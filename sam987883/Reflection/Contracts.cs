@@ -12,6 +12,8 @@ namespace sam987883.Reflection
 	{
 		IImmutableList<IEnumMember<T>> Fields { get; }
 
+		bool Flags { get; }
+
 		TypeCode UnderlyingTypeCode { get; }
 
 		RuntimeTypeHandle UnderlyingTypeHandle { get; }

@@ -2,7 +2,6 @@
 
 using System;
 using System.Reflection;
-using static sam987883.Extensions.EnumExtensions;
 
 namespace sam987883.Reflection.Members
 {
@@ -11,11 +10,8 @@ namespace sam987883.Reflection.Members
 	{
 		public EnumMember(FieldInfo fieldInfo, T value) : base(fieldInfo)
 		{
-			this.Name = value.Name();
 			this.Value = value;
 		}
-
-		public string Name { get; }
 
 		public T Value { get; }
 	}

@@ -3,6 +3,7 @@
 using sam987883.Reflection.Members;
 using System;
 using System.Collections.Immutable;
+using System.Reflection;
 using static sam987883.Extensions.EnumExtensions;
 using static sam987883.Extensions.IEnumerableExtensions;
 
@@ -16,6 +17,7 @@ namespace sam987883.Reflection
 			var type = typeof(T);
 			var underlyingType = type.GetEnumUnderlyingType();
 
+			this.Flags = type.GetCustomAttribute<FlagsAttribute>() != null;
 			this.UnderlyingTypeCode = Type.GetTypeCode(underlyingType);
 			this.UnderlyingTypeHandle = underlyingType.TypeHandle;
 
@@ -26,6 +28,8 @@ namespace sam987883.Reflection
 		}
 
 		public IImmutableList<IEnumMember<T>> Fields { get; }
+
+		public bool Flags { get; }
 
 		public TypeCode UnderlyingTypeCode { get; }
 
