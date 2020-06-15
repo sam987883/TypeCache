@@ -18,7 +18,6 @@ namespace sam987883.Reflection.Members
 
 		public MethodMember(MethodInfo methodInfo) : base(methodInfo)
 		{
-			methodInfo.DeclaringType.Assert($"{nameof(methodInfo)}.{nameof(methodInfo.DeclaringType)}", typeof(T));
 			methodInfo.IsStatic.Assert($"{nameof(methodInfo)}.{nameof(methodInfo.IsStatic)}", false);
 
 			var parameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);

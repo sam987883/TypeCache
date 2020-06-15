@@ -11,7 +11,6 @@ namespace sam987883.Reflection.Members
 	{
 		public IndexerMember(PropertyInfo propertyInfo) : base(propertyInfo)
 		{
-			propertyInfo.DeclaringType.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.DeclaringType)}", typeof(T));
 			propertyInfo.GetIndexParameters().Any().Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetIndexParameters)}().Any()", true);
 
 			this.GetMethod = propertyInfo.GetMethod != null ? new MethodMember<T>(propertyInfo.GetMethod) : null;

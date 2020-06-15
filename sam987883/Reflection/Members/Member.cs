@@ -11,9 +11,21 @@ namespace sam987883.Reflection.Members
 	{
 		private Member(MemberInfo info, Type type)
 		{
+			this.ArrayTypeHandles = type.IsArray
+				? type.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable(type.GenericTypeArguments.Length)
+				: ImmutableArray<RuntimeTypeHandle>.Empty;
+
 			this.Attributes = info.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
+
+			this.IsString = type == typeof(string);
+			this.IsValueType = type.IsValueType;
+
 			var (nameAttribute, exists) = this.Attributes.If<Attribute, NameAttribute>().First();
 			this.Name = exists ? nameAttribute.Name : info.Name;
+
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+				this.NullableTypeHandle = type.GenericTypeArguments[0].TypeHandle;
+
 			this.TypeHandle = type.TypeHandle;
 		}
 
@@ -49,11 +61,19 @@ namespace sam987883.Reflection.Members
 			this.Public = type.IsPublic;
 		}
 
+		public IImmutableList<RuntimeTypeHandle> ArrayTypeHandles { get; }
+
 		public IImmutableList<Attribute> Attributes { get; }
 
 		public bool Internal { get; }
 
+		public bool IsString { get; }
+
+		public bool IsValueType { get; }
+
 		public string Name { get; }
+
+		public RuntimeTypeHandle? NullableTypeHandle { get; }
 
 		public bool Public { get; }
 

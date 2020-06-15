@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using Microsoft.Extensions.DependencyInjection;
 using sam987883.Extensions;
 using sam987883.Reflection.Members;
 using System;
@@ -18,7 +19,15 @@ namespace sam987883.Reflection
 
 	internal sealed class TypeCache<T> : Member, ITypeCache<T>
 	{
-		public TypeCache() : base(typeof(T))
+		public TypeCache(IConstructorCache<T> constructorCache
+			, IFieldCache<T> fieldCache
+			, IMethodCache<T> methodCache
+			, IIndexerCache<T> indexerCache
+			, IPropertyCache<T> propertyCache
+			, IStaticFieldCache<T> staticFieldCache
+			, IStaticMethodCache<T> staticMethodCache
+			, IStaticPropertyCache<T> staticPropertyCache)
+			: base(typeof(T))
 		{
 			var type = typeof(T);
 
@@ -38,34 +47,36 @@ namespace sam987883.Reflection
 				.To(_ => _.TypeHandle)
 				.ToImmutable(interfaces.Length);
 
-			this.Constructors = type.GetConstructors(TypeCache.INSTANCE_BINDING)
-				.If(constructorInfo => !constructorInfo.Name.Is(".ctor"))
-				.To(constructorInfo => (IConstructorMember<T>)new ConstructorMember<T>(constructorInfo))
-				.ToImmutable();
-
-			this.Indexers = type.GetProperties(TypeCache.INSTANCE_BINDING)
-				.If(propertyInfo => propertyInfo.GetIndexParameters().Any())
-				.To(propertyInfo => (IIndexerMember<T>)new IndexerMember<T>(propertyInfo))
-				.ToImmutable();
+			this.ConstructorCache = constructorCache;
+			this.FieldCache = fieldCache;
+			this.MethodCache = methodCache;
+			this.IndexerCache = indexerCache;
+			this.PropertyCache = propertyCache;
+			this.StaticFieldCache = staticFieldCache;
+			this.StaticMethodCache = staticMethodCache;
+			this.StaticPropertyCache = staticPropertyCache;
 		}
-
-		public IImmutableList<IConstructorMember<T>> Constructors { get; }
 
 		public IImmutableList<RuntimeTypeHandle> GenericInterfaces { get; }
 
 		public IImmutableList<RuntimeTypeHandle> GenericTypes { get; }
 
-		public IImmutableList<IIndexerMember<T>> Indexers { get; }
-
 		public IImmutableList<RuntimeTypeHandle> Interfaces { get; }
 
-		public T Create(params object[] parameters)
-		{
-			var constructorMember = this.Constructors.First(constructorMember => constructorMember.IsCallable(parameters));
-			if (constructorMember.Exists)
-				return constructorMember.Value.Invoke();
-			else
-				throw new ArgumentException($"Create instance of {this.Name} failed with {parameters?.Length ?? 0} parameters.");
-		}
+		public IConstructorCache<T> ConstructorCache { get; }
+
+		public IFieldCache<T> FieldCache { get; }
+
+		public IMethodCache<T> MethodCache { get; }
+
+		public IIndexerCache<T> IndexerCache { get; }
+
+		public IPropertyCache<T> PropertyCache { get; }
+
+		public IStaticFieldCache<T> StaticFieldCache { get; }
+
+		public IStaticMethodCache<T> StaticMethodCache { get; }
+
+		public IStaticPropertyCache<T> StaticPropertyCache { get; }
 	}
 }

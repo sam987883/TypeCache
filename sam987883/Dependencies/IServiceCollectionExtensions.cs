@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using sam987883.Common;
 using sam987883.Database;
 using sam987883.Reflection;
+using sam987883.Reflection.Mappers;
 using System;
 using System.Collections.Generic;
 
@@ -29,20 +30,18 @@ namespace sam987883.Dependencies
             .AddSingleton(typeof(IEqualityComparer<>), typeof(CustomEqualityComparer<>))
             .AddSingleton(typeof(IReferenceEqualityComparer<>), typeof(ReferenceEqualityComparer<>));
 
-        public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this) => @this
-            .AddSingleton<IFieldMapper<FROM, TO>>(provider => new FieldMapper<FROM, TO>(provider.GetRequiredService<IFieldCache<FROM>>(), provider.GetRequiredService<IFieldCache<TO>>()));
-
-        public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this) => @this
-            .AddSingleton<IPropertyMapper<FROM, TO>>(provider => new PropertyMapper<FROM, TO>(provider.GetRequiredService<IPropertyCache<FROM>>(), provider.GetRequiredService<IPropertyCache<TO>>()));
-
         public static IServiceCollection RegisterTypeCache(this IServiceCollection @this) => @this
             .AddSingleton(typeof(ITypeCache<>), typeof(TypeCache<>))
+            .AddSingleton(typeof(IConstructorCache<>), typeof(ConstructorCache<>))
             .AddSingleton(typeof(IEnumCache<>), typeof(EnumCache<>))
             .AddSingleton(typeof(IFieldCache<>), typeof(FieldCache<>))
             .AddSingleton(typeof(IMethodCache<>), typeof(MethodCache<>))
+            .AddSingleton(typeof(IIndexerCache<>), typeof(IndexerCache<>))
             .AddSingleton(typeof(IPropertyCache<>), typeof(PropertyCache<>))
-            .AddSingleton(typeof(IStaticFieldCache<>), typeof(FieldCache<>))
+            .AddSingleton(typeof(IStaticFieldCache<>), typeof(StaticFieldCache<>))
             .AddSingleton(typeof(IStaticMethodCache<>), typeof(StaticMethodCache<>))
-            .AddSingleton(typeof(IStaticPropertyCache<>), typeof(StaticPropertyCache<>));
+            .AddSingleton(typeof(IStaticPropertyCache<>), typeof(StaticPropertyCache<>))
+            .AddSingleton(typeof(IFieldMapper<,>), typeof(FieldMapper<,>))
+            .AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>));
     }
 }

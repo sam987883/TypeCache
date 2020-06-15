@@ -12,7 +12,6 @@ namespace sam987883.Reflection.Members
 	{
 		public FieldMember(FieldInfo fieldInfo) : base(fieldInfo)
 		{
-			fieldInfo.DeclaringType.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.DeclaringType)}", typeof(T));
 			fieldInfo.IsLiteral.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsLiteral)}", false);
 			fieldInfo.IsStatic.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsStatic)}", false);
 

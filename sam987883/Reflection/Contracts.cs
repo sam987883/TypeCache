@@ -7,6 +7,13 @@ using sam987883.Reflection.Members;
 
 namespace sam987883.Reflection
 {
+	public interface IConstructorCache<T>
+	{
+		IImmutableList<IConstructorMember<T>> Constructors { get; }
+
+		T Create(params object[] parameters);
+	}
+
 	public interface IEnumCache<T> : IMember
 		where T : struct, Enum
 	{
@@ -26,6 +33,11 @@ namespace sam987883.Reflection
 		IImmutableDictionary<string, IFieldMember<T>> Fields { get; }
 
 		void Map(T from, T to);
+	}
+
+	public interface IIndexerCache<T>
+	{
+		IImmutableList<IIndexerMember<T>> Indexers { get; }
 	}
 
 	public interface IMethodCache<T>
@@ -63,17 +75,27 @@ namespace sam987883.Reflection
 
 	public interface ITypeCache<T> : IMember
 	{
-		IImmutableList<IConstructorMember<T>> Constructors { get; }
-
 		IImmutableList<RuntimeTypeHandle> GenericInterfaces { get; }
 
 		IImmutableList<RuntimeTypeHandle> GenericTypes { get; }
 
-		IImmutableList<IIndexerMember<T>> Indexers { get; }
-
 		IImmutableList<RuntimeTypeHandle> Interfaces { get; }
 
-		T Create(params object[] parameters);
+		IConstructorCache<T> ConstructorCache { get; }
+
+		IFieldCache<T> FieldCache { get; }
+
+		IMethodCache<T> MethodCache { get; }
+
+		IIndexerCache<T> IndexerCache { get; }
+
+		IPropertyCache<T> PropertyCache { get; }
+
+		IStaticFieldCache<T> StaticFieldCache { get; }
+
+		IStaticMethodCache<T> StaticMethodCache { get; }
+
+		IStaticPropertyCache<T> StaticPropertyCache { get; }
 	}
 
 	public interface IFieldAccessor<in T> : IReadOnlyDictionary<string, object>
@@ -81,18 +103,8 @@ namespace sam987883.Reflection
 		new object? this[string key] { get; set; }
 	}
 
-	public interface IFieldMapper<in FROM, in TO>
-	{
-		void Map(FROM from, TO to);
-	}
-
 	public interface IPropertyAccessor<in T> : IReadOnlyDictionary<string, object>
 	{
 		new object? this[string key] { get; set; }
-	}
-
-	public interface IPropertyMapper<in FROM, in TO>
-	{
-		void Map(FROM from, TO to);
 	}
 }

@@ -18,8 +18,6 @@ namespace sam987883.Reflection.Members
 
 		public ConstructorMember(ConstructorInfo constructorInfo) : base(constructorInfo)
 		{
-			constructorInfo.DeclaringType.Assert($"{nameof(constructorInfo)}.{nameof(constructorInfo.DeclaringType)}", typeof(T));
-
 			var parameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
 
 			var parameterInfos = constructorInfo.GetParameters().Sort(parameterPositionComparer).ToArray();

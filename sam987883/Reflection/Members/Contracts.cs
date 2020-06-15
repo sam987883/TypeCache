@@ -7,11 +7,19 @@ namespace sam987883.Reflection.Members
 {
 	public interface IMember
 	{
+		IImmutableList<RuntimeTypeHandle> ArrayTypeHandles { get; }
+
 		IImmutableList<Attribute> Attributes { get; }
 
 		bool Internal { get; }
 
+		bool IsString { get; }
+
+		bool IsValueType { get; }
+
 		string Name { get; }
+
+		RuntimeTypeHandle? NullableTypeHandle { get; }
 
 		bool Public { get; }
 

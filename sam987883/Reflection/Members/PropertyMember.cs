@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using System;
 using System.Reflection;
 using static sam987883.Extensions.IEnumerableExtensions;
 using static sam987883.Extensions.ObjectExtensions;
@@ -10,7 +11,6 @@ namespace sam987883.Reflection.Members
 	{
 		public PropertyMember(PropertyInfo propertyInfo) : base(propertyInfo)
 		{
-			propertyInfo.DeclaringType.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.DeclaringType)}", typeof(T));
 			propertyInfo.GetIndexParameters().Any().Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetIndexParameters)}().Any()", false);
 
 			this.GetMethod = propertyInfo.GetMethod != null ? new MethodMember<T>(propertyInfo.GetMethod) : null;

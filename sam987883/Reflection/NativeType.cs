@@ -24,8 +24,6 @@ namespace sam987883.Reflection
 		Char,
 		Enum,
 		ValueType,
-		String,
-		Array,
-		DbNull
+		String
 	}
 }
