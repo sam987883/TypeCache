@@ -24,9 +24,15 @@ namespace sam987883.Reflection.Members
 			this.Name = exists ? nameAttribute.Name : info.Name;
 
 			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-				this.NullableTypeHandle = type.GenericTypeArguments[0].TypeHandle;
-
-			this.TypeHandle = type.TypeHandle;
+			{
+				this.IsNullable = true;
+				this.TypeHandle = type.GenericTypeArguments[0].TypeHandle;
+			}
+			else
+			{
+				this.IsNullable = type.IsClass;
+				this.TypeHandle = type.TypeHandle;
+			}
 		}
 
 		protected Member(ConstructorInfo info) : this(info, info.DeclaringType)
@@ -73,7 +79,7 @@ namespace sam987883.Reflection.Members
 
 		public string Name { get; }
 
-		public RuntimeTypeHandle? NullableTypeHandle { get; }
+		public bool IsNullable { get; }
 
 		public bool Public { get; }
 

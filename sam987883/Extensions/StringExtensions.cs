@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace sam987883.Extensions
@@ -18,7 +19,7 @@ namespace sam987883.Extensions
 			caseSensitive ? StringComparer.Ordinal.Equals(@this, value) : StringComparer.OrdinalIgnoreCase.Equals(@this, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBlank(this string? @this) =>
+		public static bool IsBlank([NotNullWhen(false)] this string? @this) =>
 			string.IsNullOrWhiteSpace(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

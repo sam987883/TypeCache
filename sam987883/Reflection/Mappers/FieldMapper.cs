@@ -1,54 +1,72 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using static sam987883.Extensions.IEnumerableExtensions;
-using static sam987883.Extensions.IReadOnlyDictionaryExtensions;
 
 namespace sam987883.Reflection.Mappers
 {
-	public class FieldMapper<FROM, TO> : IFieldMapper<FROM, TO>
+	internal class FieldMapper<FROM, TO> : IFieldMapper<FROM, TO>
 	{
 		private readonly IFieldCache<FROM> _FromFieldCache;
 
 		private readonly IFieldCache<TO> _ToFieldCache;
 
-		public FieldMapper(IFieldCache<FROM> fromFieldCache, IFieldCache<TO> toFieldCache)
+		public IImmutableList<MapperSetting> Settings { get; }
+
+		public FieldMapper(IFieldCache<FROM> fromFieldCache, IFieldCache<TO> toFieldCache, params MapperSetting[] overrides)
 		{
 			this._FromFieldCache = fromFieldCache;
 			this._ToFieldCache = toFieldCache;
+
+			var settings = new Dictionary<string, MapperSetting>(toFieldCache.Fields.Count, TypeCache.NameComparer);
+			var properties = this._ToFieldCache.Fields.Keys.Match(this._FromFieldCache.Fields.Keys, TypeCache.NameComparer);
+			properties.Do(name =>
+			{
+				var fromField = this._FromFieldCache.Fields[name];
+				var toField = this._ToFieldCache.Fields[name];
+
+				if (toField.TypeHandle.Equals(fromField.TypeHandle))
+					settings.Add(name, new MapperSetting(name, name, !toField.IsNullable));
+			});
+
+			overrides.Do(setting =>
+			{
+				var (toField, toExists) = this._ToFieldCache.Fields.Get(setting.To);
+				if (!toExists)
+					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] was not found for mapping.");
+
+				if (!setting.From.IsBlank())
+				{
+					var (fromField, fromExists) = this._FromFieldCache.Fields.Get(setting.From);
+					if (!fromExists)
+						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] was not found for mapping.");
+
+					if (toField.TypeHandle.Equals(fromField.TypeHandle))
+						settings[setting.To] = setting;
+					else
+					{
+						var fromTypeName = Type.GetTypeFromHandle(fromField.TypeHandle).Name;
+						var toTypeName = Type.GetTypeFromHandle(toField.TypeHandle).Name;
+						throw new ArgumentOutOfRangeException(nameof(overrides), $"Field [{setting.From}] of type {fromTypeName} cannot be mapped to [{setting.To}] of type {toTypeName}.");
+					}
+				}
+				else
+					settings.Remove(setting.To);
+			});
+			this.Settings = settings.Values.ToImmutable();
 		}
 
-		/// <summary>
-		/// Homogenius mapping- field names and types match.
-		/// Field types must be primitives or strings.
-		/// Nullable<> to/from non-Nullable<> value types will be handled.
-		/// </summary>
-		/// <param name="from">Mapping from instance</param>
-		/// <param name="to">Mapping to instance</param>
-		public void Map(FROM from, TO to)
+		public void Map(FROM from, TO to) => this.Settings.Do(setting =>
 		{
-			var toProperties = this._ToFieldCache.Fields.Values
-				.If(fieldMember => fieldMember.Public && fieldMember.SetValue != null)
-				.To(fieldMember => fieldMember.Name)
-				.ToArray();
-			this._FromFieldCache.Fields
-				.GetValues(toProperties)
-				.If(fieldMember => fieldMember.Public && fieldMember.GetValue != null)
-				.Do(fromField =>
-				{
-					var toField = this._ToFieldCache.Fields[fromField.Name];
-					if (toField.IsValueType || toField.IsString)
-					{
-						if (toField.TypeHandle.Equals(fromField.TypeHandle) // Assign ValueType/String values, copying handled automatically
-							|| toField.NullableTypeHandle == fromField.TypeHandle) // Assign ValueType to Nullable<ValueType>
-							toField[to] = fromField[from];
-						else if (toField.TypeHandle == fromField.NullableTypeHandle)
-						{ // Assign Nullable<ValueType> to ValueType if not null
-							var value = fromField[from];
-							if (value != null)
-								toField[to] = value;
-						}
-					}
-				});
-		}
+			var fromField = this._FromFieldCache.Fields[setting.From];
+			var toField = this._ToFieldCache.Fields[setting.To];
+
+			var fromValue = fromField[from];
+			if (!setting.IgnoreNullValue || fromValue != null)
+				toField[to] = fromValue;
+		});
 	}
 }

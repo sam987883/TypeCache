@@ -19,7 +19,7 @@ namespace sam987883.Reflection.Members
 
 		string Name { get; }
 
-		RuntimeTypeHandle? NullableTypeHandle { get; }
+		bool IsNullable { get; }
 
 		bool Public { get; }
 

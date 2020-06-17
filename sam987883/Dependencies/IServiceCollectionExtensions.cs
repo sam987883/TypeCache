@@ -30,6 +30,14 @@ namespace sam987883.Dependencies
             .AddSingleton(typeof(IEqualityComparer<>), typeof(CustomEqualityComparer<>))
             .AddSingleton(typeof(IReferenceEqualityComparer<>), typeof(ReferenceEqualityComparer<>));
 
+        public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides) => @this
+            .AddSingleton<IFieldMapper<FROM, TO>>(provider =>
+                new FieldMapper<FROM, TO>(provider.GetRequiredService<IFieldCache<FROM>>(), provider.GetRequiredService<IFieldCache<TO>>(), overrides));
+
+        public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides) => @this
+            .AddSingleton<IPropertyMapper<FROM, TO>>(provider =>
+                new PropertyMapper<FROM, TO>(provider.GetRequiredService<IPropertyCache<FROM>>(), provider.GetRequiredService<IPropertyCache<TO>>(), overrides));
+
         public static IServiceCollection RegisterTypeCache(this IServiceCollection @this) => @this
             .AddSingleton(typeof(ITypeCache<>), typeof(TypeCache<>))
             .AddSingleton(typeof(IConstructorCache<>), typeof(ConstructorCache<>))
