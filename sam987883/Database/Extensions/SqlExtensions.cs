@@ -343,7 +343,7 @@ SET {updateCsv}");
 			Guid guid => $"'{guid:D}'",
 			Enum token => token.Number(),
 			IEnumerable _ => JsonSerializer.Serialize(@this, @this.GetType(), _JsonSerializerOptions),
-			_ => @this.ToString()
+			_ => @this.ToString() ?? string.Empty
 		};
 
 		public static string ToSql(this Select @this)
@@ -352,7 +352,7 @@ SET {updateCsv}");
 				.AppendLine("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
 				.AppendLine("SET NOCOUNT ON;")
 				.AppendLine()
-				.AppendLine($"SELECT {(@this.Columns.Any() ? @this.Columns.Join("\r\n, ", column => $"[{column.EscapeIdentifier()}]") : "*")}")
+				.AppendLine($"SELECT {(@this.Output.Columns.Any() ? @this.Output.Columns.Join("\r\n, ", column => $"[{column.EscapeIdentifier()}]") : "*")}")
 				.Append($"FROM [{@this.From.EscapeIdentifier()}]");
 
 			if (@this.Where != null)

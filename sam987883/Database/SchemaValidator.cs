@@ -142,7 +142,7 @@ namespace sam987883.Database
 
 		public void Validate(Select select)
 		{
-			this.ValidateColumnsExist($"{nameof(select)}.{nameof(select.Columns)}", select.Columns);
+			this.ValidateColumnsExist($"{nameof(select)}.{nameof(select.Output.Columns)}", select.Output.Columns);
 			this.ValidateExpression($"{nameof(select)}.{select.Where}", select.Where);
 			this.ValidateExpression($"{nameof(select)}.{select.Having}", select.Having);
 			this.ValidateColumnsExist($"{nameof(select)}.{nameof(select.OrderBy)}", select.OrderBy.To(orderBy => orderBy.Column).ToArray());

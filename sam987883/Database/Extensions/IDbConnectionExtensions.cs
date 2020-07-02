@@ -132,8 +132,8 @@ namespace sam987883.Database.Extensions
 			select.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			using var reader = command.ExecuteReader(CommandBehavior.SingleResult);
-			select.Rows = reader.ReadValues().ToArray();
-			return select.Rows.Length;
+			select.Output.Rows = reader.ReadValues().ToArray();
+			return select.Output.Rows.Length;
 		}
 
 		public static int Select<T>(this IDbConnection @this, Select<T> select) where T : class, new()
@@ -142,8 +142,8 @@ namespace sam987883.Database.Extensions
 			select.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			using var reader = command.ExecuteReader(CommandBehavior.SingleResult);
-			select.Rows = reader.Read(select.PropertyCache).ToArray();
-			return select.Rows.Length;
+			select.Output.Rows = reader.Read(select.PropertyCache).ToArray();
+			return select.Output.Rows.Length;
 		}
 
 		public static int TruncateTable(this IDbConnection @this, string table)

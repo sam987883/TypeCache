@@ -9,8 +9,6 @@ namespace sam987883.Database
 	{
 		public (string Name, object Value)[] Parameters { get; set; } = new (string, object)[0];
 
-		public string[] Columns { get; set; } = new string[0];
-
 		public string From { get; set; } = string.Empty;
 
 		public ExpressionSet? Where { get; set; }
@@ -19,10 +17,10 @@ namespace sam987883.Database
 
 		public (string Column, Sort Sort)[] OrderBy { get; set; } = new (string, Sort)[0];
 
-		public object?[][] Rows { get; set; } = new object[0][];
+		public RowSet Output { get; set; } = new RowSet();
 	}
 
-	public class Select<T> where T : class
+	public class Select<T> where T : class, new()
 	{
 		public Select(IPropertyCache<T> propertyCache) =>
 			this.PropertyCache = propertyCache;
@@ -31,8 +29,6 @@ namespace sam987883.Database
 
 		public (string Name, object Value)[] Parameters { get; set; } = new (string, object)[0];
 
-		public string[] Columns { get; set; } = new string[0];
-
 		public string From { get; set; } = string.Empty;
 
 		public ExpressionSet? Where { get; set; }
@@ -41,6 +37,6 @@ namespace sam987883.Database
 
 		public (string Column, Sort Sort)[] OrderBy { get; set; } = new (string, Sort)[0];
 
-		public T[] Rows { get; set; } = new T[0];
+		public RowSet<T> Output { get; set; } = new RowSet<T>();
 	}
 }
