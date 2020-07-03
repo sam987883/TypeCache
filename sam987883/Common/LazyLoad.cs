@@ -10,7 +10,7 @@ namespace sam987883.Common
 	{
         private readonly object _ThreadLock = new object();
 		private Func<T> _GetValue;
-		private T _Value;
+        [AllowNull] private T _Value;
 
         public LazyLoad([NotNull] Func<T> getValue)
 		{

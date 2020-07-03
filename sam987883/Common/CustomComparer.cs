@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using static System.Linq.Expressions.Expression;
 using static sam987883.Extensions.ExpressionExtensions;
@@ -38,7 +39,7 @@ namespace sam987883.Common
 
 		public Func<T, T, int> Compare { get; } 
 
-		int IComparer<T>.Compare(T x, T y) =>
+		int IComparer<T>.Compare([AllowNull] T x, [AllowNull] T y) =>
 			this.Compare(x, y);
 	}
 }

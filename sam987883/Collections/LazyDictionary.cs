@@ -13,16 +13,28 @@ namespace sam987883.Collections
 		private readonly ConcurrentDictionary<K, V> _Dictionary;
 		private readonly Func<K, V> _CreateValue;
 
-		public LazyDictionary(Func<K, V> createValue, int concurrencyLevel, int capacity, IEqualityComparer<K>? comparer = null)
+		public LazyDictionary(Func<K, V> createValue)
 		{
 			this._CreateValue = createValue;
-			this._Dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, capacity, comparer ?? EqualityComparer<K>.Default);
+			this._Dictionary = new ConcurrentDictionary<K, V>();
 		}
 
-		public LazyDictionary(Func<K, V> createValue, IEqualityComparer<K>? comparer = null)
+		public LazyDictionary(Func<K, V> createValue, IEqualityComparer<K> comparer)
 		{
 			this._CreateValue = createValue;
-			this._Dictionary = new ConcurrentDictionary<K, V>(comparer ?? EqualityComparer<K>.Default);
+			this._Dictionary = new ConcurrentDictionary<K, V>(comparer);
+		}
+
+		public LazyDictionary(Func<K, V> createValue, int concurrencyLevel, int capacity)
+		{
+			this._CreateValue = createValue;
+			this._Dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, capacity);
+		}
+
+		public LazyDictionary(Func<K, V> createValue, int concurrencyLevel, int capacity, IEqualityComparer<K> comparer)
+		{
+			this._CreateValue = createValue;
+			this._Dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, capacity, comparer);
 		}
 
 		V IReadOnlyDictionary<K, V>.this[K key] =>

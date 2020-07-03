@@ -98,13 +98,17 @@ namespace sam987883.Reflection
 		IStaticPropertyCache<T> StaticPropertyCache { get; }
 	}
 
-	public interface IFieldAccessor<in T> : IReadOnlyDictionary<string, object>
+	public interface IFieldAccessor<in T>
 	{
-		new object? this[string key] { get; set; }
+		object? this[string key] { get; set; }
+		string[] Names { get; }
+		IDictionary<string, object?> Values { get; set; }
 	}
 
-	public interface IPropertyAccessor<in T> : IReadOnlyDictionary<string, object>
+	public interface IPropertyAccessor<in T>
 	{
-		new object? this[string key] { get; set; }
+		object? this[string key] { get; set; }
+		string[] Names { get; }
+		IDictionary<string, object?> Values { get; set; }
 	}
 }

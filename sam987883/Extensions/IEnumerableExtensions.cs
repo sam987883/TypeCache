@@ -12,7 +12,7 @@ namespace sam987883.Extensions
 {
 	public static class IEnumerableExtensions
 	{
-		public static IEnumerable<T?> As<T>(this IEnumerable @this) where T : class
+		public static IEnumerable<T?> As<T>(this IEnumerable? @this) where T : class
 		{
 			if (@this == null)
 				yield break;
@@ -30,10 +30,10 @@ namespace sam987883.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool All<T>(this IEnumerable<T> @this, Func<T, bool> filter) =>
+		public static bool All<T>(this IEnumerable<T>? @this, Func<T, bool> filter) =>
 			!@this.If(item => !filter(item)).Any();
 
-		public static IEnumerable<T> And<T>(this IEnumerable<T> @this, IEnumerable<IEnumerable<T>> items)
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? items)
 		{
 			var enumerable = @this;
 			using var itemEnumerator = items?.GetEnumerator();
@@ -73,7 +73,7 @@ namespace sam987883.Extensions
 			}
 		}
 
-		public static IEnumerable<T> And<T>(this IEnumerable<T> @this, params IEnumerable<T>[] items)
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params IEnumerable<T>?[] items)
 		{
 			var enumerable = @this;
 			var index = 0;
@@ -108,13 +108,13 @@ namespace sam987883.Extensions
 
 			if (index < length)
 			{
-				enumerable = items[index++];
+				enumerable = items?[index++];
 				goto Action;
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> And<T>(this IEnumerable<T> @this, params T[] items) =>
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[] items) =>
 			@this.And(items as IEnumerable<T>);
 
 		public static bool Any<T>(this IEnumerable<T>? @this)
@@ -267,7 +267,7 @@ namespace sam987883.Extensions
 			@this.If(filter).First();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>> @this) =>
+		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this) =>
 			Factory.Empty<T>().And(@this);
 
 		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
@@ -279,23 +279,23 @@ namespace sam987883.Extensions
 			_ => @this.ToArray().Get(range).ToArray(),
 		};
 
-		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>> getItems) =>
+		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> getItems) =>
 			@this.And(@this.To<T, IEnumerable<T>>(getItems));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this IEnumerable<T> @this, T value) =>
+		public static bool Has<T>(this IEnumerable<T>? @this, T value) =>
 			@this.ToIndex(value).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this IEnumerable<T> @this, T value, IEqualityComparer<T> comparer) =>
+		public static bool Has<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer) =>
 			@this.ToIndex(value, comparer).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this IEnumerable<T> @this, IEnumerable<T> values) =>
+		public static bool Has<T>(this IEnumerable<T>? @this, IEnumerable<T>? values) =>
 			values.All(value => @this.Has(value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this IEnumerable<T> @this, IEnumerable<T> values, IEqualityComparer<T> comparer) =>
+		public static bool Has<T>(this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer) =>
 			values.All(value => @this.Has(value, comparer));
 
 		public static IEnumerable<T> If<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
@@ -380,20 +380,20 @@ namespace sam987883.Extensions
 			@this.ToHashSet(comparer).SetEquals(items ?? Factory.Empty<T>());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T> @this, char delimeter) =>
-			string.Join(delimeter, @this);
+		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) =>
+			@this != null ? string.Join(delimeter, @this) : string.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T> @this, char delimeter, Func<T, string> map) =>
-			string.Join(delimeter, @this.To(map));
+		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map) =>
+			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T> @this, string delimeter) =>
-			string.Join(delimeter, @this);
+		public static string Join<T>(this IEnumerable<T>? @this, string delimeter) =>
+			@this != null ? string.Join(delimeter, @this) : string.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T> @this, string delimeter, Func<T, string> map) =>
-			string.Join(delimeter, @this.To(map));
+		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map) =>
+			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		public static IEnumerable<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
@@ -408,19 +408,19 @@ namespace sam987883.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T> @this) where T : IComparable<T> =>
+		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Aggregate((x, y) => x.CompareTo(y) > 0 ? x : y);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T> @this, IComparer<T> comparer) =>
+		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) =>
 			@this.Aggregate(comparer.Maximum);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T> @this) where T : IComparable<T> =>
+		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Aggregate((x, y) => x.CompareTo(y) < 0 ? x : y);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T> @this, IComparer<T> comparer) =>
+		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) =>
 			@this.Aggregate(comparer.Minimum);
 
 		public static IEnumerable<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items) =>
@@ -430,14 +430,14 @@ namespace sam987883.Extensions
 			@this.Without(items, comparer).Union(items.Without(@this, comparer), comparer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T>? Sort<T>(this IEnumerable<T> @this) where T : IComparable<T> =>
+		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
 
-		public static IEnumerable<T>? Sort<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
 		{
 			var items = @this switch
 			{
-				null => null,
+				null => new T[0],
 				T[] array => array,
 				_ => @this.ToArray()
 			};
@@ -543,22 +543,31 @@ namespace sam987883.Extensions
 			return arrayBuilder.ToImmutable();
 		}
 
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>> @this)
+		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this)
 		{
+			if (@this == null)
+				return ImmutableDictionary<K, V>.Empty;
+
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>();
 			dictionaryBuilder.AddRange(@this);
 			return dictionaryBuilder.ToImmutable();
 		}
 
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>> @this, IEqualityComparer<K> keyComparer)
+		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer)
 		{
+			if (@this == null)
+				return ImmutableDictionary<K, V>.Empty;
+
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>(keyComparer);
 			dictionaryBuilder.AddRange(@this);
 			return dictionaryBuilder.ToImmutable();
 		}
 
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>> @this, IEqualityComparer<K> keyComparer, IEqualityComparer<V> valueComparer)
+		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer, IEqualityComparer<V> valueComparer)
 		{
+			if (@this == null)
+				return ImmutableDictionary<K, V>.Empty;
+
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder(keyComparer, valueComparer);
 			dictionaryBuilder.AddRange(@this);
 			return dictionaryBuilder.ToImmutable();
@@ -624,11 +633,11 @@ namespace sam987883.Extensions
 			new ReadOnlyDictionary<K, V>(@this.ToDictionary(valueFactory, comparer));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T> @this, Func<T, K> keyFactory, Func<T, V> valueFactory) where K : notnull =>
+		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory) where K : notnull =>
 			new ReadOnlyDictionary<K, V>(@this.ToDictionary(keyFactory, valueFactory));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T> @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull =>
+		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull =>
 			new ReadOnlyDictionary<K, V>(@this.ToDictionary(keyFactory, valueFactory, comparer));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
