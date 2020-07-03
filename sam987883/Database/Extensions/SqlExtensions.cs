@@ -1,12 +1,14 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using sam987883.Common;
+using sam987883.Database.Commands;
 using sam987883.Extensions;
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace sam987883.Database.Extensions
 {
@@ -14,14 +16,20 @@ namespace sam987883.Database.Extensions
 	{
 		private const string SQL_DELIMETER = "\r\n\t, ";
 
-		private readonly static JsonSerializerOptions _JsonSerializerOptions = new JsonSerializerOptions
+		private readonly static JsonSerializerOptions JsonOptions;
+
+		static SqlExtensions()
 		{
-			AllowTrailingCommas = false,
-			IgnoreNullValues = false,
-			PropertyNameCaseInsensitive = true,
-			WriteIndented = false,
-			MaxDepth = 100
-		};
+			JsonOptions = new JsonSerializerOptions
+			{
+				AllowTrailingCommas = false,
+				IgnoreNullValues = false,
+				PropertyNameCaseInsensitive = true,
+				WriteIndented = false,
+				MaxDepth = 100
+			};
+			JsonOptions.Converters.Add(new JsonStringEnumConverter());
+		}
 
 		public static string EscapeIdentifier(this string @this) =>
 			@this.Replace("]", "]]");
@@ -342,7 +350,7 @@ SET {updateCsv}");
 			TimeSpan time => $"'{time:c}'",
 			Guid guid => $"'{guid:D}'",
 			Enum token => token.Number(),
-			IEnumerable _ => JsonSerializer.Serialize(@this, @this.GetType(), _JsonSerializerOptions),
+			IEnumerable _ => JsonSerializer.Serialize(@this, @this.GetType(), JsonOptions),
 			_ => @this.ToString() ?? string.Empty
 		};
 

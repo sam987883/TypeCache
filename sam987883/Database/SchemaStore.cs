@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
@@ -21,11 +22,13 @@ namespace sam987883.Database
 
 		public TableSchema GetTableSchema(IDbConnection connection, string tableSource)
 		{
-			var parts = tableSource.Replace("[", string.Empty).Replace("]", string.Empty).Split('.', StringSplitOptions.RemoveEmptyEntries);
+			var parts = tableSource.Split('.', StringSplitOptions.RemoveEmptyEntries)
+				.To(part => part.TrimStart('[').TrimEnd(']'))
+				.ToArray(3);
 			var tableSourceKey = parts.Length switch
 			{
 				1 => $"[{connection.Database}]..[{parts[0]}]",
-				2 => $"[{connection.Database}].[{parts[0]}].[{parts[1]}]",
+				2 => tableSource.Contains("..") ? $"[{parts[0]}]..[{parts[1]}]" : $"[{connection.Database}].[{parts[0]}].[{parts[1]}]",
 				3 => $"[{parts[0]}].[{parts[1]}].[{parts[2]}]",
 				_ => throw new ArgumentException($"Invalid table source name: {tableSource}", nameof(tableSource))
 			};

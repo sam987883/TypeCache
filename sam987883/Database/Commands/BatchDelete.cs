@@ -2,7 +2,7 @@
 
 using sam987883.Reflection;
 
-namespace sam987883.Database
+namespace sam987883.Database.Commands
 {
 	public sealed class BatchDelete : Batch
 	{

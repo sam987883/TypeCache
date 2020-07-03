@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace sam987883.Collections
 {
@@ -24,13 +25,28 @@ namespace sam987883.Collections
 			this._Dictionary = new ConcurrentDictionary<K, V>(comparer ?? EqualityComparer<K>.Default);
 		}
 
-		V IReadOnlyDictionary<K, V>.this[K key] => this._Dictionary.GetOrAdd(key, this._CreateValue);
-		IEnumerable<K> IReadOnlyDictionary<K, V>.Keys => this._Dictionary.Keys;
-		IEnumerable<V> IReadOnlyDictionary<K, V>.Values => this._Dictionary.Values;
-		int IReadOnlyCollection<KeyValuePair<K, V>>.Count => this._Dictionary.Count;
-		bool IReadOnlyDictionary<K, V>.ContainsKey(K key) => this._Dictionary.ContainsKey(key);
-		IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K, V>>.GetEnumerator() => this._Dictionary.GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => this._Dictionary.GetEnumerator();
-		bool IReadOnlyDictionary<K, V>.TryGetValue(K key, out V value) => this._Dictionary.TryGetValue(key, out value) || this._Dictionary.TryAdd(key, value = this._CreateValue(key));
+		V IReadOnlyDictionary<K, V>.this[K key] =>
+			this._Dictionary.GetOrAdd(key, this._CreateValue);
+
+		IEnumerable<K> IReadOnlyDictionary<K, V>.Keys =>
+			this._Dictionary.Keys;
+
+		IEnumerable<V> IReadOnlyDictionary<K, V>.Values =>
+			this._Dictionary.Values;
+
+		int IReadOnlyCollection<KeyValuePair<K, V>>.Count =>
+			this._Dictionary.Count;
+
+		bool IReadOnlyDictionary<K, V>.ContainsKey(K key) =>
+			this._Dictionary.ContainsKey(key);
+
+		IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K, V>>.GetEnumerator() =>
+			this._Dictionary.GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() =>
+			this._Dictionary.GetEnumerator();
+
+		bool IReadOnlyDictionary<K, V>.TryGetValue(K key, [MaybeNullWhen(false)] out V value) =>
+			this._Dictionary.TryGetValue(key, out value) || this._Dictionary.TryAdd(key, value = this._CreateValue(key));
 	}
 }

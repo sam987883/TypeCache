@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Common;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -38,9 +39,51 @@ namespace sam987883.Extensions
 		public static void Do<T>(this T[]? @this, Action<T> action, Action? between = null) =>
 			(@this as IReadOnlyList<T>).Do(action, between);
 
+		public static void Do<T>(this T[]? @this, ActionRef<T> action, Action? between = null)
+		{
+			if (@this?.Length > 0)
+			{
+				action(ref @this[0]);
+				if (between != null)
+				{
+					for (var i = 1; i < @this.Length; ++i)
+					{
+						between();
+						action(ref @this[i]);
+					}
+				}
+				else
+				{
+					for (var i = 1; i < @this.Length; ++i)
+						action(ref @this[i]);
+				}
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Do<T>(this T[]? @this, Action<T, int> action, Action? between = null) =>
 			(@this as IReadOnlyList<T>).Do(action, between);
+
+		public static void Do<T>(this T[]? @this, ActionRef<T, int> action, Action? between = null)
+		{
+			if (@this?.Length > 0)
+			{
+				action(ref @this[0], 0);
+				if (between != null)
+				{
+					for (var i = 1; i < @this.Length; ++i)
+					{
+						between();
+						action(ref @this[i], i);
+					}
+				}
+				else
+				{
+					for (var i = 1; i < @this.Length; ++i)
+						action(ref @this[i], i);
+				}
+			}
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Csv<T>(this T[] @this) =>

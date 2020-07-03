@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Database.Commands;
 using sam987883.Extensions;
 using System;
 using System.Data;

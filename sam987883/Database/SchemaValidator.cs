@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using sam987883.Common;
+using sam987883.Database.Commands;
 using sam987883.Extensions;
 using sam987883.Reflection;
 using System;
