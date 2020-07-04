@@ -13,13 +13,13 @@ namespace sam987883.Reflection.Members
 
 		bool Internal { get; }
 
+		bool IsNullable { get; }
+
 		bool IsString { get; }
 
 		bool IsValueType { get; }
 
 		string Name { get; }
-
-		bool IsNullable { get; }
 
 		bool Public { get; }
 
@@ -34,7 +34,7 @@ namespace sam987883.Reflection.Members
 
 		T Invoke(params object[] parameters);
 
-		bool IsCallable(params object[] arguments);
+		bool IsCallableWith(params object[] arguments);
 	}
 
 	public interface IEnumMember<out T> : IMember
@@ -74,16 +74,24 @@ namespace sam987883.Reflection.Members
 
 		object? Invoke(T instance, params object[]? parameters);
 
-		bool IsCallable(params object[]? arguments);
+		bool IsCallableWith(params object[]? arguments);
 	}
 
 	public interface IParameter
 	{
+		IImmutableList<RuntimeTypeHandle> ArrayTypeHandles { get; }
+
 		IImmutableList<Attribute> Attributes { get; }
 
 		object? DefaultValue { get; }
 
 		bool HasDefaultValue { get; }
+
+		bool IsNullable { get; }
+
+		bool IsString { get; }
+
+		bool IsValueType { get; }
 
 		string Name { get; }
 
@@ -126,9 +134,9 @@ namespace sam987883.Reflection.Members
 
 		bool Void { get; }
 
-		object Invoke(params object[]? parameters);
+		object? Invoke(params object[]? parameters);
 
-		bool IsCallable(params object[]? arguments);
+		bool IsCallableWith(params object[]? arguments);
 	}
 
 	public interface IStaticPropertyMember : IMember

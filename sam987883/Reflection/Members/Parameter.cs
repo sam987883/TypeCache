@@ -11,21 +11,45 @@ namespace sam987883.Reflection.Members
 	{
 		public Parameter(ParameterInfo parameterInfo)
 		{
+			this.ArrayTypeHandles = parameterInfo.ParameterType.IsArray
+				? parameterInfo.ParameterType.GenericTypeArguments
+					.To(_ => _.TypeHandle)
+					.ToImmutable(parameterInfo.ParameterType.GenericTypeArguments.Length)
+				: ImmutableArray<RuntimeTypeHandle>.Empty;
 			this.Attributes = parameterInfo.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
-			var (nameAttribute, exists) = this.Attributes.If<Attribute, NameAttribute>().First();
-			this.Name = exists ? nameAttribute.Name : parameterInfo.Name;
-			this.TypeHandle = parameterInfo.ParameterType.TypeHandle;
+			this.Name = this.Attributes.If<Attribute, NameAttribute>().First().Value?.Name ?? parameterInfo.Name ?? string.Empty;
 			this.DefaultValue = parameterInfo.DefaultValue;
 			this.HasDefaultValue = parameterInfo.HasDefaultValue;
+			this.IsString = parameterInfo.ParameterType == typeof(string);
+			this.IsValueType = parameterInfo.ParameterType.IsValueType;
 			this.Optional = parameterInfo.IsOptional;
 			this.Out = parameterInfo.IsOut;
+
+			if (parameterInfo.ParameterType.IsGenericType && parameterInfo.ParameterType.GetGenericTypeDefinition() == typeof(Nullable<>))
+			{
+				this.IsNullable = true;
+				this.TypeHandle = parameterInfo.ParameterType.GenericTypeArguments[0].TypeHandle;
+			}
+			else
+			{
+				this.IsNullable = parameterInfo.ParameterType.IsClass;
+				this.TypeHandle = parameterInfo.ParameterType.TypeHandle;
+			}
 		}
+
+		public IImmutableList<RuntimeTypeHandle> ArrayTypeHandles { get; }
 
 		public IImmutableList<Attribute> Attributes { get; }
 
 		public object? DefaultValue { get; }
 
 		public bool HasDefaultValue { get; }
+
+		public bool IsNullable { get; }
+
+		public bool IsString { get; }
+
+		public bool IsValueType { get; }
 
 		public string Name { get; }
 

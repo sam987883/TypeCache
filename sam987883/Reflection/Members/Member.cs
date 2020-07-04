@@ -12,7 +12,9 @@ namespace sam987883.Reflection.Members
 		private Member(MemberInfo info, Type type)
 		{
 			this.ArrayTypeHandles = type.IsArray
-				? type.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable(type.GenericTypeArguments.Length)
+				? type.GenericTypeArguments
+					.To(_ => _.TypeHandle)
+					.ToImmutable(type.GenericTypeArguments.Length)
 				: ImmutableArray<RuntimeTypeHandle>.Empty;
 
 			this.Attributes = info.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
@@ -73,13 +75,13 @@ namespace sam987883.Reflection.Members
 
 		public bool Internal { get; }
 
+		public bool IsNullable { get; }
+
 		public bool IsString { get; }
 
 		public bool IsValueType { get; }
 
 		public string Name { get; }
-
-		public bool IsNullable { get; }
 
 		public bool Public { get; }
 

@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Title>TypeCache Reflection</Title>
     <Description>A fast alternative to System.Reflection. Also contained are IEnumerable extensions as an alternative to System.Linq that handle null-checking, as well as a database access alternative to Dapper that uses TypeCache.</Description>

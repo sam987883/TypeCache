@@ -48,20 +48,8 @@ namespace sam987883.Reflection.Members
 		public T Invoke(params object[] parameters) =>
 			this._Invoke(parameters);
 
-		public bool IsCallable(params object[] arguments)
-		{
-			if (arguments.Any())
-			{
-				var argumentEnumerator = arguments.GetEnumerator();
-				for (var i = 0; i < this.Parameters.Count; ++i)
-				{
-					var parameter = this.Parameters[i];
-					if (!(argumentEnumerator.MoveNext() ? parameter.Supports(argumentEnumerator.Current.GetType()) : parameter.HasDefaultValue || parameter.Optional))
-						break;
-				}
-				return !argumentEnumerator.MoveNext();
-			}
-			return this.Parameters.Count == 0 || this.Parameters.All(parameter => parameter.HasDefaultValue || parameter.Optional);
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool IsCallableWith(params object[]? arguments) =>
+			this.Parameters.IsCallableWith(arguments);
 	}
 }

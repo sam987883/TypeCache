@@ -23,7 +23,7 @@ namespace sam987883.Reflection
 
 		public T Create(params object[] parameters)
 		{
-			var constructorMember = this.Constructors.First(constructorMember => constructorMember.IsCallable(parameters));
+			var constructorMember = this.Constructors.First(constructorMember => constructorMember.IsCallableWith(parameters));
 			if (constructorMember.Exists)
 				return constructorMember.Value.Invoke();
 			else
