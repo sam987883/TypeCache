@@ -36,7 +36,14 @@ namespace sam987883.Common
 			}
 			else if (type.Implements(typeof(IEquatable<T>)))
 			{
-				this._Equals = (x, y) => (x == null && y == null) || (x != null ? ((IEquatable<T>)x).Equals(y) : ((IEquatable<T>)y).Equals(x));
+				this._Equals = (x, y) =>
+				{
+					if (x != null)
+						return ((IEquatable<T>)x).Equals(y);
+					if (y != null)
+						return ((IEquatable<T>)y).Equals(x);
+					return true;
+				};
 				this._GetHashCode = value => value?.GetHashCode() ?? 0;
 			}
 			else

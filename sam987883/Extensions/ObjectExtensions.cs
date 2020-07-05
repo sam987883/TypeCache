@@ -2,29 +2,45 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace sam987883.Extensions
 {
 	public static class ObjectExtensions
 	{
-		public static void Assert<T>(this T @this, string name, T value)
+		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value)
 		{
-			@this.AssertNotNull(name);
-			if (!Equals(@this, value))
-				throw new ArgumentException($"{nameof(Assert)}: {@this} <> {(value != null ? value.ToString() : "null")}.", name);
+			name.AssertNotNull(nameof(name));
+
+			switch (@this)
+			{
+				case IEquatable<T> equatable when !equatable.Equals(value):
+					throw new ArgumentException($"{nameof(Assert)}: [{@this}] <> [{(value != null ? value.ToString() : "null")}].", name);
+				case null when value != null:
+					throw new ArgumentException($"{nameof(Assert)}: null <> [{value}].", name);
+				case IEquatable<T> _:
+				case null:
+					return;
+				default:
+					if (!object.Equals(@this, value))
+						throw new ArgumentException($"{nameof(Assert)}: [{@this}] <> [{(value != null ? value.ToString() : "null")}].", name);
+					return;
+			}
 		}
 
-		public static void Assert<T>(this T @this, string name, T value, IEqualityComparer<T> comparer)
+		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value, IEqualityComparer<T> comparer)
 		{
-			@this.AssertNotNull(name);
+			name.AssertNotNull(nameof(name));
+			comparer.AssertNotNull(nameof(comparer));
+
 			if (!comparer.Equals(@this, value))
-				throw new ArgumentException($"{nameof(Assert)}: {@this} <> {(value != null ? value.ToString() : "null")}.", name);
+				throw new ArgumentException($"{nameof(Assert)}: {(@this != null ? $"[{@this}]" : "null")} <> {(value != null ? $"[{value}]" : "null")}.", name);
 		}
 
-		public static void AssertNotNull<T>(this T @this, string name)
+		public static void AssertNotNull<T>([AllowNull] this T @this, string name)
 		{
 			if (@this == null)
-				throw new NullReferenceException($"{nameof(Assert)}: [{name}] is null.");
+				throw new NullReferenceException($"{nameof(AssertNotNull)}: [{name}] is null.");
 		}
 
 		public static Type? GetTypeOf(this object @this, Type type)

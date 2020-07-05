@@ -106,19 +106,19 @@ namespace sam987883.Extensions
 			Array.Reverse(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Search<T>(this T[] @this, IComparer<T>? comparer = null) =>
-			Array.BinarySearch(@this, comparer ?? Comparer<T>.Default);
+		public static int Search<T>(this T[] @this, T value, IComparer<T>? comparer = null) =>
+			Array.BinarySearch(@this, value, comparer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Search<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null) =>
-			Array.BinarySearch(@this, start, length > 0 ? length : @this.Length, comparer ?? Comparer<T>.Default);
+		public static int Search<T>(this T[] @this, T value, int start, int length = 0, IComparer<T>? comparer = null) =>
+			Array.BinarySearch(@this, start, length > 0 ? length : @this.Length, value, comparer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Sort<T>(this T[] @this, IComparer<T>? comparer = null) =>
-			Array.Sort(@this, comparer ?? Comparer<T>.Default);
+			Array.Sort(@this, comparer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null) =>
-			Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer ?? Comparer<T>.Default);
+			Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 	}
 }

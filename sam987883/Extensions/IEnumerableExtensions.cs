@@ -24,14 +24,19 @@ namespace sam987883.Extensions
 
 		public static (T Value, bool Exists) Aggregate<T>(this IEnumerable<T>? @this, Func<T, T, T> aggregator)
 		{
+			aggregator.AssertNotNull(nameof(aggregator));
+
 			var result = default((T Value, bool));
 			@this.Do(item => result = (aggregator(result.Value, item), true));
 			return result;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool All<T>(this IEnumerable<T>? @this, Func<T, bool> filter) =>
-			!@this.If(item => !filter(item)).Any();
+		public static bool All<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			return !@this.If(item => !filter(item)).Any();
+		}
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? items)
 		{
@@ -164,6 +169,8 @@ namespace sam987883.Extensions
 
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action, Action? between = null)
 		{
+			action.AssertNotNull(nameof(action));
+
 			switch (@this)
 			{
 				case null:
@@ -203,6 +210,8 @@ namespace sam987883.Extensions
 
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action, Action? between = null)
 		{
+			action.AssertNotNull(nameof(action));
+
 			switch (@this)
 			{
 				case null:
@@ -280,7 +289,7 @@ namespace sam987883.Extensions
 		};
 
 		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> getItems) =>
-			@this.And(@this.To<T, IEnumerable<T>>(getItems));
+			@this.And(@this.To<T, IEnumerable<T>?>(getItems));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>(this IEnumerable<T>? @this, T value) =>
@@ -300,6 +309,8 @@ namespace sam987883.Extensions
 
 		public static IEnumerable<T> If<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
 		{
+			filter.AssertNotNull(nameof(filter));
+
 			switch (@this)
 			{
 				case null:
@@ -411,17 +422,23 @@ namespace sam987883.Extensions
 		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Aggregate((x, y) => x.CompareTo(y) > 0 ? x : y);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) =>
-			@this.Aggregate(comparer.Maximum);
+		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
+
+			return @this.Aggregate(comparer.Maximum);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Aggregate((x, y) => x.CompareTo(y) < 0 ? x : y);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) =>
-			@this.Aggregate(comparer.Minimum);
+		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
+
+			return @this.Aggregate(comparer.Minimum);
+		}
 
 		public static IEnumerable<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items) =>
 			@this.Without(items).Union(items.Without(@this));
@@ -433,7 +450,7 @@ namespace sam987883.Extensions
 		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
 			@this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
 
-		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 		{
 			var items = @this switch
 			{
@@ -441,7 +458,7 @@ namespace sam987883.Extensions
 				T[] array => array,
 				_ => @this.ToArray()
 			};
-			items?.Sort(comparer);
+			items.Sort(comparer);
 			return items;
 		}
 
@@ -495,6 +512,8 @@ namespace sam987883.Extensions
 
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory) where K : notnull
 		{
+			valueFactory.AssertNotNull(nameof(valueFactory));
+
 			var dictionary = new Dictionary<K, V>();
 			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
 			return dictionary;
@@ -502,6 +521,9 @@ namespace sam987883.Extensions
 
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull
 		{
+			valueFactory.AssertNotNull(nameof(valueFactory));
+			comparer.AssertNotNull(nameof(comparer));
+
 			var dictionary = new Dictionary<K, V>(comparer);
 			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
 			return dictionary;
@@ -509,6 +531,9 @@ namespace sam987883.Extensions
 
 		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory) where K : notnull
 		{
+			keyFactory.AssertNotNull(nameof(keyFactory));
+			valueFactory.AssertNotNull(nameof(valueFactory));
+
 			var dictionary = new Dictionary<K, V>();
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
@@ -516,6 +541,10 @@ namespace sam987883.Extensions
 
 		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull
 		{
+			keyFactory.AssertNotNull(nameof(keyFactory));
+			valueFactory.AssertNotNull(nameof(valueFactory));
+			comparer.AssertNotNull(nameof(comparer));
+
 			var dictionary = new Dictionary<K, V>(comparer);
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
@@ -525,9 +554,12 @@ namespace sam987883.Extensions
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this) =>
 			@this != null ? new HashSet<T>(@this) : new HashSet<T>(0);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T> comparer) =>
-			@this != null ? new HashSet<T>(@this, comparer) : new HashSet<T>(comparer);
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
+
+			return @this != null ? new HashSet<T>(@this, comparer) : new HashSet<T>(comparer);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this) =>
@@ -555,6 +587,8 @@ namespace sam987883.Extensions
 
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer)
 		{
+			keyComparer.AssertNotNull(nameof(keyComparer));
+
 			if (@this == null)
 				return ImmutableDictionary<K, V>.Empty;
 
@@ -565,6 +599,9 @@ namespace sam987883.Extensions
 
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer, IEqualityComparer<V> valueComparer)
 		{
+			keyComparer.AssertNotNull(nameof(keyComparer));
+			valueComparer.AssertNotNull(nameof(valueComparer));
+
 			if (@this == null)
 				return ImmutableDictionary<K, V>.Empty;
 
@@ -575,6 +612,8 @@ namespace sam987883.Extensions
 
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
 		{
+			filter.AssertNotNull(nameof(filter));
+
 			switch (@this)
 			{
 				case null:
@@ -613,8 +652,12 @@ namespace sam987883.Extensions
 			_ => @this.ToIndex(item => object.Equals(item, value))
 		};
 
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer) =>
-			@this.ToIndex(item => comparer.Equals(item, value));
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
+
+			return @this.ToIndex(item => comparer.Equals(item, value));
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this) =>

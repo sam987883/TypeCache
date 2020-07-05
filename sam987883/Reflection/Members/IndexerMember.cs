@@ -24,7 +24,7 @@ namespace sam987883.Reflection.Members
 			{
 				if (this.SetMethod != null)
 				{
-					var list = new List<object>(indexParameters.Length + 1);
+					var list = new List<object?>(indexParameters.Length + 1);
 					list.Add(value);
 					list.AddRange(indexParameters);
 					this.SetMethod.Invoke(instance, list.ToArray());

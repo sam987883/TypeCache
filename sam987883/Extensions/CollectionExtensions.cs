@@ -102,7 +102,7 @@ namespace sam987883.Extensions
 
 		public static Span<T> Get<T>(this T[]? @this, Range range)
 		{
-			if (@this.Any())
+			if (!@this.Any())
 				return Span<T>.Empty;
 
 			range = range.Normalize(@this.Length);

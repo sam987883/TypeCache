@@ -9,11 +9,28 @@ namespace sam987883.Extensions
 {
     public static class StringExtensions
     {
-		public static T? Enum<T>(this string @this, bool isCaseSensitive = false) where T : struct, Enum =>
-			System.Enum.TryParse(@this, !isCaseSensitive, out T result) ? (T?) result : null;
+		public static void Assert(this string? @this, string name, string? value)
+		{
+			name.AssertNotNull(nameof(name));
 
-		public static bool Has(this string @this, string value, bool isCaseSensitive = false) =>
-			@this.Contains(value, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+			if (!string.Equals(@this, value))
+				throw new ArgumentException($"{nameof(Assert)}: [{(@this != null ? $"\"{@this}\"" : "null")}] <> {(value != null ? $"\"{value}\"" : "null")}.", name);
+		}
+
+		public static void Assert(this string? @this, string name, string? value, StringComparer comparer)
+		{
+			name.AssertNotNull(nameof(name));
+			comparer.AssertNotNull(nameof(comparer));
+
+			if (!comparer.Equals(@this, value))
+				throw new ArgumentException($"{nameof(Assert)}: [{(@this != null ? $"\"{@this}\"" : "null")}] <> {(value != null ? $"\"{value}\"" : "null")}.", name);
+		}
+
+		public static T? Enum<T>(this string @this, bool caseSensitive = false) where T : struct, Enum =>
+			System.Enum.TryParse(@this, !caseSensitive, out T result) ? (T?) result : null;
+
+		public static bool Has(this string @this, string value, bool caseSensitive = false) =>
+			@this.Contains(value, caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
 		public static bool Is(this string @this, string value, bool caseSensitive = false) =>
 			caseSensitive ? StringComparer.Ordinal.Equals(@this, value) : StringComparer.OrdinalIgnoreCase.Equals(@this, value);

@@ -70,6 +70,7 @@ WHEN MATCHED THEN DELETE");
 				{
 					Columns = @this.Input.Columns,
 					Rows = @this.Input.Rows
+						.If(row => row != null)
 						.To(row => inputProperties
 							.To(property => property[row])
 							.ToArray(inputProperties.Length))
@@ -157,7 +158,12 @@ WHEN MATCHED THEN
 				Input = new RowSet
 				{
 					Columns = @this.Input.Columns,
-					Rows = @this.Input.Rows.To(row => inputProperties.To(property => property[row]).ToArray(inputProperties.Length)).ToArray(@this.Input.Rows.Length)
+					Rows = @this.Input.Rows
+						.If(row => row != null)
+						.To(row => inputProperties
+							.To(property => property[row])
+							.ToArray(inputProperties.Length))
+						.ToArray(@this.Input.Rows.Length)
 				},
 				UpdateColumns = @this.UpdateColumns,
 				OnColumns = @this.OnColumns,
@@ -208,6 +214,7 @@ WHEN NOT MATCHED BY TARGET THEN
 				{
 					Columns = @this.Input.Columns,
 					Rows = @this.Input.Rows
+						.If(row => row != null)
 						.To(row => inputProperties
 							.To(property => property[row])
 							.ToArray(inputProperties.Length))
@@ -300,27 +307,34 @@ SET {updateCsv}");
 		public static string ToSql([NotNull] this Expression @this)
 		{
 			var field = @this.Field.EscapeIdentifier();
+			var value = @this.Value.ToSql();
+			var @operator = @this.Operator.ToSql();
 
 			if (@this.Value != null)
 			{
 				switch (@this.Operator)
 				{
-					case ComparisonOperator.Like: return $"{field} {@this.Operator.ToSql()} N'%{@this.Value.ToString().EscapeValue()}%'";
-					case ComparisonOperator.StartWith: return $"{field} {@this.Operator.ToSql()} N'{@this.Value.ToString().EscapeValue()}%'";
-					case ComparisonOperator.EndWith: return $"{field} {@this.Operator.ToSql()} N'%{@this.Value.ToString().EscapeValue()}'";
-					case ComparisonOperator.NotLike: return $"{field} {@this.Operator.ToSql()} N'%{@this.Value.ToString().EscapeValue()}%'";
-					case ComparisonOperator.NotStartWith: return $"{field} {@this.Operator.ToSql()} N'{@this.Value.ToString().EscapeValue()}%'";
-					case ComparisonOperator.NotEndWith: return $"{field} {@this.Operator.ToSql()} N'%{@this.Value.ToString().EscapeValue()}'";
+					case ComparisonOperator.Like:
+					case ComparisonOperator.NotLike:
+						return $"{field} {@operator} N'%{value}%'";
+					case ComparisonOperator.StartWith:
+					case ComparisonOperator.NotStartWith:
+						return $"{field} {@operator} N'{value}%'";
+					case ComparisonOperator.EndWith:
+					case ComparisonOperator.NotEndWith:
+						return $"{field} {@operator} N'%{value}'";
+				}
+			}
+			else
+			{
+				switch (@this.Operator)
+				{
+					case ComparisonOperator.Equal: return $"{field} IS NULL";
+					case ComparisonOperator.NotEqual: return $"{field} IS NOT NULL";
 				}
 			}
 
-			switch (@this.Operator)
-			{
-				case ComparisonOperator.Equal: return $"{field} IS NULL";
-				case ComparisonOperator.NotEqual: return $"{field} IS NOT NULL";
-			}
-
-			return $"{field} {@this.Operator.ToSql()} {@this.Value.ToSql()}";
+			return $"{field} {@operator} {value}";
 		}
 
 		public static string ToSql(this ComparisonOperator @this) => @this switch
@@ -340,7 +354,7 @@ SET {updateCsv}");
 			_ => throw new NotImplementedException($"{nameof(ComparisonOperator)}.{@this.Name().ToUpper()} is not implemented for SQL.")
 		};
 
-		public static string ToSql(this object @this) => @this switch
+		public static string ToSql(this object? @this) => @this switch
 		{
 			null => "NULL",
 			char text => text.Equals('\'') ? "N''''" : $"N'{text}'",

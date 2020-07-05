@@ -32,9 +32,9 @@ namespace sam987883.Reflection.Members
 
 		IImmutableList<IParameter> Parameters { get; }
 
-		T Invoke(params object[] parameters);
+		T Invoke(params object?[]? parameters);
 
-		bool IsCallableWith(params object[] arguments);
+		bool IsCallableWith(params object?[]? arguments);
 	}
 
 	public interface IEnumMember<out T> : IMember
@@ -72,9 +72,9 @@ namespace sam987883.Reflection.Members
 
 		bool Void { get; }
 
-		object? Invoke(T instance, params object[]? parameters);
+		object? Invoke(T instance, params object?[]? parameters);
 
-		bool IsCallableWith(params object[]? arguments);
+		bool IsCallableWith(params object?[]? arguments);
 	}
 
 	public interface IParameter
@@ -134,9 +134,9 @@ namespace sam987883.Reflection.Members
 
 		bool Void { get; }
 
-		object? Invoke(params object[]? parameters);
+		object? Invoke(params object?[]? parameters);
 
-		bool IsCallableWith(params object[]? arguments);
+		bool IsCallableWith(params object?[]? arguments);
 	}
 
 	public interface IStaticPropertyMember : IMember

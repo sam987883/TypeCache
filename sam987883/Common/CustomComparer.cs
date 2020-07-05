@@ -27,9 +27,23 @@ namespace sam987883.Common
 					.Lambda<Func<T, T, int>>(value1, value2).Compile();
 			}
 			else if (type.Implements(typeof(IComparable<T>)))
-				this.Compare = (x, y) => (x == null && y == null) ? 0 : (x != null ? ((IComparable<T>)x).CompareTo(y) : ((IComparable<T>)y).CompareTo(x));
+				this.Compare = (x, y) =>
+				{
+					if (x != null)
+						return ((IComparable<T>)x).CompareTo(y);
+					if (y != null)
+						return ((IComparable<T>)y).CompareTo(x);
+					return 0;
+				};
 			else if (type.Implements(typeof(IComparable)))
-				this.Compare = (x, y) => (x == null && y == null) ? 0 : (x != null ? ((IComparable)x).CompareTo(y) : ((IComparable)y).CompareTo(x));
+				this.Compare = (x, y) =>
+				{
+					if (x != null)
+						return ((IComparable)x).CompareTo(y);
+					if (y != null)
+						return ((IComparable)y).CompareTo(x);
+					return 0;
+				};
 			else
 				throw new NotImplementedException($"'{type.FullName}' does not have a default comparison implementation.");
 		}

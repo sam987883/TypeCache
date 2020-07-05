@@ -4,13 +4,13 @@ namespace sam987883.Database
 {
 	public class ColumnSchema
 	{
-		public string Name { get; set; }
+		public string Name { get; set; } = string.Empty;
 		public bool Hidden { get; set; }
 		public bool Identity { get; set; }
 		public bool Nullable { get; set; }
 		public bool PrimaryKey { get; set; }
 		public bool Readonly { get; set; }
-		public string Type { get; set; }
+		public string Type { get; set; } = string.Empty;
 		public int Length { get; set; }
 	}
 }

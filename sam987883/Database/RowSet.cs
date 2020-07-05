@@ -13,6 +13,6 @@ namespace sam987883.Database
 	{
 		public string[] Columns { get; set; } = new string[0];
 
-		public T[] Rows { get; set; } = new T[0];
+		public T?[] Rows { get; set; } = new T[0];
 	}
 }
