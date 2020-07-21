@@ -12,13 +12,9 @@ namespace sam987883.Common
 {
 	internal sealed class CustomEqualityComparer<T> : IEqualityComparer<T>
 	{
-		private readonly Func<T, T, bool> _Equals;
+		private readonly EqualsFunc<T> _Equals;
 
 		private readonly Func<T, int> _GetHashCode;
-
-		public CustomEqualityComparer(Func<T, T, bool> equals) : this(equals, value => value?.GetHashCode() ?? 0)
-		{
-		}
 
 		public CustomEqualityComparer()
 		{
@@ -29,31 +25,28 @@ namespace sam987883.Common
 
 				ParameterExpression value1 = nameof(value1).Parameter<T>();
 				ParameterExpression value2 = nameof(value2).Parameter<T>();
-				this._Equals = value1.ConvertTo(underlyingType).EqualTo(value2.ConvertTo(underlyingType)).Lambda<Func<T, T, bool>>(value1, value2).Compile();
+				this._Equals = value1.ConvertTo(underlyingType).EqualTo(value2.ConvertTo(underlyingType)).Lambda<EqualsFunc<T>>(value1, value2).Compile();
 
 				ParameterExpression value = nameof(value).Parameter<T>();
 				this._GetHashCode = value.ConvertTo(underlyingType).Call(nameof(object.GetHashCode)).Lambda<Func<T, int>>(value).Compile();
 			}
 			else if (type.Implements(typeof(IEquatable<T>)))
 			{
-				this._Equals = (x, y) =>
-				{
-					if (x != null)
-						return ((IEquatable<T>)x).Equals(y);
-					if (y != null)
-						return ((IEquatable<T>)y).Equals(x);
-					return true;
-				};
+				this._Equals = (x, y) => x != null ? ((IEquatable<T>)x).Equals(y) : (y != null ? ((IEquatable<T>)y).Equals(x) : true);
 				this._GetHashCode = value => value?.GetHashCode() ?? 0;
 			}
 			else
 			{
-				this._Equals = (x, y) => (x == null && y == null) || (x != null ? x.Equals(y) : y.Equals(x));
+				this._Equals = (x, y) => x != null ? x.Equals(y) : (y != null ? y.Equals(x) : true);
 				this._GetHashCode = value => value?.GetHashCode() ?? 0;
 			}
 		}
 
-		public CustomEqualityComparer(Func<T, T, bool> equals, Func<T, int> getHashCode)
+		public CustomEqualityComparer(EqualsFunc<T> equals) : this(equals, value => value?.GetHashCode() ?? 0)
+		{
+		}
+
+		public CustomEqualityComparer(EqualsFunc<T> equals, Func<T, int> getHashCode)
 		{
 			this._Equals = equals;
 			this._GetHashCode = getHashCode;

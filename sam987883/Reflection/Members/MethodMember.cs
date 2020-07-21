@@ -27,7 +27,7 @@ namespace sam987883.Reflection.Members
 			ParameterExpression instance = nameof(instance).Parameter<T>();
 			ParameterExpression parameters = nameof(parameters).Parameter<object[]>();
 
-			var parameterInfos = methodInfo.GetParameters().Sort(parameterPositionComparer).ToArray();
+			var parameterInfos = methodInfo.GetParameters().Sort(parameterPositionComparer).ToList().ToArray();
 			MethodCallExpression call;
 			if (parameterInfos.Any())
 			{

@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Extensions;
 using System;
 using System.Collections.Immutable;
+using System.Linq.Expressions;
 using System.Reflection;
 using static sam987883.Extensions.IEnumerableExtensions;
 
@@ -58,9 +60,11 @@ namespace sam987883.Reflection.Members
 		protected Member(PropertyInfo propertyInfo) : this(propertyInfo, propertyInfo.PropertyType)
 		{
 			var methodInfo = propertyInfo.GetMethod ?? propertyInfo.SetMethod;
-
-			this.Internal = methodInfo.IsAssembly;
-			this.Public = methodInfo.IsPublic;
+			if (methodInfo != null)
+			{
+				this.Internal = methodInfo.IsAssembly;
+				this.Public = methodInfo.IsPublic;
+			}
 		}
 
 		protected Member(Type type) : this(type, type)
@@ -86,5 +90,25 @@ namespace sam987883.Reflection.Members
 		public bool Public { get; }
 
 		public RuntimeTypeHandle TypeHandle { get; }
+
+		public static MethodCallExpression? ConvertExpression(Expression value, Type type) => Type.GetTypeCode(type) switch
+		{
+			TypeCode.Boolean => Expression.Call(typeof(Convert), nameof(Convert.ToBoolean), null, value),
+			TypeCode.Char => Expression.Call(typeof(Convert), nameof(Convert.ToChar), null, value),
+			TypeCode.SByte => Expression.Call(typeof(Convert), nameof(Convert.ToSByte), null, value),
+			TypeCode.Byte => Expression.Call(typeof(Convert), nameof(Convert.ToByte), null, value),
+			TypeCode.Int16 => Expression.Call(typeof(Convert), nameof(Convert.ToInt16), null, value),
+			TypeCode.UInt16 => Expression.Call(typeof(Convert), nameof(Convert.ToUInt16), null, value),
+			TypeCode.Int32 => Expression.Call(typeof(Convert), nameof(Convert.ToInt32), null, value),
+			TypeCode.UInt32 => Expression.Call(typeof(Convert), nameof(Convert.ToUInt32), null, value),
+			TypeCode.Int64 => Expression.Call(typeof(Convert), nameof(Convert.ToInt64), null, value),
+			TypeCode.UInt64 => Expression.Call(typeof(Convert), nameof(Convert.ToUInt64), null, value),
+			TypeCode.Single => Expression.Call(typeof(Convert), nameof(Convert.ToSingle), null, value),
+			TypeCode.Double => Expression.Call(typeof(Convert), nameof(Convert.ToDouble), null, value),
+			TypeCode.Decimal => Expression.Call(typeof(Convert), nameof(Convert.ToDecimal), null, value),
+			TypeCode.DateTime => Expression.Call(typeof(Convert), nameof(Convert.ToDateTime), null, value),
+			TypeCode.String => Expression.Call(typeof(Convert), nameof(Convert.ToString), null, value),
+			_ => null
+		};
 	}
 }

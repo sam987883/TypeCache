@@ -13,7 +13,7 @@ namespace sam987883.Collections
 		public ReadOnlyList(IList<T> list) : base(list) =>
 			this._GetValue = index => list[index];
 
-		public ReadOnlyList(IEnumerable<T> enumerable) : this(enumerable.ToArray()) { }
+		public ReadOnlyList(IEnumerable<T> enumerable) : this(enumerable.ToList()) { }
 
 		public T this[int index] =>
 			this._GetValue(index);

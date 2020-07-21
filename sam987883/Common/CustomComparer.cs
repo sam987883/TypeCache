@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using static System.Linq.Expressions.Expression;
 using static sam987883.Extensions.ExpressionExtensions;
 using static sam987883.Extensions.ReflectionExtensions;
@@ -24,35 +25,22 @@ namespace sam987883.Common
 				this.Compare = value1.ConvertTo(underlyingType).GreaterThan(value2.ConvertTo(underlyingType))
 					.If(Constant(1), value1.ConvertTo(underlyingType).LessThan(value2.ConvertTo(underlyingType))
 					.If(Constant(-1), Constant(0)))
-					.Lambda<Func<T, T, int>>(value1, value2).Compile();
+					.Lambda<CompareFunc<T>>(value1, value2).Compile();
 			}
 			else if (type.Implements(typeof(IComparable<T>)))
-				this.Compare = (x, y) =>
-				{
-					if (x != null)
-						return ((IComparable<T>)x).CompareTo(y);
-					if (y != null)
-						return ((IComparable<T>)y).CompareTo(x);
-					return 0;
-				};
+				this.Compare = (x, y) => x != null ? ((IComparable<T>)x).CompareTo(y) : (y != null ? ((IComparable<T>)y).CompareTo(x) : 0);
 			else if (type.Implements(typeof(IComparable)))
-				this.Compare = (x, y) =>
-				{
-					if (x != null)
-						return ((IComparable)x).CompareTo(y);
-					if (y != null)
-						return ((IComparable)y).CompareTo(x);
-					return 0;
-				};
+				this.Compare = (x, y) => x != null ? ((IComparable)x).CompareTo(y) : (y != null ? ((IComparable)y).CompareTo(x) : 0);
 			else
 				throw new NotImplementedException($"'{type.FullName}' does not have a default comparison implementation.");
 		}
 
-		public CustomComparer(Func<T, T, int> compare) =>
+		public CustomComparer(CompareFunc<T> compare) =>
 			this.Compare = compare;
 
-		public Func<T, T, int> Compare { get; } 
+		public CompareFunc<T> Compare { get; }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		int IComparer<T>.Compare([AllowNull] T x, [AllowNull] T y) =>
 			this.Compare(x, y);
 	}

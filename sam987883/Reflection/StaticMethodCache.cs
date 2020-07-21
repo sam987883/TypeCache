@@ -16,7 +16,7 @@ namespace sam987883.Reflection
 		{
 			var methodInfos = typeof(T).GetMethods(TypeCache.STATIC_BINDING)
 				.If(methodInfo => !methodInfo.ContainsGenericParameters && !methodInfo.IsSpecialName)
-				.ToArray();
+				.ToList();
 			var valueComparer = new CustomEqualityComparer<IImmutableList<IStaticMethodMember>>((x, y) => x == y);
 			this.Methods = methodInfos
 				.To(methodInfo => methodInfo.Name)

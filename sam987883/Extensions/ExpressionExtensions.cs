@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -34,7 +35,7 @@ namespace sam987883.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, params int[] indexes) =>
-			Expression.ArrayAccess(@this, indexes.To(index => (Expression)Expression.Constant(index, index.GetType())).ToArray());
+			Expression.ArrayAccess(@this, indexes.To(index => (Expression)Expression.Constant(index, index.GetType())).ToArray(indexes.Length));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, long index) =>
@@ -42,7 +43,7 @@ namespace sam987883.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, params long[] indexes) =>
-			Expression.ArrayAccess(@this, indexes.To(i => (Expression)Expression.Constant(i, i.GetType())).ToArray());
+			Expression.ArrayAccess(@this, indexes.To(i => (Expression)Expression.Constant(i, i.GetType())).ToArray(indexes.Length));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayIndex(this Expression @this, Expression index) =>
@@ -107,7 +108,7 @@ namespace sam987883.Extensions
 		public static Expression Cast(this Expression @this, Type type)
 		{
 			if (type.IsByRef || type.IsPointer)
-				type = type.GetElementType();
+				type = type.GetElementType() ?? type;
 
 			return type.IsValueType ? Expression.Unbox(@this, type) : Expression.TypeAs(@this, type);
 		}
@@ -199,22 +200,22 @@ namespace sam987883.Extensions
 			Expression.Lambda<T>(@this, parameters);
 
 		public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters) =>
-			Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToList().ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters) =>
-			Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray(parameters.Length)), @this, parameters);
 
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters) =>
-			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToList().ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters) =>
-			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray(parameters.Length)), @this, parameters);
 
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters) =>
-			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToList().ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters) =>
-			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
+			Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray(parameters.Length)), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression LessThan(this Expression @this, Expression expression) =>
@@ -261,6 +262,10 @@ namespace sam987883.Extensions
 			Expression.New(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression Or(this Expression @this, Expression expression) =>
+			Expression.Or(@this, expression);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ParameterExpression Parameter(this ParameterInfo @this) =>
 			Expression.Parameter(@this.ParameterType, @this.Name);
 
@@ -288,12 +293,39 @@ namespace sam987883.Extensions
 			? Expression.SubtractAssignChecked(@this, expression)
 			: Expression.SubtractAssign(@this, expression);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Or(this Expression @this, Expression expression) =>
-			Expression.Or(@this, expression);
+		public static Expression SystemConvert(this Expression @this, Type type)
+		{
+			if (type == typeof(bool))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToBoolean), null, @this);
+			else if (type == typeof(char))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToChar), null, @this);
+			else if (type == typeof(sbyte))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToSByte), null, @this);
+			else if (type == typeof(byte))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToByte), null, @this);
+			else if (type == typeof(short))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToInt16), null, @this);
+			else if (type == typeof(ushort))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToUInt16), null, @this);
+			else if (type == typeof(int))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToInt32), null, @this);
+			else if (type == typeof(uint))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToUInt32), null, @this);
+			else if (type == typeof(float))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToSingle), null, @this);
+			else if (type == typeof(double))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToDouble), null, @this);
+			else if (type == typeof(decimal))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToDecimal), null, @this);
+			else if (type == typeof(DateTime))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToDateTime), null, @this);
+			else if (type == typeof(string))
+				return Expression.Call(typeof(Convert), nameof(Convert.ToString), null, @this);
+			return @this.Cast(type);
+		}
 
 		public static IEnumerable<Expression> ToParameterArray(this ParameterExpression @this, params ParameterInfo[] parameterInfos) =>
-			parameterInfos.To(parameterInfo => @this.ArrayAccess(parameterInfo.Position).Cast(parameterInfo.ParameterType));
+			parameterInfos.To(parameterInfo => @this.ArrayAccess(parameterInfo.Position).SystemConvert(parameterInfo.ParameterType));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Unbox<T>(this Expression @this) where T : struct =>

@@ -2,14 +2,17 @@
 
 using Microsoft.AspNetCore.Http;
 using sam987883.Database;
-using sam987883.Database.Commands;
+using sam987883.Database.Requests;
 using sam987883.Database.Extensions;
+using sam987883.Dependencies;
 using System.Data.Common;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System;
 
 namespace sam987883.Web.Middleware
 {
+
 	public class SelectMiddleware
     {
         private readonly string _ConnectionString;
@@ -21,24 +24,25 @@ namespace sam987883.Web.Middleware
             this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);
         }
 
-        public async Task Invoke(HttpContext httpContext, ISchemaStore schemaStore, IRequestValidator<Select> requestValidator)
+        public async Task Invoke(HttpContext httpContext, IServiceProvider serviceProvider, ISchemaStore schemaStore)
         {
-            var request = await JsonSerializer.DeserializeAsync<Select>(httpContext.Request.Body);
+            var jsonOptions = new JsonSerializerOptions();
+            jsonOptions.Converters.Add(new ParameterJsonConverter());
+            jsonOptions.Converters.Add(new ExpressionJsonConverter());
+            var request = await JsonSerializer.DeserializeAsync<SelectRequest>(httpContext.Request.Body, jsonOptions);
+            var requestValidator = serviceProvider.GetService<IRequestValidator<SelectRequest>>();
             var valid = requestValidator == null || await requestValidator.Validate(request, httpContext);
             if (valid)
             {
-                using (var connection = this._DbProviderFactory.CreateConnection())
-                {
-                    connection.ConnectionString = this._ConnectionString;
-
-                    await connection.OpenAsync();
-                    var tableSchema = schemaStore.GetTableSchema(connection, request.From);
-                    var validator = new SchemaValidator(tableSchema);
-                    validator.Validate(request);
-                    connection.Select(request);
-                }
-
-                await JsonSerializer.SerializeAsync(httpContext.Response.Body, request.Output);
+                using var connection = this._DbProviderFactory.CreateConnection();
+                connection.ConnectionString = this._ConnectionString;
+                await connection.OpenAsync();
+                var objectSchema = schemaStore.GetObjectSchema(connection, request.From);
+                request.From = objectSchema.Name;
+                var validator = new SchemaValidator(objectSchema);
+                validator.Validate(request);
+                var output = connection.Select(request);
+                await JsonSerializer.SerializeAsync(httpContext.Response.Body, output);
             }
         }
     }

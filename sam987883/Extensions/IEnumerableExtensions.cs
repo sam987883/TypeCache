@@ -127,8 +127,8 @@ namespace sam987883.Extensions
 			return @this switch
 			{
 				null => false,
-				ICollection<T> collection => collection.Any(),
-				IReadOnlyCollection<T> collection => collection.Any(),
+				ICollection<T> collection => collection.Count > 0,
+				IReadOnlyCollection<T> collection => collection.Count > 0,
 				_ => any(@this)
 			};
 
@@ -178,10 +178,42 @@ namespace sam987883.Extensions
 				case ImmutableList<T> _:
 					goto default;
 				case IReadOnlyList<T> readOnlyList:
-					readOnlyList.Do(action, between);
+					if (readOnlyList.Count > 0)
+					{
+						action(readOnlyList[0]);
+						if (between != null)
+						{
+							for (var i = 1; i < readOnlyList.Count; ++i)
+							{
+								between();
+								action(readOnlyList[i]);
+							}
+						}
+						else
+						{
+							for (var i = 1; i < readOnlyList.Count; ++i)
+								action(readOnlyList[i]);
+						}
+					}
 					return;
 				case IList<T> list:
-					list.Do(action, between);
+					if (list.Count > 0)
+					{
+						action(list[0]);
+						if (between != null)
+						{
+							for (var i = 1; i < list.Count; ++i)
+							{
+								between();
+								action(list[i]);
+							}
+						}
+						else
+						{
+							for (var i = 1; i < list.Count; ++i)
+								action(list[i]);
+						}
+					}
 					return;
 				default:
 					using (var enumerator = @this.GetEnumerator())
@@ -219,10 +251,42 @@ namespace sam987883.Extensions
 				case ImmutableList<T> _:
 					goto default;
 				case IReadOnlyList<T> readOnlyList:
-					readOnlyList.Do(action, between);
+					if (readOnlyList.Count > 0)
+					{
+						action(readOnlyList[0], 0);
+						if (between != null)
+						{
+							for (var i = 1; i < readOnlyList.Count; ++i)
+							{
+								between();
+								action(readOnlyList[i], i);
+							}
+						}
+						else
+						{
+							for (var i = 1; i < readOnlyList.Count; ++i)
+								action(readOnlyList[i], i);
+						}
+					}
 					return;
 				case IList<T> list:
-					list.Do(action, between);
+					if (list.Count > 0)
+					{
+						action(list[0], 0);
+						if (between != null)
+						{
+							for (var i = 1; i < list.Count; ++i)
+							{
+								between();
+								action(list[i], i);
+							}
+						}
+						else
+						{
+							for (var i = 1; i < list.Count; ++i)
+								action(list[i], i);
+						}
+					}
 					return;
 				default:
 					using (var enumerator = @this.GetEnumerator())
@@ -282,10 +346,10 @@ namespace sam987883.Extensions
 		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
 		{
 			null => new T[0],
-			T[] array => array.Get(range).ToArray(),
-			IReadOnlyCollection<T> readOnlyCollection => @this.ToArray(readOnlyCollection.Count).Get(range).ToArray(),
-			ICollection<T> collection => @this.ToArray(collection.Count).Get(range).ToArray(),
-			_ => @this.ToArray().Get(range).ToArray(),
+			T[] array => array.Get(range).ToArray(array.Length),
+			IReadOnlyCollection<T> readOnlyCollection => @this.Get(range).ToArray(readOnlyCollection.Count),
+			ICollection<T> collection => @this.Get(range).ToArray(collection.Count),
+			_ => @this.Get(range).ToList().ToArray(),
 		};
 
 		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> getItems) =>
@@ -456,7 +520,7 @@ namespace sam987883.Extensions
 			{
 				null => new T[0],
 				T[] array => array,
-				_ => @this.ToArray()
+				_ => @this.ToList().ToArray()
 			};
 			items.Sort(comparer);
 			return items;
@@ -490,10 +554,6 @@ namespace sam987883.Extensions
 
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map) =>
 			map != null ? Factory.Empty<V>().And(@this.To<T, IEnumerable<V>>(map)) : Factory.Empty<V>();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[] ToArray<T>(this IEnumerable<T>? @this) =>
-			@this.ToArray(@this.Count());
 
 		public static T[] ToArray<T>(this IEnumerable<T>? @this, int length)
 		{
@@ -695,7 +755,7 @@ namespace sam987883.Extensions
 		{
 			null => Span<T>.Empty,
 			T[] array => array.AsSpan(),
-			_ => @this.ToArray().AsSpan(),
+			_ => @this.ToList().ToArray().AsSpan(),
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

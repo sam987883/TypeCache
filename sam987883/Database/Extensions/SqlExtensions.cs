@@ -1,14 +1,12 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using sam987883.Common;
-using sam987883.Database.Commands;
+using sam987883.Database.Requests;
 using sam987883.Extensions;
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace sam987883.Database.Extensions
 {
@@ -16,251 +14,92 @@ namespace sam987883.Database.Extensions
 	{
 		private const string SQL_DELIMETER = "\r\n\t, ";
 
-		private readonly static JsonSerializerOptions JsonOptions;
-
-		static SqlExtensions()
-		{
-			JsonOptions = new JsonSerializerOptions
-			{
-				AllowTrailingCommas = false,
-				IgnoreNullValues = false,
-				PropertyNameCaseInsensitive = true,
-				WriteIndented = false,
-				MaxDepth = 100
-			};
-			JsonOptions.Converters.Add(new JsonStringEnumConverter());
-		}
-
 		public static string EscapeIdentifier(this string @this) =>
 			@this.Replace("]", "]]");
 
 		public static string EscapeValue(this string @this) =>
 			@this.Replace("'", "''");
 
-		public static string ToSql(this BatchDelete @this)
+		public static string ToSql(this BatchRequest @this)
 		{
 			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({row.ToCsv(value => value.ToSql())})");
 			var sourceColumnCsv = @this.Input.Columns.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
-			var onSql = @this.OnColumns.Join(" AND ", column => $"s.[{column.EscapeIdentifier()}] = t.[{column.EscapeIdentifier()}]");
+			var onSql = @this.On.Join(" AND ", column => $"s.[{column.EscapeIdentifier()}] = t.[{column.EscapeIdentifier()}]");
+			var updateCsv = @this.Update.ToCsv(column => $"[{column.EscapeIdentifier()}] = s.[{column.EscapeIdentifier()}]");
+			var insertColumnCsv = @this.Insert.ToCsv(column => $"[{column.EscapeIdentifier()}]");
+			var insertValueCsv = @this.Insert.ToCsv(column => $"s.[{column.EscapeIdentifier()}]");
 
-			var sqlBuilder = new StringBuilder(@$"MERGE [{@this.Table.EscapeIdentifier()}] AS t
-USING
-(
-	VALUES {batchDataCsv}
-) AS s ({sourceColumnCsv})
-ON {onSql}
-WHEN MATCHED THEN DELETE");
-
-			var outputColumnCsv = @this.Output.Columns.Join(SQL_DELIMETER, column => $"DELETED.[{column.EscapeIdentifier()}]");
-			if (!outputColumnCsv.IsBlank())
-				sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
-
-			return sqlBuilder.AppendLine(";").ToString();
-		}
-
-		public static string ToSql<T>(this BatchDelete<T> @this) where T : class, new()
-		{
-			var inputProperties = @this.PropertyCache.Properties
-				.GetValues(@this.Input.Columns)
-				.If(property => property.GetMethod?.Public == true)
-				.ToArray();
-			var batch = new BatchDelete
+			var sqlBuilder = new StringBuilder();
+			if (!@this.Delete && updateCsv.IsBlank())
 			{
-				Input = new RowSet
-				{
-					Columns = @this.Input.Columns,
-					Rows = @this.Input.Rows
-						.If(row => row != null)
-						.To(row => inputProperties
-							.To(property => property[row])
-							.ToArray(inputProperties.Length))
-						.ToArray(@this.Input.Rows.Length)
-				},
-				OnColumns = @this.OnColumns,
-				Table = @this.Table
-			};
-			batch.Output.Columns = @this.Output.Columns;
-			return batch.ToSql();
-		}
-
-		public static string ToSql(this BatchInsert @this)
-		{
-			var insertColumnCsv = @this.InsertColumns.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
-			var columnIndexes = @this.Input.Columns.ToIndex(column => @this.InsertColumns.Has(column, StringComparer.OrdinalIgnoreCase)).ToArray();
-			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({columnIndexes.ToCsv(i => row[i].ToSql())}");
-
-			var sqlBuilder = new StringBuilder(@$"INSERT INTO {@this.Table.EscapeIdentifier()}
+				sqlBuilder.Append(@$"INSERT INTO {@this.Table.EscapeIdentifier()}
 (
 	{insertColumnCsv}
 )");
 
-			var outputColumnCsv = @this.Output.Columns.Join(SQL_DELIMETER, column => $"INSERTED.[{column.EscapeIdentifier()}]");
-			if (!outputColumnCsv.IsBlank())
-				sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
+				var outputColumnCsv = @this.OutputInserted.Join(SQL_DELIMETER, column => $"INSERTED.[{column.EscapeIdentifier()}]");
+				if (!outputColumnCsv.IsBlank())
+					sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
 
-			return sqlBuilder.AppendLine().AppendLine($"VALUES {batchDataCsv};").ToString();
-		}
-
-		public static string ToSql<T>(this BatchInsert<T> @this) where T : class, new()
-		{
-			var inputProperties = @this.PropertyCache.Properties
-				.GetValues(@this.Input.Columns)
-				.If(propertyMember => propertyMember.GetMethod?.Public == true)
-				.ToArray();
-			var batch = new BatchInsert
+				sqlBuilder.AppendLine().Append($"VALUES {batchDataCsv}");
+			}
+			else
 			{
-				Input = new RowSet
-				{
-					Columns = @this.Input.Columns,
-					Rows = @this.Input.Rows
-						.To(row => inputProperties
-							.To(property => property[row])
-							.ToArray(inputProperties.Length))
-						.ToArray(@this.Input.Rows.Length)
-				},
-				Table = @this.Table
-			};
-			batch.Output.Columns = @this.Output.Columns;
-			return batch.ToSql();
-		}
-
-		public static string ToSql(this BatchUpdate @this)
-		{
-			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({row.ToCsv(value => value.ToSql())})");
-			var sourceColumnCsv = @this.Input.Columns.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
-			var onSql = @this.OnColumns.Join(" AND ", column => $"s.[{column.EscapeIdentifier()}] = t.[{column.EscapeIdentifier()}]");
-			var updateCsv = @this.UpdateColumns.ToCsv(column => $"[{column.EscapeIdentifier()}] = s.[{column.EscapeIdentifier()}]");
-
-			var sqlBuilder = new StringBuilder($@"MERGE {@this.Table.EscapeIdentifier()} AS t
+				sqlBuilder.Append($@"MERGE {@this.Table.EscapeIdentifier()} AS t
 USING
 (
 	VALUES {batchDataCsv}
 ) AS s ({sourceColumnCsv})
-ON {onSql}
-WHEN MATCHED THEN
+ON {onSql}");
+				//WHEN MATCHED THEN
+				//	UPDATE SET {updateCsv}
+				//WHEN NOT MATCHED BY TARGET THEN
+				//	INSERT ({insertColumnCsv})
+				//	VALUES ({insertValueCsv})");
+
+				if (!updateCsv.IsBlank())
+					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
 	UPDATE SET {updateCsv}");
 
-			var outputSql = @this.Output.ToSql();
-			if (!outputSql.IsBlank())
-				sqlBuilder.AppendLine().Append(outputSql);
+				if (@this.Delete)
+					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN DELETE");
+
+				if (@this.OutputDeleted.Any() || (@this.OutputInserted.Any() && updateCsv.IsBlank()))
+				{
+					sqlBuilder.AppendLine().Append("OUTPUT ");
+					if (@this.OutputDeleted.Any())
+					{
+						var outputColumnCsv = @this.OutputDeleted.Join(SQL_DELIMETER, column => $"DELETED.[{column.EscapeIdentifier()}]");
+						sqlBuilder.Append(outputColumnCsv);
+					}
+
+					if (@this.OutputInserted.Any())
+					{
+						var outputColumnCsv = @this.OutputInserted.Join(SQL_DELIMETER, column => $"INSERTED.[{column.EscapeIdentifier()}]");
+						sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
+					}
+				}
+			}
 
 			return sqlBuilder.AppendLine(";").ToString();
 		}
 
-		public static string ToSql<T>(this BatchUpdate<T> @this) where T : class, new()
+		public static string ToSql(this DeleteRequest @this)
 		{
-			var inputProperties = @this.PropertyCache.Properties
-				.GetValues(@this.Input.Columns)
-				.If(property => property.GetMethod?.Public == true)
-				.ToArray();
-			var batch = new BatchUpdate
-			{
-				Input = new RowSet
-				{
-					Columns = @this.Input.Columns,
-					Rows = @this.Input.Rows
-						.If(row => row != null)
-						.To(row => inputProperties
-							.To(property => property[row])
-							.ToArray(inputProperties.Length))
-						.ToArray(@this.Input.Rows.Length)
-				},
-				UpdateColumns = @this.UpdateColumns,
-				OnColumns = @this.OnColumns,
-				Table = @this.Table
-			};
-			batch.Output.Deleted.Columns = @this.Output.Deleted.Columns;
-			batch.Output.Inserted.Columns = @this.Output.Inserted.Columns;
-			return batch.ToSql();
-		}
-
-		public static string ToSql(this BatchUpsert @this)
-		{
-			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({row.ToCsv(value => value.ToSql())})");
-			var sourceColumnCsv = @this.Input.Columns.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
-			var onSql = @this.OnColumns.Join(" AND ", column => $"s.[{column.EscapeIdentifier()}] = t.[{column.EscapeIdentifier()}]");
-			var updateCsv = @this.UpdateColumns.ToCsv(column => $"[{column.EscapeIdentifier()}] = s.[{column.EscapeIdentifier()}]");
-			var insertColumnCsv = @this.InsertColumns.ToCsv(column => $"[{column.EscapeIdentifier()}]");
-			var insertValueCsv = @this.InsertColumns.ToCsv(column => $"s.[{column.EscapeIdentifier()}]");
-
-			var sqlBuilder = new StringBuilder($@"MERGE {@this.Table.EscapeIdentifier()} AS t
-USING
-(
-	VALUES {batchDataCsv}
-) AS s ({sourceColumnCsv})
-ON {onSql}
-WHEN MATCHED THEN
-	UPDATE SET {updateCsv}
-WHEN NOT MATCHED BY TARGET THEN
-	INSERT ({insertColumnCsv})
-	VALUES ({insertValueCsv})");
-
-			var outputSql = @this.Output.ToSql();
-			if (!outputSql.IsBlank())
-				sqlBuilder.AppendLine().Append(outputSql);
-
-			return sqlBuilder.AppendLine(";").ToString();
-		}
-
-		public static string ToSql<T>(this BatchUpsert<T> @this) where T : class, new()
-		{
-			var inputProperties = @this.PropertyCache.Properties
-				.GetValues(@this.Input.Columns)
-				.If(property => property.GetMethod?.Public == true)
-				.ToArray();
-			var batch = new BatchUpsert
-			{
-				Input = new RowSet
-				{
-					Columns = @this.Input.Columns,
-					Rows = @this.Input.Rows
-						.If(row => row != null)
-						.To(row => inputProperties
-							.To(property => property[row])
-							.ToArray(inputProperties.Length))
-						.ToArray(@this.Input.Rows.Length)
-				},
-				InsertColumns = @this.InsertColumns,
-				UpdateColumns = @this.UpdateColumns,
-				OnColumns = @this.OnColumns,
-				Table = @this.Table
-			};
-			batch.Output.Deleted.Columns = @this.Output.Deleted.Columns;
-			batch.Output.Inserted.Columns = @this.Output.Inserted.Columns;
-			return batch.ToSql();
-		}
-
-		public static string ToSql(this Delete @this)
-		{
-			var sqlBuilder = new StringBuilder(@$"DELETE FROM {@this.Table.EscapeIdentifier()}");
+			var sqlBuilder = new StringBuilder(@$"DELETE FROM {@this.From.EscapeIdentifier()}");
 
 			var whereSql = @this.Where.ToSql();
 			if (!whereSql.IsBlank())
 				sqlBuilder.AppendLine().Append($"WHERE {whereSql}");
 
-			var outputColumnCsv = @this.Output.Columns.Join(SQL_DELIMETER, column => $"DELETED.[{column.EscapeIdentifier()}]");
+			var outputColumnCsv = @this.Output.Join(SQL_DELIMETER, column => $"DELETED.[{column.EscapeIdentifier()}]");
 			if (!outputColumnCsv.IsBlank())
 				sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
 
 			return sqlBuilder.AppendLine(";").ToString();
 		}
 
-		public static string ToSql(this Output @this)
-		{
-			var outputDeletedColumnCsv = @this.Deleted.Columns.Join(SQL_DELIMETER, column => $"DELETED.[{column}]");
-			var outputInsertedColumnCsv = @this.Inserted.Columns.Join(SQL_DELIMETER, column => $"INSERTED.[{column}]");
-
-			if (!outputDeletedColumnCsv.IsBlank() && !outputInsertedColumnCsv.IsBlank())
-				return $"OUTPUT {outputDeletedColumnCsv}{SQL_DELIMETER}{outputInsertedColumnCsv}";
-			else if (!outputDeletedColumnCsv.IsBlank())
-				return $"OUTPUT {outputDeletedColumnCsv}";
-			else if (!outputInsertedColumnCsv.IsBlank())
-				return $"OUTPUT {outputInsertedColumnCsv}";
-			else
-				return string.Empty;
-		}
-
-		public static string ToSql(this Update @this)
+		public static string ToSql(this UpdateRequest @this)
 		{
 			var updateCsv = @this.Set.Join(SQL_DELIMETER, item => $"[{item.Column.EscapeIdentifier()}] = {item.Value.ToSql()}");
 
@@ -271,9 +110,21 @@ SET {updateCsv}");
 			if (!whereSql.IsBlank())
 				sqlBuilder.AppendLine().Append($"WHERE {whereSql}");
 
-			var outputSql = @this.Output.ToSql();
-			if (!outputSql.IsBlank())
-				sqlBuilder.AppendLine().Append(outputSql);
+			if (@this.OutputDeleted.Any() || @this.OutputInserted.Any())
+			{
+				sqlBuilder.AppendLine().Append("OUTPUT ");
+				if (@this.OutputDeleted.Any())
+				{
+					var outputColumnCsv = @this.OutputDeleted.Join(SQL_DELIMETER, column => $"DELETED.[{column.EscapeIdentifier()}]");
+					sqlBuilder.Append(outputColumnCsv);
+				}
+
+				if (@this.OutputInserted.Any())
+				{
+					var outputColumnCsv = @this.OutputInserted.Join(SQL_DELIMETER, column => $"INSERTED.[{column.EscapeIdentifier()}]");
+					sqlBuilder.AppendLine().Append(outputColumnCsv);
+				}
+			}
 
 			return sqlBuilder.AppendLine(";").ToString();
 		}
@@ -310,27 +161,37 @@ SET {updateCsv}");
 			var value = @this.Value.ToSql();
 			var @operator = @this.Operator.ToSql();
 
-			if (@this.Value != null)
+			if (@this.Value is string pattern)
 			{
 				switch (@this.Operator)
 				{
 					case ComparisonOperator.Like:
 					case ComparisonOperator.NotLike:
-						return $"{field} {@operator} N'%{value}%'";
+						return $"{field} {@operator} N'%{pattern.EscapeValue()}%'";
 					case ComparisonOperator.StartWith:
 					case ComparisonOperator.NotStartWith:
-						return $"{field} {@operator} N'{value}%'";
+						return $"{field} {@operator} N'{pattern.EscapeValue()}%'";
 					case ComparisonOperator.EndWith:
 					case ComparisonOperator.NotEndWith:
-						return $"{field} {@operator} N'%{value}'";
+						return $"{field} {@operator} N'%{pattern.EscapeValue()}'";
 				}
 			}
-			else
+
+			if (@this.Value == null)
 			{
 				switch (@this.Operator)
 				{
 					case ComparisonOperator.Equal: return $"{field} IS NULL";
 					case ComparisonOperator.NotEqual: return $"{field} IS NOT NULL";
+				}
+			}
+
+			if (@this.Value is IEnumerable)
+			{
+				switch (@this.Operator)
+				{
+					case ComparisonOperator.Equal: return $"{field} IN ({value})";
+					case ComparisonOperator.NotEqual: return $"{field} NOT IN ({value})";
 				}
 			}
 
@@ -357,6 +218,7 @@ SET {updateCsv}");
 		public static string ToSql(this object? @this) => @this switch
 		{
 			null => "NULL",
+			bool boolean => boolean ? "1" : "0",
 			char text => text.Equals('\'') ? "N''''" : $"N'{text}'",
 			string text => $"N'{text.EscapeValue()}'",
 			DateTime dateTime => $"'{dateTime:o}'",
@@ -364,33 +226,29 @@ SET {updateCsv}");
 			TimeSpan time => $"'{time:c}'",
 			Guid guid => $"'{guid:D}'",
 			Enum token => token.Number(),
-			IEnumerable _ => JsonSerializer.Serialize(@this, @this.GetType(), JsonOptions),
+			IEnumerable enumerable => enumerable.As<object>().To(_ => _.ToSql()).ToCsv(),
 			_ => @this.ToString() ?? string.Empty
 		};
 
-		public static string ToSql(this Select @this)
+		public static string ToSql(this SelectRequest @this)
 		{
-			var sqlBuilder = new StringBuilder()
-				.AppendLine("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
-				.AppendLine("SET NOCOUNT ON;")
-				.AppendLine()
-				.AppendLine($"SELECT {(@this.Output.Columns.Any() ? @this.Output.Columns.Join("\r\n, ", column => $"[{column.EscapeIdentifier()}]") : "*")}")
-				.Append($"FROM [{@this.From.EscapeIdentifier()}]");
+			var sqlBuilder = new StringBuilder("SELECT ");
+
+			if (@this.Output.Any())
+				sqlBuilder.AppendLine(@this.Output.Join("\r\n, ", _ => !_.Alias.IsBlank() ? $"[{_.Column.EscapeIdentifier()}] AS [{_.Alias.EscapeIdentifier()}]" : $"[{_.Column.EscapeIdentifier()}]"));
+			else
+				sqlBuilder.AppendLine("*");
+
+			sqlBuilder.Append($"FROM {@this.From}");
 
 			if (@this.Where != null)
-			{
 				sqlBuilder.AppendLine().Append($"WHERE {@this.Where.ToSql()}");
-			}
 
 			if (@this.Having != null)
-			{
 				sqlBuilder.AppendLine().Append($"HAVING {@this.Having.ToSql()}");
-			}
 
 			if (!@this.OrderBy.Any())
-			{
 				sqlBuilder.AppendLine().Append($"ORDER BY {@this.OrderBy.Join("\r\n\t, ", orderBy => $"[{orderBy.Column.EscapeIdentifier()}] {orderBy.Sort.ToSql()}")}");
-			}
 
 			return sqlBuilder.AppendLine(";").ToString();
 		}

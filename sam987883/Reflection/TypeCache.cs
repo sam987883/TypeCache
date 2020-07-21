@@ -19,16 +19,12 @@ namespace sam987883.Reflection
 
 	internal sealed class TypeCache<T> : Member, ITypeCache<T>
 	{
-		public TypeCache(IConstructorCache<T> constructorCache
-			, IFieldCache<T> fieldCache
-			, IMethodCache<T> methodCache
-			, IIndexerCache<T> indexerCache
-			, IPropertyCache<T> propertyCache
-			, IStaticFieldCache<T> staticFieldCache
-			, IStaticMethodCache<T> staticMethodCache
-			, IStaticPropertyCache<T> staticPropertyCache)
+		private readonly IServiceProvider _ServiceProvider;
+
+		public TypeCache(IServiceProvider serviceProvider)
 			: base(typeof(T))
 		{
+			this._ServiceProvider = serviceProvider;
 			var type = typeof(T);
 
 			var interfaces = type.GetInterfaces();
@@ -46,15 +42,6 @@ namespace sam987883.Reflection
 			this.Interfaces = interfaces
 				.To(_ => _.TypeHandle)
 				.ToImmutable(interfaces.Length);
-
-			this.ConstructorCache = constructorCache;
-			this.FieldCache = fieldCache;
-			this.MethodCache = methodCache;
-			this.IndexerCache = indexerCache;
-			this.PropertyCache = propertyCache;
-			this.StaticFieldCache = staticFieldCache;
-			this.StaticMethodCache = staticMethodCache;
-			this.StaticPropertyCache = staticPropertyCache;
 		}
 
 		public IImmutableList<RuntimeTypeHandle> GenericInterfaces { get; }
@@ -63,20 +50,20 @@ namespace sam987883.Reflection
 
 		public IImmutableList<RuntimeTypeHandle> Interfaces { get; }
 
-		public IConstructorCache<T> ConstructorCache { get; }
+		public IConstructorCache<T> ConstructorCache => this._ServiceProvider.GetRequiredService<IConstructorCache<T>>();
 
-		public IFieldCache<T> FieldCache { get; }
+		public IFieldCache<T> FieldCache => this._ServiceProvider.GetRequiredService<IFieldCache<T>>();
 
-		public IMethodCache<T> MethodCache { get; }
+		public IMethodCache<T> MethodCache => this._ServiceProvider.GetRequiredService<IMethodCache<T>>();
 
-		public IIndexerCache<T> IndexerCache { get; }
+		public IIndexerCache<T> IndexerCache => this._ServiceProvider.GetRequiredService<IIndexerCache<T>>();
 
-		public IPropertyCache<T> PropertyCache { get; }
+		public IPropertyCache<T> PropertyCache => this._ServiceProvider.GetRequiredService<IPropertyCache<T>>();
 
-		public IStaticFieldCache<T> StaticFieldCache { get; }
+		public IStaticFieldCache<T> StaticFieldCache => this._ServiceProvider.GetRequiredService<IStaticFieldCache<T>>();
 
-		public IStaticMethodCache<T> StaticMethodCache { get; }
+		public IStaticMethodCache<T> StaticMethodCache => this._ServiceProvider.GetRequiredService<IStaticMethodCache<T>>();
 
-		public IStaticPropertyCache<T> StaticPropertyCache { get; }
+		public IStaticPropertyCache<T> StaticPropertyCache => this._ServiceProvider.GetRequiredService<IStaticPropertyCache<T>>();
 	}
 }

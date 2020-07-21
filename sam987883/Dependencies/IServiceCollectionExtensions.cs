@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using sam987883.Common;
 using sam987883.Database;
+using sam987883.Database.Schemas;
 using sam987883.Reflection;
 using sam987883.Reflection.Mappers;
 using System;
@@ -22,7 +23,10 @@ namespace sam987883.Dependencies
             @this.AddSingleton(typeof(INamedService<T>), provider => new NamedService<T>(name, () => serviceFactory(provider)));
 
         public static IServiceCollection RegisterDatabaseSchema(this IServiceCollection @this) => @this
-            .AddSingleton<ISchemaFactory>(provider => new SchemaFactory(provider.GetRequiredService<IPropertyCache<TableSchema>>(), provider.GetRequiredService<IPropertyCache<ColumnSchema>>()))
+            .AddSingleton(typeof(IRowSetConverter<>), typeof(RowSetConverter<>))
+            .AddSingleton<ISchemaFactory>(provider => new SchemaFactory(provider.GetRequiredService<IRowSetConverter<ObjectSchema>>()
+                , provider.GetRequiredService<IRowSetConverter<ColumnSchema>>()
+                , provider.GetRequiredService<IRowSetConverter<ParameterSchema>>()))
             .AddSingleton<ISchemaStore>(provider => new SchemaStore(provider.GetRequiredService<ISchemaFactory>()));
 
         public static IServiceCollection RegisterDefaultComparers(this IServiceCollection @this) => @this

@@ -26,8 +26,7 @@ namespace sam987883.Reflection.Members
 				this.Setter = field.Assign(value).LambdaAction(value).Compile();
 
 				value = nameof(value).Parameter<object>();
-				this.SetValue = field.Assign(value.Cast(fieldInfo.FieldType))
-					.Lambda<Action<object?>>(value).Compile();
+				this.SetValue = field.Assign(value.SystemConvert(fieldInfo.FieldType)).Lambda<Action<object?>>(value).Compile();
 			}
 		}
 

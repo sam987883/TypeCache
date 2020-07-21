@@ -14,7 +14,6 @@ namespace sam987883.Reflection
 		{
 			var valueComparer = new CustomEqualityComparer<IImmutableList<IMethodMember<T>>>((x, y) => x == y);
 			this.Constructors = typeof(T).GetConstructors(TypeCache.INSTANCE_BINDING)
-				.If(constructorInfo => !constructorInfo.Name.Is(".ctor"))
 				.To(constructorInfo => (IConstructorMember<T>)new ConstructorMember<T>(constructorInfo))
 				.ToImmutable();
 		}

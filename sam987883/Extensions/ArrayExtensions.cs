@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using sam987883.Common;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -13,16 +12,6 @@ namespace sam987883.Extensions
 		public static bool Any<T>(this T[]? @this) =>
 			@this?.Length > 0;
 
-		public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
-		{
-			if (sourceIndex + length > @this.Length)
-				throw new IndexOutOfRangeException("");
-
-			var array = new T[length > 0 ? length : @this.Length];
-			Array.Copy(@this, sourceIndex, array, 0, array.Length);
-			return array;
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Clear<T>(this T[] @this, int start = 0, int length = 0) =>
 			Array.Clear(@this, start, length == 0 ? @this.Length : length);
@@ -34,56 +23,6 @@ namespace sam987883.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void CopyTo<T>(this T[] @this, int sourceIndex, T[] target, int targetIndex, int length = 0) =>
 			Array.Copy(@this, sourceIndex, target, targetIndex, length < 1 ? @this.Length : length);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Do<T>(this T[]? @this, Action<T> action, Action? between = null) =>
-			(@this as IReadOnlyList<T>).Do(action, between);
-
-		public static void Do<T>(this T[]? @this, ActionRef<T> action, Action? between = null)
-		{
-			if (@this?.Length > 0)
-			{
-				action(ref @this[0]);
-				if (between != null)
-				{
-					for (var i = 1; i < @this.Length; ++i)
-					{
-						between();
-						action(ref @this[i]);
-					}
-				}
-				else
-				{
-					for (var i = 1; i < @this.Length; ++i)
-						action(ref @this[i]);
-				}
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Do<T>(this T[]? @this, Action<T, int> action, Action? between = null) =>
-			(@this as IReadOnlyList<T>).Do(action, between);
-
-		public static void Do<T>(this T[]? @this, ActionRef<T, int> action, Action? between = null)
-		{
-			if (@this?.Length > 0)
-			{
-				action(ref @this[0], 0);
-				if (between != null)
-				{
-					for (var i = 1; i < @this.Length; ++i)
-					{
-						between();
-						action(ref @this[i], i);
-					}
-				}
-				else
-				{
-					for (var i = 1; i < @this.Length; ++i)
-						action(ref @this[i], i);
-				}
-			}
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Csv<T>(this T[] @this) =>
@@ -120,5 +59,15 @@ namespace sam987883.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null) =>
 			Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
+
+		public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
+		{
+			if (sourceIndex + length > @this.Length)
+				throw new IndexOutOfRangeException("");
+
+			var array = new T[length > 0 ? length : @this.Length];
+			Array.Copy(@this, sourceIndex, array, 0, array.Length);
+			return array;
+		}
 	}
 }

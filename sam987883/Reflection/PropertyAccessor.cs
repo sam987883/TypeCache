@@ -22,7 +22,7 @@ namespace sam987883.Reflection
 			set => this._PropertyCache.Properties.Get(name).Value[this._Instance] = value;
 		}
 
-		public string[] Names => this._PropertyCache.Properties.Keys.ToArray();
+		public string[] Names => this._PropertyCache.Properties.Keys.ToArray(this._PropertyCache.Properties.Count);
 
 		public IDictionary<string, object?> Values
 		{

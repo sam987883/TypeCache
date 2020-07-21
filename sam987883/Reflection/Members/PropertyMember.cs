@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using System;
 using System.Reflection;
 using static sam987883.Extensions.IEnumerableExtensions;
 using static sam987883.Extensions.ObjectExtensions;

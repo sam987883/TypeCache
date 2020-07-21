@@ -20,7 +20,7 @@ namespace sam987883.Reflection.Members
 		{
 			var parameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
 
-			var parameterInfos = constructorInfo.GetParameters().Sort(parameterPositionComparer).ToArray();
+			var parameterInfos = constructorInfo.GetParameters().Sort(parameterPositionComparer).ToList().ToArray();
 			ParameterExpression parameters = nameof(parameters).Parameter<object[]>();
 
 			if (parameterInfos.Any())

@@ -26,12 +26,12 @@ namespace sam987883.Reflection.Members
 
 			ParameterExpression parameters = nameof(parameters).Parameter<object[]>();
 
-			var parameterInfos = methodInfo.GetParameters().Sort(parameterPositionComparer).ToArray();
+			var parameterInfos = methodInfo.GetParameters().Sort(parameterPositionComparer).ToList().ToArray();
 			MethodCallExpression call;
 			if (parameterInfos.Any())
 			{
 				call = Expression.Call(methodInfo, parameters.ToParameterArray(parameterInfos));
-				
+
 				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
 				this.Method = Expression.Call(methodInfo, methodParameters).Lambda(methodParameters).Compile();
 				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo)).ToImmutableArray();
