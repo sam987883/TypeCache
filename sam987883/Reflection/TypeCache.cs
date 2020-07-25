@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using Microsoft.Extensions.DependencyInjection;
-using sam987883.Extensions;
+using sam987883.Common.Extensions;
 using sam987883.Reflection.Members;
 using System;
 using System.Collections.Immutable;

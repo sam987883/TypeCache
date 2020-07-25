@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using Microsoft.AspNetCore.Http;
+using sam987883.Common.Extensions;
 using sam987883.Database;
 using System.Data.Common;
 using System.Text.Json;
 using System.Threading.Tasks;
-using sam987883.Extensions;
 
 namespace sam987883.Web.Middleware
 {

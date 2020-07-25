@@ -5,8 +5,8 @@ using sam987883.Reflection.Members;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using static sam987883.Extensions.IEnumerableExtensions;
-using static sam987883.Extensions.IReadOnlyDictionaryExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IReadOnlyDictionaryExtensions;
 
 namespace sam987883.Reflection
 {

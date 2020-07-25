@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using sam987883.Common;
-using sam987883.Database.Requests;
-using sam987883.Database.Schemas;
-using sam987883.Extensions;
+using sam987883.Common.Extensions;
+using sam987883.Common.Models;
+using sam987883.Database.Models;
 using System;
 using System.Collections.Generic;
 

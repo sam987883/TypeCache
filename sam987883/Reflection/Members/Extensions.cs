@@ -1,4 +1,6 @@
-﻿using sam987883.Extensions;
+﻿// Copyright (c) 2020 Samuel Abraham
+
+using sam987883.Common.Extensions;
 using System.Collections.Immutable;
 
 namespace sam987883.Reflection.Members

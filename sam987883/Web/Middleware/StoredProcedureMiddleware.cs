@@ -1,12 +1,11 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using Microsoft.AspNetCore.Http;
+using sam987883.Common.Extensions;
 using sam987883.Database;
 using sam987883.Database.Extensions;
-using sam987883.Database.Requests;
-using sam987883.Database.Responses;
+using sam987883.Database.Models;
 using sam987883.Dependencies;
-using sam987883.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;

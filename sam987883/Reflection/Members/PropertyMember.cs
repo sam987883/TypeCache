@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using System.Reflection;
-using static sam987883.Extensions.IEnumerableExtensions;
-using static sam987883.Extensions.ObjectExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.ObjectExtensions;
 
 namespace sam987883.Reflection.Members
 {

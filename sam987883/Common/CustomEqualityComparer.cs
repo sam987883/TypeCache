@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using static sam987883.Extensions.ExpressionExtensions;
-using static sam987883.Extensions.ReflectionExtensions;
+using static sam987883.Common.Extensions.ExpressionExtensions;
+using static sam987883.Common.Extensions.ReflectionExtensions;
 
 namespace sam987883.Common
 {

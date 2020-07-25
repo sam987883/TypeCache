@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using System.Data;
 using sam987883.Common;
-using sam987883.Extensions;
+using sam987883.Common.Extensions;
+using System.Data;
 
 namespace sam987883.Database.Extensions
 {

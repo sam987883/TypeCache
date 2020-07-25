@@ -5,7 +5,7 @@ using sam987883.Reflection.Members;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using static sam987883.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Reflection
 {

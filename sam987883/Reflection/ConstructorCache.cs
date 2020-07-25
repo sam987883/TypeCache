@@ -4,7 +4,7 @@ using sam987883.Common;
 using sam987883.Reflection.Members;
 using System;
 using System.Collections.Immutable;
-using static sam987883.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Reflection
 {

@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using static sam987883.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Collections
 {

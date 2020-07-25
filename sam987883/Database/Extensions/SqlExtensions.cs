@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using sam987883.Common;
-using sam987883.Database.Requests;
-using sam987883.Extensions;
+using sam987883.Common.Extensions;
+using sam987883.Common.Models;
+using sam987883.Database.Models;
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
@@ -16,6 +16,9 @@ namespace sam987883.Database.Extensions
 
 		public static string EscapeIdentifier(this string @this) =>
 			@this.Replace("]", "]]");
+
+		public static string EscapeLikeValue(this string @this) =>
+			@this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
 		public static string EscapeValue(this string @this) =>
 			@this.Replace("'", "''");
@@ -167,13 +170,13 @@ SET {updateCsv}");
 				{
 					case ComparisonOperator.Like:
 					case ComparisonOperator.NotLike:
-						return $"{field} {@operator} N'%{pattern.EscapeValue()}%'";
+						return $"{field} {@operator} N'%{pattern.EscapeLikeValue()}%'";
 					case ComparisonOperator.StartWith:
 					case ComparisonOperator.NotStartWith:
-						return $"{field} {@operator} N'{pattern.EscapeValue()}%'";
+						return $"{field} {@operator} N'{pattern.EscapeLikeValue()}%'";
 					case ComparisonOperator.EndWith:
 					case ComparisonOperator.NotEndWith:
-						return $"{field} {@operator} N'%{pattern.EscapeValue()}'";
+						return $"{field} {@operator} N'%{pattern.EscapeLikeValue()}'";
 				}
 			}
 
@@ -186,7 +189,7 @@ SET {updateCsv}");
 				}
 			}
 
-			if (@this.Value is IEnumerable)
+			if (@this.Value is IEnumerable && !(@this.Value is string))
 			{
 				switch (@this.Operator)
 				{
@@ -235,7 +238,7 @@ SET {updateCsv}");
 			var sqlBuilder = new StringBuilder("SELECT ");
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine(@this.Output.Join("\r\n, ", _ => !_.Alias.IsBlank() ? $"[{_.Column.EscapeIdentifier()}] AS [{_.Alias.EscapeIdentifier()}]" : $"[{_.Column.EscapeIdentifier()}]"));
+				sqlBuilder.AppendLine(@this.Output.Join(SQL_DELIMETER, _ => !_.Alias.IsBlank() ? $"{_.Column.EscapeIdentifier()} AS [{_.Alias.EscapeIdentifier()}]" : _.Column.EscapeIdentifier()));
 			else
 				sqlBuilder.AppendLine("*");
 
@@ -247,8 +250,8 @@ SET {updateCsv}");
 			if (@this.Having != null)
 				sqlBuilder.AppendLine().Append($"HAVING {@this.Having.ToSql()}");
 
-			if (!@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append($"ORDER BY {@this.OrderBy.Join("\r\n\t, ", orderBy => $"[{orderBy.Column.EscapeIdentifier()}] {orderBy.Sort.ToSql()}")}");
+			if (@this.OrderBy.Any())
+				sqlBuilder.AppendLine().Append($"ORDER BY {@this.OrderBy.Join(SQL_DELIMETER, orderBy => $"[{orderBy.Column.EscapeIdentifier()}] {orderBy.Sort.ToSql()}")}");
 
 			return sqlBuilder.AppendLine(";").ToString();
 		}

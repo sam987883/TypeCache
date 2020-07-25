@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using static sam987883.Extensions.ExpressionExtensions;
+using static sam987883.Common.Extensions.ExpressionExtensions;
 
 namespace sam987883.Common
 {

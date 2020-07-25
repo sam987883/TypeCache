@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using System.Collections.Generic;
-using static sam987883.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Collections
 {

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using sam987883.Database.Schemas;
-using sam987883.Extensions;
+using sam987883.Common.Extensions;
+using sam987883.Database.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Data;

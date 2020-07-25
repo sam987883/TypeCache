@@ -3,8 +3,8 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using static sam987883.Extensions.ExpressionExtensions;
-using static sam987883.Extensions.ObjectExtensions;
+using static sam987883.Common.Extensions.ExpressionExtensions;
+using static sam987883.Common.Extensions.ObjectExtensions;
 
 namespace sam987883.Reflection.Members
 {

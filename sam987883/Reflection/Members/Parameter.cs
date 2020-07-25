@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Reflection;
-using static sam987883.Extensions.IEnumerableExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Reflection.Members
 {

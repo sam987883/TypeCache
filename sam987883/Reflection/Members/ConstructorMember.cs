@@ -6,9 +6,8 @@ using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using static sam987883.Extensions.ExpressionExtensions;
-using static sam987883.Extensions.IEnumerableExtensions;
-using static sam987883.Extensions.ObjectExtensions;
+using static sam987883.Common.Extensions.ExpressionExtensions;
+using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Reflection.Members
 {

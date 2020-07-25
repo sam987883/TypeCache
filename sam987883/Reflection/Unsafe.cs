@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Common.Extensions;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using sam987883.Extensions;
 
 namespace sam987883.Reflection
 {
