@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 
 namespace sam987883.Database.Extensions
 {
@@ -54,20 +55,20 @@ USING
 	VALUES {batchDataCsv}
 ) AS s ({sourceColumnCsv})
 ON {onSql}");
-				//WHEN MATCHED THEN
-				//	UPDATE SET {updateCsv}
-				//WHEN NOT MATCHED BY TARGET THEN
-				//	INSERT ({insertColumnCsv})
-				//	VALUES ({insertValueCsv})");
 
 				if (!updateCsv.IsBlank())
 					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
 	UPDATE SET {updateCsv}");
 
-				if (@this.Delete)
-					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN DELETE");
+				sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY TARGET THEN
+	INSERT ({insertColumnCsv})
+	VALUES ({insertValueCsv})");
 
-				if (@this.OutputDeleted.Any() || (@this.OutputInserted.Any() && updateCsv.IsBlank()))
+				if (@this.Delete)
+					sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY SOURCE THEN
+	DELETE");
+
+				if (@this.OutputDeleted.Any() || @this.OutputInserted.Any())
 				{
 					sqlBuilder.AppendLine().Append("OUTPUT ");
 					if (@this.OutputDeleted.Any())
@@ -79,7 +80,7 @@ ON {onSql}");
 					if (@this.OutputInserted.Any())
 					{
 						var outputColumnCsv = @this.OutputInserted.Join(SQL_DELIMETER, column => $"INSERTED.[{column.EscapeIdentifier()}]");
-						sqlBuilder.AppendLine().Append($"OUTPUT {outputColumnCsv}");
+						sqlBuilder.Append(outputColumnCsv);
 					}
 				}
 			}
@@ -221,6 +222,7 @@ SET {updateCsv}");
 		public static string ToSql(this object? @this) => @this switch
 		{
 			null => "NULL",
+			DBNull _ => "NULL",
 			bool boolean => boolean ? "1" : "0",
 			char text => text.Equals('\'') ? "N''''" : $"N'{text}'",
 			string text => $"N'{text.EscapeValue()}'",
@@ -229,8 +231,22 @@ SET {updateCsv}");
 			TimeSpan time => $"'{time:c}'",
 			Guid guid => $"'{guid:D}'",
 			Enum token => token.Number(),
-			IEnumerable enumerable => enumerable.As<object>().To(_ => _.ToSql()).ToCsv(),
-			_ => @this.ToString() ?? string.Empty
+			Index index => $"N'{index}'",
+			JsonElement json => json.ValueKind switch
+			{
+				JsonValueKind.Object => json.ToString().ToSql(),
+				JsonValueKind.Array => json.ToString().ToSql(),
+				JsonValueKind.String => json.GetString().ToSql(),
+				JsonValueKind.Number => json.ToString(),
+				JsonValueKind.True => true.ToSql(),
+				JsonValueKind.False => false.ToSql(),
+				_ => "NULL",
+			},
+			Range range => $"N'{range}'",
+			Uri uri => $"N'{uri.ToString().EscapeValue()}'",
+			byte[] binary => Encoding.Default.GetString(binary),
+			IEnumerable enumerable => enumerable.As<object>().Join(", ", _ => _.ToSql()),
+			_ => @this.ToString() ?? "NULL"
 		};
 
 		public static string ToSql(this SelectRequest @this)

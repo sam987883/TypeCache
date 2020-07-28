@@ -4,8 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using sam987883.Collections;
 
 namespace sam987883.Common.Extensions
 {
@@ -141,13 +141,6 @@ namespace sam987883.Common.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any<T>(this IEnumerable<T>? @this, Func<T, bool> filter) =>
 			@this.If(filter).Any();
-
-		public static IReadOnlyList<T>? AsReadOnlyList<T>(this IEnumerable<T>? @this) => @this switch
-		{
-			IList<T> list => new ReadOnlyList<T>(list),
-			IReadOnlyList<T> list => list,
-			_ => null
-		};
 
 		public static int Count<T>(this IEnumerable<T>? @this)
 		{
@@ -340,7 +333,7 @@ namespace sam987883.Common.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this) =>
-			Factory.Empty<T>().And(@this);
+			Enumerable.Empty<T>().And(@this);
 
 		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
 		{
@@ -455,23 +448,29 @@ namespace sam987883.Common.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items) =>
-			@this.ToHashSet().SetEquals(items ?? Factory.Empty<T>());
+			@this.ToHashSet().SetEquals(items ?? Enumerable.Empty<T>());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer) =>
-			@this.ToHashSet(comparer).SetEquals(items ?? Factory.Empty<T>());
+			@this.ToHashSet(comparer).SetEquals(items ?? Enumerable.Empty<T>());
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) =>
-			@this != null ? string.Join(delimeter, @this) : string.Empty;
+		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) => @this switch
+		{
+			null => string.Empty,
+			T[] array => string.Join(delimeter, array),
+			_ => string.Join(delimeter, @this)
+		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map) =>
 			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, string delimeter) =>
-			@this != null ? string.Join(delimeter, @this) : string.Empty;
+		public static string Join<T>(this IEnumerable<T>? @this, string delimeter) => @this switch
+		{
+			null => string.Empty,
+			T[] array => string.Join(delimeter, array),
+			_ => string.Join(delimeter, @this)
+		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map) =>
@@ -560,7 +559,7 @@ namespace sam987883.Common.Extensions
 		}
 
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map) =>
-			map != null ? Factory.Empty<V>().And(@this.To<T, IEnumerable<V>>(map)) : Factory.Empty<V>();
+			map != null ? Enumerable.Empty<V>().And(@this.To<T, IEnumerable<V>>(map)) : Enumerable.Empty<V>();
 
 		public static T[] ToArray<T>(this IEnumerable<T>? @this, int length)
 		{
@@ -570,18 +569,42 @@ namespace sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToCsv<T>(this IEnumerable<T>? @this) =>
-			@this != null ? string.Join(", ", @this) : string.Empty;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToCsv<T>(this IEnumerable<T>? @this, Func<T, string> map) =>
-			@this != null ? string.Join(", ", @this.To(map)) : string.Empty;
+			@this.To(map).ToCsv();
+
+		public static string ToCsv(this IEnumerable<string>? @this) =>
+			@this.Any() ? string.Join(',', @this.To(text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""))) : string.Empty;
+
+		public static string ToCsv<T>(this IEnumerable<T>? @this) =>
+			@this.Any() ? string.Join(',', @this.To(value => value switch
+			{
+				bool _ => value.ToString(),
+				byte _ => value.ToString(),
+				sbyte _ => value.ToString(),
+				short _ => value.ToString(),
+				ushort _ => value.ToString(),
+				int _ => value.ToString(),
+				uint _ => value.ToString(),
+				long _ => value.ToString(),
+				ulong _ => value.ToString(),
+				decimal _ => value.ToString(),
+				double _ => value.ToString(),
+				float _ => value.ToString(),
+				char text => text.Equals(',') ? "\",\"" : text.Equals('\"') ? "\"\"\"\"" : text.ToString(),
+				DateTime dateTime => dateTime.ToString("o"),
+				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
+				TimeSpan time => time.ToString("c"),
+				Guid guid => guid.ToString("D"),
+				Enum token => token.Number(),
+				string text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""),
+				_ => $"\"{value.ToString().Replace("\"", "\"\"")}\"" ?? string.Empty
+			})) : string.Empty;
 
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory) where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
-			var dictionary = new Dictionary<K, V>();
+			var dictionary = new Dictionary<K, V>(@this.Count());
 			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
 			return dictionary;
 		}
@@ -591,7 +614,7 @@ namespace sam987883.Common.Extensions
 			valueFactory.AssertNotNull(nameof(valueFactory));
 			comparer.AssertNotNull(nameof(comparer));
 
-			var dictionary = new Dictionary<K, V>(comparer);
+			var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
 			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
 			return dictionary;
 		}
@@ -601,7 +624,7 @@ namespace sam987883.Common.Extensions
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
-			var dictionary = new Dictionary<K, V>();
+			var dictionary = new Dictionary<K, V>(@this.Count());
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
 		}
@@ -612,7 +635,7 @@ namespace sam987883.Common.Extensions
 			valueFactory.AssertNotNull(nameof(valueFactory));
 			comparer.AssertNotNull(nameof(comparer));
 
-			var dictionary = new Dictionary<K, V>(comparer);
+			var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
 		}
@@ -733,26 +756,6 @@ namespace sam987883.Common.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this) =>
 			@this != null ? new Queue<T>(@this) : new Queue<T>(0);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory) where K : notnull =>
-			new ReadOnlyDictionary<K, V>(@this.ToDictionary(valueFactory));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull =>
-			new ReadOnlyDictionary<K, V>(@this.ToDictionary(valueFactory, comparer));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory) where K : notnull =>
-			new ReadOnlyDictionary<K, V>(@this.ToDictionary(keyFactory, valueFactory));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyDictionary<K, V> ToReadOnlyDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull =>
-			new ReadOnlyDictionary<K, V>(@this.ToDictionary(keyFactory, valueFactory, comparer));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IReadOnlyList<T> ToReadOnlyList<T>(this IEnumerable<T>? @this) =>
-			@this != null ? (IReadOnlyList<T>)new ReadOnlyList<T>(@this) : new T[0];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this) =>

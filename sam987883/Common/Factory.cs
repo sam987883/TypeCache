@@ -37,13 +37,7 @@ namespace sam987883.Common
 			new CustomStringWriter(builder, encoding);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Empty<T>()
-		{
-			yield break;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IFieldAccessor<T> CreateFieldAccessor<T>(T anonymousInstance)
-			where T : class => Anonymous<T>.FieldCache.CreateAccessor(anonymousInstance);
+		public static IFieldAccessor<T> CreateFieldAccessor<T>(T anonymousInstance) where T : class =>
+			Anonymous<T>.FieldCache.CreateAccessor(anonymousInstance);
 	}
 }

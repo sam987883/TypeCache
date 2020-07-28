@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
-namespace sam987883.Collections
+namespace sam987883.Common.Collections
 {
 	public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V> where K : notnull
 	{
