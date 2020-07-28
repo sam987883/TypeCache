@@ -2,6 +2,7 @@
 
 using sam987883.Common.Extensions;
 using sam987883.Common.Models;
+using sam987883.Database.Extensions;
 using sam987883.Database.Models;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace sam987883.Database
 		public void Validate(BatchRequest batch)
 		{
 			this._ObjectSchema.Type.Assert($"{nameof(BatchRequest)}.{nameof(batch.Table)}", ObjectType.Table);
+			if (!batch.Delete && !batch.Update.Any() && !batch.Insert.Any())
+				throw new ArgumentException($"[{nameof(BatchRequest)}] must have either {nameof(batch.Delete)} selected, {nameof(batch.Insert)} columns or {nameof(batch.Update)} columns.", nameof(batch));
 			if (batch.Delete || batch.Update.Any())
 				this.ValidateInputColumnsHavePrimaryKeys($"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}", batch.Input.Columns);
 			if (batch.Insert.Any())
@@ -25,8 +28,6 @@ namespace sam987883.Database
 			if (batch.Update.Any())
 				this.ValidateInputDataColumns($"{nameof(BatchRequest)}.{nameof(batch.Update)}", batch.Input.Columns, batch.Update);
 			this.ValidateInputRows($"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Rows)}", batch.Input);
-			if (batch.Delete || batch.Update.Any())
-				this.ValidateOnColumns($"{nameof(BatchRequest)}.{nameof(batch.On)}", batch.On);
 			this.ValidateOutputColumns($"{nameof(BatchRequest)}.{nameof(batch.OutputDeleted)}", batch.OutputDeleted);
 			this.ValidateOutputColumns($"{nameof(BatchRequest)}.{nameof(batch.OutputInserted)}", batch.OutputInserted);
 		}
@@ -103,27 +104,27 @@ namespace sam987883.Database
 				if (primaryKeys.Any())
 				{
 					if (!columns.Has(primaryKeys, StringComparer.OrdinalIgnoreCase))
-						throw new ArgumentException("Input columns must contain all primary keys for batch UPDATE.", parameter);
+						throw new ArgumentException("Input columns must contain all primary keys to use batch DELETE/UPDATE.", parameter);
 				}
 				else
-					throw new ArgumentException($"Table {this._ObjectSchema.Name} must have a primary key for batch UPDATE.", "Table");
+					throw new ArgumentException($"Table {this._ObjectSchema.Name} must have primary key(s) defined to use batch DELETE/UPDATE.", parameter);
 			}
 			else
-				throw new ArgumentException("No input columns for batch UPDATE.", parameter);
+				throw new ArgumentException("Batch requires input columns.", parameter);
 		}
 
 		private void ValidateInputDataColumns(string parameter, IEnumerable<string> inputColumns, IEnumerable<string> dataColumns)
 		{
 			if (dataColumns.Any())
 			{
-				var invalidColumnCsv = dataColumns.Without(inputColumns).ToCsv(column => $"[{column}]");
+				var invalidColumnCsv = dataColumns.Without(inputColumns, StringComparer.OrdinalIgnoreCase).ToCsv(column => $"[{column.EscapeIdentifier()}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Data columns contain columns that are not available from the input: {invalidColumnCsv}", parameter);
+					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", parameter);
 
 				var writableColumns = this._ObjectSchema.Columns.If(column => !column.Readonly).To(column => column.Name);
 				invalidColumnCsv = dataColumns.Without(writableColumns).ToCsv(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Data columns for table {this._ObjectSchema.Name} contain non-writable columns: {invalidColumnCsv}", parameter);
+					throw new ArgumentException($"Column selections for table {this._ObjectSchema.Name} contain non-writable columns: {invalidColumnCsv}", parameter);
 			}
 			else
 				throw new ArgumentException("Columns are required.", parameter);
@@ -179,21 +180,6 @@ namespace sam987883.Database
 			}
 			else
 				throw new ArgumentException("Input rows are required.", parameter);
-		}
-
-		private void ValidateOnColumns(string parameter, IEnumerable<string> columns)
-		{
-			if (columns.Any())
-			{
-				var primaryKeys = this._ObjectSchema.Columns
-					.If(column => column.PrimaryKey)
-					.To(column => column.Name)
-					.ToList();
-				if (primaryKeys.Any() && !columns.Has(primaryKeys, StringComparer.OrdinalIgnoreCase))
-					throw new ArgumentException("ON columns must contain all primary keys for SQL MERGE.", parameter);
-			}
-			else
-				throw new ArgumentException("SQL MERGE requires ON columns.", parameter);
 		}
 
 		private void ValidateOutputColumns(string parameter, IEnumerable<string> outputColumns)

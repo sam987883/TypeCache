@@ -81,9 +81,9 @@ namespace sam987883.Web.Middleware
                 using var connection = this._DbProviderFactory.CreateConnection();
                 connection.ConnectionString = this._ConnectionString;
                 await connection.OpenAsync();
-				var objectSchema = schemaStore.GetObjectSchema(connection, request.Procedure);
-				request.Procedure = objectSchema.Name;
-				var validator = new SchemaValidator(objectSchema);
+				var schema = schemaStore.GetObjectSchema(connection, request.Procedure);
+				request.Procedure = schema.Name;
+				var validator = new SchemaValidator(schema);
 				validator.Validate(request);
 				var output = connection.Call(request);
 				var response = new StoredProcedureResponse

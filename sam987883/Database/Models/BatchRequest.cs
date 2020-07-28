@@ -1,18 +1,28 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using sam987883.Common.Models;
+using System.Text.Json.Serialization;
 
 namespace sam987883.Database.Models
 {
 	/// <summary>
-	/// Performs a SQL MERGE.
-	/// Insert only uses INSERT statement instead of MERGE statement.
+	/// Performs a batch DELETE/INSERT/UPDATE or any combination thereof.
+	/// <code>
+	/// <list>
+	/// <item>MERGE ... USING ... ON s.[PrimaryKey] = t.[PrimaryKey] WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+	/// <item>MERGE ... USING ... ON s.[PrimaryKey] = t.[PrimaryKey] WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+	/// <item>MERGE ... USING ... ON s.[PrimaryKey] = t.[PrimaryKey] WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+	/// <item>MERGE ... USING ... ON s.[PrimaryKey] = t.[PrimaryKey] WHEN MATCHED THEN DELETE ... OUTPUT ...;</item>
+	/// <item>INSERT INTO ... (...) OUTPUT ... VALUES ...;</item>
+	/// </list>
+	/// </code>
 	/// </summary>
 	public sealed class BatchRequest
 	{
 		/// <summary>
-		/// JSON: <code>true</code>
-		/// SQL: <code>WHEN NOT MATCHED BY SOURCE THEN DELETE</code>
+		/// JSON: <code>true|false</code>
+		/// SQL: For UPDATE/DELETE: <code>WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE</code>
+		/// For DELETE only: <code>WHEN MATCHED THEN DELETE</code>
 		/// </summary>
 		public bool Delete { get; set; } = false;
 
@@ -23,7 +33,8 @@ namespace sam987883.Database.Models
 
 		/// <summary>
 		/// JSON: <code>"Insert": [ "Column1", "Column2", "Column3" ]</code>
-		/// SQL: <code>WHEN NOT MATCHED BY TARGET THEN INSERT ... </code>
+		/// SQL: For INSERT/[UPDATE|DELETE]: <code>WHEN NOT MATCHED BY TARGET THEN INSERT ...</code>
+		/// For INSERT only: <code>INSERT INTO ... (...) OUTPUT ... VALUES ...;</code>
 		/// </summary>
 		public string[] Insert { get; set; } = new string[0];
 
@@ -32,6 +43,7 @@ namespace sam987883.Database.Models
 		/// JSON: <code>"On": [ "PrimaryKey1", "PrimaryKey2" ]</code>
 		/// SQL: <code>ON SOURCE.[PrimaryKey1] = TARGET.[PrimaryKey1] AND SOURCE.[PrimaryKey2] = TARGET.[PrimaryKey2]</code>
 		/// </summary>
+		[JsonIgnore]
 		public string[] On { get; set; } = new string[0];
 
 		/// <summary>
@@ -47,6 +59,7 @@ namespace sam987883.Database.Models
 		public string[] OutputInserted { get; set; } = new string[0];
 
 		/// <summary>
+		/// <para>Table must have primary key(s) defined to be used for batch DELETE/UPDATE.</para>
 		/// JSON: <code>"Table1"</code>
 		/// SQL: <code>MERGE [Database1]..[Table1]</code>
 		/// </summary>

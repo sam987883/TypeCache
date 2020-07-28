@@ -58,10 +58,15 @@ namespace sam987883.Database.Extensions
 		}
 
 		/// <summary>
-		/// MERGE ... USING ... ON ...
-		/// WHEN MATCHED THEN UPDATE ...
-		/// WHEN NOT MATCHED BY TARGET THEN INSERT ...
-		/// WHEN NOT MATCHED BY SOURCE THEN DELETE ...
+		/// <code>
+		/// <list>
+		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+		/// <item>MERGE ... USING ... ON ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
+		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN DELETE ... OUTPUT ...;</item>
+		/// <item>INSERT INTO ... (...) OUTPUT ... VALUES ...;</item>
+		/// </list>
+		/// </code>
 		/// </summary>
 		/// <returns>OUTPUT DELETED, INSERTED</returns>
 		public static Output Merge(this IDbConnection @this, BatchRequest batch)

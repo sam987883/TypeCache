@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Http;
 using sam987883.Common.Converters;
+using sam987883.Common.Extensions;
 using sam987883.Database;
 using sam987883.Database.Extensions;
 using sam987883.Database.Models;
@@ -36,9 +37,10 @@ namespace sam987883.Web.Middleware
                 using var connection = this._DbProviderFactory.CreateConnection();
                 connection.ConnectionString = this._ConnectionString;
                 await connection.OpenAsync();
-                var objectSchema = schemaStore.GetObjectSchema(connection, request.Table);
-                request.Table = objectSchema.Name;
-                var validator = new SchemaValidator(objectSchema);
+                var schema = schemaStore.GetObjectSchema(connection, request.Table);
+                request.Table = schema.Name;
+                request.On = schema.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToList().ToArray();
+                var validator = new SchemaValidator(schema);
                 validator.Validate(request);
                 await httpContext.Response.WriteAsync(request.ToSql());
             }

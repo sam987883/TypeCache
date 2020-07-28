@@ -28,8 +28,8 @@ namespace sam987883.Web.Middleware
                 using var connection = this._DbProviderFactory.CreateConnection();
                 connection.ConnectionString = this._ConnectionString;
                 await connection.OpenAsync();
-                var objectSchema = schemaStore.GetObjectSchema(connection, name);
-                await JsonSerializer.SerializeAsync(httpContext.Response.Body, objectSchema);
+                var schema = schemaStore.GetObjectSchema(connection, name);
+                await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
             }
         }
     }

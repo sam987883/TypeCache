@@ -36,9 +36,9 @@ namespace sam987883.Web.Middleware
                 using var connection = this._DbProviderFactory.CreateConnection();
                 connection.ConnectionString = this._ConnectionString;
                 await connection.OpenAsync();
-                var objectSchema = schemaStore.GetObjectSchema(connection, request.Table);
-                request.Table = objectSchema.Name;
-                var validator = new SchemaValidator(objectSchema);
+                var schema = schemaStore.GetObjectSchema(connection, request.Table);
+                request.Table = schema.Name;
+                var validator = new SchemaValidator(schema);
                 validator.Validate(request);
                 var output = connection.Update(request);
                 await JsonSerializer.SerializeAsync(httpContext.Response.Body, output);

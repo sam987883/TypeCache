@@ -476,16 +476,20 @@ namespace sam987883.Common.Extensions
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map) =>
 			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
-		public static IEnumerable<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
 			var hashSet = @this.ToHashSet();
-			return items.If(item => !hashSet.Add(item));
+			if (items != null)
+				hashSet.IntersectWith(items);
+			return hashSet;
 		}
 
-		public static IEnumerable<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			var hashSet = @this.ToHashSet(comparer);
-			return items.If(item => !hashSet.Add(item));
+			if (items != null)
+				hashSet.IntersectWith(items);
+			return hashSet;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -510,11 +514,21 @@ namespace sam987883.Common.Extensions
 			return @this.Aggregate(comparer.Minimum);
 		}
 
-		public static IEnumerable<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items) =>
-			@this.Without(items).Union(items.Without(@this));
+		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		{
+			var hashSet = @this.ToHashSet();
+			if (items != null)
+				hashSet.SymmetricExceptWith(items);
+			return hashSet;
+		}
 
-		public static IEnumerable<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer) =>
-			@this.Without(items, comparer).Union(items.Without(@this, comparer), comparer);
+		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		{
+			var hashSet = @this.ToHashSet(comparer);
+			if (items != null)
+				hashSet.SymmetricExceptWith(items);
+			return hashSet;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
@@ -772,28 +786,36 @@ namespace sam987883.Common.Extensions
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this) =>
 			@this != null ? new Stack<T>(@this) : new Stack<T>(0);
 
-		public static IEnumerable<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
-			var hashSet = items.ToHashSet();
-			return @this.If(hashSet.Add).And(items.If(hashSet.Add));
+			var hashSet = @this.ToHashSet();
+			if (items != null)
+				hashSet.UnionWith(items);
+			return hashSet;
 		}
 
-		public static IEnumerable<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
-			var hashSet = items.ToHashSet(comparer);
-			return @this.If(hashSet.Add).And(items.If(hashSet.Add));
+			var hashSet = @this.ToHashSet(comparer);
+			if (items != null)
+				hashSet.UnionWith(items);
+			return hashSet;
 		}
 
-		public static IEnumerable<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
-			var hashSet = items.ToHashSet();
-			return @this.If(hashSet.Add);
+			var hashSet = @this.ToHashSet();
+			if (items != null)
+				hashSet.ExceptWith(items);
+			return hashSet;
 		}
 
-		public static IEnumerable<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
-			var hashSet = items.ToHashSet(comparer);
-			return @this.If(hashSet.Add);
+			var hashSet = @this.ToHashSet(comparer);
+			if (items != null)
+				hashSet.ExceptWith(items);
+			return hashSet;
 		}
 	}
 }

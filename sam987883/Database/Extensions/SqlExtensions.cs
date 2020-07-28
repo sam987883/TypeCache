@@ -27,11 +27,11 @@ namespace sam987883.Database.Extensions
 		public static string ToSql(this BatchRequest @this)
 		{
 			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({row.ToCsv(value => value.ToSql())})");
-			var sourceColumnCsv = @this.Input.Columns.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
+			var sourceColumnCsv = @this.Input.Columns.Join(", ", column => $"[{column.EscapeIdentifier()}]");
 			var onSql = @this.On.Join(" AND ", column => $"s.[{column.EscapeIdentifier()}] = t.[{column.EscapeIdentifier()}]");
-			var updateCsv = @this.Update.ToCsv(column => $"[{column.EscapeIdentifier()}] = s.[{column.EscapeIdentifier()}]");
-			var insertColumnCsv = @this.Insert.ToCsv(column => $"[{column.EscapeIdentifier()}]");
-			var insertValueCsv = @this.Insert.ToCsv(column => $"s.[{column.EscapeIdentifier()}]");
+			var updateCsv = @this.Update.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}] = s.[{column.EscapeIdentifier()}]");
+			var insertColumnCsv = @this.Insert.Join(SQL_DELIMETER, column => $"[{column.EscapeIdentifier()}]");
+			var insertValueCsv = @this.Insert.Join(SQL_DELIMETER, column => $"s.[{column.EscapeIdentifier()}]");
 
 			var sqlBuilder = new StringBuilder();
 			if (!@this.Delete && updateCsv.IsBlank())
@@ -57,16 +57,27 @@ USING
 ON {onSql}");
 
 				if (!updateCsv.IsBlank())
+				{
 					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
 	UPDATE SET {updateCsv}");
-
-				sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY TARGET THEN
-	INSERT ({insertColumnCsv})
-	VALUES ({insertValueCsv})");
-
-				if (@this.Delete)
-					sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY SOURCE THEN
+					if (@this.Delete)
+						sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY SOURCE THEN
 	DELETE");
+				}
+				else if (@this.Delete)
+					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
+	DELETE");
+
+				if (!insertColumnCsv.IsBlank())
+					sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY TARGET THEN
+	INSERT
+	(
+	{insertColumnCsv}
+	)
+	VALUES
+	(
+	{insertValueCsv}
+	)");
 
 				if (@this.OutputDeleted.Any() || @this.OutputInserted.Any())
 				{
