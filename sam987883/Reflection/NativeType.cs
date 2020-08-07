@@ -4,7 +4,7 @@ namespace sam987883.Reflection
 {
 	public enum NativeType
 	{
-		Class = 0,
+		Object = 0,
 		Boolean,
 		SByte,
 		Byte,
@@ -23,7 +23,12 @@ namespace sam987883.Reflection
 		Guid,
 		Char,
 		Enum,
+		Index,
+		Range,
+		JsonElement,
 		ValueType,
-		String
+		String,
+		Uri,
+		DBNull
 	}
 }

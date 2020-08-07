@@ -13,8 +13,9 @@ using static sam987883.Common.Extensions.ObjectExtensions;
 namespace sam987883.Reflection.Members
 {
 	internal sealed class MethodMember<T> : Member, IMethodMember<T>
+		where T : class
 	{
-		private readonly Func<T, object[]?, object?> _Invoke;
+		private readonly Func<T, object?[]?, object?> _Invoke;
 
 		public MethodMember(MethodInfo methodInfo) : base(methodInfo)
 		{
@@ -28,10 +29,10 @@ namespace sam987883.Reflection.Members
 			ParameterExpression parameters = nameof(parameters).Parameter<object[]>();
 
 			var parameterInfos = methodInfo.GetParameters().Sort(parameterPositionComparer).ToList().ToArray();
-			MethodCallExpression call;
+			Expression call;
 			if (parameterInfos.Any())
 			{
-				call = Expression.Call(instance, methodInfo, parameters.ToParameterArray(parameterInfos));
+				call = instance.Call(methodInfo, parameters.ToParameterArray(parameterInfos));
 
 				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
 				var methodParameters = new ParameterExpression[parameterInfos.Length + 1];
@@ -43,15 +44,15 @@ namespace sam987883.Reflection.Members
 			}
 			else
 			{
-				call = (MethodCallExpression)instance.Call(methodInfo);
+				call = instance.Call(methodInfo);
 
 				this.Method = call.Lambda(instance).Compile();
 				this.Parameters = ImmutableArray<IParameter>.Empty;
 			}
 
 			this._Invoke = methodInfo.ReturnType == typeof(void)
-				? Expression.Block(call, Expression.Constant(null)).Lambda<Func<T, object[]?, object?>>(instance, parameters).Compile()
-				: call.As<object>().Lambda<Func<T, object[]?, object?>>(instance, parameters).Compile();
+				? Expression.Block(call, Expression.Constant(null)).Lambda<Func<T, object?[]?, object?>>(instance, parameters).Compile()
+				: call.As<object>().Lambda<Func<T, object?[]?, object?>>(instance, parameters).Compile();
 		}
 
 		public Delegate Method { get; }
@@ -61,11 +62,11 @@ namespace sam987883.Reflection.Members
 		public bool Void { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public object? Invoke(T instance, params object[]? parameters) =>
+		public object? Invoke(T instance, params object?[]? parameters) =>
 			this._Invoke(instance, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsCallableWith(params object[]? arguments) =>
+		public bool IsCallableWith(params object?[]? arguments) =>
 			this.Parameters.IsCallableWith(arguments);
 	}
 }

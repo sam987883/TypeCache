@@ -1,8 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using sam987883.Reflection;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -12,12 +10,6 @@ namespace sam987883.Common
 {
 	public static class Factory
 	{
-		static class Anonymous<T>
-			where T : class
-		{
-			public static IFieldCache<T> FieldCache { get; } = new FieldCache<T>();
-		}
-
 		static class Instance<T>
 			where T : class, new()
 		{
@@ -35,9 +27,5 @@ namespace sam987883.Common
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static StringWriter CreateStringWriter(StringBuilder builder, Encoding encoding) =>
 			new CustomStringWriter(builder, encoding);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IFieldAccessor<T> CreateFieldAccessor<T>(T anonymousInstance) where T : class =>
-			Anonymous<T>.FieldCache.CreateAccessor(anonymousInstance);
 	}
 }

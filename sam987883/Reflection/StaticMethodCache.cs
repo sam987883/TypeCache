@@ -11,6 +11,7 @@ using static sam987883.Common.Extensions.IReadOnlyDictionaryExtensions;
 namespace sam987883.Reflection
 {
 	internal sealed class StaticMethodCache<T> : IStaticMethodCache<T>
+		where T : class
 	{
 		public StaticMethodCache()
 		{

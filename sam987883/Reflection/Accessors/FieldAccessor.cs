@@ -3,9 +3,10 @@
 using sam987883.Common.Extensions;
 using System.Collections.Generic;
 
-namespace sam987883.Reflection
+namespace sam987883.Reflection.Accessors
 {
-	internal sealed class FieldAccessor<T> : IFieldAccessor<T>
+	internal sealed class FieldAccessor<T> : IFieldAccessor
+		where T : class
 	{
 		private readonly T _Instance;
 		private readonly IFieldCache<T> _FieldCache;
@@ -22,7 +23,8 @@ namespace sam987883.Reflection
 			set => this._FieldCache.Fields.Get(name).Value[this._Instance] = value;
 		}
 
-		public string[] Names => this._FieldCache.Fields.Keys.ToArray(this._FieldCache.Fields.Count);
+		public string[] Names =>
+			this._FieldCache.Fields.Keys.ToArray(this._FieldCache.Fields.Count);
 
 		public IDictionary<string, object?> Values
 		{

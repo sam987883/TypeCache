@@ -8,6 +8,7 @@ using static sam987883.Common.Extensions.ObjectExtensions;
 namespace sam987883.Reflection.Members
 {
 	internal sealed class IndexerMember<T> : Member, IIndexerMember<T>
+		where T : class
 	{
 		public IndexerMember(PropertyInfo propertyInfo) : base(propertyInfo)
 		{
@@ -24,8 +25,7 @@ namespace sam987883.Reflection.Members
 			{
 				if (this.SetMethod != null)
 				{
-					var list = new List<object?>(indexParameters.Length + 1);
-					list.Add(value);
+					var list = new List<object?>(indexParameters.Length + 1) { value };
 					list.AddRange(indexParameters);
 					this.SetMethod.Invoke(instance, list.ToArray());
 				}

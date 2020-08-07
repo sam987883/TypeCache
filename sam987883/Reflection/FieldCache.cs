@@ -4,12 +4,12 @@ using sam987883.Common;
 using sam987883.Reflection.Members;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
 using static sam987883.Common.Extensions.IEnumerableExtensions;
 
 namespace sam987883.Reflection
 {
 	internal sealed class FieldCache<T> : IFieldCache<T>
+		where T : class
 	{
 		public FieldCache()
 		{
@@ -19,10 +19,6 @@ namespace sam987883.Reflection
 				.To(fieldInfo => KeyValuePair.Create(fieldInfo.Name, (IFieldMember<T>)new FieldMember<T>(fieldInfo)))
 				.ToImmutable(TypeCache.NameComparer, valueComparer);
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IFieldAccessor<T> CreateAccessor(T instance) =>
-			new FieldAccessor<T>(this, instance);
 
 		public IImmutableDictionary<string, IFieldMember<T>> Fields { get; }
 

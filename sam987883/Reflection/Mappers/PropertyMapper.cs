@@ -8,6 +8,8 @@ using System.Collections.Immutable;
 namespace sam987883.Reflection.Mappers
 {
 	internal class PropertyMapper<FROM, TO> : IPropertyMapper<FROM, TO>
+		where FROM : class
+		where TO : class
 	{
 		private readonly IPropertyCache<FROM> _FromPropertyCache;
 
@@ -36,16 +38,20 @@ namespace sam987883.Reflection.Mappers
 				var (toProperty, toExists) = this._ToPropertyCache.Properties.Get(setting.To);
 				if (!toExists)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] was not found for mapping.");
+				else if (toProperty.SetMethod == null)
+					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable.");
 
 				if (!setting.From.IsBlank())
 				{
 					var (fromProperty, fromExists) = this._FromPropertyCache.Properties.Get(setting.From);
 					if (!fromExists)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] was not found for mapping.");
+					else if (fromProperty.GetMethod == null)
+						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not writable.");
 
-					if (toProperty.TypeHandle.Equals(fromProperty.TypeHandle))
+					if (fromProperty.TypeHandle.Equals(toProperty.TypeHandle))
 						settings[setting.To] = setting;
-					else
+					else if (fromProperty.Type == NativeType.Object || toProperty.Type == NativeType.Object)
 					{
 						var fromTypeName = Type.GetTypeFromHandle(fromProperty.TypeHandle).Name;
 						var toTypeName = Type.GetTypeFromHandle(toProperty.TypeHandle).Name;

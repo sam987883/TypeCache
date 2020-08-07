@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Reflection.Extensions;
 using System;
 using System.Collections.Immutable;
 using System.Reflection;
@@ -20,20 +21,21 @@ namespace sam987883.Reflection.Members
 			this.Name = this.Attributes.If<Attribute, NameAttribute>().First().Value?.Name ?? parameterInfo.Name ?? string.Empty;
 			this.DefaultValue = parameterInfo.DefaultValue;
 			this.HasDefaultValue = parameterInfo.HasDefaultValue;
-			this.IsString = parameterInfo.ParameterType == typeof(string);
-			this.IsValueType = parameterInfo.ParameterType.IsValueType;
+			this.IsNullable = parameterInfo.ParameterType.IsClass;
 			this.Optional = parameterInfo.IsOptional;
 			this.Out = parameterInfo.IsOut;
 
 			if (parameterInfo.ParameterType.IsGenericType && parameterInfo.ParameterType.GetGenericTypeDefinition() == typeof(Nullable<>))
 			{
 				this.IsNullable = true;
-				this.TypeHandle = parameterInfo.ParameterType.GenericTypeArguments[0].TypeHandle;
+				var type = parameterInfo.ParameterType.GenericTypeArguments[0];
+				this.TypeHandle = type.TypeHandle;
+				this.Type = type.ToNativeType();
 			}
 			else
 			{
-				this.IsNullable = parameterInfo.ParameterType.IsClass;
 				this.TypeHandle = parameterInfo.ParameterType.TypeHandle;
+				this.Type = parameterInfo.ParameterType.ToNativeType();
 			}
 		}
 
@@ -47,21 +49,19 @@ namespace sam987883.Reflection.Members
 
 		public bool IsNullable { get; }
 
-		public bool IsString { get; }
-
-		public bool IsValueType { get; }
-
 		public string Name { get; }
 
 		public bool Optional { get; }
 
 		public bool Out { get; }
 
+		public NativeType Type { get; }
+
 		public RuntimeTypeHandle TypeHandle { get; }
 
 		public bool Supports(Type type)
 		{
-			var parameterType = Type.GetTypeFromHandle(this.TypeHandle);
+			var parameterType = System.Type.GetTypeFromHandle(this.TypeHandle);
 			return type.Equals(parameterType) || type.IsSubclassOf(parameterType);
 		}
 	}

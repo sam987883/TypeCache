@@ -6,14 +6,30 @@ using sam987883.Common.Converters;
 using sam987883.Database;
 using sam987883.Database.Models;
 using sam987883.Reflection;
+using sam987883.Reflection.Accessors;
+using sam987883.Reflection.Converters;
 using sam987883.Reflection.Mappers;
 using System;
 using System.Collections.Generic;
 
 namespace sam987883.Dependencies
 {
-    public static class IServiceCollectionExtensions
+	public static class IServiceCollectionExtensions
     {
+        private static IFieldAccessor CreateFieldAccessor(IServiceProvider provider, object instance)
+        {
+            var type = typeof(IFieldAccessorFactory<>).MakeGenericType(instance.GetType());
+            dynamic factory = provider.GetRequiredService(type);
+            return factory.Create(instance);
+        }
+
+        private static IPropertyAccessor CreatePropertyAccessor(IServiceProvider provider, object instance)
+        {
+            var type = typeof(IPropertyAccessorFactory<>).MakeGenericType(instance.GetType());
+            dynamic factory = provider.GetRequiredService(type);
+            return factory.Create(instance);
+        }
+
         public static IServiceCollection AddSingleton<T>(this IServiceCollection @this, string name, T service) =>
             @this.AddSingleton(typeof(INamedService<T>), new NamedService<T>(name, service));
 
@@ -35,12 +51,14 @@ namespace sam987883.Dependencies
             .AddSingleton(typeof(IEqualityComparer<>), typeof(CustomEqualityComparer<>))
             .AddSingleton(typeof(IReferenceEqualityComparer<>), typeof(ReferenceEqualityComparer<>));
 
-        public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides) => @this
-            .AddSingleton<IFieldMapper<FROM, TO>>(provider =>
+        public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
+            where FROM : class
+            where TO : class => @this.AddSingleton<IFieldMapper<FROM, TO>>(provider =>
                 new FieldMapper<FROM, TO>(provider.GetRequiredService<IFieldCache<FROM>>(), provider.GetRequiredService<IFieldCache<TO>>(), overrides));
 
-        public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides) => @this
-            .AddSingleton<IPropertyMapper<FROM, TO>>(provider =>
+        public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
+            where FROM : class
+            where TO : class => @this.AddSingleton<IPropertyMapper<FROM, TO>>(provider =>
                 new PropertyMapper<FROM, TO>(provider.GetRequiredService<IPropertyCache<FROM>>(), provider.GetRequiredService<IPropertyCache<TO>>(), overrides));
 
         public static IServiceCollection RegisterTypeCache(this IServiceCollection @this) => @this
@@ -54,7 +72,13 @@ namespace sam987883.Dependencies
             .AddSingleton(typeof(IStaticFieldCache<>), typeof(StaticFieldCache<>))
             .AddSingleton(typeof(IStaticMethodCache<>), typeof(StaticMethodCache<>))
             .AddSingleton(typeof(IStaticPropertyCache<>), typeof(StaticPropertyCache<>))
+            .AddSingleton(typeof(IFieldAccessorFactory<>), typeof(FieldAccessorFactory<>))
+            .AddSingleton(typeof(Func<object, IFieldAccessor>), provider => new Func<object, IFieldAccessor>(instance => CreateFieldAccessor(provider, instance)))
             .AddSingleton(typeof(IFieldMapper<,>), typeof(FieldMapper<,>))
-            .AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>));
+            .AddSingleton(typeof(IPropertyAccessorFactory<>), typeof(PropertyAccessorFactory<>))
+            .AddSingleton(typeof(Func<object, IPropertyAccessor>), provider => new Func<object, IPropertyAccessor>(instance => CreatePropertyAccessor(provider, instance)))
+            .AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>))
+            .AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>))
+            .AddSingleton(typeof(PropertyJsonConverter<>), typeof(PropertyJsonConverter<>));
     }
 }

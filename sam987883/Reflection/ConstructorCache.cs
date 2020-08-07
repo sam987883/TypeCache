@@ -9,6 +9,7 @@ using static sam987883.Common.Extensions.IEnumerableExtensions;
 namespace sam987883.Reflection
 {
 	internal sealed class ConstructorCache<T> : IConstructorCache<T>
+		where T : class
 	{
 		public ConstructorCache()
 		{

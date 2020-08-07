@@ -18,6 +18,7 @@ namespace sam987883.Reflection
 	}
 
 	internal sealed class TypeCache<T> : Member, ITypeCache<T>
+		where T : class
 	{
 		private readonly IServiceProvider _ServiceProvider;
 
@@ -50,20 +51,28 @@ namespace sam987883.Reflection
 
 		public IImmutableList<RuntimeTypeHandle> Interfaces { get; }
 
-		public IConstructorCache<T> ConstructorCache => this._ServiceProvider.GetRequiredService<IConstructorCache<T>>();
+		public IConstructorCache<T> ConstructorCache =>
+			this._ServiceProvider.GetRequiredService<IConstructorCache<T>>();
 
-		public IFieldCache<T> FieldCache => this._ServiceProvider.GetRequiredService<IFieldCache<T>>();
+		public IFieldCache<T> FieldCache =>
+			this._ServiceProvider.GetRequiredService<IFieldCache<T>>();
 
-		public IMethodCache<T> MethodCache => this._ServiceProvider.GetRequiredService<IMethodCache<T>>();
+		public IMethodCache<T> MethodCache =>
+			this._ServiceProvider.GetRequiredService<IMethodCache<T>>();
 
-		public IIndexerCache<T> IndexerCache => this._ServiceProvider.GetRequiredService<IIndexerCache<T>>();
+		public IIndexerCache<T> IndexerCache =>
+			this._ServiceProvider.GetRequiredService<IIndexerCache<T>>();
 
-		public IPropertyCache<T> PropertyCache => this._ServiceProvider.GetRequiredService<IPropertyCache<T>>();
+		public IPropertyCache<T> PropertyCache =>
+			this._ServiceProvider.GetRequiredService<IPropertyCache<T>>();
 
-		public IStaticFieldCache<T> StaticFieldCache => this._ServiceProvider.GetRequiredService<IStaticFieldCache<T>>();
+		public IStaticFieldCache<T> StaticFieldCache =>
+			this._ServiceProvider.GetRequiredService<IStaticFieldCache<T>>();
 
-		public IStaticMethodCache<T> StaticMethodCache => this._ServiceProvider.GetRequiredService<IStaticMethodCache<T>>();
+		public IStaticMethodCache<T> StaticMethodCache =>
+			this._ServiceProvider.GetRequiredService<IStaticMethodCache<T>>();
 
-		public IStaticPropertyCache<T> StaticPropertyCache => this._ServiceProvider.GetRequiredService<IStaticPropertyCache<T>>();
+		public IStaticPropertyCache<T> StaticPropertyCache =>
+			this._ServiceProvider.GetRequiredService<IStaticPropertyCache<T>>();
 	}
 }

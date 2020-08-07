@@ -1,13 +1,13 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using sam987883.Reflection.Members;
 
 namespace sam987883.Reflection
 {
 	public interface IConstructorCache<T>
+		where T : class
 	{
 		IImmutableList<IConstructorMember<T>> Constructors { get; }
 
@@ -21,26 +21,27 @@ namespace sam987883.Reflection
 
 		bool Flags { get; }
 
-		TypeCode UnderlyingTypeCode { get; }
+		NativeType UnderlyingType { get; }
 
 		RuntimeTypeHandle UnderlyingTypeHandle { get; }
 	}
 
 	public interface IFieldCache<T>
+		where T : class
 	{
-		IFieldAccessor<T> CreateAccessor(T instance);
+		void Map(T from, T to);
 
 		IImmutableDictionary<string, IFieldMember<T>> Fields { get; }
-
-		void Map(T from, T to);
 	}
 
 	public interface IIndexerCache<T>
+		where T : class
 	{
 		IImmutableList<IIndexerMember<T>> Indexers { get; }
 	}
 
 	public interface IMethodCache<T>
+		where T : class
 	{
 		(D? Method, bool Exists) GetMethod<D>(string name) where D : Delegate;
 
@@ -48,20 +49,21 @@ namespace sam987883.Reflection
 	}
 
 	public interface IPropertyCache<T>
+		where T : class
 	{
-		IPropertyAccessor<T> CreateAccessor(T instance);
+		void Map(T from, T to);
 
 		IImmutableDictionary<string, IPropertyMember<T>> Properties { get; }
-
-		void Map(T from, T to);
 	}
 
 	public interface IStaticFieldCache<T>
+		where T : class
 	{
 		IImmutableDictionary<string, IStaticFieldMember> Fields { get; }
 	}
 
 	public interface IStaticMethodCache<T>
+		where T : class
 	{
 		(D? Method, bool Exists) GetMethod<D>(string name) where D : Delegate;
 
@@ -69,11 +71,13 @@ namespace sam987883.Reflection
 	}
 
 	public interface IStaticPropertyCache<T>
+		where T : class
 	{
 		IImmutableDictionary<string, IStaticPropertyMember> Properties { get; }
 	}
 
 	public interface ITypeCache<T> : IMember
+		where T : class
 	{
 		IImmutableList<RuntimeTypeHandle> GenericInterfaces { get; }
 
@@ -96,19 +100,5 @@ namespace sam987883.Reflection
 		IStaticMethodCache<T> StaticMethodCache { get; }
 
 		IStaticPropertyCache<T> StaticPropertyCache { get; }
-	}
-
-	public interface IFieldAccessor<in T>
-	{
-		object? this[string key] { get; set; }
-		string[] Names { get; }
-		IDictionary<string, object?> Values { get; set; }
-	}
-
-	public interface IPropertyAccessor<in T>
-	{
-		object? this[string key] { get; set; }
-		string[] Names { get; }
-		IDictionary<string, object?> Values { get; set; }
 	}
 }

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using sam987883.Reflection.Extensions;
 using sam987883.Reflection.Members;
 using System;
 using System.Collections.Immutable;
@@ -18,7 +19,7 @@ namespace sam987883.Reflection
 			var underlyingType = type.GetEnumUnderlyingType();
 
 			this.Flags = type.GetCustomAttribute<FlagsAttribute>() != null;
-			this.UnderlyingTypeCode = Type.GetTypeCode(underlyingType);
+			this.UnderlyingType = underlyingType.ToNativeType();
 			this.UnderlyingTypeHandle = underlyingType.TypeHandle;
 
 			var values = (T[])type.GetEnumValues();
@@ -31,7 +32,7 @@ namespace sam987883.Reflection
 
 		public bool Flags { get; }
 
-		public TypeCode UnderlyingTypeCode { get; }
+		public NativeType UnderlyingType { get; }
 
 		public RuntimeTypeHandle UnderlyingTypeHandle { get; }
 	}

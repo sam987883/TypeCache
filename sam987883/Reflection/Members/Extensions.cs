@@ -7,7 +7,7 @@ namespace sam987883.Reflection.Members
 {
 	internal static class Extensions
 	{
-		public static bool IsCallableWith(this IImmutableList<IParameter> @this, params object[]? arguments)
+		public static bool IsCallableWith(this IImmutableList<IParameter> @this, params object?[]? arguments)
 		{
 			if (arguments?.Length > 0)
 			{

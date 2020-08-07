@@ -8,6 +8,8 @@ using System.Collections.Immutable;
 namespace sam987883.Reflection.Mappers
 {
 	internal class FieldMapper<FROM, TO> : IFieldMapper<FROM, TO>
+		where FROM : class
+		where TO : class
 	{
 		private readonly IFieldCache<FROM> _FromFieldCache;
 
@@ -21,8 +23,8 @@ namespace sam987883.Reflection.Mappers
 			this._ToFieldCache = toFieldCache;
 
 			var settings = new Dictionary<string, MapperSetting>(toFieldCache.Fields.Count, TypeCache.NameComparer);
-			var properties = this._ToFieldCache.Fields.Keys.Match(this._FromFieldCache.Fields.Keys, TypeCache.NameComparer);
-			properties.Do(name =>
+			var fields = this._ToFieldCache.Fields.Keys.Match(this._FromFieldCache.Fields.Keys, TypeCache.NameComparer);
+			fields.Do(name =>
 			{
 				var fromField = this._FromFieldCache.Fields[name];
 				var toField = this._ToFieldCache.Fields[name];
@@ -36,16 +38,20 @@ namespace sam987883.Reflection.Mappers
 				var (toField, toExists) = this._ToFieldCache.Fields.Get(setting.To);
 				if (!toExists)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] was not found for mapping.");
+				else if (toField.SetValue == null)
+					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] is not writable.");
 
 				if (!setting.From.IsBlank())
 				{
 					var (fromField, fromExists) = this._FromFieldCache.Fields.Get(setting.From);
 					if (!fromExists)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] was not found for mapping.");
+					else if (fromField.GetValue == null)
+						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] is not writable.");
 
-					if (toField.TypeHandle.Equals(fromField.TypeHandle))
+					if (fromField.TypeHandle.Equals(toField.TypeHandle))
 						settings[setting.To] = setting;
-					else
+					else if (fromField.Type == NativeType.Object || toField.Type == NativeType.Object)
 					{
 						var fromTypeName = Type.GetTypeFromHandle(fromField.TypeHandle).Name;
 						var toTypeName = Type.GetTypeFromHandle(toField.TypeHandle).Name;

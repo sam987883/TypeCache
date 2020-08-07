@@ -3,9 +3,10 @@
 using sam987883.Common.Extensions;
 using System.Collections.Generic;
 
-namespace sam987883.Reflection
+namespace sam987883.Reflection.Accessors
 {
-	internal sealed class PropertyAccessor<T> : IPropertyAccessor<T>
+	internal sealed class PropertyAccessor<T> : IPropertyAccessor
+		where T : class
 	{
 		private readonly T _Instance;
 		private readonly IPropertyCache<T> _PropertyCache;

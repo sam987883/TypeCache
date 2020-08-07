@@ -9,6 +9,7 @@ using static sam987883.Common.Extensions.ObjectExtensions;
 namespace sam987883.Reflection.Members
 {
 	internal sealed class FieldMember<T> : Member, IFieldMember<T>
+		where T : class
 	{
 		public FieldMember(FieldInfo fieldInfo) : base(fieldInfo)
 		{
@@ -34,7 +35,7 @@ namespace sam987883.Reflection.Members
 		public object? this[T instance]
 		{
 			get => this.GetValue?.Invoke(instance);
-			set	=> this.SetValue?.Invoke(instance, value);
+			set => this.SetValue?.Invoke(instance, value);
 		}
 
 		public Delegate? Getter { get; }

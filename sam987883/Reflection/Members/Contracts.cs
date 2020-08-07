@@ -15,18 +15,17 @@ namespace sam987883.Reflection.Members
 
 		bool IsNullable { get; }
 
-		bool IsString { get; }
-
-		bool IsValueType { get; }
-
 		string Name { get; }
 
 		bool Public { get; }
+
+		NativeType Type { get; }
 
 		RuntimeTypeHandle TypeHandle { get; }
 	}
 
 	public interface IConstructorMember<out T> : IMember
+		where T : class
 	{
 		Delegate Method { get; }
 
@@ -38,11 +37,13 @@ namespace sam987883.Reflection.Members
 	}
 
 	public interface IEnumMember<out T> : IMember
+		where T : struct, Enum
 	{
 		T Value { get; }
 	}
 
 	public interface IFieldMember<in T> : IMember
+		where T : class
 	{
 		object? this[T instance] { get; set; }
 
@@ -56,6 +57,7 @@ namespace sam987883.Reflection.Members
 	}
 
 	public interface IIndexerMember<in T> : IMember
+		where T : class
 	{
 		object? this[T instance, params object[] indexParameters] { get; set; }
 
@@ -65,6 +67,7 @@ namespace sam987883.Reflection.Members
 	}
 
 	public interface IMethodMember<in T> : IMember
+		where T : class
 	{
 		Delegate Method { get; }
 
@@ -89,15 +92,13 @@ namespace sam987883.Reflection.Members
 
 		bool IsNullable { get; }
 
-		bool IsString { get; }
-
-		bool IsValueType { get; }
-
 		string Name { get; }
 
 		bool Optional { get; }
 
 		bool Out { get; }
+
+		NativeType Type { get; }
 
 		RuntimeTypeHandle TypeHandle { get; }
 
@@ -105,6 +106,7 @@ namespace sam987883.Reflection.Members
 	}
 
 	public interface IPropertyMember<in T> : IMember
+		where T : class
 	{
 		object? this[T instance] { get; set; }
 

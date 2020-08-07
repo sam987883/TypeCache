@@ -9,6 +9,7 @@ using static sam987883.Common.Extensions.IEnumerableExtensions;
 namespace sam987883.Reflection
 {
 	internal sealed class StaticPropertyCache<T> : IStaticPropertyCache<T>
+		where T : class
 	{
 		public StaticPropertyCache()
 		{

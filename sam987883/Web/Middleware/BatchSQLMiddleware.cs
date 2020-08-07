@@ -7,6 +7,7 @@ using sam987883.Database;
 using sam987883.Database.Extensions;
 using sam987883.Database.Models;
 using sam987883.Dependencies;
+using sam987883.Reflection.Converters;
 using System;
 using System.Data.Common;
 using System.Text.Json;
@@ -25,7 +26,7 @@ namespace sam987883.Web.Middleware
             this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);
         }
 
-        public async Task Invoke(HttpContext httpContext, IServiceProvider serviceProvider, ISchemaStore schemaStore)
+        public async Task Invoke(HttpContext httpContext, IServiceProvider serviceProvider, ISchemaStore schemaStore, PropertyJsonConverter<BatchRequest> jsonConverter)
         {
             var jsonOptions = new JsonSerializerOptions();
             jsonOptions.Converters.Add(new ObjectJsonConverter());

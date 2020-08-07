@@ -7,6 +7,7 @@ using static sam987883.Common.Extensions.ObjectExtensions;
 namespace sam987883.Reflection.Members
 {
 	internal sealed class PropertyMember<T> : Member, IPropertyMember<T>
+		where T : class
 	{
 		public PropertyMember(PropertyInfo propertyInfo) : base(propertyInfo)
 		{
