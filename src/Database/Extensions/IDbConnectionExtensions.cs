@@ -45,6 +45,18 @@ namespace Sam987883.Database.Extensions
 		}
 
 		/// <summary>
+		/// EXECUTE ...
+		/// </summary>
+		public static IEnumerable<RowSet> Run(this IDbConnection @this, SQLRequest request)
+		{
+			using var command = @this.CreateSqlCommand(request.SQL);
+			request.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
+
+			using var reader = command.ExecuteReader(CommandBehavior.SingleResult);
+			return reader.ReadRowSets().ToList();
+		}
+
+		/// <summary>
 		/// DELETE FROM ... WHERE ...
 		/// </summary>
 		/// <param name="schemaProvider">ISchemaFactory or ISchemaStore</param>

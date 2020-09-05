@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Sam987883.Common.Extensions;
 using Sam987883.Web.Middleware;
 
 namespace Sam987883.Web.Extenstions
@@ -9,239 +10,255 @@ namespace Sam987883.Web.Extenstions
 	public static class IApplicationBuilderExtensions
 	{
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="number">
+		/// <item><term>/sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
+		/// <item><term>/sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
+		/// <item><term>/sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
+		/// <item><term>/sql-api/merge</term> <description><see cref="MergeMiddleware"/></description></item>
+		/// <item><term>/sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
+		/// <item><term>/sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider</param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string provider, string connectionString) =>
-			@this.UseSqlApiMerge(provider, connectionString, null)
-				.UseSqlApiCall(provider, connectionString, null)
-				.UseSqlApiDelete(provider, connectionString, null)
-				.UseSqlApiInsert(provider, connectionString, null)
-				.UseSqlApiSelect(provider, connectionString, null)
-				.UseSqlApiUpdate(provider, connectionString, null);
+		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString) =>
+			@this.UseSqlApiCall(databaseProvider, connectionString, null)
+				.UseSqlApiDelete(databaseProvider, connectionString, null)
+				.UseSqlApiInsert(databaseProvider, connectionString, null)
+				.UseSqlApiMerge(databaseProvider, connectionString, null)
+				.UseSqlApiSelect(databaseProvider, connectionString, null)
+				.UseSqlApiUpdate(databaseProvider, connectionString, null);
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="number">
+		/// <item><term>/sql-api/schema/sql</term> <description><see cref="SchemaSQLMiddleware"/></description></item>
+		/// <item><term>/sql-api/delete/sql</term> <description><see cref="DeleteSQLMiddleware"/></description></item>
+		/// <item><term>/sql-api/insert/sql</term> <description><see cref="InsertSQLMiddleware"/></description></item>
+		/// <item><term>/sql-api/merge/sql</term> <description><see cref="MergeSQLMiddleware"/></description></item>
+		/// <item><term>/sql-api/select/sql</term> <description><see cref="SelectSQLMiddleware"/></description></item>
+		/// <item><term>/sql-api/update/sql</term> <description><see cref="UpdateSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider</param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this, string provider, string connectionString) =>
-			@this.UseSqlApiMergeSQL(provider, connectionString, null)
-				.UseSqlApiDeleteSQL(provider, connectionString, null)
-				.UseSqlApiInsertSQL(provider, connectionString, null)
-				.UseSqlApiSchemaSQL(null)
-				.UseSqlApiSelectSQL(provider, connectionString, null)
-				.UseSqlApiUpdateSQL(provider, connectionString, null);
+		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString) =>
+			@this.UseSqlApiSchemaSQL(null)
+				.UseSqlApiDeleteSQL(databaseProvider, connectionString, null)
+				.UseSqlApiInsertSQL(databaseProvider, connectionString, null)
+				.UseSqlApiMergeSQL(databaseProvider, connectionString, null)
+				.UseSqlApiSelectSQL(databaseProvider, connectionString, null)
+				.UseSqlApiUpdateSQL(databaseProvider, connectionString, null);
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/sql</term> <description><see cref="SQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/call</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiCall(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/call");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<BatchMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<SQLMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/delete</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiDelete(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiCall(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/delete");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/call");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<DeleteMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<StoredProcedureMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/delete/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiDeleteSQL(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiDelete(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/delete/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/delete");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<DeleteSQLMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<DeleteMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/delete/sql</term> <description><see cref="DeleteSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/insert</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiInsert(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiDeleteSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/insert");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/delete/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<InsertMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<DeleteSQLMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/insert/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiInsertSQL(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiInsert(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/insert/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insert");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<InsertSQLMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<InsertMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/insert/sql</term> <description><see cref="InsertSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/merge</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiMerge(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiInsertSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/merge");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insert/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<BatchMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<InsertSQLMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/merge</term> <description><see cref="MergeMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/merge/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiMergeSQL(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiMerge(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/merge/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/merge");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<BatchSQLMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<MergeMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/merge/sql</term> <description><see cref="MergeSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/schema</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiMergeSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/schema");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/merge/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<SchemaMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<MergeSQLMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Gets the SQL used to retrieve schema information about database objects.
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/schema</term> <description><see cref="SchemaMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="path">Default: <code>/sql-api/schema/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiSchemaSQL(this IApplicationBuilder @this, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/schema/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/schema");
+			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
+				appBuilder.UseMiddleware<SchemaMiddleware>(databaseProvider, connectionString));
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/schema/sql</term> <description><see cref="SchemaSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiSchemaSQL(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/schema/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
 				appBuilder.UseMiddleware<SchemaSQLMiddleware>());
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/select</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiSelect(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiSelect(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/select");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/select");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<SelectMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<SelectMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/select/sql</term> <description><see cref="SelectSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/select/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiSelectSQL(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiSelectSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/select/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/select/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<SelectSQLMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<SelectSQLMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/update</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiUpdate(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiUpdate(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/update");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/update");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<UpdateMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<UpdateMiddleware>(databaseProvider, connectionString));
 		}
 
 		/// <summary>
-		/// Be sure to register your provider before calling this method.
-		/// For example, if using Nuget Package <b>Microsoft.Data.SqlClient</b>, register the provider:
-		/// <code>DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);</code>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/update/sql</term> <description><see cref="UpdateSQLMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires a call to:</i>
+		/// <code><see cref="Database.Extensions.IServiceCollectionExtensions.RegisterDatabaseProviderFactory"/></code>
 		/// </summary>
-		/// <param name="provider">Database provider ie. <b>Microsoft.Data.SqlClient</b></param>
-		/// <param name="connectionString">Database connection string</param>
-		/// <param name="path">Default: <code>/sql-api/update/sql</code></param>
-		/// <returns>IApplicationBuilder</returns>
-		public static IApplicationBuilder UseSqlApiUpdateSQL(this IApplicationBuilder @this, string provider, string connectionString, PathString? path = null)
+		public static IApplicationBuilder UseSqlApiUpdateSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
-			path ??= new PathString("/sql-api/update/sql");
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/update/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path), appBuilder =>
-				appBuilder.UseMiddleware<UpdateSQLMiddleware>(provider, connectionString));
+				appBuilder.UseMiddleware<UpdateSQLMiddleware>(databaseProvider, connectionString));
 		}
 	}
 }

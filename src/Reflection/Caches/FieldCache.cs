@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using static Sam987883.Common.Extensions.IEnumerableExtensions;
 
-namespace Sam987883.Reflection
+namespace Sam987883.Reflection.Caches
 {
 	internal sealed class FieldCache<T> : IFieldCache<T>
 		where T : class

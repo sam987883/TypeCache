@@ -2,7 +2,6 @@
 
 using Sam987883.Common.Extensions;
 using Sam987883.Common.Models;
-using Sam987883.Reflection.Members;
 
 namespace Sam987883.Reflection.Converters
 {

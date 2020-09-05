@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace Sam987883.Web.Middleware
 {
-	public class BatchMiddleware
+	public class MergeMiddleware
     {
         private readonly string _ConnectionString;
         private readonly DbProviderFactory _DbProviderFactory;
 
-        public BatchMiddleware(RequestDelegate _, string providerName, string connectionString)
+        public MergeMiddleware(RequestDelegate _, string providerName, string connectionString)
         {
             this._ConnectionString = connectionString;
             this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);

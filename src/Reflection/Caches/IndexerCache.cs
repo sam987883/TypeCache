@@ -4,7 +4,7 @@ using Sam987883.Reflection.Members;
 using System.Collections.Immutable;
 using static Sam987883.Common.Extensions.IEnumerableExtensions;
 
-namespace Sam987883.Reflection
+namespace Sam987883.Reflection.Caches
 {
 	internal sealed class IndexerCache<T> : IIndexerCache<T>
 		where T : class

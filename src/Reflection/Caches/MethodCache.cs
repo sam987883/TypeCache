@@ -8,7 +8,7 @@ using System.Collections.Immutable;
 using static Sam987883.Common.Extensions.IEnumerableExtensions;
 using static Sam987883.Common.Extensions.IReadOnlyDictionaryExtensions;
 
-namespace Sam987883.Reflection
+namespace Sam987883.Reflection.Caches
 {
 	internal sealed class MethodCache<T> : IMethodCache<T>
 		where T : class

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Immutable;
 using static Sam987883.Common.Extensions.IEnumerableExtensions;
 
-namespace Sam987883.Reflection
+namespace Sam987883.Reflection.Caches
 {
 	internal sealed class ConstructorCache<T> : IConstructorCache<T>
 		where T : class

@@ -8,7 +8,7 @@ using System.Reflection;
 using static Sam987883.Common.Extensions.EnumExtensions;
 using static Sam987883.Common.Extensions.IEnumerableExtensions;
 
-namespace Sam987883.Reflection
+namespace Sam987883.Reflection.Caches
 {
 	internal sealed class EnumCache<T> : Member, IEnumCache<T>
 		where T : struct, Enum
