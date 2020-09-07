@@ -4,15 +4,14 @@ using System.Collections.Immutable;
 
 namespace Sam987883.Reflection
 {
-	public interface IFieldCache<T>
-		where T : class
+	public interface IMemberAccessor
 	{
-		IImmutableDictionary<string, IFieldMember<T>> Fields { get; }
+		object? this[string name] { get; set; }
 
 		IImmutableList<string> GetNames { get; }
 
 		IImmutableList<string> SetNames { get; }
 
-		void Map(T from, T to);
+		IImmutableDictionary<string, object?> Values { get; }
 	}
 }

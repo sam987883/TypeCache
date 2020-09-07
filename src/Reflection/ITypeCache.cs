@@ -1,18 +1,34 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
+using Sam987883.Common.Models;
 using System;
 using System.Collections.Immutable;
 
 namespace Sam987883.Reflection
 {
+	public interface ITypeCache
+	{
+		T? Create<T>() where T : class, new();
+
+		IMemberAccessor CreateFieldAccessor<T>(T instance) where T : class, new();
+
+		IMemberAccessor CreatePropertyAccessor<T>(T instance) where T : class, new();
+
+		T[] Map<T>(RowSet rowSet) where T : class, new();
+
+		RowSet Map<T>(T[] items, params string[] columns) where T : class, new();
+	}
+
 	public interface ITypeCache<T> : IMember
 		where T : class
 	{
-		IImmutableList<RuntimeTypeHandle> GenericInterfaces { get; }
+		IImmutableList<RuntimeTypeHandle> GenericInterfaceHandles { get; }
 
-		IImmutableList<RuntimeTypeHandle> GenericTypes { get; }
+		IImmutableList<RuntimeTypeHandle> GenericTypeHandles { get; }
 
-		IImmutableList<RuntimeTypeHandle> Interfaces { get; }
+		IImmutableList<NativeType> GenericTypes { get; }
+
+		IImmutableList<RuntimeTypeHandle> InterfaceHandles { get; }
 
 		IConstructorCache<T> ConstructorCache { get; }
 

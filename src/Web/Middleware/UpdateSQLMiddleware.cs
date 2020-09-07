@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace Sam987883.Web.Middleware
 {
-	public class UpdateSQLMiddleware
+	public class UpdateSqlMiddleware
     {
         private readonly string _ConnectionString;
         private readonly DbProviderFactory _DbProviderFactory;
 
-        public UpdateSQLMiddleware(RequestDelegate _, string providerName, string connectionString)
+        public UpdateSqlMiddleware(RequestDelegate _, string providerName, string connectionString)
         {
             this._ConnectionString = connectionString;
             this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);
@@ -40,7 +40,7 @@ namespace Sam987883.Web.Middleware
                 request.Table = schema.Name;
                 var validator = new SchemaValidator(schema);
                 validator.Validate(request);
-                await httpContext.Response.WriteAsync(request.ToSQL());
+                await httpContext.Response.WriteAsync(request.ToSql());
             }
         }
     }

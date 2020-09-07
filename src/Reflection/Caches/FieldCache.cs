@@ -18,9 +18,21 @@ namespace Sam987883.Reflection.Caches
 				.If(fieldInfo => !fieldInfo.IsLiteral)
 				.To(fieldInfo => KeyValuePair.Create(fieldInfo.Name, (IFieldMember<T>)new FieldMember<T>(fieldInfo)))
 				.ToImmutable(TypeCache.NameComparer, valueComparer);
+			this.GetNames = this.Fields
+				.If(_ => _.Value.Getter != null)
+				.To(_ => _.Value.Name)
+				.ToImmutableArray();
+			this.SetNames = this.Fields
+				.If(_ => _.Value.Setter != null)
+				.To(_ => _.Value.Name)
+				.ToImmutableArray();
 		}
 
 		public IImmutableDictionary<string, IFieldMember<T>> Fields { get; }
+
+		public IImmutableList<string> GetNames { get; }
+
+		public IImmutableList<string> SetNames { get; }
 
 		public void Map(T from, T to) =>
 			this.Fields.Values

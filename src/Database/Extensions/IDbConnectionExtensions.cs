@@ -47,7 +47,7 @@ namespace Sam987883.Database.Extensions
 		/// <summary>
 		/// EXECUTE ...
 		/// </summary>
-		public static IEnumerable<RowSet> Run(this IDbConnection @this, SQLRequest request)
+		public static IEnumerable<RowSet> Run(this IDbConnection @this, SqlRequest request)
 		{
 			using var command = @this.CreateSqlCommand(request.SQL);
 			request.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
@@ -69,7 +69,7 @@ namespace Sam987883.Database.Extensions
 			var validator = new SchemaValidator(schema);
 			validator.Validate(delete);
 
-			using var command = @this.CreateSqlCommand(delete.ToSQL());
+			using var command = @this.CreateSqlCommand(delete.ToSql());
 			delete.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			if (delete.Output.Any())
@@ -99,7 +99,7 @@ namespace Sam987883.Database.Extensions
 			var validator = new SchemaValidator(schema);
 			validator.Validate(insert);
 
-			using var command = @this.CreateSqlCommand(insert.ToSQL());
+			using var command = @this.CreateSqlCommand(insert.ToSql());
 			insert.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			if (insert.Output.Any())
@@ -136,7 +136,7 @@ namespace Sam987883.Database.Extensions
 			var validator = new SchemaValidator(schema);
 			validator.Validate(batch);
 
-			using var command = @this.CreateSqlCommand(batch.ToSQL());
+			using var command = @this.CreateSqlCommand(batch.ToSql());
 			if (batch.Output.Any())
 			{
 				using var reader = command.ExecuteReader();
@@ -161,7 +161,7 @@ namespace Sam987883.Database.Extensions
 			var validator = new SchemaValidator(schema);
 			validator.Validate(select);
 
-			using var command = @this.CreateSqlCommand(select.ToSQL());
+			using var command = @this.CreateSqlCommand(select.ToSql());
 			select.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			using var transaction = command.BeginTransaction(IsolationLevel.ReadUncommitted);
@@ -191,7 +191,7 @@ namespace Sam987883.Database.Extensions
 			var validator = new SchemaValidator(schema);
 			validator.Validate(update);
 
-			using var command = @this.CreateSqlCommand(update.ToSQL());
+			using var command = @this.CreateSqlCommand(update.ToSql());
 			update.Parameters.Do(parameter => command.AddInputParameter(parameter.Name, parameter.Value));
 
 			if (update.Output.Any())

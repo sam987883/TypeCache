@@ -33,7 +33,7 @@ namespace Sam987883.Reflection.Members
 			{
 				call = Expression.Call(methodInfo, parameters.ToParameterArray(parameterInfos));
 
-				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
+				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArrayOf(parameterInfos.Length);
 				this.Method = Expression.Call(methodInfo, methodParameters).Lambda(methodParameters).Compile();
 				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo)).ToImmutableArray();
 			}

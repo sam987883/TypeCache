@@ -8,7 +8,7 @@ namespace Sam987883.Database.Models
 	/// <summary>
 	/// Use Parameters to take in user input to avoid SQL Injection.
 	/// </summary>
-	public class SQLRequest
+	public class SqlRequest
 	{
 		/// <summary>
 		/// Raw SQL.

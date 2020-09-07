@@ -62,18 +62,10 @@ INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
 WHERE p.[object_id] = @ObjectId
 ORDER BY p.[parameter_id] ASC;";
 
-		private readonly IRowSetConverter<ObjectSchema> _TableSchemaConverter;
-		private readonly IRowSetConverter<ColumnSchema> _ColumnSchemaConverter;
-		private readonly IRowSetConverter<ParameterSchema> _ParameterSchemaConverter;
+		private readonly ITypeCache _TypeCache;
 
-		public SchemaFactory(IRowSetConverter<ObjectSchema> tableSchemaConverter
-			, IRowSetConverter<ColumnSchema> columnSchemaConverter
-			, IRowSetConverter<ParameterSchema> parameterSchemaConverter)
-		{
-			this._TableSchemaConverter = tableSchemaConverter;
-			this._ColumnSchemaConverter = columnSchemaConverter;
-			this._ParameterSchemaConverter = parameterSchemaConverter;
-		}
+		public SchemaFactory(ITypeCache typeCache)
+			=> this._TypeCache = typeCache;
 
 		public string SQL { get; } = ObjectSchemaSQL;
 
@@ -102,7 +94,7 @@ ORDER BY p.[parameter_id] ASC;";
 
 			using var reader = command.ExecuteReader();
 			var tableRowSet = reader.ReadRowSet();
-			var (objectSchema, exists) = this._TableSchemaConverter.FromRowSet(tableRowSet).First();
+			var (objectSchema, exists) = this._TypeCache.Map<ObjectSchema>(tableRowSet).First();
 			if (exists)
 			{
 				objectSchema.DatabaseName = connection.Database;
@@ -110,13 +102,13 @@ ORDER BY p.[parameter_id] ASC;";
 				if (reader.NextResult())
 				{
 					var columnRowSet = reader.ReadRowSet();
-					objectSchema.Columns = this._ColumnSchemaConverter.FromRowSet(columnRowSet).ToImmutable();
+					objectSchema.Columns = this._TypeCache.Map<ColumnSchema>(columnRowSet).ToImmutable();
 				}
 
 				if (reader.NextResult())
 				{
 					var parameterRowSet = reader.ReadRowSet();
-					objectSchema.Parameters = this._ParameterSchemaConverter.FromRowSet(parameterRowSet).ToImmutable();
+					objectSchema.Parameters = this._TypeCache.Map<ParameterSchema>(parameterRowSet).ToImmutable();
 				}
 
 				return objectSchema;

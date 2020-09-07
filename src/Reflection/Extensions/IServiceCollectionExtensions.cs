@@ -1,34 +1,18 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
 using Microsoft.Extensions.DependencyInjection;
-using Sam987883.Reflection.Accessors;
 using Sam987883.Reflection.Caches;
 using Sam987883.Reflection.Converters;
 using Sam987883.Reflection.Mappers;
-using System;
 
 namespace Sam987883.Reflection.Extensions
 {
 	public static class IServiceCollectionExtensions
 	{
-		private static IFieldAccessor CreateFieldAccessor(IServiceProvider provider, object instance)
-		{
-			var type = typeof(IFieldAccessorFactory<>).MakeGenericType(instance.GetType());
-			dynamic factory = provider.GetRequiredService(type);
-			return factory.Create(instance);
-		}
-
-		private static IPropertyAccessor CreatePropertyAccessor(IServiceProvider provider, object instance)
-		{
-			var type = typeof(IPropertyAccessorFactory<>).MakeGenericType(instance.GetType());
-			dynamic factory = provider.GetRequiredService(type);
-			return factory.Create(instance);
-		}
-
 		/// <summary>
-		/// Registers Singletons:
+		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><see cref="IFieldMapper&lt;FROM, TO&gt;"/></item>
+		/// <item><term><see cref="IFieldMapper&lt;FROM, TO&gt;"/></term> <description>Field mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
 		/// <i>Requires call to: <see cref="RegisterTypeCache"/></i>
 		/// </summary>
@@ -38,9 +22,9 @@ namespace Sam987883.Reflection.Extensions
 				new FieldMapper<FROM, TO>(provider.GetRequiredService<IFieldCache<FROM>>(), provider.GetRequiredService<IFieldCache<TO>>(), overrides));
 
 		/// <summary>
-		/// Registers Singletons:
+		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><see cref="IPropertyMapper&lt;FROM, TO&gt;"/></item>
+		/// <item><term><see cref="IPropertyMapper&lt;FROM, TO&gt;"/></term> <description>Property mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
 		/// <i>Requires call to: <see cref="RegisterTypeCache"/></i>
 		/// </summary>
@@ -52,21 +36,20 @@ namespace Sam987883.Reflection.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><see cref="ITypeCache&lt;&gt;"/></item>
-		/// <item><see cref="IConstructorCache&lt;&gt;"/></item>
-		/// <item><see cref="IIndexerCache&lt;&gt;"/></item>
-		/// <item><see cref="IMethodCache&lt;&gt;"/>, <see cref="IStaticMethodCache&lt;&gt;"/></item>
-		/// <item><see cref="IPropertyCache&lt;&gt;"/>, <see cref="IStaticPropertyCache&lt;&gt;"/></item>
-		/// <item><see cref="IFieldCache&lt;&gt;"/>, <see cref="IStaticFieldCache&lt;&gt;"/></item>
-		/// <item><see cref="IEnumCache&lt;&gt;"/></item>
-		/// <item><see cref="IPropertyAccessorFactory&lt;&gt;"/>, <see cref="IFieldAccessorFactory&lt;&gt;"/></item>
-		/// <item><see cref="Func&lt;object, IPropertyAccessor&gt;"/>, <see cref="Func&lt;object, IFieldAccessor&gt;"/></item>
-		/// <item><see cref="IPropertyMapper&lt;,&gt;"/>, <see cref="IFieldMapper&lt;,&gt;"/></item>
-		/// <item><see cref="PropertyJsonConverter&lt;&gt;"/>, <see cref="FieldJsonConverter&lt;&gt;"/></item>
-		/// <item><see cref="IRowSetConverter&lt;&gt;"/></item>
+		/// <item><term><see cref="ITypeCache"/></term> <description>Useful utility class.</description></item>
+		/// <item><term><see cref="ITypeCache&lt;&gt;"/></term> <description>Class type information.</description></item>
+		/// <item><term><see cref="IConstructorCache&lt;&gt;"/></term> <description>Class constructors.</description></item>
+		/// <item><term><see cref="IIndexerCache&lt;&gt;"/></term> <description>Class indexers.</description></item>
+		/// <item><term><see cref="IMethodCache&lt;&gt;"/>, <see cref="IStaticMethodCache&lt;&gt;"/></term> <description>Class methods.</description></item>
+		/// <item><term><see cref="IPropertyCache&lt;&gt;"/>, <see cref="IStaticPropertyCache&lt;&gt;"/></term> <description>Class properties.</description></item>
+		/// <item><term><see cref="IFieldCache&lt;&gt;"/>, <see cref="IStaticFieldCache&lt;&gt;"/></term> <description>Class fields.</description></item>
+		/// <item><term><see cref="IEnumCache&lt;&gt;"/></term> <description>Enum fields and information.</description></item>
+		/// <item><term><see cref="IPropertyMapper&lt;,&gt;"/>, <see cref="IFieldMapper&lt;,&gt;"/></term> <description>Mappers where types: FROM = TO.</description></item>
+		/// <item><term><see cref="PropertyJsonConverter&lt;&gt;"/>, <see cref="FieldJsonConverter&lt;&gt;"/></term> <description>TypeCache based JSON converters.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterTypeCache(this IServiceCollection @this) => @this
+			.AddSingleton<ITypeCache>(serviceProvider => new TypeCache(serviceProvider))
 			.AddSingleton(typeof(ITypeCache<>), typeof(TypeCache<>))
 			.AddSingleton(typeof(IConstructorCache<>), typeof(ConstructorCache<>))
 			.AddSingleton(typeof(IIndexerCache<>), typeof(IndexerCache<>))
@@ -77,14 +60,9 @@ namespace Sam987883.Reflection.Extensions
 			.AddSingleton(typeof(IFieldCache<>), typeof(FieldCache<>))
 			.AddSingleton(typeof(IStaticFieldCache<>), typeof(StaticFieldCache<>))
 			.AddSingleton(typeof(IEnumCache<>), typeof(EnumCache<>))
-			.AddSingleton(typeof(IPropertyAccessorFactory<>), typeof(PropertyAccessorFactory<>))
-			.AddSingleton(typeof(IFieldAccessorFactory<>), typeof(FieldAccessorFactory<>))
-			.AddSingleton(typeof(Func<object, IPropertyAccessor>), provider => new Func<object, IPropertyAccessor>(instance => CreatePropertyAccessor(provider, instance)))
-			.AddSingleton(typeof(Func<object, IFieldAccessor>), provider => new Func<object, IFieldAccessor>(instance => CreateFieldAccessor(provider, instance)))
 			.AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>))
 			.AddSingleton(typeof(IFieldMapper<,>), typeof(FieldMapper<,>))
 			.AddSingleton(typeof(PropertyJsonConverter<>), typeof(PropertyJsonConverter<>))
-			.AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>))
-			.AddSingleton(typeof(IRowSetConverter<>), typeof(RowSetConverter<>));
+			.AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>));
 	}
 }

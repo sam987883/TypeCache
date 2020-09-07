@@ -25,5 +25,15 @@ namespace Sam987883.Common.Extensions
 						yield return value;
 			}
 		}
+
+		public static IEnumerable<V> GetValues<K, V>(this IReadOnlyDictionary<K, V> @this, IEnumerable<K> keys) where K : notnull
+		{
+			if (keys.Any())
+			{
+				foreach (var key in keys)
+					if (@this.TryGetValue(key, out var value))
+						yield return value;
+			}
+		}
 	}
 }

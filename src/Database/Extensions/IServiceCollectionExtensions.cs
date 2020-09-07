@@ -1,7 +1,6 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
 using Microsoft.Extensions.DependencyInjection;
-using Sam987883.Database.Models;
 using Sam987883.Reflection;
 using System.Data.Common;
 
@@ -30,9 +29,7 @@ namespace Sam987883.Database.Extensions
 		/// <i>Requires call to: <see cref="Reflection.Extensions.IServiceCollectionExtensions.RegisterTypeCache"/></i>
 		/// </summary>
 		public static IServiceCollection RegisterDatabaseSchema(this IServiceCollection @this) => @this
-			.AddSingleton<ISchemaFactory>(provider => new SchemaFactory(provider.GetRequiredService<IRowSetConverter<ObjectSchema>>()
-				, provider.GetRequiredService<IRowSetConverter<ColumnSchema>>()
-				, provider.GetRequiredService<IRowSetConverter<ParameterSchema>>()))
+			.AddSingleton<ISchemaFactory>(provider => new SchemaFactory(provider.GetRequiredService<ITypeCache>()))
 			.AddSingleton<ISchemaStore>(provider => new SchemaStore(provider.GetRequiredService<ISchemaFactory>()));
 	}
 }

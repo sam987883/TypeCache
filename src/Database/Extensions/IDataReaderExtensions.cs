@@ -10,7 +10,7 @@ namespace Sam987883.Database.Extensions
 	public static class IDataReaderExtensions
 	{
 		public static string[] GetColumns(this IDataReader @this) =>
-			0.Range(@this.FieldCount).To(@this.GetName).ToArray(@this.FieldCount);
+			0.Range(@this.FieldCount).To(@this.GetName).ToArrayOf(@this.FieldCount);
 
 		public static IEnumerable<object[]> ReadRows(this IDataReader @this)
 		{

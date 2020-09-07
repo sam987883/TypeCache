@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Sam987883.Web.Middleware
 {
-	public class SchemaSQLMiddleware
+	public class SchemaSqlMiddleware
     {
-        public SchemaSQLMiddleware(RequestDelegate _) { }
+        public SchemaSqlMiddleware(RequestDelegate _) { }
 
         public async Task Invoke(HttpContext httpContext, ISchemaFactory schemaFactory)
         {

@@ -35,7 +35,7 @@ namespace Sam987883.Reflection.Members
 			{
 				call = instance.Call(methodInfo, parameters.ToParameterArray(parameterInfos));
 
-				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
+				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArrayOf(parameterInfos.Length);
 				var methodParameters = new ParameterExpression[parameterInfos.Length + 1];
 				methodParameters[0] = instance;
 				callParameters.CopyTo(methodParameters, 1);

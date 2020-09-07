@@ -339,9 +339,9 @@ namespace Sam987883.Common.Extensions
 		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
 		{
 			null => new T[0],
-			T[] array => array.Get(range).ToArray(array.Length),
-			IReadOnlyCollection<T> readOnlyCollection => @this.Get(range).ToArray(readOnlyCollection.Count),
-			ICollection<T> collection => @this.Get(range).ToArray(collection.Count),
+			T[] array => array.Get(range).ToArrayOf(array.Length),
+			IReadOnlyCollection<T> readOnlyCollection => @this.Get(range).ToArrayOf(readOnlyCollection.Count),
+			ICollection<T> collection => @this.Get(range).ToArrayOf(collection.Count),
 			_ => @this.Get(range).ToList().ToArray(),
 		};
 
@@ -580,7 +580,14 @@ namespace Sam987883.Common.Extensions
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map) =>
 			map != null ? Enumerable.Empty<V>().And(@this.To<T, IEnumerable<V>>(map)) : Enumerable.Empty<V>();
 
-		public static T[] ToArray<T>(this IEnumerable<T>? @this, int length)
+		public static T[] ToArray<T>(this ICollection<T>? @this)
+		{
+			var array = new T[@this?.Count ?? 0];
+			@this.Do((item, index) => array[index] = item);
+			return array;
+		}
+
+		public static T[] ToArrayOf<T>(this IEnumerable<T>? @this, int length)
 		{
 			var array = new T[length];
 			@this.Do((item, index) => array[index] = item);

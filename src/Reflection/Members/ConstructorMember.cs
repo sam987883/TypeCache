@@ -28,7 +28,7 @@ namespace Sam987883.Reflection.Members
 			{
 				this._Invoke = Expression.New(constructorInfo, parameters.ToParameterArray(parameterInfos)).Lambda<Func<object?[]?, T>>(parameters).Compile();
 
-				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
+				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArrayOf(parameterInfos.Length);
 				this.Method = Expression.New(constructorInfo, methodParameters).Lambda(methodParameters).Compile();
 				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo)).ToImmutableArray();
 			}

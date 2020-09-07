@@ -1,11 +1,12 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
 using Sam987883.Common.Extensions;
-using System.Collections.Generic;
+using Sam987883.Reflection.Caches;
+using System.Collections.Immutable;
 
 namespace Sam987883.Reflection.Accessors
 {
-	internal sealed class FieldAccessor<T> : IFieldAccessor
+	internal sealed class FieldAccessor<T> : IMemberAccessor
 		where T : class
 	{
 		private readonly T _Instance;
@@ -23,18 +24,15 @@ namespace Sam987883.Reflection.Accessors
 			set => this._FieldCache.Fields.Get(name).Value[this._Instance] = value;
 		}
 
-		public string[] Names =>
-			this._FieldCache.Fields.Keys.ToArray(this._FieldCache.Fields.Count);
+		public IImmutableList<string> GetNames => this._FieldCache.GetNames;
 
-		public IDictionary<string, object?> Values
+		public IImmutableList<string> SetNames => this._FieldCache.SetNames;
+
+		public IImmutableDictionary<string, object?> Values
 		{
-			get => this._FieldCache.Fields.Keys.ToDictionary(name => this._FieldCache.Fields[name][this._Instance], TypeCache.NameComparer);
-			set => value.Do(pair =>
-			{
-				var field = this._FieldCache.Fields.Get(pair.Key);
-				if (field.Exists)
-					field.Value[this._Instance] = pair.Value;
-			});
+			get => this._FieldCache.Fields
+				.GetValues(this.GetNames)
+				.ToImmutableDictionary(_ => _.Name, _ => this._FieldCache.Fields[_.Name][this._Instance], TypeCache.NameComparer);
 		}
 	}
 }
