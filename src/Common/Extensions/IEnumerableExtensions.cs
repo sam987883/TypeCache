@@ -119,8 +119,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[] items) =>
-			@this.And(items as IEnumerable<T>);
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[] items)
+			=> @this.And(items as IEnumerable<T>);
 
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this)
 		{
@@ -140,8 +140,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T, bool> filter) =>
-			@this.If(filter).Any();
+		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T, bool> filter)
+			=> @this.If(filter).Any();
 
 		public static int Count<T>(this IEnumerable<T>? @this)
 		{
@@ -329,12 +329,12 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) First<T>(this IEnumerable<T>? @this, Func<T, bool> filter) =>
-			@this.If(filter).First();
+		public static (T Value, bool Exists) First<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+			=> @this.If(filter).First();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this) =>
-			Enumerable.Empty<T>().And(@this);
+		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this)
+			=> Enumerable.Empty<T>().And(@this);
 
 		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
 		{
@@ -345,26 +345,27 @@ namespace Sam987883.Common.Extensions
 			_ => @this.Get(range).ToList().ToArray(),
 		};
 
-		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> getItems) =>
-			@this.And(@this.To<T, IEnumerable<T>?>(getItems));
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> map)
+			=> @this.And(@this.To<T, IEnumerable<T>?>(map));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value) =>
-			@this.ToIndex(value).Any();
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
+			=> @this.ToIndex(value).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer) =>
-			@this.ToIndex(value, comparer).Any();
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
+			=> @this.ToIndex(value, comparer).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values) =>
-			values.All(value => @this.Has(value));
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
+			=> values.All(value => @this.Has(value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer) =>
-			values.All(value => @this.Has(value, comparer));
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
+			=> values.All(value => @this.Has(value, comparer));
 
-		public static IEnumerable<T> If<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T, bool> filter)
+		public static IEnumerable<T> If<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -440,24 +441,24 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<string> IfNotBlank(this IEnumerable<string?>? @this) =>
-			@this.If(_ => !_.IsBlank());
+		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this) where T : class
+			=> @this.If<T>(_ => _ != null);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this) where T : class =>
-			@this.If(_ => _ != null);
+		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this) where T : struct
+			=> @this.If(_ => _.HasValue).To(_ => _.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this) where T : struct =>
-			@this.If(_ => _.HasValue).To(_ => _.Value);
+		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+			=> @this.ToHashSet().SetEquals(items ?? Enumerable.Empty<T>());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items) =>
-			@this.ToHashSet().SetEquals(items ?? Enumerable.Empty<T>());
+		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer) =>
-			@this.ToHashSet(comparer).SetEquals(items ?? Enumerable.Empty<T>());
+			return @this.ToHashSet(comparer).SetEquals(items ?? Enumerable.Empty<T>());
+		}
 
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) => @this switch
 		{
@@ -467,8 +468,8 @@ namespace Sam987883.Common.Extensions
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map) =>
-			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
+		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map)
+			=> @this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter) => @this switch
 		{
@@ -478,8 +479,8 @@ namespace Sam987883.Common.Extensions
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map) =>
-			@this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
+		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map)
+			=> @this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
@@ -498,8 +499,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
-			@this.Aggregate((x, y) => x.CompareTo(y) > 0 ? x : y);
+		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this) where T : IComparable<T>
+			=> @this.Aggregate((x, y) => x.MoreThan(y) ? x : y);
 
 		public static (T Value, bool Exists) Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
 		{
@@ -509,8 +510,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
-			@this.Aggregate((x, y) => x.CompareTo(y) < 0 ? x : y);
+		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this) where T : IComparable<T>
+			=> @this.Aggregate((x, y) => x.LessThan(y) ? x : y);
 
 		public static (T Value, bool Exists) Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
 		{
@@ -536,8 +537,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T> =>
-			@this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
+		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T>
+			=> @this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
 
 		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 		{
@@ -553,6 +554,8 @@ namespace Sam987883.Common.Extensions
 
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
 		{
+			map.AssertNotNull(nameof(map));
+
 			switch (@this)
 			{
 				case null:
@@ -577,8 +580,9 @@ namespace Sam987883.Common.Extensions
 			}
 		}
 
-		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map) =>
-			map != null ? Enumerable.Empty<V>().And(@this.To<T, IEnumerable<V>>(map)) : Enumerable.Empty<V>();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
+			=> Enumerable.Empty<V>().And(@this.To<T, IEnumerable<V>>(map));
 
 		public static T[] ToArray<T>(this ICollection<T>? @this)
 		{
@@ -595,14 +599,11 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToCsv<T>(this IEnumerable<T>? @this, Func<T, string> map) =>
-			@this.To(map).ToCsv();
+		public static string ToCsv<T>(this IEnumerable<T>? @this, Func<T, string> map)
+			=> @this.To(map).ToCsv();
 
-		public static string ToCsv(this IEnumerable<string>? @this) =>
-			@this.Any() ? string.Join(',', @this.To(text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""))) : string.Empty;
-
-		public static string ToCsv<T>(this IEnumerable<T>? @this) =>
-			@this.Any() ? string.Join(',', @this.To(value => value switch
+		public static string ToCsv<T>(this IEnumerable<T>? @this)
+			=> @this.Any() ? string.Join(',', @this.To(value => value switch
 			{
 				bool _ => value.ToString(),
 				byte _ => value.ToString(),
@@ -623,7 +624,8 @@ namespace Sam987883.Common.Extensions
 				Guid guid => guid.ToString("D"),
 				Enum token => token.Number(),
 				string text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""),
-				_ => $"\"{value.ToString().Replace("\"", "\"\"")}\"" ?? string.Empty
+				null => string.Empty,
+				_ => $"\"{value.ToString().Replace("\"", "\"\"")}\""
 			})) : string.Empty;
 
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory) where K : notnull
@@ -667,8 +669,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this) =>
-			@this != null ? new HashSet<T>(@this) : new HashSet<T>(0);
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this)
+			=> @this != null ? new HashSet<T>(@this) : new HashSet<T>(0);
 
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T> comparer)
 		{
@@ -678,8 +680,8 @@ namespace Sam987883.Common.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this) =>
-			@this.ToImmutable(@this.Count());
+		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this)
+			=> @this.ToImmutable(@this.Count());
 
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this, int count)
 		{
@@ -768,24 +770,21 @@ namespace Sam987883.Common.Extensions
 			_ => @this.ToIndex(item => object.Equals(item, value))
 		};
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
-		{
-			comparer.AssertNotNull(nameof(comparer));
-
-			return @this.ToIndex(item => comparer.Equals(item, value));
-		}
+			=> @this.ToIndex(item => comparer.Equals(item, value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static List<T> ToList<T>(this IEnumerable<T>? @this) =>
-			@this != null ? new List<T>(@this) : new List<T>(0);
+		public static List<T> ToList<T>(this IEnumerable<T>? @this)
+			=> @this != null ? new List<T>(@this) : new List<T>(0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this) =>
-			@this != null ? new Queue<T>(@this) : new Queue<T>(0);
+		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
+			=> @this != null ? new Queue<T>(@this) : new Queue<T>(0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this) =>
-			@this.ToSpan();
+		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
+			=> @this.ToSpan();
 
 		public static Span<T> ToSpan<T>(this IEnumerable<T>? @this) => @this switch
 		{
@@ -795,8 +794,8 @@ namespace Sam987883.Common.Extensions
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this) =>
-			@this != null ? new Stack<T>(@this) : new Stack<T>(0);
+		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
+			=> @this != null ? new Stack<T>(@this) : new Stack<T>(0);
 
 		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{

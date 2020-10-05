@@ -13,8 +13,8 @@ namespace Sam987883.Database
 	{
 		private readonly ObjectSchema _ObjectSchema;
 
-		public SchemaValidator(ObjectSchema objectSchema) =>
-			this._ObjectSchema = objectSchema;
+		public SchemaValidator(ObjectSchema objectSchema)
+			=> this._ObjectSchema = objectSchema;
 
 		public void Validate(BatchRequest batch)
 		{
@@ -45,6 +45,7 @@ namespace Sam987883.Database
 
 		public void Validate(InsertRequest insert)
 		{
+			this._ObjectSchema.Type.Assert($"{nameof(insert)}.{nameof(insert.Into)}", ObjectType.Table);
 			this.ValidateColumns($"{nameof(insert)}.{nameof(insert.Insert)}", insert.Insert);
 			this.ValidateAliases($"{nameof(insert)}.{nameof(insert.Output)}", insert.Output);
 			this.ValidateAliases($"{nameof(insert)}.{nameof(insert.Select)}", insert.Select);

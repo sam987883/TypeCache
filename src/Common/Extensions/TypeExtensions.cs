@@ -5,10 +5,10 @@ using System.Runtime.CompilerServices;
 
 namespace Sam987883.Common.Extensions
 {
-	public static class ReflectionExtensions
+	public static class TypeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Implements(this Type @this, Type type) =>
-			@this == type || @this.GetInterfaces().Any(interfaceType => interfaceType == type);
+		public static bool Implements(this Type @this, Type type)
+			=> @this == type || @this.GetInterfaces().Any(interfaceType => interfaceType == type);
 	}
 }

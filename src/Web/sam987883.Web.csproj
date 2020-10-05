@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>sam987883.Web</PackageId>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Title>TypeCache Reflection</Title>
     <Description>Web API access to SQL database data operations: let the front-end decide how to retrieve and manipulate data.</Description>

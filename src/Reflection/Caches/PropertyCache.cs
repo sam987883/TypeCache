@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2020 Samuel Abraham
 
-using Sam987883.Common;
 using Sam987883.Reflection.Members;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,11 +12,10 @@ namespace Sam987883.Reflection.Caches
 	{
 		public PropertyCache()
 		{
-			var valueComparer = new CustomEqualityComparer<IPropertyMember<T>>((x, y) => TypeCache.NameComparer.Equals(x.Name, y.Name));
 			this.Properties = typeof(T).GetProperties(TypeCache.INSTANCE_BINDING)
 				.If(propertyInfo => !propertyInfo.GetIndexParameters().Any())
 				.To(propertyInfo => KeyValuePair.Create(propertyInfo.Name, (IPropertyMember<T>)new PropertyMember<T>(propertyInfo)))
-				.ToImmutable(TypeCache.NameComparer, valueComparer);
+				.ToImmutable(TypeCache.NameComparer);
 			this.GetNames = this.Properties
 				.If(_ => _.Value.GetMethod != null)
 				.To(_ => _.Value.Name)

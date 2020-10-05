@@ -9,8 +9,8 @@ namespace Sam987883.Database.Extensions
 {
 	public static class IDataReaderExtensions
 	{
-		public static string[] GetColumns(this IDataReader @this) =>
-			0.Range(@this.FieldCount).To(@this.GetName).ToArrayOf(@this.FieldCount);
+		public static string[] GetColumns(this IDataReader @this)
+			=> 0.Range(@this.FieldCount).To(@this.GetName).ToArrayOf(@this.FieldCount);
 
 		public static IEnumerable<object[]> ReadRows(this IDataReader @this)
 		{
@@ -23,11 +23,12 @@ namespace Sam987883.Database.Extensions
 			}
 		}
 
-		public static RowSet ReadRowSet(this IDataReader @this) => new RowSet
-		{
-			Columns = @this.GetColumns(),
-			Rows = @this.ReadRows().ToList().ToArray()
-		};
+		public static RowSet ReadRowSet(this IDataReader @this)
+			=> new RowSet
+			{
+				Columns = @this.GetColumns(),
+				Rows = @this.ReadRows().ToList().ToArray()
+			};
 
 		public static IEnumerable<RowSet> ReadRowSets(this IDataReader @this)
 		{

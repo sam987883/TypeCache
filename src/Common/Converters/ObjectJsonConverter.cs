@@ -19,7 +19,7 @@ namespace Sam987883.Common.Converters
 			_ => null,
 		};
 
-		public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options) =>
-			JsonSerializer.Serialize(writer, value, null);
+		public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
+			=> JsonSerializer.Serialize(writer, value, null);
 	}
 }

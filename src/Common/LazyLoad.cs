@@ -7,13 +7,13 @@ using System.Runtime.CompilerServices;
 namespace Sam987883.Common
 {
     public class LazyLoad<T>
-	{
+    {
         private readonly object _ThreadLock = new object();
-		private Func<T> _GetValue;
+        private Func<T> _GetValue;
         [AllowNull] private T _Value;
 
         public LazyLoad([NotNull] Func<T> getValue)
-		{
+        {
             this._GetValue = initialGetValue;
             this._Value = default;
             this.Loaded = false;
@@ -35,19 +35,19 @@ namespace Sam987883.Common
 
         public bool Loaded { get; private set; }
 
-        public T Value =>
-            this._GetValue();
+        public T Value
+            => this._GetValue();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? value) =>
-            Equals(this._GetValue(), value);
+        public override bool Equals(object? value)
+            => Equals(this._GetValue(), value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() =>
-            this._GetValue()?.GetHashCode() ?? 0;
+        public override int GetHashCode()
+            => this._GetValue()?.GetHashCode() ?? 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ToString() =>
-            this._GetValue()?.ToString() ?? string.Empty;
-	}
+        public override string ToString()
+            => this._GetValue()?.ToString() ?? string.Empty;
+    }
 }

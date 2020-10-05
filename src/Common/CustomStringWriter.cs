@@ -5,14 +5,14 @@ using System.Text;
 
 namespace Sam987883.Common
 {
-	internal class CustomStringWriter : StringWriter
+	public class CustomStringWriter : StringWriter
 	{
 		public override Encoding Encoding { get; }
 
-		public CustomStringWriter(Encoding encoding) =>
-			this.Encoding = encoding;
+		public CustomStringWriter(Encoding encoding)
+			=> this.Encoding = encoding;
 
-		public CustomStringWriter(StringBuilder builder, Encoding encoding) : base(builder) =>
-			this.Encoding = encoding;
+		internal CustomStringWriter(StringBuilder builder, Encoding encoding) : base(builder)
+			=> this.Encoding = encoding;
 	}
 }

@@ -36,7 +36,7 @@ namespace Sam987883.Reflection.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="ITypeCache"/></term> <description>Useful utility class.</description></item>
+		/// <item><term><see cref="ITypeCache"/></term> <description>Utility class that handles Relection for anonymous types.</description></item>
 		/// <item><term><see cref="ITypeCache&lt;&gt;"/></term> <description>Class type information.</description></item>
 		/// <item><term><see cref="IConstructorCache&lt;&gt;"/></term> <description>Class constructors.</description></item>
 		/// <item><term><see cref="IIndexerCache&lt;&gt;"/></term> <description>Class indexers.</description></item>
@@ -46,6 +46,7 @@ namespace Sam987883.Reflection.Extensions
 		/// <item><term><see cref="IEnumCache&lt;&gt;"/></term> <description>Enum fields and information.</description></item>
 		/// <item><term><see cref="IPropertyMapper&lt;,&gt;"/>, <see cref="IFieldMapper&lt;,&gt;"/></term> <description>Mappers where types: FROM = TO.</description></item>
 		/// <item><term><see cref="PropertyJsonConverter&lt;&gt;"/>, <see cref="FieldJsonConverter&lt;&gt;"/></term> <description>TypeCache based JSON converters.</description></item>
+		/// <item><term><see cref="IEnumEqualityComparer&lt;&gt;"/>, <see cref="IEnumComparer&lt;&gt;"/></term> <description>EnumCache based IEqualityComparer&lt;&gt; and IComparer&lt;&gt;.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterTypeCache(this IServiceCollection @this) => @this
@@ -63,6 +64,8 @@ namespace Sam987883.Reflection.Extensions
 			.AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>))
 			.AddSingleton(typeof(IFieldMapper<,>), typeof(FieldMapper<,>))
 			.AddSingleton(typeof(PropertyJsonConverter<>), typeof(PropertyJsonConverter<>))
-			.AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>));
+			.AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>))
+			.AddSingleton(typeof(IEnumEqualityComparer<>), typeof(EnumEqualityComparer<>))
+			.AddSingleton(typeof(IEnumComparer<>), typeof(EnumComparer<>));
 	}
 }

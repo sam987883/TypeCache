@@ -16,18 +16,18 @@ namespace Sam987883.Database.Extensions
 	{
 		private const string SQL_DELIMETER = "\r\n\t, ";
 
-		public static string EscapeIdentifier([NotNull] this string @this) =>
-			@this.StartsWith('[') && @this.EndsWith(']')
+		public static string EscapeIdentifier([NotNull] this string @this)
+			=> @this.StartsWith('[') && @this.EndsWith(']')
 				? $"[{@this.Substring(1, @this.Length - 2).Replace("]", "]]")}]"
 				: $"[{@this.Replace("]", "]]")}]";
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string EscapeLikeValue([NotNull] this string @this) =>
-			@this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+		public static string EscapeLikeValue([NotNull] this string @this)
+			=> @this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string EscapeValue([NotNull] this string @this) =>
-			@this.Replace("'", "''");
+		public static string EscapeValue([NotNull] this string @this)
+			=> @this.Replace("'", "''");
 
 		public static string ToSql([NotNull] this BatchRequest @this)
 		{
@@ -103,8 +103,8 @@ ON {onSql}");
 			return sqlBuilder.AppendLine(";").ToString();
 		}
 
-		public static string ToSql([NotNull] this InsertRequest @this) =>
-			new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
+		public static string ToSql([NotNull] this InsertRequest @this)
+			=> new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
 				.AppendJoin(", ", @this.Insert.To(column => column.EscapeIdentifier())).AppendLine()
 				.Append(((SelectRequest)@this).ToSql())
 				.ToString();

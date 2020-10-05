@@ -25,8 +25,8 @@ namespace Sam987883.Reflection.Caches
 			this.ServiceProvider = serviceProvider;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T? Create<T>() where T : class, new() =>
-			ServiceProvider?.GetService<IConstructorCache<T>>()?.Create();
+		public T Create<T>() where T : class, new() =>
+			this.ServiceProvider.GetRequiredService<IConstructorCache<T>>().Create();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IMemberAccessor CreateFieldAccessor<T>(T instance) where T : class, new() =>
