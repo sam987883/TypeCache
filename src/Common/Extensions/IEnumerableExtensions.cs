@@ -5,13 +5,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Sam987883.Common.Extensions
 {
 	public static class IEnumerableExtensions
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static IEnumerable<T> Empty<T>()
+		{
+			yield break;
+		}
+
 		public static IEnumerable<T?> As<T>(this IEnumerable? @this) where T : class
 		{
 			if (@this == null)
@@ -334,16 +339,115 @@ namespace Sam987883.Common.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this)
-			=> Enumerable.Empty<T>().And(@this);
+			=> Empty<T>().And(@this);
 
-		public static T[] Get<T>(this IEnumerable<T>? @this, Range range) => @this switch
+		public static (T Value, bool Exists) Get<T>(this IEnumerable<T>? @this, Index index)
 		{
-			null => new T[0],
-			T[] array => array.Get(range).ToArrayOf(array.Length),
-			IReadOnlyCollection<T> readOnlyCollection => @this.Get(range).ToArrayOf(readOnlyCollection.Count),
-			ICollection<T> collection => @this.Get(range).ToArrayOf(collection.Count),
-			_ => @this.Get(range).ToList().ToArray(),
-		};
+			if (index.IsFromEnd)
+				index = @this switch
+				{
+					IReadOnlyCollection<T> collection when collection.Count > 0 => index.Normalize(collection.Count),
+					ICollection<T> collection when collection.Count > 0 => index.Normalize(collection.Count),
+					_ => index.Normalize(@this.Count()),
+				};
+
+			return @this switch
+			{
+				null => (default, false),
+				ImmutableList<T> _ when index.Value >= 0 => getItem(@this, index),
+				IReadOnlyList<T> list when index.Value >= 0 && index.Value < list.Count => (list[index.Value], true),
+				IList<T> list when index.Value >= 0 && index.Value < list.Count => (list[index.Value], true),
+				IReadOnlyList<T> _ => (default, false),
+				IList<T> _ => (default, false),
+				_ when index.Value >= 0 => getItem(@this, index),
+				_ => (default, false)
+			};
+
+			(T Value, bool Exists) getItem(IEnumerable<T> enumerable, Index index)
+			{
+				using var enumerator = enumerable.GetEnumerator();
+				return enumerator.Move(index.Value);
+			}
+		}
+
+		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Range range)
+		{
+			if (range.Start.IsFromEnd || range.End.IsFromEnd)
+				range = @this switch
+				{
+					IReadOnlyCollection<T> collection when collection.Count > 0 => range.Normalize(collection.Count),
+					ICollection<T> collection when collection.Count > 0 => range.Normalize(collection.Count),
+					_ => range.Normalize(@this.Count()),
+				};
+
+			if (range.Start.Value < 0 || range.End.Value < 0)
+				range = new Range(range.Start.Value >= 0 ? range.Start : Index.Start, range.End.Value >= 0 ? range.End : Index.Start);
+
+			switch (@this)
+			{
+				case ImmutableList<T> _:
+					goto default;
+				case IReadOnlyList<T> list when list.Count > 0:
+					if (!range.IsReverse())
+						for (var i = range.Start.Value; i < range.End.Value; ++i)
+							yield return list[i];
+					else
+						for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
+							yield return list[i];
+					yield break;
+				case IList<T> list when list.Count > 0:
+					if (!range.IsReverse())
+						for (var i = range.Start.Value; i < range.End.Value; ++i)
+							yield return list[i];
+					else
+						for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
+							yield return list[i];
+					yield break;
+				case IReadOnlyList<T> _:
+				case IList<T> _:
+				case null:
+					yield break;
+				default:
+					if (!range.IsReverse())
+					{
+						var count = range.Start.Value - range.End.Value;
+						var items = new Stack<T>(count);
+
+						using var enumerator = @this.GetEnumerator();
+						if (range.End.Value > 0)
+						{
+							var (value, exists) = enumerator.Move(range.End.Value);
+							if (exists)
+								yield return value;
+							else
+								yield break;
+						}
+
+						while (enumerator.MoveNext() && --count >= 0)
+							items.Push(enumerator.Current);
+
+						while (items.TryPop(out var item))
+							yield return item;
+					}
+					else
+					{
+						using var enumerator = @this.GetEnumerator();
+						if (range.Start.Value > 0)
+						{
+							var (value, exists) = enumerator.Move(range.Start.Value);
+							if (exists)
+								yield return value;
+							else
+								yield break;
+						}
+
+						var count = range.End.Value - range.Start.Value;
+						while (enumerator.MoveNext() && --count >= 0)
+							yield return enumerator.Current;
+					}
+					yield break;
+			}
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> map)
@@ -450,14 +554,13 @@ namespace Sam987883.Common.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-			=> @this.ToHashSet().SetEquals(items ?? Enumerable.Empty<T>());
+			=> @this.ToHashSet().SetEquals(items ?? Empty<T>());
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
-			return @this.ToHashSet(comparer).SetEquals(items ?? Enumerable.Empty<T>());
+			return @this.ToHashSet(comparer).SetEquals(items ?? Empty<T>());
 		}
 
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) => @this switch
@@ -582,7 +685,7 @@ namespace Sam987883.Common.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
-			=> Enumerable.Empty<V>().And(@this.To<T, IEnumerable<V>>(map));
+			=> Empty<V>().And(@this.To<T, IEnumerable<V>>(map));
 
 		public static T[] ToArray<T>(this ICollection<T>? @this)
 		{

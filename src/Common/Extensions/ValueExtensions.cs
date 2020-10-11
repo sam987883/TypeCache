@@ -32,8 +32,13 @@ namespace Sam987883.Common.Extensions
 		public static bool IsReverse(this Range @this)
 			=> @this.End.Value > @this.Start.Value;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Index Normalize(this Index @this, int count)
+			=> @this.IsFromEnd ? new Index(@this.GetOffset(count)) : @this;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Range Normalize(this Range @this, int count)
-			=> new Range(@this.Start.IsFromEnd ? count - @this.Start.Value : @this.Start.Value, @this.End.IsFromEnd ? count - @this.End.Value : @this.End.Value);
+			=> new Range(@this.Start.Normalize(count), @this.End.Normalize(count));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> Range(this int @this, int count, int increment = 1)
