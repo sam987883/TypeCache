@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>TypeCache.GraphQL</RootNamespace>
+    <Version>1.0.1</Version>
+    <Authors>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Authors>
+    <Company>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Company>
+    <Product>TypeCache</Product>
+    <Description>GraphQL made easy.</Description>
+    <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://www.nuget.org/packages/TypeCache.GraphQL/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/TypeCache/TypeCache/</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageIcon>TypeCash.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GraphQL" Version="3.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TypeCache\TypeCache.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\TypeCash.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
