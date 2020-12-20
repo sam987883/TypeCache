@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Company>
     <Product>TypeCache</Product>
