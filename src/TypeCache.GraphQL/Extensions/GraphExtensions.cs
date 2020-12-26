@@ -38,6 +38,19 @@ namespace TypeCache.GraphQL.Extensions
 			{ typeof(string).TypeHandle, typeof(StringGraphType).TypeHandle }
 		};
 
+		public static FieldType CreateFieldType(this IPropertyMember property, IPropertyMember source)
+		{
+			var graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
+			return new FieldType
+			{
+				Type = graphAttribute?.Type ?? property.GetGraphType(source == null),
+				Name = graphAttribute?.Name ?? property.Name,
+				Description = graphAttribute?.Description,
+				DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,
+				Resolver = source != null ? new FieldResolver(context => source[context]) : null
+			};
+		}
+
 		public static Type GetGraphType(this IMember @this, bool isInput)
 		{
 			var graphType = @this switch

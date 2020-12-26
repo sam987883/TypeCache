@@ -28,7 +28,7 @@ namespace TypeCache.GraphQL.Types
 			var graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
 			return new FieldType
 			{
-				Type = graphAttribute?.Type ?? property.GetGraphType(true),
+				Type = graphAttribute?.Type ?? property.GetGraphType(false),
 				Name = graphAttribute?.Name ?? property.Name,
 				Description = graphAttribute?.Description,
 				DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,

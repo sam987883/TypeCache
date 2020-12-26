@@ -16,7 +16,7 @@ namespace TypeCache.GraphQL.Types
 		public GraphHashIdType(IHashMaker hashMaker)
 		{
 			this.Name = "HashID";
-			hashMaker.AssertNotNull($"GraphQL: Cannot use [{nameof(GraphHashIdType)}] '{this.Name}' without first calling [{nameof(IServiceCollection)}.{nameof(IServiceCollectionExtensions.RegisterSecurity)}]");
+			hashMaker.AssertNotNull($"{nameof(GraphHashIdType)}: Must first call: [{nameof(IServiceCollection)}.{nameof(IServiceCollectionExtensions.RegisterSecurity)}].");
 
 			this._HashMaker = hashMaker;
 		}
