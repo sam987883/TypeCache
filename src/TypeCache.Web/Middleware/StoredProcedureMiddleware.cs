@@ -1,41 +1,27 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Data.Common;
 using System.Text.Json;
 using System.Threading.Tasks;
+using TypeCache.Business;
 using TypeCache.Data;
-using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
 {
-	public class StoredProcedureMiddleware
-    {
-        private readonly string _ConnectionString;
-        private readonly DbProviderFactory _DbProviderFactory;
+	public class StoredProcedureMiddleware : DataMiddleware
+	{
+		public StoredProcedureMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
+			: base(providerName, connectionString, mediator)
+		{
+		}
 
-        public StoredProcedureMiddleware(RequestDelegate _, string providerName, string connectionString)
-        {
-            this._ConnectionString = connectionString;
-            this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);
-        }
-
-        public async Task Invoke(HttpContext httpContext, IServiceProvider serviceProvider, ISchemaStore schemaStore)
-        {
+		public async Task Invoke(HttpContext httpContext)
+		{
 			string procedure = httpContext.Request.Query[nameof(procedure)].First();
-			if (procedure.IsBlank())
-				throw new ArgumentException("Query parameter with stored procedure name not found.", nameof(procedure));
-
-			var request = new StoredProcedureRequest
-			{
-				Procedure = procedure
-			};
-
 			var parameters = httpContext.Request.Query
-				.If(query => !query.Key.Equals(nameof(procedure), StringComparison.OrdinalIgnoreCase))
+				.If(query => !query.Key.Is(nameof(procedure)))
 				.To(query => new Parameter
 				{
 					Name = query.Key,
@@ -43,7 +29,7 @@ namespace TypeCache.Web.Middleware
 				}).ToList();
 
 			var json = await JsonSerializer.DeserializeAsync<JsonElement>(httpContext.Request.Body);
-            if (json.ValueKind == JsonValueKind.Object)
+			if (json.ValueKind == JsonValueKind.Object)
 			{
 				using var enumerator = json.EnumerateObject();
 				while (enumerator.MoveNext())
@@ -62,35 +48,19 @@ namespace TypeCache.Web.Middleware
 							JsonValueKind.True => true,
 							JsonValueKind.False => false,
 							JsonValueKind.Null => DBNull.Value,
-							_ => throw new ArgumentException($"[JsonValueKind.{property.Value.ValueKind.Name()}] stored procedure parameter value: {property.Value}", property.Name)
+							_ => DBNull.Value
 						}
 					});
 				}
 			}
-			else if (json.ValueKind != JsonValueKind.Undefined && json.ValueKind != JsonValueKind.Null)
-				throw new ArgumentException("Request body can only contain stored procedure parameters as an object.", "execute");
 
-			request.Parameters = parameters.ToArray();
+			var request = new StoredProcedureRequest
+			{
+				Procedure = procedure,
+				Parameters = parameters.ToArray()
+			};
 
-			var requestValidator = serviceProvider.GetService<IRequestValidator<StoredProcedureRequest>>();
-			var valid = requestValidator == null || await requestValidator.Validate(request, httpContext);
-            if (valid)
-            {
-                using var connection = this._DbProviderFactory.CreateConnection();
-                connection.ConnectionString = this._ConnectionString;
-                await connection.OpenAsync();
-				var schema = schemaStore.GetObjectSchema(connection, request.Procedure);
-				request.Procedure = schema.Name;
-				var validator = new SchemaValidator(schema);
-				validator.Validate(request);
-				var output = connection.Call(request);
-				var response = new StoredProcedureResponse
-				{
-					Parameters = request.Parameters,
-					Output = output
-				};
-                await JsonSerializer.SerializeAsync(httpContext.Response.Body, output);
-            }
+			await this.HandleRequest<StoredProcedureRequest, RowSet[]>(request, httpContext);
 		}
 	}
 }

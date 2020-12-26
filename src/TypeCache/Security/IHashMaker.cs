@@ -4,22 +4,22 @@ using System.Collections.Generic;
 
 namespace TypeCache.Security
 {
-    public interface IHashMaker
-    {
-        byte[] Decrypt(byte[] data);
+	public interface IHashMaker
+	{
+		byte[] Decrypt(byte[] data);
 
-        long Decrypt(string hashId);
+		long Decrypt(string hashId);
 
-        long[]? Decrypt(string[] hashIds);
+		long[]? Decrypt(string[] hashIds);
 
-        long[]? Decrypt(IEnumerable<string> hashIds);
+		long[]? Decrypt(IEnumerable<string> hashIds);
 
-        byte[] Encrypt(byte[] data);
+		byte[] Encrypt(byte[] data);
 
-        string Encrypt(long id);
+		string Encrypt(long id);
 
-        string[]? Encrypt(long[] ids);
+		string[]? Encrypt(long[] ids);
 
-        string[]? Encrypt(IEnumerable<long> ids);
-    }
+		string[]? Encrypt(IEnumerable<long> ids);
+	}
 }

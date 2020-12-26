@@ -2,8 +2,7 @@
 
 namespace TypeCache.Business
 {
-    public interface IValidationRule<in T> : IRule<T, bool>
-    {
-        string Message { get; }
-    }
+	public interface IValidationRule<in T> : IRule<T, bool>, IValidation
+	{
+	}
 }

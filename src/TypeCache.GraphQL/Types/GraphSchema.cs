@@ -46,11 +46,13 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		private FieldType CreateFieldType(IMethodMember method, IGraphHandler handler)
-			=> new FieldType
+		{
+			var graphAttribute = method.Attributes.First<Attribute, GraphAttribute>();
+			return new FieldType
 			{
-				Type = method.GetGraphType(false),
-				Name = method.Name,
-				Description = method.Attributes.First<Attribute, GraphDescriptionAttribute>()?.Description,
+				Type = graphAttribute?.Type ?? method.GetGraphType(false),
+				Name = graphAttribute?.Name ?? method.Name,
+				Description = graphAttribute?.Description,
 				DeprecationReason = method.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,
 				Resolver = new FieldResolver(context =>
 				{
@@ -59,14 +61,15 @@ namespace TypeCache.GraphQL.Types
 				}),
 				Arguments = method.ToQueryArguments()
 			};
+		}
 
 		private IEnumerable<object> GetArguments(IMethodMember method, IResolveFieldContext context)
 		{
 			foreach (var parameter in method.Parameters)
 			{
-				var inject = parameter.Attributes.First<Attribute, GraphInjectAttribute>();
-				if (inject != null)
-					yield return inject.Resolver(context);
+				var graphAttribute = parameter.Attributes.First<Attribute, GraphAttribute>();
+				if (graphAttribute?.Inject == true)
+					yield return context;
 				else if (parameter.CollectionType == CollectionType.None && parameter.NativeType == NativeType.Object)
 				{
 					var parameterType = parameter.TypeHandle.ToType();

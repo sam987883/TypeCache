@@ -8,23 +8,22 @@ namespace TypeCache.Extensions
 {
 	public static class IAsyncEnumeratorExtensions
 	{
-	    public async static Task<int> CountAsync<T>(this IAsyncEnumerator<T> @this)
-	    {
-		    var count = 0;
-		    while (await @this.MoveNextAsync())
-			    ++count;
-		    return count;
-	    }
+		public async static Task<int> CountAsync<T>(this IAsyncEnumerator<T> @this)
+		{
+			var count = 0;
+			while (await @this.MoveNextAsync())
+				++count;
+			return count;
+		}
 
 		public async static Task<T> MoveAsync<T>(this IAsyncEnumerator<T> @this, int count)
 		{
 			while (count > 0 && await @this.MoveNextAsync())
 				--count;
 
-			if (count > 0)
-				new IndexOutOfRangeException($"{nameof(IAsyncEnumerator<T>)}.{nameof(MoveAsync)}: Remaining {nameof(count)} of {count}.");
-
-			return @this.Current;
+			return count == 0
+				? @this.Current
+				: throw new IndexOutOfRangeException($"{nameof(IAsyncEnumerator<T>)}.{nameof(MoveAsync)}: Remaining {nameof(count)} of {count}.");
 		}
 
 		public async static Task<V> MoveUntilAsync<T, V>(this IAsyncEnumerator<T> @this)

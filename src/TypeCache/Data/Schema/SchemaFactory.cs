@@ -2,6 +2,8 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
+using System.Threading.Tasks;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
@@ -67,7 +69,7 @@ ORDER BY p.[parameter_id] ASC;";
 
 		public string SQL { get; } = ObjectSchemaSQL;
 
-		public ObjectSchema GetObjectSchema(IDbConnection connection, string name)
+		public async ValueTask<ObjectSchema> GetObjectSchema(DbConnection connection, string name)
 		{
 			if (name.EndsWith(')'))
 				name = name.Left(name.LastIndexOf('('));
@@ -87,27 +89,27 @@ ORDER BY p.[parameter_id] ASC;";
 			using var command = connection.CreateSqlCommand(sql);
 			command.AddInputParameter(OBJECT_NAME, name, DbType.String);
 
-			using var transaction = connection.BeginTransaction(IsolationLevel.ReadUncommitted);
+			await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.ReadUncommitted);
 			command.Transaction = transaction;
 
-			using var reader = command.ExecuteReader();
+			await using var reader = await command.ExecuteReaderAsync();
 
-			var tableRowSet = reader.ReadRowSet();
+			var tableRowSet = await reader.ReadRowSetAsync();
 
 			var objectSchema = this._TypeCache.Map<ObjectSchema>(tableRowSet).First();
 			if (objectSchema != null)
 			{
 				objectSchema.DatabaseName = connection.Database;
 
-				if (reader.NextResult())
+				if (await reader.NextResultAsync())
 				{
-					var columnRowSet = reader.ReadRowSet();
+					var columnRowSet = await reader.ReadRowSetAsync();
 					objectSchema.Columns = this._TypeCache.Map<ColumnSchema>(columnRowSet).ToImmutable();
 				}
 
-				if (reader.NextResult())
+				if (await reader.NextResultAsync())
 				{
-					var parameterRowSet = reader.ReadRowSet();
+					var parameterRowSet = await reader.ReadRowSetAsync();
 					objectSchema.Parameters = this._TypeCache.Map<ParameterSchema>(parameterRowSet).ToImmutable();
 				}
 

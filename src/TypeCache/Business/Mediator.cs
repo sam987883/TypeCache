@@ -8,95 +8,66 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Business
 {
-	public class Mediator
-    {
-        private readonly IServiceProvider _ServiceProvider;
+	internal class Mediator : IMediator
+	{
+		private readonly IServiceProvider _ServiceProvider;
 
-        public Mediator(IServiceProvider serviceProvider)
-        {
-            this._ServiceProvider = serviceProvider;
-        }
+		public Mediator(IServiceProvider serviceProvider)
+			=> this._ServiceProvider = serviceProvider;
 
-        public async Task RunAsync<T>(T request, CancellationToken cancellationToken = default)
-        {
-            var processHandler = this._ServiceProvider.GetService<IProcessHandler<T>>();
-            if (processHandler != null)
-                await processHandler.HandleAsync(request, cancellationToken);
-            else
-            {
-                var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-                if (validationRules.Any())
-                {
-                    var results = await Task.WhenAll(validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)));
-                    if (results.All(true))
-                    {
-                        var processes = this._ServiceProvider.GetServices<IProcess<T>>();
-                        await Task.WhenAll(processes.To(async process => await process.RunAsync(request, cancellationToken)));
-                    }
-                }
-            }
-        }
+		public async ValueTask<Response<R>> ApplyRule<T, R>(T request, Func<T, R> rule, CancellationToken cancellationToken = default)
+		{
+			var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
+			if (validationRules.Any())
+			{
+				var results = await validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)).AllAsync();
+				if (!results.All(true))
+					return new Response<R>(validationRules);
+			}
 
-        public async Task RunAsync<M, T>(M metadata, T request, CancellationToken cancellationToken = default)
-        {
-            var processHandler = this._ServiceProvider.GetService<IProcessHandler<M, T>>();
-            if (processHandler != null)
-                await processHandler.HandleAsync(metadata, request, cancellationToken);
-            else
-            {
-                var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-                if (validationRules.Any())
-                {
-                    var results = await Task.WhenAll(validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)));
-                    if (results.All(true))
-                    {
-                        var processes = this._ServiceProvider.GetServices<IProcess<M, T>>();
-                        await Task.WhenAll(processes.To(async process => await process.RunAsync(metadata, request, cancellationToken)));
-                    }
-                }
-            }
-        }
+			return new Response<R>(rule(request));
+		}
 
-        public async Task<R[]> SendAsync<T, R>(T request, CancellationToken cancellationToken = default)
-        {
-            var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<T, R>>();
-            if (ruleHandler != null)
-                return await ruleHandler.HandleAsync(request, cancellationToken);
-            else
-            {
-                var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-                if (validationRules.Any())
-                {
-                    var results = await Task.WhenAll(validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)));
-                    if (results.All(true))
-                    {
-                        var rules = this._ServiceProvider.GetServices<IRule<T, R>>();
-                        return await Task.WhenAll(rules.To(async rule => await rule.ApplyAsync(request, cancellationToken)));
-                    }
-                }
-            }
-            return Array.Empty<R>();
-        }
+		public async ValueTask<Response<R>> ApplyRuleAsync<T, R>(T request, CancellationToken cancellationToken = default)
+		{
+			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<T, R>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<T, R>>();
+			return await ruleHandler.HandleAsync(request, cancellationToken);
+		}
 
-        public async Task<R[]> SendAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
-        {
-            var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<M, T, R>>();
-            if (ruleHandler != null)
-                return await ruleHandler.HandleAsync(metadata, request, cancellationToken);
-            else
-            {
-                var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-                if (validationRules.Any())
-                {
-                    var results = await Task.WhenAll(validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)));
-                    if (results.All(true))
-                    {
-                        var rules = this._ServiceProvider.GetServices<IRule<M, T, R>>();
-                        return await Task.WhenAll(rules.To(async rule => await rule.ApplyAsync(metadata, request, cancellationToken)));
-                    }
-                }
-            }
-            return Array.Empty<R>();
-        }
-    }
+		public async ValueTask<Response<R>> ApplyRuleAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
+		{
+			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<M, T, R>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<M, T, R>>();
+			return await ruleHandler.HandleAsync(metadata, request, cancellationToken);
+		}
+
+		public async ValueTask<Response<R[]>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default)
+		{
+			var rulesHandler = this._ServiceProvider.GetService<IRulesHandler<T, R>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultRulesHandler<T, R>>();
+			return await rulesHandler.HandleAsync(request, cancellationToken);
+		}
+
+		public async ValueTask<Response<R[]>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
+		{
+			var rulesHandler = this._ServiceProvider.GetService<IRulesHandler<M, T, R>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultRulesHandler<M, T, R>>();
+			return await rulesHandler.HandleAsync(metadata, request, cancellationToken);
+		}
+
+		public async ValueTask RunProcessAsync<T>(T request, CancellationToken cancellationToken = default)
+		{
+			var processHandler = this._ServiceProvider.GetService<IProcessHandler<T>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultProcessHandler<T>>();
+			await processHandler.HandleAsync(request, cancellationToken);
+		}
+
+		public async ValueTask RunProcessAsync<M, T>(M metadata, T request, CancellationToken cancellationToken = default)
+		{
+			var processHandler = this._ServiceProvider.GetService<IProcessHandler<M, T>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultProcessHandler<M, T>>();
+			await processHandler.HandleAsync(metadata, request, cancellationToken);
+		}
+	}
 }

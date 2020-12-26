@@ -283,7 +283,7 @@ namespace TypeCache.Extensions
 			if (@this == null)
 				yield break;
 
-			await foreach(var item in @this)
+			await foreach (var item in @this)
 			{
 				if (item is R value)
 					yield return value;

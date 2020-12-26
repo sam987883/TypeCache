@@ -41,7 +41,7 @@ namespace TypeCache.Reflection.Members
 			else
 			{
 				call = Expression.Call(methodInfo);
-				
+
 				this.Method = Expression.Call(methodInfo).Lambda().Compile();
 				this.Parameters = ImmutableArray<IParameter>.Empty;
 			}

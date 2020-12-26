@@ -2,7 +2,7 @@
 
 namespace TypeCache.GraphQL
 {
-    public interface IGraphHandler
-    {
-    }
+	public interface IGraphHandler
+	{
+	}
 }

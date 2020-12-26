@@ -24,14 +24,16 @@ namespace TypeCache.GraphQL.Extensions
 		/// <item><term><see cref="GraphSchema"/></term> <description>The GraphQL schema that will be built based on all registered IGraphHandler classes.</description></item>
 		/// <item><term><see cref="GraphObjectType&lt;&gt;"/></term> <description>The GraphQL ObjectGraphType.</description></item>
 		/// <item><term><see cref="GraphInputType&lt;&gt;"/></term> <description>The GraphQL InputObjectGraphType.</description></item>
-		/// <item><term><see cref="GraphEnumType&lt;&gt;"/>, <see cref="IStaticMethodCache&lt;&gt;"/></term> <description>The GraphQL EnumerationGraphType.</description></item>
+		/// <item><term><see cref="GraphEnumType&lt;&gt;"/></term> <description>The GraphQL EnumerationGraphType.</description></item>
+		/// <item><term><see cref="GraphHashIdType"/></term> <description>A ScalarGraphType that hashes and unhashes integer identifier types to prevent a sequential attack.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
-            => @this
-                .AddSingleton(typeof(GraphObjectType<>))
-                .AddSingleton(typeof(GraphInputType<>))
-                .AddSingleton(typeof(GraphEnumType<>))
-                .AddSingleton<GraphSchema>();
-    }
+			=> @this
+				.AddSingleton(typeof(GraphObjectType<>))
+				.AddSingleton(typeof(GraphInputType<>))
+				.AddSingleton(typeof(GraphEnumType<>))
+				.AddSingleton(typeof(GraphHashIdType))
+				.AddSingleton<GraphSchema>();
+	}
 }

@@ -8,9 +8,9 @@ using TypeCache.Reflection;
 namespace TypeCache.Extensions
 {
 	public static class IServiceProviderExtensions
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ITypeCache GetTypeCache(this IServiceProvider @this)
-            => @this.GetRequiredService<ITypeCache>();
-    }
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ITypeCache GetTypeCache(this IServiceProvider @this)
+			=> @this.GetRequiredService<ITypeCache>();
+	}
 }

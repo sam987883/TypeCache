@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Common;
@@ -8,78 +9,70 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Converters
 {
-	public class PropertyJsonConverter<T> : JsonConverter<T?> where T : class, new()
+	public class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
 	{
 		private readonly ITypeCache _TypeCache;
-		private readonly IPropertyCache<T> _PropertyCache;
 
-		public PropertyJsonConverter(ITypeCache typeCache, IPropertyCache<T> propertyCache)
+		public PropertyJsonConverter(ITypeCache typeCache)
 		{
 			this._TypeCache = typeCache;
-			this._PropertyCache = propertyCache;
 		}
 
 		public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			=> this.ReadObject(ref reader, typeToConvert, options) as T;
+
+		private object[] ReadArray(ref Utf8JsonReader reader, Type elementType, JsonSerializerOptions options)
 		{
-			if (reader.TokenType == JsonTokenType.StartObject)
+			var values = new List<object?>();
+			while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
 			{
-				var output = this._TypeCache.Create<T>();
-				var accessor = this._TypeCache.CreatePropertyAccessor(output);
-				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
-				{
-					var name = reader.GetString();
-					if (reader.Read())
-					{
-						switch (reader.TokenType)
-						{
-							case JsonTokenType.StartObject:
-								{
-									var type = this._PropertyCache.Properties[name].TypeHandle.ToType();
-									accessor[name] = JsonSerializer.Deserialize(ref reader, type, options);
-								}
-								break;
-							case JsonTokenType.StartArray:
-								while (reader.Read() && reader.TokenType == JsonTokenType.StartObject)
-								{
-									var type = this._PropertyCache.Properties[name].TypeHandle.ToType();
-									accessor[name] = JsonSerializer.Deserialize(ref reader, type, options);
-								}
-								break;
-							case JsonTokenType.String:
-								accessor[name] = reader.GetString();
-								break;
-							case JsonTokenType.Number:
-								accessor[name] = reader.TryGetInt64(out var value) ? value : reader.GetDecimal();
-								break;
-							case JsonTokenType.True:
-								accessor[name] = true;
-								break;
-							case JsonTokenType.False:
-								accessor[name] = false;
-								break;
-							case JsonTokenType.Null:
-								accessor[name] = null;
-								break;
-						}
-					}
-				}
-
-				return output;
+				values.Add(JsonSerializer.Deserialize(ref reader, elementType, options));
 			}
-
-			return null;
+			return values.ToArray();
 		}
+
+		private object? ReadObject(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			var propertyCache = this._TypeCache.GetPropertyCache(typeToConvert);
+			var instance = this._TypeCache.Create(typeToConvert);
+			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			{
+				var name = reader.GetString();
+				if (reader.Read())
+				{
+					var property = propertyCache.Properties[name];
+					var type = property.TypeHandle.ToType();
+					var value = JsonSerializer.Deserialize(ref reader, type, options);
+					property[instance] = value;
+				}
+			}
+			return instance;
+		}
+
+		private object? ReadValue(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			=> reader.TokenType switch
+			{
+				JsonTokenType.StartObject => ReadObject(ref reader, typeToConvert, options),
+				JsonTokenType.StartArray => this.ReadArray(ref reader, typeToConvert.GetElementType(), options),
+				JsonTokenType.String => reader.GetString(),
+				JsonTokenType.Number => reader.TryGetInt64(out var number) ? number : reader.GetDecimal(),
+				JsonTokenType.True => true,
+				JsonTokenType.False => false,
+				JsonTokenType.Null => null,
+				_ => null,
+			};
 
 		public override void Write(Utf8JsonWriter writer, T? input, JsonSerializerOptions options)
 		{
 			if (input != null)
 			{
 				writer.WriteStartObject();
+				var propertyCache = this._TypeCache.GetPropertyCache<T>();
 				var accessor = this._TypeCache.CreatePropertyAccessor(input);
-				this._PropertyCache.Properties.Values.If(_ => _.GetMethod != null).Do(property =>
+				propertyCache.Properties.Values.If(_ => _.GetMethod != null).Do(property =>
 				{
 					writer.WritePropertyName(property.Name);
-					var value = accessor[property.Name];
+					var value = propertyCache.Properties[property.Name][input];
 					if (value != null)
 					{
 						switch (property.NativeType)

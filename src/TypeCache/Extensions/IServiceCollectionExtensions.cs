@@ -60,20 +60,21 @@ namespace TypeCache.Extensions
 		/// Registers Singletons:
 		/// <list type="bullet">
 		/// <item><term><see cref="IProcess&lt;&gt;"/></term> <description>All implementations of IProcess.</description></item>
-		/// <item><term><see cref="IProcessHandler&lt;&gt;"/>, <see cref="IProcessHandler&lt;,&gt;"/></term> <description>All implementations of IProcessHandler.</description></item>
-		/// <item><term><see cref="IRule&lt;,&gt;"/></term> <description>All implementations of IRule.</description></item>
-		/// <item><term><see cref="IRuleHandler&lt,;&gt;"/>, <see cref="IRuleHandler&lt;,,&gt;"/></term> <description>All implementations of IRuleHandler.</description></item>
+		/// <item><term><see cref="DefaultProcessHandler&lt;&gt;"/>, <see cref="DefaultProcessHandler&lt;,&gt;"/></term> <description>Default implementation of IProcessHandler.</description></item>
+		/// <item><term><see cref="DefaultRuleHandler&lt;,&gt;"/>, <see cref="DefaultRuleHandler&lt;,,&gt;"/></term> <description>Default implementation of IRuleHandler.</description></item>
+		/// <item><term><see cref="DefaultRulesHandler&lt;,&gt;"/>, <see cref="DefaultRulesHandler&lt;,,&gt;"/></term> <description>Default implementation of IRulesHandler.</description></item>
 		/// </list>
 		/// </summary>
 		/// <param name="this"></param>
 		/// <returns></returns>
 		public static IServiceCollection RegisterMediator(this IServiceCollection @this)
-			=> @this.AddSingleton(typeof(IProcess<>))
-				.AddSingleton(typeof(IProcessHandler<>))
-				.AddSingleton(typeof(IProcessHandler<,>))
-				.AddSingleton(typeof(IRule<,>))
-				.AddSingleton(typeof(IRuleHandler<,>))
-				.AddSingleton(typeof(IRuleHandler<,,>));
+			=> @this.AddSingleton<IMediator, Mediator>()
+				.AddSingleton(typeof(DefaultProcessHandler<>), typeof(DefaultProcessHandler<>))
+				.AddSingleton(typeof(DefaultProcessHandler<,>), typeof(DefaultProcessHandler<,>))
+				.AddSingleton(typeof(DefaultRuleHandler<,>), typeof(DefaultRuleHandler<,>))
+				.AddSingleton(typeof(DefaultRuleHandler<,,>), typeof(DefaultRuleHandler<,,>))
+				.AddSingleton(typeof(DefaultRulesHandler<,>), typeof(DefaultRulesHandler<,>))
+				.AddSingleton(typeof(DefaultRulesHandler<,,>), typeof(DefaultRulesHandler<,,>));
 
 		/// <summary>
 		/// Registers Singleton:

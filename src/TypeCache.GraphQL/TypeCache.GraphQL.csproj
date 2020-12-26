@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
-    <Version>1.0.2</Version>
-    <Authors>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Authors>
-    <Company>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Company>
+    <Version>1.0.3</Version>
+    <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
+    <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Product>TypeCache</Product>
     <Description>GraphQL made easy.</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>

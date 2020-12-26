@@ -15,7 +15,7 @@ namespace TypeCache.Reflection.Members
 			fieldInfo.IsLiteral.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsLiteral)}", false);
 
 			var field = Expression.Field(null, fieldInfo);
-			
+
 			this.Getter = field.Lambda().Compile();
 			this.GetValue = field.As<object>().Lambda<Func<object?>>().Compile();
 

@@ -234,7 +234,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
-			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToList().ToArray()), @this, parameters);
+			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray()), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
@@ -242,7 +242,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToList().ToArray()), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
@@ -250,7 +250,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToList().ToArray()), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters)
@@ -382,8 +382,8 @@ namespace TypeCache.Extensions
 				: @this.Cast(type);
 		}
 
-		public static IEnumerable<Expression> ToParameterArray(this ParameterExpression @this, params ParameterInfo[] parameterInfos) =>
-			parameterInfos.To(parameterInfo => @this.ArrayAccess(parameterInfo.Position).SystemConvert(parameterInfo.ParameterType));
+		public static IEnumerable<Expression> ToParameterArray(this ParameterExpression @this, params ParameterInfo[] parameterInfos)
+			=> parameterInfos.To(parameterInfo => @this.ArrayAccess(parameterInfo.Position).SystemConvert(parameterInfo.ParameterType));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Unbox<T>(this Expression @this) where T : struct

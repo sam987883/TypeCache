@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 

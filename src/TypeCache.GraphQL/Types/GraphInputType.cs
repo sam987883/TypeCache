@@ -10,22 +10,27 @@ using TypeCache.Reflection;
 namespace TypeCache.GraphQL.Types
 {
 	public sealed class GraphInputType<T> : InputObjectGraphType<T> where T : class
-    {
-        public GraphInputType(IPropertyCache<T> propertyCache)
-        {
-            this.Name = typeof(T).GetName();
-            propertyCache.Properties.Values
-                .If(property => property.GetMethod != null && !property.Attributes.Any<Attribute, GraphIgnoreAttribute>())
-                .Do(property => this.AddField(CreateFieldType(property)));
-        }
+	{
+		public GraphInputType(IPropertyCache<T> propertyCache)
+		{
+			var graphAttribute = typeof(T).GetCustomAttributes(true).First<object, GraphAttribute>();
+			this.Name = graphAttribute?.Name ?? typeof(T).GetName();
 
-        private static FieldType CreateFieldType(IPropertyMember property)
-            => new FieldType
-            {
-                Type = property.GetGraphType(true),
-                Name = property.Name,
-                Description = property.Attributes.First<Attribute, GraphDescriptionAttribute>()?.Description,
-                DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message
-            };
-    }
+			propertyCache.Properties.Values
+				.If(property => property.GetMethod != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
+				.Do(property => this.AddField(CreateFieldType(property)));
+		}
+
+		private static FieldType CreateFieldType(IPropertyMember property)
+		{
+			var graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
+			return new FieldType
+			{
+				Type = graphAttribute?.Type ?? property.GetGraphType(true),
+				Name = graphAttribute?.Name ?? property.Name,
+				Description = graphAttribute?.Description,
+				DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message
+			};
+		}
+	}
 }

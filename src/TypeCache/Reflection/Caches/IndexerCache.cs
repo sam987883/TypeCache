@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Reflection.Members;
 using System.Collections.Immutable;
-using static TypeCache.Extensions.IEnumerableExtensions;
+using TypeCache.Extensions;
+using TypeCache.Reflection.Members;
 
 namespace TypeCache.Reflection.Caches
 {

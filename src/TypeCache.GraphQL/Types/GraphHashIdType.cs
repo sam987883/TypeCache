@@ -10,37 +10,37 @@ using TypeCache.Security;
 namespace TypeCache.GraphQL.Types
 {
 	public class GraphHashIdType : ScalarGraphType
-    {
-        private readonly IHashMaker _HashMaker;
+	{
+		private readonly IHashMaker _HashMaker;
 
-        public GraphHashIdType(IHashMaker hashMaker)
-        {
-            this.Name = "HashID";
-            hashMaker.AssertNotNull($"GraphQL: Cannot use [{nameof(GraphHashIdType)}] '{this.Name}' without first calling [{nameof(IServiceCollection)}.{nameof(IServiceCollectionExtensions.RegisterSecurity)}]");
+		public GraphHashIdType(IHashMaker hashMaker)
+		{
+			this.Name = "HashID";
+			hashMaker.AssertNotNull($"GraphQL: Cannot use [{nameof(GraphHashIdType)}] '{this.Name}' without first calling [{nameof(IServiceCollection)}.{nameof(IServiceCollectionExtensions.RegisterSecurity)}]");
 
-            this._HashMaker = hashMaker;
-        }
+			this._HashMaker = hashMaker;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object ParseLiteral(IValue value)
-            => this.ParseValue(value.Value);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override object ParseLiteral(IValue value)
+			=> this.ParseValue(value.Value);
 
-        public override object ParseValue(object value)
-            => value switch
-            {
-                int id => id,
-                long id => id,
-                string hashId => this._HashMaker.Decrypt(hashId),
-                _ => value
-            };
+		public override object ParseValue(object value)
+			=> value switch
+			{
+				int id => id,
+				long id => id,
+				string hashId => this._HashMaker.Decrypt(hashId),
+				_ => value
+			};
 
-        public override object Serialize(object value)
-            => value switch
-            {
-                int id => this._HashMaker.Encrypt(id),
-                long id => this._HashMaker.Encrypt(id),
-                string hashId => this._HashMaker.Decrypt(hashId),
-                _ => value
-            };
-    }
+		public override object Serialize(object value)
+			=> value switch
+			{
+				int id => this._HashMaker.Encrypt(id),
+				long id => this._HashMaker.Encrypt(id),
+				string hashId => this._HashMaker.Decrypt(hashId),
+				_ => value
+			};
+	}
 }

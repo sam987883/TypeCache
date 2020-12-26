@@ -4,8 +4,11 @@ using System;
 
 namespace TypeCache.GraphQL.Attributes
 {
-    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-    public class GraphQueryAttribute : Attribute
-    {
-    }
+	/// <summary>
+	/// Mark endpoint as a GraphQL query endpoint.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method, Inherited = false)]
+	public class GraphQueryAttribute : Attribute
+	{
+	}
 }

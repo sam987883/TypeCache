@@ -11,24 +11,29 @@ using TypeCache.Reflection;
 namespace TypeCache.GraphQL.Types
 {
 	public sealed class GraphObjectType<T> : ObjectGraphType<T> where T : class
-    {
-        public GraphObjectType(IPropertyCache<T> propertyCache, IPropertyCache<IResolveFieldContext<T>> contextPropertyCache)
-        {
-            this.Name = typeof(T).GetName();
-            var source = contextPropertyCache.Properties[nameof(IResolveFieldContext<T>.Source)];
-            propertyCache.Properties.Values
-                .If(property => property.GetMethod != null && !property.Attributes.Any<Attribute, GraphIgnoreAttribute>())
-                .Do(property => this.AddField(CreateFieldType(property, source)));
-        }
+	{
+		public GraphObjectType(IPropertyCache<T> propertyCache, IPropertyCache<IResolveFieldContext<T>> contextPropertyCache)
+		{
+			var graphAttribute = typeof(T).GetCustomAttributes(true).First<object, GraphAttribute>();
+			this.Name = graphAttribute?.Name ?? typeof(T).GetName();
 
-        private static FieldType CreateFieldType(IPropertyMember property, IPropertyMember source)
-            => new FieldType
-            {
-                Type = property.GetGraphType(false),
-                Name = property.Name,
-                Description = property.Attributes.First<Attribute, GraphDescriptionAttribute>()?.Description,
-                DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,
-                Resolver = new FieldResolver(context => source[context])
-            };
-    }
+			var source = contextPropertyCache.Properties[nameof(IResolveFieldContext.Source)];
+			propertyCache.Properties.Values
+				.If(property => property.GetMethod != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
+				.Do(property => this.AddField(CreateFieldType(property, source)));
+		}
+
+		private static FieldType CreateFieldType(IPropertyMember property, IPropertyMember source)
+		{
+			var graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
+			return new FieldType
+			{
+				Type = graphAttribute?.Type ?? property.GetGraphType(true),
+				Name = graphAttribute?.Name ?? property.Name,
+				Description = graphAttribute?.Description,
+				DeprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,
+				Resolver = new FieldResolver(context => source[context])
+			};
+		}
+	}
 }

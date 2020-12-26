@@ -11,7 +11,7 @@ namespace TypeCache.Reflection
 		private static class Converter<FROM, TO>
 		{
 			public delegate ref TO Convert(ref FROM value);
-			
+
 			static Converter()
 			{
 				ParameterExpression value = nameof(value).Parameter<FROM>();

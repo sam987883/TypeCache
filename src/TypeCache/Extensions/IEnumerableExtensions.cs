@@ -324,7 +324,7 @@ namespace TypeCache.Extensions
 			=> @this?.ToCustomEnumerable().First();
 
 		public static T? First<T>(this IEnumerable<T>? @this, Func<T?, bool> filter) where T : class
-        {
+		{
 			filter.AssertNotNull(nameof(filter));
 
 			return @this?.If(filter).First();
@@ -411,7 +411,7 @@ namespace TypeCache.Extensions
 				range = new Range(range.Start.Value >= 0 ? range.Start : Index.Start, range.End.Value >= 0 ? range.End : Index.Start);
 
 			if (@this is T[] array)
-            {
+			{
 				if (!range.IsReverse())
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
 						yield return array[i];
@@ -420,7 +420,7 @@ namespace TypeCache.Extensions
 						yield return array[i];
 			}
 			else if (@this is ImmutableArray<T> immutableArray)
-            {
+			{
 				if (!range.IsReverse())
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
 						yield return immutableArray[i];
@@ -536,13 +536,13 @@ namespace TypeCache.Extensions
 					yield return item;
 		}
 
-		public static IEnumerable<R> If<T, R>(this IEnumerable<T?>? @this)
+		public static IEnumerable<V> If<T, V>(this IEnumerable<T?>? @this)
 		{
 			if (!@this.Any())
 				yield break;
 
 			foreach (var item in @this.ToCustomEnumerable())
-				if (item is R value)
+				if (item is V value)
 					yield return value;
 		}
 
@@ -560,7 +560,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
-			=> (IEnumerable<T>)@this.If(_ => _ != null);
+			=> @this.If(_ => _ != null);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
@@ -661,7 +661,7 @@ namespace TypeCache.Extensions
 				T[] array => array,
 				List<T> list => list.ToArray(),
 				HashSet<T> hashSet => hashSet.ToArray(),
-				_ => @this.ToList().ToArray()
+				_ => @this.ToArray()
 			};
 			items.Sort(comparer);
 			return items;
@@ -690,7 +690,7 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
+		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
 			=> Empty<V>().And(@this.To<T, IEnumerable<V>>(map));
 
 		public static T[] ToArray<T>(this IEnumerable<T>? @this)
@@ -889,7 +889,7 @@ namespace TypeCache.Extensions
 		{
 			null => Span<T>.Empty,
 			T[] array => array.AsSpan(),
-			_ => @this.ToList().ToArray().AsSpan(),
+			_ => @this.ToArray().AsSpan(),
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

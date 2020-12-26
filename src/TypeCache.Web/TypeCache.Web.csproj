@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>1.0.2</Version>
-    <Authors>Samuel Abraham &lt;TypeCache@gmail.com&gt;</Authors>
+    <Version>1.0.3</Version>
+    <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Title>TypeCache Reflection</Title>
     <Description>Web API access to SQL database data operations: let the front-end decide how to retrieve and manipulate data.</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
@@ -21,6 +21,7 @@
     <PackageIcon>TypeCash.png</PackageIcon>
     <NeutralLanguage>en-US</NeutralLanguage>
     <RootNamespace>TypeCache.Web</RootNamespace>
+    <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
   </PropertyGroup>
 
   <ItemGroup>

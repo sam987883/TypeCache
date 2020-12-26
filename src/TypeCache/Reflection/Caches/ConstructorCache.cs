@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Reflection.Members;
 using System;
 using System.Collections.Immutable;
-using static TypeCache.Extensions.IEnumerableExtensions;
+using TypeCache.Extensions;
+using TypeCache.Reflection.Members;
 
 namespace TypeCache.Reflection.Caches
 {
@@ -19,12 +19,12 @@ namespace TypeCache.Reflection.Caches
 
 		public IImmutableList<IConstructorMember> Constructors { get; }
 
-        public T Create(params object[] parameters)
+		public T Create(params object[] parameters)
 		{
 			var constructorMember = this.Constructors.First(constructorMember => constructorMember.IsCallableWith(parameters));
 			return constructorMember != null
 				? (T)constructorMember.Invoke(parameters)
-                : throw new ArgumentException($"Create instance of {typeof(T).Name} failed with {parameters?.Length ?? 0} parameters.");
+				: throw new ArgumentException($"Create instance of {typeof(T).Name} failed with {parameters?.Length ?? 0} parameters.");
 		}
-    }
+	}
 }

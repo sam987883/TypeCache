@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions
 {
-    public static class IEnumerableBooleanExtensions
+	public static class IEnumerableBooleanExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool All(this IEnumerable<bool>? @this, bool value)

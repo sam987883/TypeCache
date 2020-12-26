@@ -29,11 +29,7 @@ namespace TypeCache.Reflection.Caches
 		}
 
 		public D? GetMethod<D>(string name) where D : Delegate
-			=> this.Methods
-				.Get(name)
-				.To(staticMethodMember => staticMethodMember.Method)
-				.If<Delegate, D>()
-				.First();
+			=> this.Methods.Get(name).To(staticMethodMember => staticMethodMember.Method).First<Delegate, D>();
 
 		public IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> Methods { get; }
 	}

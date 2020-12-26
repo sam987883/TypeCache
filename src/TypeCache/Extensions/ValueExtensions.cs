@@ -102,6 +102,6 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this decimal @this)
-			=> decimal.GetBits(@this).To(_ => (IEnumerable<byte>)BitConverter.GetBytes(_)).ToArrayOf(sizeof(decimal));
+			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArrayOf(sizeof(decimal));
 	}
 }
