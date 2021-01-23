@@ -16,7 +16,7 @@ namespace TypeCache.Data
 		public ObjectType Type { get; set; }
 
 		/// <summary>
-		/// Database table/view/function name.
+		/// Database table/view/function/procedure name.
 		/// </summary>
 		public string ObjectName { get; set; } = string.Empty;
 
@@ -34,8 +34,20 @@ namespace TypeCache.Data
 
 		public IImmutableList<ParameterSchema> Parameters { get; set; } = ImmutableArray<ParameterSchema>.Empty;
 
-		public string Name =>
-			$"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]";
+		public string Name
+		{
+			get
+			{
+				if (this.DatabaseName.IsBlank() && this.SchemaName.IsBlank())
+					return $"[{this.ObjectName}]";
+				else if (this.DatabaseName.IsBlank())
+					return $"[{this.SchemaName}].[{this.ObjectName}]";
+				else if (this.SchemaName.IsBlank())
+					return $"[{this.DatabaseName}]..[{this.ObjectName}]";
+				else
+					return $"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]";
+			}
+		}
 
 		public bool HasColumn(string column) =>
 			this.Columns.To(_ => _.Name).Has(column, StringComparer.OrdinalIgnoreCase);

@@ -1,10 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
-using TypeCache.Data;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
@@ -16,13 +15,13 @@ namespace TypeCache.Web.Middleware
 		{
 		}
 
-		public async Task Invoke(HttpContext httpContext, ISchemaStore schemaStore)
+		public async Task Invoke(HttpContext httpContext)
 		{
 			var name = httpContext.Request.Query["object"].First();
 			if (!name.IsBlank())
 			{
-				await using var connection = this.CreateDbConnection();
-				var schema = await schemaStore.GetObjectSchema(connection, name);
+				await using var dbConnection = this.CreateDbConnection();
+				var schema = await dbConnection.GetObjectSchema(name);
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
 			}
 		}

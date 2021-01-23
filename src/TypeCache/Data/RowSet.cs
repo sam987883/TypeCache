@@ -3,10 +3,12 @@
 namespace TypeCache.Data
 {
 	/// <summary>
-	/// {
-	///		"Columns": [ "Column1", "Column2", "Column3", ... ],
-	///		"Rows": [ [ "Data", 123, null ], [ ... ], ... ]
+	/// <code>
+	/// {<br />
+	///		"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
+	///		"Rows": [ [ "Data", 123, null ], [ ... ], ... ]<br />
 	/// }
+	/// </code>
 	/// </summary>
 	public struct RowSet
 	{

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System;
+using TypeCache.Data;
 using TypeCache.Extensions;
-using TypeCache.Common;
 
 namespace TypeCache.Converters
 {

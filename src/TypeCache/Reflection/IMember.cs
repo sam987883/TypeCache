@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Immutable;
-using TypeCache.Common;
 
 namespace TypeCache.Reflection
 {
@@ -15,6 +14,10 @@ namespace TypeCache.Reflection
 		bool Internal { get; }
 
 		bool IsNullable { get; }
+
+		bool IsTask { get; }
+
+		bool IsValueTask { get; }
 
 		string Name { get; }
 

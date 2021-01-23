@@ -1,10 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TypeCache.Business
 {
@@ -14,19 +13,6 @@ namespace TypeCache.Business
 
 		public Mediator(IServiceProvider serviceProvider)
 			=> this._ServiceProvider = serviceProvider;
-
-		public async ValueTask<Response<R>> ApplyRule<T, R>(T request, Func<T, R> rule, CancellationToken cancellationToken = default)
-		{
-			var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-			if (validationRules.Any())
-			{
-				var results = await validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)).AllAsync();
-				if (!results.All(true))
-					return new Response<R>(validationRules);
-			}
-
-			return new Response<R>(rule(request));
-		}
 
 		public async ValueTask<Response<R>> ApplyRuleAsync<T, R>(T request, CancellationToken cancellationToken = default)
 		{

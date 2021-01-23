@@ -4,10 +4,9 @@ namespace TypeCache.Data
 {
 	public enum ObjectType
 	{
-		None = 0,
-		Table = 1,
-		View = 2,
-		Function = 3,
-		StoredProcedure = 4
+		Table,
+		View,
+		Function,
+		StoredProcedure
 	}
 }

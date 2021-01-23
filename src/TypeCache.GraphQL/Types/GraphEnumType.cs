@@ -1,36 +1,34 @@
-// Copyright (c) 2021 Samuel Abraham
+﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Types;
 using System;
 using System.Runtime.CompilerServices;
+using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types
 {
 	public sealed class GraphEnumType<T> : EnumerationGraphType<T> where T : struct, Enum
 	{
-		private readonly Func<string, string> _ChangeEnumCase;
+		private readonly Func<string, string> _ChangeEnumCase = DefaultChangeEnumCase;
 
-		public GraphEnumType(IEnumCache<T> enumCache, Func<string, string> changeEnumCase = null)
+		public GraphEnumType()
 		{
-			var graphAttribute = enumCache.Attributes.First<object, GraphAttribute>();
-			this.Name = graphAttribute?.Name ?? enumCache.Name;
-			this._ChangeEnumCase = changeEnumCase ?? this.DefaultChangeEnumCase;
+			var graphAttribute = Enum<T>.Attributes.First<Attribute, GraphAttribute>();
+			this.Name = graphAttribute?.Name ?? Enum<T>.Name;
 
-			foreach (var field in enumCache.Fields)
+			Enum<T>.Tokens.Do(token =>
 			{
-				graphAttribute = field.Attributes.First<Attribute, GraphAttribute>();
-				if (graphAttribute.Ignore)
-					continue;
+				graphAttribute = token.Attributes.First<Attribute, GraphAttribute>();
+				if (graphAttribute?.Ignore != true)
+					return;
 
-				var name = graphAttribute?.Name ?? field.Name;
+				var name = token.Name;
 				var description = graphAttribute?.Description;
-				var deprecationReason = field.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
+				var deprecationReason = token.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
 
-				this.AddValue(name, description, field.Value, deprecationReason);
-			}
+				this.AddValue(name, description, token, deprecationReason);
+			});
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,7 +36,7 @@ namespace TypeCache.GraphQL.Types
 			=> this._ChangeEnumCase(value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private string DefaultChangeEnumCase(string value)
+		private static string DefaultChangeEnumCase(string value)
 			=> value;
 	}
 }

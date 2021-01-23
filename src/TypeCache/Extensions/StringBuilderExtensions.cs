@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TypeCache.Common;
+using TypeCache.IO;
 
 namespace TypeCache.Extensions
 {

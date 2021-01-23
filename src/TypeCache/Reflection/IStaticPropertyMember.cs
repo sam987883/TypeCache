@@ -4,9 +4,9 @@ namespace TypeCache.Reflection
 {
 	public interface IStaticPropertyMember : IMember
 	{
-		IStaticMethodMember? GetMethod { get; }
+		IStaticMethodMember? Getter { get; }
 
-		IStaticMethodMember? SetMethod { get; }
+		IStaticMethodMember? Setter { get; }
 
 		object? Value { get; set; }
 	}

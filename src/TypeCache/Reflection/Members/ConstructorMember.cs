@@ -24,7 +24,7 @@ namespace TypeCache.Reflection.Members
 			{
 				this.Invoke = constructorInfo.New(parameters.ToParameterArray(parameterInfos)).Lambda<Func<object?[]?, object>>(parameters).Compile();
 
-				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArrayOf(parameterInfos.Length);
+				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
 				this.Method = constructorInfo.New(methodParameters).Lambda(methodParameters).Compile();
 				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo)).ToImmutableArray();
 			}

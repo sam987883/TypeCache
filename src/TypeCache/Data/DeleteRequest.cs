@@ -21,8 +21,8 @@ namespace TypeCache.Data
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
 		/// SQL:
 		/// <code>
-		/// SET @ParameterName1 = N'ParameterValue1';
-		/// SET @ParameterName2 = NULL;
+		/// SET @ParameterName1 = N'ParameterValue1';<br />
+		/// SET @ParameterName2 = NULL;<br />
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>

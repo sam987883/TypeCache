@@ -3,65 +3,35 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Common;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
 namespace TypeCache.Converters
 {
-	public class FieldJsonConverter<T> : JsonConverter<T?> where T : class, new()
+	public class FieldJsonConverter<T> : JsonConverter<T?>
+		where T : class, new()
 	{
-		private readonly ITypeCache _TypeCache;
-		private readonly IFieldCache<T> _FieldCache;
-
-		public FieldJsonConverter(ITypeCache typeCache, IFieldCache<T> fieldCache)
-		{
-			this._TypeCache = typeCache;
-			this._FieldCache = fieldCache;
-		}
-
 		public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
-				var output = this._TypeCache.Create<T>();
-				var accessor = this._TypeCache.CreateFieldAccessor(output);
+				var output = Class<T>.Create();
 				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 				{
 					var name = reader.GetString();
 					if (reader.Read())
 					{
-						switch (reader.TokenType)
+						var field = Class<T>.Fields[name];
+						field[output] = reader.TokenType switch
 						{
-							case JsonTokenType.StartObject:
-								{
-									var type = this._FieldCache.Fields[name].TypeHandle.ToType();
-									accessor[name] = JsonSerializer.Deserialize(ref reader, type, options);
-								}
-								break;
-							case JsonTokenType.StartArray:
-								while (reader.Read() && reader.TokenType == JsonTokenType.StartObject)
-								{
-									var type = this._FieldCache.Fields[name].TypeHandle.ToType();
-									accessor[name] = JsonSerializer.Deserialize(ref reader, type, options);
-								}
-								break;
-							case JsonTokenType.String:
-								accessor[name] = reader.GetString();
-								break;
-							case JsonTokenType.Number:
-								accessor[name] = reader.TryGetInt64(out var value) ? value : reader.GetDecimal();
-								break;
-							case JsonTokenType.True:
-								accessor[name] = true;
-								break;
-							case JsonTokenType.False:
-								accessor[name] = false;
-								break;
-							case JsonTokenType.Null:
-								accessor[name] = null;
-								break;
-						}
+							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.TypeHandle.ToType(), options),
+							JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.TypeHandle.ToType(), options),
+							JsonTokenType.String => reader.GetString(),
+							JsonTokenType.Number => reader.TryGetInt64(out var value) ? value : reader.GetDecimal(),
+							JsonTokenType.True => true,
+							JsonTokenType.False => false,
+							_ => null
+						};
 					}
 				}
 
@@ -76,11 +46,10 @@ namespace TypeCache.Converters
 			if (input != null)
 			{
 				writer.WriteStartObject();
-				var accessor = this._TypeCache.CreateFieldAccessor(input);
-				this._FieldCache.Fields.Values.If(_ => _.Getter != null).Do(field =>
+				Class<T>.Fields.Values.If(field => field.Getter != null).Do(field =>
 				{
 					writer.WritePropertyName(field.Name);
-					var value = accessor[field.Name];
+					var value = field[input];
 					if (value != null)
 					{
 						switch (field.NativeType)

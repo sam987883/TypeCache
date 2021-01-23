@@ -1,5 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+
 namespace TypeCache.Data
 {
 	public class ColumnSchema
@@ -21,5 +23,7 @@ namespace TypeCache.Data
 		public bool Readonly { get; set; }
 
 		public int Length { get; set; }
+
+		public RuntimeTypeHandle TypeHandle { get; set; }
 	}
 }

@@ -16,10 +16,8 @@ namespace TypeCache.Reflection.Members
 		{
 			methodInfo.IsStatic.Assert($"{nameof(methodInfo)}.{nameof(methodInfo.IsStatic)}", false);
 
-			var parameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
+			var parameterPositionComparer = Comparer<ParameterInfo?>.Create((x, y) => x.Position - y.Position);
 
-			this.IsTask = methodInfo.ReturnType.IsTask();
-			this.IsValueTask = methodInfo.ReturnType.IsValueTask();
 			this.IsVoid = methodInfo.ReturnType.IsVoid();
 			this.ReturnAttributes = methodInfo.ReturnParameter.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
 
@@ -31,9 +29,9 @@ namespace TypeCache.Reflection.Members
 			Expression call;
 			if (parameterInfos.Any())
 			{
-				call = methodInfo.Call(instance, parameters.ToParameterArray(parameterInfos));
+				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType), parameters.ToParameterArray(parameterInfos));
 
-				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArrayOf(parameterInfos.Length);
+				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
 				var methodParameters = new ParameterExpression[parameterInfos.Length + 1];
 				methodParameters[0] = instance;
 				callParameters.CopyTo(methodParameters, 1);
@@ -59,10 +57,6 @@ namespace TypeCache.Reflection.Members
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsCallableWith(params object?[]? arguments)
 			=> this.Parameters.IsCallableWith(arguments);
-
-		public bool IsTask { get; }
-
-		public bool IsValueTask { get; }
 
 		public bool IsVoid { get; }
 

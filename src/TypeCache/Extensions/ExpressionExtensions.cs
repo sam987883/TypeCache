@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Common;
+using TypeCache.Reflection;
 
 namespace TypeCache.Extensions
 {
@@ -38,7 +38,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, params int[] indexes)
-			=> Expression.ArrayAccess(@this, indexes.To(index => (Expression)Expression.Constant(index, index.GetType())).ToArrayOf(indexes.Length));
+			=> Expression.ArrayAccess(@this, indexes.To(index => (Expression)Expression.Constant(index, index.GetType())).ToArray(indexes.Length));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, long index)
@@ -46,7 +46,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayAccess(this Expression @this, params long[] indexes)
-			=> Expression.ArrayAccess(@this, indexes.To(i => (Expression)Expression.Constant(i, i.GetType())).ToArrayOf(indexes.Length));
+			=> Expression.ArrayAccess(@this, indexes.To(i => (Expression)Expression.Constant(i, i.GetType())).ToArray(indexes.Length));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ArrayIndex(this Expression @this, Expression index)
@@ -238,7 +238,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArrayOf(parameters.Length)), @this, parameters);
+			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray(parameters.Length)), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
@@ -246,7 +246,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArrayOf(parameters.Length)), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray(parameters.Length)), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
@@ -254,7 +254,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArrayOf(parameters.Length)), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray(parameters.Length)), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression LessThan(this Expression @this, Expression expression)
@@ -325,6 +325,18 @@ namespace TypeCache.Extensions
 			=> Expression.Parameter(typeof(T), @this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression Property(this Expression @this, string name)
+			=> Expression.Property(@this, name);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression Property(this Expression @this, Type type, string name)
+			=> Expression.Property(@this, type, name);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression Property<T>(this Expression @this, string name)
+			=> Expression.Property(@this, typeof(T), name);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Property(this Expression @this, PropertyInfo propertyInfo)
 			=> Expression.Property(@this, propertyInfo);
 
@@ -333,8 +345,16 @@ namespace TypeCache.Extensions
 			=> Expression.Property(@this, propertyInfo, index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression Property(this Expression @this, MethodInfo getMethodInfo)
+			=> Expression.Property(@this, getMethodInfo);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression StaticField(this FieldInfo @this)
 			=> Expression.Field(null, @this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression StaticField(this Type @this, string name)
+			=> Expression.Field(null, @this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression StaticProperty(this PropertyInfo @this)
@@ -343,6 +363,10 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression StaticProperty(this PropertyInfo @this, ParameterExpression index)
 			=> Expression.Property(null, @this, index);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Expression StaticProperty(this Type @this, string name)
+			=> Expression.Property(null, @this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Subtract(this Expression @this, Expression expression, bool overflowCheck = false)

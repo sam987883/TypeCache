@@ -1,6 +1,9 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
+using System;
+using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Extensions
@@ -10,30 +13,26 @@ namespace TypeCache.GraphQL.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="IGraphHandler"/></term> <description>The GraphQL handler that contains query and/or mutation method endpoints.</description></item>
-		/// </list>
-		/// </summary>
-		/// <typeparam name="T">The Graph handler implementation.</typeparam>
-		public static IServiceCollection RegisterGraphHandler<T>(this IServiceCollection @this)
-			where T : class, IGraphHandler
-			=> @this.AddSingleton<IGraphHandler, T>();
-
-		/// <summary>
-		/// Registers Singletons:
-		/// <list type="bullet">
 		/// <item><term><see cref="GraphSchema"/></term> <description>The GraphQL schema that will be built based on all registered IGraphHandler classes.</description></item>
-		/// <item><term><see cref="GraphObjectType&lt;&gt;"/></term> <description>The GraphQL ObjectGraphType.</description></item>
-		/// <item><term><see cref="GraphInputType&lt;&gt;"/></term> <description>The GraphQL InputObjectGraphType.</description></item>
-		/// <item><term><see cref="GraphEnumType&lt;&gt;"/></term> <description>The GraphQL EnumerationGraphType.</description></item>
+		/// <item><term><see cref="GraphObjectType&lt;T&gt;"/></term> <description>The GraphQL ObjectGraphType.</description></item>
+		/// <item><term><see cref="GraphInputType&lt;T&gt;"/></term> <description>The GraphQL InputObjectGraphType.</description></item>
+		/// <item><term><see cref="GraphEnumType&lt;T&gt;"/></term> <description>The GraphQL EnumerationGraphType.</description></item>
 		/// <item><term><see cref="GraphHashIdType"/></term> <description>A ScalarGraphType that hashes and unhashes integer identifier types to prevent a sequential attack.</description></item>
+		/// <item><term><see cref="GraphConnectionType&lt;T&gt;"/></term> <description>GraphQL Connection type for paging.</description></item>
+		/// <item><term><see cref="GraphEdgeType&lt;T&gt;"/></term> <description>Edge component of the GraphQL Connection type.</description></item>
 		/// </list>
 		/// </summary>
-		public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
+		/// <param name="registerEndpoints">Use this to register handler classes containing endpoint methods or register SQL API generated endpoints.</param>
+		public static IServiceCollection RegisterGraphQL(this IServiceCollection @this, Action<GraphSchema> addEndpoints)
 			=> @this
 				.AddSingleton(typeof(GraphObjectType<>))
+				.AddSingleton(typeof(GraphObjectEnumType<>))
 				.AddSingleton(typeof(GraphInputType<>))
 				.AddSingleton(typeof(GraphEnumType<>))
+				.RegisterSecurity((decimal)Math.PI, (decimal)(-1 * Math.PI))
 				.AddSingleton(typeof(GraphHashIdType))
-				.AddSingleton<GraphSchema>();
+				.AddSingleton(typeof(GraphConnectionType<>))
+				.AddSingleton(typeof(GraphEdgeType<>))
+				.AddSingleton<ISchema>(provider => new GraphSchema(provider, addEndpoints));
 	}
 }

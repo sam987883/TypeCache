@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Extensions;
 using System;
 using System.Collections.Immutable;
 using System.Reflection;
-using TypeCache.Common;
+using System.Threading.Tasks;
+using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Members
 {
@@ -15,15 +15,25 @@ namespace TypeCache.Reflection.Members
 			this.TypeHandle = type.TypeHandle;
 			this.Attributes = memberInfo.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
 			this.Name = this.Attributes.First<Attribute, NameAttribute>()?.Name ?? memberInfo.Name;
-			this.CollectionType = type.ToCollectionType();
 
 			if (type.IsGenericType)
 			{
-				this.IsNullable = type.GetGenericTypeDefinition() == typeof(Nullable<>);
-				this.NativeType = type.GenericTypeArguments[0].ToNativeType();
+				var genericType = type.GetGenericTypeDefinition();
+				this.IsNullable = genericType == typeof(Nullable<>);
+				this.IsTask = genericType == typeof(Task<>);
+				this.IsValueTask = genericType == typeof(ValueTask<>);
+
+				if (this.IsNullable || this.IsTask || this.IsValueTask)
+					type = type.GenericTypeArguments[0];
+
+				this.CollectionType = type.ToCollectionType();
+				this.NativeType = type.ToNativeType();
 			}
 			else
 			{
+				this.CollectionType = type.ToCollectionType();
+				this.IsTask = type == typeof(Task);
+				this.IsValueTask = type == typeof(ValueTask);
 				this.IsNullable = false;
 				this.NativeType = type.ToNativeType();
 			}
@@ -70,6 +80,10 @@ namespace TypeCache.Reflection.Members
 		public bool Internal { get; }
 
 		public bool IsNullable { get; }
+
+		public bool IsTask { get; }
+
+		public bool IsValueTask { get; }
 
 		public string Name { get; }
 

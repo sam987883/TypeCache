@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using TypeCache.Common;
 using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Mappers
@@ -12,23 +11,16 @@ namespace TypeCache.Reflection.Mappers
 		where FROM : class
 		where TO : class
 	{
-		private readonly IFieldCache<FROM> _FromFieldCache;
-
-		private readonly IFieldCache<TO> _ToFieldCache;
-
 		public IImmutableList<MapperSetting> Settings { get; }
 
-		public FieldMapper(IFieldCache<FROM> fromFieldCache, IFieldCache<TO> toFieldCache, params MapperSetting[] overrides)
+		public FieldMapper(params MapperSetting[] overrides)
 		{
-			this._FromFieldCache = fromFieldCache;
-			this._ToFieldCache = toFieldCache;
-
-			var settings = new Dictionary<string, MapperSetting>(toFieldCache.Fields.Count, Caches.TypeCache.NameComparer);
-			var fields = this._ToFieldCache.Fields.Keys.Match(this._FromFieldCache.Fields.Keys, Caches.TypeCache.NameComparer);
+			var settings = new Dictionary<string, MapperSetting>(Class<TO>.Fields.Count, StringComparer.Ordinal);
+			var fields = Class<TO>.Fields.Keys.Match(Class<FROM>.Fields.Keys, StringComparer.Ordinal);
 			fields.Do(name =>
 			{
-				var fromField = this._FromFieldCache.Fields[name];
-				var toField = this._ToFieldCache.Fields[name];
+				var fromField = Class<FROM>.Fields[name];
+				var toField = Class<TO>.Fields[name];
 
 				if (toField.TypeHandle.Equals(fromField.TypeHandle))
 					settings.Add(name, new MapperSetting
@@ -41,7 +33,7 @@ namespace TypeCache.Reflection.Mappers
 
 			overrides.Do(setting =>
 			{
-				var toField = this._ToFieldCache.Fields.Get(setting.To);
+				var toField = Class<TO>.Fields.Get(setting.To);
 				if (toField == null)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] was not found for mapping.");
 				else if (toField.SetValue == null)
@@ -49,7 +41,7 @@ namespace TypeCache.Reflection.Mappers
 
 				if (!setting.From.IsBlank())
 				{
-					var fromField = this._FromFieldCache.Fields.Get(setting.From);
+					var fromField = Class<FROM>.Fields.Get(setting.From);
 					if (fromField == null)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] was not found for mapping.");
 					else if (fromField.GetValue == null)
@@ -72,8 +64,8 @@ namespace TypeCache.Reflection.Mappers
 
 		public void Map(FROM from, TO to) => this.Settings.Do(setting =>
 		{
-			var fromField = this._FromFieldCache.Fields[setting.From];
-			var toField = this._ToFieldCache.Fields[setting.To];
+			var fromField = Class<FROM>.Fields[setting.From];
+			var toField = Class<TO>.Fields[setting.To];
 
 			var fromValue = fromField[from];
 			if (!setting.IgnoreNullValue || fromValue != null)

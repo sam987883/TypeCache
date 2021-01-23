@@ -2,13 +2,15 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Collections
 {
-	public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V> where K : notnull
+	public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
+		where K : notnull
 	{
 		private readonly ConcurrentDictionary<K, V> _Dictionary;
 		private readonly Func<K, V> _CreateValue;
@@ -37,24 +39,23 @@ namespace TypeCache.Collections
 			this._Dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, capacity, comparer);
 		}
 
-		V IReadOnlyDictionary<K, V>.this[K key]
-			=> this._Dictionary.GetOrAdd(key, this._CreateValue);
+		V IReadOnlyDictionary<K, V>.this[K key] => this._Dictionary.GetOrAdd(key, this._CreateValue);
 
-		IEnumerable<K> IReadOnlyDictionary<K, V>.Keys
-			=> this._Dictionary.Keys;
+		IEnumerable<K> IReadOnlyDictionary<K, V>.Keys => this._Dictionary.Keys;
 
-		IEnumerable<V> IReadOnlyDictionary<K, V>.Values
-			=> this._Dictionary.Values;
+		IEnumerable<V> IReadOnlyDictionary<K, V>.Values => this._Dictionary.Values;
 
-		int IReadOnlyCollection<KeyValuePair<K, V>>.Count
-			=> this._Dictionary.Count;
+		int IReadOnlyCollection<KeyValuePair<K, V>>.Count => this._Dictionary.Count;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool IReadOnlyDictionary<K, V>.ContainsKey(K key)
 			=> this._Dictionary.ContainsKey(key);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K, V>>.GetEnumerator()
 			=> this._Dictionary.GetEnumerator();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator()
 			=> this._Dictionary.GetEnumerator();
 

@@ -4,13 +4,13 @@ namespace TypeCache.Data
 {
 	/// <summary>
 	/// JSON: <code>
-	/// {
-	///		"Deleted": { "Columns": [ "Column1", "Column2", "Column3", ... ], "Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ] },
-	///		"Inserted": { "Columns": [ "Column1", "Column2", "Column3", ... ], "Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ] }
+	/// {<br />
+	///		"Deleted": { "Columns": [ "Column1", "Column2", "Column3", ... ], "Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ] },<br />
+	///		"Inserted": { "Columns": [ "Column1", "Column2", "Column3", ... ], "Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ] }<br />
 	/// }
 	/// </code>
 	/// </summary>
-	public struct Output
+	public class Output
 	{
 		/// <summary>
 		/// JSON: <code>{ "Deleted": { "Columns": [ ... ], "Rows": [ [ ... ], [ ... ], [ ... ] ] } }</code>

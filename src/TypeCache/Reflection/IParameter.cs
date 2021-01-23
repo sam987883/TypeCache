@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Immutable;
-using TypeCache.Common;
 
 namespace TypeCache.Reflection
 {

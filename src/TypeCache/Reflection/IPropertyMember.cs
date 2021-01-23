@@ -6,8 +6,8 @@ namespace TypeCache.Reflection
 	{
 		object? this[object instance] { get; set; }
 
-		IMethodMember? GetMethod { get; }
+		IMethodMember? Getter { get; }
 
-		IMethodMember? SetMethod { get; }
+		IMethodMember? Setter { get; }
 	}
 }

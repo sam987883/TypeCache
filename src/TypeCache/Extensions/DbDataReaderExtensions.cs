@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Data;
@@ -12,9 +13,9 @@ namespace TypeCache.Extensions
 	public static class DbDataReaderExtensions
 	{
 		public static string[] GetColumns(this IDataReader @this)
-			=> 0.Range(@this.FieldCount).To(@this.GetName).ToArrayOf(@this.FieldCount);
+			=> 0.Range(@this.FieldCount).To(@this.GetName).ToArray(@this.FieldCount);
 
-		public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, CancellationToken cancellationToken = default)
+		public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			var columnCount = @this.FieldCount;
 			while (await @this.ReadAsync(cancellationToken))
@@ -32,7 +33,7 @@ namespace TypeCache.Extensions
 				Rows = (await @this.ReadRowsAsync(cancellationToken).ToListAsync()).ToArray()
 			};
 
-		public static async IAsyncEnumerable<RowSet> ReadRowSetsAsync(this DbDataReader @this, CancellationToken cancellationToken = default)
+		public static async IAsyncEnumerable<RowSet> ReadRowSetsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			do
 			{

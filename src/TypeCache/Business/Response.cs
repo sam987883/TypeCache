@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using TypeCache.Extensions;
 
 namespace TypeCache.Business
@@ -30,10 +29,10 @@ namespace TypeCache.Business
 			this.Result = default;
 		}
 
-		public Response(IEnumerable<IValidation> validations)
+		public Response(ValidationResponse[] validationResponses)
 		{
-			this.HasError = validations.Any(validation => validation.IsError);
-			this.Messages = validations.ToMany(validation => validation.Messages).ToArray();
+			this.HasError = validationResponses.Any(_ => _.IsError);
+			this.Messages = validationResponses.ToMany(_ => _.Messages).ToArray();
 			this.Result = default;
 		}
 

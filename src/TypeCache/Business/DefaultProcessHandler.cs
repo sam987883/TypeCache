@@ -1,15 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 
 namespace TypeCache.Business
 {
-	internal class DefaultProcessHandler<T> : IProcessHandler<T>
+	public class DefaultProcessHandler<T> : IProcessHandler<T>
 	{
 		private readonly IServiceProvider _ServiceProvider;
 
@@ -18,23 +17,13 @@ namespace TypeCache.Business
 
 		public async ValueTask HandleAsync(T request, CancellationToken cancellationToken)
 		{
-			var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-			if (validationRules.Any())
-			{
-				var results = await validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)).AllAsync();
-				if (!results.All(true))
-				{
-					var errors = validationRules.If(rule => rule.IsError).ToMany(rule => rule.Messages).ToArray();
-					throw new ValidationRuleException(errors);
-				}
-			}
-
-			var processes = this._ServiceProvider.GetServices<IProcess<T>>();
-			await processes.To(async process => await process.RunAsync(request, cancellationToken)).AllAsync<IEnumerable<ValueTask>>();
+			await this.ApplyValidationRules(this._ServiceProvider, request, cancellationToken);
+			var process = this._ServiceProvider.GetRequiredService<IProcess<T>>();
+			await process.RunAsync(request, cancellationToken);
 		}
 	}
 
-	internal class DefaultProcessHandler<M, T> : IProcessHandler<M, T>
+	public class DefaultProcessHandler<M, T> : IProcessHandler<M, T>
 	{
 		private readonly IServiceProvider _ServiceProvider;
 
@@ -43,19 +32,10 @@ namespace TypeCache.Business
 
 		public async ValueTask HandleAsync(M metadata, T request, CancellationToken cancellationToken)
 		{
-			var validationRules = this._ServiceProvider.GetServices<IValidationRule<T>>();
-			if (validationRules.Any())
-			{
-				var results = await Task.WhenAll(validationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)));
-				if (!results.All(true))
-				{
-					var errors = validationRules.If(rule => rule.IsError).ToMany(rule => rule.Messages).ToArray();
-					throw new ValidationRuleException(errors);
-				}
-			}
-
-			var processes = this._ServiceProvider.GetServices<IProcess<T>>();
-			await processes.To(async process => await process.RunAsync(request, cancellationToken)).AllAsync<IEnumerable<ValueTask>>();
+			await this.ApplyValidationRules(this._ServiceProvider, request, cancellationToken);
+			await this.ApplyValidationRules(this._ServiceProvider, metadata, request, cancellationToken);
+			var process = this._ServiceProvider.GetRequiredService<IProcess<M, T>>();
+			await process.RunAsync(metadata, request, cancellationToken);
 		}
 	}
 }

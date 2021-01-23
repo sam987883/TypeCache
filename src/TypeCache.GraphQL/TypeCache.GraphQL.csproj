@@ -1,21 +1,29 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
-    <Version>1.0.4</Version>
+    <PackageId>TypeCache.GraphQL</PackageId>
+    <Version>1.0.5</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
-    <Product>TypeCache</Product>
+    <Title>TypeCache GraphQL</Title>
     <Description>GraphQL made easy.</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
+    <Product>TypeCache</Product>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://www.nuget.org/packages/TypeCache.GraphQL/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TypeCache/TypeCache/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageIcon>TypeCash.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\TypeCash.png">
+		<None Include="..\..\.editorconfig" Link=".editorconfig" />
+		<None Include="..\..\TypeCash.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

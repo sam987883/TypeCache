@@ -10,7 +10,7 @@ namespace TypeCache.GraphQL
 	{
 		public Connection(T[] items, Func<T, C> getCursor, int totalCount, bool hasNextPage, bool hasPreviousPage)
 		{
-			this.Edges = items.To(item => new Edge<T, C>(item, getCursor)).ToArrayOf(items.Length);
+			this.Edges = items.To(item => new Edge<T, C>(item, getCursor)).ToArray(items.Length);
 			this.Items = items;
 			this.PageInfo = new PageInfo<C>
 			{

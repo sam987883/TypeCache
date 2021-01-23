@@ -2,12 +2,30 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions
 {
 	public static class ValueExtensions
 	{
+		public static void AssertNotNull<T>([AllowNull] this T? @this, string name, [CallerMemberName] string caller = null)
+			where T : struct
+		{
+			if (@this == null)
+				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotNull)}: [{name}] is null.");
+		}
+
+		public static IEnumerable<T> Repeat<T>(this T @this, int count)
+			where T : struct
+		{
+			while (count > 0)
+			{
+				yield return @this;
+				--count;
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DateTime As(this DateTime @this, DateTimeKind kind)
 			=> DateTime.SpecifyKind(@this, kind);
@@ -102,6 +120,6 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this decimal @this)
-			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArrayOf(sizeof(decimal));
+			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray(sizeof(decimal));
 	}
 }

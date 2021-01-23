@@ -8,22 +8,22 @@ namespace TypeCache.Data
 {
 	/// <summary>
 	/// JSON: <code>
-	/// {
-	///		"Parameters": [ ... ],
-	///		"Output":
-	///		{
-	///			"Columns": [ "Column1", "Column2", "Column3", ... ],
-	///			"Rows": [ [ "Data", 123, null ], [ ... ], ... ]
-	///		}
+	/// {<br />
+	///		"Parameters": [ ... ],<br />
+	///		"Output":<br />
+	///		{<br />
+	///			"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
+	///			"Rows": [ [ "Data", 123, null ], [ ... ], ... ]<br />
+	///		}<br />
 	///	}
 	/// </code>
 	/// </summary>
 	public class StoredProcedureResponse
 	{
 		/// <summary>
-		/// {
-		///		"Columns": [ "Column1", "Column2", "Column3", ... ],
-		///		"Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ]
+		/// {<br />
+		///		"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
+		///		"Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ]<br />
 		/// }
 		/// </summary>
 		public IEnumerable<RowSet> Output { get; set; } = new RowSet[0];

@@ -1,48 +1,19 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
-using Microsoft.Extensions.DependencyInjection;
 using System.Data.Common;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TypeCache.Business;
-using TypeCache.Common;
-using TypeCache.Converters;
 using TypeCache.Data;
-using TypeCache.Data.Schema;
+using TypeCache.Data.Business;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Caches;
-using TypeCache.Reflection.Converters;
 using TypeCache.Reflection.Mappers;
 using TypeCache.Security;
-using TypeCache.Security.Coders;
 
 namespace TypeCache.Extensions
 {
 	public static class IServiceCollectionExtensions
 	{
-		/// <summary>
-		/// Makes a call to:
-		/// <code>DbProviderFactories.RegisterFactory(databaseProvider, dbProviderFactory);</code>
-		/// </summary>
-		/// <param name="databaseProvider">ie. <c>"Microsoft.Data.SqlClient"</c></param>
-		/// <param name="dbProviderFactory">ie. <c>SqlClientFactory.Instance</c></param>
-		public static IServiceCollection RegisterDatabaseProviderFactory(this IServiceCollection @this, string databaseProvider, DbProviderFactory dbProviderFactory)
-		{
-			DbProviderFactories.RegisterFactory(databaseProvider, dbProviderFactory);
-			return @this;
-		}
-
-		/// <summary>
-		/// Registers Singletons:
-		/// <list type="bullet">
-		/// <item><see cref="ISchemaFactory"/></item>
-		/// <item><see cref="ISchemaStore"/></item>
-		/// </list>
-		/// <i>Requires call to: <see cref="Reflection.Extensions.IServiceCollectionExtensions.RegisterTypeCache"/></i>
-		/// </summary>
-		public static IServiceCollection RegisterDatabaseSchema(this IServiceCollection @this)
-			=> @this
-				.AddSingleton<ISchemaFactory>(provider => new SchemaFactory(provider.GetRequiredService<ITypeCache>()))
-				.AddSingleton<ISchemaStore>(provider => new SchemaStore(provider.GetRequiredService<ISchemaFactory>()));
-
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
@@ -53,16 +24,14 @@ namespace TypeCache.Extensions
 		public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
 			where FROM : class
 			where TO : class
-			=> @this.AddSingleton<IFieldMapper<FROM, TO>>(provider =>
-				new FieldMapper<FROM, TO>(provider.GetRequiredService<IFieldCache<FROM>>(), provider.GetRequiredService<IFieldCache<TO>>(), overrides));
+			=> @this.AddSingleton<IFieldMapper<FROM, TO>>(provider => new FieldMapper<FROM, TO>(overrides));
 
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="IProcess&lt;&gt;"/></term> <description>All implementations of IProcess.</description></item>
-		/// <item><term><see cref="DefaultProcessHandler&lt;&gt;"/>, <see cref="DefaultProcessHandler&lt;,&gt;"/></term> <description>Default implementation of IProcessHandler.</description></item>
-		/// <item><term><see cref="DefaultRuleHandler&lt;,&gt;"/>, <see cref="DefaultRuleHandler&lt;,,&gt;"/></term> <description>Default implementation of IRuleHandler.</description></item>
-		/// <item><term><see cref="DefaultRulesHandler&lt;,&gt;"/>, <see cref="DefaultRulesHandler&lt;,,&gt;"/></term> <description>Default implementation of IRulesHandler.</description></item>
+		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementation of IProcessHandler.</description></item>
+		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRuleHandler.</description></item>
+		/// <item><term><see cref="DefaultRulesHandler&lt;T,R&gt;"/>, <see cref="DefaultRulesHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRulesHandler.</description></item>
 		/// </list>
 		/// </summary>
 		/// <param name="this"></param>
@@ -86,8 +55,7 @@ namespace TypeCache.Extensions
 		public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
 			where FROM : class
 			where TO : class
-			=> @this.AddSingleton<IPropertyMapper<FROM, TO>>(provider =>
-				new PropertyMapper<FROM, TO>(provider.GetRequiredService<IPropertyCache<FROM>>(), provider.GetRequiredService<IPropertyCache<TO>>(), overrides));
+			=> @this.AddSingleton<IPropertyMapper<FROM, TO>>(provider => new PropertyMapper<FROM, TO>(overrides));
 
 		/// <summary>
 		/// Registers Singletons:
@@ -98,7 +66,10 @@ namespace TypeCache.Extensions
 		/// <param name="rgbKey">Any random 16 bytes</param>
 		/// <param name="rgbIV">Any random 16 bytes</param>
 		public static IServiceCollection RegisterSecurity(this IServiceCollection @this, byte[] rgbKey, byte[] rgbIV)
-			=> @this.AddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+		{
+			@this.TryAddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+			return @this;
+		}
 
 		/// <summary>
 		/// Registers Singletons:
@@ -109,40 +80,147 @@ namespace TypeCache.Extensions
 		/// <param name="rgbKey">Any random decimal value (gets cionverted to 16 byte array)</param>
 		/// <param name="rgbIV">Any random decimal value (gets cionverted to 16 byte array)</param>
 		public static IServiceCollection RegisterSecurity(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
-			=> @this.AddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+		{
+			@this.TryAddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+			return @this;
+		}
 
 		/// <summary>
-		/// Registers Singletons:
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <list type="bullet">
-		/// <item><term><see cref="ITypeCache"/></term> <description>Utility class that handles Relection for anonymous types.</description></item>
-		/// <item><term><see cref="IConstructorCache&lt;&gt;"/></term> <description>Class constructors.</description></item>
-		/// <item><term><see cref="IIndexerCache&lt;&gt;"/></term> <description>Class indexers.</description></item>
-		/// <item><term><see cref="IMethodCache&lt;&gt;"/>, <see cref="IStaticMethodCache&lt;&gt;"/></term> <description>Class methods.</description></item>
-		/// <item><term><see cref="IPropertyCache&lt;&gt;"/>, <see cref="IStaticPropertyCache&lt;&gt;"/></term> <description>Class properties.</description></item>
-		/// <item><term><see cref="IFieldCache&lt;&gt;"/>, <see cref="IStaticFieldCache&lt;&gt;"/></term> <description>Class fields.</description></item>
-		/// <item><term><see cref="IEnumCache&lt;&gt;"/></term> <description>Enum fields and information.</description></item>
-		/// <item><term><see cref="IPropertyMapper&lt;,&gt;"/>, <see cref="IFieldMapper&lt;,&gt;"/></term> <description>Mappers where types: FROM = TO.</description></item>
-		/// <item><term><see cref="PropertyJsonConverter&lt;&gt;"/>, <see cref="FieldJsonConverter&lt;&gt;"/></term> <description>TypeCache based JSON converters.</description></item>
-		/// <item><term><see cref="IEnumEqualityComparer&lt;&gt;"/>, <see cref="IEnumComparer&lt;&gt;"/></term> <description>EnumCache based IEqualityComparer&lt;&gt; and IComparer&lt;&gt;.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;StoredProcedureRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,StoredProcedureRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="StoredProcedureRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DeleteRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,DeleteRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="DeleteRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;InsertRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,InsertRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="InsertRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;BatchRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,BatchRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="BatchRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;SelectRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,SelectRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="SelectRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;UpdateRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
 		/// </list>
 		/// </summary>
-		public static IServiceCollection RegisterTypeCache(this IServiceCollection @this)
-			=> @this
-				.AddSingleton(typeof(IConstructorCache<>), typeof(ConstructorCache<>))
-				.AddSingleton(typeof(IIndexerCache<>), typeof(IndexerCache<>))
-				.AddSingleton(typeof(IMethodCache<>), typeof(MethodCache<>))
-				.AddSingleton(typeof(IStaticMethodCache<>), typeof(StaticMethodCache<>))
-				.AddSingleton(typeof(IPropertyCache<>), typeof(PropertyCache<>))
-				.AddSingleton(typeof(IStaticPropertyCache<>), typeof(StaticPropertyCache<>))
-				.AddSingleton(typeof(IFieldCache<>), typeof(FieldCache<>))
-				.AddSingleton(typeof(IStaticFieldCache<>), typeof(StaticFieldCache<>))
-				.AddSingleton(typeof(IEnumCache<>), typeof(EnumCache<>))
-				.AddSingleton(typeof(IPropertyMapper<,>), typeof(PropertyMapper<,>))
-				.AddSingleton(typeof(IFieldMapper<,>), typeof(FieldMapper<,>))
-				.AddSingleton<ITypeCache>(new Reflection.Caches.TypeCache(((ServiceCollection)@this).BuildServiceProvider()))
-				.AddSingleton(typeof(PropertyJsonConverter<>), typeof(PropertyJsonConverter<>))
-				.AddSingleton(typeof(FieldJsonConverter<>), typeof(FieldJsonConverter<>))
-				.AddSingleton(typeof(IEnumEqualityComparer<>), typeof(EnumEqualityComparer<>))
-				.AddSingleton(typeof(IEnumComparer<>), typeof(EnumComparer<>));
+		public static IServiceCollection RegisterSqlApi(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
+				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRule<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
+				.AddSingleton<IRule<DbConnection, DeleteRequest, RowSet>, DeleteRule>()
+				.AddSingleton<IRule<DbConnection, DeleteRequest, string>, DeleteRule>()
+				.AddSingleton<IRule<DbConnection, InsertRequest, RowSet>, InsertRule>()
+				.AddSingleton<IRule<DbConnection, InsertRequest, string>, InsertRule>()
+				.AddSingleton<IRule<DbConnection, BatchRequest, RowSet>, MergeRule>()
+				.AddSingleton<IRule<DbConnection, BatchRequest, string>, MergeRule>()
+				.AddSingleton<IRule<DbConnection, SelectRequest, RowSet>, SelectRule>()
+				.AddSingleton<IRule<DbConnection, SelectRequest, string>, SelectRule>()
+				.AddSingleton<IRule<DbConnection, UpdateRequest, RowSet>, UpdateRule>()
+				.AddSingleton<IRule<DbConnection, UpdateRequest, string>, UpdateRule>()
+				.AddSingleton<IValidationRule<DbConnection, DeleteRequest>, DeleteValidationRule>()
+				.AddSingleton<IValidationRule<DbConnection, InsertRequest>, InsertValidationRule>()
+				.AddSingleton<IValidationRule<DbConnection, BatchRequest>, MergeValidationRule>()
+				.AddSingleton<IValidationRule<DbConnection, SelectRequest>, SelectValidationRule>()
+				.AddSingleton<IValidationRule<DbConnection, StoredProcedureRequest>, StoredProcedureValidationRule>()
+				.AddSingleton<IValidationRule<DbConnection, UpdateRequest>, UpdateValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for calling procedures.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;StoredProcedureRequest&gt;"/></term> <description>where T = <see cref="StoredProcedureRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,StoredProcedureRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="StoredProcedureRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiCall(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
+				.AddSingleton<IRule<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
+				.AddSingleton<IValidationRule<DbConnection, StoredProcedureRequest>, StoredProcedureValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing deletes.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;DeleteRequest&gt;"/></term> <description>where T = <see cref="DeleteRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiDelete(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRule<DbConnection, DeleteRequest, RowSet>, DeleteRule>()
+				.AddSingleton<IRule<DbConnection, DeleteRequest, string>, DeleteRule>()
+				.AddSingleton<IValidationRule<DbConnection, DeleteRequest>, DeleteValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing inserts.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;InsertRequest&gt;"/></term> <description>where T = <see cref="InsertRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,InsertRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="InsertRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiInsert(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
+				.AddSingleton<IRule<DbConnection, InsertRequest, RowSet>, InsertRule>()
+				.AddSingleton<IRule<DbConnection, InsertRequest, string>, InsertRule>()
+				.AddSingleton<IValidationRule<DbConnection, InsertRequest>, InsertValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing merges.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;BatchRequest&gt;"/></term> <description>where T = <see cref="BatchRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,BatchRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="BatchRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiMerge(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
+				.AddSingleton<IRule<DbConnection, BatchRequest, RowSet>, MergeRule>()
+				.AddSingleton<IRule<DbConnection, BatchRequest, string>, MergeRule>()
+				.AddSingleton<IValidationRule<DbConnection, BatchRequest>, MergeValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing selects.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;SelectRequest&gt;"/></term> <description>where T = <see cref="SelectRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,SelectRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="SelectRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiSelect(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
+				.AddSingleton<IRule<DbConnection, SelectRequest, RowSet>, SelectRule>()
+				.AddSingleton<IRule<DbConnection, SelectRequest, string>, SelectRule>()
+				.AddSingleton<IValidationRule<DbConnection, SelectRequest>, SelectValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing updates.<br />
+		/// You can register the following validation rules to validate the request before the database call is made:
+		/// <list type="bullet">
+		/// <item><term><see cref="IValidationRule&lt;UpdateRequest&gt;"/></term> <description>where T = <see cref="UpdateRequest" />.</description></item>
+		/// <item><term><see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiUpdate(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRule<DbConnection, UpdateRequest, RowSet>, UpdateRule>()
+				.AddSingleton<IRule<DbConnection, UpdateRequest, string>, UpdateRule>()
+				.AddSingleton<IValidationRule<DbConnection, UpdateRequest>, UpdateValidationRule>();
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for executing raw SQL.<br />
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiExecuteSql(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<DbConnection, SqlRequest, RowSet[]>, ExecuteSqlRuleHandler>()
+				.AddSingleton<IRule<DbConnection, SqlRequest, RowSet[]>, ExecuteSqlRule>();
 	}
 }

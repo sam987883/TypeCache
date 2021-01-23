@@ -1,100 +1,186 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
-using TypeCache.Common;
 using TypeCache.Reflection;
 
 namespace TypeCache.Extensions
 {
 	public static class TypeExtensions
 	{
+		private static IDictionary<RuntimeTypeHandle, CollectionType> _GenericCollectionTypeMap =
+			new Dictionary<RuntimeTypeHandle, CollectionType>
+			{
+				{ typeof(Dictionary<,>).TypeHandle, CollectionType.Dictionary},
+				{ typeof(HashSet<>).TypeHandle, CollectionType.HashSet},
+				{ typeof(ImmutableArray<>).TypeHandle, CollectionType.ImmutableArray},
+				{ typeof(ImmutableDictionary<,>).TypeHandle, CollectionType.ImmutableDictionary},
+				{ typeof(ImmutableHashSet<>).TypeHandle, CollectionType.ImmutableHashSet},
+				{ typeof(ImmutableList<>).TypeHandle, CollectionType.ImmutableList},
+				{ typeof(ImmutableQueue<>).TypeHandle, CollectionType.ImmutableQueue},
+				{ typeof(ImmutableSortedDictionary<,>).TypeHandle, CollectionType.ImmutableSortedDictionary},
+				{ typeof(ImmutableSortedSet<>).TypeHandle, CollectionType.ImmutableSortedSet},
+				{ typeof(ImmutableStack<>).TypeHandle, CollectionType.ImmutableStack},
+				{ typeof(LinkedList<>).TypeHandle, CollectionType.LinkedList},
+				{ typeof(List<>).TypeHandle, CollectionType.List},
+				{ typeof(Queue<>).TypeHandle, CollectionType.Queue},
+				{ typeof(SortedDictionary<,>).TypeHandle, CollectionType.SortedDictionary},
+				{ typeof(SortedList<,>).TypeHandle, CollectionType.SortedList},
+				{ typeof(SortedSet<>).TypeHandle, CollectionType.SortedSet},
+				{ typeof(Stack<>).TypeHandle, CollectionType.Stack}
+			};
+
+		private static IDictionary<RuntimeTypeHandle, NativeType> _NativeTypeMap =
+			new Dictionary<RuntimeTypeHandle, NativeType>
+			{
+				{ typeof(bool).TypeHandle, NativeType.Boolean},
+				{ typeof(sbyte).TypeHandle, NativeType.SByte},
+				{ typeof(byte).TypeHandle, NativeType.Byte},
+				{ typeof(short).TypeHandle, NativeType.Int16},
+				{ typeof(ushort).TypeHandle, NativeType.UInt16},
+				{ typeof(int).TypeHandle, NativeType.Int32},
+				{ typeof(uint).TypeHandle, NativeType.UInt32},
+				{ typeof(long).TypeHandle, NativeType.Int64},
+				{ typeof(ulong).TypeHandle, NativeType.UInt64},
+				{ typeof(float).TypeHandle, NativeType.Single},
+				{ typeof(double).TypeHandle, NativeType.Double},
+				{ typeof(decimal).TypeHandle, NativeType.Decimal},
+				{ typeof(char).TypeHandle, NativeType.Char},
+				{ typeof(DateTime).TypeHandle, NativeType.DateTime},
+				{ typeof(DateTimeOffset).TypeHandle, NativeType.DateTimeOffset},
+				{ typeof(TimeSpan).TypeHandle, NativeType.TimeSpan},
+				{ typeof(Guid).TypeHandle, NativeType.Guid},
+				{ typeof(Index).TypeHandle, NativeType.Index},
+				{ typeof(Range).TypeHandle, NativeType.Range},
+				{ typeof(JsonElement).TypeHandle, NativeType.JsonElement},
+				{ typeof(string).TypeHandle, NativeType.String},
+				{ typeof(DBNull).TypeHandle, NativeType.DBNull},
+				{ typeof(Uri).TypeHandle, NativeType.Uri}
+			};
+
+		private static T GetFromCache<T>(this Type @this, string name)
+		{
+			var type = @this.IsClass ? typeof(Class<>) : typeof(Struct<>);
+			var invoke = type.MakeGenericType(@this).StaticProperty(name).Lambda<Func<T>>().Compile();
+			return invoke();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Any(this Type? @this, params Type[] types)
+			=> types.Any(@this.Is);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this Type @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Implements(this Type @this, Type type)
-			=> @this == type || @this.GetInterfaces().Any(interfaceType => interfaceType == type);
-
-		public static bool IsAsync(this Type @this)
+		public static object Create(this Type @this, params object[] arguments)
 		{
-			if (@this.IsGenericType)
-			{
-				var genericType = @this.GetGenericTypeDefinition();
-				return genericType == typeof(ValueTask<>)
-					|| genericType == typeof(Task<>)
-					|| genericType == typeof(IAsyncEnumerable<>);
-			}
+			@this.IsClass.Assert(nameof(@this.IsClass), true);
 
-			return @this == typeof(Task) || @this == typeof(ValueTask);
+			var parameter = nameof(arguments).Parameter<object[]>();
+			var type = typeof(Class<>).MakeGenericType(@this);
+			var invoke = type.CallStatic(nameof(Class<object>.Create), Type.EmptyTypes, parameter).Lambda<Func<object[], object>>().Compile();
+			return invoke(arguments);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableList<IConstructorMember> GetConstructorCache(this Type @this)
+			=> @this.GetFromCache<IImmutableList<IConstructorMember>>(nameof(Class<object>.Constructors));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IFieldMember> GetFieldCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IFieldMember>>(nameof(Class<object>.Fields));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableList<IIndexerMember> GetIndexerCache(this Type @this)
+			=> @this.GetFromCache<IImmutableList<IIndexerMember>>(nameof(Class<object>.Indexers));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> GetMethodCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IImmutableList<IMethodMember>>>(nameof(Class<object>.Methods));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IPropertyMember> GetPropertyCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IPropertyMember>>(nameof(Class<object>.Properties));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IStaticFieldMember> GetStaticFieldCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IStaticFieldMember>>(nameof(Class<object>.StaticFields));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> GetStaticMethodCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IImmutableList<IStaticMethodMember>>>(nameof(Class<object>.StaticMethods));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IStaticPropertyMember> GetStaticPropertyCache(this Type @this)
+			=> @this.GetFromCache<IImmutableDictionary<string, IStaticPropertyMember>>(nameof(Class<object>.StaticProperties));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Implements<T>(this Type @this)
+			where T : class
+			=> @this.Implements(typeof(T));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Implements(this Type @this, Type type)
+			=> @this.BaseType.Is(type) || @this.GetInterfaces().Any(_ => _.Is(type));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is<T>(this Type? @this)
+			=> @this.Is(typeof(T));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is<T>(this RuntimeTypeHandle @this)
+			=> @this.Equals(typeof(T).TypeHandle);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is(this Type? @this, Type type)
+			=> @this == type || (@this?.IsGenericTypeDefinition == true && @this == type.ToGenericType());
+
+		public static bool IsAsync(this Type @this)
+			=> @this.IsTask() || @this.IsValueTask() || @this.Is(typeof(IAsyncEnumerable<>));
+
 		public static bool IsTask(this Type @this)
-			=> @this == typeof(Task) || (@this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(Task<>));
+			=> @this.Is<Task>() || @this.ToGenericType() == typeof(Task<>);
 
 		public static bool IsValueTask(this Type @this)
-			=> @this == typeof(ValueTask) || (@this.IsGenericType && @this.GetGenericTypeDefinition() == typeof(ValueTask<>));
+			=> @this.Is<ValueTask>() || @this.ToGenericType() == typeof(ValueTask<>);
 
 		public static bool IsVoid(this Type @this)
 			=> @this == typeof(void) || @this == typeof(Task) || @this == typeof(ValueTask);
+
+		public static CollectionType ToCollectionType(this Type @this)
+			=> @this switch
+			{
+				_ when @this == typeof(string) => CollectionType.None,
+				_ when @this.IsArray => CollectionType.Array,
+				_ when @this.Implements(typeof(IEnumerable)) => _GenericCollectionTypeMap.GetValue(@this.TypeHandle) ?? CollectionType.Enumerable,
+				_ => CollectionType.None
+			};
+
+		public static Type? ToGenericType(this Type? @this)
+			=> @this == null
+				? null
+				: @this.IsGenericTypeDefinition
+					? @this
+					: @this.IsGenericType
+						? @this.GetGenericTypeDefinition()
+						: null;
 
 		public static NativeType ToNativeType(this Type @this)
 		{
 			if (@this.IsEnum)
 				return NativeType.Enum;
-			else if (@this == typeof(bool))
-				return NativeType.Boolean;
-			else if (@this == typeof(sbyte))
-				return NativeType.SByte;
-			else if (@this == typeof(byte))
-				return NativeType.Byte;
-			else if (@this == typeof(short))
-				return NativeType.Int16;
-			else if (@this == typeof(ushort))
-				return NativeType.UInt16;
-			else if (@this == typeof(int))
-				return NativeType.Int32;
-			else if (@this == typeof(uint))
-				return NativeType.UInt32;
-			else if (@this == typeof(long))
-				return NativeType.Int64;
-			else if (@this == typeof(ulong))
-				return NativeType.UInt64;
-			else if (@this == typeof(float))
-				return NativeType.Single;
-			else if (@this == typeof(double))
-				return NativeType.Double;
-			else if (@this == typeof(decimal))
-				return NativeType.Decimal;
-			else if (@this == typeof(char))
-				return NativeType.Char;
-			else if (@this == typeof(DateTime))
-				return NativeType.DateTime;
-			else if (@this == typeof(DateTimeOffset))
-				return NativeType.DateTimeOffset;
-			else if (@this == typeof(TimeSpan))
-				return NativeType.TimeSpan;
-			else if (@this == typeof(Guid))
-				return NativeType.Guid;
-			else if (@this == typeof(Index))
-				return NativeType.Index;
-			else if (@this == typeof(Range))
-				return NativeType.Range;
-			else if (@this == typeof(JsonElement))
-				return NativeType.JsonElement;
+			else if (_NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType))
+				return nativeType;
 			else if (@this.IsValueType)
 				return NativeType.ValueType;
-			else if (@this == typeof(string))
-				return NativeType.String;
-			else if (@this == typeof(DBNull))
-				return NativeType.DBNull;
-			else if (@this == typeof(Uri))
-				return NativeType.Uri;
 			else
 				return NativeType.Object;
 		}

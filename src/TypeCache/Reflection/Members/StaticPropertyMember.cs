@@ -8,18 +8,18 @@ namespace TypeCache.Reflection.Members
 	{
 		public StaticPropertyMember(PropertyInfo propertyInfo) : base(propertyInfo)
 		{
-			this.GetMethod = propertyInfo.GetMethod != null ? new StaticMethodMember(propertyInfo.GetMethod) : null;
-			this.SetMethod = propertyInfo.SetMethod != null ? new StaticMethodMember(propertyInfo.SetMethod) : null;
+			this.Getter = propertyInfo.GetMethod != null ? new StaticMethodMember(propertyInfo.GetMethod) : null;
+			this.Setter = propertyInfo.SetMethod != null ? new StaticMethodMember(propertyInfo.SetMethod) : null;
 		}
 
-		public IStaticMethodMember? GetMethod { get; }
+		public IStaticMethodMember? Getter { get; }
 
-		public IStaticMethodMember? SetMethod { get; }
+		public IStaticMethodMember? Setter { get; }
 
 		public object? Value
 		{
-			get => this.GetMethod?.Invoke();
-			set => this.SetMethod?.Invoke(value);
+			get => this.Getter?.Invoke();
+			set => this.Setter?.Invoke(value);
 		}
 	}
 }

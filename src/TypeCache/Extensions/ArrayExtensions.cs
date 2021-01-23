@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TypeCache.Data;
 
 namespace TypeCache.Extensions
 {
@@ -19,6 +20,27 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void CopyTo<T>(this T[] @this, int sourceIndex, T[] target, int targetIndex, int length = 0)
 			=> Array.Copy(@this, sourceIndex, target, targetIndex, length < 1 ? @this.Length : length);
+
+		public static RowSet Map<T>(this T[] @this, string[] columns, bool compareCase = false)
+			where T : class, new()
+		{
+			var comparer = compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			var getters = Class<T>.Properties.Values.If(property => property.Getter != null).To(property => property.Name);
+			var rowSet = new RowSet
+			{
+				Columns = columns.Any() ? columns.Match(getters, comparer).ToArray() : getters.ToArray(),
+				Rows = new object?[@this.Length][]
+			};
+
+			@this.Do((item, rowIndex) =>
+			{
+				var row = new object?[rowSet.Columns.Length];
+				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = Class<T>.Properties[column][item]);
+				rowSet.Rows[rowIndex] = row;
+			});
+
+			return rowSet;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Resize<T>(this T[] @this, int size)

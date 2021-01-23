@@ -2,25 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
+    <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>1.0.15</Version>
+    <Version>1.0.16</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
+    <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
     <Description>A faster alternative to System.Reflection and System.Linq with built-in null checking.</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
+    <Product>TypeCache</Product>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://www.nuget.org/packages/TypeCache/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sam987883/TypeCache/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://www.nuget.org/packages/TypeCache/</PackageProjectUrl>
-    <Product>TypeCache</Product>
-    <PackageIcon>TypeCash.png</PackageIcon>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <RootNamespace>TypeCache</RootNamespace>
+    <PackageIcon>TypeCash.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\.editorconfig" Link=".editorconfig" />
     <None Include="..\..\TypeCash.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

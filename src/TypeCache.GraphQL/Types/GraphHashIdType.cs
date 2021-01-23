@@ -2,21 +2,19 @@
 
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Security;
 
 namespace TypeCache.GraphQL.Types
 {
-	public class GraphHashIdType : ScalarGraphType
+	public class GraphHashIdType : IdGraphType
 	{
 		private readonly IHashMaker _HashMaker;
 
 		public GraphHashIdType(IHashMaker hashMaker)
 		{
-			this.Name = "HashID";
-			hashMaker.AssertNotNull($"{nameof(GraphHashIdType)}: Must first call: [{nameof(IServiceCollection)}.{nameof(IServiceCollectionExtensions.RegisterSecurity)}].");
+			hashMaker.AssertNotNull(nameof(hashMaker));
 
 			this._HashMaker = hashMaker;
 		}

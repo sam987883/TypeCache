@@ -393,7 +393,7 @@ namespace TypeCache.Extensions
 
 		public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
-			var list = new List<T>(await @this.CountAsync(token));
+			var list = new List<T>();
 			if (@this != null)
 			{
 				await using var enumerator = @this.GetAsyncEnumerator();

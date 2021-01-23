@@ -10,22 +10,22 @@ namespace TypeCache.Extensions
 	public static class StringExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Assert(this string? @this, string name, string? value, bool compareCase = false)
-			=> @this.Assert(name, value, compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+		public static void Assert(this string? @this, string name, string? value, bool compareCase = false, [CallerMemberName] string caller = null)
+			=> @this.Assert(name, value, compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase, caller);
 
-		public static void Assert(this string? @this, string name, string? value, StringComparer comparer)
+		public static void Assert(this string? @this, string name, string? value, StringComparer comparer, [CallerMemberName] string caller = null)
 		{
-			name.AssertNotNull(nameof(name));
-			comparer.AssertNotNull(nameof(comparer));
+			name.AssertNotNull(nameof(name), caller);
+			comparer.AssertNotNull(nameof(comparer), caller);
 
 			if (!comparer.Equals(@this, value))
 				throw new ArgumentException($"{nameof(Assert)}: [{(@this != null ? $"\"{@this}\"" : "null")}] <> {(value != null ? $"\"{value}\"" : "null")}.", name);
 		}
 
-		public static void AssertNotBlank([AllowNull] this string @this, string name)
+		public static void AssertNotBlank([AllowNull] this string @this, string name, [CallerMemberName] string caller = null)
 		{
 			if (@this == null)
-				throw new ArgumentNullException($"{nameof(AssertNotBlank)}: [{name}] is blank.");
+				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,8 +57,16 @@ namespace TypeCache.Extensions
 			=> @this.Substring(0, length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Left(this string @this, string text, bool compareCase = false)
+			=> @this.StartsWith(text, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Reverse(this string @this)
 			=> new string(@this.ToStack().ToArray());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Right(this string @this, string text, bool compareCase = false)
+			=> @this.EndsWith(text, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToBase64(this string @this, Encoding encoding)

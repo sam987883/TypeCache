@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Text.Json.Serialization;
-using TypeCache.Common;
 using TypeCache.Converters;
 
 namespace TypeCache.Data
@@ -11,7 +10,7 @@ namespace TypeCache.Data
 	/// SQL: <code>[Column1] ASC</code>
 	/// </summary>
 	[JsonConverter(typeof(ColumnSortJsonConverter))]
-	public struct ColumnSort
+	public class ColumnSort
 	{
 		public string Expression { get; set; }
 
