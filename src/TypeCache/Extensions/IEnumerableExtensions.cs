@@ -20,15 +20,16 @@ namespace TypeCache.Extensions
 			yield break;
 		}
 
-		public static IEnumerable<T?> As<T>(this IEnumerable? @this)
-			where T : class
+		public static IEnumerable<T> As<T>(this IEnumerable? @this)
+			where T : notnull
 		{
 			if (@this == null)
 				yield break;
 
 			var enumerator = @this.GetEnumerator();
 			while (enumerator.MoveNext())
-				yield return enumerator.Current as T;
+				if (enumerator.Current is T value)
+					yield return value;
 		}
 
 		public static T? Aggregate<T>(this IEnumerable<T>? @this, Func<T, T, T> aggregator)
@@ -769,9 +770,11 @@ namespace TypeCache.Extensions
 		}
 
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this)
+			where T : notnull
 			=> @this is T[] array ? Unsafe.As<T[], ImmutableArray<T>>(ref array) : @this.ToImmutable(@this.Count());
 
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this, int count)
+			where T : notnull
 		{
 			if (@this == null)
 				return ImmutableArray<T>.Empty;
@@ -782,6 +785,7 @@ namespace TypeCache.Extensions
 		}
 
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this)
+			where K : notnull
 		{
 			if (@this == null)
 				return ImmutableDictionary<K, V>.Empty;
@@ -792,6 +796,7 @@ namespace TypeCache.Extensions
 		}
 
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer)
+			where K : notnull
 		{
 			keyComparer.AssertNotNull(nameof(keyComparer));
 
@@ -804,6 +809,7 @@ namespace TypeCache.Extensions
 		}
 
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer, IEqualityComparer<V> valueComparer)
+			where K : notnull
 		{
 			keyComparer.AssertNotNull(nameof(keyComparer));
 			valueComparer.AssertNotNull(nameof(valueComparer));

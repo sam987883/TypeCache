@@ -17,7 +17,7 @@ namespace TypeCache
 		{
 			public Token(T value)
 			{
-				var field = typeof(T).GetField(value.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+				var field = value.GetType().GetField(value.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 				var attributes = field?.GetCustomAttributes(true);
 
 				this.Attributes = attributes?.As<Attribute>().ToImmutable() ?? ImmutableArray<Attribute>.Empty;
