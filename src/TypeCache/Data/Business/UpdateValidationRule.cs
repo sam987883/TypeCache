@@ -13,32 +13,35 @@ namespace TypeCache.Data.Business
 	{
 		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, UpdateRequest request, CancellationToken cancellationToken)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				var schema = await dbConnection.GetObjectSchema(request.Table);
-				request.Table = schema.Name;
-
-				var validator = new SchemaValidator(schema);
-				validator.Validate(request);
-
-				return default;
-			}
-			catch(ArgumentException exception)
-			{
-				return new ValidationResponse
+				try
 				{
-					IsError = true,
-					Messages = new[] { exception.Source, exception.ParamName, exception.Message, exception.StackTrace }
-				};
-			}
-			catch (Exception exception)
-			{
-				return new ValidationResponse
+					var schema = dbConnection.GetObjectSchema(request.Table);
+					request.Table = schema.Name;
+
+					var validator = new SchemaValidator(schema);
+					validator.Validate(request);
+
+					return default;
+				}
+				catch (ArgumentException exception)
 				{
-					IsError = true,
-					Messages = new[] { exception.Message, exception.StackTrace }
-				};
-			}
+					return new ValidationResponse
+					{
+						IsError = true,
+						Messages = new[] { exception.Source!, exception.ParamName!, exception.Message, exception.StackTrace! }
+					};
+				}
+				catch (Exception exception)
+				{
+					return new ValidationResponse
+					{
+						IsError = true,
+						Messages = new[] { exception.Message, exception.StackTrace! }
+					};
+				}
+			});
 		}
 	}
 }

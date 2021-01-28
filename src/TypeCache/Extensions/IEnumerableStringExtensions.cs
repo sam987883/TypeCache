@@ -24,7 +24,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<string> IfNotBlank(this IEnumerable<string?>? @this)
-			=> @this.If(_ => !_.IsBlank());
+			=> @this.If(_ => !_.IsBlank())!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is(this IEnumerable<string>? @this, IEnumerable<string>? items, bool compareCase = false)

@@ -15,12 +15,12 @@ namespace TypeCache.Reflection.Mappers
 
 		public FieldMapper(params MapperSetting[] overrides)
 		{
-			var settings = new Dictionary<string, MapperSetting>(Class<TO>.Fields.Count, StringComparer.Ordinal);
-			var fields = Class<TO>.Fields.Keys.Match(Class<FROM>.Fields.Keys, StringComparer.Ordinal);
+			var settings = new Dictionary<string, MapperSetting>(TypeOf<TO>.Fields.Count, StringComparer.Ordinal);
+			var fields = TypeOf<TO>.Fields.Keys.Match(TypeOf<FROM>.Fields.Keys, StringComparer.Ordinal);
 			fields.Do(name =>
 			{
-				var fromField = Class<FROM>.Fields[name];
-				var toField = Class<TO>.Fields[name];
+				var fromField = TypeOf<FROM>.Fields[name];
+				var toField = TypeOf<TO>.Fields[name];
 
 				if (toField.TypeHandle.Equals(fromField.TypeHandle))
 					settings.Add(name, new MapperSetting
@@ -33,7 +33,7 @@ namespace TypeCache.Reflection.Mappers
 
 			overrides.Do(setting =>
 			{
-				var toField = Class<TO>.Fields.Get(setting.To);
+				var toField = TypeOf<TO>.Fields.Get(setting.To);
 				if (toField == null)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] was not found for mapping.");
 				else if (toField.SetValue == null)
@@ -41,7 +41,7 @@ namespace TypeCache.Reflection.Mappers
 
 				if (!setting.From.IsBlank())
 				{
-					var fromField = Class<FROM>.Fields.Get(setting.From);
+					var fromField = TypeOf<FROM>.Fields.Get(setting.From);
 					if (fromField == null)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] was not found for mapping.");
 					else if (fromField.GetValue == null)
@@ -64,8 +64,8 @@ namespace TypeCache.Reflection.Mappers
 
 		public void Map(FROM from, TO to) => this.Settings.Do(setting =>
 		{
-			var fromField = Class<FROM>.Fields[setting.From];
-			var toField = Class<TO>.Fields[setting.To];
+			var fromField = TypeOf<FROM>.Fields[setting.From];
+			var toField = TypeOf<TO>.Fields[setting.To];
 
 			var fromValue = fromField[from];
 			if (!setting.IgnoreNullValue || fromValue != null)

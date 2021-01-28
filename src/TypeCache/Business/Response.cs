@@ -25,7 +25,7 @@ namespace TypeCache.Business
 		public Response(Exception ex)
 		{
 			this.HasError = true;
-			this.Messages = new[] { ex.Message, ex.StackTrace };
+			this.Messages = new[] { ex.Message, ex.StackTrace! };
 			this.Result = default;
 		}
 

@@ -31,9 +31,9 @@ namespace TypeCache.Converters
 							var json = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
 							if (json.TryGetProperty(LogicalOperator.And.Name(), out _) ||
 								json.TryGetProperty(LogicalOperator.Or.Name(), out _))
-								expressionSets.Add(JsonSerializer.Deserialize<ExpressionSet>(json.ToString(), options));
+								expressionSets.Add(JsonSerializer.Deserialize<ExpressionSet>(json.ToString()!, options)!);
 							else
-								expressions.Add(JsonSerializer.Deserialize<ComparisonExpression>(json.ToString(), options));
+								expressions.Add(JsonSerializer.Deserialize<ComparisonExpression>(json.ToString()!, options)!);
 						}
 					}
 
@@ -41,7 +41,7 @@ namespace TypeCache.Converters
 
 					return new ExpressionSet
 					{
-						Operator = Enum.Parse<LogicalOperator>(name),
+						Operator = name.Enum<LogicalOperator>()!.Value,
 						Expressions = expressions.ToArray(),
 						ExpressionSets = expressionSets.ToArray()
 					};

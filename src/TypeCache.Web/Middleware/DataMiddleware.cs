@@ -26,11 +26,11 @@ namespace TypeCache.Web.Middleware
 		protected DbConnection CreateDbConnection()
 		{
 			var connection = this._DbProviderFactory.CreateConnection();
-			connection.ConnectionString = this._ConnectionString;
+			connection!.ConnectionString = this._ConnectionString;
 			return connection;
 		}
 
-		protected async ValueTask<T> GetRequest<T>(HttpContext httpContext)
+		protected async ValueTask<T?> GetRequest<T>(HttpContext httpContext)
 		{
 			var jsonOptions = new JsonSerializerOptions();
 			jsonOptions.Converters.Add(new ObjectJsonConverter());
@@ -40,7 +40,7 @@ namespace TypeCache.Web.Middleware
 		protected async ValueTask HandleRequest<T, R>(HttpContext httpContext)
 		{
 			var request = await this.GetRequest<T>(httpContext);
-			await this.HandleRequest<T, R>(request, httpContext);
+			await this.HandleRequest<T, R>(request!, httpContext);
 		}
 
 		protected async ValueTask HandleRequest<T, R>(T request, HttpContext httpContext)
@@ -63,7 +63,7 @@ namespace TypeCache.Web.Middleware
 			var request = await this.GetRequest<T>(httpContext);
 
 			await using var dbConnection = this.CreateDbConnection();
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, T, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<DbConnection, T, string>(dbConnection, request!);
 
 			if (!response.HasError)
 			{

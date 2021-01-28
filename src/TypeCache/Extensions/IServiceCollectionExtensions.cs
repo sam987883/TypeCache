@@ -19,7 +19,6 @@ namespace TypeCache.Extensions
 		/// <list type="bullet">
 		/// <item><term><see cref="IFieldMapper&lt;FROM, TO&gt;"/></term> <description>Field mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
-		/// <i>Requires call to: <see cref="RegisterTypeCache"/></i>
 		/// </summary>
 		public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
 			where FROM : class
@@ -50,7 +49,6 @@ namespace TypeCache.Extensions
 		/// <list type="bullet">
 		/// <item><term><see cref="IPropertyMapper&lt;FROM, TO&gt;"/></term> <description>Property mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
-		/// <i>Requires call to: <see cref="RegisterTypeCache"/></i>
 		/// </summary>
 		public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
 			where FROM : class
@@ -217,7 +215,6 @@ namespace TypeCache.Extensions
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for executing raw SQL.<br />
-		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiExecuteSql(this IServiceCollection @this)
 			=> @this.AddSingleton<IRuleHandler<DbConnection, SqlRequest, RowSet[]>, ExecuteSqlRuleHandler>()

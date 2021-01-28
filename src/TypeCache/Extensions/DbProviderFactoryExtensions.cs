@@ -10,7 +10,7 @@ namespace TypeCache.Extensions
 		public static DbConnection CreateConnection(this DbProviderFactory @this, string connectionString)
 		{
 			var dbConnection = @this.CreateConnection();
-			dbConnection.ConnectionString = connectionString;
+			dbConnection!.ConnectionString = connectionString;
 			return dbConnection;
 		}
 

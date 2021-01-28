@@ -64,16 +64,9 @@ namespace TypeCache.Extensions
 				{ typeof(Uri).TypeHandle, NativeType.Uri}
 			};
 
-		private static T GetFromCache<T>(this Type @this, string name)
-		{
-			var type = @this.IsClass ? typeof(Class<>) : typeof(Struct<>);
-			var invoke = type.MakeGenericType(@this).StaticProperty(name).Lambda<Func<T>>().Compile();
-			return invoke();
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any(this Type? @this, params Type[] types)
-			=> types.Any(@this.Is);
+			=> types.Any(@this.Is!);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this Type @this)
@@ -85,42 +78,42 @@ namespace TypeCache.Extensions
 			@this.IsClass.Assert(nameof(@this.IsClass), true);
 
 			var parameter = nameof(arguments).Parameter<object[]>();
-			var type = typeof(Class<>).MakeGenericType(@this);
-			var invoke = type.CallStatic(nameof(Class<object>.Create), Type.EmptyTypes, parameter).Lambda<Func<object[], object>>().Compile();
+			var type = typeof(TypeOf<>).MakeGenericType(@this);
+			var invoke = type.CallStatic(nameof(TypeOf<object>.Create), Type.EmptyTypes, parameter).Lambda<Func<object[], object>>().Compile();
 			return invoke(arguments);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<IConstructorMember> GetConstructorCache(this Type @this)
-			=> @this.GetFromCache<IImmutableList<IConstructorMember>>(nameof(Class<object>.Constructors));
+			=> MemberCache.Constructors[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IFieldMember> GetFieldCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IFieldMember>>(nameof(Class<object>.Fields));
+		public static IImmutableDictionary<string, IFieldMember> GetFieldMembers(this Type @this)
+			=> MemberCache.Fields[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableList<IIndexerMember> GetIndexerCache(this Type @this)
-			=> @this.GetFromCache<IImmutableList<IIndexerMember>>(nameof(Class<object>.Indexers));
+		public static IImmutableList<IIndexerMember> GetIndexerMembers(this Type @this)
+			=> MemberCache.Indexers[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> GetMethodCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IImmutableList<IMethodMember>>>(nameof(Class<object>.Methods));
+		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> GetMethodMembers(this Type @this)
+			=> MemberCache.Methods[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IPropertyMember> GetPropertyCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IPropertyMember>>(nameof(Class<object>.Properties));
+		public static IImmutableDictionary<string, IPropertyMember> GetPropertyMembers(this Type @this)
+			=> MemberCache.Properties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IStaticFieldMember> GetStaticFieldCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IStaticFieldMember>>(nameof(Class<object>.StaticFields));
+		public static IImmutableDictionary<string, IStaticFieldMember> GetStaticFieldMembers(this Type @this)
+			=> MemberCache.StaticFields[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> GetStaticMethodCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IImmutableList<IStaticMethodMember>>>(nameof(Class<object>.StaticMethods));
+		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> GetStaticMethodMembers(this Type @this)
+			=> MemberCache.StaticMethods[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IStaticPropertyMember> GetStaticPropertyCache(this Type @this)
-			=> @this.GetFromCache<IImmutableDictionary<string, IStaticPropertyMember>>(nameof(Class<object>.StaticProperties));
+		public static IImmutableDictionary<string, IStaticPropertyMember> GetStaticPropertyMembers(this Type @this)
+			=> MemberCache.StaticProperties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)
@@ -143,15 +136,19 @@ namespace TypeCache.Extensions
 		public static bool Is(this Type? @this, Type type)
 			=> @this == type || (@this?.IsGenericTypeDefinition == true && @this == type.ToGenericType());
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAsync(this Type @this)
 			=> @this.IsTask() || @this.IsValueTask() || @this.Is(typeof(IAsyncEnumerable<>));
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsTask(this Type @this)
 			=> @this.Is<Task>() || @this.ToGenericType() == typeof(Task<>);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsValueTask(this Type @this)
 			=> @this.Is<ValueTask>() || @this.ToGenericType() == typeof(ValueTask<>);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsVoid(this Type @this)
 			=> @this == typeof(void) || @this == typeof(Task) || @this == typeof(ValueTask);
 
@@ -165,25 +162,22 @@ namespace TypeCache.Extensions
 			};
 
 		public static Type? ToGenericType(this Type? @this)
-			=> @this == null
-				? null
-				: @this.IsGenericTypeDefinition
-					? @this
-					: @this.IsGenericType
-						? @this.GetGenericTypeDefinition()
-						: null;
+			=> @this switch
+			{
+				null => null,
+				_ when @this.IsGenericTypeDefinition => @this,
+				_ when @this.IsGenericType => @this.GetGenericTypeDefinition(),
+				_ => null
+			};
 
 		public static NativeType ToNativeType(this Type @this)
-		{
-			if (@this.IsEnum)
-				return NativeType.Enum;
-			else if (_NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType))
-				return nativeType;
-			else if (@this.IsValueType)
-				return NativeType.ValueType;
-			else
-				return NativeType.Object;
-		}
+			=> @this switch
+			{
+				_ when @this.IsEnum => NativeType.Enum,
+				_ when _NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType) => nativeType,
+				_ when @this.IsValueType => NativeType.ValueType,
+				_ => NativeType.Object
+			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type ToType(this RuntimeTypeHandle @this)

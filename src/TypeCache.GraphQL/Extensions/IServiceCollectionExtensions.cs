@@ -22,7 +22,7 @@ namespace TypeCache.GraphQL.Extensions
 		/// <item><term><see cref="GraphEdgeType&lt;T&gt;"/></term> <description>Edge component of the GraphQL Connection type.</description></item>
 		/// </list>
 		/// </summary>
-		/// <param name="registerEndpoints">Use this to register handler classes containing endpoint methods or register SQL API generated endpoints.</param>
+		/// <param name="addEndpoints">Use this to register handler classes containing endpoint methods or register SQL API generated endpoints.</param>
 		public static IServiceCollection RegisterGraphQL(this IServiceCollection @this, Action<GraphSchema> addEndpoints)
 			=> @this
 				.AddSingleton(typeof(GraphObjectType<>))

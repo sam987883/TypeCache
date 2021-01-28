@@ -9,21 +9,21 @@ namespace TypeCache.Collections
 {
 	public sealed class CustomEqualityComparer<T> : IEqualityComparer<T>
 	{
-		private readonly Func<T, T, bool> _Equals;
-		private readonly Func<T, int> _GetHashCode;
+		private readonly Func<T?, T?, bool> _Equals;
+		private readonly Func<T?, int> _GetHashCode;
 
-		public CustomEqualityComparer(Func<T, T, bool> equals, Func<T, int> getHashCode)
+		public CustomEqualityComparer(Func<T?, T?, bool> equals, Func<T?, int> getHashCode)
 		{
 			this._Equals = equals;
 			this._GetHashCode = getHashCode;
 		}
 
-		public CustomEqualityComparer(Func<T, T, bool> equals) : this(equals, _ => _.GetHashCode())
+		public CustomEqualityComparer(Func<T?, T?, bool> equals) : this(equals, _ => _?.GetHashCode() ?? 0)
 		{
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals([AllowNull] T x, [AllowNull] T y)
+		public bool Equals([AllowNull] T? x, [AllowNull] T? y)
 			=> this._Equals(x, y);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

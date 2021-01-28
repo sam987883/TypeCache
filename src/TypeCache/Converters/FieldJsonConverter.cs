@@ -15,13 +15,13 @@ namespace TypeCache.Converters
 		{
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
-				var output = Class<T>.Create();
+				var output = TypeOf<T>.Create();
 				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 				{
-					var name = reader.GetString();
+					var name = reader.GetString()!;
 					if (reader.Read())
 					{
-						var field = Class<T>.Fields[name];
+						var field = TypeOf<T>.Fields[name];
 						field[output] = reader.TokenType switch
 						{
 							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.TypeHandle.ToType(), options),
@@ -46,9 +46,9 @@ namespace TypeCache.Converters
 			if (input != null)
 			{
 				writer.WriteStartObject();
-				Class<T>.Fields.Values.If(field => field.Getter != null).Do(field =>
+				TypeOf<T>.Fields.Values.If(field => field!.Getter != null).Do(field =>
 				{
-					writer.WritePropertyName(field.Name);
+					writer.WritePropertyName(field!.Name);
 					var value = field[input];
 					if (value != null)
 					{

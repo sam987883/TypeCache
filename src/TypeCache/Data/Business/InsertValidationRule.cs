@@ -13,34 +13,37 @@ namespace TypeCache.Data.Business
 	{
 		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, InsertRequest request, CancellationToken cancellationToken)
 		{
-			try
+			return await Task.Run(() =>
 			{
-				var insertSchema = await dbConnection.GetObjectSchema(request.Into);
-				request.Into = insertSchema.Name;
-				var fromSchema = await dbConnection.GetObjectSchema(request.From);
-				request.From = fromSchema.Name;
-
-				var validator = new SchemaValidator(insertSchema);
-				validator.Validate(request);
-
-				return default;
-			}
-			catch (ArgumentException exception)
-			{
-				return new ValidationResponse
+				try
 				{
-					IsError = true,
-					Messages = new[] { exception.Source, exception.ParamName, exception.Message, exception.StackTrace }
-				};
-			}
-			catch (Exception exception)
-			{
-				return new ValidationResponse
+					var insertSchema = dbConnection.GetObjectSchema(request.Into);
+					request.Into = insertSchema.Name;
+					var fromSchema = dbConnection.GetObjectSchema(request.From);
+					request.From = fromSchema.Name;
+
+					var validator = new SchemaValidator(insertSchema);
+					validator.Validate(request);
+
+					return default;
+				}
+				catch (ArgumentException exception)
 				{
-					IsError = true,
-					Messages = new[] { exception.Message, exception.StackTrace }
-				};
-			}
+					return new ValidationResponse
+					{
+						IsError = true,
+						Messages = new[] { exception.Source!, exception.ParamName!, exception.Message, exception.StackTrace! }
+					};
+				}
+				catch (Exception exception)
+				{
+					return new ValidationResponse
+					{
+						IsError = true,
+						Messages = new[] { exception.Message, exception.StackTrace! }
+					};
+				}
+			});
 		}
 	}
 }

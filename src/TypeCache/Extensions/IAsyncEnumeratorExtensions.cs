@@ -8,7 +8,7 @@ namespace TypeCache.Extensions
 {
 	public static class IAsyncEnumeratorExtensions
 	{
-		public async static Task<int> CountAsync<T>(this IAsyncEnumerator<T> @this)
+		public async static ValueTask<int> CountAsync<T>(this IAsyncEnumerator<T> @this)
 		{
 			var count = 0;
 			while (await @this.MoveNextAsync())
@@ -16,7 +16,7 @@ namespace TypeCache.Extensions
 			return count;
 		}
 
-		public async static Task<T> MoveAsync<T>(this IAsyncEnumerator<T> @this, int count)
+		public async static ValueTask<T> MoveAsync<T>(this IAsyncEnumerator<T> @this, int count)
 		{
 			while (count > 0 && await @this.MoveNextAsync())
 				--count;
@@ -26,7 +26,7 @@ namespace TypeCache.Extensions
 				: throw new IndexOutOfRangeException($"{nameof(IAsyncEnumerator<T>)}.{nameof(MoveAsync)}: Remaining {nameof(count)} of {count}.");
 		}
 
-		public async static Task<V> MoveUntilAsync<T, V>(this IAsyncEnumerator<T> @this)
+		public async static ValueTask<V> MoveUntilAsync<T, V>(this IAsyncEnumerator<T> @this)
 		{
 			while (await @this.MoveNextAsync())
 				if (@this.Current is V current)
@@ -35,7 +35,7 @@ namespace TypeCache.Extensions
 			throw new ArgumentException("Value of this type was not found.", $"typeof({typeof(V).Name})");
 		}
 
-		public async static Task<T> MoveUntilAsync<T>(this IAsyncEnumerator<T> @this, Func<T, bool> condition)
+		public async static ValueTask<T> MoveUntilAsync<T>(this IAsyncEnumerator<T> @this, Func<T, bool> condition)
 		{
 			while (await @this.MoveNextAsync())
 				if (condition(@this.Current))

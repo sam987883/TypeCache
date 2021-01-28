@@ -32,7 +32,7 @@ namespace TypeCache.Converters
 				if (reader.Read())
 				{
 					var value = JsonSerializer.Deserialize<object>(ref reader, options);
-					dictionary.Add(name, value);
+					dictionary.Add(name!, value!);
 				}
 			}
 			return dictionary;
@@ -44,7 +44,7 @@ namespace TypeCache.Converters
 			while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
 			{
 				var value = JsonSerializer.Deserialize<object>(ref reader, options);
-				list.Add(value);
+				list.Add(value!);
 			}
 			return list.ToArray();
 		}

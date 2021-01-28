@@ -13,12 +13,12 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectType()
 		{
-			var graphAttribute = Class<T>.Attributes.First<Attribute, GraphAttribute>();
-			this.Name = graphAttribute?.Name ?? Class<T>.Name;
+			var graphAttribute = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>();
+			this.Name = graphAttribute?.Name ?? TypeOf<T>.Name;
 
-			Class<T>.Properties.Values
-				.If(property => property.Getter != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
-				.Do(property => this.AddField(property.CreateFieldType(false)));
+			TypeOf<T>.Properties.Values
+				.If(property => property!.Getter != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
+				.Do(property => this.AddField(property!.CreateFieldType(false)));
 		}
 	}
 }

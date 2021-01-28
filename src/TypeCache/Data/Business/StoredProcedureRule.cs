@@ -12,7 +12,7 @@ namespace TypeCache.Data.Business
 	{
 		public async ValueTask<StoredProcedureResponse> ApplyAsync(DbConnection dbConnection, StoredProcedureRequest request, CancellationToken cancellationToken)
 		{
-			var schema = await dbConnection.GetObjectSchema(request.Procedure);
+			var schema = dbConnection.GetObjectSchema(request.Procedure);
 			request.Procedure = schema.Name;
 			return new StoredProcedureResponse
 			{

@@ -21,7 +21,7 @@ namespace TypeCache.Converters
 				{
 					parameters.Add(new Parameter
 					{
-						Name = reader.GetString(),
+						Name = reader.GetString()!,
 						Value = reader.Read() ? JsonSerializer.Deserialize<object>(ref reader) : null
 					});
 				}

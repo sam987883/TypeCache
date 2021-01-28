@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL;
 using System;
+using GraphQL;
 using TypeCache.Extensions;
 
 namespace TypeCache.GraphQL.Attributes
@@ -20,7 +20,7 @@ namespace TypeCache.GraphQL.Attributes
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Method)]
 	public class GraphAttribute : Attribute
 	{
-		public GraphAttribute(string name = null, string description = null, Type type = null, bool ignore = false)
+		public GraphAttribute(string? name = null, string? description = null, Type? type = null, bool ignore = false)
 		{
 			type?.IsGraphType().Assert($"{nameof(GraphAttribute)}: Type is not a graph type.", true);
 			this.Name = name;

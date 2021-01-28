@@ -12,20 +12,22 @@ namespace TypeCache.Converters
 	{
 		public override ColumnSort Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			var columnSort = new ColumnSort();
+			Sort sort = Sort.Ascending;
+			string expression = null!;
 
-			if (reader.TokenType == JsonTokenType.StartObject)
+			if (reader.TokenType == JsonTokenType.StartObject && reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
-				if (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
-				{
-					columnSort.Sort = Enum.Parse<Sort>(reader.GetString());
-					reader.Read();
-					columnSort.Expression = reader.GetString();
-					reader.Read();
-				}
+				sort = reader.GetString().Enum<Sort>()!.Value;
+				reader.Read();
+				expression = reader.GetString()!;
+				reader.Read();
 			}
 
-			return columnSort;
+			return new ColumnSort()
+			{
+				Expression = expression,
+				Sort = sort
+			};
 		}
 
 		public override void Write(Utf8JsonWriter writer, ColumnSort columnSort, JsonSerializerOptions options)

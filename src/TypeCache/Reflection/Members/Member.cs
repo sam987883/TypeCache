@@ -39,7 +39,7 @@ namespace TypeCache.Reflection.Members
 			}
 		}
 
-		protected Member(ConstructorInfo info) : this(info, info.DeclaringType)
+		protected Member(ConstructorInfo info) : this(info, info.DeclaringType!)
 		{
 			this.Internal = info.IsAssembly;
 			this.Public = info.IsPublic;

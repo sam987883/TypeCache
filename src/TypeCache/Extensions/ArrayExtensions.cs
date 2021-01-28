@@ -25,7 +25,7 @@ namespace TypeCache.Extensions
 			where T : class, new()
 		{
 			var comparer = compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
-			var getters = Class<T>.Properties.Values.If(property => property.Getter != null).To(property => property.Name);
+			var getters = TypeOf<T>.Properties.Values.If(property => property!.Getter != null).To(property => property!.Name);
 			var rowSet = new RowSet
 			{
 				Columns = columns.Any() ? columns.Match(getters, comparer).ToArray() : getters.ToArray(),
@@ -35,7 +35,7 @@ namespace TypeCache.Extensions
 			@this.Do((item, rowIndex) =>
 			{
 				var row = new object?[rowSet.Columns.Length];
-				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = Class<T>.Properties[column][item]);
+				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = TypeOf<T>.Properties[column][item]);
 				rowSet.Rows[rowIndex] = row;
 			});
 

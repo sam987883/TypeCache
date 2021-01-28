@@ -134,7 +134,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Constant<T>([NotNull] this T @this)
-			=> Expression.Constant(@this, @this.GetType());
+			=> Expression.Constant(@this, @this!.GetType());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression ConvertTo<T>(this Expression @this, bool overflowCheck = false)

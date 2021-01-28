@@ -12,7 +12,7 @@ namespace TypeCache.GraphQL.Types
     {
         public GraphConnectionType()
         {
-            var name = Class<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? Class<T>.Name;
+            var name = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? TypeOf<T>.Name;
             Name = $"{name}Connection";
             Description = $"A connection from an object to a list of objects of type `{name}`.";
         }

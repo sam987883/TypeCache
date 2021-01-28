@@ -16,32 +16,32 @@ namespace TypeCache.Reflection.Members
 		{
 			methodInfo.IsStatic.Assert($"{nameof(methodInfo)}.{nameof(methodInfo.IsStatic)}", false);
 
-			var parameterPositionComparer = Comparer<ParameterInfo?>.Create((x, y) => x.Position - y.Position);
+			var parameterPositionComparer = Comparer<ParameterInfo?>.Create((x, y) => x!.Position - y!.Position);
 
 			this.IsVoid = methodInfo.ReturnType.IsVoid();
 			this.ReturnAttributes = methodInfo.ReturnParameter.GetCustomAttributes(true).As<Attribute>().ToImmutableArray();
 
 			ParameterExpression instance = nameof(instance).Parameter(typeof(object));
-			ParameterExpression parameters = nameof(parameters).Parameter<object[]>();
+			ParameterExpression parameters = nameof(parameters).Parameter<object?[]?>();
 
 			var parameterInfos = methodInfo.GetParameters().If(parameterInfo => parameterInfo != methodInfo.ReturnParameter).ToArray();
 			parameterInfos.Sort(parameterPositionComparer);
 			Expression call;
 			if (parameterInfos.Any())
 			{
-				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType), parameters.ToParameterArray(parameterInfos));
+				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!), parameters.ToParameterArray(parameterInfos!));
 
-				var callParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
+				var callParameters = parameterInfos.To(parameterInfo => parameterInfo!.Parameter()).ToArray(parameterInfos.Length);
 				var methodParameters = new ParameterExpression[parameterInfos.Length + 1];
 				methodParameters[0] = instance;
 				callParameters.CopyTo(methodParameters, 1);
 
-				this.Method = methodInfo.Call(instance.Cast(methodInfo.DeclaringType), callParameters).Lambda(methodParameters).Compile();
-				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo)).ToImmutableArray();
+				this.Method = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!), callParameters).Lambda(methodParameters).Compile();
+				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo!)).ToImmutableArray();
 			}
 			else
 			{
-				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType));
+				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!));
 
 				this.Method = call.Lambda(instance).Compile();
 				this.Parameters = ImmutableArray<IParameter>.Empty;

@@ -51,7 +51,7 @@ namespace TypeCache.Extensions
 			return result;
 		}
 
-		public static bool All<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+		public static bool All<T>(this IEnumerable<T>? @this, Func<T?, bool> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -412,7 +412,7 @@ namespace TypeCache.Extensions
 					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
 						yield return readOnlyList[i];
 			}
-			else if (!range.IsReverse())
+			else if (range.IsReverse())
 			{
 				var count = range.Start.Value - range.End.Value;
 				var items = new Stack<T>(count);
@@ -492,7 +492,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
-			=> values.All(value => @this.Has(value, comparer));
+			=> values.All(value => @this.Has(value, comparer!));
 
 		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter)
 		{
@@ -530,7 +530,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
-			=> @this.If(_ => _ != null);
+			=> @this.If(_ => _ != null)!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
@@ -710,7 +710,7 @@ namespace TypeCache.Extensions
 				Enum token => token.ToString(),
 				string text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""),
 				null => string.Empty,
-				_ => $"\"{value.ToString().Replace("\"", "\"\"")}\""
+				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
 			})) : string.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

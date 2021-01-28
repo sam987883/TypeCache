@@ -11,10 +11,10 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectEnumType()
 		{
-			var graphAttribute = Class<T>.Attributes.First<Attribute, GraphAttribute>();
-			this.Name = graphAttribute?.Name ?? $"{Class<T>.Name}Fields";
+			var graphAttribute = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>();
+			this.Name = graphAttribute?.Name ?? $"{TypeOf<T>.Name}Fields";
 
-			foreach (var property in Class<T>.Properties.Values)
+			foreach (var property in TypeOf<T>.Properties.Values)
 			{
 				graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
 				if (graphAttribute?.Ignore == true)

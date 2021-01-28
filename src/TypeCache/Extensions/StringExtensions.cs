@@ -41,7 +41,7 @@ namespace TypeCache.Extensions
 			=> @this.Contains(value, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is(this string @this, string value, bool compareCase = false)
+		public static bool Is(this string? @this, string value, bool compareCase = false)
 			=> compareCase ? StringComparer.Ordinal.Equals(@this, value) : StringComparer.OrdinalIgnoreCase.Equals(@this, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

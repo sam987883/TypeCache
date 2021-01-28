@@ -12,7 +12,7 @@ namespace TypeCache.GraphQL.Types
     {
         public GraphEdgeType()
         {
-			var name = Class<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? Class<T>.Name;
+			var name = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? TypeOf<T>.Name;
 			Name = $"{name}Edge";
             Description = $"An edge in a connection from an object to another object of type `{name}`.";
         }

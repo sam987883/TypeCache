@@ -19,7 +19,7 @@ namespace TypeCache.Web.Middleware
 
 		public async Task Invoke(HttpContext httpContext)
 		{
-			string procedure = httpContext.Request.Query[nameof(procedure)].First();
+			string procedure = httpContext.Request.Query[nameof(procedure)].First()!;
 			var parameters = httpContext.Request.Query
 				.If(query => !query.Key.Is(nameof(procedure)))
 				.To(query => new Parameter

@@ -40,66 +40,53 @@ namespace TypeCache.Extensions
 				throw new ArgumentException($"{caller} -> {nameof(Assert)}: {(@this != null ? $"[{@this}]" : "null")} <> {(value != null ? $"[{value}]" : "null")}.", name);
 		}
 
-		public static void AssertNotNull<T>([AllowNull] this T @this, string name, [CallerMemberName] string caller = null)
+		public static void AssertNotNull<T>(this T? @this, string name, [CallerMemberName] string caller = null)
 			where T : class
 		{
 			if (@this == null)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotNull)}: [{name}] is null.");
 		}
 
-		public static IImmutableDictionary<string, IFieldMember> GetClassFields<T>(this T @this)
-			where T : class
-		{
-			@this.AssertNotNull(nameof(@this));
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IFieldMember> GetTypeFields<T>([NotNull] this T @this)
+			=> @this!.GetType().GetFieldMembers();
 
-			return typeof(T) == typeof(object) ? @this.GetType().GetClassFields() : Class<T>.Fields;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableList<IIndexerMember> GetTypeIndexers<T>(this T @this)
+			=> @this!.GetType().GetIndexerMembers();
 
-		public static IImmutableList<IIndexerMember> GetClassIndexers<T>(this T @this)
-			where T : class
-		{
-			@this.AssertNotNull(nameof(@this));
-
-			return typeof(T) == typeof(object) ? @this.GetType().GetClassIndexers() : Class<T>.Indexers;
-		}
-
-		public static IImmutableDictionary<string, IPropertyMember> GetClassProperties<T>(this T @this)
-			where T : class
-		{
-			@this.AssertNotNull(nameof(@this));
-
-			return typeof(T) == typeof(object) ? @this.GetType().GetClassProperties() : Class<T>.Properties;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IImmutableDictionary<string, IPropertyMember> GetTypeProperties<T>(this T @this)
+			=> @this!.GetType().GetPropertyMembers();
 
 		public static void MapFields<T>(this T @this, T source)
-			where T : class
 		{
-			source.AssertNotNull(nameof(source));
-
-			@this.GetClassFields()
-				.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
-				.Do(_ => _.Value[@this] = _.Value[source]);
+			if (source != null)
+				@this?.GetTypeFields()
+					.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
+					.Do(_ => _.Value[@this] = _.Value[source]);
 		}
 
 		public static ISet<string> MapFields<T, FROM>(this T @this, FROM source, bool compareCase = false)
-			where T : class
-			where FROM : class
 		{
-			var fromFields = source.GetClassFields();
-			var toFields = @this.GetClassFields();
-			var fromNames = fromFields.If(_ => _.Value.Getter != null).To(_ => _.Key);
-			var toNames = toFields.If(_ => _.Value.Setter != null).To(_ => _.Key);
-			var names = fromNames.Match(toNames, compareCase);
-			names.Do(name => toFields[name][@this] = fromFields[name][source]);
-			return names;
+			if (@this != null && source != null)
+			{
+				var fromFields = source.GetTypeFields();
+				var toFields = @this.GetTypeFields();
+				var fromNames = fromFields.If(_ => _.Value.Getter != null).To(_ => _.Key);
+				var toNames = toFields.If(_ => _.Value.Setter != null).To(_ => _.Key);
+				var names = fromNames.Match(toNames, compareCase);
+				names.Do(name => toFields[name][@this] = fromFields[name][source]);
+				return names;
+			}
+			return new HashSet<string>(0);
 		}
 
 		public static void MapFields<T>(this T @this, IDictionary<string, object?> source)
-			where T : class
 		{
 			source.AssertNotNull(nameof(source));
 
-			@this.GetClassFields().Do(_ =>
+			@this?.GetTypeFields().Do(_ =>
 			{
 				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
 					_.Value[@this] = value;
@@ -107,34 +94,33 @@ namespace TypeCache.Extensions
 		}
 
 		public static void MapProperties<T>(this T @this, T source)
-			where T : class
 		{
-			source.AssertNotNull(nameof(source));
-
-			@this.GetClassProperties()
-				.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
-				.Do(_ => _.Value[@this] = _.Value[source]);
+			if (source != null)
+				@this?.GetTypeProperties()
+					.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
+					.Do(_ => _.Value[@this] = _.Value[source]);
 		}
 
 		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source, bool compareCase = false)
-			where T : class
-			where FROM : class
 		{
-			var fromProperties = source.GetClassProperties();
-			var toProperties = @this.GetClassProperties();
-			var fromNames = fromProperties.If(_ => _.Value.Getter != null).To(_ => _.Key);
-			var toNames = toProperties.If(_ => _.Value.Setter != null).To(_ => _.Key);
-			var names = fromNames.Match(toNames, compareCase);
-			names.Do(name => toProperties[name][@this] = fromProperties[name][source]);
-			return names;
+			if (@this != null && source != null)
+			{
+				var fromProperties = source.GetTypeProperties();
+				var toProperties = @this.GetTypeProperties();
+				var fromNames = fromProperties.If(_ => _.Value.Getter != null).To(_ => _.Key);
+				var toNames = toProperties.If(_ => _.Value.Setter != null).To(_ => _.Key);
+				var names = fromNames.Match(toNames, compareCase);
+				names.Do(name => toProperties[name][@this] = fromProperties[name][source]);
+				return names;
+			}
+			return new HashSet<string>(0);
 		}
 
 		public static void MapProperties<T>(this T @this, IDictionary<string, object?> source)
-			where T : class
 		{
 			source.AssertNotNull(nameof(source));
 
-			@this.GetClassProperties().Do(_ =>
+			@this?.GetTypeProperties().Do(_ =>
 			{
 				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
 					_.Value[@this] = value;
@@ -142,11 +128,9 @@ namespace TypeCache.Extensions
 		}
 
 		public static IDictionary<string, object?>? ToFieldDictionary<T>(this T @this, bool compareCase = false)
-			where T : class
-			=> @this.GetClassFields().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 
 		public static IDictionary<string, object?>? ToPropertyDictionary<T>(this T @this, bool compareCase = false)
-			where T : class
-			=> @this.GetClassProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 	}
 }

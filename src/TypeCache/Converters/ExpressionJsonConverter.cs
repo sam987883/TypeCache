@@ -23,13 +23,13 @@ namespace TypeCache.Converters
 					if (reader.Read())
 					{
 						if (name.Is(nameof(expression.Field)))
-							expression.Field = reader.GetString();
-						else if (name.Is(nameof(expression.Operator)))
-							expression.Operator = Enum.Parse<ComparisonOperator>(reader.GetString());
+							expression.Field = reader.GetString()!;
+						else if (name!.Is(nameof(expression.Operator)))
+							expression.Operator = reader.GetString().Enum<ComparisonOperator>()!.Value;
 						else
 						{
 							if (!name.Is(nameof(expression.Value)))
-								expression.Operator = Enum.Parse<ComparisonOperator>(name);
+								expression.Operator = name.Enum<ComparisonOperator>()!.Value;
 
 							expression.Value = JsonSerializer.Deserialize<object>(ref reader, options);
 						}

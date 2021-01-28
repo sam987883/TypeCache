@@ -2,18 +2,20 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+using TypeCache.Collections;
 using TypeCache.Data;
 
 namespace TypeCache.Extensions
 {
 	public static class DbConnectionExtensions
 	{
-		private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ObjectSchema>> SchemaCache =
-			new ConcurrentDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(StringComparer.OrdinalIgnoreCase);
+		private static readonly LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> SchemaCache =
+			new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(connectionString => new ConcurrentDictionary<string, ObjectSchema>(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
 
 		public const string OBJECT_NAME = "ObjectName";
 
@@ -152,7 +154,7 @@ ORDER BY p.[parameter_id] ASC;";
 
 			var objectSchema = tableRowSet.Map<ObjectSchema>().First();
 			objectSchema.AssertNotNull($"{nameof(CreateObjectSchema)}: Database object not found: [{name}].  Must be a table, view, table-valued function or stored procedure.");
-			objectSchema.DatabaseName = @this.Database;
+			objectSchema!.DatabaseName = @this.Database;
 
 			if (await reader.NextResultAsync())
 			{
@@ -171,7 +173,7 @@ ORDER BY p.[parameter_id] ASC;";
 			return objectSchema;
 		}
 
-		public static async ValueTask<ObjectSchema> GetObjectSchema(this DbConnection @this, string name)
+		public static ObjectSchema GetObjectSchema(this DbConnection @this, string name)
 		{
 			var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries).To(part => part.TrimStart('[').TrimEnd(']')).ToArray();
 			var fullName = parts.Length switch
@@ -182,7 +184,7 @@ ORDER BY p.[parameter_id] ASC;";
 				3 => $"[{parts[0]}].[{parts[1]}].[{parts[2]}]",
 				_ => throw new ArgumentException($"Invalid table source name: {name}", nameof(name))
 			};
-			var tableSchemaCache = SchemaCache.GetOrAdd(@this.ConnectionString, connectionString => new ConcurrentDictionary<string, ObjectSchema>(StringComparer.OrdinalIgnoreCase));
+			var tableSchemaCache = SchemaCache[@this.ConnectionString];
 			return tableSchemaCache.GetOrAdd(fullName, key => @this.CreateObjectSchema(name).AsTask().Result);
 		}
 

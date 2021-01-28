@@ -28,13 +28,10 @@ namespace TypeCache.GraphQL.Resolvers
 		public Task<T> Resolve(IResolveFieldContext context)
 		{
 			var arguments = this.GetArguments(context).ToArray();
-			if (this._Method.IsValueTask)
-			{
-				var value = (ValueTask<T>)this._Method.Invoke(this._Handler, arguments);
-				return value.AsTask();
-			}
-			else
-				return (Task<T>)this._Method.Invoke(this._Handler, arguments);
+			var value = this._Method.Invoke(this._Handler, arguments);
+			return this._Method.IsValueTask
+				? ((ValueTask<T>)value!).AsTask()
+				: (Task<T>)value!;
 		}
 
 		object? IFieldResolver.Resolve(IResolveFieldContext context)
@@ -56,9 +53,10 @@ namespace TypeCache.GraphQL.Resolvers
 					yield return context;
 				else if (parameter.CollectionType == CollectionType.None && parameter.NativeType == NativeType.Object)
 				{
-					var argument = context.GetArgument<IDictionary<string, object>>(parameter.Name);
+					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create(parameterType);
-					model.MapProperties(argument);
+					if (argument != null)
+						model.MapProperties(argument);
 					yield return model;
 				}
 				else
@@ -100,9 +98,10 @@ namespace TypeCache.GraphQL.Resolvers
 					yield return context;
 				else if (parameter.CollectionType == CollectionType.None && parameter.NativeType == NativeType.Object)
 				{
-					var argument = context.GetArgument<IDictionary<string, object>>(parameter.Name);
+					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create();
-					model.MapProperties(argument);
+					if (argument != null)
+						model.MapProperties(argument);
 					yield return model;
 				}
 				else

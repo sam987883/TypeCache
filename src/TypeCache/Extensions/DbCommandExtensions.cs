@@ -33,8 +33,8 @@ namespace TypeCache.Extensions
 		public static async ValueTask<DbTransaction> BeginTransactionAsync(this DbCommand @this, IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
 			var transaction = isolationLevel == IsolationLevel.Unspecified
-				? await @this.Connection.BeginTransactionAsync(cancellationToken)
-				: await @this.Connection.BeginTransactionAsync(isolationLevel, cancellationToken);
+				? await @this.Connection!.BeginTransactionAsync(cancellationToken)
+				: await @this.Connection!.BeginTransactionAsync(isolationLevel, cancellationToken);
 			@this.Transaction = transaction;
 			return transaction;
 		}

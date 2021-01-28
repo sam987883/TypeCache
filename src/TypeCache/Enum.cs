@@ -18,10 +18,10 @@ namespace TypeCache
 			public Token(T value)
 			{
 				var field = typeof(T).GetField(value.ToString(), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-				var attributes = field.GetCustomAttributes(true);
+				var attributes = field?.GetCustomAttributes(true);
 
 				this.Attributes = attributes?.As<Attribute>().ToImmutable() ?? ImmutableArray<Attribute>.Empty;
-				this.Name = attributes.First<object, NameAttribute>()?.Name ?? field.Name;
+				this.Name = attributes.First<object, NameAttribute>()?.Name ?? field!.Name;
 				this.Value = value;
 			}
 

@@ -11,7 +11,7 @@ namespace TypeCache.Reflection.Members
 		{
 			if (arguments?.Length > 0)
 			{
-				var argumentEnumerator = arguments.GetEnumerator();
+				var argumentEnumerator = arguments.ToCustomEnumerable().GetEnumerator();
 				for (var i = 0; i < @this.Count; ++i)
 				{
 					var parameter = @this[i];
@@ -30,7 +30,7 @@ namespace TypeCache.Reflection.Members
 				}
 				return !argumentEnumerator.MoveNext();
 			}
-			return @this.Count == 0 || @this.All(parameter => parameter.HasDefaultValue || parameter.IsOptional);
+			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 		}
 	}
 }

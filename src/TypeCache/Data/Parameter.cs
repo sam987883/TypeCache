@@ -8,19 +8,19 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "ParameterName": "ParameterValue" }</code>
 	/// SQL: <code>SET @ParameterName = N'ParameterValue';</code>
 	/// </summary>
-	public class Parameter
+	public readonly struct Parameter
 	{
 		/// <summary>
 		/// JSON: <code>"ParameterName"</code>
 		/// SQL: <code>@ParameterName</code>
 		/// </summary>
 		[NotNull]
-		public string Name { get; set; }
+		public string Name { get; init; }
 
 		/// <summary>
 		/// JSON: <code>"ParameterValue"</code>
 		/// SQL: <code>N'ParameterValue'</code>
 		/// </summary>
-		public object? Value { get; set; }
+		public object? Value { get; init; }
 	}
 }

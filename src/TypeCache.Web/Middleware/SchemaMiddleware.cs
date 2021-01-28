@@ -21,7 +21,7 @@ namespace TypeCache.Web.Middleware
 			if (!name.IsBlank())
 			{
 				await using var dbConnection = this.CreateDbConnection();
-				var schema = await dbConnection.GetObjectSchema(name);
+				var schema = dbConnection.GetObjectSchema(name);
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
 			}
 		}

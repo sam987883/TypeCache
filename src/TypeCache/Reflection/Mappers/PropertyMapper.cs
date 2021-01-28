@@ -15,12 +15,12 @@ namespace TypeCache.Reflection.Mappers
 
 		public PropertyMapper(params MapperSetting[] overrides)
 		{
-			var settings = new Dictionary<string, MapperSetting>(Class<TO>.Properties.Count, StringComparer.Ordinal);
-			var properties = Class<TO>.Properties.Keys.Match(Class<FROM>.Properties.Keys, StringComparer.Ordinal);
+			var settings = new Dictionary<string, MapperSetting>(TypeOf<TO>.Properties.Count, StringComparer.Ordinal);
+			var properties = TypeOf<TO>.Properties.Keys.Match(TypeOf<FROM>.Properties.Keys, StringComparer.Ordinal);
 			properties.Do(name =>
 			{
-				var fromProperty = Class<FROM>.Properties[name];
-				var toProperty = Class<TO>.Properties[name];
+				var fromProperty = TypeOf<FROM>.Properties[name];
+				var toProperty = TypeOf<TO>.Properties[name];
 
 				if (toProperty.TypeHandle.Equals(fromProperty.TypeHandle))
 					settings.Add(name, new MapperSetting
@@ -33,16 +33,16 @@ namespace TypeCache.Reflection.Mappers
 
 			overrides.Do(setting =>
 			{
-				var toProperty = Class<TO>.Properties.Get(setting.To);
-				if (toProperty != null)
+				var toProperty = TypeOf<TO>.Properties.Get(setting.To);
+				if (toProperty == null)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] was not found for mapping.");
 				else if (toProperty.Setter == null)
 					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable.");
 
 				if (!setting.From.IsBlank())
 				{
-					var fromProperty = Class<FROM>.Properties.Get(setting.From);
-					if (fromProperty != null)
+					var fromProperty = TypeOf<FROM>.Properties.Get(setting.From);
+					if (fromProperty == null)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] was not found for mapping.");
 					else if (fromProperty.Getter == null)
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not writable.");
@@ -64,8 +64,8 @@ namespace TypeCache.Reflection.Mappers
 
 		public void Map(FROM from, TO to) => this.Settings.Do(setting =>
 		{
-			var fromProperty = Class<FROM>.Properties[setting.From];
-			var toProperty = Class<TO>.Properties[setting.To];
+			var fromProperty = TypeOf<FROM>.Properties[setting.From];
+			var toProperty = TypeOf<TO>.Properties[setting.To];
 
 			var fromValue = fromProperty[from];
 			if (!setting.IgnoreNullValue || fromValue != null)

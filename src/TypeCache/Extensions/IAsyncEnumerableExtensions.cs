@@ -19,16 +19,16 @@ namespace TypeCache.Extensions
 			yield break;
 		}
 
-		public static async Task<T> AggregateAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, T, T> aggregator, CancellationToken token = default)
+		public static async ValueTask<T?> AggregateAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, T, T> aggregator, CancellationToken token = default)
 		{
 			aggregator.AssertNotNull(nameof(aggregator));
 
 			var result = default(T);
-			await @this.DoAsync(item => result = aggregator(result, item), token: token);
+			await @this.DoAsync(item => result = aggregator(result!, item), token: token);
 			return result;
 		}
 
-		public static async Task<bool> AllAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, bool> filter, CancellationToken token = default)
+		public static async ValueTask<bool> AllAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, bool> filter, CancellationToken token = default)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -45,8 +45,11 @@ namespace TypeCache.Extensions
 			{
 				await foreach (var itemSet in itemSets)
 				{
-					await foreach (var item in itemSet)
-						yield return item;
+					if (itemSet != null)
+					{
+						await foreach (var item in itemSet)
+							yield return item;
+					}
 				}
 			}
 		}
@@ -62,7 +65,7 @@ namespace TypeCache.Extensions
 					yield return item;
 		}
 
-		public static async Task<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, CancellationToken token = default)
+		public static async ValueTask<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
 			if (@this == null)
 				return false;
@@ -75,7 +78,7 @@ namespace TypeCache.Extensions
 		public static async Task<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, Func<T, bool> filter, CancellationToken token = default)
 			=> await @this.IfAsync(filter).AnyAsync(token);
 
-		public static async Task<int> CountAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
+		public static async ValueTask<int> CountAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
 			if (@this == null)
 				return 0;
@@ -84,7 +87,7 @@ namespace TypeCache.Extensions
 			return await enumerator.CountAsync();
 		}
 
-		public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action? between = null, CancellationToken token = default)
+		public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action? between = null, CancellationToken token = default)
 		{
 			action.AssertNotNull(nameof(action));
 
@@ -111,7 +114,7 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action? between = null, CancellationToken token = default)
+		public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action? between = null, CancellationToken token = default)
 		{
 			action.AssertNotNull(nameof(action));
 
@@ -139,7 +142,7 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		public static async Task<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, [EnumeratorCancellation] CancellationToken _ = default)
+		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			if (@this == null)
 				return await Task.FromException<T>(new ArgumentNullException(nameof(@this), $"{nameof(IAsyncEnumerable<T>)} argument is null."));
@@ -151,7 +154,7 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static async Task<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, bool> filter)
+		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, Func<T, bool> filter)
 			=> await @this.IfAsync(filter).FirstAsync();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -224,17 +227,17 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static async Task<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value)
+		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value)
 			=> await @this.IfAsync(_ => _ != null && _.Equals(value)).AnyAsync();
 
-		public static async Task<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
+		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
 			return await @this.IfAsync(_ => comparer.Equals(_, value)).AnyAsync();
 		}
 
-		public static async Task<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? values)
+		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? values)
 		{
 			if (@this == null)
 				return false;
@@ -249,7 +252,7 @@ namespace TypeCache.Extensions
 			return true;
 		}
 
-		public static async Task<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? values, IEqualityComparer<T> comparer)
+		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? values, IEqualityComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -311,10 +314,10 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static async Task<T> MaximumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
+		public static async ValueTask<T?> MaximumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 			=> await @this.AggregateAsync((x, y) => x.MoreThan(y) ? x : y);
 
-		public static async Task<T> MaximumAsync<T>(this IAsyncEnumerable<T>? @this, IComparer<T> comparer)
+		public static async ValueTask<T?> MaximumAsync<T>(this IAsyncEnumerable<T>? @this, IComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -322,10 +325,10 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static async Task<T> MinimumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
+		public static async ValueTask<T?> MinimumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 			=> await @this.AggregateAsync((x, y) => x.LessThan(y) ? x : y);
 
-		public static async Task<T> MinimumAsync<T>(this IAsyncEnumerable<T>? @this, IComparer<T> comparer)
+		public static async ValueTask<T?> MinimumAsync<T>(this IAsyncEnumerable<T>? @this, IComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -347,7 +350,7 @@ namespace TypeCache.Extensions
 		public static IAsyncEnumerable<V> ToAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, IAsyncEnumerable<V>> map)
 			=> Empty<V>().AndAsync(@this.ToAsync<T, IAsyncEnumerable<V>>(map));
 
-		public static async Task<ConcurrentDictionary<K, V>> ToDictionaryAsync<K, V>(this IAsyncEnumerable<K>? @this, Func<K, V> valueFactory, int concurrencyLevel, CancellationToken token = default) where K : notnull
+		public static async ValueTask<ConcurrentDictionary<K, V>> ToDictionaryAsync<K, V>(this IAsyncEnumerable<K>? @this, Func<K, V> valueFactory, int concurrencyLevel, CancellationToken token = default) where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
@@ -357,7 +360,7 @@ namespace TypeCache.Extensions
 			return dictionary;
 		}
 
-		public static async Task<ConcurrentDictionary<K, V>> ToDictionaryAsync<K, V>(this IAsyncEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer, int concurrencyLevel, CancellationToken token = default) where K : notnull
+		public static async ValueTask<ConcurrentDictionary<K, V>> ToDictionaryAsync<K, V>(this IAsyncEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer, int concurrencyLevel, CancellationToken token = default) where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 			comparer.AssertNotNull(nameof(comparer));
@@ -368,7 +371,7 @@ namespace TypeCache.Extensions
 			return dictionary;
 		}
 
-		public static async Task<ConcurrentDictionary<K, V>> ToDictionaryAsync<T, K, V>(this IAsyncEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, int concurrencyLevel, CancellationToken token = default) where K : notnull
+		public static async ValueTask<ConcurrentDictionary<K, V>> ToDictionaryAsync<T, K, V>(this IAsyncEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, int concurrencyLevel, CancellationToken token = default) where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
@@ -379,7 +382,7 @@ namespace TypeCache.Extensions
 			return dictionary;
 		}
 
-		public static async Task<ConcurrentDictionary<K, V>> ToDictionaryAsync<T, K, V>(this IAsyncEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer, int concurrencyLevel, CancellationToken token = default) where K : notnull
+		public static async ValueTask<ConcurrentDictionary<K, V>> ToDictionaryAsync<T, K, V>(this IAsyncEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer, int concurrencyLevel, CancellationToken token = default) where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
@@ -391,7 +394,7 @@ namespace TypeCache.Extensions
 			return dictionary;
 		}
 
-		public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
+		public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
 			var list = new List<T>();
 			if (@this != null)

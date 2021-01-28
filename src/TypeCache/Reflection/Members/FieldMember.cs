@@ -14,7 +14,7 @@ namespace TypeCache.Reflection.Members
 			fieldInfo.IsLiteral.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsLiteral)}", false);
 			fieldInfo.IsStatic.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsStatic)}", false);
 
-			ParameterExpression instance = nameof(instance).Parameter(fieldInfo.DeclaringType);
+			ParameterExpression instance = nameof(instance).Parameter(fieldInfo.DeclaringType!);
 			var field = instance.Field(fieldInfo);
 
 			this.Getter = field.Lambda(instance).Compile();

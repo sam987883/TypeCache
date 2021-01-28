@@ -39,11 +39,11 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true
 						|| property.Name.Is(selection));
 					return new OutputExpression
 					{
-						Expression = $"DELETED.[{property.Name}]",
+						Expression = $"DELETED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -64,11 +64,11 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = output?.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"DELETED.[{property.Name}]",
+						Expression = $"DELETED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(output.Length),
@@ -78,7 +78,7 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, DeleteRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 
 		[Graph(name: "DeleteBatch{0}", description: "DELETE FROM {0} ...")]
@@ -88,14 +88,14 @@ namespace TypeCache.GraphQL
 			{
 				Delete = true,
 				Table = this.TableName,
-				Input = batch.Map(Class<T>.Properties.Keys.ToArray()),
+				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"DELETED.[{property.Name}]",
+						Expression = $"DELETED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count)
@@ -113,14 +113,14 @@ namespace TypeCache.GraphQL
 			{
 				Delete = true,
 				Table = this.TableName,
-				Input = batch.Map(Class<T>.Properties.Keys.ToArray()),
+				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"DELETED.[{property.Name}]",
+						Expression = $"DELETED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count)
@@ -128,13 +128,13 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 
 		[Graph(name: "InsertBatch{0}", description: "INSERT INTO {0} ...")]
 		public async Task<T[]> InsertBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
-			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First().Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
 				Table = this.TableName,
@@ -142,11 +142,11 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count)
@@ -160,7 +160,7 @@ namespace TypeCache.GraphQL
 		[Graph(name: "InsertBatch{0}_SQL")]
 		public async Task<string> InsertBatchSQL([NotNull] T[] batch, IResolveFieldContext context)
 		{
-			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First().Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
 				Table = this.TableName,
@@ -168,11 +168,11 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count)
@@ -180,7 +180,7 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 
 		[Graph(name: "Select{0}", description: "SELLECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
@@ -193,11 +193,11 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"[{property.Name}]",
+						Expression = $"[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -220,11 +220,11 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"[{property.Name}]",
+						Expression = $"[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -234,7 +234,7 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, SelectRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 
 		[Graph(name: "Update{0}", description: "UPDATE {0} SET ... WHERE ...")]
@@ -245,23 +245,23 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
-						?? Class<T>.Properties.Get(column);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+						?? TypeOf<T>.Properties.Get(column);
 					return new ColumnSet
 					{
 						Column = column,
-						Expression = property[set]
+						Expression = property![set]
 					};
 				}).ToArray(),
 				Table = this.TableName,
@@ -281,23 +281,23 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
-						?? Class<T>.Properties.Get(column);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+						?? TypeOf<T>.Properties.Get(column);
 					return new ColumnSet
 					{
 						Column = column,
-						Expression = property[set]
+						Expression = property![set]
 					};
 				}).ToArray(),
 				Table = this.TableName,
@@ -306,23 +306,23 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, UpdateRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 
 		[Graph(name: "UpdateBatch{0}", description: "UPDATE {0} SET ...")]
 		public async Task<T[]> UpdateBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
-			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First().Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -338,17 +338,17 @@ namespace TypeCache.GraphQL
 		[Graph(name: "UpdateBatch{0}_SQL")]
 		public async Task<string> UpdateBatchSQL([NotNull] T[] batch, IResolveFieldContext context)
 		{
-			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First().Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = Class<T>.Properties.Values.First(property => property.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? Class<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.Get(selection);
 					return new OutputExpression
 					{
-						Expression = $"INSERTED.[{property.Name}]",
+						Expression = $"INSERTED.[{property!.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -358,7 +358,7 @@ namespace TypeCache.GraphQL
 
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
-			return response.Result;
+			return response.Result!;
 		}
 	}
 }

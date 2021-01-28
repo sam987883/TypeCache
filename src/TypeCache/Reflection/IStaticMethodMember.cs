@@ -11,10 +11,6 @@ namespace TypeCache.Reflection
 
 		bool IsCallableWith(params object?[]? arguments);
 
-		bool IsTask { get; }
-
-		bool IsValueTask { get; }
-
 		bool IsVoid { get; }
 
 		Delegate Method { get; }

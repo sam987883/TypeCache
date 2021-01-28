@@ -2,12 +2,12 @@
 
 namespace TypeCache.Reflection.Mappers
 {
-	public class MapperSetting
+	public readonly struct MapperSetting
 	{
-		public string From { get; set; }
+		public string From { get; init; }
 
-		public bool IgnoreNullValue { get; set; }
+		public bool IgnoreNullValue { get; init; }
 
-		public string To { get; set; }
+		public string To { get; init; }
 	}
 }

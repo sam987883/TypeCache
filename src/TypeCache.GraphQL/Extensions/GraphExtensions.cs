@@ -47,8 +47,8 @@ namespace TypeCache.GraphQL.Extensions
 			where T : class, new()
 		{
 			var graphAttribute = method.Attributes.First<Attribute, GraphAttribute>();
-			var graphName = Class<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? Class<T>.Name;
-			graphName = string.Format(graphAttribute.Name, graphName);
+			var graphName = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? TypeOf<T>.Name;
+			graphName = string.Format(graphAttribute!.Name!, graphName);
 			var graphType = method.ReturnAttributes.First<Attribute, GraphAttribute>()?.Type ?? method.GetGraphType(false);
 			var description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null;
 			var deprecationReason = method.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
@@ -56,12 +56,12 @@ namespace TypeCache.GraphQL.Extensions
 			var arguments = new QueryArguments(method.Parameters
 				.If(parameter =>
 				{
-					var graphAttribute = parameter.Attributes.First<Attribute, GraphAttribute>();
+					var graphAttribute = parameter!.Attributes.First<Attribute, GraphAttribute>();
 					return graphAttribute?.Ignore != true && !parameter.TypeHandle.Is<IResolveFieldContext>();
 				})
 				.To(parameter =>
 				{
-					if (parameter.Name.Is("output") || parameter.Name.Is("select"))
+					if (parameter!.Name.Is("output") || parameter.Name.Is("select"))
 						return new QueryArgument(typeof(ListGraphType<GraphObjectEnumType<T>>))
 						{
 							Name = parameter.Name
@@ -76,8 +76,8 @@ namespace TypeCache.GraphQL.Extensions
 			where T : class, new()
 		{
 			var graphAttribute = method.Attributes.First<Attribute, GraphAttribute>();
-			var graphName = Class<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? Class<T>.Name;
-			graphName = string.Format(graphAttribute.Name, graphName);
+			var graphName = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>()?.Name ?? TypeOf<T>.Name;
+			graphName = string.Format(graphAttribute!.Name!, graphName);
 			var graphType = method.ReturnAttributes.First<Attribute, GraphAttribute>()?.Type ?? method.GetGraphType(false);
 			var description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null;
 			var deprecationReason = method.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
@@ -99,19 +99,19 @@ namespace TypeCache.GraphQL.Extensions
 		public static Connection<T> CreateConnection<T>(this IEnumerable<T> data, int totalCount, bool hasNextPage, bool hasPreviousPage)
 			where T : class
 		{
-			var cursorProperty = Class<T>.Properties.FirstValue(property => property.Value.Attributes.Any<Attribute, GraphCursorAttribute>())?.Value;
+			var cursorProperty = TypeOf<T>.Properties.FirstValue(property => property.Value.Attributes.Any<Attribute, GraphCursorAttribute>())?.Value;
 			var items = data.ToArray();
 			var connection = new Connection<T>
 			{
 				Edges = items.To(item => new Edge<T>
 				{
-					Cursor = cursorProperty != null ? cursorProperty[item]?.ToString() : null,
+					Cursor = cursorProperty?[item]?.ToString(),
 					Node = item
 				}).ToList(),
 				PageInfo = new PageInfo
 				{
-					StartCursor = items.Length > 0 ? cursorProperty[items[0]]?.ToString() : null,
-					EndCursor = items.Length > 0 ? cursorProperty[items[^1]]?.ToString() : null,
+					StartCursor = items.Length > 0 ? cursorProperty?[items[0]]?.ToString() : null,
+					EndCursor = items.Length > 0 ? cursorProperty?[items[^1]]?.ToString() : null,
 					HasNextPage = hasNextPage,
 					HasPreviousPage = hasPreviousPage
 				},
@@ -145,7 +145,7 @@ namespace TypeCache.GraphQL.Extensions
 			return new FieldType
 			{
 				Type = typeof(ListGraphType<GraphObjectType<T>>),
-				Name = string.Format(graphAttribute.Name, graphName),
+				Name = string.Format(graphAttribute!.Name!, graphName),
 				Description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null,
 				DeprecationReason = method.Attributes.First<Attribute, ObsoleteAttribute>()?.Message,
 				Resolver = new MethodFieldResolver(method, handler),
@@ -185,10 +185,10 @@ namespace TypeCache.GraphQL.Extensions
 			if (graphType.IsGenericType && (@this.IsNullable || @this.IsTask || @this.IsValueTask))
 				graphType = graphType.GenericTypeArguments.First();
 
-			if (graphType.IsArray && graphType != typeof(string))
+			if (graphType!.IsArray && graphType != typeof(string))
 				graphType = graphType.GetElementType();
 
-			graphType = @this.NativeType.GetGraphType(graphType, isInputType);
+			graphType = @this.NativeType.GetGraphType(graphType!, isInputType);
 
 			if (@this.CollectionType != CollectionType.None)
 				graphType = typeof(ListGraphType<>).MakeGenericType(graphType);
@@ -212,10 +212,10 @@ namespace TypeCache.GraphQL.Extensions
 			=> new QueryArguments(@this.Parameters
 				.If(parameter =>
 				{
-					var graphAttribute = parameter.Attributes.First<Attribute, GraphAttribute>();
+					var graphAttribute = parameter!.Attributes.First<Attribute, GraphAttribute>();
 					return graphAttribute?.Ignore != true && !parameter.TypeHandle.Is<IResolveFieldContext>();
 				})
-				.To(parameter => parameter.ToQueryArgument()));
+				.To(parameter => parameter!.ToQueryArgument()));
 
 		private static QueryArgument ToQueryArgument(this IParameter @this)
 		{
@@ -232,13 +232,13 @@ namespace TypeCache.GraphQL.Extensions
 						graphType = typeArgument;
 
 					if (genericType == typeof(Connection<>))
-						graphType = typeof(GraphConnectionType<>).MakeGenericType(typeArgument);
+						graphType = typeof(GraphConnectionType<>).MakeGenericType(typeArgument!);
 				}
 
-				if (graphType.IsArray && graphType != typeof(string))
+				if (graphType!.IsArray && graphType != typeof(string))
 					graphType = graphType.GetElementType();
 
-				graphType = @this.NativeType.GetGraphType(graphType, true);
+				graphType = @this.NativeType.GetGraphType(graphType!, true);
 
 				if (@this.CollectionType != CollectionType.None)
 					graphType = typeof(ListGraphType<>).MakeGenericType(graphType);
