@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Extensions
 {

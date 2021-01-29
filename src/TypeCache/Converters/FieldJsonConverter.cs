@@ -3,8 +3,9 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Converters
 {

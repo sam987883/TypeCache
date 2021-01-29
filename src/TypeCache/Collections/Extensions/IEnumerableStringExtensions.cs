@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Collections.Extensions
 {
 	public static class IEnumerableStringExtensions
 	{

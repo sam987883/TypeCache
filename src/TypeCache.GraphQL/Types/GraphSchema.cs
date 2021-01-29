@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Extensions;
+using TypeCache.Data.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 
@@ -63,7 +64,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
 		/// </summary>
 		public void AddSqlApiEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -97,7 +98,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
 		/// </summary>
 		public void AddSqlOnlyEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -126,7 +127,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
 		/// </summary>
 		public async ValueTask AddDeleteEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -146,7 +147,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
 		/// </summary>
 		public async ValueTask AddDeleteSqlEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -165,7 +166,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
 		/// </summary>
 		public async ValueTask AddInsertEndpoint<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -183,7 +184,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
 		/// </summary>
 		public async ValueTask AddInsertSqlEndpoint<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -201,7 +202,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
 		/// </summary>
 		public async ValueTask AddSelectEndpoint<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -219,7 +220,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
 		/// </summary>
 		public async ValueTask AddSelectSqlEndpoint<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -238,7 +239,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
 		/// </summary>
 		public async ValueTask AddUpdateEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()
@@ -258,7 +259,7 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// <i>Requires calls to:</i>
 		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
 		/// </summary>
 		public async ValueTask AddUpdateSqlEndpoints<T>(string databaseProvider, string connectionString, string table)
 			where T : class, new()

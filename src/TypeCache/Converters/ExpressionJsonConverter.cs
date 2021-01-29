@@ -14,6 +14,9 @@ namespace TypeCache.Converters
 		{
 			var expression = new ComparisonExpression();
 
+			string field = string.Empty;
+			var comparisonOperator = ComparisonOperator.Equal;
+			object value = null!;
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
 				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
@@ -23,21 +26,26 @@ namespace TypeCache.Converters
 					if (reader.Read())
 					{
 						if (name.Is(nameof(expression.Field)))
-							expression.Field = reader.GetString()!;
+							field = reader.GetString()!;
 						else if (name!.Is(nameof(expression.Operator)))
-							expression.Operator = reader.GetString().Enum<ComparisonOperator>()!.Value;
+							comparisonOperator = reader.GetString().Enum<ComparisonOperator>()!.Value;
 						else
 						{
 							if (!name.Is(nameof(expression.Value)))
-								expression.Operator = name.Enum<ComparisonOperator>()!.Value;
+								comparisonOperator = name.Enum<ComparisonOperator>()!.Value;
 
-							expression.Value = JsonSerializer.Deserialize<object>(ref reader, options);
+							value = JsonSerializer.Deserialize<object>(ref reader, options)!;
 						}
 					}
 				}
 			}
 
-			return expression;
+			return new ComparisonExpression
+			{
+				Field = field,
+				Operator = comparisonOperator,
+				Value = value
+			};
 		}
 
 		public override void Write(Utf8JsonWriter writer, ComparisonExpression expression, JsonSerializerOptions options)

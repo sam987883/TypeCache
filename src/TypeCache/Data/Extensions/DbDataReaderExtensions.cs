@@ -6,9 +6,10 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Data;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class DbDataReaderExtensions
 	{

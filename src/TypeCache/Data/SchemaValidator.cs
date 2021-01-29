@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using TypeCache.Collections.Extensions;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data

@@ -7,8 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Collections.Extensions
 {
 	public static class IAsyncEnumerableExtensions
 	{
@@ -142,7 +143,7 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, [EnumeratorCancellation] CancellationToken _ = default)
+		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken _ = default)
 		{
 			if (@this == null)
 				return await Task.FromException<T>(new ArgumentNullException(nameof(@this), $"{nameof(IAsyncEnumerable<T>)} argument is null."));

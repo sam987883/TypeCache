@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Extensions;
+using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {

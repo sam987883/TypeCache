@@ -6,12 +6,12 @@ using System.Text.Json.Serialization;
 namespace TypeCache.Data
 {
 	[JsonConverter(typeof(ExpressionJsonConverter))]
-	public class ComparisonExpression
+	public readonly struct ComparisonExpression
 	{
-		public string Field { get; set; } = string.Empty;
+		public string Field { get; init; }
 
-		public ComparisonOperator Operator { get; set; }
+		public ComparisonOperator Operator { get; init; }
 
-		public object? Value { get; set; }
+		public object? Value { get; init; }
 	}
 }

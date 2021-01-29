@@ -2,8 +2,8 @@
 
 using System.Collections.Generic;
 using System.Reflection;
-using static TypeCache.Extensions.IEnumerableExtensions;
-using static TypeCache.Extensions.ObjectExtensions;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Members
 {

@@ -8,9 +8,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Collections;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Collections.Extensions
 {
 	public static class IEnumerableExtensions
 	{
@@ -59,77 +59,37 @@ namespace TypeCache.Extensions
 			return !@this.If(item => !filter(item)).Any();
 		}
 
-		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? items)
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 		{
-			var enumerable = @this;
-			using var itemEnumerator = items?.GetEnumerator();
-
-		Action:
-			switch (enumerable)
+			if (@this.Any())
 			{
-				case null:
-					break;
-				case ImmutableList<T> immutableList when immutableList.Count > 0:
-					goto default;
-				case IList<T> list when list.Count > 0:
-					for (var i = 0; i < list.Count; ++i)
-						yield return list[i];
-					break;
-				case IReadOnlyList<T> list when list.Count > 0:
-					for (var i = 0; i < list.Count; ++i)
-						yield return list[i];
-					break;
-				case ImmutableList<T> _:
-				case IList<T> _:
-				case IReadOnlyList<T> _:
-					break;
-				default:
-					foreach (var item in enumerable.ToCustomEnumerable())
-						yield return item;
-					break;
+				foreach (var item in @this.ToCustomEnumerable())
+					yield return item;
 			}
 
-			if (itemEnumerator?.MoveNext() == true)
+			if (sets.Any())
 			{
-				enumerable = itemEnumerator.Current;
-				goto Action;
+				foreach (var items in sets.IfNotNull().ToCustomEnumerable())
+					foreach (var item in items.ToCustomEnumerable())
+						yield return item;
 			}
 		}
 
-		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params IEnumerable<T>?[] items)
+		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params IEnumerable<T>?[] sets)
 		{
-			var enumerable = @this;
-			var index = 0;
-			var length = items?.Length ?? 0;
-
-		Action:
-			switch (enumerable)
+			if (@this.Any())
 			{
-				case null:
-					break;
-				case ImmutableList<T> _:
-					goto default;
-				case IList<T> list when list.Count > 0:
-					for (var i = 0; i < list.Count; ++i)
-						yield return list[i];
-					break;
-				case IReadOnlyList<T> list when list.Count > 0:
-					for (var i = 0; i < list.Count; ++i)
-						yield return list[i];
-					break;
-				case IList<T> _:
-				case IReadOnlyList<T> _:
-					break;
-				default:
-					foreach (var item in enumerable.ToCustomEnumerable())
-						yield return item;
-					break;
+				foreach (var item in @this.ToCustomEnumerable())
+					yield return item;
 			}
 
-			if (index < length)
+			var length = sets?.Length ?? 0;
+			for (var i = 0; i < length; ++i)
 			{
-				enumerable = items?[index++];
-				goto Action;
+				var enumerable = sets![i]?.ToCustomEnumerable();
+				if (enumerable != null)
+					foreach (var item in enumerable)
+						yield return item;
 			}
 		}
 
@@ -462,6 +422,33 @@ namespace TypeCache.Extensions
 		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> map)
 			=> @this.And(@this.To(map));
 
+		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K> comparer)
+			where K : notnull
+		{
+			keyFactory.AssertNotNull(nameof(keyFactory));
+			comparer.AssertNotNull(nameof(comparer));
+
+			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), item)).ToArray(@this.Count());
+			return items
+				.To(pair => pair.Key)
+				.ToHashSet()
+				.ToDictionary(key => items.If(pair => comparer.Equals(pair.Key, key)).To(pair => pair.Value));
+		}
+
+		public static IDictionary<K, IEnumerable<V>> Group<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer)
+			where K : notnull
+		{
+			keyFactory.AssertNotNull(nameof(keyFactory));
+			valueFactory.AssertNotNull(nameof(valueFactory));
+			comparer.AssertNotNull(nameof(comparer));
+
+			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), valueFactory(item))).ToArray(@this.Count());
+			return items
+				.To(pair => pair.Key)
+				.ToHashSet()
+				.ToDictionary(key => items.If(pair => comparer.Equals(pair.Key, key)).To(pair => pair.Value));
+		}
+
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index)
 		{
 			if (!@this.Any() || index.Value < 0)
@@ -481,6 +468,11 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
+			where T : struct
+			=> @this.ToIndex(value).Any();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEquatable<T> value)
 			=> @this.ToIndex(value).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -489,7 +481,12 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
-			=> values.All(value => @this.Has(value));
+			where T : struct
+			=> values.All(@this.Has);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<IEquatable<T>>? values)
+			=> values.All(@this.Has!);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
@@ -531,7 +528,13 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
+			where T : class
 			=> @this.If(_ => _ != null)!;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
+			where T : struct
+			=> @this.If(_ => _.HasValue).To(_ => _!.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
@@ -838,12 +841,17 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value) => value switch
-		{
-			IEquatable<T> equatable => @this.ToIndex(equatable.Equals),
-			null => @this.ToIndex(item => item == null),
-			_ => @this.ToIndex(item => Equals(item, value))
-		};
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value)
+			where T : struct
+			=> value switch
+			{
+				IEquatable<T> equatable => @this.ToIndex(equatable.Equals),
+				_ => @this.ToIndex(item => Equals(item, value))
+			};
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, IEquatable<T> value)
+			=> @this.ToIndex(value.Equals);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)

@@ -6,9 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Reflection;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Reflection.Extensions
 {
 	public static class ExpressionExtensions
 	{

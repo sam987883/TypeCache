@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Extensions;
 
 namespace TypeCache.Converters
 {

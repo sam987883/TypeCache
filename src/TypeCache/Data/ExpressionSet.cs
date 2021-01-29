@@ -7,12 +7,12 @@ using TypeCache.Converters;
 namespace TypeCache.Data
 {
 	[JsonConverter(typeof(ExpressionSetJsonConverter))]
-	public class ExpressionSet
+	public readonly struct ExpressionSet
 	{
-		public LogicalOperator Operator { get; set; }
+		public LogicalOperator Operator { get; init; }
 
-		public ComparisonExpression[] Expressions { get; set; } = Array.Empty<ComparisonExpression>();
+		public ComparisonExpression[] Expressions { get; init; }
 
-		public ExpressionSet[] ExpressionSets { get; set; } = Array.Empty<ExpressionSet>();
+		public ExpressionSet[] ExpressionSets { get; init; }
 	}
 }

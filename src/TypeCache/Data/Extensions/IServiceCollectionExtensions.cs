@@ -2,87 +2,13 @@
 
 using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using TypeCache.Business;
-using TypeCache.Data;
 using TypeCache.Data.Business;
-using TypeCache.Reflection;
-using TypeCache.Reflection.Mappers;
-using TypeCache.Security;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class IServiceCollectionExtensions
 	{
-		/// <summary>
-		/// Registers Singleton:
-		/// <list type="bullet">
-		/// <item><term><see cref="IFieldMapper&lt;FROM, TO&gt;"/></term> <description>Field mapper where types: FROM &lt;&gt; TO.</description></item>
-		/// </list>
-		/// </summary>
-		public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
-			where FROM : class
-			where TO : class
-			=> @this.AddSingleton<IFieldMapper<FROM, TO>>(provider => new FieldMapper<FROM, TO>(overrides));
-
-		/// <summary>
-		/// Registers Singletons:
-		/// <list type="bullet">
-		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementation of IProcessHandler.</description></item>
-		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRuleHandler.</description></item>
-		/// <item><term><see cref="DefaultRulesHandler&lt;T,R&gt;"/>, <see cref="DefaultRulesHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRulesHandler.</description></item>
-		/// </list>
-		/// </summary>
-		/// <param name="this"></param>
-		/// <returns></returns>
-		public static IServiceCollection RegisterMediator(this IServiceCollection @this)
-			=> @this.AddSingleton<IMediator, Mediator>()
-				.AddSingleton(typeof(DefaultProcessHandler<>), typeof(DefaultProcessHandler<>))
-				.AddSingleton(typeof(DefaultProcessHandler<,>), typeof(DefaultProcessHandler<,>))
-				.AddSingleton(typeof(DefaultRuleHandler<,>), typeof(DefaultRuleHandler<,>))
-				.AddSingleton(typeof(DefaultRuleHandler<,,>), typeof(DefaultRuleHandler<,,>))
-				.AddSingleton(typeof(DefaultRulesHandler<,>), typeof(DefaultRulesHandler<,>))
-				.AddSingleton(typeof(DefaultRulesHandler<,,>), typeof(DefaultRulesHandler<,,>));
-
-		/// <summary>
-		/// Registers Singleton:
-		/// <list type="bullet">
-		/// <item><term><see cref="IPropertyMapper&lt;FROM, TO&gt;"/></term> <description>Property mapper where types: FROM &lt;&gt; TO.</description></item>
-		/// </list>
-		/// </summary>
-		public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
-			where FROM : class
-			where TO : class
-			=> @this.AddSingleton<IPropertyMapper<FROM, TO>>(provider => new PropertyMapper<FROM, TO>(overrides));
-
-		/// <summary>
-		/// Registers Singletons:
-		/// <list type="bullet">
-		/// <item><term><see cref="IHashMaker"/></term> <description>Utility class that encrypts a long to a simple string hashed ID and back.</description></item>
-		/// </list>
-		/// </summary>
-		/// <param name="rgbKey">Any random 16 bytes</param>
-		/// <param name="rgbIV">Any random 16 bytes</param>
-		public static IServiceCollection RegisterSecurity(this IServiceCollection @this, byte[] rgbKey, byte[] rgbIV)
-		{
-			@this.TryAddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
-			return @this;
-		}
-
-		/// <summary>
-		/// Registers Singletons:
-		/// <list type="bullet">
-		/// <item><term><see cref="IHashMaker"/></term> <description>Utility class that encrypts a long to a simple string hashed ID and back.</description></item>
-		/// </list>
-		/// </summary>
-		/// <param name="rgbKey">Any random decimal value (gets cionverted to 16 byte array)</param>
-		/// <param name="rgbIV">Any random decimal value (gets cionverted to 16 byte array)</param>
-		public static IServiceCollection RegisterSecurity(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
-		{
-			@this.TryAddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
-			return @this;
-		}
-
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:

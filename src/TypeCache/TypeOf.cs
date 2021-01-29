@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Immutable;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {
@@ -55,21 +57,21 @@ namespace TypeCache
 
 		public static RuntimeTypeHandle TypeHandle { get; }
 
-		public static IImmutableList<IConstructorMember> Constructors => MemberCache.Constructors[TypeHandle];
+		public static IImmutableList<IConstructorMember> Constructors => TypeMemberCache.Constructors[TypeHandle];
 
-		public static IImmutableDictionary<string, IFieldMember> Fields => MemberCache.Fields[TypeHandle];
+		public static IImmutableDictionary<string, IFieldMember> Fields => TypeMemberCache.Fields[TypeHandle];
 
-		public static IImmutableList<IIndexerMember> Indexers => MemberCache.Indexers[TypeHandle];
+		public static IImmutableList<IIndexerMember> Indexers => TypeMemberCache.Indexers[TypeHandle];
 
-		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> Methods => MemberCache.Methods[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> Methods => TypeMemberCache.Methods[TypeHandle];
 
-		public static IImmutableDictionary<string, IPropertyMember> Properties => MemberCache.Properties[TypeHandle];
+		public static IImmutableDictionary<string, IPropertyMember> Properties => TypeMemberCache.Properties[TypeHandle];
 
-		public static IImmutableDictionary<string, IStaticFieldMember> StaticFields => MemberCache.StaticFields[TypeHandle];
+		public static IImmutableDictionary<string, IStaticFieldMember> StaticFields => TypeMemberCache.StaticFields[TypeHandle];
 
-		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> StaticMethods => MemberCache.StaticMethods[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> StaticMethods => TypeMemberCache.StaticMethods[TypeHandle];
 
-		public static IImmutableDictionary<string, IStaticPropertyMember> StaticProperties => MemberCache.StaticProperties[TypeHandle];
+		public static IImmutableDictionary<string, IStaticPropertyMember> StaticProperties => TypeMemberCache.StaticProperties[TypeHandle];
 
 		public static T Create()
 			=> (T)Constructors.First(constructor => !constructor!.Parameters.Any())?.Invoke(null)

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 
@@ -55,13 +56,13 @@ namespace TypeCache.Converters
 
 		public override void Write(Utf8JsonWriter writer, ExpressionSet? expressionSet, JsonSerializerOptions options)
 		{
-			if (expressionSet != null)
+			if (expressionSet.HasValue)
 			{
 				writer.WriteStartObject();
-				writer.WritePropertyName(expressionSet.Operator.Name());
+				writer.WritePropertyName(expressionSet.Value.Operator.Name());
 				writer.WriteStartArray();
-				expressionSet.ExpressionSets?.IfNotNull().Do(_ => JsonSerializer.Serialize(writer, _, options));
-				expressionSet.Expressions?.IfNotNull().Do(_ => JsonSerializer.Serialize(writer, _, options));
+				expressionSet.Value.ExpressionSets?.Do(_ => JsonSerializer.Serialize(writer, _, options));
+				expressionSet.Value.Expressions?.Do(_ => JsonSerializer.Serialize(writer, _, options));
 				writer.WriteEndArray();
 				writer.WriteEndObject();
 			}

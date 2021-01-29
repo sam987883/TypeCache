@@ -6,9 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using TypeCache.Data;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class SqlExtensions
 	{

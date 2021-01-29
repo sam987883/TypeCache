@@ -2,14 +2,14 @@
 
 namespace TypeCache.Data
 {
-	public class ParameterSchema
+	public readonly struct ParameterSchema
 	{
-		public int Id { get; set; }
+		public int Id { get; init; }
 
-		public string Name { get; set; } = string.Empty;
+		public string Name { get; init; }
 
-		public bool Output { get; set; }
+		public bool Output { get; init; }
 
-		public bool Return { get; set; }
+		public bool Return { get; init; }
 	}
 }

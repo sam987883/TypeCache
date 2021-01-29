@@ -5,7 +5,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class DbCommandExtensions
 	{

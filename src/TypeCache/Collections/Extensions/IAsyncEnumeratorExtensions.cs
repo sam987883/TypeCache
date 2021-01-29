@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Collections.Extensions
 {
 	public static class IAsyncEnumeratorExtensions
 	{

@@ -10,16 +10,16 @@ namespace TypeCache.Data
 	/// }
 	/// </code>
 	/// </summary>
-	public class Output
+	public readonly struct Output
 	{
 		/// <summary>
 		/// JSON: <code>{ "Deleted": { "Columns": [ ... ], "Rows": [ [ ... ], [ ... ], [ ... ] ] } }</code>
 		/// </summary>
-		public RowSet Deleted { get; set; }
+		public RowSet Deleted { get; init; }
 
 		/// <summary>
 		/// JSON: <code>{ "Inserted": { "Columns": [ ... ], "Rows": [ [ ... ], [ ... ], [ ... ] ] } }</code>
 		/// </summary>
-		public RowSet Inserted { get; set; }
+		public RowSet Inserted { get; init; }
 	}
 }

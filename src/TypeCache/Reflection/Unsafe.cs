@@ -2,7 +2,7 @@
 
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {

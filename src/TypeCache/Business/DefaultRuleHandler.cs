@@ -4,7 +4,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Extensions;
+using TypeCache.Business.Extensions;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business
 {

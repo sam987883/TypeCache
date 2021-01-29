@@ -2,11 +2,12 @@
 
 using System;
 using System.Collections.Immutable;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data
 {
-	public class ObjectSchema
+	public sealed class ObjectSchema
 	{
 		/// <summary>
 		/// The database object_id.

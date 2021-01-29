@@ -2,7 +2,7 @@
 
 using System;
 using GraphQL.Types.Relay;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
 using TypeCache.GraphQL.Attributes;
 
 namespace TypeCache.GraphQL.Types

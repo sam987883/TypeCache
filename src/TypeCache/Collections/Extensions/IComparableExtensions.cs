@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Collections.Extensions
 {
 	public static class CompareExtensions
 	{

@@ -8,9 +8,10 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
-using TypeCache.Reflection;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Reflection.Extensions
 {
 	public static class TypeExtensions
 	{
@@ -85,35 +86,35 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<IConstructorMember> GetConstructorCache(this Type @this)
-			=> MemberCache.Constructors[@this.TypeHandle];
+			=> TypeMemberCache.Constructors[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IFieldMember> GetFieldMembers(this Type @this)
-			=> MemberCache.Fields[@this.TypeHandle];
+			=> TypeMemberCache.Fields[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<IIndexerMember> GetIndexerMembers(this Type @this)
-			=> MemberCache.Indexers[@this.TypeHandle];
+			=> TypeMemberCache.Indexers[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> GetMethodMembers(this Type @this)
-			=> MemberCache.Methods[@this.TypeHandle];
+			=> TypeMemberCache.Methods[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IPropertyMember> GetPropertyMembers(this Type @this)
-			=> MemberCache.Properties[@this.TypeHandle];
+			=> TypeMemberCache.Properties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IStaticFieldMember> GetStaticFieldMembers(this Type @this)
-			=> MemberCache.StaticFields[@this.TypeHandle];
+			=> TypeMemberCache.StaticFields[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> GetStaticMethodMembers(this Type @this)
-			=> MemberCache.StaticMethods[@this.TypeHandle];
+			=> TypeMemberCache.StaticMethods[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableDictionary<string, IStaticPropertyMember> GetStaticPropertyMembers(this Type @this)
-			=> MemberCache.StaticProperties[@this.TypeHandle];
+			=> TypeMemberCache.StaticProperties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)

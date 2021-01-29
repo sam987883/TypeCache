@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Immutable;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
 
-namespace TypeCache.Reflection.Members
+namespace TypeCache.Reflection.Extensions
 {
-	internal static class Extensions
+	internal static class MemberExtensions
 	{
 		public static bool IsCallableWith(this IImmutableList<IParameter> @this, params object?[]? arguments)
 		{

@@ -2,15 +2,15 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
-using TypeCache.Data;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class DbConnectionExtensions
 	{
@@ -159,9 +159,7 @@ ORDER BY p.[parameter_id] ASC;";
 			if (await reader.NextResultAsync())
 			{
 				var columnRowSet = await reader.ReadRowSetAsync();
-				var columns = columnRowSet.Map<ColumnSchema>();
-				columns.Do(column => column.TypeHandle = GetColumnType(column).TypeHandle);
-				objectSchema.Columns = columns.ToImmutable();
+				objectSchema.Columns = columnRowSet.Map<ColumnSchema>().ToImmutable();
 			}
 
 			if (await reader.NextResultAsync())

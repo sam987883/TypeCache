@@ -3,13 +3,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection.Mappers
 {
 	internal class PropertyMapper<FROM, TO> : IPropertyMapper<FROM, TO>
-		where FROM : class
-		where TO : class
+		where FROM : notnull
+		where TO : notnull
 	{
 		public IImmutableList<MapperSetting> Settings { get; }
 

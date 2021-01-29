@@ -29,7 +29,6 @@ namespace TypeCache.GraphQL.Extensions
 				.AddSingleton(typeof(GraphObjectEnumType<>))
 				.AddSingleton(typeof(GraphInputType<>))
 				.AddSingleton(typeof(GraphEnumType<>))
-				.RegisterSecurity((decimal)Math.PI, (decimal)(-1 * Math.PI))
 				.AddSingleton(typeof(GraphHashIdType))
 				.AddSingleton(typeof(GraphConnectionType<>))
 				.AddSingleton(typeof(GraphEdgeType<>))

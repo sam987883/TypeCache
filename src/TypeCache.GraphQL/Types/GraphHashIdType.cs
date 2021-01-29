@@ -1,13 +1,22 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Runtime.CompilerServices;
 using GraphQL.Language.AST;
 using GraphQL.Types;
-using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.Security;
+using TypeCache.Security.Extensions;
 
 namespace TypeCache.GraphQL.Types
 {
+	/// <summary>
+	/// Requires call to either one of:
+	/// <list type="bullet">
+	/// <item><see cref="IServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, byte[], byte[])"/></item>
+	/// <item><see cref="IServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
+	/// </list>
+	/// </summary>
 	public class GraphHashIdType : IdGraphType
 	{
 		private readonly IHashMaker _HashMaker;

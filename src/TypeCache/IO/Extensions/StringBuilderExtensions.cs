@@ -4,9 +4,8 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TypeCache.IO;
 
-namespace TypeCache.Extensions
+namespace TypeCache.IO.Extensions
 {
 	public static class StringBuilderExtensions
 	{

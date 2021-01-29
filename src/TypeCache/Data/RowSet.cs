@@ -10,16 +10,16 @@ namespace TypeCache.Data
 	/// }
 	/// </code>
 	/// </summary>
-	public struct RowSet
+	public readonly struct RowSet
 	{
 		/// <summary>
 		/// [ "Column1", "Column2", "Column3", ... ]
 		/// </summary>
-		public string[] Columns { get; set; }
+		public string[] Columns { get; init; }
 
 		/// <summary>
 		/// [ [ "Data", 123, null ], [ ... ], ... ]
 		/// </summary>
-		public object?[][] Rows { get; set; }
+		public object?[][] Rows { get; init; }
 	}
 }

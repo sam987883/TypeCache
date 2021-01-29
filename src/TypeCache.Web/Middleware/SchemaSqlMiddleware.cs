@@ -2,6 +2,8 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using TypeCache.Collections.Extensions;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware

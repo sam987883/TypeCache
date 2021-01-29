@@ -5,8 +5,10 @@ using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Collections;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {

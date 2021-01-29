@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Security

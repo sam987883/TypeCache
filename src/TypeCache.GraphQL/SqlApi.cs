@@ -7,7 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 

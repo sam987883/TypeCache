@@ -3,6 +3,7 @@
 using System.Data.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Middleware;
 

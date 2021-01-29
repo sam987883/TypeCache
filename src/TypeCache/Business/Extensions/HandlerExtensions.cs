@@ -5,11 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Business;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Business.Extensions
 {
-	public static class BusinessExtensions
+	public static class HandlerExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask ApplyValidationRules<T>(this IProcessHandler<T> _, IServiceProvider provider, T request, CancellationToken cancellationToken)

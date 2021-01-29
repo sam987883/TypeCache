@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 

@@ -4,7 +4,8 @@ using System;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Threading.Tasks;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection.Members
 {

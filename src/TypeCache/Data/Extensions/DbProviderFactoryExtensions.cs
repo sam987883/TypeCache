@@ -3,7 +3,7 @@
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Data.Extensions
 {
 	public static class DbProviderFactoryExtensions
 	{

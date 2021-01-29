@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business
 {
