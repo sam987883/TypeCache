@@ -11,7 +11,7 @@ namespace TypeCache.Reflection.Extensions
 		{
 			if (arguments?.Length > 0)
 			{
-				var argumentEnumerator = arguments.ToCustomEnumerable().GetEnumerator();
+				var argumentEnumerator = arguments.GetEnumerator();
 				for (var i = 0; i < @this.Count; ++i)
 				{
 					var parameter = @this[i];

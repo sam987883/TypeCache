@@ -30,21 +30,21 @@ namespace TypeCache.Reflection
 			StaticProperties = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IStaticPropertyMember>>(CreateStaticPropertyMembers);
 		}
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableList<IConstructorMember>> Constructors { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableList<IConstructorMember>> Constructors { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IFieldMember>> Fields { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IFieldMember>> Fields { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableList<IIndexerMember>> Indexers { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableList<IIndexerMember>> Indexers { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<IMethodMember>>> Methods { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<IMethodMember>>> Methods { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IPropertyMember>> Properties { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IPropertyMember>> Properties { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IStaticFieldMember>> StaticFields { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IStaticFieldMember>> StaticFields { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<IStaticMethodMember>>> StaticMethods { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<IStaticMethodMember>>> StaticMethods { get; }
 
-		public static LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IStaticPropertyMember>> StaticProperties { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IStaticPropertyMember>> StaticProperties { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo)
@@ -81,7 +81,8 @@ namespace TypeCache.Reflection
 		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> CreateMethodMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetMethods(INSTANCE_BINDINGS)
 				.If(methodInfo => !methodInfo!.ContainsGenericParameters && !methodInfo.IsSpecialName)
-				.Group(methodInfo => methodInfo!.Name, CreateMethodMember!, StringComparer.Ordinal)
+				.To(CreateMethodMember!)
+				.Group(method => method!.Name, StringComparer.Ordinal)
 				.ToImmutableDictionary(_ => _.Key, _ => _.Value.ToImmutable());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,7 +112,8 @@ namespace TypeCache.Reflection
 		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> CreateStaticMethodMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetMethods(STATIC_BINDINGS)
 				.If(methodInfo => !methodInfo!.ContainsGenericParameters && !methodInfo.IsSpecialName)
-				.Group(methodInfo => methodInfo!.Name, CreateStaticMethodMember!, StringComparer.Ordinal)
+				.To(CreateStaticMethodMember!)
+				.Group(method => method!.Name, StringComparer.Ordinal)
 				.ToImmutableDictionary(_ => _.Key, _ => _.Value.ToImmutable());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

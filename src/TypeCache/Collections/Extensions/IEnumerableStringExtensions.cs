@@ -16,6 +16,10 @@ namespace TypeCache.Collections.Extensions
 			=> compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IDictionary<string, IEnumerable<V>> Group<V>(this IEnumerable<V>? @this, Func<V, string> keyFactory, bool compareCase = false)
+			=> @this.Group(keyFactory, GetStringOrdinalComparer(compareCase));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has([NotNullWhen(true)] this IEnumerable<string>? @this, string value, bool compareCase = false)
 			=> @this.Has(value, GetStringOrdinalComparer(compareCase));
 

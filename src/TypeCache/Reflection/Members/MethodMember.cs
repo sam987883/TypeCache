@@ -31,19 +31,19 @@ namespace TypeCache.Reflection.Members
 			Expression call;
 			if (parameterInfos.Any())
 			{
-				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!), parameters.ToParameterArray(parameterInfos!));
+				call = instance.Cast(methodInfo.DeclaringType!).Call(methodInfo, parameters.ToParameterArray(parameterInfos!));
 
 				var callParameters = parameterInfos.To(parameterInfo => parameterInfo!.Parameter()).ToArray(parameterInfos.Length);
 				var methodParameters = new ParameterExpression[parameterInfos.Length + 1];
 				methodParameters[0] = instance;
 				callParameters.CopyTo(methodParameters, 1);
 
-				this.Method = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!), callParameters).Lambda(methodParameters).Compile();
+				this.Method = instance.Cast(methodInfo.DeclaringType!).Call(methodInfo, callParameters).Lambda(methodParameters).Compile();
 				this.Parameters = parameterInfos.To(parameterInfo => (IParameter)new Parameter(parameterInfo!)).ToImmutableArray();
 			}
 			else
 			{
-				call = methodInfo.Call(instance.Cast(methodInfo.DeclaringType!));
+				call = instance.Cast(methodInfo.DeclaringType!).Call(methodInfo);
 
 				this.Method = call.Lambda(instance).Compile();
 				this.Parameters = ImmutableArray<IParameter>.Empty;

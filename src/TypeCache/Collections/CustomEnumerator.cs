@@ -1,34 +1,35 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Collections
 {
-	public class CustomEnumerator<T> : IDisposable
+	public readonly struct CustomEnumerator<T> : IDisposable
 	{
-		private readonly IEnumerator<T> _Enumerator;
+		public IEnumerator<T> Enumerator { get; init; }
 
-		public CustomEnumerator(IEnumerator<T> enumerator)
-		{
-			enumerator.AssertNotNull(nameof(IEnumerator<T>));
+		public Func<T> CurrentFunc { get; init; }
 
-			this._Enumerator = enumerator;
-		}
+		public Func<bool> MoveNextFunc { get; init; }
 
-		public T Current => this._Enumerator.Current;
+		public T Current => this.CurrentFunc();
 
 		public void Dispose()
 		{
-			(this._Enumerator as IDisposable)?.Dispose();
+			(this.Enumerator as IDisposable)?.Dispose();
 			GC.SuppressFinalize(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
-			=> this._Enumerator.MoveNext();
+			=> this.MoveNextFunc();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()

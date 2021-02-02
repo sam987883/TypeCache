@@ -86,16 +86,16 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Call(@this, method, genericTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this MethodInfo @this, Expression instance)
-			=> Expression.Call(instance, @this);
+		public static Expression Call(this Expression @this, MethodInfo methodInfo)
+			=> Expression.Call(@this, methodInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this MethodInfo @this, Expression instance, IEnumerable<Expression> arguments)
-			=> Expression.Call(instance, @this, arguments);
+		public static Expression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression> arguments)
+			=> Expression.Call(@this, methodInfo, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this MethodInfo @this, Expression instance, params Expression[] arguments)
-			=> Expression.Call(instance, @this, arguments);
+		public static Expression Call(this Expression @this, MethodInfo methodInfo, params Expression[] arguments)
+			=> Expression.Call(@this, methodInfo, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression CallStatic(this MethodInfo @this)

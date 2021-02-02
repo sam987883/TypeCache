@@ -8,12 +8,6 @@ namespace TypeCache.Collections.Extensions
 	public static class IReadOnlyDictionaryExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static IEnumerable<T> Empty<T>()
-		{
-			yield break;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static V? Get<K, V>(this IReadOnlyDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : class
@@ -28,14 +22,21 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<V> GetValues<K, V>(this IReadOnlyDictionary<K, V> @this, params K[] keys)
 			where K : notnull
-			=> keys.Any() ? @this.GetValues((IEnumerable<K>)keys) : Empty<V>();
+		{
+			if (keys.Any())
+			{
+				for (var i = 0; i < keys.Length; ++i)
+					if (@this.TryGetValue(keys[i], out var value))
+						yield return value;
+			}
+		}
 
 		public static IEnumerable<V> GetValues<K, V>(this IReadOnlyDictionary<K, V> @this, IEnumerable<K> keys)
 			where K : notnull
 		{
 			if (keys.Any())
 			{
-				foreach (var key in keys.ToCustomEnumerable())
+				foreach (var key in keys)
 					if (@this.TryGetValue(key, out var value))
 						yield return value;
 			}

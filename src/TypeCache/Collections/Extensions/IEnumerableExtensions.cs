@@ -61,35 +61,80 @@ namespace TypeCache.Collections.Extensions
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 		{
-			if (@this.Any())
+			var enumerable = @this;
+			using var enumerator = sets?.GetEnumerator() ?? Empty<IEnumerable<T>?>().GetEnumerator();
+
+Yield:
+			int count;
+			switch (enumerable)
 			{
-				foreach (var item in @this.ToCustomEnumerable())
-					yield return item;
+				case null:
+					break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						yield return array[i];
+					break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						yield return immutableArray[i];
+					break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						yield return list[i];
+					break;
+				default:
+					foreach (var item in enumerable)
+						yield return item;
+					break;
 			}
 
-			if (sets.Any())
+			if (enumerator.MoveNext())
 			{
-				foreach (var items in sets.IfNotNull().ToCustomEnumerable())
-					foreach (var item in items.ToCustomEnumerable())
-						yield return item;
+				enumerable = enumerator.Current;
+				goto Yield;
 			}
 		}
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params IEnumerable<T>?[] sets)
 		{
-			if (@this.Any())
-			{
-				foreach (var item in @this.ToCustomEnumerable())
-					yield return item;
-			}
+			var enumerable = @this;
+			var setCount = sets?.Length ?? 0;
+			var setIndex = 0;
 
-			var length = sets?.Length ?? 0;
-			for (var i = 0; i < length; ++i)
+Yield:
+			int count;
+			switch (enumerable)
 			{
-				var enumerable = sets![i]?.ToCustomEnumerable();
-				if (enumerable != null)
+				case null:
+					break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						yield return array[i];
+					break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						yield return immutableArray[i];
+					break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						yield return list[i];
+					break;
+				default:
 					foreach (var item in enumerable)
 						yield return item;
+					break;
+			}
+
+			if (++setIndex < setCount)
+			{
+				enumerable = sets![setIndex];
+				goto Yield;
 			}
 		}
 
@@ -102,7 +147,7 @@ namespace TypeCache.Collections.Extensions
 			{
 				null => false,
 				T[] array => array.Length > 0,
-				ImmutableArray<T> array => array.Length > 0,
+				IImmutableList<T> list => list.Count > 0,
 				ICollection<T> collection => collection.Count > 0,
 				IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection.Count > 0,
 				ICollection collection => collection.Count > 0,
@@ -122,44 +167,57 @@ namespace TypeCache.Collections.Extensions
 			{
 				null => 0,
 				T[] array => array.Length,
-				ImmutableArray<T> array => array.Length,
+				IImmutableList<T> list => list.Count,
 				ICollection<T> collection => collection.Count,
 				IReadOnlyCollection<T> collection => collection.Count,
 				ICollection collection => collection.Count,
-				_ => @this.ToCustomEnumerable().Count()
+				_ => @this.GetEnumerator().Count()
 			};
 
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action)
 		{
-			action.AssertNotNull(nameof(action));
+			switch (@this)
+			{
+				case null:
+					return;
+				case T[] array:
+					array.Do(action);
+					return;
+				case ImmutableArray<T> immutableArray:
+					immutableArray.Do(action);
+					return;
+				case List<T> list:
+					list.Do(action);
+					return;
+				default:
+					action.AssertNotNull(nameof(action));
 
-			if (!@this.Any())
-				return;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				action(item);
+					foreach (var item in @this)
+						action(item);
+					return;
+			}
 		}
 
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action)
 		{
-			action.AssertNotNull(nameof(action));
-
-			if (!@this.Any())
-				return;
-
-			var i = -1;
 			switch (@this)
 			{
+				case null:
+					return;
 				case T[] array:
-					while (++i < array.Length)
-						action(array[i], i);
+					array.Do(action);
 					return;
 				case ImmutableArray<T> immutableArray:
-					while (++i < immutableArray.Length)
-						action(immutableArray[i], i);
+					immutableArray.Do(action);
+					return;
+				case List<T> list:
+					list.Do(action);
 					return;
 				default:
-					foreach (var item in @this.ToCustomEnumerable())
+					action.AssertNotNull(nameof(action));
+
+					var i = -1;
+					foreach (var item in @this)
 						action(item, ++i);
 					return;
 			}
@@ -167,33 +225,25 @@ namespace TypeCache.Collections.Extensions
 
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action, Action between)
 		{
-			action.AssertNotNull(nameof(action));
-			between.AssertNotNull(nameof(between));
-
-			if (!@this.Any())
-				return;
-
 			switch (@this)
 			{
-				case T[] array:
-					action(array[0]);
-					for (var i = 1; i < array.Length; ++i)
-					{
-						between();
-						action(array[i]);
-					}
+				case null:
 					return;
-				case ImmutableArray<T> array:
-					action(array[0]);
-					for (var i = 1; i < array.Length; ++i)
-					{
-						between();
-						action(array[i]);
-					}
+				case T[] array:
+					array.Do(action, between);
+					return;
+				case ImmutableArray<T> immutableArray:
+					immutableArray.Do(action, between);
+					return;
+				case List<T> list:
+					list.Do(action, between);
 					return;
 				default:
+					action.AssertNotNull(nameof(action));
+					between.AssertNotNull(nameof(between));
+
 					var first = true;
-					foreach (var item in @this.ToCustomEnumerable())
+					foreach (var item in @this)
 					{
 						if (first)
 							first = false;
@@ -216,24 +266,19 @@ namespace TypeCache.Collections.Extensions
 			var i = 0;
 			switch (@this)
 			{
-				case T[] array:
-					action(array[0], i);
-					for (i = 1; i < array.Length; ++i)
-					{
-						between();
-						action(array[i], i);
-					}
+				case null:
 					return;
-				case ImmutableArray<T> array:
-					action(array[0], i);
-					for (i = 1; i < array.Length; ++i)
-					{
-						between();
-						action(array[i], i);
-					}
+				case T[] array:
+					array.Do(action, between);
+					return;
+				case ImmutableArray<T> immutableArray:
+					immutableArray.Do(action, between);
+					return;
+				case List<T> list:
+					list.Do(action, between);
 					return;
 				default:
-					foreach (var item in @this.ToCustomEnumerable())
+					foreach (var item in @this)
 					{
 						if (i > 0)
 							between();
@@ -264,10 +309,12 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? First<T>(this IEnumerable<T?>? @this) where T : class
-			=> @this?.ToCustomEnumerable().First();
+		public static T? First<T>(this IEnumerable<T?>? @this)
+			where T : class
+			=> @this?.GetEnumerator().First();
 
-		public static T? First<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter) where T : class
+		public static T? First<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter)
+			where T : class
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -275,14 +322,24 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static V? First<T, V>(this IEnumerable<T>? @this) where T : class
-			=> @this.If<T, V>().ToCustomEnumerable().First();
+		public static V? First<T, V>(this IEnumerable<T>? @this)
+			where T : class
+			where V : class
+			=> @this.If<T, V>().First();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? FirstValue<T>(this IEnumerable<T>? @this) where T : struct
-			=> @this?.ToCustomEnumerable().First();
+		public static V? FirstValue<T, V>(this IEnumerable<T>? @this)
+			where T : class
+			where V : struct
+			=> @this.If<T, V>().FirstValue();
 
-		public static T? FirstValue<T>(this IEnumerable<T>? @this, Func<T, bool> filter) where T : struct
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T? FirstValue<T>(this IEnumerable<T>? @this)
+			where T : struct
+			=> @this?.FirstValue();
+
+		public static T? FirstValue<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+			where T : struct
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -291,9 +348,42 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this)
-			=> Empty<T>().And(@this);
+		{
+			if (!@this.Any())
+				yield break;
 
-		public static T? Get<T>(this IEnumerable<T>? @this, Index index) where T : class
+			foreach (var items in @this)
+			{
+				int count;
+				switch (items)
+				{
+					case null:
+						continue;
+					case T[] array:
+						count = array.Length;
+						for (var i = 0; i < count; ++i)
+							yield return array[i];
+						continue;
+					case ImmutableArray<T> immutableArray:
+						count = immutableArray.Length;
+						for (var i = 0; i < count; ++i)
+							yield return immutableArray[i];
+						continue;
+					case List<T> list:
+						count = list.Count;
+						for (var i = 0; i < count; ++i)
+							yield return list[i];
+						continue;
+					default:
+						foreach (var item in items)
+							yield return item;
+						continue;
+				}
+			}
+		}
+
+		public static T? Get<T>(this IEnumerable<T>? @this, Index index)
+			where T : class
 		{
 			if (!@this.Any() || index.Value < 0)
 				return null;
@@ -303,18 +393,19 @@ namespace TypeCache.Collections.Extensions
 
 			return @this switch
 			{
-				ImmutableList<T> _ => @this.ToCustomEnumerable().Get(index),
+				ImmutableList<T> _ => @this.GetEnumerator().Get(index),
 				T[] array when index.Value < array.Length => array[index.Value],
 				T[] _ => null,
 				IList<T> list when index.Value < list.Count => list[index.Value],
 				IList<T> _ => null,
 				IReadOnlyList<T> list when index.Value < list.Count => list[index.Value],
 				IReadOnlyList<T> _ => null,
-				_ => @this.ToCustomEnumerable().Get(index)
+				_ => @this.GetEnumerator().Get(index)
 			};
 		}
 
-		public static T? GetValue<T>(this IEnumerable<T>? @this, Index index) where T : struct
+		public static T? GetValue<T>(this IEnumerable<T>? @this, Index index)
+			where T : struct
 		{
 			if (!@this.Any() || index.Value < 0)
 				return default;
@@ -324,14 +415,14 @@ namespace TypeCache.Collections.Extensions
 
 			return @this switch
 			{
-				ImmutableList<T> _ => @this.ToCustomEnumerable().Get(index),
+				ImmutableList<T> _ => @this.GetEnumerator().GetValue(index),
 				T[] array when index.Value < array.Length => array[index.Value],
 				T[] _ => null,
 				IList<T> list when index.Value < list.Count => list[index.Value],
 				IList<T> _ => null,
 				IReadOnlyList<T> list when index.Value < list.Count => list[index.Value],
 				IReadOnlyList<T> _ => null,
-				_ => @this.ToCustomEnumerable().Get(index)
+				_ => @this.GetEnumerator().GetValue(index)
 			};
 		}
 
@@ -355,41 +446,32 @@ namespace TypeCache.Collections.Extensions
 					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
 						yield return array[i];
 			}
-			else if (@this is IList<T> list)
+			else if (@this is ImmutableArray<T> immutableArray)
 			{
 				if (!range.IsReverse())
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
-						yield return list[i];
+						yield return immutableArray[i];
 				else
 					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
-						yield return list[i];
+						yield return immutableArray[i];
 			}
-			else if (@this is IReadOnlyList<T> readOnlyList)
+			else if (@this is List<T> list)
 			{
 				if (!range.IsReverse())
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
-						yield return readOnlyList[i];
+						yield return list[i];
 				else
 					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
-						yield return readOnlyList[i];
+						yield return list[i];
 			}
 			else if (range.IsReverse())
 			{
 				var count = range.Start.Value - range.End.Value;
 				var items = new Stack<T>(count);
 
-				using var enumerator = @this.ToCustomEnumerable().GetEnumerator();
-				if (range.End.Value > 0)
-				{
-					var i = range.End.Value;
-					while (i > 0 && enumerator.MoveNext())
-						--i;
-
-					if (i == 0)
-						yield return enumerator.Current;
-					else
-						yield break;
-				}
+				using var enumerator = @this.GetEnumerator();
+				if (range.End.Value > 0 && enumerator.Move(range.End.Value))
+					yield return enumerator.Current;
 
 				while (enumerator.MoveNext() && --count >= 0)
 					items.Push(enumerator.Current);
@@ -399,28 +481,15 @@ namespace TypeCache.Collections.Extensions
 			}
 			else
 			{
-				using var enumerator = @this.ToCustomEnumerable().GetEnumerator();
-				if (range.Start.Value > 0)
-				{
-					var i = range.End.Value;
-					while (i > 0 && enumerator.MoveNext())
-						--i;
-
-					if (i == 0)
-						yield return enumerator.Current;
-					else
-						yield break;
-				}
+				using var enumerator = @this.GetEnumerator();
+				if (range.Start.Value > 0 && enumerator.Move(range.Start.Value))
+					yield return enumerator.Current;
 
 				var count = range.End.Value - range.Start.Value;
 				while (enumerator.MoveNext() && --count >= 0)
 					yield return enumerator.Current;
 			}
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Func<T, IEnumerable<T>?> map)
-			=> @this.And(@this.To(map));
 
 		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K> comparer)
 			where K : notnull
@@ -431,28 +500,14 @@ namespace TypeCache.Collections.Extensions
 			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), item)).ToArray(@this.Count());
 			return items
 				.To(pair => pair.Key)
-				.ToHashSet()
-				.ToDictionary(key => items.If(pair => comparer.Equals(pair.Key, key)).To(pair => pair.Value));
-		}
-
-		public static IDictionary<K, IEnumerable<V>> Group<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer)
-			where K : notnull
-		{
-			keyFactory.AssertNotNull(nameof(keyFactory));
-			valueFactory.AssertNotNull(nameof(valueFactory));
-			comparer.AssertNotNull(nameof(comparer));
-
-			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), valueFactory(item))).ToArray(@this.Count());
-			return items
-				.To(pair => pair.Key)
-				.ToHashSet()
+				.ToHashSet(comparer)
 				.ToDictionary(key => items.If(pair => comparer.Equals(pair.Key, key)).To(pair => pair.Value));
 		}
 
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index)
 		{
 			if (!@this.Any() || index.Value < 0)
-				return default;
+				return false;
 
 			if (index.IsFromEnd)
 				index = index.Normalize(@this.Count());
@@ -460,19 +515,16 @@ namespace TypeCache.Collections.Extensions
 			return @this switch
 			{
 				T[] array => index.Value < array.Length,
-				IList<T> list => index.Value < list.Count,
-				IReadOnlyList<T> list => index.Value < list.Count,
-				_ => @this.ToCustomEnumerable().Has(index),
+				IImmutableList<T> list => index.Value < list.Count,
+				ICollection<T> collection => index.Value < collection.Count,
+				IReadOnlyCollection<T> collection => index.Value < collection.Count,
+				ICollection collection => index.Value < collection.Count,
+				_ => @this.GetEnumerator().Move(index.Value),
 			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
-			where T : struct
-			=> @this.ToIndex(value).Any();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEquatable<T> value)
 			=> @this.ToIndex(value).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -485,10 +537,6 @@ namespace TypeCache.Collections.Extensions
 			=> values.All(@this.Has);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<IEquatable<T>>? values)
-			=> values.All(@this.Has!);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
 			=> values.All(value => @this.Has(value, comparer!));
 
@@ -496,34 +544,121 @@ namespace TypeCache.Collections.Extensions
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (!@this.Any())
-				yield break;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				if (filter(item))
-					yield return item;
+			int count;
+			switch (@this)
+			{
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = array[i];
+						if (filter(item))
+							yield return item;
+					}
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = immutableArray[i];
+						if (filter(item))
+							yield return item;
+					}
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = list[i];
+						if (filter(item))
+							yield return item;
+					}
+					yield break;
+				default:
+					foreach (var item in @this)
+						if (filter(item))
+							yield return item;
+					yield break;
+			}
 		}
 
 		public static IEnumerable<V> If<T, V>(this IEnumerable<T?>? @this)
 		{
-			if (!@this.Any())
-				yield break;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				if (item is V value)
-					yield return value;
+			int count;
+			switch (@this)
+			{
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						if (array[i] is V value)
+							yield return value;
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						if (immutableArray[i] is V value)
+							yield return value;
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						if (list[i] is V value)
+							yield return value;
+					yield break;
+				default:
+					foreach (var item in @this)
+						if (item is V value)
+							yield return value;
+					yield break;
+			}
 		}
 
 		public static async IAsyncEnumerable<T?> IfAsync<T>(this IEnumerable<T?>? @this, Func<T?, Task<bool>> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (!@this.Any())
-				yield break;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				if (await filter(item))
-					yield return item;
+			int count;
+			switch (@this)
+			{
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = array[i];
+						if (await filter(item))
+							yield return item;
+					}
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = immutableArray[i];
+						if (await filter(item))
+							yield return item;
+					}
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+					{
+						var item = list[i];
+						if (await filter(item))
+							yield return item;
+					}
+					yield break;
+				default:
+					foreach (var item in @this)
+						if (await filter(item))
+							yield return item;
+					yield break;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -547,23 +682,25 @@ namespace TypeCache.Collections.Extensions
 			return @this.ToHashSet(comparer).SetEquals(items ?? Empty<T>());
 		}
 
-		public static string Join<T>(this IEnumerable<T>? @this, char delimeter) => @this switch
-		{
-			null => string.Empty,
-			T[] array => string.Join(delimeter, array),
-			_ => string.Join(delimeter, @this)
-		};
+		public static string Join<T>(this IEnumerable<T>? @this, char delimeter)
+			=> @this switch
+			{
+				null => string.Empty,
+				T[] array => string.Join(delimeter, array),
+				_ => string.Join(delimeter, @this)
+			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map)
 			=> @this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
-		public static string Join<T>(this IEnumerable<T>? @this, string delimeter) => @this switch
-		{
-			null => string.Empty,
-			T[] array => string.Join(delimeter, array),
-			_ => string.Join(delimeter, @this)
-		};
+		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)
+			=> @this switch
+			{
+				null => string.Empty,
+				T[] array => string.Join(delimeter, array),
+				_ => string.Join(delimeter, @this)
+			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map)
@@ -586,10 +723,12 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? Maximum<T>(this IEnumerable<T>? @this) where T : struct, IComparable<T>
+		public static T? Maximum<T>(this IEnumerable<T>? @this)
+			where T : struct, IComparable<T>
 			=> @this.Aggregate((x, y) => x.MoreThan(y) ? x : y);
 
-		public static T? Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) where T : struct
+		public static T? Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+			where T : struct
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -597,10 +736,12 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? Minimum<T>(this IEnumerable<T>? @this) where T : struct, IComparable<T>
+		public static T? Minimum<T>(this IEnumerable<T>? @this)
+			where T : struct, IComparable<T>
 			=> @this.Aggregate((x, y) => x.LessThan(y) ? x : y);
 
-		public static T? Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer) where T : struct
+		public static T? Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+			where T : struct
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -624,17 +765,16 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this) where T : IComparable<T>
+		public static T[] Sort<T>(this IEnumerable<T>? @this)
+			where T : IComparable<T>
 			=> @this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
 
-		public static IEnumerable<T> Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
+		public static T[] Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 		{
 			var items = @this switch
 			{
 				null => Array.Empty<T>(),
 				T[] array => array,
-				List<T> list => list.ToArray(),
-				HashSet<T> hashSet => hashSet.ToArray(),
 				_ => @this.ToArray()
 			};
 			items.Sort(comparer);
@@ -645,43 +785,70 @@ namespace TypeCache.Collections.Extensions
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (!@this.Any())
-				yield break;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				yield return map(item);
+			int count;
+			switch (@this)
+			{
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						yield return map(array[i]);
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						yield return map(immutableArray[i]);
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						yield return map(list[i]);
+					yield break;
+				default:
+					foreach (var item in @this)
+						yield return map(item);
+					yield break;
+			}
 		}
 
 		public static async IAsyncEnumerable<V?> ToAsync<T, V>(this IEnumerable<T?>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (!@this.Any())
-				yield break;
-
-			foreach (var item in @this.ToCustomEnumerable())
-				yield return await map(item);
+			int count;
+			switch (@this)
+			{
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						yield return await map(array[i]);
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						yield return await map(immutableArray[i]);
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						yield return await map(list[i]);
+					yield break;
+				default:
+					foreach (var item in @this)
+						yield return await map(item);
+					yield break;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
-			=> Empty<V>().And(@this.To(map));
-
 		public static T[] ToArray<T>(this IEnumerable<T>? @this)
-		{
-			if (!@this.Any())
-				return Array.Empty<T>();
-
-			var array = new T[@this.Count()];
-			@this.Do((item, index) => array[index] = item);
-			return array;
-		}
+			=> @this is List<T> list ? list.ToArray() : @this.ToArray(@this.Count());
 
 		public static T[] ToArray<T>(this IEnumerable<T>? @this, int length)
 		{
-			if (!@this.Any())
-				return Array.Empty<T>();
-
 			var array = new T[length];
 			@this.Do((item, index) => array[index] = item);
 			return array;
@@ -711,17 +878,14 @@ namespace TypeCache.Collections.Extensions
 				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
 				TimeSpan time => time.ToString("c"),
 				Guid guid => guid.ToString("D"),
-				Enum token => token.ToString(),
+				Enum token => token.Number(),
 				string text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""),
 				null => string.Empty,
 				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
 			})) : string.Empty;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static CustomEnumerable<T> ToCustomEnumerable<T>(this IEnumerable<T> @this)
-			=> new CustomEnumerable<T>(@this);
-
-		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory) where K : notnull
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory)
+			where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
@@ -730,7 +894,8 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer)
+			where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 			comparer.AssertNotNull(nameof(comparer));
@@ -740,7 +905,8 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory) where K : notnull
+		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory)
+			where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
@@ -750,7 +916,8 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer) where K : notnull
+		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer)
+			where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
@@ -829,29 +996,47 @@ namespace TypeCache.Collections.Extensions
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (!@this.Any())
-				yield break;
-
-			var index = 0;
-			foreach (var item in @this.ToCustomEnumerable())
+			int count;
+			switch (@this)
 			{
-				if (filter(item))
-					yield return index;
-				++index;
+				case null:
+					yield break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						if (filter(array[i]))
+							yield return i;
+					yield break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						if (filter(immutableArray[i]))
+							yield return i;
+					yield break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						if (filter(list[i]))
+							yield return i;
+					yield break;
+				default:
+					var index = 0;
+					foreach (var item in @this)
+					{
+						if (filter(item))
+							yield return index;
+						++index;
+					}
+					yield break;
 			}
 		}
 
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value)
-			where T : struct
 			=> value switch
 			{
 				IEquatable<T> equatable => @this.ToIndex(equatable.Equals),
 				_ => @this.ToIndex(item => Equals(item, value))
 			};
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, IEquatable<T> value)
-			=> @this.ToIndex(value.Equals);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
@@ -862,6 +1047,10 @@ namespace TypeCache.Collections.Extensions
 			=> @this != null ? new List<T>(@this) : new List<T>(0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
+			=> @this.To(map).Gather();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
 			=> @this != null ? new Queue<T>(@this) : new Queue<T>(0);
 
@@ -869,12 +1058,13 @@ namespace TypeCache.Collections.Extensions
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
 			=> @this.ToSpan();
 
-		public static Span<T> ToSpan<T>(this IEnumerable<T>? @this) => @this switch
-		{
-			null => Span<T>.Empty,
-			T[] array => array.AsSpan(),
-			_ => @this.ToArray().AsSpan(),
-		};
+		public static Span<T> ToSpan<T>(this IEnumerable<T>? @this)
+			=> @this switch
+			{
+				null => Span<T>.Empty,
+				T[] array => array.AsSpan(),
+				_ => @this.ToArray().AsSpan(),
+			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
