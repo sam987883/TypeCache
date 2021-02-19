@@ -8,6 +8,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Expressions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
@@ -49,7 +50,7 @@ namespace TypeCache
 			ParameterExpression value1 = nameof(value1).Parameter<T>();
 			ParameterExpression value2 = nameof(value2).Parameter<T>();
 			return value1.ConvertTo(underlyingType)
-				.EqualTo(value2.ConvertTo(underlyingType))
+				.Operation(Equality.EqualTo, value2.ConvertTo(underlyingType))
 				.Lambda<Func<T, T, bool>>(value1, value2)
 				.Compile();
 		}

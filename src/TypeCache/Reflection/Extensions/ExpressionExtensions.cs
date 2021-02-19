@@ -8,62 +8,19 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Expressions;
 
 namespace TypeCache.Reflection.Extensions
 {
 	public static class ExpressionExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Add(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.AddChecked(@this, expression) : Expression.Add(@this, expression);
+		public static BinaryExpression And(this Expression @this, Expression operand)
+			=> Expression.AndAlso(@this, operand);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression AddAssign(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.AddAssignChecked(@this, expression) : Expression.AddAssign(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression And(this Expression @this, Expression expression)
-			=> Expression.And(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression AndAlso(this Expression @this, Expression expression)
-			=> Expression.AndAlso(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression AndAssign(this Expression @this, Expression expression)
-			=> Expression.AndAssign(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayAccess(this Expression @this, int index)
-			=> Expression.ArrayAccess(@this, Expression.Constant(index, index.GetType()));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayAccess(this Expression @this, params int[] indexes)
-			=> Expression.ArrayAccess(@this, indexes.To(index => (Expression)Expression.Constant(index, index.GetType())).ToArray(indexes.Length));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayAccess(this Expression @this, long index)
-			=> Expression.ArrayAccess(@this, Expression.Constant(index, index.GetType()));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayAccess(this Expression @this, params long[] indexes)
-			=> Expression.ArrayAccess(@this, indexes.To(i => (Expression)Expression.Constant(i, i.GetType())).ToArray(indexes.Length));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayIndex(this Expression @this, Expression index)
-			=> Expression.ArrayIndex(@this, index);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayIndex(this Expression @this, IEnumerable<Expression> indexes)
-			=> Expression.ArrayIndex(@this, indexes);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayIndex(this Expression @this, params Expression[] indexes)
-			=> Expression.ArrayIndex(@this, indexes);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ArrayLength(this Expression @this)
-			=> Expression.ArrayLength(@this);
+		public static ArrayExpressionBuilder Array(this Expression @this)
+			=> new ArrayExpressionBuilder { Expression = @this };
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression As<T>(this Expression @this)
@@ -74,54 +31,90 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.TypeAs(@this, type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Assign(this Expression @this, Expression expression)
+		public static BinaryExpression Assign(this Expression @this, Expression expression)
 			=> Expression.Assign(@this, expression);
 
+		public static UnaryExpression Assign(this Expression @this, Unary operation)
+			=> operation switch
+			{
+				Unary.PreIncrement => Expression.PreIncrementAssign(@this),
+				Unary.PostIncrement => Expression.PostIncrementAssign(@this),
+				Unary.PreDecrement => Expression.PreDecrementAssign(@this),
+				Unary.PostDecrement => Expression.PostDecrementAssign(@this),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Unary)} [{operation}] is not supported.")
+			};
+
+		public static BinaryExpression Assign(this Expression @this, Expression operand, Arithmetic operation)
+			=> operation switch
+			{
+				Arithmetic.Add => Expression.AddAssign(@this, operand),
+				Arithmetic.AddChecked => Expression.AddAssignChecked(@this, operand),
+				Arithmetic.Divide => Expression.DivideAssign(@this, operand),
+				Arithmetic.Modulus => Expression.ModuloAssign(@this, operand),
+				Arithmetic.Multiply => Expression.MultiplyAssign(@this, operand),
+				Arithmetic.MultiplyChecked => Expression.MultiplyAssignChecked(@this, operand),
+				Arithmetic.Power => Expression.PowerAssign(@this, operand),
+				Arithmetic.Subtract => Expression.SubtractAssign(@this, operand),
+				Arithmetic.SubtractChecked => Expression.SubtractAssignChecked(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Arithmetic)} [{operation}] is not supported.")
+			};
+
+		public static BinaryExpression Assign(this Expression @this, Expression operand, Bitwise operation)
+			=> operation switch
+			{
+				Bitwise.And => Expression.AndAssign(@this, operand),
+				Bitwise.Or => Expression.OrAssign(@this, operand),
+				Bitwise.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
+				Bitwise.LeftShift => Expression.LeftShiftAssign(@this, operand),
+				Bitwise.RightShift => Expression.RightShiftAssign(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Bitwise)} [{operation}] is not supported.")
+			};
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this Expression @this, string method, params Expression[] arguments)
+		public static MethodCallExpression Call(this Expression @this, string method, params Expression[] arguments)
 			=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this Expression @this, string method, Type[] genericTypes, params Expression[] arguments)
+		public static MethodCallExpression Call(this Expression @this, string method, Type[] genericTypes, params Expression[] arguments)
 			=> Expression.Call(@this, method, genericTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this Expression @this, MethodInfo methodInfo)
+		public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo)
 			=> Expression.Call(@this, methodInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression> arguments)
+		public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression> arguments)
 			=> Expression.Call(@this, methodInfo, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Call(this Expression @this, MethodInfo methodInfo, params Expression[] arguments)
+		public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, params Expression[] arguments)
 			=> Expression.Call(@this, methodInfo, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression CallStatic(this MethodInfo @this)
+		public static MethodCallExpression CallStatic(this MethodInfo @this)
 			=> Expression.Call(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression CallStatic(this MethodInfo @this, IEnumerable<Expression> arguments)
+		public static MethodCallExpression CallStatic(this MethodInfo @this, IEnumerable<Expression> arguments)
 			=> Expression.Call(@this, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression CallStatic(this MethodInfo @this, params Expression[] arguments)
+		public static MethodCallExpression CallStatic(this MethodInfo @this, params Expression[] arguments)
 			=> Expression.Call(@this, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression CallStatic(this Type @this, string method, params Expression[] arguments)
+		public static MethodCallExpression CallStatic(this Type @this, string method, params Expression[] arguments)
 			=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression CallStatic(this Type @this, string method, Type[] genericTypes, params Expression[] arguments)
+		public static MethodCallExpression CallStatic(this Type @this, string method, Type[] genericTypes, params Expression[] arguments)
 			=> Expression.Call(@this, method, genericTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Cast<T>(this Expression @this)
 			=> @this.Cast(typeof(T));
 
-		public static Expression Cast(this Expression @this, Type type)
+		public static UnaryExpression Cast(this Expression @this, Type type)
 		{
 			if (type.IsByRef || type.IsPointer)
 				type = type.GetElementType() ?? type;
@@ -130,91 +123,72 @@ namespace TypeCache.Reflection.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Coalesce(this Expression @this, Expression expression)
+		public static BinaryExpression Coalesce(this Expression @this, Expression expression)
 			=> Expression.Coalesce(@this, expression);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Constant<T>([NotNull] this T @this)
+		public static UnaryExpression Complement(this Expression @this)
+			=> Expression.OnesComplement(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ConstantExpression Constant<T>([NotNull] this T @this)
 			=> Expression.Constant(@this, @this!.GetType());
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ConvertTo<T>(this Expression @this, bool overflowCheck = false)
+		public static UnaryExpression ConvertTo<T>(this Expression @this, bool overflowCheck = false)
 			=> overflowCheck ? Expression.ConvertChecked(@this, typeof(T)) : Expression.Convert(@this, typeof(T));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ConvertTo(this Expression @this, Type type, bool overflowCheck = false)
+		public static UnaryExpression ConvertTo(this Expression @this, Type type, bool overflowCheck = false)
 			=> overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Decrement(this Expression @this)
+		public static UnaryExpression Decrement(this Expression @this)
 			=> Expression.Decrement(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Decrement(this Expression @this, MethodInfo methodInfo)
-			=> Expression.Decrement(@this, methodInfo);
+		public static DefaultExpression Default(this Type @this)
+			=> Expression.Default(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Divide(this Expression @this, Expression expression)
-			=> Expression.Divide(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression DivideAssign(this Expression @this, Expression expression)
-			=> Expression.DivideAssign(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression EqualTo(this Expression @this, Expression expression)
-			=> Expression.Equal(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression EqualTo<T>(this Expression @this)
-			=> Expression.TypeEqual(@this, typeof(T));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression EqualTo(this Expression @this, Type type)
-			=> Expression.TypeEqual(@this, type);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Field(this Expression @this, string name)
+		public static MemberExpression Field(this Expression @this, string name)
 			=> Expression.Field(@this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Field(this Expression @this, FieldInfo fieldInfo)
+		public static MemberExpression Field(this Expression @this, FieldInfo fieldInfo)
 			=> Expression.Field(@this, fieldInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression GreaterThan(this Expression @this, Expression expression)
-			=> Expression.GreaterThan(@this, expression);
+		public static ConditionalExpression If(this Expression @this, Expression trueResult)
+			=> Expression.IfThen(@this, trueResult);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression GreaterThanOrEqual(this Expression @this, Expression expression)
-			=> Expression.GreaterThanOrEqual(@this, expression);
+		public static ConditionalExpression If(this Expression @this, Expression trueResult, Expression falseResult)
+			=> Expression.IfThenElse(@this, trueResult, falseResult);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression If(this Expression @this, Expression trueResult, Expression falseResult)
+		public static ConditionalExpression IIf(this Expression @this, Expression trueResult, Expression falseResult)
 			=> Expression.Condition(@this, trueResult, falseResult);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Increment(this Expression @this)
+		public static UnaryExpression Increment(this Expression @this)
 			=> Expression.Increment(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Increment(this Expression @this, MethodInfo methodInfo)
-			=> Expression.Increment(@this, methodInfo);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Invoke(this LambdaExpression @this, IEnumerable<Expression> parameters)
+		public static InvocationExpression Invoke(this LambdaExpression @this, IEnumerable<Expression> parameters)
 			=> Expression.Invoke(@this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Invoke(this LambdaExpression @this, params Expression[] parameters)
+		public static InvocationExpression Invoke(this LambdaExpression @this, params Expression[] parameters)
 			=> Expression.Invoke(@this, parameters);
 
+		public static UnaryExpression Is(this Expression @this, bool value)
+			=> value ? Expression.IsTrue(@this) : Expression.IsFalse(@this);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Is<T>(this Expression @this)
+		public static TypeBinaryExpression Is<T>(this Expression @this)
 			=> Expression.TypeIs(@this, typeof(T));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Is(this Expression @this, Type type)
+		public static TypeBinaryExpression Is(this Expression @this, Type type)
 			=> Expression.TypeIs(@this, type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -233,85 +207,98 @@ namespace TypeCache.Reflection.Extensions
 		public static Expression<T> Lambda<T>(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda<T>(@this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray()), @this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray(parameters.Length)), @this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray(parameters.Length)), @this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray(parameters.Length)), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression LessThan(this Expression @this, Expression expression)
-			=> Expression.LessThan(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression LessThanOrEqual(this Expression @this, Expression expression)
-			=> Expression.LessThanOrEqual(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Member(this Expression @this, string name)
+		public static MemberExpression Member(this Expression @this, string name)
 			=> Expression.PropertyOrField(@this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression MemberInit(this NewExpression @this, IEnumerable<MemberBinding> bindings)
+		public static MemberInitExpression MemberInit(this NewExpression @this, IEnumerable<MemberBinding> bindings)
 			=> Expression.MemberInit(@this, bindings);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
+		public static MemberInitExpression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
 			=> Expression.MemberInit(@this, bindings);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Modulo(this Expression @this, Expression expression)
-			=> Expression.Modulo(@this, expression);
+		public static UnaryExpression Negate(this Expression @this, bool overflowCheck = false)
+			=> overflowCheck ? Expression.NegateChecked(@this) : Expression.Negate(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression ModuloAssign(this Expression @this, Expression expression)
-			=> Expression.ModuloAssign(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Multiply(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.MultiplyChecked(@this, expression) : Expression.Multiply(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression MultiplyAssign(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.MultiplyAssignChecked(@this, expression) : Expression.MultiplyAssign(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression New(this ConstructorInfo @this, params Expression[]? parameters)
+		public static NewExpression New(this ConstructorInfo @this, params Expression[]? parameters)
 			=> Expression.New(@this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
+		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
 			=> Expression.New(@this, parameters, memberInfos);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, IEnumerable<MemberInfo> memberInfos)
+		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, IEnumerable<MemberInfo> memberInfos)
 			=> Expression.New(@this, parameters, memberInfos);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression New(this Type @this)
+		public static NewExpression New(this Type @this)
 			=> Expression.New(@this);
 
+		public static BinaryExpression Operation(this Expression @this, Arithmetic operation, Expression operand)
+			=> operation switch
+			{
+				Arithmetic.Add => Expression.Add(@this, operand),
+				Arithmetic.AddChecked => Expression.AddChecked(@this, operand),
+				Arithmetic.Divide => Expression.Divide(@this, operand),
+				Arithmetic.Modulus => Expression.Modulo(@this, operand),
+				Arithmetic.Multiply => Expression.Multiply(@this, operand),
+				Arithmetic.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
+				Arithmetic.Power => Expression.Power(@this, operand),
+				Arithmetic.Subtract => Expression.Subtract(@this, operand),
+				Arithmetic.SubtractChecked => Expression.SubtractChecked(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Arithmetic)} [{operation}] is not supported.")
+			};
+
+		public static BinaryExpression Operation(this Expression @this, Bitwise operation, Expression operand)
+			=> operation switch
+			{
+				Bitwise.And => Expression.And(@this, operand),
+				Bitwise.Or => Expression.Or(@this, operand),
+				Bitwise.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
+				Bitwise.LeftShift => Expression.LeftShift(@this, operand),
+				Bitwise.RightShift => Expression.RightShift(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Bitwise)} [{operation}] is not supported.")
+			};
+
+		public static BinaryExpression Operation(this Expression @this, Equality operation, Expression operand)
+			=> operation switch
+			{
+				Equality.EqualTo => Expression.Equal(@this, operand),
+				Equality.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
+				Equality.NotEqualTo => Expression.NotEqual(@this, operand),
+				Equality.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
+				Equality.MoreThan => Expression.GreaterThan(@this, operand),
+				Equality.MoreThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
+				Equality.LessThan => Expression.LessThan(@this, operand),
+				Equality.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Equality)} [{operation}] is not supported.")
+			};
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Or(this Expression @this, Expression expression)
-			=> Expression.Or(@this, expression);
+		public static BinaryExpression Or(this Expression @this, Expression operand)
+			=> Expression.OrElse(@this, operand);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ParameterExpression Parameter(this ParameterInfo @this)
@@ -326,104 +313,137 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Parameter(typeof(T), @this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property(this Expression @this, string name)
+		public static MemberExpression Property(this Expression @this, string name)
 			=> Expression.Property(@this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property(this Expression @this, Type type, string name)
+		public static MemberExpression Property(this Expression @this, Type type, string name)
 			=> Expression.Property(@this, type, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property<T>(this Expression @this, string name)
+		public static MemberExpression Property<T>(this Expression @this, string name)
 			=> Expression.Property(@this, typeof(T), name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property(this Expression @this, PropertyInfo propertyInfo)
+		public static MemberExpression Property(this Expression @this, PropertyInfo propertyInfo)
 			=> Expression.Property(@this, propertyInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property(this Expression @this, PropertyInfo propertyInfo, ParameterExpression index)
+		public static IndexExpression Property(this Expression @this, PropertyInfo propertyInfo, ParameterExpression index)
 			=> Expression.Property(@this, propertyInfo, index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Property(this Expression @this, MethodInfo getMethodInfo)
+		public static MemberExpression Property(this Expression @this, MethodInfo getMethodInfo)
 			=> Expression.Property(@this, getMethodInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression StaticField(this FieldInfo @this)
+		public static MemberExpression StaticField(this FieldInfo @this)
 			=> Expression.Field(null, @this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression StaticField(this Type @this, string name)
+		public static MemberExpression StaticField(this Type @this, string name)
 			=> Expression.Field(null, @this, name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression StaticProperty(this PropertyInfo @this)
+		public static MemberExpression StaticProperty(this PropertyInfo @this)
 			=> Expression.Property(null, @this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression StaticProperty(this PropertyInfo @this, ParameterExpression index)
+		public static IndexExpression StaticProperty(this PropertyInfo @this, ParameterExpression index)
 			=> Expression.Property(null, @this, index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression StaticProperty(this Type @this, string name)
+		public static MemberExpression StaticProperty(this Type @this, string name)
 			=> Expression.Property(null, @this, name);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Subtract(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.SubtractChecked(@this, expression) : Expression.Subtract(@this, expression);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression SubtractAssign(this Expression @this, Expression expression, bool overflowCheck = false)
-			=> overflowCheck ? Expression.SubtractAssignChecked(@this, expression) : Expression.SubtractAssign(@this, expression);
-
 		public static Expression SystemConvert(this Expression @this, Type type)
-		{
-			if (@this.Type == type || (@this.Type.IsGenericType && @this.Type == typeof(Nullable<>).MakeGenericType(type)))
-				return @this;
-
-			var name = type.ToNativeType() switch
+			=> type.ToNativeType() switch
 			{
-				NativeType.Boolean => nameof(Convert.ToBoolean),
-				NativeType.Char => nameof(Convert.ToChar),
-				NativeType.SByte => nameof(Convert.ToSByte),
-				NativeType.Byte => nameof(Convert.ToByte),
-				NativeType.Int16 => nameof(Convert.ToInt16),
-				NativeType.UInt16 => nameof(Convert.ToUInt16),
-				NativeType.Int32 => nameof(Convert.ToInt32),
-				NativeType.UInt32 => nameof(Convert.ToUInt32),
-				NativeType.Int64 => nameof(Convert.ToInt64),
-				NativeType.UInt64 => nameof(Convert.ToUInt64),
-				NativeType.Single => nameof(Convert.ToSingle),
-				NativeType.Double => nameof(Convert.ToDouble),
-				NativeType.Decimal => nameof(Convert.ToDecimal),
-				NativeType.DateTime => nameof(Convert.ToDateTime),
-				NativeType.String => nameof(Convert.ToString),
-				_ => null
+				_ when @this.Type == type => @this,
+				NativeType.Boolean => typeof(Convert).CallStatic(nameof(Convert.ToBoolean), Type.EmptyTypes, @this),
+				NativeType.Char => typeof(Convert).CallStatic(nameof(Convert.ToChar), Type.EmptyTypes, @this),
+				NativeType.SByte => typeof(Convert).CallStatic(nameof(Convert.ToSByte), Type.EmptyTypes, @this),
+				NativeType.Byte => typeof(Convert).CallStatic(nameof(Convert.ToByte), Type.EmptyTypes, @this),
+				NativeType.Int16 => typeof(Convert).CallStatic(nameof(Convert.ToInt16), Type.EmptyTypes, @this),
+				NativeType.UInt16 => typeof(Convert).CallStatic(nameof(Convert.ToUInt16), Type.EmptyTypes, @this),
+				NativeType.Int32 => typeof(Convert).CallStatic(nameof(Convert.ToInt32), Type.EmptyTypes, @this),
+				NativeType.UInt32 => typeof(Convert).CallStatic(nameof(Convert.ToUInt32), Type.EmptyTypes, @this),
+				NativeType.Int64 => typeof(Convert).CallStatic(nameof(Convert.ToInt64), Type.EmptyTypes, @this),
+				NativeType.UInt64 => typeof(Convert).CallStatic(nameof(Convert.ToUInt64), Type.EmptyTypes, @this),
+				NativeType.Single => typeof(Convert).CallStatic(nameof(Convert.ToSingle), Type.EmptyTypes, @this),
+				NativeType.Double => typeof(Convert).CallStatic(nameof(Convert.ToDouble), Type.EmptyTypes, @this),
+				NativeType.Decimal => typeof(Convert).CallStatic(nameof(Convert.ToDecimal), Type.EmptyTypes, @this),
+				NativeType.DateTime => typeof(Convert).CallStatic(nameof(Convert.ToDateTime), Type.EmptyTypes, @this),
+				NativeType.String => typeof(Convert).CallStatic(nameof(Convert.ToString), Type.EmptyTypes, @this),
+				_ => @this.Cast(type)
 			};
 
-			return name != null
-				? typeof(Convert).CallStatic(name, Type.EmptyTypes, @this)
-				: @this.Cast(type);
-		}
-
 		public static IEnumerable<Expression> ToParameterArray(this ParameterExpression @this, params ParameterInfo[] parameterInfos)
-			=> parameterInfos.To(parameterInfo => @this.ArrayAccess(parameterInfo.Position).SystemConvert(parameterInfo.ParameterType));
+			=> parameterInfos.To(parameterInfo => @this.Array()[parameterInfo.Position].SystemConvert(parameterInfo.ParameterType));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TypeBinaryExpression TypeEqual<T>(this Expression @this)
+			=> Expression.TypeEqual(@this, typeof(T));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TypeBinaryExpression TypeEqual(this Expression @this, Type type)
+			=> Expression.TypeEqual(@this, type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Unbox<T>(this Expression @this) where T : struct
 			=> @this.Unbox(typeof(T));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression Unbox(this Expression @this, Type type)
 			=> type.IsValueType ? Expression.Unbox(@this, type) : @this;
 
+		#region LabelTarget
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression XOr(this Expression @this, Expression expression)
-			=> Expression.ExclusiveOr(@this, expression);
+		public static GotoExpression Break(this LabelTarget @this)
+			=> Expression.Break(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression XOrAssign(this Expression @this, Expression expression)
-			=> Expression.ExclusiveOrAssign(@this, expression);
+		public static GotoExpression Break(this LabelTarget @this, Expression? value)
+			=> Expression.Break(@this, value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GotoExpression Break(this LabelTarget @this, Type type)
+			=> Expression.Break(@this, type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GotoExpression Break(this LabelTarget @this, Expression? value, Type type)
+			=> Expression.Break(@this, value, type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GotoExpression Continue(this LabelTarget @this)
+			=> Expression.Continue(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GotoExpression Continue(this LabelTarget @this, Type type)
+			=> Expression.Continue(@this, type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static GotoExpression Goto(this LabelTarget @this)
+			=> Expression.Goto(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static LabelTarget Label(this Type @this)
+			=> Expression.Label(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static LabelTarget Label(this Type @this, string? name)
+			=> Expression.Label(@this, name);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static LabelExpression Label(this LabelTarget @this)
+			=> Expression.Label(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static LabelExpression Label(this LabelTarget @this, Expression? defaultValue)
+			=> Expression.Label(@this, defaultValue);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static LabelTarget Label(this string? @this)
+			=> Expression.Label(@this);
+		#endregion
 	}
 }

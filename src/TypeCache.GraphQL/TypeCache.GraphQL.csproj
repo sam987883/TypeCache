@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
     <PackageId>TypeCache.GraphQL</PackageId>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache GraphQL</Title>
@@ -16,7 +16,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://www.nuget.org/packages/TypeCache.GraphQL/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/TypeCache/TypeCache/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/sam987883/TypeCache/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageIcon>TypeCash.png</PackageIcon>

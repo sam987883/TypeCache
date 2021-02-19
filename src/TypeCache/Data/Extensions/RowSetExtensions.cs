@@ -3,6 +3,7 @@
 using System;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Data.Extensions
 {
@@ -21,7 +22,7 @@ namespace TypeCache.Data.Extensions
 			@this.Rows.Do((row, rowIndex) =>
 			{
 				var item = TypeOf<T>.Create();
-				properties.Do((property, columnIndex) => property![item!] = row[columnIndex]);
+				properties.Do((property, columnIndex) => property.Setter?.Invoke(item!, row[columnIndex]));
 				items[rowIndex] = item;
 			});
 
@@ -42,7 +43,7 @@ namespace TypeCache.Data.Extensions
 			@this.Do((item, rowIndex) =>
 			{
 				var row = new object?[rowSet.Columns.Length];
-				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = TypeOf<T>.Properties[column][item]);
+				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = TypeOf<T>.Properties[column].GetValue(item));
 				rowSet.Rows[rowIndex] = row;
 			});
 

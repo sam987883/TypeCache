@@ -24,37 +24,39 @@ namespace TypeCache.Reflection.Mappers
 				var fromProperty = TypeOf<FROM>.Properties[name];
 				var toProperty = TypeOf<TO>.Properties[name];
 
-				if (toProperty.TypeHandle.Equals(fromProperty.TypeHandle))
+				if (toProperty.Type.Equals(fromProperty.Type))
 					settings.Add(name, new MapperSetting
 					{
 						From = name,
 						To = name,
-						IgnoreNullValue = !toProperty.IsNullable
+						IgnoreNullValue = !toProperty.Type.IsNullable
 					});
 			});
 
 			overrides.Do(setting =>
 			{
-				var toProperty = TypeOf<TO>.Properties.Get(setting.To);
-				if (toProperty == null)
-					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] was not found for mapping.");
-				else if (toProperty.Setter == null)
-					throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable.");
+				var toProperty = TypeOf<TO>.Properties.GetValue(setting.To) switch
+				{
+					PropertyMember property when property.Setter != null => property,
+					PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable."),
+					_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] was not found for mapping.")
+				};
 
 				if (!setting.From.IsBlank())
 				{
-					var fromProperty = TypeOf<FROM>.Properties.Get(setting.From);
-					if (fromProperty == null)
-						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] was not found for mapping.");
-					else if (fromProperty.Getter == null)
-						throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not writable.");
-
-					if (fromProperty.TypeHandle.Equals(toProperty.TypeHandle))
-						settings[setting.To] = setting;
-					else if (fromProperty.NativeType == NativeType.Object || toProperty.NativeType == NativeType.Object)
+					var fromProperty = TypeOf<FROM>.Properties.GetValue(setting.From) switch
 					{
-						var fromTypeName = fromProperty.TypeHandle.ToType().Name;
-						var toTypeName = toProperty.TypeHandle.ToType().Name;
+						PropertyMember property when property.Getter != null => property,
+						PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not readable."),
+						_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] was not found for mapping.")
+					};
+
+					if (fromProperty.Type.Equals(toProperty.Type))
+						settings[setting.To] = setting;
+					else if (fromProperty.Type.NativeType == NativeType.Object || toProperty.Type.NativeType == NativeType.Object)
+					{
+						var fromTypeName = fromProperty.Type.Name;
+						var toTypeName = toProperty.Type.Name;
 						throw new ArgumentOutOfRangeException(nameof(overrides), $"Property [{setting.From}] of type {fromTypeName} cannot be mapped to [{setting.To}] of type {toTypeName}.");
 					}
 				}
@@ -69,9 +71,9 @@ namespace TypeCache.Reflection.Mappers
 			var fromProperty = TypeOf<FROM>.Properties[setting.From];
 			var toProperty = TypeOf<TO>.Properties[setting.To];
 
-			var fromValue = fromProperty[from];
+			var fromValue = fromProperty.GetValue(from);
 			if (!setting.IgnoreNullValue || fromValue != null)
-				toProperty[to] = fromValue;
+				toProperty.SetValue(to, fromValue);
 		});
 	}
 }

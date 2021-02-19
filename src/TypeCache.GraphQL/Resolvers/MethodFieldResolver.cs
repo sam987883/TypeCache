@@ -15,12 +15,11 @@ namespace TypeCache.GraphQL.Resolvers
 {
 	public class MethodFieldResolver<T> : IFieldResolver<Task<T>>
 	{
-		private readonly IMethodMember _Method;
+		private readonly MethodMember _Method;
 		private readonly object _Handler;
 
-		public MethodFieldResolver(IMethodMember method, object handler)
+		public MethodFieldResolver(MethodMember method, object handler)
 		{
-			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
 
 			this._Method = method;
@@ -31,7 +30,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			var arguments = this.GetArguments(context).ToArray();
 			var value = this._Method.Invoke(this._Handler, arguments);
-			return this._Method.IsValueTask
+			return this._Method.Type.IsValueTask
 				? ((ValueTask<T>)value!).AsTask()
 				: (Task<T>)value!;
 		}
@@ -50,10 +49,10 @@ namespace TypeCache.GraphQL.Resolvers
 				if (graphAttribute?.Ignore == true)
 					continue;
 
-				var parameterType = parameter.TypeHandle.ToType();
+				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.CollectionType == CollectionType.None && parameter.NativeType == NativeType.Object)
+				else if (parameter.Type.CollectionType == CollectionType.None && parameter.Type.NativeType == NativeType.Object)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create(parameterType);
@@ -62,19 +61,18 @@ namespace TypeCache.GraphQL.Resolvers
 					yield return model;
 				}
 				else
-					yield return context.GetArgument(parameter.TypeHandle.ToType(), parameter.Name); // TODO: Support a default value?
+					yield return context.GetArgument(parameterType, parameter.Name); // TODO: Support a default value?
 			}
 		}
 	}
 
 	public class MethodFieldResolver : IFieldResolver
 	{
-		private readonly IMethodMember _Method;
+		private readonly MethodMember _Method;
 		private readonly object _Handler;
 
-		public MethodFieldResolver(IMethodMember method, object handler)
+		public MethodFieldResolver(MethodMember method, object handler)
 		{
-			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
 
 			this._Method = method;
@@ -95,10 +93,10 @@ namespace TypeCache.GraphQL.Resolvers
 				if (graphAttribute?.Ignore == true)
 					continue;
 
-				var parameterType = parameter.TypeHandle.ToType();
+				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.CollectionType == CollectionType.None && parameter.NativeType == NativeType.Object)
+				else if (parameter.Type.CollectionType == CollectionType.None && parameter.Type.NativeType == NativeType.Object)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create();
@@ -107,7 +105,7 @@ namespace TypeCache.GraphQL.Resolvers
 					yield return model;
 				}
 				else
-					yield return context.GetArgument(parameter.TypeHandle.ToType(), parameter.Name); // TODO: Support a default value?
+					yield return context.GetArgument(parameterType, parameter.Name); // TODO: Support a default value?
 			}
 		}
 	}

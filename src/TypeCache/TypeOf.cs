@@ -22,7 +22,7 @@ namespace TypeCache
 			IsClass = type.IsClass;
 			IsDisposable = type.Implements<IDisposable>();
 			IsInternal = !type.IsVisible;
-			IsNullable = type.IsClass || type.Is(typeof(Nullable<>));
+			IsNullable = type.Is(typeof(Nullable<>));
 			IsPublic = type.IsPublic;
 			IsTask = type.IsTask();
 			IsValueTask = type.IsValueTask();
@@ -57,29 +57,29 @@ namespace TypeCache
 
 		public static RuntimeTypeHandle TypeHandle { get; }
 
-		public static IImmutableList<IConstructorMember> Constructors => TypeMemberCache.Constructors[TypeHandle];
+		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[TypeHandle];
 
-		public static IImmutableDictionary<string, IFieldMember> Fields => TypeMemberCache.Fields[TypeHandle];
+		public static IImmutableDictionary<string, FieldMember> Fields => MemberCache.Fields[TypeHandle];
 
-		public static IImmutableList<IIndexerMember> Indexers => TypeMemberCache.Indexers[TypeHandle];
+		public static IImmutableList<IndexerMember> Indexers => MemberCache.Indexers[TypeHandle];
 
-		public static IImmutableDictionary<string, IImmutableList<IMethodMember>> Methods => TypeMemberCache.Methods[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => MemberCache.Methods[TypeHandle];
 
-		public static IImmutableDictionary<string, IPropertyMember> Properties => TypeMemberCache.Properties[TypeHandle];
+		public static IImmutableDictionary<string, PropertyMember> Properties => MemberCache.Properties[TypeHandle];
 
-		public static IImmutableDictionary<string, IStaticFieldMember> StaticFields => TypeMemberCache.StaticFields[TypeHandle];
+		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => MemberCache.StaticFields[TypeHandle];
 
-		public static IImmutableDictionary<string, IImmutableList<IStaticMethodMember>> StaticMethods => TypeMemberCache.StaticMethods[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => MemberCache.StaticMethods[TypeHandle];
 
-		public static IImmutableDictionary<string, IStaticPropertyMember> StaticProperties => TypeMemberCache.StaticProperties[TypeHandle];
+		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[TypeHandle];
 
 		public static T Create()
-			=> (T)Constructors.First(constructor => !constructor!.Parameters.Any())?.Invoke(null)
+			=> (T)Constructors.FirstValue(constructor => !constructor!.Parameters.Any())?.Invoke(null)
 				?? throw new ArgumentException($"Create instance of class {Name} failed with 0 parameters.");
 
 		public static T Create(params object[] parameters)
 		{
-			var constructor = Constructors.First(constructor => constructor!.IsCallableWith(parameters));
+			var constructor = Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters));
 			return (T)constructor?.Invoke(parameters) ?? throw new ArgumentException($"Create instance of class {Name} failed with {parameters?.Length ?? 0} parameters.");
 		}
 

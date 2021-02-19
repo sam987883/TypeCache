@@ -12,6 +12,7 @@ using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL
 {
@@ -41,11 +42,11 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true
-						|| property.Name.Is(selection));
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true
+						|| property.Name.Is(selection))!.Value;
 					return new OutputExpression
 					{
-						Expression = $"DELETED.[{property!.Name}]",
+						Expression = $"DELETED.[{property.Name}]",
 						As = selection
 					};
 				}).ToArray(context.SubFields.Count),
@@ -66,8 +67,8 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = output?.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"DELETED.[{property!.Name}]",
@@ -93,8 +94,8 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"DELETED.[{property!.Name}]",
@@ -118,8 +119,8 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"DELETED.[{property!.Name}]",
@@ -144,8 +145,8 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",
@@ -170,8 +171,8 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",
@@ -195,8 +196,8 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"[{property!.Name}]",
@@ -222,8 +223,8 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"[{property!.Name}]",
@@ -247,8 +248,8 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",
@@ -258,12 +259,12 @@ namespace TypeCache.GraphQL
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
-						?? TypeOf<T>.Properties.Get(column);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+						?? TypeOf<T>.Properties.GetValue(column)!.Value;
 					return new ColumnSet
 					{
 						Column = column,
-						Expression = property![set]
+						Expression = property.GetValue(set)
 					};
 				}).ToArray(),
 				Table = this.TableName,
@@ -283,8 +284,8 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",
@@ -294,12 +295,12 @@ namespace TypeCache.GraphQL
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
-						?? TypeOf<T>.Properties.Get(column);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+						?? TypeOf<T>.Properties.GetValue(column)!.Value;
 					return new ColumnSet
 					{
 						Column = column,
-						Expression = property![set]
+						Expression = property.GetValue(set)
 					};
 				}).ToArray(),
 				Table = this.TableName,
@@ -320,8 +321,8 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",
@@ -346,8 +347,8 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
-						?? TypeOf<T>.Properties.Get(selection);
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
 						Expression = $"INSERTED.[{property!.Name}]",

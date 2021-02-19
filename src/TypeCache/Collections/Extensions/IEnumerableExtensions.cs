@@ -23,13 +23,32 @@ namespace TypeCache.Collections.Extensions
 		public static IEnumerable<T> As<T>(this IEnumerable? @this)
 			where T : notnull
 		{
-			if (@this == null)
-				yield break;
-
-			var enumerator = @this.GetEnumerator();
-			while (enumerator.MoveNext())
-				if (enumerator.Current is T value)
-					yield return value;
+			int count;
+			switch (@this)
+			{
+				case null:
+					break;
+				case T[] array:
+					count = array.Length;
+					for (var i = 0; i < count; ++i)
+						yield return array[i];
+					break;
+				case ImmutableArray<T> immutableArray:
+					count = immutableArray.Length;
+					for (var i = 0; i < count; ++i)
+						yield return immutableArray[i];
+					break;
+				case List<T> list:
+					count = list.Count;
+					for (var i = 0; i < count; ++i)
+						yield return list[i];
+					break;
+				default:
+					foreach (var item in @this)
+						if (item is T value)
+							yield return value;
+					break;
+			}
 		}
 
 		public static T? Aggregate<T>(this IEnumerable<T>? @this, Func<T, T, T> aggregator)

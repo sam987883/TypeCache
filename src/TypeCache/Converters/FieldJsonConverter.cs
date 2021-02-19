@@ -23,16 +23,18 @@ namespace TypeCache.Converters
 					if (reader.Read())
 					{
 						var field = TypeOf<T>.Fields[name];
-						field[output] = reader.TokenType switch
+						var value = reader.TokenType switch
 						{
-							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.TypeHandle.ToType(), options),
-							JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.TypeHandle.ToType(), options),
+							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
+							JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
 							JsonTokenType.String => reader.GetString(),
-							JsonTokenType.Number => reader.TryGetInt64(out var value) ? value : reader.GetDecimal(),
+							JsonTokenType.Number => reader.TryGetInt64(out var number) ? number : reader.GetDecimal(),
 							JsonTokenType.True => true,
 							JsonTokenType.False => false,
 							_ => null
 						};
+						if (field.SetValue != null)
+							field.SetValue(output, value);
 					}
 				}
 
@@ -50,10 +52,10 @@ namespace TypeCache.Converters
 				TypeOf<T>.Fields.Values.If(field => field!.Getter != null).Do(field =>
 				{
 					writer.WritePropertyName(field!.Name);
-					var value = field[input];
+					var value = field.GetValue!(input);
 					if (value != null)
 					{
-						switch (field.NativeType)
+						switch (field.Type.NativeType)
 						{
 							case NativeType.DBNull:
 								writer.WriteNullValue();

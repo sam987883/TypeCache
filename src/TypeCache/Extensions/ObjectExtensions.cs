@@ -50,23 +50,23 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IFieldMember> GetTypeFields<T>([NotNull] this T @this)
+		public static IImmutableDictionary<string, FieldMember> GetTypeFields<T>([NotNull] this T @this)
 			=> @this!.GetType().GetFieldMembers();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableList<IIndexerMember> GetTypeIndexers<T>(this T @this)
+		public static IImmutableList<IndexerMember> GetTypeIndexers<T>(this T @this)
 			=> @this!.GetType().GetIndexerMembers();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IPropertyMember> GetTypeProperties<T>(this T @this)
+		public static IImmutableDictionary<string, PropertyMember> GetTypeProperties<T>(this T @this)
 			=> @this!.GetType().GetPropertyMembers();
 
 		public static void MapFields<T>(this T @this, T source)
 		{
 			if (source != null)
 				@this?.GetTypeFields()
-					.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
-					.Do(_ => _.Value[@this] = _.Value[source]);
+					.If(_ => _.Value.IsPublic && _.Value.Getter != null && _.Value.Setter != null)
+					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
 		public static ISet<string> MapFields<T, FROM>(this T @this, FROM source, bool compareCase = false)
@@ -78,7 +78,7 @@ namespace TypeCache.Extensions
 				var fromNames = fromFields.If(_ => _.Value.Getter != null).To(_ => _.Key);
 				var toNames = toFields.If(_ => _.Value.Setter != null).To(_ => _.Key);
 				var names = fromNames.Match(toNames, compareCase);
-				names.Do(name => toFields[name][@this] = fromFields[name][source]);
+				names.Do(name => toFields[name].SetValue!(@this, fromFields[name].GetValue!(source)));
 				return names;
 			}
 			return new HashSet<string>(0);
@@ -91,7 +91,7 @@ namespace TypeCache.Extensions
 			@this?.GetTypeFields().Do(_ =>
 			{
 				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
-					_.Value[@this] = value;
+					_.Value.SetValue!(@this, value);
 			});
 		}
 
@@ -99,8 +99,8 @@ namespace TypeCache.Extensions
 		{
 			if (source != null)
 				@this?.GetTypeProperties()
-					.If(_ => _.Value.Public && _.Value.Getter != null && _.Value.Setter != null)
-					.Do(_ => _.Value[@this] = _.Value[source]);
+					.If(_ => _.Value.IsPublic && _.Value.Getter != null && _.Value.Setter != null)
+					.Do(_ => _.Value.SetValue(@this, _.Value.GetValue(source)));
 		}
 
 		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source, bool compareCase = false)
@@ -112,7 +112,7 @@ namespace TypeCache.Extensions
 				var fromNames = fromProperties.If(_ => _.Value.Getter != null).To(_ => _.Key);
 				var toNames = toProperties.If(_ => _.Value.Setter != null).To(_ => _.Key);
 				var names = fromNames.Match(toNames, compareCase);
-				names.Do(name => toProperties[name][@this] = fromProperties[name][source]);
+				names.Do(name => toProperties[name].SetValue(@this, fromProperties[name].GetValue(source)));
 				return names;
 			}
 			return new HashSet<string>(0);
@@ -125,14 +125,14 @@ namespace TypeCache.Extensions
 			@this?.GetTypeProperties().Do(_ =>
 			{
 				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
-					_.Value[@this] = value;
+					_.Value.SetValue(@this, value);
 			});
 		}
 
 		public static IDictionary<string, object?>? ToFieldDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 
 		public static IDictionary<string, object?>? ToPropertyDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value[@this], compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 	}
 }
