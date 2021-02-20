@@ -20,8 +20,22 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Getter?.Invoke();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Implements<T>(this TypeMember @this)
+			where T : class
+			=> @this.Implements(typeof(T));
+
+		public static bool Implements(this TypeMember @this, RuntimeTypeHandle handle)
+			=> @this.BaseHandle.Equals(handle) || @this.InterfaceHandles.Any(handle.Equals);
+
+		public static bool Implements(this TypeMember @this, Type type)
+			=> @this.BaseHandle.Equals(type.TypeHandle) || (type.IsInterface && @this.InterfaceHandles.Any(type.TypeHandle.Equals));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this TypeMember @this)
 			=> @this.Handle.Equals(typeof(T).TypeHandle);
+
+		public static bool Is(this TypeMember @this, Type type)
+			=> @this.Handle.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && @this.Handle.ToType().ToGenericType() == type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsCallableWith(this ConstructorMember @this, params object?[]? arguments)

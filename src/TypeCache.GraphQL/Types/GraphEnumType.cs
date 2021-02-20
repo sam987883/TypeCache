@@ -14,18 +14,18 @@ namespace TypeCache.GraphQL.Types
 
 		public GraphEnumType()
 		{
-			var graphAttribute = Enum<T>.Attributes.First<Attribute, GraphAttribute>();
+			var graphAttribute = Enum<T>.Attributes.First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? Enum<T>.Name;
 
 			Enum<T>.Tokens.Do(token =>
 			{
-				graphAttribute = token.Attributes.First<Attribute, GraphAttribute>();
+				graphAttribute = token.Attributes.First<GraphAttribute>();
 				if (graphAttribute?.Ignore != true)
 					return;
 
 				var name = token.Name;
 				var description = graphAttribute?.Description;
-				var deprecationReason = token.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
+				var deprecationReason = token.Attributes.First<ObsoleteAttribute>()?.Message;
 
 				this.AddValue(name, description, token, deprecationReason);
 			});

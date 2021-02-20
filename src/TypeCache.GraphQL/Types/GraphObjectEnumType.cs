@@ -11,18 +11,18 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectEnumType()
 		{
-			var graphAttribute = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>();
+			var graphAttribute = TypeOf<T>.Attributes.First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? $"{TypeOf<T>.Name}Fields";
 
 			foreach (var property in TypeOf<T>.Properties.Values)
 			{
-				graphAttribute = property.Attributes.First<Attribute, GraphAttribute>();
+				graphAttribute = property.Attributes.First<GraphAttribute>();
 				if (graphAttribute?.Ignore == true)
 					continue;
 
 				var name = graphAttribute?.Name ?? property.Name;
 				var description = graphAttribute?.Description;
-				var deprecationReason = property.Attributes.First<Attribute, ObsoleteAttribute>()?.Message;
+				var deprecationReason = property.Attributes.First<ObsoleteAttribute>()?.Message;
 
 				this.AddValue(name, description, name, deprecationReason);
 			}

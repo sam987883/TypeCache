@@ -45,14 +45,15 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<Attribute, GraphAttribute>();
+				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
 				if (graphAttribute?.Ignore == true)
 					continue;
 
 				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.Type.CollectionType == CollectionType.None && parameter.Type.NativeType == NativeType.Object)
+				else if (parameter.Type.CollectionType == CollectionType.None
+					&& parameter.Type.NativeType == NativeType.None)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create(parameterType);
@@ -89,14 +90,15 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<Attribute, GraphAttribute>();
+				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
 				if (graphAttribute?.Ignore == true)
 					continue;
 
 				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.Type.CollectionType == CollectionType.None && parameter.Type.NativeType == NativeType.Object)
+				else if (parameter.Type.CollectionType == CollectionType.None
+					&& parameter.Type.NativeType == NativeType.None)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create();

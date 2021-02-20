@@ -4,9 +4,7 @@ namespace TypeCache.Reflection
 {
 	public enum NativeType
 	{
-		Object,
-		ValueType,
-		Enum,
+		None,
 		Boolean,
 		SByte,
 		Byte,

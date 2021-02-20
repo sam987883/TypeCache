@@ -11,67 +11,47 @@ namespace TypeCache
 {
 	public static class TypeOf<T>
 	{
-		static TypeOf()
-		{
-			var type = typeof(T);
-			var attributes = type.GetCustomAttributes(true);
+		private static readonly TypeMember Type = MemberCache.Types[typeof(T).TypeHandle];
 
-			Attributes = attributes.As<Attribute>().ToImmutable(attributes.Length)!;
-			CollectionType = type.ToCollectionType();
-			IsAsyncDisposable = type.Implements<IAsyncDisposable>();
-			IsClass = type.IsClass;
-			IsDisposable = type.Implements<IDisposable>();
-			IsInternal = !type.IsVisible;
-			IsNullable = type.Is(typeof(Nullable<>));
-			IsPublic = type.IsPublic;
-			IsTask = type.IsTask();
-			IsValueTask = type.IsValueTask();
-			IsValueType = type.IsValueType;
-			Name = Attributes.First<Attribute, NameAttribute>()?.Name ?? type.Name;
-			TypeHandle = type.TypeHandle;
-		}
+		public static IImmutableList<Attribute> Attributes => Type.Attributes;
 
-		public static IImmutableList<Attribute> Attributes { get; }
+		public static CollectionType CollectionType => Type.CollectionType;
 
-		public static CollectionType CollectionType { get; }
+		public static RuntimeTypeHandle? BaseHandle => Type.BaseHandle;
 
-		public static bool IsAsyncDisposable { get; }
+		public static RuntimeTypeHandle Handle => Type.Handle;
 
-		public static bool IsClass { get; }
+		public static IImmutableList<RuntimeTypeHandle> InterfaceHandles => Type.InterfaceHandles;
 
-		public static bool IsDisposable { get; }
+		public static bool IsInternal => Type.IsInternal;
 
-		public static bool IsInternal { get; }
+		public static bool IsNullable => Type.IsNullable;
 
-		public static bool IsNullable { get; }
+		public static bool IsPublic => Type.IsPublic;
 
-		public static bool IsPublic { get; }
+		public static bool IsTask => Type.IsTask;
 
-		public static bool IsTask { get; }
+		public static bool IsValueTask => Type.IsValueTask;
 
-		public static bool IsValueTask { get; }
+		public static Kind Kind => Type.Kind;
 
-		public static bool IsValueType { get; }
+		public static string Name => Type.Name;
 
-		public static string Name { get; }
+		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[Handle];
 
-		public static RuntimeTypeHandle TypeHandle { get; }
+		public static IImmutableDictionary<string, FieldMember> Fields => MemberCache.Fields[Handle];
 
-		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[TypeHandle];
+		public static IImmutableList<IndexerMember> Indexers => MemberCache.Indexers[Handle];
 
-		public static IImmutableDictionary<string, FieldMember> Fields => MemberCache.Fields[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => MemberCache.Methods[Handle];
 
-		public static IImmutableList<IndexerMember> Indexers => MemberCache.Indexers[TypeHandle];
+		public static IImmutableDictionary<string, PropertyMember> Properties => MemberCache.Properties[Handle];
 
-		public static IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => MemberCache.Methods[TypeHandle];
+		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => MemberCache.StaticFields[Handle];
 
-		public static IImmutableDictionary<string, PropertyMember> Properties => MemberCache.Properties[TypeHandle];
+		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => MemberCache.StaticMethods[Handle];
 
-		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => MemberCache.StaticFields[TypeHandle];
-
-		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => MemberCache.StaticMethods[TypeHandle];
-
-		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[TypeHandle];
+		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[Handle];
 
 		public static T Create()
 			=> (T)Constructors.FirstValue(constructor => !constructor!.Parameters.Any())?.Invoke(null)
@@ -88,7 +68,7 @@ namespace TypeCache
 		{
 			name.AssertNotBlank(nameof(name));
 
-			return Methods.Get(name).To(_ => _.Method).If<Delegate, D>().First();
+			return Methods.Get(name).To(_ => _.Method).First<D>();
 		}
 
 		public static D? GetStaticMethod<D>(string name)
@@ -96,7 +76,7 @@ namespace TypeCache
 		{
 			name.AssertNotBlank(nameof(name));
 
-			return StaticMethods.Get(name).To(staticMethodMember => staticMethodMember.Method).First<Delegate, D>();
+			return StaticMethods.Get(name).To(staticMethodMember => staticMethodMember.Method).First<D>();
 		}
 	}
 }

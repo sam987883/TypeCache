@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -47,7 +46,6 @@ namespace TypeCache.Reflection
 			};
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<ConstructorMember> CreateConstructorMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetConstructors(INSTANCE_BINDINGS).To(CreateConstructorMember).ToImmutable();
 
@@ -312,11 +310,16 @@ namespace TypeCache.Reflection
 			=> new TypeMember
 			{
 				Attributes = type.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
+				BaseHandle = type.BaseType?.TypeHandle,
 				CollectionType = type.ToCollectionType(),
 				Handle = type.TypeHandle,
+				InterfaceHandles = type.GetInterfaces().To(_ => _.TypeHandle).ToImmutable(type.GetInterfaces().Length),
+				IsInternal = !type.IsVisible,
 				IsNullable = type.IsNullable(),
+				IsPublic = type.IsPublic,
 				IsTask = type.IsTask(),
 				IsValueTask = type.IsValueTask(),
+				Kind = type.ToKind(),
 				Name = type.GetCustomAttribute<NameAttribute>(false)?.Name ?? type.Name,
 				NativeType = type.ToNativeType()
 			};

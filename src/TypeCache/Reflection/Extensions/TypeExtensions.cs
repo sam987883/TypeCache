@@ -176,14 +176,23 @@ namespace TypeCache.Reflection.Extensions
 				_ => null
 			};
 
+		public static Kind ToKind(this Type @this)
+			=> @this switch
+			{
+				_ when typeof(Delegate).IsAssignableFrom(@this.BaseType) => Kind.Delegate,
+				_ when @this.IsEnum => Kind.Enum,
+				_ when @this.IsInterface => Kind.Interface,
+				_ when @this.IsValueType => Kind.Struct,
+				_ => Kind.Class,
+			};
+
 		public static NativeType ToNativeType(this Type @this)
 			=> @this switch
 			{
-				_ when @this.IsNullable() || @this.IsTask() || @this.IsValueTask() => @this.GenericTypeArguments[0].ToNativeType(),
-				_ when @this.IsEnum => NativeType.Enum,
+				_ when @this.IsNullable() || @this.IsTask() || @this.IsValueTask() || @this.IsArray => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when @this.ToKind() == Kind.Enum => @this.GetEnumUnderlyingType().ToNativeType(),
 				_ when _NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType) => nativeType,
-				_ when @this.IsValueType => NativeType.ValueType,
-				_ => NativeType.Object
+				_ => NativeType.None
 			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

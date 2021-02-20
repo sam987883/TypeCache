@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -13,11 +12,11 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphInputType()
 		{
-			var graphAttribute = typeof(T).GetCustomAttributes(true).First<object, GraphAttribute>();
+			var graphAttribute = typeof(T).GetCustomAttributes(true).First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? $"{typeof(T).GetName()}Input";
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
+				.If(property => property!.Getter != null && property.Attributes.First<GraphAttribute>()?.Ignore != true)
 				.Do(property => this.AddField(property!.CreateFieldType(true)));
 		}
 	}

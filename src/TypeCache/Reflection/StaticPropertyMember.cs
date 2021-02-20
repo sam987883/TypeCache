@@ -26,8 +26,9 @@ namespace TypeCache.Reflection
 		public bool Equals(StaticPropertyMember other)
 			=> this.Type.Equals(other.Type) && this.Name.Is(other.Name, true);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> other switch { StaticPropertyMember member => member.Equals(this), _ => false };
+			=> (other is StaticPropertyMember member) ? this.Equals(member) : false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

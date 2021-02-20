@@ -33,8 +33,9 @@ namespace TypeCache.Reflection
 		public bool Equals(FieldMember other)
 			=> this.Type.Equals(other.Type) && this.Name.Is(other.Name, true);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> other switch { FieldMember member => member.Equals(this), _ => false };
+			=> (other is FieldMember member) ? this.Equals(member) : false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

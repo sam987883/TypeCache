@@ -42,7 +42,7 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true
 						|| property.Name.Is(selection))!.Value;
 					return new OutputExpression
 					{
@@ -67,7 +67,7 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = output?.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -94,7 +94,7 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -119,7 +119,7 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -145,7 +145,7 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -171,7 +171,7 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -196,7 +196,7 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -223,7 +223,7 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -248,7 +248,7 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -259,7 +259,7 @@ namespace TypeCache.GraphQL
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(column) == true)
 						?? TypeOf<T>.Properties.GetValue(column)!.Value;
 					return new ColumnSet
 					{
@@ -284,7 +284,7 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -295,7 +295,7 @@ namespace TypeCache.GraphQL
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(column) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(column) == true)
 						?? TypeOf<T>.Properties.GetValue(column)!.Value;
 					return new ColumnSet
 					{
@@ -321,7 +321,7 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{
@@ -347,7 +347,7 @@ namespace TypeCache.GraphQL
 				Input = batch.Map(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<Attribute, GraphAttribute>()?.Name.Is(selection) == true)
+					var property = TypeOf<T>.Properties.Values.FirstValue(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
 						?? TypeOf<T>.Properties.GetValue(selection)!.Value;
 					return new OutputExpression
 					{

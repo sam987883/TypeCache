@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -13,11 +12,11 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectType()
 		{
-			var graphAttribute = TypeOf<T>.Attributes.First<Attribute, GraphAttribute>();
+			var graphAttribute = TypeOf<T>.Attributes.First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? TypeOf<T>.Name;
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter != null && property.Attributes.First<Attribute, GraphAttribute>()?.Ignore != true)
+				.If(property => property!.Getter != null && property.Attributes.First<GraphAttribute>()?.Ignore != true)
 				.Do(property => this.AddField(property!.CreateFieldType(false)));
 		}
 	}

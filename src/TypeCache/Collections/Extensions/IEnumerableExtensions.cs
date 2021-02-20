@@ -51,6 +51,37 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Any<T>([NotNullWhen(true)] this IEnumerable? @this)
+			=> @this.If<T>().Any();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T? First<T>(this IEnumerable? @this)
+			where T : class
+			=> @this.If<T>().First();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T? FirstValue<T>(this IEnumerable? @this)
+			where T : struct
+			=> @this.If<T>().FirstValue();
+
+		public static IEnumerable<T> If<T>(this IEnumerable? @this)
+		{
+			return @this switch
+			{
+				null => Empty<T>(),
+				IEnumerable<T> items => items,
+				_ => getItems(@this)
+			};
+
+			static IEnumerable<T> getItems(IEnumerable enumerable)
+			{
+				foreach (var item in enumerable)
+					if (item is T value)
+						yield return value;
+			}
+		}
+
 		public static T? Aggregate<T>(this IEnumerable<T>? @this, Func<T, T, T> aggregator)
 			where T : struct
 		{
@@ -176,10 +207,6 @@ Yield:
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T?, bool> filter)
 			=> @this.If(filter).Any();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Any<T, V>([NotNullWhen(true)] this IEnumerable<T>? @this)
-			=> @this.If<T, V>().Any();
 
 		public static int Count<T>(this IEnumerable<T>? @this)
 			=> @this switch
@@ -339,18 +366,6 @@ Yield:
 
 			return @this.If(filter).First();
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static V? First<T, V>(this IEnumerable<T>? @this)
-			where T : class
-			where V : class
-			=> @this.If<T, V>().First();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static V? FirstValue<T, V>(this IEnumerable<T>? @this)
-			where T : class
-			where V : struct
-			=> @this.If<T, V>().FirstValue();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this)
@@ -599,39 +614,6 @@ Yield:
 					foreach (var item in @this)
 						if (filter(item))
 							yield return item;
-					yield break;
-			}
-		}
-
-		public static IEnumerable<V> If<T, V>(this IEnumerable<T?>? @this)
-		{
-			int count;
-			switch (@this)
-			{
-				case null:
-					yield break;
-				case T[] array:
-					count = array.Length;
-					for (var i = 0; i < count; ++i)
-						if (array[i] is V value)
-							yield return value;
-					yield break;
-				case ImmutableArray<T> immutableArray:
-					count = immutableArray.Length;
-					for (var i = 0; i < count; ++i)
-						if (immutableArray[i] is V value)
-							yield return value;
-					yield break;
-				case List<T> list:
-					count = list.Count;
-					for (var i = 0; i < count; ++i)
-						if (list[i] is V value)
-							yield return value;
-					yield break;
-				default:
-					foreach (var item in @this)
-						if (item is V value)
-							yield return value;
 					yield break;
 			}
 		}
