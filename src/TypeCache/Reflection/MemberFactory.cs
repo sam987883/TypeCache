@@ -19,6 +19,9 @@ namespace TypeCache.Reflection
 		private static readonly IComparer<ParameterInfo> ParameterSortComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position)!;
 
 		public static ConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo)
+			=> CreateConstructorMember(constructorInfo, MemberCache.Types[constructorInfo.DeclaringType!.TypeHandle]);
+
+		private static ConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo, TypeMember typeMember)
 		{
 			var parameterInfos = constructorInfo.GetParameters();
 			parameterInfos.Sort(ParameterSortComparer);
@@ -42,12 +45,16 @@ namespace TypeCache.Reflection
 				IsPublic = constructorInfo.IsPublic,
 				Method = method,
 				Parameters = parameterInfos.To(MemberFactory.CreateParameter).ToImmutableArray(),
-				Type = MemberCache.Types[constructorInfo.DeclaringType!.TypeHandle]
+				Type = typeMember
 			};
 		}
 
 		public static IImmutableList<ConstructorMember> CreateConstructorMembers(RuntimeTypeHandle typeHandle)
-			=> typeHandle.ToType().GetConstructors(INSTANCE_BINDINGS).To(CreateConstructorMember).ToImmutable();
+		{
+			var typeMember = MemberCache.Types[typeHandle];
+			return typeHandle.ToType().GetConstructors(INSTANCE_BINDINGS)
+				.To(constructorInfo => CreateConstructorMember(constructorInfo, typeMember)).ToImmutable();
+		}
 
 		public static FieldMember CreateFieldMember(FieldInfo fieldInfo)
 		{

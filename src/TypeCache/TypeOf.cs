@@ -53,15 +53,9 @@ namespace TypeCache
 
 		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[Handle];
 
-		public static T Create()
-			=> (T)Constructors.FirstValue(constructor => !constructor!.Parameters.Any())?.Invoke(null)
-				?? throw new ArgumentException($"Create instance of class {Name} failed with 0 parameters.");
-
 		public static T Create(params object[] parameters)
-		{
-			var constructor = Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters));
-			return (T)constructor?.Invoke(parameters) ?? throw new ArgumentException($"Create instance of class {Name} failed with {parameters?.Length ?? 0} parameters.");
-		}
+			=> (T?)Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
+				?? throw new ArgumentException($"Create instance of class {Name} failed with {parameters?.Length ?? 0} parameters.");
 
 		public static D? GetMethod<D>(string name)
 			where D : Delegate

@@ -69,20 +69,13 @@ namespace TypeCache.Reflection.Extensions
 		public static bool Any(this Type? @this, params Type[] types)
 			=> types.Any(@this.Is!);
 
+		public static object Create(this Type @this, params object[] parameters)
+			=> @this.GetConstructorCache().FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
+				?? throw new ArgumentException($"Create instance of class {@this.Name} failed with {parameters?.Length ?? 0} parameters.");
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this Type @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object Create(this Type @this, params object[] arguments)
-		{
-			@this.IsClass.Assert(nameof(@this.IsClass), true);
-
-			var parameter = nameof(arguments).Parameter<object[]>();
-			var type = typeof(TypeOf<>).MakeGenericType(@this);
-			var invoke = type.CallStatic(nameof(TypeOf<object>.Create), Type.EmptyTypes, parameter).Lambda<Func<object[], object>>().Compile();
-			return invoke(arguments);
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<ConstructorMember> GetConstructorCache(this Type @this)
@@ -129,11 +122,6 @@ namespace TypeCache.Reflection.Extensions
 		public static bool Is<T>(this Type? @this)
 			=> @this.Is(typeof(T));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is<T>(this RuntimeTypeHandle @this)
-			=> @this.Equals(typeof(T).TypeHandle);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is(this Type? @this, Type type)
 			=> @this == type || (@this?.IsGenericTypeDefinition == true && @this == type.ToGenericType());
 
@@ -153,7 +141,6 @@ namespace TypeCache.Reflection.Extensions
 		public static bool IsValueTask(this Type @this)
 			=> @this.Is<ValueTask>() || @this.ToGenericType() == typeof(ValueTask<>);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsVoid(this Type @this)
 			=> @this == typeof(void) || @this == typeof(Task) || @this == typeof(ValueTask);
 
@@ -194,9 +181,5 @@ namespace TypeCache.Reflection.Extensions
 				_ when _NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType) => nativeType,
 				_ => NativeType.None
 			};
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type ToType(this RuntimeTypeHandle @this)
-			=> Type.GetTypeFromHandle(@this);
 	}
 }
