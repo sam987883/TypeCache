@@ -76,8 +76,7 @@ namespace TypeCache
 			HasFlags = Type.Attributes.Any<FlagsAttribute>();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
-			Tokens = TypeOf<T>.StaticFields.Values.To(CreateToken).ToImmutable();
-			Map = Tokens.ToImmutableDictionary(_ => _.Value, Comparer);
+			Tokens = TypeOf<T>.StaticFields.Values.To(CreateToken).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
 		public static IImmutableList<Attribute> Attributes => Type.Attributes;
@@ -92,11 +91,9 @@ namespace TypeCache
 
 		public static bool IsPublic => Type.IsPublic;
 
-		public static IImmutableDictionary<T, Enum<T>.Token> Map { get; }
-
 		public static string Name => Type.Name;
 
-		public static IImmutableList<Token> Tokens { get; }
+		public static IImmutableDictionary<T, Enum<T>.Token> Tokens { get; }
 
 		public static NativeType UnderlyingType => Type.NativeType;
 

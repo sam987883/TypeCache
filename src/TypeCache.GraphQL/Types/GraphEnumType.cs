@@ -17,10 +17,10 @@ namespace TypeCache.GraphQL.Types
 			var graphAttribute = Enum<T>.Attributes.First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? Enum<T>.Name;
 
-			Enum<T>.Tokens.Do(token =>
+			Enum<T>.Tokens.Values.Do(token =>
 			{
 				graphAttribute = token.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore != true)
+				if (graphAttribute?.Ignore == true)
 					return;
 
 				var name = token.Name;

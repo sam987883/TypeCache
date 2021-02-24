@@ -4,18 +4,18 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Extensions
 {
 	public static class TypeExtensions
 	{
-		private static IDictionary<RuntimeTypeHandle, CollectionType> _GenericCollectionTypeMap =
+		private static IDictionary<RuntimeTypeHandle, CollectionType> CollectionGenericTypeMap =
 			new Dictionary<RuntimeTypeHandle, CollectionType>
 			{
 				{ typeof(Dictionary<,>).TypeHandle, CollectionType.Dictionary},
@@ -37,7 +37,7 @@ namespace TypeCache.Reflection.Extensions
 				{ typeof(Stack<>).TypeHandle, CollectionType.Stack}
 			};
 
-		private static IDictionary<RuntimeTypeHandle, NativeType> _NativeTypeMap =
+		private static IDictionary<RuntimeTypeHandle, NativeType> NativeTypeMap =
 			new Dictionary<RuntimeTypeHandle, NativeType>
 			{
 				{ typeof(bool).TypeHandle, NativeType.Boolean},
@@ -49,8 +49,12 @@ namespace TypeCache.Reflection.Extensions
 				{ typeof(uint).TypeHandle, NativeType.UInt32},
 				{ typeof(long).TypeHandle, NativeType.Int64},
 				{ typeof(ulong).TypeHandle, NativeType.UInt64},
+				{ typeof(IntPtr).TypeHandle, NativeType.IntPtr},
+				{ typeof(UIntPtr).TypeHandle, NativeType.UIntPtr},
+				{ typeof(BigInteger).TypeHandle, NativeType.BigInteger},
 				{ typeof(float).TypeHandle, NativeType.Single},
 				{ typeof(double).TypeHandle, NativeType.Double},
+				{ typeof(Half).TypeHandle, NativeType.Half},
 				{ typeof(decimal).TypeHandle, NativeType.Decimal},
 				{ typeof(char).TypeHandle, NativeType.Char},
 				{ typeof(DateTime).TypeHandle, NativeType.DateTime},
@@ -62,7 +66,8 @@ namespace TypeCache.Reflection.Extensions
 				{ typeof(JsonElement).TypeHandle, NativeType.JsonElement},
 				{ typeof(string).TypeHandle, NativeType.String},
 				{ typeof(DBNull).TypeHandle, NativeType.DBNull},
-				{ typeof(Uri).TypeHandle, NativeType.Uri}
+				{ typeof(Uri).TypeHandle, NativeType.Uri},
+				{ typeof(void).TypeHandle, NativeType.Void}
 			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,20 +119,23 @@ namespace TypeCache.Reflection.Extensions
 			where T : class
 			=> @this.Implements(typeof(T));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements(this Type @this, Type type)
-			=> @this.BaseType.Is(type) || @this.GetInterfaces().Any(_ => _.Is(type));
+			=> type.IsInterface ? @this.GetInterfaces().Any(_ => _.Is(type)) : @this.BaseType.Is(type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this Type? @this)
-			=> @this.Is(typeof(T));
+			=> @this == typeof(T);
 
 		public static bool Is(this Type? @this, Type type)
-			=> @this == type || (@this?.IsGenericTypeDefinition == true && @this == type.ToGenericType());
+			=> type.IsGenericTypeDefinition ? @this.ToGenericType() == type : @this == type;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAsync(this Type @this)
 			=> @this.IsTask() || @this.IsValueTask() || @this.Is(typeof(IAsyncEnumerable<>));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsLazy(this Type @this)
+			=> @this.ToGenericType() == typeof(Lazy<>);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullable(this Type @this)
@@ -150,7 +158,7 @@ namespace TypeCache.Reflection.Extensions
 				_ when @this.IsNullable() || @this.IsTask() || @this.IsValueTask() => @this.GenericTypeArguments[0].ToCollectionType(),
 				_ when @this == typeof(string) => CollectionType.None,
 				_ when @this.IsArray => CollectionType.Array,
-				_ when @this.Implements(typeof(IEnumerable)) => _GenericCollectionTypeMap.GetValue(@this.TypeHandle) ?? CollectionType.Enumerable,
+				_ when @this.Implements(typeof(IEnumerable)) => CollectionGenericTypeMap.GetValue(@this.TypeHandle) ?? CollectionType.Enumerable,
 				_ => CollectionType.None
 			};
 
@@ -176,9 +184,13 @@ namespace TypeCache.Reflection.Extensions
 		public static NativeType ToNativeType(this Type @this)
 			=> @this switch
 			{
-				_ when @this.IsNullable() || @this.IsTask() || @this.IsValueTask() || @this.IsArray => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType) => nativeType,
 				_ when @this.ToKind() == Kind.Enum => @this.GetEnumUnderlyingType().ToNativeType(),
-				_ when _NativeTypeMap.TryGetValue(@this.TypeHandle, out var nativeType) => nativeType,
+				_ when @this.IsLazy() => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when @this.IsNullable() => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when @this.IsTask() => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when @this.IsValueTask() => @this.GenericTypeArguments[0].ToNativeType(),
+				_ when @this.IsArray && @this.IsGenericType => @this.GenericTypeArguments[0].ToNativeType(),
 				_ => NativeType.None
 			};
 	}

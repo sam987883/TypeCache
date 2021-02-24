@@ -51,8 +51,8 @@ namespace TypeCache.GraphQL.Extensions
 			var graphAttribute = method.Attributes.First<GraphAttribute>();
 			var graphName = TypeOf<T>.Attributes.First<GraphAttribute>()?.Name ?? TypeOf<T>.Name;
 			graphName = string.Format(graphAttribute!.Name!, graphName);
-			var hasNotNull = method.ReturnAttributes.Any<NotNullAttribute>();
-			var graphType = method.ReturnAttributes.First<GraphAttribute>()?.Type ?? method.Type.GetGraphType(hasNotNull, false);
+			var hasNotNull = method.Return.Attributes.Any<NotNullAttribute>();
+			var graphType = method.Return.Attributes.First<GraphAttribute>()?.Type ?? method.Return.Type.GetGraphType(hasNotNull, false);
 			var description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null;
 			var deprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message;
 			var resolver = new MethodFieldResolver<T[]>(method, handler);
@@ -77,8 +77,8 @@ namespace TypeCache.GraphQL.Extensions
 			var graphAttribute = method.Attributes.First<GraphAttribute>();
 			var graphName = TypeOf<T>.Attributes.First<GraphAttribute>()?.Name ?? TypeOf<T>.Name;
 			graphName = string.Format(graphAttribute!.Name!, graphName);
-			var hasNotNull = method.ReturnAttributes.Any<NotNullAttribute>();
-			var graphType = method.ReturnAttributes.First<GraphAttribute>()?.Type ?? method.Type.GetGraphType(hasNotNull, false);
+			var hasNotNull = method.Return.Attributes.Any<NotNullAttribute>();
+			var graphType = method.Return.Attributes.First<GraphAttribute>()?.Type ?? method.Return.Type.GetGraphType(hasNotNull, false);
 			var description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null;
 			var deprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message;
 			var resolver = new MethodFieldResolver(method, handler);
@@ -124,11 +124,11 @@ namespace TypeCache.GraphQL.Extensions
 		public static FieldType CreateHandlerFieldType(this MethodMember method, object handler)
 		{
 			var graphAttribute = method.Attributes.First<GraphAttribute>();
-			var graphType = method.ReturnAttributes.First<GraphAttribute>()?.Type;
-			var hasNotNull = method.ReturnAttributes.Any<NotNullAttribute>();
+			var graphType = method.Return.Attributes.First<GraphAttribute>()?.Type;
+			var hasNotNull = method.Return.Attributes.Any<NotNullAttribute>();
 			return new FieldType
 			{
-				Type = graphType ?? method.Type.GetGraphType(hasNotNull, false),
+				Type = graphType ?? method.Return.Type.GetGraphType(hasNotNull, false),
 				Name = graphAttribute?.Name ?? method.Name,
 				Description = graphAttribute?.Description,
 				DeprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message,
@@ -142,8 +142,8 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			var graphAttribute = method.Attributes.First<GraphAttribute>();
 			var graphName = typeof(T).GetCustomAttribute<GraphAttribute>()?.Name ?? typeof(T).Name;
-			var hasNotNull = method.ReturnAttributes.Any<NotNullAttribute>();
-			var graphType = method.ReturnAttributes.First<GraphAttribute>()?.Type ?? method.Type.GetGraphType(hasNotNull, false);
+			var hasNotNull = method.Return.Attributes.Any<NotNullAttribute>();
+			var graphType = method.Return.Attributes.First<GraphAttribute>()?.Type ?? method.Return.Type.GetGraphType(hasNotNull, false);
 			return new FieldType
 			{
 				Type = typeof(ListGraphType<GraphObjectType<T>>),

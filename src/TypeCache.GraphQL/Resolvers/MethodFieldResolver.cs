@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
@@ -30,7 +29,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			var arguments = this.GetArguments(context).ToArray();
 			var value = this._Method.Invoke(this._Handler, arguments);
-			return this._Method.Type.IsValueTask
+			return this._Method.Return.IsValueTask
 				? ((ValueTask<T>)value!).AsTask()
 				: (Task<T>)value!;
 		}

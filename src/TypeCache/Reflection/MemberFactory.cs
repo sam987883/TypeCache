@@ -154,12 +154,17 @@ namespace TypeCache.Reflection
 				Invoke = invoke,
 				IsInternal = methodInfo.IsAssembly,
 				IsPublic = methodInfo.IsPublic,
-				IsVoid = methodInfo.ReturnType.IsVoid(),
 				Method = method,
 				Parameters = parameters,
 				Name = methodInfo.GetCustomAttribute<NameAttribute>()?.Name ?? methodInfo.Name,
-				ReturnAttributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-				Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+				Return = new ReturnParameter
+				{
+					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
+					IsTask = methodInfo.ReturnType.IsTask(),
+					IsValueTask = methodInfo.ReturnType.IsValueTask(),
+					IsVoid = methodInfo.ReturnType == typeof(void),
+					Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+				}
 			};
 		}
 
@@ -263,12 +268,17 @@ namespace TypeCache.Reflection
 				Invoke = invoke,
 				IsInternal = methodInfo.IsAssembly,
 				IsPublic = methodInfo.IsPublic,
-				IsVoid = methodInfo.ReturnType.IsVoid(),
 				Method = method,
 				Parameters = parameters,
 				Name = methodInfo.GetCustomAttribute<NameAttribute>()?.Name ?? methodInfo.Name,
-				ReturnAttributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-				Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+				Return = new ReturnParameter
+				{
+					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
+					IsTask = methodInfo.ReturnType.IsTask(),
+					IsValueTask = methodInfo.ReturnType.IsValueTask(),
+					IsVoid = methodInfo.ReturnType == typeof(void),
+					Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+				}
 			};
 		}
 
@@ -324,8 +334,6 @@ namespace TypeCache.Reflection
 				IsInternal = !type.IsVisible,
 				IsNullable = type.IsNullable(),
 				IsPublic = type.IsPublic,
-				IsTask = type.IsTask(),
-				IsValueTask = type.IsValueTask(),
 				Kind = type.ToKind(),
 				Name = type.GetCustomAttribute<NameAttribute>(false)?.Name ?? type.Name,
 				NativeType = type.ToNativeType()

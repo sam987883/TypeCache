@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
@@ -20,25 +18,21 @@ namespace TypeCache.Reflection
 
 		public bool IsPublic { get; init; }
 
-		public bool IsVoid { get; init; }
-
 		public Delegate Method { get; init; }
 
 		public string Name { get; init; }
 
 		public IImmutableList<Parameter> Parameters { get; init; }
 
-		public IImmutableList<Attribute> ReturnAttributes { get; init; }
+		public ReturnParameter Return { get; init; }
 
-		public TypeMember Type { get; init; }
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(StaticMethodMember other)
-			=> this.Type.Equals(other.Type) && this.Name.Is(other.Name, true)
-				&& this.Parameters.Match(other.Parameters);
+			=> this.Handle.Equals(other.Handle);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> (other is StaticMethodMember member) ? this.Equals(member) : false;
+			=> other is StaticMethodMember member && this.Equals(member);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

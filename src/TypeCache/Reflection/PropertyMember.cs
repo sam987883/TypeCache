@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
 
 namespace TypeCache.Reflection
 {
@@ -24,11 +23,11 @@ namespace TypeCache.Reflection
 		public MethodMember? Setter { get; init; }
 
 		public bool Equals(PropertyMember other)
-			=> this.Type.Equals(other.Type) && this.Name.Is(other.Name, true);
+			=> this.Getter?.Handle == other.Getter?.Handle && this.Setter?.Handle == other.Setter?.Handle;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> (other is PropertyMember member) ? this.Equals(member) : false;
+			=> other is PropertyMember member && this.Equals(member);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

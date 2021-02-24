@@ -24,10 +24,6 @@ namespace TypeCache.Reflection
 
 		public bool IsPublic { get; init; }
 
-		public bool IsTask { get; init; }
-
-		public bool IsValueTask { get; init; }
-
 		public Kind Kind { get; init; }
 
 		public string Name { get; init; }
@@ -40,7 +36,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> (other is TypeMember member) ? this.Equals(member) : false;
+			=> other is TypeMember member && this.Equals(member);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

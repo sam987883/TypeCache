@@ -37,7 +37,7 @@ namespace TypeCache.GraphQL.Types
 			var handler = TypeOf<T>.Create();
 			TypeOf<T>.Methods.Values.Gather().If(method => method!.Attributes.Any<GraphMutationAttribute>()).Do(method =>
 			{
-				if (method!.IsVoid)
+				if (method!.Return.IsVoid)
 					throw new NotSupportedException("Queries cannot have a return type that is void, Task or ValueTask.");
 
 				this.Mutation.AddField(method.CreateHandlerFieldType(handler));
@@ -45,7 +45,7 @@ namespace TypeCache.GraphQL.Types
 
 			TypeOf<T>.Methods.Values.Gather().If(method => method!.Attributes.Any<GraphQueryAttribute>()).Do(method =>
 			{
-				if (method!.IsVoid)
+				if (method!.Return.IsVoid)
 					throw new NotSupportedException("Mutations cannot have a return type that is void, Task or ValueTask.");
 
 				this.Query.AddField(method.CreateHandlerFieldType(handler));

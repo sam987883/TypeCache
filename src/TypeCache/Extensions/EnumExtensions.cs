@@ -12,7 +12,7 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IImmutableList<Attribute> Attributes<T>(this T @this)
 			where T : struct, Enum
-			=> Enum<T>.Map[@this].Attributes;
+			=> Enum<T>.Tokens[@this].Attributes;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Hex<T>(this T @this)
@@ -22,7 +22,7 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Name<T>(this T @this)
 			where T : struct, Enum
-			=> Enum<T>.Map[@this].Name;
+			=> Enum<T>.Tokens[@this].Name;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Number<T>(this T @this)

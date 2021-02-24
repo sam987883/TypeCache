@@ -14,8 +14,12 @@ namespace TypeCache.Reflection
 		UInt32,
 		Int64,
 		UInt64,
+		BigInteger,
+		IntPtr,
+		UIntPtr,
 		Single,
 		Double,
+		Half,
 		Decimal,
 		DateTime,
 		DateTimeOffset,
@@ -27,6 +31,7 @@ namespace TypeCache.Reflection
 		JsonElement,
 		String,
 		Uri,
-		DBNull
+		DBNull,
+		Void
 	}
 }

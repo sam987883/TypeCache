@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
 
 namespace TypeCache.Reflection
 {
@@ -29,12 +28,13 @@ namespace TypeCache.Reflection
 
 		public TypeMember Type { get; init; }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(StaticFieldMember other)
-			=> this.Type.Equals(other.Type) && this.Name.Is(other.Name, true);
+			=> this.Handle.Equals(other.Handle);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? other)
-			=> (other is StaticFieldMember member) ? this.Equals(member) : false;
+			=> other is StaticFieldMember member && this.Equals(member);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

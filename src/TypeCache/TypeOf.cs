@@ -29,10 +29,6 @@ namespace TypeCache
 
 		public static bool IsPublic => Type.IsPublic;
 
-		public static bool IsTask => Type.IsTask;
-
-		public static bool IsValueTask => Type.IsValueTask;
-
 		public static Kind Kind => Type.Kind;
 
 		public static string Name => Type.Name;
@@ -70,7 +66,7 @@ namespace TypeCache
 		{
 			name.AssertNotBlank(nameof(name));
 
-			return StaticMethods.Get(name).To(staticMethodMember => staticMethodMember.Method).First<D>();
+			return StaticMethods.Get(name).To(_ => _.Method).First<D>();
 		}
 	}
 }
