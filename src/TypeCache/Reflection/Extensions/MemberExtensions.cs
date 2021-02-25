@@ -25,10 +25,10 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Implements(typeof(T));
 
 		public static bool Implements(this TypeMember @this, RuntimeTypeHandle handle)
-			=> @this.BaseHandle.Equals(handle) || @this.InterfaceHandles.Any(handle.Equals);
+			=> @this.BaseTypeHandle.Equals(handle) || @this.InterfaceTypeHandles.Any(handle.Equals);
 
 		public static bool Implements(this TypeMember @this, Type type)
-			=> @this.BaseHandle.Equals(type.TypeHandle) || (type.IsInterface && @this.InterfaceHandles.Any(type.TypeHandle.Equals));
+			=> @this.BaseTypeHandle.Equals(type.TypeHandle) || (type.IsInterface && @this.InterfaceTypeHandles.Any(type.TypeHandle.Equals));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this TypeMember @this)
@@ -74,6 +74,10 @@ namespace TypeCache.Reflection.Extensions
 			}
 			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsEnumerable(this TypeMember @this)
+			=> @this.Handle.ToType().IsEnumerable();
 
 		public static bool Match(this IReadOnlyList<Parameter> @this, IReadOnlyList<Parameter> parameters)
 		{

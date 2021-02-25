@@ -53,7 +53,7 @@ namespace TypeCache.Reflection.Mappers
 
 					if (fromProperty.Type.Equals(toProperty.Type))
 						settings[setting.To] = setting;
-					else if (fromProperty.Type.NativeType == NativeType.None || toProperty.Type.NativeType == NativeType.None)
+					else if (fromProperty.Type.SystemType == SystemType.Unknown || toProperty.Type.SystemType == SystemType.Unknown)
 					{
 						var fromTypeName = fromProperty.Type.Name;
 						var toTypeName = toProperty.Type.Name;

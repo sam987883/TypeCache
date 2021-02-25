@@ -95,7 +95,7 @@ namespace TypeCache
 
 		public static IImmutableDictionary<T, Enum<T>.Token> Tokens { get; }
 
-		public static NativeType UnderlyingType => Type.NativeType;
+		public static SystemType UnderlyingType => Type.SystemType;
 
 		public static RuntimeTypeHandle UnderlyingTypeHandle { get; }
 	}

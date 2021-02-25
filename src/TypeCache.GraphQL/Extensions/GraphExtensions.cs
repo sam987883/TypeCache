@@ -186,7 +186,7 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			var graphType = @this.Handle.ToType();
 
-			if (graphType.IsArray && @this.NativeType != NativeType.String)
+			if (graphType.IsArray && @this.SystemType != SystemType.String)
 				graphType = graphType.GetElementType();
 			else if (graphType.IsGenericType)
 				graphType = graphType.GenericTypeArguments.First();
@@ -201,10 +201,10 @@ namespace TypeCache.GraphQL.Extensions
 				_ => typeof(GraphEnumType<>).MakeGenericType(graphType!)
 			};
 
-			if (@this.CollectionType != CollectionType.None)
+			if (@this.IsEnumerable())
 				graphType = typeof(ListGraphType<>).MakeGenericType(graphType);
 
-			if (hasNotNull || (!@this.IsNullable && (@this.Kind == Kind.Struct || @this.Kind == Kind.Enum)))
+			if (hasNotNull || !@this.IsNullable)
 				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
 
 			return graphType;

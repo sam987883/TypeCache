@@ -84,7 +84,7 @@ namespace TypeCache.Reflection
 				GetValue = getValue,
 				Handle = fieldInfo.FieldHandle,
 				IsInternal = fieldInfo.IsAssembly,
-				Name = fieldInfo.GetCustomAttribute<NameAttribute>(false)?.Name ?? fieldInfo.Name,
+				Name = fieldInfo.GetName(),
 				IsPublic = fieldInfo.IsPublic,
 				Setter = setter,
 				SetValue = setValue,
@@ -147,6 +147,8 @@ namespace TypeCache.Reflection
 				? Expression.Block(call, Expression.Constant(null)).Lambda<InvokeType>(instance, arguments).Compile()
 				: call.As<object>().Lambda<InvokeType>(instance, arguments).Compile();
 
+			var returnType = MemberCache.Types[methodInfo.ReturnType.TypeHandle];
+
 			return new MethodMember
 			{
 				Attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
@@ -156,14 +158,14 @@ namespace TypeCache.Reflection
 				IsPublic = methodInfo.IsPublic,
 				Method = method,
 				Parameters = parameters,
-				Name = methodInfo.GetCustomAttribute<NameAttribute>()?.Name ?? methodInfo.Name,
+				Name = methodInfo.GetName(),
 				Return = new ReturnParameter
 				{
 					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-					IsTask = methodInfo.ReturnType.IsTask(),
-					IsValueTask = methodInfo.ReturnType.IsValueTask(),
-					IsVoid = methodInfo.ReturnType == typeof(void),
-					Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+					IsTask = returnType.SystemType == SystemType.Task,
+					IsValueTask = returnType.SystemType == SystemType.ValueTask,
+					IsVoid = returnType.SystemType == SystemType.Void,
+					Type = returnType
 				}
 			};
 		}
@@ -185,7 +187,7 @@ namespace TypeCache.Reflection
 				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
 				Getter = propertyInfo.GetMethod != null ? CreateMethodMember(propertyInfo.GetMethod) : null,
 				IsInternal = methodInfo.IsAssembly,
-				Name = propertyInfo.GetCustomAttribute<NameAttribute>()?.Name ?? propertyInfo.Name,
+				Name = propertyInfo.GetName(),
 				IsPublic = methodInfo.IsPublic,
 				Setter = propertyInfo.SetMethod != null ? CreateMethodMember(propertyInfo.SetMethod) : null,
 				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
@@ -225,7 +227,7 @@ namespace TypeCache.Reflection
 				GetValue = getValue,
 				Handle = fieldInfo.FieldHandle,
 				Internal = fieldInfo.IsAssembly,
-				Name = fieldInfo.GetCustomAttribute<NameAttribute>(false)?.Name ?? fieldInfo.Name,
+				Name = fieldInfo.GetName(),
 				Public = fieldInfo.IsPublic,
 				Setter = setter,
 				SetValue = setValue,
@@ -261,6 +263,8 @@ namespace TypeCache.Reflection
 				? methodInfo.CallStatic(methodParameters).Lambda(methodParameters).Compile()
 				: call.Lambda().Compile();
 
+			var returnType = MemberCache.Types[methodInfo.ReturnType.TypeHandle];
+
 			return new StaticMethodMember
 			{
 				Attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
@@ -270,14 +274,14 @@ namespace TypeCache.Reflection
 				IsPublic = methodInfo.IsPublic,
 				Method = method,
 				Parameters = parameters,
-				Name = methodInfo.GetCustomAttribute<NameAttribute>()?.Name ?? methodInfo.Name,
+				Name = methodInfo.GetName(),
 				Return = new ReturnParameter
 				{
 					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-					IsTask = methodInfo.ReturnType.IsTask(),
-					IsValueTask = methodInfo.ReturnType.IsValueTask(),
-					IsVoid = methodInfo.ReturnType == typeof(void),
-					Type = MemberCache.Types[methodInfo.ReturnType.TypeHandle]
+					IsTask = returnType.SystemType == SystemType.Task,
+					IsValueTask = returnType.SystemType == SystemType.ValueTask,
+					IsVoid = returnType.SystemType == SystemType.Void,
+					Type = returnType
 				}
 			};
 		}
@@ -294,7 +298,7 @@ namespace TypeCache.Reflection
 			{
 				Type = MemberCache.Types[parameterInfo.ParameterType.TypeHandle],
 				Attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-				Name = parameterInfo.GetCustomAttribute<NameAttribute>()?.Name ?? parameterInfo.Name!,
+				Name = parameterInfo.GetName(),
 				DefaultValue = parameterInfo.DefaultValue,
 				HasDefaultValue = parameterInfo.HasDefaultValue,
 				IsOptional = parameterInfo.IsOptional,
@@ -311,7 +315,7 @@ namespace TypeCache.Reflection
 				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
 				Getter = propertyInfo.GetMethod != null ? CreateStaticMethodMember(propertyInfo.GetMethod) : null,
 				IsInternal = methodInfo.IsAssembly,
-				Name = propertyInfo.GetCustomAttribute<NameAttribute>()?.Name ?? propertyInfo.Name,
+				Name = propertyInfo.GetName(),
 				IsPublic = methodInfo.IsPublic,
 				Setter = propertyInfo.SetMethod != null ? CreateStaticMethodMember(propertyInfo.SetMethod) : null,
 				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
@@ -324,19 +328,25 @@ namespace TypeCache.Reflection
 				.ToImmutable(StringComparer.Ordinal);
 
 		public static TypeMember CreateTypeMember(Type type)
-			=> new TypeMember
+		{
+			var interfaces = type.GetInterfaces();
+			var kind = type.GetKind();
+			var systemType = type.GetSystemType();
+			return new TypeMember
 			{
 				Attributes = type.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
-				BaseHandle = type.BaseType?.TypeHandle,
-				CollectionType = type.ToCollectionType(),
+				BaseTypeHandle = type.BaseType?.TypeHandle,
+				GenericTypeHandles = type.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable(),
 				Handle = type.TypeHandle,
-				InterfaceHandles = type.GetInterfaces().To(_ => _.TypeHandle).ToImmutable(type.GetInterfaces().Length),
+				InterfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutable(interfaces.Length),
+				IsEnumerable = type.IsEnumerable(),
 				IsInternal = !type.IsVisible,
-				IsNullable = type.IsNullable(),
+				IsNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable,
 				IsPublic = type.IsPublic,
-				Kind = type.ToKind(),
-				Name = type.GetCustomAttribute<NameAttribute>(false)?.Name ?? type.Name,
-				NativeType = type.ToNativeType()
+				Kind = kind,
+				Name = type.GetName(),
+				SystemType = systemType
 			};
+		}
 	}
 }

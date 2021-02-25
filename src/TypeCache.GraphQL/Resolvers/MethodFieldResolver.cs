@@ -51,8 +51,7 @@ namespace TypeCache.GraphQL.Resolvers
 				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.Type.CollectionType == CollectionType.None
-					&& parameter.Type.NativeType == NativeType.None)
+				else if (parameter.Type.SystemType == SystemType.Unknown)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create(parameterType);
@@ -96,8 +95,7 @@ namespace TypeCache.GraphQL.Resolvers
 				var parameterType = parameter.Type.Handle.ToType();
 				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
-				else if (parameter.Type.CollectionType == CollectionType.None
-					&& parameter.Type.NativeType == NativeType.None)
+				else if (parameter.Type.SystemType == SystemType.Unknown)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create();

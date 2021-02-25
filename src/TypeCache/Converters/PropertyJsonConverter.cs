@@ -51,66 +51,66 @@ namespace TypeCache.Reflection.Converters
 					var value = property.GetValue(input);
 					if (value != null)
 					{
-						switch (property.Type.NativeType)
+						switch (property.Type.SystemType)
 						{
-							case NativeType.DBNull:
+							case SystemType.DBNull:
 								writer.WriteNullValue();
 								break;
-							case NativeType.Boolean:
+							case SystemType.Boolean:
 								writer.WriteBooleanValue((bool)value);
 								break;
-							case NativeType.SByte:
+							case SystemType.SByte:
 								writer.WriteNumberValue((sbyte)value);
 								break;
-							case NativeType.Byte:
+							case SystemType.Byte:
 								writer.WriteNumberValue((byte)value);
 								break;
-							case NativeType.Int16:
+							case SystemType.Int16:
 								writer.WriteNumberValue((short)value);
 								break;
-							case NativeType.UInt16:
+							case SystemType.UInt16:
 								writer.WriteNumberValue((ushort)value);
 								break;
-							case NativeType.Int32:
+							case SystemType.Int32:
 								writer.WriteNumberValue((int)value);
 								break;
-							case NativeType.UInt32:
+							case SystemType.UInt32:
 								writer.WriteNumberValue((uint)value);
 								break;
-							case NativeType.Int64:
+							case SystemType.Int64:
 								writer.WriteNumberValue((long)value);
 								break;
-							case NativeType.UInt64:
+							case SystemType.UInt64:
 								writer.WriteNumberValue((ulong)value);
 								break;
-							case NativeType.Single:
+							case SystemType.Single:
 								writer.WriteNumberValue((float)value);
 								break;
-							case NativeType.Double:
+							case SystemType.Double:
 								writer.WriteNumberValue((double)value);
 								break;
-							case NativeType.Decimal:
+							case SystemType.Decimal:
 								writer.WriteNumberValue((decimal)value);
 								break;
-							case NativeType.DateTime:
+							case SystemType.DateTime:
 								writer.WriteStringValue((DateTime)value);
 								break;
-							case NativeType.DateTimeOffset:
+							case SystemType.DateTimeOffset:
 								writer.WriteStringValue((DateTimeOffset)value);
 								break;
-							case NativeType.TimeSpan:
+							case SystemType.TimeSpan:
 								writer.WriteStringValue(((TimeSpan)value).ToString("c"));
 								break;
-							case NativeType.Guid:
+							case SystemType.Guid:
 								writer.WriteStringValue((Guid)value);
 								break;
-							case NativeType.Char:
-							case NativeType.Index:
-							case NativeType.Range:
-							case NativeType.Uri:
+							case SystemType.Char:
+							case SystemType.Index:
+							case SystemType.Range:
+							case SystemType.Uri:
 								writer.WriteStringValue(value.ToString());
 								break;
-							case NativeType.String:
+							case SystemType.String:
 								writer.WriteStringValue((string)value);
 								break;
 							default:

@@ -10,13 +10,15 @@ namespace TypeCache.Reflection
 	{
 		public IImmutableList<Attribute> Attributes { get; init; }
 
-		public RuntimeTypeHandle? BaseHandle { get; init; }
+		public RuntimeTypeHandle? BaseTypeHandle { get; init; }
 
-		public CollectionType CollectionType { get; init; }
+		public IImmutableList<RuntimeTypeHandle> GenericTypeHandles { get; init; }
 
 		public RuntimeTypeHandle Handle { get; init; }
 
-		public IImmutableList<RuntimeTypeHandle> InterfaceHandles { get; init; }
+		public IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles { get; init; }
+
+		public bool IsEnumerable { get; init; }
 
 		public bool IsInternal { get; init; }
 
@@ -28,7 +30,7 @@ namespace TypeCache.Reflection
 
 		public string Name { get; init; }
 
-		public NativeType NativeType { get; init; }
+		public SystemType SystemType { get; init; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(TypeMember other)

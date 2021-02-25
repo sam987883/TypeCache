@@ -52,7 +52,7 @@ namespace TypeCache.Reflection.Mappers
 
 					if (fromField.Type == toField.Type)
 						settings[setting.To] = setting;
-					else if (fromField.Type.NativeType == NativeType.None || toField.Type.NativeType == NativeType.None)
+					else if (fromField.Type.SystemType == SystemType.Unknown || toField.Type.SystemType == SystemType.Unknown)
 					{
 						var fromTypeName = fromField.Type.Name;
 						var toTypeName = toField.Type.Name;

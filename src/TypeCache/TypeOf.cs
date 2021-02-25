@@ -15,23 +15,31 @@ namespace TypeCache
 
 		public static IImmutableList<Attribute> Attributes => Type.Attributes;
 
-		public static CollectionType CollectionType => Type.CollectionType;
+		public static RuntimeTypeHandle? BaseTypeHandle => Type.BaseTypeHandle;
 
-		public static RuntimeTypeHandle? BaseHandle => Type.BaseHandle;
+		public static TypeMember? BaseType => Type.BaseTypeHandle.HasValue ? MemberCache.Types[Type.BaseTypeHandle.Value] : null;
+
+		public static IImmutableList<RuntimeTypeHandle> GenericTypeHandles => Type.GenericTypeHandles;
+
+		public static TypeMember[] GenericTypes => Type.GenericTypeHandles.To(_ => MemberCache.Types[_]).ToArray();
 
 		public static RuntimeTypeHandle Handle => Type.Handle;
 
-		public static IImmutableList<RuntimeTypeHandle> InterfaceHandles => Type.InterfaceHandles;
+		public static IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles => Type.InterfaceTypeHandles;
+
+		public static TypeMember[] InterfaceTypes => Type.InterfaceTypeHandles.To(_ => MemberCache.Types[_]).ToArray();
+
+		public static bool IsEnumerable => Type.IsEnumerable;
 
 		public static bool IsInternal => Type.IsInternal;
-
-		public static bool IsNullable => Type.IsNullable;
 
 		public static bool IsPublic => Type.IsPublic;
 
 		public static Kind Kind => Type.Kind;
 
 		public static string Name => Type.Name;
+
+		public static SystemType SystemType => Type.SystemType;
 
 		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[Handle];
 
@@ -51,7 +59,7 @@ namespace TypeCache
 
 		public static T Create(params object[] parameters)
 			=> (T?)Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
-				?? throw new ArgumentException($"Create instance of class {Name} failed with {parameters?.Length ?? 0} parameters.");
+				?? throw new ArgumentException($"{nameof(TypeOf<T>)}<{Name}>.{nameof(Create)}: failed with {parameters?.Length ?? 0} parameters.");
 
 		public static D? GetMethod<D>(string name)
 			where D : Delegate
