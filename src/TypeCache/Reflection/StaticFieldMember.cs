@@ -20,11 +20,11 @@ namespace TypeCache.Reflection
 
 		public Delegate? Getter { get; init; }
 
-		public Func<object?>? GetValue { get; init; }
+		public StaticGetValue? GetValue { get; init; }
 
 		public Delegate? Setter { get; init; }
 
-		public Action<object?>? SetValue { get; init; }
+		public StaticSetValue? SetValue { get; init; }
 
 		public TypeMember Type { get; init; }
 

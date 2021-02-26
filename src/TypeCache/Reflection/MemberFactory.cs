@@ -64,17 +64,17 @@ namespace TypeCache.Reflection
 			ParameterExpression instance = nameof(instance).Parameter(fieldInfo.DeclaringType!);
 			var field = instance.Field(fieldInfo);
 			var getter = field.Lambda(instance).Compile();
-			var getValue = field.As<object>().Lambda<Func<object, object?>>(instance).Compile();
+			var getValue = field.As<object>().Lambda<GetValue>(instance).Compile();
 
 			Delegate? setter = null;
-			Action<object, object?>? setValue = null;
+			SetValue? setValue = null;
 			if (!fieldInfo.IsInitOnly)
 			{
 				ParameterExpression value = nameof(value).Parameter(fieldInfo.FieldType);
 				setter = field.Assign(value).LambdaAction(instance, value).Compile();
 
 				value = nameof(value).Parameter<object>();
-				setValue = field.Assign(value.SystemConvert(fieldInfo.FieldType)).Lambda<Action<object, object?>>(instance, value).Compile();
+				setValue = field.Assign(value.SystemConvert(fieldInfo.FieldType)).Lambda<SetValue>(instance, value).Compile();
 			}
 
 			return new FieldMember
@@ -182,14 +182,23 @@ namespace TypeCache.Reflection
 			var methodInfo = propertyInfo.GetMethod ?? propertyInfo.SetMethod;
 			methodInfo!.IsStatic.Assert(nameof(methodInfo.IsStatic), false);
 
+			ParameterExpression instance = nameof(instance).Parameter(propertyInfo.DeclaringType!);
+			var property = instance.Property(propertyInfo);
+			var getValue = propertyInfo.CanRead ? property.As<object>().Lambda<GetValue>(instance).Compile() : null;
+
+			ParameterExpression value = nameof(value).Parameter<object>();
+			var setValue = propertyInfo.CanWrite ? property.Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<SetValue>(instance, value).Compile() : null;
+
 			return new PropertyMember
 			{
 				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
 				Getter = propertyInfo.GetMethod != null ? CreateMethodMember(propertyInfo.GetMethod) : null,
+				GetValue = getValue,
 				IsInternal = methodInfo.IsAssembly,
 				Name = propertyInfo.GetName(),
 				IsPublic = methodInfo.IsPublic,
 				Setter = propertyInfo.SetMethod != null ? CreateMethodMember(propertyInfo.SetMethod) : null,
+				SetValue = setValue,
 				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
 			};
 		}
@@ -207,17 +216,17 @@ namespace TypeCache.Reflection
 
 			var field = Expression.Field(null, fieldInfo);
 			var getter = field.Lambda().Compile();
-			var getValue = field.As<object>().Lambda<Func<object?>>().Compile();
+			var getValue = field.As<object>().Lambda<StaticGetValue>().Compile();
 
 			Delegate? setter = null;
-			Action<object?>? setValue = null;
+			StaticSetValue? setValue = null;
 			if (!fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)
 			{
 				ParameterExpression value = nameof(value).Parameter(fieldInfo.FieldType);
 				setter = field.Assign(value).LambdaAction(value).Compile();
 
 				value = nameof(value).Parameter<object>();
-				setValue = field.Assign(value.SystemConvert(fieldInfo.FieldType)).Lambda<Action<object?>>(value).Compile();
+				setValue = field.Assign(value.SystemConvert(fieldInfo.FieldType)).Lambda<StaticSetValue>(value).Compile();
 			}
 
 			return new StaticFieldMember
@@ -310,14 +319,22 @@ namespace TypeCache.Reflection
 			var methodInfo = propertyInfo.GetMethod ?? propertyInfo.SetMethod;
 			methodInfo!.IsStatic.Assert(nameof(methodInfo.IsStatic), true);
 
+			var property = Expression.Property(null, propertyInfo);
+			var getValue = propertyInfo.CanRead ? property.As<object>().Lambda<StaticGetValue>().Compile() : null;
+
+			ParameterExpression value = nameof(value).Parameter<object>();
+			var setValue = propertyInfo.CanWrite ? property.Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<StaticSetValue>(value).Compile() : null;
+
 			return new StaticPropertyMember
 			{
 				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray(),
 				Getter = propertyInfo.GetMethod != null ? CreateStaticMethodMember(propertyInfo.GetMethod) : null,
+				GetValue = getValue,
 				IsInternal = methodInfo.IsAssembly,
 				Name = propertyInfo.GetName(),
 				IsPublic = methodInfo.IsPublic,
 				Setter = propertyInfo.SetMethod != null ? CreateStaticMethodMember(propertyInfo.SetMethod) : null,
+				SetValue = setValue,
 				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
 			};
 		}

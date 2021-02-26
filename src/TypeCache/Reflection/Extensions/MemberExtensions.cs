@@ -12,14 +12,6 @@ namespace TypeCache.Reflection.Extensions
 	public static class MemberExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object? GetValue(this PropertyMember @this, object instance)
-			=> @this.Getter?.Invoke(instance);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object? GetValue(this StaticPropertyMember @this)
-			=> @this.Getter?.Invoke();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this TypeMember @this)
 			where T : class
 			=> @this.Implements(typeof(T));
@@ -93,14 +85,6 @@ namespace TypeCache.Reflection.Extensions
 			}
 			return true;
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object? SetValue(this PropertyMember @this, object instance, object? value)
-			=> @this.Setter?.Invoke(instance, value);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object? SetValue(this StaticPropertyMember @this, object? value)
-			=> @this.Setter?.Invoke(value);
 
 		public static bool Supports(this TypeMember @this, Type type)
 			=> @this.Handle.Equals(type.TypeHandle) || type.IsSubclassOf(@this.Handle.ToType());

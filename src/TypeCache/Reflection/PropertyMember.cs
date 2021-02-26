@@ -16,11 +16,15 @@ namespace TypeCache.Reflection
 
 		public string Name { get; init; }
 
-		public TypeMember Type { get; init; }
-
 		public MethodMember? Getter { get; init; }
 
+		public GetValue? GetValue { get; init; }
+
 		public MethodMember? Setter { get; init; }
+
+		public SetValue? SetValue { get; init; }
+
+		public TypeMember Type { get; init; }
 
 		public bool Equals(PropertyMember other)
 			=> this.Getter?.Handle == other.Getter?.Handle && this.Setter?.Handle == other.Setter?.Handle;

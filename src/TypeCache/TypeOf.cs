@@ -21,13 +21,13 @@ namespace TypeCache
 
 		public static IImmutableList<RuntimeTypeHandle> GenericTypeHandles => Type.GenericTypeHandles;
 
-		public static TypeMember[] GenericTypes => Type.GenericTypeHandles.To(_ => MemberCache.Types[_]).ToArray();
+		public static TypeMember[] GenericTypes => Type.GenericTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
 
 		public static RuntimeTypeHandle Handle => Type.Handle;
 
 		public static IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles => Type.InterfaceTypeHandles;
 
-		public static TypeMember[] InterfaceTypes => Type.InterfaceTypeHandles.To(_ => MemberCache.Types[_]).ToArray();
+		public static TypeMember[] InterfaceTypes => Type.InterfaceTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
 
 		public static bool IsEnumerable => Type.IsEnumerable;
 
@@ -59,7 +59,7 @@ namespace TypeCache
 
 		public static T Create(params object[] parameters)
 			=> (T?)Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
-				?? throw new ArgumentException($"{nameof(TypeOf<T>)}<{Name}>.{nameof(Create)}: failed with {parameters?.Length ?? 0} parameters.");
+				?? throw new ArgumentException($"TypeOf<{Name}>.{nameof(Create)}: failed with {parameters?.Length ?? 0} parameters.");
 
 		public static D? GetMethod<D>(string name)
 			where D : Delegate
