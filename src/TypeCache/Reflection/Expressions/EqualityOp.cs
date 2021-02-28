@@ -2,7 +2,7 @@
 
 namespace TypeCache.Reflection.Expressions
 {
-	public enum Equality
+	public enum EqualityOp
 	{
 		/// <summary><code>a == b</code></summary>
 		EqualTo,

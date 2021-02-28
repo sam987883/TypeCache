@@ -2,6 +2,7 @@
 
 namespace TypeCache.Reflection
 {
+	public delegate object CreateType(params object?[]? arguments);
 	public delegate object? GetValue(object instance);
 	public delegate object? InvokeType(object instance, params object?[]? arguments);
 	public delegate void SetValue(object instance, object? value);

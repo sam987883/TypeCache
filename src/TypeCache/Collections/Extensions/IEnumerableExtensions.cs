@@ -114,7 +114,7 @@ namespace TypeCache.Collections.Extensions
 			var enumerable = @this;
 			using var enumerator = sets?.GetEnumerator() ?? Empty<IEnumerable<T>?>().GetEnumerator();
 
-Yield:
+YieldBang:
 			int count;
 			switch (enumerable)
 			{
@@ -144,7 +144,7 @@ Yield:
 			if (enumerator.MoveNext())
 			{
 				enumerable = enumerator.Current;
-				goto Yield;
+				goto YieldBang;
 			}
 		}
 
@@ -154,7 +154,7 @@ Yield:
 			var setCount = sets?.Length ?? 0;
 			var setIndex = 0;
 
-Yield:
+YieldBang:
 			int count;
 			switch (enumerable)
 			{
@@ -184,7 +184,7 @@ Yield:
 			if (++setIndex < setCount)
 			{
 				enumerable = sets![setIndex];
-				goto Yield;
+				goto YieldBang;
 			}
 		}
 

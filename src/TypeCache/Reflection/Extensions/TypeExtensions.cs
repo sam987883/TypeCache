@@ -17,7 +17,7 @@ namespace TypeCache.Reflection.Extensions
 			=> types.Any(@this.Is!);
 
 		public static object Create(this Type @this, params object[] parameters)
-			=> @this.GetConstructorCache().FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
+			=> @this.GetConstructorCache().FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Create(parameters)
 				?? throw new ArgumentException($"Create instance of class {@this.Name} failed with {parameters?.Length ?? 0} parameters.");
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

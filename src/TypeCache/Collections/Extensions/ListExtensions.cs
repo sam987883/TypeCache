@@ -51,9 +51,8 @@ namespace TypeCache.Collections.Extensions
 			var count = @this?.Count ?? 0;
 			if (count > 0)
 			{
-				var i = 0;
-				action(@this![0], i);
-				for (i = 1; i < count; ++i)
+				action(@this![0], 0);
+				for (var i = 1; i < count; ++i)
 				{
 					between();
 					action(@this[i], i);

@@ -58,7 +58,7 @@ namespace TypeCache
 		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[Handle];
 
 		public static T Create(params object[] parameters)
-			=> (T?)Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Invoke(parameters)
+			=> (T?)Constructors.FirstValue(constructor => constructor!.IsCallableWith(parameters))?.Create(parameters)
 				?? throw new ArgumentException($"TypeOf<{Name}>.{nameof(Create)}: failed with {parameters?.Length ?? 0} parameters.");
 
 		public static D? GetMethod<D>(string name)

@@ -21,16 +21,17 @@ namespace TypeCache.Reflection.Converters
 					if (reader.Read())
 					{
 						var property = TypeOf<T>.Properties[name!];
-						property.SetValue(output, reader.TokenType switch
-						{
-							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, property.Type.Handle.ToType(), options),
-							JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.Type.Handle.ToType(), options),
-							JsonTokenType.String => reader.GetString(),
-							JsonTokenType.Number => reader.TryGetInt64(out var value) ? value : reader.GetDecimal(),
-							JsonTokenType.True => true,
-							JsonTokenType.False => false,
-							_ => null
-						});
+						if (property.SetValue != null)
+							property.SetValue(output, reader.TokenType switch
+							{
+								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, property.Type.Handle.ToType(), options),
+								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.Type.Handle.ToType(), options),
+								JsonTokenType.String => reader.GetString(),
+								JsonTokenType.Number => reader.TryGetInt64(out var value) ? value : reader.GetDecimal(),
+								JsonTokenType.True => true,
+								JsonTokenType.False => false,
+								_ => null
+							});
 					}
 				}
 
@@ -45,10 +46,10 @@ namespace TypeCache.Reflection.Converters
 			if (input != null)
 			{
 				writer.WriteStartObject();
-				TypeOf<T>.Properties.Values.If(property => property!.Getter != null).Do(property =>
+				TypeOf<T>.Properties.Values.If(property => property!.GetValue != null).Do(property =>
 				{
 					writer.WritePropertyName(property!.Name);
-					var value = property.GetValue(input);
+					var value = property.GetValue!(input);
 					if (value != null)
 					{
 						switch (property.Type.SystemType)

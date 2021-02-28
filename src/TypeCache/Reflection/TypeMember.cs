@@ -24,7 +24,11 @@ namespace TypeCache.Reflection
 
 		public bool IsNullable { get; init; }
 
+		public bool IsPointer { get; init; }
+
 		public bool IsPublic { get; init; }
+
+		public bool IsRef { get; init; }
 
 		public Kind Kind { get; init; }
 

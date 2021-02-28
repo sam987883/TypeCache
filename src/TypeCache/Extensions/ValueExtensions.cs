@@ -122,5 +122,21 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this decimal @this)
 			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray(sizeof(decimal));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ToInt32(this float @this)
+			=> BitConverter.SingleToInt32Bits(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ToInt64(this double @this)
+			=> BitConverter.DoubleToInt64Bits(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float ToSingle(this int @this)
+			=> BitConverter.Int32BitsToSingle(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double ToDouble(this long @this)
+			=> BitConverter.Int64BitsToDouble(@this);
 	}
 }

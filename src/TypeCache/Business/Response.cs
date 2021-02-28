@@ -5,7 +5,7 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business
 {
-	public struct Response<T>
+	public readonly struct Response<T>
 	{
 		public static Response<T> Empty
 			=> new Response<T>

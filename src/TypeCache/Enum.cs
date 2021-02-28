@@ -28,8 +28,8 @@ namespace TypeCache
 		{
 			ParameterExpression value1 = nameof(value1).Parameter<T>();
 			ParameterExpression value2 = nameof(value2).Parameter<T>();
-			return value1.ConvertTo(underlyingType)
-				.Call(nameof(IComparable<T>.CompareTo), value2.ConvertTo(underlyingType))
+			return value1.Cast(underlyingType)
+				.Call(nameof(IComparable<T>.CompareTo), value2.Cast(underlyingType))
 				.Lambda<Comparison<T>>(value1, value2)
 				.Compile();
 		}
@@ -38,8 +38,8 @@ namespace TypeCache
 		{
 			ParameterExpression value1 = nameof(value1).Parameter<T>();
 			ParameterExpression value2 = nameof(value2).Parameter<T>();
-			return value1.ConvertTo(underlyingType)
-				.Operation(Equality.EqualTo, value2.ConvertTo(underlyingType))
+			return value1.Cast(underlyingType)
+				.Operation(EqualityOp.EqualTo, value2.Cast(underlyingType))
 				.Lambda<Func<T, T, bool>>(value1, value2)
 				.Compile();
 		}
@@ -47,7 +47,7 @@ namespace TypeCache
 		private static Func<T, int> CreateGetHashCode(Type underlyingType)
 		{
 			ParameterExpression value = nameof(value).Parameter<T>();
-			return value.ConvertTo(underlyingType)
+			return value.Cast(underlyingType)
 				.Call(nameof(object.GetHashCode))
 				.Lambda<Func<T, int>>(value)
 				.Compile();

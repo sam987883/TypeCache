@@ -71,9 +71,9 @@ namespace TypeCache.Reflection.Mappers
 			var fromProperty = TypeOf<FROM>.Properties[setting.From];
 			var toProperty = TypeOf<TO>.Properties[setting.To];
 
-			var fromValue = fromProperty.GetValue(from);
+			var fromValue = fromProperty.GetValue!(from);
 			if (!setting.IgnoreNullValue || fromValue != null)
-				toProperty.SetValue(to, fromValue);
+				toProperty.SetValue!(to, fromValue);
 		});
 	}
 }

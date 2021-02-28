@@ -90,8 +90,8 @@ namespace TypeCache.Extensions
 
 			@this?.GetTypeFields().Do(_ =>
 			{
-				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
-					_.Value.SetValue!(@this, value);
+				if (_.Value.SetValue != null && source.TryGetValue(_.Key, out var value))
+					_.Value.SetValue(@this, value);
 			});
 		}
 
@@ -99,8 +99,8 @@ namespace TypeCache.Extensions
 		{
 			if (source != null)
 				@this?.GetTypeProperties()
-					.If(_ => _.Value.IsPublic && _.Value.Getter != null && _.Value.Setter != null)
-					.Do(_ => _.Value.SetValue(@this, _.Value.GetValue(source)));
+					.If(_ => _.Value.IsPublic && _.Value.GetValue != null && _.Value.SetValue != null)
+					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
 		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source, bool compareCase = false)
@@ -109,10 +109,10 @@ namespace TypeCache.Extensions
 			{
 				var fromProperties = source.GetTypeProperties();
 				var toProperties = @this.GetTypeProperties();
-				var fromNames = fromProperties.If(_ => _.Value.Getter != null).To(_ => _.Key);
-				var toNames = toProperties.If(_ => _.Value.Setter != null).To(_ => _.Key);
+				var fromNames = fromProperties.If(_ => _.Value.GetValue != null).To(_ => _.Key);
+				var toNames = toProperties.If(_ => _.Value.SetValue != null).To(_ => _.Key);
 				var names = fromNames.Match(toNames, compareCase);
-				names.Do(name => toProperties[name].SetValue(@this, fromProperties[name].GetValue(source)));
+				names.Do(name => toProperties[name].SetValue!(@this, fromProperties[name].GetValue!(source)));
 				return names;
 			}
 			return new HashSet<string>(0);
@@ -124,15 +124,15 @@ namespace TypeCache.Extensions
 
 			@this?.GetTypeProperties().Do(_ =>
 			{
-				if (_.Value.Setter != null && source.TryGetValue(_.Key, out var value))
+				if (_.Value.SetValue != null && source.TryGetValue(_.Key, out var value))
 					_.Value.SetValue(@this, value);
 			});
 		}
 
 		public static IDictionary<string, object?>? ToFieldDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 
 		public static IDictionary<string, object?>? ToPropertyDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.Getter != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 	}
 }

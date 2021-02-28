@@ -2,7 +2,7 @@
 
 namespace TypeCache.Reflection.Expressions
 {
-	public enum Bitwise
+	public enum BitwiseOp
 	{
 		/// <summary><code>a &amp; b</code></summary>
 		And,

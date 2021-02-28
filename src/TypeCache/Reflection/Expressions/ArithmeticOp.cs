@@ -2,7 +2,7 @@
 
 namespace TypeCache.Reflection.Expressions
 {
-	public enum Arithmetic
+	public enum ArithmeticOp
 	{
 		/// <summary><code>a + b</code></summary>
 		Add,

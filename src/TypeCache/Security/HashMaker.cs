@@ -21,20 +21,14 @@ namespace TypeCache.Security
 			this._RgbIV = rgbIV;
 		}
 
-		public HashMaker(decimal rgbKey, decimal rgbIV) : this(rgbKey.ToBytes(), rgbIV.ToBytes())
+		public HashMaker(decimal rgbKey, decimal rgbIV)
 		{
+			this._RgbKey = rgbKey.ToBytes();
+			this._RgbIV = rgbIV.ToBytes();
 		}
 
 		public long Decrypt(string hashId)
-		{
-			if (Guid.TryParseExact(hashId, "N", out var guid))
-			{
-				var result = this.Decrypt(guid.ToByteArray());
-				var id = BitConverter.ToInt64(result);
-				return id;
-			}
-			return 0;
-		}
+			=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public long[]? Decrypt(string[] hashIds)
@@ -45,11 +39,7 @@ namespace TypeCache.Security
 			=> hashIds?.To(this.Decrypt).ToArray();
 
 		public string Encrypt(long id)
-		{
-			var data = BitConverter.GetBytes(id);
-			var result = this.Encrypt(data);
-			return new Guid(result).ToString("N");
-		}
+			=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public string? Encrypt(long? id)

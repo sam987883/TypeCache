@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -15,15 +14,12 @@ namespace TypeCache.Reflection.Extensions
 	public static class ExpressionExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BinaryExpression And(this Expression @this, Expression operand)
-			=> Expression.AndAlso(@this, operand);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ArrayExpressionBuilder Array(this Expression @this)
 			=> new ArrayExpressionBuilder { Expression = @this };
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression As<T>(this Expression @this)
+			where T : class
 			=> Expression.TypeAs(@this, typeof(T));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,40 +30,30 @@ namespace TypeCache.Reflection.Extensions
 		public static BinaryExpression Assign(this Expression @this, Expression expression)
 			=> Expression.Assign(@this, expression);
 
-		public static UnaryExpression Assign(this Expression @this, Unary operation)
+		public static BinaryExpression Assign(this Expression @this, ArithmeticOp operation, Expression operand)
 			=> operation switch
 			{
-				Unary.PreIncrement => Expression.PreIncrementAssign(@this),
-				Unary.PostIncrement => Expression.PostIncrementAssign(@this),
-				Unary.PreDecrement => Expression.PreDecrementAssign(@this),
-				Unary.PostDecrement => Expression.PostDecrementAssign(@this),
-				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Unary)} [{operation}] is not supported.")
+				ArithmeticOp.Add => Expression.AddAssign(@this, operand),
+				ArithmeticOp.AddChecked => Expression.AddAssignChecked(@this, operand),
+				ArithmeticOp.Divide => Expression.DivideAssign(@this, operand),
+				ArithmeticOp.Modulus => Expression.ModuloAssign(@this, operand),
+				ArithmeticOp.Multiply => Expression.MultiplyAssign(@this, operand),
+				ArithmeticOp.MultiplyChecked => Expression.MultiplyAssignChecked(@this, operand),
+				ArithmeticOp.Power => Expression.PowerAssign(@this, operand),
+				ArithmeticOp.Subtract => Expression.SubtractAssign(@this, operand),
+				ArithmeticOp.SubtractChecked => Expression.SubtractAssignChecked(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(ArithmeticOp)} [{operation}] is not supported.")
 			};
 
-		public static BinaryExpression Assign(this Expression @this, Expression operand, Arithmetic operation)
+		public static BinaryExpression Assign(this Expression @this, BitwiseOp operation, Expression operand)
 			=> operation switch
 			{
-				Arithmetic.Add => Expression.AddAssign(@this, operand),
-				Arithmetic.AddChecked => Expression.AddAssignChecked(@this, operand),
-				Arithmetic.Divide => Expression.DivideAssign(@this, operand),
-				Arithmetic.Modulus => Expression.ModuloAssign(@this, operand),
-				Arithmetic.Multiply => Expression.MultiplyAssign(@this, operand),
-				Arithmetic.MultiplyChecked => Expression.MultiplyAssignChecked(@this, operand),
-				Arithmetic.Power => Expression.PowerAssign(@this, operand),
-				Arithmetic.Subtract => Expression.SubtractAssign(@this, operand),
-				Arithmetic.SubtractChecked => Expression.SubtractAssignChecked(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Arithmetic)} [{operation}] is not supported.")
-			};
-
-		public static BinaryExpression Assign(this Expression @this, Expression operand, Bitwise operation)
-			=> operation switch
-			{
-				Bitwise.And => Expression.AndAssign(@this, operand),
-				Bitwise.Or => Expression.OrAssign(@this, operand),
-				Bitwise.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
-				Bitwise.LeftShift => Expression.LeftShiftAssign(@this, operand),
-				Bitwise.RightShift => Expression.RightShiftAssign(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(Bitwise)} [{operation}] is not supported.")
+				BitwiseOp.And => Expression.AndAssign(@this, operand),
+				BitwiseOp.Or => Expression.OrAssign(@this, operand),
+				BitwiseOp.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
+				BitwiseOp.LeftShift => Expression.LeftShiftAssign(@this, operand),
+				BitwiseOp.RightShift => Expression.RightShiftAssign(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(BitwiseOp)} [{operation}] is not supported.")
 			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,38 +97,20 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Call(@this, method, genericTypes, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Cast<T>(this Expression @this)
-			=> @this.Cast(typeof(T));
+		public static Expression Cast<T>(this Expression @this, bool overflowCheck = false)
+			=> @this.Cast(typeof(T), overflowCheck);
 
-		public static UnaryExpression Cast(this Expression @this, Type type)
-		{
-			if (type.IsByRef || type.IsPointer)
-				type = type.GetElementType() ?? type;
-
-			return type.IsValueType ? Expression.Unbox(@this, type) : Expression.TypeAs(@this, type);
-		}
+		public static UnaryExpression Cast(this Expression @this, Type type, bool overflowCheck = false)
+			=> !@this.Type.IsValueType && type.IsValueType
+				? Expression.Unbox(@this, type)
+				: (overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BinaryExpression Coalesce(this Expression @this, Expression expression)
 			=> Expression.Coalesce(@this, expression);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UnaryExpression Complement(this Expression @this)
-			=> Expression.OnesComplement(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ConstantExpression Constant<T>([NotNull] this T @this)
-			=> Expression.Constant(@this, @this!.GetType());
-
-		public static UnaryExpression ConvertTo<T>(this Expression @this, bool overflowCheck = false)
-			=> overflowCheck ? Expression.ConvertChecked(@this, typeof(T)) : Expression.Convert(@this, typeof(T));
-
-		public static UnaryExpression ConvertTo(this Expression @this, Type type, bool overflowCheck = false)
-			=> overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UnaryExpression Decrement(this Expression @this)
-			=> Expression.Decrement(@this);
+		public static ConstantExpression Constant<T>(this T? @this)
+			=> @this != null ? Expression.Constant(@this, @this!.GetType()) : Expression.Constant(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DefaultExpression Default(this Type @this)
@@ -169,19 +137,12 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Condition(@this, trueResult, falseResult);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UnaryExpression Increment(this Expression @this)
-			=> Expression.Increment(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static InvocationExpression Invoke(this LambdaExpression @this, IEnumerable<Expression> parameters)
 			=> Expression.Invoke(@this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static InvocationExpression Invoke(this LambdaExpression @this, params Expression[] parameters)
 			=> Expression.Invoke(@this, parameters);
-
-		public static UnaryExpression Is(this Expression @this, bool value)
-			=> value ? Expression.IsTrue(@this) : Expression.IsFalse(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeBinaryExpression Is<T>(this Expression @this)
@@ -237,15 +198,16 @@ namespace TypeCache.Reflection.Extensions
 		public static MemberInitExpression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
 			=> Expression.MemberInit(@this, bindings);
 
-		public static UnaryExpression Negate(this Expression @this, bool overflowCheck = false)
-			=> overflowCheck ? Expression.NegateChecked(@this) : Expression.Negate(@this);
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static NewExpression New(this ConstructorInfo @this, params Expression[]? parameters)
 			=> Expression.New(@this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
+		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters)
+			=> Expression.New(@this, parameters);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, MemberInfo[] memberInfos)
 			=> Expression.New(@this, parameters, memberInfos);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -256,49 +218,70 @@ namespace TypeCache.Reflection.Extensions
 		public static NewExpression New(this Type @this)
 			=> Expression.New(@this);
 
-		public static BinaryExpression Operation(this Expression @this, Arithmetic operation, Expression operand)
+		public static UnaryExpression Operation(this Expression @this, UnaryOp operation)
 			=> operation switch
 			{
-				Arithmetic.Add => Expression.Add(@this, operand),
-				Arithmetic.AddChecked => Expression.AddChecked(@this, operand),
-				Arithmetic.Divide => Expression.Divide(@this, operand),
-				Arithmetic.Modulus => Expression.Modulo(@this, operand),
-				Arithmetic.Multiply => Expression.Multiply(@this, operand),
-				Arithmetic.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
-				Arithmetic.Power => Expression.Power(@this, operand),
-				Arithmetic.Subtract => Expression.Subtract(@this, operand),
-				Arithmetic.SubtractChecked => Expression.SubtractChecked(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Arithmetic)} [{operation}] is not supported.")
+				UnaryOp.IsTrue => Expression.IsTrue(@this),
+				UnaryOp.IsFalse => Expression.IsFalse(@this),
+				UnaryOp.PreIncrement => Expression.PreIncrementAssign(@this),
+				UnaryOp.Increment => Expression.Increment(@this),
+				UnaryOp.PostIncrement => Expression.PostIncrementAssign(@this),
+				UnaryOp.PreDecrement => Expression.PreDecrementAssign(@this),
+				UnaryOp.Decrement => Expression.Decrement(@this),
+				UnaryOp.PostDecrement => Expression.PostDecrementAssign(@this),
+				UnaryOp.Negate => Expression.Negate(@this),
+				UnaryOp.NegateChecked => Expression.NegateChecked(@this),
+				UnaryOp.Complement => Expression.OnesComplement(@this),
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(UnaryOp)} [{operation}] is not supported.")
 			};
 
-		public static BinaryExpression Operation(this Expression @this, Bitwise operation, Expression operand)
+		public static BinaryExpression Operation(this Expression @this, ArithmeticOp operation, Expression operand)
 			=> operation switch
 			{
-				Bitwise.And => Expression.And(@this, operand),
-				Bitwise.Or => Expression.Or(@this, operand),
-				Bitwise.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
-				Bitwise.LeftShift => Expression.LeftShift(@this, operand),
-				Bitwise.RightShift => Expression.RightShift(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Bitwise)} [{operation}] is not supported.")
+				ArithmeticOp.Add => Expression.Add(@this, operand),
+				ArithmeticOp.AddChecked => Expression.AddChecked(@this, operand),
+				ArithmeticOp.Divide => Expression.Divide(@this, operand),
+				ArithmeticOp.Modulus => Expression.Modulo(@this, operand),
+				ArithmeticOp.Multiply => Expression.Multiply(@this, operand),
+				ArithmeticOp.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
+				ArithmeticOp.Power => Expression.Power(@this, operand),
+				ArithmeticOp.Subtract => Expression.Subtract(@this, operand),
+				ArithmeticOp.SubtractChecked => Expression.SubtractChecked(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(ArithmeticOp)} [{operation}] is not supported.")
 			};
 
-		public static BinaryExpression Operation(this Expression @this, Equality operation, Expression operand)
+		public static BinaryExpression Operation(this Expression @this, BitwiseOp operation, Expression operand)
 			=> operation switch
 			{
-				Equality.EqualTo => Expression.Equal(@this, operand),
-				Equality.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
-				Equality.NotEqualTo => Expression.NotEqual(@this, operand),
-				Equality.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
-				Equality.MoreThan => Expression.GreaterThan(@this, operand),
-				Equality.MoreThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
-				Equality.LessThan => Expression.LessThan(@this, operand),
-				Equality.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(Equality)} [{operation}] is not supported.")
+				BitwiseOp.And => Expression.And(@this, operand),
+				BitwiseOp.Or => Expression.Or(@this, operand),
+				BitwiseOp.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
+				BitwiseOp.LeftShift => Expression.LeftShift(@this, operand),
+				BitwiseOp.RightShift => Expression.RightShift(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(BitwiseOp)} [{operation}] is not supported.")
 			};
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BinaryExpression Or(this Expression @this, Expression operand)
-			=> Expression.OrElse(@this, operand);
+		public static BinaryExpression Operation(this Expression @this, EqualityOp operation, Expression operand)
+			=> operation switch
+			{
+				EqualityOp.EqualTo => Expression.Equal(@this, operand),
+				EqualityOp.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
+				EqualityOp.NotEqualTo => Expression.NotEqual(@this, operand),
+				EqualityOp.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
+				EqualityOp.MoreThan => Expression.GreaterThan(@this, operand),
+				EqualityOp.MoreThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
+				EqualityOp.LessThan => Expression.LessThan(@this, operand),
+				EqualityOp.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(EqualityOp)} [{operation}] is not supported.")
+			};
+
+		public static BinaryExpression Operation(this Expression @this, LogicalOp operation, Expression operand)
+			=> operation switch
+			{
+				LogicalOp.And => Expression.AndAlso(@this, operand),
+				LogicalOp.Or => Expression.OrElse(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(EqualityOp)} [{operation}] is not supported.")
+			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ParameterExpression Parameter(this ParameterInfo @this)
@@ -357,24 +340,28 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Property(null, @this, name);
 
 		public static Expression SystemConvert(this Expression @this, Type type)
-			=> type.GetSystemType() switch
+			=> type.GetKind() switch
 			{
-				_ when @this.Type == type => @this,
-				SystemType.Boolean => typeof(Convert).CallStatic(nameof(Convert.ToBoolean), Type.EmptyTypes, @this),
-				SystemType.Char => typeof(Convert).CallStatic(nameof(Convert.ToChar), Type.EmptyTypes, @this),
-				SystemType.SByte => typeof(Convert).CallStatic(nameof(Convert.ToSByte), Type.EmptyTypes, @this),
-				SystemType.Byte => typeof(Convert).CallStatic(nameof(Convert.ToByte), Type.EmptyTypes, @this),
-				SystemType.Int16 => typeof(Convert).CallStatic(nameof(Convert.ToInt16), Type.EmptyTypes, @this),
-				SystemType.UInt16 => typeof(Convert).CallStatic(nameof(Convert.ToUInt16), Type.EmptyTypes, @this),
-				SystemType.Int32 => typeof(Convert).CallStatic(nameof(Convert.ToInt32), Type.EmptyTypes, @this),
-				SystemType.UInt32 => typeof(Convert).CallStatic(nameof(Convert.ToUInt32), Type.EmptyTypes, @this),
-				SystemType.Int64 => typeof(Convert).CallStatic(nameof(Convert.ToInt64), Type.EmptyTypes, @this),
-				SystemType.UInt64 => typeof(Convert).CallStatic(nameof(Convert.ToUInt64), Type.EmptyTypes, @this),
-				SystemType.Single => typeof(Convert).CallStatic(nameof(Convert.ToSingle), Type.EmptyTypes, @this),
-				SystemType.Double => typeof(Convert).CallStatic(nameof(Convert.ToDouble), Type.EmptyTypes, @this),
-				SystemType.Decimal => typeof(Convert).CallStatic(nameof(Convert.ToDecimal), Type.EmptyTypes, @this),
-				SystemType.DateTime => typeof(Convert).CallStatic(nameof(Convert.ToDateTime), Type.EmptyTypes, @this),
-				SystemType.String => typeof(Convert).CallStatic(nameof(Convert.ToString), Type.EmptyTypes, @this),
+				Kind.Struct => type.GetSystemType() switch
+				{
+					_ when @this.Type == type => @this,
+					SystemType.Boolean => typeof(Convert).CallStatic(nameof(Convert.ToBoolean), Type.EmptyTypes, @this),
+					SystemType.Char => typeof(Convert).CallStatic(nameof(Convert.ToChar), Type.EmptyTypes, @this),
+					SystemType.SByte => typeof(Convert).CallStatic(nameof(Convert.ToSByte), Type.EmptyTypes, @this),
+					SystemType.Byte => typeof(Convert).CallStatic(nameof(Convert.ToByte), Type.EmptyTypes, @this),
+					SystemType.Int16 => typeof(Convert).CallStatic(nameof(Convert.ToInt16), Type.EmptyTypes, @this),
+					SystemType.UInt16 => typeof(Convert).CallStatic(nameof(Convert.ToUInt16), Type.EmptyTypes, @this),
+					SystemType.Int32 => typeof(Convert).CallStatic(nameof(Convert.ToInt32), Type.EmptyTypes, @this),
+					SystemType.UInt32 => typeof(Convert).CallStatic(nameof(Convert.ToUInt32), Type.EmptyTypes, @this),
+					SystemType.Int64 => typeof(Convert).CallStatic(nameof(Convert.ToInt64), Type.EmptyTypes, @this),
+					SystemType.UInt64 => typeof(Convert).CallStatic(nameof(Convert.ToUInt64), Type.EmptyTypes, @this),
+					SystemType.Single => typeof(Convert).CallStatic(nameof(Convert.ToSingle), Type.EmptyTypes, @this),
+					SystemType.Double => typeof(Convert).CallStatic(nameof(Convert.ToDouble), Type.EmptyTypes, @this),
+					SystemType.Decimal => typeof(Convert).CallStatic(nameof(Convert.ToDecimal), Type.EmptyTypes, @this),
+					SystemType.DateTime => typeof(Convert).CallStatic(nameof(Convert.ToDateTime), Type.EmptyTypes, @this),
+					SystemType.String => typeof(Convert).CallStatic(nameof(Convert.ToString), Type.EmptyTypes, @this),
+					_ => @this.Cast(type)
+				},
 				_ => @this.Cast(type)
 			};
 
@@ -390,11 +377,13 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.TypeEqual(@this, type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Expression Unbox<T>(this Expression @this) where T : struct
-			=> @this.Unbox(typeof(T));
+		public static UnaryExpression Unbox<T>(this Expression @this)
+			where T : struct
+			=> Expression.Unbox(@this, typeof(T));
 
-		public static Expression Unbox(this Expression @this, Type type)
-			=> type.IsValueType ? Expression.Unbox(@this, type) : @this;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static UnaryExpression Unbox(this Expression @this, Type type)
+			=> Expression.Unbox(@this, type);
 
 		#region LabelTarget
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

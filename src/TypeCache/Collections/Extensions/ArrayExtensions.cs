@@ -45,6 +45,31 @@ namespace TypeCache.Collections.Extensions
 				action(@this![i], i);
 		}
 
+		/// <summary>
+		/// Can modify the items in the array.
+		/// </summary>
+		public static void Do<T>(this T[]? @this, ActionRef<T> action)
+		{
+			action.AssertNotNull(nameof(action));
+
+			var count = @this?.Length ?? 0;
+			for (var i = 0; i < count; ++i)
+				action(ref @this![i]);
+		}
+
+		/// <summary>
+		/// Can modify the contents of the array and the looping index.
+		/// </summary>
+		/// <remarks>index = 0 restarts the loop, --index repeats the current item and ++iindex skips the next item</remarks>
+		public static void Do<T>(this T[]? @this, ActionRef<T, int> action)
+		{
+			action.AssertNotNull(nameof(action));
+
+			var count = @this?.Length ?? 0;
+			for (var index = 0; index < count; ++index)
+				action(ref @this![index], ref index);
+		}
+
 		public static void Do<T>(this T[]? @this, Action<T> action, Action between)
 		{
 			action.AssertNotNull(nameof(action));

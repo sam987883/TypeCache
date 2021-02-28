@@ -37,9 +37,11 @@ namespace TypeCache.Reflection
 		public override int GetHashCode()
 			=> base.GetHashCode();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(StaticPropertyMember a, StaticPropertyMember b)
 			=> a.Equals(b);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(StaticPropertyMember a, StaticPropertyMember b)
 			=> !a.Equals(b);
 	}

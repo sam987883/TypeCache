@@ -12,13 +12,13 @@ namespace TypeCache.Reflection
 
 		public RuntimeMethodHandle Handle { get; init; }
 
-		public InvokeType Invoke { get; init; }
+		public InvokeType? Invoke { get; init; }
 
 		public bool IsInternal { get; init; }
 
 		public bool IsPublic { get; init; }
 
-		public Delegate Method { get; init; }
+		public Delegate? Method { get; init; }
 
 		public string Name { get; init; }
 
@@ -38,9 +38,11 @@ namespace TypeCache.Reflection
 		public override int GetHashCode()
 			=> base.GetHashCode();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(MethodMember a, MethodMember b)
 			=> a.Equals(b);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(MethodMember a, MethodMember b)
 			=> !a.Equals(b);
 	}
