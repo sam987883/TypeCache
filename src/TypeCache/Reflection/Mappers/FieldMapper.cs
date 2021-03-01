@@ -34,7 +34,7 @@ namespace TypeCache.Reflection.Mappers
 
 			overrides.Do(setting =>
 			{
-				var toField = TypeOf<TO>.Fields.GetValue(setting.To) switch
+				var toField = TypeOf<TO>.Fields.Get(setting.To) switch
 				{
 					FieldMember member when member.SetValue != null => member,
 					FieldMember _ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] is not writable."),
@@ -43,7 +43,7 @@ namespace TypeCache.Reflection.Mappers
 
 				if (!setting.From.IsBlank())
 				{
-					var fromField = TypeOf<FROM>.Fields.GetValue(setting.From) switch
+					var fromField = TypeOf<FROM>.Fields.Get(setting.From) switch
 					{
 						FieldMember member when member.GetValue != null => member,
 						FieldMember _ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] is not readable."),

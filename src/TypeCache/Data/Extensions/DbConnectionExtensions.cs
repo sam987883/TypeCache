@@ -152,23 +152,30 @@ ORDER BY p.[parameter_id] ASC;";
 
 			var tableRowSet = await reader.ReadRowSetAsync();
 
-			var objectSchema = tableRowSet.Map<ObjectSchema>().First();
-			objectSchema.AssertNotNull($"{nameof(CreateObjectSchema)}: Database object not found: [{name}].  Must be a table, view, table-valued function or stored procedure.");
-			objectSchema!.DatabaseName = @this.Database;
-
+			ColumnSchema[]? columns = null;
 			if (await reader.NextResultAsync())
 			{
 				var columnRowSet = await reader.ReadRowSetAsync();
-				objectSchema.Columns = columnRowSet.Map<ColumnSchema>().ToImmutable();
+				columns = columnRowSet.Map<ColumnSchema>();
 			}
 
+			ParameterSchema[]? parameters = null;
 			if (await reader.NextResultAsync())
 			{
 				var parameterRowSet = await reader.ReadRowSetAsync();
-				objectSchema.Parameters = parameterRowSet.Map<ParameterSchema>().ToImmutable();
+				parameters = parameterRowSet.Map<ParameterSchema>();
 			}
 
-			return objectSchema;
+			return new ObjectSchema
+			{
+				Columns = columns.ToImmutable(),
+				Id = (int)tableRowSet[0, nameof(ObjectSchema.Id)]!,
+				DatabaseName = @this.Database,
+				ObjectName = tableRowSet[0, nameof(ObjectSchema.ObjectName)]!.ToString()!,
+				Parameters = parameters.ToImmutable(),
+				SchemaName = tableRowSet[0, nameof(ObjectSchema.SchemaName)]!.ToString()!,
+				Type = (ObjectType)tableRowSet[0, nameof(ObjectSchema.Type)]!
+			};
 		}
 
 		public static ObjectSchema GetObjectSchema(this DbConnection @this, string name)
@@ -249,7 +256,7 @@ ORDER BY p.[parameter_id] ASC;";
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return default;
+				return RowSet.Empty;
 			}
 		}
 
@@ -269,7 +276,7 @@ ORDER BY p.[parameter_id] ASC;";
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return default;
+				return RowSet.Empty;
 			}
 		}
 
@@ -296,7 +303,7 @@ ORDER BY p.[parameter_id] ASC;";
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return default;
+				return RowSet.Empty;
 			}
 		}
 
@@ -339,7 +346,7 @@ ORDER BY p.[parameter_id] ASC;";
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return default;
+				return RowSet.Empty;
 			}
 		}
 	}

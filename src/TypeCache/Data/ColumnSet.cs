@@ -6,10 +6,5 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "Column": "N'Expression 1'" }</code>
 	/// SQL: <code>[Column] = N'Expression 1'</code>
 	/// </summary>
-	public readonly struct ColumnSet
-	{
-		public string Column { get; init; }
-
-		public object? Expression { get; init; }
-	}
+	public record ColumnSet(string Column, object? Expression);
 }

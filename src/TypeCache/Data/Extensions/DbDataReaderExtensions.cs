@@ -28,11 +28,7 @@ namespace TypeCache.Data.Extensions
 		}
 
 		public static async ValueTask<RowSet> ReadRowSetAsync(this DbDataReader @this, CancellationToken cancellationToken = default)
-			=> new RowSet
-			{
-				Columns = @this.GetColumns(),
-				Rows = (await @this.ReadRowsAsync(cancellationToken).ToListAsync()).ToArray()
-			};
+			=> new RowSet(@this.GetColumns(), (await @this.ReadRowsAsync(cancellationToken).ToListAsync()).ToArray());
 
 		public static async IAsyncEnumerable<RowSet> ReadRowSetsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{

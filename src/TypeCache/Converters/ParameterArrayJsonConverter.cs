@@ -18,13 +18,7 @@ namespace TypeCache.Converters
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
 				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
-				{
-					parameters.Add(new Parameter
-					{
-						Name = reader.GetString()!,
-						Value = reader.Read() ? JsonSerializer.Deserialize<object>(ref reader) : null
-					});
-				}
+					parameters.Add(new Parameter(reader.GetString()!, reader.Read() ? JsonSerializer.Deserialize<object>(ref reader) : null));
 			}
 
 			while (reader.TokenType != JsonTokenType.EndObject && reader.Read()) { }

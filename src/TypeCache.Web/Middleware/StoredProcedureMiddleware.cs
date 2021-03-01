@@ -23,11 +23,8 @@ namespace TypeCache.Web.Middleware
 			string procedure = httpContext.Request.Query[nameof(procedure)].First()!;
 			var parameters = httpContext.Request.Query
 				.If(query => !query.Key.Is(nameof(procedure)))
-				.To(query => new Parameter
-				{
-					Name = query.Key,
-					Value = query.Value.First()
-				}).ToList();
+				.To(query => new Parameter(query.Key, query.Value.First()))
+				.ToList();
 
 			var json = await JsonSerializer.DeserializeAsync<JsonElement>(httpContext.Request.Body);
 			if (json.ValueKind == JsonValueKind.Object)
@@ -36,22 +33,18 @@ namespace TypeCache.Web.Middleware
 				while (enumerator.MoveNext())
 				{
 					var property = enumerator.Current;
-					parameters.Add(new Parameter
+					parameters.Add(new Parameter(property.Name, property.Value.ValueKind switch
 					{
-						Name = property.Name,
-						Value = property.Value.ValueKind switch
-						{
-							JsonValueKind.Undefined => throw new NotImplementedException(),
-							JsonValueKind.Object => property.Value.ToString(),
-							JsonValueKind.Array => property.Value.ToString(),
-							JsonValueKind.String => property.Value.GetString(),
-							JsonValueKind.Number => property.Value.TryGetInt64(out var value) ? value : property.Value.GetDecimal(),
-							JsonValueKind.True => true,
-							JsonValueKind.False => false,
-							JsonValueKind.Null => DBNull.Value,
-							_ => DBNull.Value
-						}
-					});
+						JsonValueKind.Undefined => throw new NotImplementedException(),
+						JsonValueKind.Object => property.Value.ToString(),
+						JsonValueKind.Array => property.Value.ToString(),
+						JsonValueKind.String => property.Value.GetString(),
+						JsonValueKind.Number => property.Value.TryGetInt64(out var value) ? value : property.Value.GetDecimal(),
+						JsonValueKind.True => true,
+						JsonValueKind.False => false,
+						JsonValueKind.Null => DBNull.Value,
+						_ => DBNull.Value
+					}));
 				}
 			}
 

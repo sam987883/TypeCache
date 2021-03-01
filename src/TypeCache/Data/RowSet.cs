@@ -1,5 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using TypeCache.Collections.Extensions;
+
 namespace TypeCache.Data
 {
 	/// <summary>
@@ -10,16 +13,10 @@ namespace TypeCache.Data
 	/// }
 	/// </code>
 	/// </summary>
-	public readonly struct RowSet
+	public record RowSet(string[] Columns, object?[][] Rows)
 	{
-		/// <summary>
-		/// [ "Column1", "Column2", "Column3", ... ]
-		/// </summary>
-		public string[] Columns { get; init; }
+		public static RowSet Empty { get; } = new RowSet(Array.Empty<string>(), Array.Empty<object[]>());
 
-		/// <summary>
-		/// [ [ "Data", 123, null ], [ ... ], ... ]
-		/// </summary>
-		public object?[][] Rows { get; init; }
+		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column, false).FirstValue()!.Value];
 	}
 }

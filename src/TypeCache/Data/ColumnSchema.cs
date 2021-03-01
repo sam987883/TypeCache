@@ -1,16 +1,18 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Runtime.CompilerServices;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Data
 {
-	public readonly struct ColumnSchema
+	public sealed record ColumnSchema() : IEquatable<ColumnSchema>
 	{
 		public int Id { get; init; }
 
-		public string Name { get; init; }
+		public string Name { get; init; } = string.Empty;
 
-		public string Type { get; init; }
+		public string Type { get; init; } = string.Empty;
 
 		public bool Hidden { get; init; }
 
@@ -81,5 +83,12 @@ namespace TypeCache.Data
 			"VARCHAR" => typeof(string),
 			_ => typeof(object)
 		}).TypeHandle;
+
+		public bool Equals(ColumnSchema? other)
+			=> this.Id == other?.Id && this.Name.Is(other.Name);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> base.GetHashCode();
 	}
 }

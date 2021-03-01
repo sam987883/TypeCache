@@ -23,11 +23,8 @@ namespace TypeCache.Web.Middleware
 			var request = new SqlRequest
 			{
 				Parameters = httpContext.Request.Query
-					.To(query => new Parameter
-					{
-						Name = query.Key,
-						Value = query.Value.First()
-					}).ToArray(httpContext.Request.Query.Count),
+					.To(query => new Parameter(query.Key, query.Value.First()))
+					.ToArray(httpContext.Request.Query.Count),
 				SQL = reader.ReadToEnd()
 			};
 

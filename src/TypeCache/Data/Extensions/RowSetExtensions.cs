@@ -22,7 +22,7 @@ namespace TypeCache.Data.Extensions
 			@this.Rows.Do((row, rowIndex) =>
 			{
 				var item = TypeOf<T>.Create();
-				properties.Do((property, columnIndex) => property.Setter?.Invoke(item!, row[columnIndex]));
+				properties.Do((property, columnIndex) => property?.Setter?.Invoke!(item!, row[columnIndex]));
 				items[rowIndex] = item;
 			});
 
@@ -34,11 +34,7 @@ namespace TypeCache.Data.Extensions
 		{
 			var comparer = compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 			var getters = TypeOf<T>.Properties.Values.If(property => property!.GetValue != null).To(property => property!.Name);
-			var rowSet = new RowSet
-			{
-				Columns = columns.Any() ? columns.Match(getters, comparer).ToArray() : getters.ToArray(),
-				Rows = new object?[@this.Length][]
-			};
+			var rowSet = new RowSet(columns.Any() ? columns.Match(getters, comparer).ToArray() : getters.ToArray(), new object?[@this.Length][]);
 
 			@this.Do((item, rowIndex) =>
 			{

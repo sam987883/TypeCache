@@ -9,17 +9,10 @@ namespace TypeCache.Data
 	///		"Inserted": { "Columns": [ "Column1", "Column2", "Column3", ... ], "Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ] }<br />
 	/// }
 	/// </code>
+	/// SQL: <code>
+	/// OUTPUT DELETED.[Column1], DELETED.[Column2], DELETED.[Column3] ...<br />
+	/// OUTPUT INSERTED.[Column1], INSERTED.[Column2], INSERTED.[Column3] ...
+	/// </code>
 	/// </summary>
-	public readonly struct Output
-	{
-		/// <summary>
-		/// JSON: <code>{ "Deleted": { "Columns": [ ... ], "Rows": [ [ ... ], [ ... ], [ ... ] ] } }</code>
-		/// </summary>
-		public RowSet Deleted { get; init; }
-
-		/// <summary>
-		/// JSON: <code>{ "Inserted": { "Columns": [ ... ], "Rows": [ [ ... ], [ ... ], [ ... ] ] } }</code>
-		/// </summary>
-		public RowSet Inserted { get; init; }
-	}
+	public record Output(RowSet Deleted, RowSet Inserted);
 }

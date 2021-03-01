@@ -28,7 +28,7 @@ namespace TypeCache.GraphQL.Resolvers
 		public Task<T> Resolve(IResolveFieldContext context)
 		{
 			var arguments = this.GetArguments(context).ToArray();
-			var value = this._Method.Invoke(this._Handler, arguments);
+			var value = this._Method.Invoke!(this._Handler, arguments);
 			return this._Method.Return.IsValueTask
 				? ((ValueTask<T>)value!).AsTask()
 				: (Task<T>)value!;
@@ -37,7 +37,7 @@ namespace TypeCache.GraphQL.Resolvers
 		object? IFieldResolver.Resolve(IResolveFieldContext context)
 		{
 			var arguments = this.GetArguments(context).ToArray();
-			return this._Method.Invoke(this._Handler, arguments);
+			return this._Method.Invoke!(this._Handler, arguments);
 		}
 
 		private IEnumerable<object> GetArguments(IResolveFieldContext context)
@@ -81,7 +81,7 @@ namespace TypeCache.GraphQL.Resolvers
 		public object? Resolve(IResolveFieldContext context)
 		{
 			var arguments = this.GetArguments(context).ToArray();
-			return this._Method.Invoke(this._Handler, arguments);
+			return this._Method.Invoke!(this._Handler, arguments);
 		}
 
 		private IEnumerable<object> GetArguments(IResolveFieldContext context)

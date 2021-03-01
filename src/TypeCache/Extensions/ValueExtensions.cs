@@ -32,6 +32,30 @@ namespace TypeCache.Extensions
 			=> DateTime.SpecifyKind(@this, kind);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTime ConvertTime(this DateTime @this, TimeZoneInfo sourceTimeZone, TimeZoneInfo targetTimeZone)
+			=> TimeZoneInfo.ConvertTime(@this, sourceTimeZone, targetTimeZone);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTime ConvertTime(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
+			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTimeOffset ConvertTime(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
+			=> TimeZoneInfo.ConvertTime(@this, targetTimeZone);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTimeOffset ConvertTime(this DateTimeOffset @this, string targetSystemTimeZoneId)
+			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTime ConvertTimeFromUTC(this DateTime @this, TimeZoneInfo targetTimeZone)
+			=> TimeZoneInfo.ConvertTimeFromUtc(@this, targetTimeZone);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DateTime ConvertTimeToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
+			=> TimeZoneInfo.ConvertTimeToUtc(@this, sourceTimeZone);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join(this char @this, params string[] values)
 			=> string.Join(@this, values);
 
@@ -51,15 +75,12 @@ namespace TypeCache.Extensions
 		public static bool IsReverse(this Range @this)
 			=> @this.End.Value > @this.Start.Value;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Index Normalize(this Index @this, int count)
 			=> @this.IsFromEnd ? new Index(@this.GetOffset(count)) : @this;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Range Normalize(this Range @this, int count)
 			=> new Range(@this.Start.Normalize(count), @this.End.Normalize(count));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> Range(this int @this, int count, int increment = 1)
 			=> @this.To(@this + (count - 1) * increment, increment);
 
@@ -119,7 +140,6 @@ namespace TypeCache.Extensions
 		public static byte[] ToBytes(this double @this)
 			=> BitConverter.GetBytes(@this);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this decimal @this)
 			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray(sizeof(decimal));
 

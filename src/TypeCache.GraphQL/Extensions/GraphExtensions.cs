@@ -105,13 +105,13 @@ namespace TypeCache.GraphQL.Extensions
 			{
 				Edges = items.To(item => new Edge<T>
 				{
-					Cursor = cursorProperty?.GetValue(item)?.ToString(),
+					Cursor = cursorProperty?.GetValue!(item)?.ToString(),
 					Node = item
 				}).ToList(),
 				PageInfo = new PageInfo
 				{
-					StartCursor = items.Length > 0 ? cursorProperty?.GetValue(items[0])?.ToString() : null,
-					EndCursor = items.Length > 0 ? cursorProperty?.GetValue(items[^1])?.ToString() : null,
+					StartCursor = items.Length > 0 ? cursorProperty?.GetValue!(items[0])?.ToString() : null,
+					EndCursor = items.Length > 0 ? cursorProperty?.GetValue!(items[^1])?.ToString() : null,
 					HasNextPage = hasNextPage,
 					HasPreviousPage = hasPreviousPage
 				},

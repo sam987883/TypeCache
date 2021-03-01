@@ -35,7 +35,7 @@ namespace TypeCache.Reflection.Mappers
 
 			overrides.Do(setting =>
 			{
-				var toProperty = TypeOf<TO>.Properties.GetValue(setting.To) switch
+				var toProperty = TypeOf<TO>.Properties.Get(setting.To) switch
 				{
 					PropertyMember property when property.Setter != null => property,
 					PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable."),
@@ -44,7 +44,7 @@ namespace TypeCache.Reflection.Mappers
 
 				if (!setting.From.IsBlank())
 				{
-					var fromProperty = TypeOf<FROM>.Properties.GetValue(setting.From) switch
+					var fromProperty = TypeOf<FROM>.Properties.Get(setting.From) switch
 					{
 						PropertyMember property when property.Getter != null => property,
 						PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not readable."),

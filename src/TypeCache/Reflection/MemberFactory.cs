@@ -27,12 +27,12 @@ namespace TypeCache.Reflection
 		public static ConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo)
 			=> CreateConstructorMember(constructorInfo, MemberCache.Types[constructorInfo.DeclaringType!.TypeHandle]);
 
-		private static ConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo, TypeMember typeMember)
+		private static ConstructorMember CreateConstructorMember(ConstructorInfo constructorInfo, TypeMember type)
 		{
 			var parameterInfos = constructorInfo.GetParameters();
 			parameterInfos.Sort(ParameterSortComparer);
 
-			CreateType? invoke = null;
+			CreateType? create = null;
 			Delegate? method = null;
 			if (constructorInfo.IsInvokable())
 			{
@@ -42,23 +42,15 @@ namespace TypeCache.Reflection
 					: constructorInfo.New().Lambda().Compile();
 
 				ParameterExpression callParameters = nameof(callParameters).Parameter<object?[]?>();
-				invoke = parameterInfos.Any()
+				create = parameterInfos.Any()
 					? constructorInfo.New(callParameters.ToParameterArray(parameterInfos)).Cast<object>().Lambda<CreateType>(callParameters).Compile()
 					: constructorInfo.New().Cast<object>().Lambda<CreateType>(callParameters).Compile();
 			}
 
+			var attributes = constructorInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var parameters = parameterInfos.To(CreateParameter!).ToImmutable();
-			return new ConstructorMember
-			{
-				Attributes = constructorInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Create = invoke,
-				Handle = constructorInfo.MethodHandle,
-				IsInternal = constructorInfo.IsAssembly,
-				IsPublic = constructorInfo.IsPublic,
-				Method = method,
-				Parameters = parameters,
-				Type = typeMember
-			};
+
+			return new ConstructorMember(constructorInfo.Name, attributes, constructorInfo.IsAssembly, constructorInfo.IsPublic, constructorInfo.MethodHandle, create, method, parameters, type);
 		}
 
 		public static IImmutableList<ConstructorMember> CreateConstructorMembers(RuntimeTypeHandle typeHandle)
@@ -104,22 +96,12 @@ namespace TypeCache.Reflection
 			fieldInfo.IsLiteral.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsLiteral)}", false);
 			fieldInfo.IsStatic.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsStatic)}", false);
 
+			var attributes = fieldInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var (getter, setter) = CreateFieldAccessorDelegates(fieldInfo);
 			var (getValue, setValue) = CreateFieldAccessors(fieldInfo);
+			var type = MemberCache.Types[fieldInfo.FieldType.TypeHandle];
 
-			return new FieldMember
-			{
-				Attributes = fieldInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Getter = getter,
-				GetValue = getValue,
-				Handle = fieldInfo.FieldHandle,
-				IsInternal = fieldInfo.IsAssembly,
-				Name = fieldInfo.GetName(),
-				IsPublic = fieldInfo.IsPublic,
-				Setter = setter,
-				SetValue = setValue,
-				Type = MemberCache.Types[fieldInfo.FieldType.TypeHandle]
-			};
+			return new FieldMember(fieldInfo.GetName(), attributes, fieldInfo.IsAssembly, fieldInfo.IsPublic, fieldInfo.FieldHandle, getter, getValue, setter, setValue, type);
 		}
 
 		public static IImmutableDictionary<string, FieldMember> CreateFieldMembers(RuntimeTypeHandle typeHandle)
@@ -132,16 +114,13 @@ namespace TypeCache.Reflection
 		{
 			propertyInfo.GetIndexParameters().Any().Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetIndexParameters)}().Any()", true);
 
-			var methodInfo = propertyInfo.GetMethod ?? propertyInfo.SetMethod;
-			return new IndexerMember
-			{
-				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				GetMethod = propertyInfo.GetMethod != null ? CreateMethodMember(propertyInfo.GetMethod) : null,
-				IsInternal = methodInfo!.IsAssembly,
-				IsPublic = methodInfo.IsPublic,
-				SetMethod = propertyInfo.SetMethod != null ? CreateMethodMember(propertyInfo.SetMethod) : null,
-				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
-			};
+			var attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var methodInfo = propertyInfo.GetAccessors(true).First()!;
+			var getMethod = propertyInfo.GetMethod != null ? CreateMethodMember(propertyInfo.GetMethod) : null;
+			var setMethod = propertyInfo.SetMethod != null ? CreateMethodMember(propertyInfo.SetMethod) : null;
+			var type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle];
+
+			return new IndexerMember(propertyInfo.GetName(), attributes, methodInfo!.IsAssembly, methodInfo.IsPublic, getMethod, setMethod, type);
 		}
 
 		public static IImmutableList<IndexerMember> CreateIndexerMembers(RuntimeTypeHandle typeHandle)
@@ -157,9 +136,9 @@ namespace TypeCache.Reflection
 			var parameterInfos = methodInfo.GetParameters()
 				.If(parameterInfo => parameterInfo != methodInfo.ReturnParameter)
 				.Sort(ParameterSortComparer!);
+
 			InvokeType? invoke = null;
 			Delegate? method = null;
-
 			if (methodInfo.IsInvokable())
 			{
 				var callParameters = parameterInfos.To(parameterInfo => parameterInfo!.Parameter()).ToArray(parameterInfos.Length);
@@ -176,33 +155,20 @@ namespace TypeCache.Reflection
 				method = parameterInfos.Any()
 					? instanceCast.Call(methodInfo, callParameters).Lambda(methodParameters).Compile()
 					: call.Lambda(instance).Compile();
-				invoke = methodInfo.ReturnType == typeof(void)
-					? Expression.Block(call, Expression.Constant(null)).Lambda<InvokeType>(instance, arguments).Compile()
-					: call.As<object>().Lambda<InvokeType>(instance, arguments).Compile();
+
+				if (methodInfo.ReturnType.IsInvokable())
+					invoke = methodInfo.ReturnType == typeof(void)
+						? Expression.Block(call, Expression.Constant(null)).Lambda<InvokeType>(instance, arguments).Compile()
+						: call.As<object>().Lambda<InvokeType>(instance, arguments).Compile();
 			}
 
+			var attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var parameters = parameterInfos.To(CreateParameter!).ToImmutable();
+			var returnAttributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var returnType = MemberCache.Types[methodInfo.ReturnType.TypeHandle];
+			var returnParameter = new ReturnParameter(returnAttributes, returnType);
 
-			return new MethodMember
-			{
-				Attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Handle = methodInfo.MethodHandle,
-				Invoke = invoke,
-				IsInternal = methodInfo.IsAssembly,
-				IsPublic = methodInfo.IsPublic,
-				Method = method,
-				Parameters = parameters,
-				Name = methodInfo.GetName(),
-				Return = new ReturnParameter
-				{
-					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable(),
-					IsTask = returnType.SystemType == SystemType.Task,
-					IsValueTask = returnType.SystemType == SystemType.ValueTask,
-					IsVoid = returnType.SystemType == SystemType.Void,
-					Type = returnType
-				}
-			};
+			return new MethodMember(methodInfo.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, methodInfo.MethodHandle, invoke, method, parameters, returnParameter);
 		}
 
 		public static IImmutableDictionary<string, IImmutableList<MethodMember>> CreateMethodMembers(RuntimeTypeHandle typeHandle)
@@ -212,45 +178,56 @@ namespace TypeCache.Reflection
 				.Group(method => method!.Name, StringComparer.Ordinal)
 				.ToImmutableDictionary(_ => _.Key, _ => _.Value.ToImmutable());
 
-		public static PropertyMember CreatePropertyMember(PropertyInfo propertyInfo)
+		public static (MethodMember? getter, MethodMember? setter) CreatePropertyAccessorMethods(PropertyInfo propertyInfo)
 		{
-			GetValue? getValue = null;
 			MethodMember? getter = null;
 			if (propertyInfo.GetMethod != null)
 			{
-				ParameterExpression instance = nameof(instance).Parameter<object>();
 				propertyInfo.GetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetMethod)}.{nameof(propertyInfo.GetMethod.IsStatic)}", false);
 				getter = CreateMethodMember(propertyInfo.GetMethod);
-				if (propertyInfo.GetMethod.IsInvokable())
-					getValue = instance.Cast(propertyInfo.DeclaringType!).Property(propertyInfo).As<object>().Lambda<GetValue>(instance).Compile();
 			}
 
-			SetValue? setValue = null;
 			MethodMember? setter = null;
 			if (propertyInfo.SetMethod != null)
 			{
-				ParameterExpression instance = nameof(instance).Parameter<object>();
 				propertyInfo.SetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.SetMethod)}.{nameof(propertyInfo.SetMethod.IsStatic)}", false);
 				setter = CreateMethodMember(propertyInfo.SetMethod);
-				var property = instance.Cast(propertyInfo.DeclaringType!).Property(propertyInfo);
-				ParameterExpression value = nameof(value).Parameter<object>();
-				if (propertyInfo.SetMethod.IsInvokable())
-					setValue = instance.Cast(propertyInfo.DeclaringType!).Property(propertyInfo).Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<SetValue>(instance, value).Compile();
 			}
 
-			var methodInfo = propertyInfo.GetAccessors(true).First()!;
-			return new PropertyMember
+			return (getter, setter);
+		}
+
+		public static (GetValue? getValue, SetValue? setValue) CreatePropertyAccessors(PropertyInfo propertyInfo)
+		{
+			ParameterExpression instance = nameof(instance).Parameter<object>();
+
+			GetValue? getValue = null;
+			if (propertyInfo.GetMethod != null && propertyInfo.GetMethod.ReturnType.IsInvokable())
 			{
-				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Getter = getter,
-				GetValue = getValue,
-				IsInternal = methodInfo.IsAssembly,
-				Name = propertyInfo.GetName(),
-				IsPublic = methodInfo.IsPublic,
-				Setter = setter,
-				SetValue = setValue,
-				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
-			};
+				propertyInfo.GetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetMethod)}.{nameof(propertyInfo.GetMethod.IsStatic)}", false);
+				getValue = instance.Cast(propertyInfo.DeclaringType!).Property(propertyInfo).As<object>().Lambda<GetValue>(instance).Compile();
+			}
+
+			SetValue? setValue = null;
+			if (propertyInfo.SetMethod != null && propertyInfo.SetMethod.IsInvokable())
+			{
+				ParameterExpression value = nameof(value).Parameter<object>();
+				propertyInfo.SetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.SetMethod)}.{nameof(propertyInfo.SetMethod.IsStatic)}", false);
+				setValue = instance.Cast(propertyInfo.DeclaringType!).Property(propertyInfo).Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<SetValue>(instance, value).Compile();
+			}
+
+			return (getValue, setValue);
+		}
+
+		public static PropertyMember CreatePropertyMember(PropertyInfo propertyInfo)
+		{
+			var attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var (getter, setter) = CreatePropertyAccessorMethods(propertyInfo);
+			var (getValue, setValue) = CreatePropertyAccessors(propertyInfo);
+			var methodInfo = propertyInfo.GetAccessors(true).First()!;
+			var type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle];
+
+			return new PropertyMember(propertyInfo.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, getValue, setter, setValue, type);
 		}
 
 		public static IImmutableDictionary<string, PropertyMember> CreatePropertyMembers(RuntimeTypeHandle typeHandle)
@@ -290,22 +267,12 @@ namespace TypeCache.Reflection
 			fieldInfo.IsLiteral.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsLiteral)}", false);
 			fieldInfo.IsStatic.Assert($"{nameof(fieldInfo)}.{nameof(fieldInfo.IsStatic)}", true);
 
+			var attributes = fieldInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var (getter, setter) = CreateStaticFieldAccessorDelegates(fieldInfo);
 			var (getValue, setValue) = CreateStaticFieldAccessors(fieldInfo);
+			var type = MemberCache.Types[fieldInfo.FieldType.TypeHandle];
 
-			return new StaticFieldMember
-			{
-				Attributes = fieldInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Getter = getter,
-				GetValue = getValue,
-				Handle = fieldInfo.FieldHandle,
-				Internal = fieldInfo.IsAssembly,
-				Name = fieldInfo.GetName(),
-				Public = fieldInfo.IsPublic,
-				Setter = setter,
-				SetValue = setValue,
-				Type = MemberCache.Types[fieldInfo.FieldType.TypeHandle]
-			};
+			return new StaticFieldMember(fieldInfo.GetName(), attributes, fieldInfo.IsAssembly, fieldInfo.IsPublic, fieldInfo.FieldHandle, getter, getValue, setter, setValue, type);
 		}
 
 		public static IImmutableDictionary<string, StaticFieldMember> CreateStaticFieldMembers(RuntimeTypeHandle typeHandle)
@@ -334,33 +301,20 @@ namespace TypeCache.Reflection
 				method = parameterInfos.Any()
 					? methodInfo.CallStatic(methodParameters).Lambda(methodParameters).Compile()
 					: call.Lambda().Compile();
-				invoke = methodInfo.ReturnType == typeof(void)
-					? Expression.Block(call, Expression.Constant(null)).Lambda<StaticInvokeType>(arguments).Compile()
-					: call.As<object>().Lambda<StaticInvokeType>(arguments).Compile();
+
+				if (methodInfo.ReturnType.IsInvokable())
+					invoke = methodInfo.ReturnType == typeof(void)
+						? Expression.Block(call, Expression.Constant(null)).Lambda<StaticInvokeType>(arguments).Compile()
+						: call.As<object>().Lambda<StaticInvokeType>(arguments).Compile();
 			}
 
-			var parameters = parameterInfos.To(MemberFactory.CreateParameter!).ToImmutable();
+			var attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var parameters = parameterInfos.To(CreateParameter!).ToImmutable();
+			var returnAttributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var returnType = MemberCache.Types[methodInfo.ReturnType.TypeHandle];
+			var returnParameter = new ReturnParameter(returnAttributes, returnType);
 
-			return new StaticMethodMember
-			{
-				Attributes = methodInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Handle = methodInfo.MethodHandle,
-				Invoke = invoke,
-				IsInternal = methodInfo.IsAssembly,
-				IsPublic = methodInfo.IsPublic,
-				Method = method,
-				Parameters = parameters,
-				Name = methodInfo.GetName(),
-				Return = new ReturnParameter
-				{
-					Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable(),
-					IsTask = returnType.SystemType == SystemType.Task,
-					IsValueTask = returnType.SystemType == SystemType.ValueTask,
-					IsVoid = returnType.SystemType == SystemType.Void,
-					Type = returnType
-				}
-			};
+			return new StaticMethodMember(methodInfo.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, methodInfo.MethodHandle, invoke, method, parameters, returnParameter);
 		}
 
 		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> CreateStaticMethodMembers(RuntimeTypeHandle typeHandle)
@@ -371,60 +325,64 @@ namespace TypeCache.Reflection
 				.ToImmutableDictionary(_ => _.Key, _ => _.Value.ToImmutable());
 
 		public static Parameter CreateParameter(ParameterInfo parameterInfo)
-			=> new Parameter
-			{
-				Type = MemberCache.Types[parameterInfo.ParameterType.TypeHandle],
-				Attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Name = parameterInfo.GetName(),
-				DefaultValue = parameterInfo.DefaultValue,
-				HasDefaultValue = parameterInfo.HasDefaultValue,
-				IsOptional = parameterInfo.IsOptional,
-				IsOut = parameterInfo.IsOut
-			};
-
-		public static StaticPropertyMember CreateStaticPropertyMember(PropertyInfo propertyInfo)
 		{
-			StaticGetValue? getValue = null;
+			var attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var type = MemberCache.Types[parameterInfo.ParameterType.TypeHandle];
+
+			return new Parameter(parameterInfo.GetName(), attributes, parameterInfo.IsOptional, parameterInfo.IsOut, parameterInfo.DefaultValue, parameterInfo.HasDefaultValue, type);
+		}
+
+		public static (StaticMethodMember? getter, StaticMethodMember? setter) CreateStaticPropertyAccessorMethods(PropertyInfo propertyInfo)
+		{
 			StaticMethodMember? getter = null;
 			if (propertyInfo.GetMethod != null)
 			{
 				propertyInfo.GetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetMethod)}.{nameof(propertyInfo.GetMethod.IsStatic)}", true);
 				getter = CreateStaticMethodMember(propertyInfo.GetMethod);
-				if (propertyInfo.GetMethod.IsInvokable())
-					getValue = propertyInfo.StaticProperty().As<object>().Lambda<StaticGetValue>().Compile();
 			}
 
-			StaticSetValue? setValue = null;
 			StaticMethodMember? setter = null;
 			if (propertyInfo.SetMethod != null)
 			{
 				propertyInfo.SetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.SetMethod)}.{nameof(propertyInfo.SetMethod.IsStatic)}", true);
 				setter = CreateStaticMethodMember(propertyInfo.SetMethod);
-				if (propertyInfo.SetMethod.IsInvokable())
-				{
-					ParameterExpression value = nameof(value).Parameter<object>();
-					setValue = propertyInfo.StaticProperty().Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<StaticSetValue>(value).Compile();
-				}
 			}
 
-			var methodInfo = propertyInfo.GetAccessors(true).First()!;
-			return new StaticPropertyMember
+			return (getter, setter);
+		}
+
+		public static (StaticGetValue? getValue, StaticSetValue? setValue) CreateStaticPropertyAccessors(PropertyInfo propertyInfo)
+		{
+			StaticGetValue? getValue = null;
+			if (propertyInfo.GetMethod != null && propertyInfo.GetMethod.ReturnType.IsInvokable())
 			{
-				Attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				Getter = getter,
-				GetValue = getValue,
-				IsInternal = methodInfo.IsAssembly,
-				Name = propertyInfo.GetName(),
-				IsPublic = methodInfo.IsPublic,
-				Setter = setter,
-				SetValue = setValue,
-				Type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle]
-			};
+				propertyInfo.GetMethod.IsStatic.Assert($"{nameof(propertyInfo)}.{nameof(propertyInfo.GetMethod)}.{nameof(propertyInfo.GetMethod.IsStatic)}", true);
+				getValue = propertyInfo.StaticProperty().As<object>().Lambda<StaticGetValue>().Compile();
+			}
+
+			StaticSetValue? setValue = null;
+			if (propertyInfo.SetMethod != null && propertyInfo.SetMethod.IsInvokable())
+			{
+				ParameterExpression value = nameof(value).Parameter<object>();
+				setValue = propertyInfo.StaticProperty().Assign(value.SystemConvert(propertyInfo.PropertyType)).Lambda<StaticSetValue>(value).Compile();
+			}
+
+			return (getValue, setValue);
+		}
+
+		public static StaticPropertyMember CreateStaticPropertyMember(PropertyInfo propertyInfo)
+		{
+			var attributes = propertyInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var (getter, setter) = CreateStaticPropertyAccessorMethods(propertyInfo);
+			var (getValue, setValue) = CreateStaticPropertyAccessors(propertyInfo);
+			var methodInfo = propertyInfo.GetAccessors(true).First()!;
+			var type = MemberCache.Types[propertyInfo.PropertyType.TypeHandle];
+
+			return new StaticPropertyMember(propertyInfo.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, getValue, setter, setValue, type);
 		}
 
 		public static IImmutableDictionary<string, StaticPropertyMember> CreateStaticPropertyMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetProperties(STATIC_BINDINGS)
-				//.If(propertyInfo => !propertyInfo!.PropertyType.IsByRefLike)
 				.To(propertyInfo => KeyValuePair.Create(propertyInfo!.Name, CreateStaticPropertyMember(propertyInfo)))
 				.ToImmutable(StringComparer.Ordinal);
 
@@ -433,23 +391,13 @@ namespace TypeCache.Reflection
 			var interfaces = type.GetInterfaces();
 			var kind = type.GetKind();
 			var systemType = type.GetSystemType();
-			return new TypeMember
-			{
-				Attributes = type.GetCustomAttributes<Attribute>(true).ToImmutable(),
-				BaseTypeHandle = type.BaseType?.TypeHandle,
-				GenericTypeHandles = type.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable(),
-				Handle = type.TypeHandle,
-				InterfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutable(interfaces.Length),
-				IsEnumerable = type.IsEnumerable(),
-				IsInternal = !type.IsVisible,
-				IsNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable,
-				IsPointer = type.IsPointer,
-				IsPublic = type.IsPublic,
-				IsRef = type.IsByRefLike,
-				Kind = kind,
-				Name = type.GetName(),
-				SystemType = systemType
-			};
+			var isNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable;
+			var attributes = type.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var genericTypeHandles = type.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable();
+			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutable(interfaces.Length);
+
+			return new TypeMember(type.GetName(), attributes, type.IsPointer, type.IsPublic, kind, systemType, type.TypeHandle, type.BaseType?.TypeHandle,
+				genericTypeHandles, interfaceTypeHandles, type.IsEnumerable(), !type.IsVisible, isNullable, type.IsByRef || type.IsByRefLike);
 		}
 	}
 }
