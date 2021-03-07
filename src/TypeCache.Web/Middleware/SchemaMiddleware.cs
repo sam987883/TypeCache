@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Extensions;
+using TypeCache.Data;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
 {
 	public class SchemaMiddleware : DataMiddleware
 	{
-		public SchemaMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
-			: base(providerName, connectionString, mediator)
+		public SchemaMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
+			: base(sqlApi, mediator)
 		{
 		}
 
@@ -22,8 +22,7 @@ namespace TypeCache.Web.Middleware
 			var name = httpContext.Request.Query["object"].First();
 			if (!name.IsBlank())
 			{
-				await using var dbConnection = this.CreateDbConnection();
-				var schema = dbConnection.GetObjectSchema(name);
+				var schema = this.SqlApi.GetObjectSchema(name);
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
 			}
 		}

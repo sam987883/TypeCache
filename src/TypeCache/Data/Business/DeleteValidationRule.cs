@@ -1,23 +1,21 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class DeleteValidationRule : IValidationRule<DbConnection, DeleteRequest>
+	internal class DeleteValidationRule : IValidationRule<ISqlApi, DeleteRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, DeleteRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, DeleteRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var schema = dbConnection.GetObjectSchema(request.From);
+					var schema = sqlApi.GetObjectSchema(request.From);
 					request.From = schema.Name;
 
 					var validator = new SchemaValidator(schema);

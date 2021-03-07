@@ -9,9 +9,16 @@ namespace TypeCache.Data.Extensions
 	{
 		public static DbConnection CreateConnection(this DbProviderFactory @this, string connectionString)
 		{
-			var dbConnection = @this.CreateConnection();
-			dbConnection!.ConnectionString = connectionString;
+			var dbConnection = @this.CreateConnection()!;
+			dbConnection.ConnectionString = connectionString;
 			return dbConnection;
+		}
+
+		public static DbConnectionStringBuilder CreateConnectionStringBuilder(this DbProviderFactory @this, string connectionString)
+		{
+			var dbConnectionStringBuilder = @this.CreateConnectionStringBuilder()!;
+			dbConnectionStringBuilder.ConnectionString = connectionString;
+			return dbConnectionStringBuilder;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

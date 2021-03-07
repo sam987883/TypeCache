@@ -9,8 +9,8 @@ namespace TypeCache.Web.Middleware
 {
 	public class InsertSqlMiddleware : DataMiddleware
 	{
-		public InsertSqlMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
-			: base(providerName, connectionString, mediator)
+		public InsertSqlMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
+			: base(sqlApi, mediator)
 		{
 		}
 

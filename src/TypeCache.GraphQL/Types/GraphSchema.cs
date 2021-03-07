@@ -1,14 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Data.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 
@@ -17,16 +14,23 @@ namespace TypeCache.GraphQL.Types
 	public class GraphSchema : Schema
 	{
 		private readonly IMediator _Mediator;
+		private readonly ISqlApi _SqlApi;
 
-		public GraphSchema(IServiceProvider provider, Action<GraphSchema> addEndpoints) : base(provider)
+		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, Action<GraphSchema> addEndpoints) : base(provider)
 		{
 			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
 			this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
 
-			this._Mediator = provider.GetRequiredService<IMediator>();
+			this._Mediator = mediator;
+			this._SqlApi = sqlApi!;
 
 			addEndpoints(this);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private SqlApi<T> CreateSqlApi<T>(ObjectSchema objectSchema)
+			where T : class, new()
+			=> new SqlApi<T>(this._Mediator, this._SqlApi, objectSchema.Name);
 
 		/// <summary>
 		/// Use this to create GraphQL endpoints based on methods defined in the specified class tagged with either <see cref="GraphMutationAttribute"/> or <see cref="GraphQueryAttribute"/>
@@ -62,15 +66,14 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-{Item}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Update-Batch-{Item}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
-		public void AddSqlApiEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddSqlApiEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = this.GetObjectSchema(databaseProvider, connectionString, table).Result;
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, table);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			if (objectSchema.Type == ObjectType.Table)
 			{
@@ -96,15 +99,14 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-{Item}-SQL</term> <description>Returns SQL that updates records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Update-Batch-{Item}-SQL</term> <description>Returns SQL that updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApi"/></code>
 		/// </summary>
-		public void AddSqlOnlyEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddSqlOnlyEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = this.GetObjectSchema(databaseProvider, connectionString, table).Result;
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			var query = (ObjectGraphType)this.Query;
 			if (objectSchema.Type == ObjectType.Table)
@@ -125,15 +127,14 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Delete-{Item}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Delete-Batch-{Item}</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
-		public async ValueTask AddDeleteEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddDeleteEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["Delete"].Do(method => this.Mutation.AddField(method.CreateSqlApiFieldType(sqlApi)));
 			TypeOf<SqlApi<T>>.Methods["DeleteBatch"].Do(method => this.Mutation.AddField(method.CreateSqlApiFieldType(sqlApi)));
@@ -145,15 +146,14 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Delete-{Item}-SQL</term> <description>Returns SQL that deletes records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Delete-Batch-{Item}-SQL</term> <description>Returns SQL that deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
-		public async ValueTask AddDeleteSqlEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddDeleteSqlEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["DeleteSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
 			TypeOf<SqlApi<T>>.Methods["DeleteBatchSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
@@ -164,15 +164,14 @@ namespace TypeCache.GraphQL.Types
 		/// <list type="table">
 		/// <item><term>Mutation: Insert-Batch-{Item}</term> <description>Inserts a batch of records.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
-		public async ValueTask AddInsertEndpoint<T>(string databaseProvider, string connectionString, string table)
+		public void AddInsertEndpoint<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["InsertBatch"].Do(method => this.Mutation.AddField(method.CreateSqlApiFieldType(sqlApi)));
 		}
@@ -182,15 +181,14 @@ namespace TypeCache.GraphQL.Types
 		/// <list type="table">
 		/// <item><term>Mutation: Insert-Batch-{Item}-SQL</term> <description>Returns SQL that inserts a batch of records.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
-		public async ValueTask AddInsertSqlEndpoint<T>(string databaseProvider, string connectionString, string table)
+		public void AddInsertSqlEndpoint<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["InsertBatchSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
 		}
@@ -200,15 +198,14 @@ namespace TypeCache.GraphQL.Types
 		/// <list type="table">
 		/// <item><term>Query: Select-{Item}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
-		public async ValueTask AddSelectEndpoint<T>(string databaseProvider, string connectionString, string table)
+		public void AddSelectEndpoint<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
 		}
@@ -218,15 +215,14 @@ namespace TypeCache.GraphQL.Types
 		/// <list type="table">
 		/// <item><term>Query: Select-{Item}-SQL</term> <description>Returns SQL that selects records based on a <c>WHERE</c> clause.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
-		public async ValueTask AddSelectSqlEndpoint<T>(string databaseProvider, string connectionString, string table)
+		public void AddSelectSqlEndpoint<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["SelectSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
 		}
@@ -237,15 +233,14 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-{Item}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Update-Batch-{Item}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
-		public async ValueTask AddUpdateEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddUpdateEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["Update"].Do(method => this.Mutation.AddField(method.CreateSqlApiFieldType(sqlApi)));
 			TypeOf<SqlApi<T>>.Methods["UpdateBatch"].Do(method => this.Mutation.AddField(method.CreateSqlApiFieldType(sqlApi)));
@@ -257,30 +252,17 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-{Item}-SQL</term> <description>Returns SQL that updates records based on a <c>WHERE</c> clause.</description></item>
 		/// <item><term>Mutation: Update-Batch-{Item}-SQL</term> <description>Returns SQL that updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="TypeCache.Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
-		public async ValueTask AddUpdateSqlEndpoints<T>(string databaseProvider, string connectionString, string table)
+		public void AddUpdateSqlEndpoints<T>(string table)
 			where T : class, new()
 		{
-			var objectSchema = await this.GetObjectSchema(databaseProvider, connectionString, table);
-			var sqlApi = new SqlApi<T>(databaseProvider, connectionString, this._Mediator, objectSchema.Name);
+			var objectSchema = this._SqlApi.GetObjectSchema(table);
+			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
 			TypeOf<SqlApi<T>>.Methods["UpdateSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
 			TypeOf<SqlApi<T>>.Methods["UpdateBatchSQL"].Do(method => this.Query.AddField(method.CreateSqlApiFieldType(sqlApi)));
-		}
-
-		private async ValueTask<ObjectSchema> GetObjectSchema(string databaseProvider, string connectionString, string table)
-		{
-			var dbProviderFactory = DbProviderFactories.GetFactory(databaseProvider);
-			await using var dbConnection = dbProviderFactory.CreateConnection(connectionString);
-
-			await dbConnection.OpenAsync();
-			var objectSchema = dbConnection.GetObjectSchema(table);
-			await dbConnection.CloseAsync();
-
-			return objectSchema;
 		}
 	}
 }

@@ -1,23 +1,21 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class StoredProcedureValidationRule : IValidationRule<DbConnection, StoredProcedureRequest>
+	internal class StoredProcedureValidationRule : IValidationRule<ISqlApi, StoredProcedureRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, StoredProcedureRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, StoredProcedureRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var schema = dbConnection.GetObjectSchema(request.Procedure);
+					var schema = sqlApi.GetObjectSchema(request.Procedure);
 					request.Procedure = schema.Name;
 
 					var validator = new SchemaValidator(schema);

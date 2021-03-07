@@ -1,33 +1,24 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Data.Common;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Converters;
+using TypeCache.Data;
 
 namespace TypeCache.Web.Middleware
 {
 	public abstract class DataMiddleware
 	{
-		private readonly string _ConnectionString;
-		private readonly DbProviderFactory _DbProviderFactory;
-		private readonly IMediator _Mediator;
+		protected IMediator Mediator { get; }
+		protected ISqlApi SqlApi { get; }
 
-		public DataMiddleware(string providerName, string connectionString, IMediator mediator)
+		public DataMiddleware(ISqlApi sqlApi, IMediator mediator)
 		{
-			this._ConnectionString = connectionString;
-			this._DbProviderFactory = DbProviderFactories.GetFactory(providerName);
-			this._Mediator = mediator;
-		}
-
-		protected DbConnection CreateDbConnection()
-		{
-			var connection = this._DbProviderFactory.CreateConnection();
-			connection!.ConnectionString = this._ConnectionString;
-			return connection;
+			this.SqlApi = sqlApi;
+			this.Mediator = mediator;
 		}
 
 		protected async ValueTask<T?> GetRequest<T>(HttpContext httpContext)
@@ -45,8 +36,7 @@ namespace TypeCache.Web.Middleware
 
 		protected async ValueTask HandleRequest<T, R>(T request, HttpContext httpContext)
 		{
-			await using var dbConnection = this.CreateDbConnection();
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, T, R>(dbConnection, request);
+			var response = await this.Mediator.ApplyRuleAsync<ISqlApi, T, R>(this.SqlApi, request);
 
 			httpContext.Response.ContentType = "application/json";
 			if (!response.HasError)
@@ -61,9 +51,7 @@ namespace TypeCache.Web.Middleware
 		protected async ValueTask HandleSqlRequest<T>(HttpContext httpContext)
 		{
 			var request = await this.GetRequest<T>(httpContext);
-
-			await using var dbConnection = this.CreateDbConnection();
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, T, string>(dbConnection, request!);
+			var response = await this.Mediator.ApplyRuleAsync<T, string>(request!);
 
 			if (!response.HasError)
 			{

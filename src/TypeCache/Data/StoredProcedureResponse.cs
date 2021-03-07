@@ -18,21 +18,13 @@ namespace TypeCache.Data
 	///	}
 	/// </code>
 	/// </summary>
-	public class StoredProcedureResponse
+	public record StoredProcedureResponse(IEnumerable<RowSet> Output)
 	{
-		/// <summary>
-		/// {<br />
-		///		"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
-		///		"Rows": [ [ "Data", 123, null, ... ], [ ... ], ... ]<br />
-		/// }
-		/// </summary>
-		public IEnumerable<RowSet> Output { get; set; } = new RowSet[0];
-
 		/// <summary>
 		/// JSON: <code>[ { "Parameter1": "Value1" }, { "Parameter2": NULL }, { "Parameter3": true } ]</code>
 		/// SQL: <code>@Parameter1 = N'Value1' OUTPUT, @Parameter2 = NULL OUTPUT, @Parameter3 = 1 OUTPUT</code>
 		/// </summary>
 		[JsonConverter(typeof(ParameterArrayJsonConverter))]
-		public Parameter[]? Parameters { get; set; }
+		public Parameter[]? Parameters { get; init; }
 	}
 }

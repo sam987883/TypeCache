@@ -12,8 +12,8 @@ namespace TypeCache.Web.Middleware
 {
 	public class ExecuteSqlMiddleware : DataMiddleware
 	{
-		public ExecuteSqlMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
-			: base(providerName, connectionString, mediator)
+		public ExecuteSqlMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
+			: base(sqlApi, mediator)
 		{
 		}
 

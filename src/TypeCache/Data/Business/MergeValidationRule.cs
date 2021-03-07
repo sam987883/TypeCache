@@ -1,25 +1,23 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class MergeValidationRule : IValidationRule<DbConnection, BatchRequest>
+	internal class MergeValidationRule : IValidationRule<ISqlApi, BatchRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, BatchRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, BatchRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var schema = dbConnection.GetObjectSchema(request.Table);
+					var schema = sqlApi.GetObjectSchema(request.Table);
 					request.Table = schema.Name;
 					request.On = schema.Columns.If(column => column!.PrimaryKey).To(column => column!.Name).ToArray();
 

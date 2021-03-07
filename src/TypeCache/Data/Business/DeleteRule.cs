@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
@@ -8,12 +7,12 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class DeleteRule : IRule<DbConnection, DeleteRequest, RowSet>, IRule<DbConnection, DeleteRequest, string>
+	internal class DeleteRule : IRule<ISqlApi, DeleteRequest, RowSet>, IRule<DeleteRequest, string>
 	{
-		async ValueTask<RowSet> IRule<DbConnection, DeleteRequest, RowSet>.ApplyAsync(DbConnection connection, DeleteRequest request, CancellationToken cancellationToken)
-			=> await connection.DeleteAsync(request, cancellationToken);
+		async ValueTask<RowSet> IRule<ISqlApi, DeleteRequest, RowSet>.ApplyAsync(ISqlApi sqlApi, DeleteRequest request, CancellationToken cancellationToken)
+			=> await sqlApi.DeleteAsync(request, cancellationToken);
 
-		async ValueTask<string> IRule<DbConnection, DeleteRequest, string>.ApplyAsync(DbConnection connection, DeleteRequest request, CancellationToken cancellationToken)
+		async ValueTask<string> IRule<DeleteRequest, string>.ApplyAsync(DeleteRequest request, CancellationToken cancellationToken)
 			=> await ValueTask.FromResult(request.ToSql());
 	}
 }

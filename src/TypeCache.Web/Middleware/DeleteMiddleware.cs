@@ -9,8 +9,8 @@ namespace TypeCache.Web.Middleware
 {
 	public class DeleteMiddleware : DataMiddleware
 	{
-		public DeleteMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
-			: base(providerName, connectionString, mediator)
+		public DeleteMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
+			: base(sqlApi, mediator)
 		{
 		}
 

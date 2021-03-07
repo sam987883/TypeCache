@@ -9,8 +9,8 @@ namespace TypeCache.Web.Middleware
 {
 	public class MergeMiddleware : DataMiddleware
 	{
-		public MergeMiddleware(RequestDelegate _, string providerName, string connectionString, IMediator mediator)
-			: base(providerName, connectionString, mediator)
+		public MergeMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
+			: base(sqlApi, mediator)
 		{
 		}
 

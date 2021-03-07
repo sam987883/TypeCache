@@ -1,23 +1,21 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class UpdateValidationRule : IValidationRule<DbConnection, UpdateRequest>
+	internal class UpdateValidationRule : IValidationRule<ISqlApi, UpdateRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, UpdateRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, UpdateRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var schema = dbConnection.GetObjectSchema(request.Table);
+					var schema = sqlApi.GetObjectSchema(request.Table);
 					request.Table = schema.Name;
 
 					var validator = new SchemaValidator(schema);

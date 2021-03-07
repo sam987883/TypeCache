@@ -17,6 +17,7 @@ namespace TypeCache.Reflection
 		static MemberCache()
 		{
 			Constructors = new LazyDictionary<RuntimeTypeHandle, IImmutableList<ConstructorMember>>(MemberFactory.CreateConstructorMembers);
+			Delegates = new LazyDictionary<RuntimeTypeHandle, MethodMember>(MemberFactory.CreateMethodMember);
 			Fields = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, FieldMember>>(MemberFactory.CreateFieldMembers);
 			Indexers = new LazyDictionary<RuntimeTypeHandle, IImmutableList<IndexerMember>>(MemberFactory.CreateIndexerMembers);
 			Methods = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<MethodMember>>>(MemberFactory.CreateMethodMembers);
@@ -24,7 +25,7 @@ namespace TypeCache.Reflection
 			StaticFields = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticFieldMember>>(MemberFactory.CreateStaticFieldMembers);
 			StaticMethods = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<StaticMethodMember>>>(MemberFactory.CreateStaticMethodMembers);
 			StaticProperties = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticPropertyMember>>(MemberFactory.CreateStaticPropertyMembers);
-			Types = new LazyDictionary<RuntimeTypeHandle, TypeMember>(typeHandle => MemberFactory.CreateTypeMember(typeHandle.ToType()));
+			Types = new LazyDictionary<RuntimeTypeHandle, TypeMember>(typeHandle => typeHandle.ToType().CreateMember());
 			SystemTypeMap = new Dictionary<RuntimeTypeHandle, SystemType>
 			{
 				{ typeof(bool).TypeHandle, SystemType.Boolean},
@@ -138,6 +139,8 @@ namespace TypeCache.Reflection
 		}
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableList<ConstructorMember>> Constructors { get; }
+
+		public static IReadOnlyDictionary<RuntimeTypeHandle, MethodMember> Delegates { get; }
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, FieldMember>> Fields { get; }
 

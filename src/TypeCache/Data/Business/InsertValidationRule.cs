@@ -1,25 +1,23 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class InsertValidationRule : IValidationRule<DbConnection, InsertRequest>
+	internal class InsertValidationRule : IValidationRule<ISqlApi, InsertRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, InsertRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, InsertRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var insertSchema = dbConnection.GetObjectSchema(request.Into);
+					var insertSchema = sqlApi.GetObjectSchema(request.Into);
 					request.Into = insertSchema.Name;
-					var fromSchema = dbConnection.GetObjectSchema(request.From);
+					var fromSchema = sqlApi.GetObjectSchema(request.From);
 					request.From = fromSchema.Name;
 
 					var validator = new SchemaValidator(insertSchema);

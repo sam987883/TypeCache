@@ -10,140 +10,124 @@ namespace TypeCache.Data.Extensions
 	public static class IServiceCollectionExtensions
 	{
 		/// <summary>
-		/// Registers Singleton Rules and RuleHandlers consumed by SQL API.<br />
-		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;StoredProcedureRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,StoredProcedureRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="StoredProcedureRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DeleteRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,DeleteRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="DeleteRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;InsertRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,InsertRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="InsertRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;BatchRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,BatchRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="BatchRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;SelectRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,SelectRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="SelectRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;UpdateRequest&gt;"/>, <see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
-		/// </list>
+		/// Provides various database operations: <see cref="ISqlApi"/><br /><br />
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApi(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
-				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRule<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
-				.AddSingleton<IRule<DbConnection, DeleteRequest, RowSet>, DeleteRule>()
-				.AddSingleton<IRule<DbConnection, DeleteRequest, string>, DeleteRule>()
-				.AddSingleton<IRule<DbConnection, InsertRequest, RowSet>, InsertRule>()
-				.AddSingleton<IRule<DbConnection, InsertRequest, string>, InsertRule>()
-				.AddSingleton<IRule<DbConnection, BatchRequest, RowSet>, MergeRule>()
-				.AddSingleton<IRule<DbConnection, BatchRequest, string>, MergeRule>()
-				.AddSingleton<IRule<DbConnection, SelectRequest, RowSet>, SelectRule>()
-				.AddSingleton<IRule<DbConnection, SelectRequest, string>, SelectRule>()
-				.AddSingleton<IRule<DbConnection, UpdateRequest, RowSet>, UpdateRule>()
-				.AddSingleton<IRule<DbConnection, UpdateRequest, string>, UpdateRule>()
-				.AddSingleton<IValidationRule<DbConnection, DeleteRequest>, DeleteValidationRule>()
-				.AddSingleton<IValidationRule<DbConnection, InsertRequest>, InsertValidationRule>()
-				.AddSingleton<IValidationRule<DbConnection, BatchRequest>, MergeValidationRule>()
-				.AddSingleton<IValidationRule<DbConnection, SelectRequest>, SelectValidationRule>()
-				.AddSingleton<IValidationRule<DbConnection, StoredProcedureRequest>, StoredProcedureValidationRule>()
-				.AddSingleton<IValidationRule<DbConnection, UpdateRequest>, UpdateValidationRule>();
+		/// <param name="databaseProvider">The database provider string ie. "Microsoft.Data.SqlClient".</param>
+		/// <param name="connectionString">The database connection string.</param>
+		public static IServiceCollection RegisterSqlApi(this IServiceCollection @this, string databaseProvider, string connectionString)
+			=> @this.AddSingleton<ISqlApi>(new SqlApi(databaseProvider, connectionString));
+
+		/// <summary>
+		/// Registers Singleton Rules and RuleHandlers consumed by SQL API.<br />
+		/// You can implement the following validation rules to validate the request before the database call is made:
+		/// <code>IValidationRule&lt;<see cref="StoredProcedureRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="StoredProcedureRequest" />&gt;</code>
+		/// <code>IValidationRule&lt;<see cref="DeleteRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="DeleteRequest" />&gt;</code>
+		/// <code>IValidationRule&lt;<see cref="InsertRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="InsertRequest" />&gt;</code>
+		/// <code>IValidationRule&lt;<see cref="BatchRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="BatchRequest" />&gt;</code>
+		/// <code>IValidationRule&lt;<see cref="SelectRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="SelectRequest" />&gt;</code>
+		/// <code>IValidationRule&lt;<see cref="UpdateRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="UpdateRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
+		/// </summary>
+		public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this)
+			=> @this.RegisterSqlApiCallRules()
+				.RegisterSqlApiDeleteRules()
+				.RegisterSqlApiInsertRules()
+				.RegisterSqlApiMergeRules()
+				.RegisterSqlApiSelectRules()
+				.RegisterSqlApiUpdateRules();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for calling procedures.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;StoredProcedureRequest&gt;"/></term> <description>where T = <see cref="StoredProcedureRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,StoredProcedureRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="StoredProcedureRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="StoredProcedureRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="StoredProcedureRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiCall(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
-				.AddSingleton<IRule<DbConnection, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
-				.AddSingleton<IValidationRule<DbConnection, StoredProcedureRequest>, StoredProcedureValidationRule>();
+		public static IServiceCollection RegisterSqlApiCallRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
+				.AddSingleton<IRule<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
+				.AddSingleton<IValidationRule<ISqlApi, StoredProcedureRequest>, StoredProcedureValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing deletes.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;DeleteRequest&gt;"/></term> <description>where T = <see cref="DeleteRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="DeleteRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="DeleteRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiDelete(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRule<DbConnection, DeleteRequest, RowSet>, DeleteRule>()
-				.AddSingleton<IRule<DbConnection, DeleteRequest, string>, DeleteRule>()
-				.AddSingleton<IValidationRule<DbConnection, DeleteRequest>, DeleteValidationRule>();
+		public static IServiceCollection RegisterSqlApiDeleteRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRuleHandler<DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
+				.AddSingleton<IRule<ISqlApi, DeleteRequest, RowSet>, DeleteRule>()
+				.AddSingleton<IRule<DeleteRequest, string>, DeleteRule>()
+				.AddSingleton<IValidationRule<ISqlApi, DeleteRequest>, DeleteValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing inserts.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;InsertRequest&gt;"/></term> <description>where T = <see cref="InsertRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,InsertRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="InsertRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="InsertRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="InsertRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiInsert(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
-				.AddSingleton<IRule<DbConnection, InsertRequest, RowSet>, InsertRule>()
-				.AddSingleton<IRule<DbConnection, InsertRequest, string>, InsertRule>()
-				.AddSingleton<IValidationRule<DbConnection, InsertRequest>, InsertValidationRule>();
+		public static IServiceCollection RegisterSqlApiInsertRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
+				.AddSingleton<IRuleHandler<InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
+				.AddSingleton<IRule<ISqlApi, InsertRequest, RowSet>, InsertRule>()
+				.AddSingleton<IRule<InsertRequest, string>, InsertRule>()
+				.AddSingleton<IValidationRule<ISqlApi, InsertRequest>, InsertValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing merges.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;BatchRequest&gt;"/></term> <description>where T = <see cref="BatchRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,BatchRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="BatchRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="BatchRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="BatchRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiMerge(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
-				.AddSingleton<IRule<DbConnection, BatchRequest, RowSet>, MergeRule>()
-				.AddSingleton<IRule<DbConnection, BatchRequest, string>, MergeRule>()
-				.AddSingleton<IValidationRule<DbConnection, BatchRequest>, MergeValidationRule>();
+		public static IServiceCollection RegisterSqlApiMergeRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
+				.AddSingleton<IRuleHandler<BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
+				.AddSingleton<IRule<ISqlApi, BatchRequest, RowSet>, MergeRule>()
+				.AddSingleton<IRule<BatchRequest, string>, MergeRule>()
+				.AddSingleton<IValidationRule<ISqlApi, BatchRequest>, MergeValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing selects.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;SelectRequest&gt;"/></term> <description>where T = <see cref="SelectRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,SelectRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="SelectRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="SelectRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="SelectRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiSelect(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
-				.AddSingleton<IRule<DbConnection, SelectRequest, RowSet>, SelectRule>()
-				.AddSingleton<IRule<DbConnection, SelectRequest, string>, SelectRule>()
-				.AddSingleton<IValidationRule<DbConnection, SelectRequest>, SelectValidationRule>();
+		public static IServiceCollection RegisterSqlApiSelectRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
+				.AddSingleton<IRuleHandler<SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
+				.AddSingleton<IRule<ISqlApi, SelectRequest, RowSet>, SelectRule>()
+				.AddSingleton<IRule<SelectRequest, string>, SelectRule>()
+				.AddSingleton<IValidationRule<ISqlApi, SelectRequest>, SelectValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing updates.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
-		/// <list type="bullet">
-		/// <item><term><see cref="IValidationRule&lt;UpdateRequest&gt;"/></term> <description>where T = <see cref="UpdateRequest" />.</description></item>
-		/// <item><term><see cref="IValidationRule&lt;DbConnection,UpdateRequest&gt;"/></term> <description>where M = <see cref="DbConnection" /> and T = <see cref="UpdateRequest" />.</description></item>
-		/// </list>
+		/// <code>IValidationRule&lt;<see cref="UpdateRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="UpdateRequest" />&gt;</code>
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiUpdate(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRuleHandler<DbConnection, UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRule<DbConnection, UpdateRequest, RowSet>, UpdateRule>()
-				.AddSingleton<IRule<DbConnection, UpdateRequest, string>, UpdateRule>()
-				.AddSingleton<IValidationRule<DbConnection, UpdateRequest>, UpdateValidationRule>();
+		public static IServiceCollection RegisterSqlApiUpdateRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRuleHandler<UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
+				.AddSingleton<IRule<ISqlApi, UpdateRequest, RowSet>, UpdateRule>()
+				.AddSingleton<IRule<UpdateRequest, string>, UpdateRule>()
+				.AddSingleton<IValidationRule<ISqlApi, UpdateRequest>, UpdateValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for executing raw SQL.<br />
+		/// <i><b>Requires call to:</b></i>
+		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
-		public static IServiceCollection RegisterSqlApiExecuteSql(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<DbConnection, SqlRequest, RowSet[]>, ExecuteSqlRuleHandler>()
-				.AddSingleton<IRule<DbConnection, SqlRequest, RowSet[]>, ExecuteSqlRule>();
+		public static IServiceCollection RegisterSqlApiExecuteSqlRules(this IServiceCollection @this)
+			=> @this.AddSingleton<IRuleHandler<ISqlApi, SqlRequest, RowSet[]>, ExecuteSqlRuleHandler>()
+				.AddSingleton<IRule<ISqlApi, SqlRequest, RowSet[]>, ExecuteSqlRule>();
 	}
 }

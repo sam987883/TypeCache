@@ -82,23 +82,23 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		public static T? Aggregate<T>(this IEnumerable<T>? @this, Func<T, T, T> aggregator)
-			where T : struct
+		public static T Aggregate<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, T> aggregator)
+			where T : unmanaged
 		{
 			aggregator.AssertNotNull(nameof(aggregator));
 
-			var result = default(T?);
-			@this.Do(item => result = aggregator(result.GetValueOrDefault(), item));
+			var result = initialValue;
+			@this.Do(item => result = aggregator(result, item));
 			return result;
 		}
 
-		public static async ValueTask<T?> AggregateAsync<T>(this IEnumerable<T>? @this, Func<T, T, Task<T>> aggregator)
-			where T : struct
+		public static async ValueTask<T> AggregateAsync<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, Task<T>> aggregator)
+			where T : unmanaged
 		{
 			aggregator.AssertNotNull(nameof(aggregator));
 
-			var result = default(T?);
-			await @this.DoAsync(async item => result = await aggregator(result.GetValueOrDefault(), item));
+			var result = initialValue;
+			await @this.DoAsync(async item => result = await aggregator(result, item));
 			return result;
 		}
 
@@ -724,29 +724,29 @@ YieldBang:
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? Maximum<T>(this IEnumerable<T>? @this)
-			where T : struct, IComparable<T>
-			=> @this.Aggregate((x, y) => x.MoreThan(y) ? x : y);
+		public static T Maximum<T>(this IEnumerable<T>? @this)
+			where T : unmanaged, IComparable<T>
+			=> @this.Aggregate(default(T), (x, y) => x.MoreThan(y) ? x : y);
 
-		public static T? Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
-			where T : struct
+		public static T Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+			where T : unmanaged
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
-			return @this.Aggregate(comparer.Maximum);
+			return @this.Aggregate(default(T), comparer.Maximum);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? Minimum<T>(this IEnumerable<T>? @this)
-			where T : struct, IComparable<T>
-			=> @this.Aggregate((x, y) => x.LessThan(y) ? x : y);
+		public static T Minimum<T>(this IEnumerable<T>? @this)
+			where T : unmanaged, IComparable<T>
+			=> @this.Aggregate(default(T), (x, y) => x.LessThan(y) ? x : y);
 
-		public static T? Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
-			where T : struct
+		public static T Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+			where T : unmanaged
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
-			return @this.Aggregate(comparer.Minimum);
+			return @this.Aggregate(default(T), comparer.Minimum);
 		}
 
 		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)

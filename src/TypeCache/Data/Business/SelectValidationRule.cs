@@ -1,23 +1,21 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class SelectValidationRule : IValidationRule<DbConnection, SelectRequest>
+	internal class SelectValidationRule : IValidationRule<ISqlApi, SelectRequest>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(DbConnection dbConnection, SelectRequest request, CancellationToken cancellationToken)
+		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, SelectRequest request, CancellationToken cancellationToken)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var schema = dbConnection.GetObjectSchema(request.From);
+					var schema = sqlApi.GetObjectSchema(request.From);
 					request.From = schema.Name;
 
 					var validator = new SchemaValidator(schema);

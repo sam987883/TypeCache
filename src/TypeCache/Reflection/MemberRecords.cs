@@ -18,7 +18,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 
 	public sealed record FieldMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -31,7 +31,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 
 	public sealed record StaticFieldMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -44,7 +44,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 
 	public sealed record IndexerMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -62,7 +62,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 
 	public sealed record StaticMethodMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -75,7 +75,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 
 	public sealed record Parameter(string Name, IImmutableList<Attribute> Attributes, bool IsOptional, bool IsOut,
@@ -99,7 +99,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> (this.Getter ?? this.Setter)!.Handle.GetHashCode();
 	}
 
 	public sealed record StaticPropertyMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -111,7 +111,7 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> (this.Getter ?? this.Setter)!.Handle.GetHashCode();
 	}
 
 	public sealed record TypeMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
@@ -125,6 +125,6 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> this.Handle.GetHashCode();
 	}
 }

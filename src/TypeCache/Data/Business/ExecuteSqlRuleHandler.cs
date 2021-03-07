@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,16 +10,16 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class ExecuteSqlRuleHandler : IRuleHandler<DbConnection, SqlRequest, RowSet[]>
+	internal class ExecuteSqlRuleHandler : IRuleHandler<ISqlApi, SqlRequest, RowSet[]>
 	{
 		private readonly IServiceProvider _ServiceProvider;
 
 		public ExecuteSqlRuleHandler(IServiceProvider provider)
 			=> this._ServiceProvider = provider;
 
-		async ValueTask<Response<RowSet[]>> IRuleHandler<DbConnection, SqlRequest, RowSet[]>.HandleAsync(DbConnection dbConnection, SqlRequest request, CancellationToken cancellationToken)
+		async ValueTask<Response<RowSet[]>> IRuleHandler<ISqlApi, SqlRequest, RowSet[]>.HandleAsync(ISqlApi sqlApi, SqlRequest request, CancellationToken cancellationToken)
 		{
-			var validationResponses = (await this.ApplyValidationRules(this._ServiceProvider, dbConnection, request, cancellationToken))
+			var validationResponses = (await this.ApplyValidationRules(this._ServiceProvider, sqlApi, request, cancellationToken))
 				.Union(await this.ApplyValidationRules(this._ServiceProvider, request, cancellationToken))
 				.ToArray();
 			if (!validationResponses.Any(_ => _.IsError))
@@ -28,19 +27,13 @@ namespace TypeCache.Data.Business
 
 			try
 			{
-				await dbConnection.OpenAsync(cancellationToken);
-				var rule = this._ServiceProvider.GetRequiredService<IRule<DbConnection, SqlRequest, RowSet[]>>();
-				var response = new Response<RowSet[]>(await rule.ApplyAsync(dbConnection, request, cancellationToken));
-				await dbConnection.CloseAsync();
+				var rule = this._ServiceProvider.GetRequiredService<IRule<ISqlApi, SqlRequest, RowSet[]>>();
+				var response = new Response<RowSet[]>(await rule.ApplyAsync(sqlApi, request, cancellationToken));
 				return response;
 			}
 			catch (Exception exception)
 			{
 				return new Response<RowSet[]>(exception);
-			}
-			finally
-			{
-				await dbConnection.DisposeAsync();
 			}
 		}
 	}

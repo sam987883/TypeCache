@@ -20,6 +20,20 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.GetConstructorCache().First(constructor => constructor!.IsCallableWith(parameters))?.Create!(parameters)
 				?? throw new ArgumentException($"Create instance of class {@this.Name} failed with {parameters?.Length ?? 0} parameters.");
 
+		public static TypeMember CreateMember(this Type @this)
+		{
+			var interfaces = @this.GetInterfaces();
+			var kind = @this.GetKind();
+			var systemType = @this.GetSystemType();
+			var isNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable;
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var genericTypeHandles = @this.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable();
+			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutable(interfaces.Length);
+
+			return new TypeMember(@this.GetName(), attributes, !@this.IsVisible, @this.IsPublic, kind, systemType, @this.TypeHandle, @this.BaseType?.TypeHandle,
+				genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this MemberInfo @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
@@ -108,9 +122,11 @@ namespace TypeCache.Reflection.Extensions
 				|| @this.Is(typeof(IAsyncEnumerable<>));
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEnumerable(this Type @this)
 			=> @this.Is<IEnumerable>() || @this.ToGenericType() == typeof(IEnumerable);
+
+		public static bool IsInvokable(this Type @this)
+			=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 
 		public static Type? ToGenericType(this Type? @this)
 			=> @this switch

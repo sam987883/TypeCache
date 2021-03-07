@@ -3,7 +3,8 @@
 using System;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Extensions;
+using TypeCache.Business;
+using TypeCache.Data;
 using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Extensions
@@ -22,7 +23,7 @@ namespace TypeCache.GraphQL.Extensions
 		/// <item><term><see cref="GraphEdgeType&lt;T&gt;"/></term> <description>Edge component of the GraphQL Connection type.</description></item>
 		/// </list>
 		/// </summary>
-		/// <param name="addEndpoints">Use this to register handler classes containing endpoint methods or register SQL API generated endpoints.</param>
+		/// <param name="addEndpoints">Use this to register handler classes containing endpoint methods or to register SQL API generated endpoints.</param>
 		public static IServiceCollection RegisterGraphQL(this IServiceCollection @this, Action<GraphSchema> addEndpoints)
 			=> @this
 				.AddSingleton(typeof(GraphObjectType<>))
@@ -32,6 +33,6 @@ namespace TypeCache.GraphQL.Extensions
 				.AddSingleton(typeof(GraphHashIdType))
 				.AddSingleton(typeof(GraphConnectionType<>))
 				.AddSingleton(typeof(GraphEdgeType<>))
-				.AddSingleton<ISchema>(provider => new GraphSchema(provider, addEndpoints));
+				.AddSingleton<ISchema>(provider => new GraphSchema(provider, provider.GetRequiredService<IMediator>(), provider.GetService<ISqlApi>(), addEndpoints));
 	}
 }

@@ -19,17 +19,15 @@ namespace TypeCache.GraphQL
 	public class SqlApi<T>
 		where T : class, new()
 	{
-		private readonly DbProviderFactory _DbProviderFactory;
-		private readonly string _ConnectionString;
 		private readonly IMediator _Mediator;
+		private readonly ISqlApi _SqlApi;
 
 		public string TableName { get; }
 
-		public SqlApi(string databaseProvider, string connectionString, IMediator mediator, string tableName)
+		public SqlApi(IMediator mediator, ISqlApi sqlApi, string tableName)
 		{
-			this._DbProviderFactory = DbProviderFactories.GetFactory(databaseProvider);
-			this._ConnectionString = connectionString;
 			this._Mediator = mediator;
+			this._SqlApi = sqlApi;
 
 			this.TableName = tableName;
 		}
@@ -50,8 +48,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, DeleteRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -71,8 +68,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, DeleteRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -92,8 +88,7 @@ namespace TypeCache.GraphQL
 				}).ToArray(context.SubFields.Count)
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -113,8 +108,7 @@ namespace TypeCache.GraphQL
 				}).ToArray(context.SubFields.Count)
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -135,8 +129,7 @@ namespace TypeCache.GraphQL
 				}).ToArray(context.SubFields.Count)
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -157,8 +150,7 @@ namespace TypeCache.GraphQL
 				}).ToArray(context.SubFields.Count)
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -180,8 +172,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, SelectRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -203,8 +194,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, SelectRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -231,8 +221,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, UpdateRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -259,8 +248,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, UpdateRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -281,8 +269,7 @@ namespace TypeCache.GraphQL
 				Update = columns
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, RowSet>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
@@ -303,8 +290,7 @@ namespace TypeCache.GraphQL
 				Update = columns
 			};
 
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			var response = await this._Mediator.ApplyRuleAsync<DbConnection, BatchRequest, string>(dbConnection, request);
+			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 	}

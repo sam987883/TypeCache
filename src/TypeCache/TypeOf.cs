@@ -11,35 +11,35 @@ namespace TypeCache
 {
 	public static class TypeOf<T>
 	{
-		private static readonly TypeMember Type = MemberCache.Types[typeof(T).TypeHandle];
+		private static readonly TypeMember TypeMember = MemberCache.Types[typeof(T).TypeHandle];
 
-		public static IImmutableList<Attribute> Attributes => Type.Attributes;
+		public static IImmutableList<Attribute> Attributes => TypeMember.Attributes;
 
-		public static RuntimeTypeHandle? BaseTypeHandle => Type.BaseTypeHandle;
+		public static RuntimeTypeHandle? BaseTypeHandle => TypeMember.BaseTypeHandle;
 
-		public static TypeMember? BaseType => Type.BaseTypeHandle.HasValue ? MemberCache.Types[Type.BaseTypeHandle.Value] : null;
+		public static TypeMember? BaseType => TypeMember.BaseTypeHandle.HasValue ? MemberCache.Types[TypeMember.BaseTypeHandle.Value] : null;
 
-		public static IImmutableList<RuntimeTypeHandle> GenericTypeHandles => Type.GenericTypeHandles;
+		public static IImmutableList<RuntimeTypeHandle> GenericTypeHandles => TypeMember.GenericTypeHandles;
 
-		public static TypeMember[] GenericTypes => Type.GenericTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
+		public static TypeMember[] GenericTypes => TypeMember.GenericTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
 
-		public static RuntimeTypeHandle Handle => Type.Handle;
+		public static RuntimeTypeHandle Handle => TypeMember.Handle;
 
-		public static IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles => Type.InterfaceTypeHandles;
+		public static IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles => TypeMember.InterfaceTypeHandles;
 
-		public static TypeMember[] InterfaceTypes => Type.InterfaceTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
+		public static TypeMember[] InterfaceTypes => TypeMember.InterfaceTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
 
-		public static bool IsEnumerable => Type.IsEnumerable;
+		public static bool IsEnumerable => TypeMember.IsEnumerable;
 
-		public static bool IsInternal => Type.IsInternal;
+		public static bool IsInternal => TypeMember.IsInternal;
 
-		public static bool IsPublic => Type.IsPublic;
+		public static bool IsPublic => TypeMember.IsPublic;
 
-		public static Kind Kind => Type.Kind;
+		public static Kind Kind => TypeMember.Kind;
 
-		public static string Name => Type.Name;
+		public static string Name => TypeMember.Name;
 
-		public static SystemType SystemType => Type.SystemType;
+		public static SystemType SystemType => TypeMember.SystemType;
 
 		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[Handle];
 

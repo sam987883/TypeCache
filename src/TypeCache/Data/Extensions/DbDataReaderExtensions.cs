@@ -19,10 +19,11 @@ namespace TypeCache.Data.Extensions
 		public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			var columnCount = @this.FieldCount;
+			var indexes = 0.Range(columnCount);
 			while (await @this.ReadAsync(cancellationToken))
 			{
 				var values = new object[columnCount];
-				@this.GetValues(values);
+				await indexes.DoAsync(async i => values[i] = await @this.GetFieldValueAsync<object>(i));
 				yield return values;
 			}
 		}

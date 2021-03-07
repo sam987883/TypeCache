@@ -1,32 +1,28 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Collections
 {
-	public abstract class CustomEquatable<T> : IEquatable<T>
+	public abstract class CustomEquatable<T> : IEquatable<CustomEquatable<T>>
 	{
-		private readonly Func<T?, bool> _Equals;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(CustomEquatable<T>? other)
+			=> other != null && this.EqualityFactors.ToHashSet().SetEquals(other.EqualityFactors);
 
-		public CustomEquatable(Func<T?, bool> equals)
-			=> this._Equals = equals;
+		/// <summary>
+		/// Override this and return the field or property values to use when considering equality.
+		/// </summary>
+		protected abstract IEnumerable<object> EqualityFactors { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(T? other)
-			=> this._Equals(other);
-
 		public override bool Equals(object? other)
-			=> other switch { T item => item.Equals(this), _ => false };
+			=> other is T item && this.Equals(item);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
-
-		public static bool operator ==(CustomEquatable<T> a, CustomEquatable<T> b)
-			=> a.Equals(b);
-
-		public static bool operator !=(CustomEquatable<T> a, CustomEquatable<T> b)
-			=> !a.Equals(b);
+			=> unchecked(this.EqualityFactors.To(factor => factor?.GetHashCode() ?? 0).Aggregate(17, (current, value) => current * 23 + value));
 	}
 }

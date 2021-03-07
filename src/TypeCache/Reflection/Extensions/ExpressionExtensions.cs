@@ -15,7 +15,7 @@ namespace TypeCache.Reflection.Extensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ArrayExpressionBuilder Array(this Expression @this)
-			=> new ArrayExpressionBuilder { Expression = @this };
+			=> new ArrayExpressionBuilder(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Expression As<T>(this Expression @this)
@@ -55,6 +55,10 @@ namespace TypeCache.Reflection.Extensions
 				BitwiseOp.RightShift => Expression.RightShiftAssign(@this, operand),
 				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(BitwiseOp)} [{operation}] is not supported.")
 			};
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BlockExpression Block(this Expression @this, Expression expression)
+			=> Expression.Block(@this, expression);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MethodCallExpression Call(this Expression @this, string method, params Expression[] arguments)
@@ -384,6 +388,10 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UnaryExpression Unbox(this Expression @this, Type type)
 			=> Expression.Unbox(@this, type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BlockExpression Void(this MethodCallExpression @this)
+			=> Expression.Block(@this, Expression.Empty());
 
 		#region LabelTarget
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

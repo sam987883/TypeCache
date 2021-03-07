@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Data.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Data.Extensions;
@@ -21,9 +20,8 @@ namespace TypeCache.Web.Extensions
 		/// <item><term>/sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
 		/// <item><term>/sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString)
 			=> @this.UseSqlApiCall(databaseProvider, connectionString, null)
@@ -43,9 +41,8 @@ namespace TypeCache.Web.Extensions
 		/// <item><term>/sql-api/select/sql</term> <description><see cref="SelectSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/update/sql</term> <description><see cref="UpdateSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString)
 			=> @this.UseSqlApiSchemaSQL(null)
@@ -60,9 +57,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/sql</term> <description><see cref="ExecuteSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCall"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -76,9 +72,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCall"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiCall(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -92,9 +87,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiDelete(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -108,9 +102,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/delete/sql</term> <description><see cref="DeleteSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDelete"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiDeleteSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -124,9 +117,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiInsert(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -140,9 +132,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/insert/sql</term> <description><see cref="InsertSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsert"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiInsertSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -156,9 +147,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/merge</term> <description><see cref="MergeMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMerge"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMergeRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiMerge(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -173,8 +163,7 @@ namespace TypeCache.Web.Extensions
 		/// <item><term>route or /sql-api/merge/sql</term> <description><see cref="MergeSqlMiddleware"/></description></item>
 		/// </list>
 		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMerge"/></code>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMergeRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiMergeSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -188,8 +177,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/schema</term> <description><see cref="SchemaMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -203,8 +192,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSchemaSQL(this IApplicationBuilder @this, string? route = null)
 		{
@@ -218,9 +207,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSelect(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -234,9 +222,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/select/sql</term> <description><see cref="SelectSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelect"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSelectSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -250,9 +237,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiUpdate(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -266,9 +252,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/update/sql</term> <description><see cref="UpdateSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdate"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiUpdateSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -282,9 +267,8 @@ namespace TypeCache.Web.Extensions
 		/// <list type="table">
 		/// <item><term>route or /sql-api/execute</term> <description><see cref="ExecuteSqlMiddleware"/></description></item>
 		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiExecuteSql"/></code>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiExecuteSqlRules"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiExecuteSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
