@@ -63,18 +63,10 @@ namespace TypeCache
 
 		public static D? GetMethod<D>(string name)
 			where D : Delegate
-		{
-			name.AssertNotBlank(nameof(name));
-
-			return Methods.Get(name).To(_ => _.Method).First<D>();
-		}
+			=> Methods.Get(name).To(_ => _.Method).First<D>();
 
 		public static D? GetStaticMethod<D>(string name)
 			where D : Delegate
-		{
-			name.AssertNotBlank(nameof(name));
-
-			return StaticMethods.Get(name).To(_ => _.Method).First<D>();
-		}
+			=> StaticMethods.Get(name).To(_ => _.Method).First<D>();
 	}
 }

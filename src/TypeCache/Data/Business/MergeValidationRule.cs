@@ -24,23 +24,11 @@ namespace TypeCache.Data.Business
 					var validator = new SchemaValidator(schema);
 					validator.Validate(request);
 
-					return default;
-				}
-				catch (ArgumentException exception)
-				{
-					return new ValidationResponse
-					{
-						IsError = true,
-						Messages = new[] { exception.Source!, exception.ParamName!, exception.Message, exception.StackTrace! }
-					};
+					return ValidationResponse.Success;
 				}
 				catch (Exception exception)
 				{
-					return new ValidationResponse
-					{
-						IsError = true,
-						Messages = new[] { exception.Message, exception.StackTrace! }
-					};
+					return new ValidationResponse(exception);
 				}
 			});
 		}

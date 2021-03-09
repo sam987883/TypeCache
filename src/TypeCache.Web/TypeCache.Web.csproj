@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.Web</RootNamespace>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>1.0.10</Version>
+    <Version>1.0.11</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>

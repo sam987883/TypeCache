@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
@@ -15,13 +16,14 @@ namespace TypeCache
 	public static class Enum<T>
 		where T : struct, Enum
 	{
-		public readonly struct Token
+		public record Token(string Name, T Value, IImmutableList<Attribute> Attributes) : IEquatable<Token>
 		{
-			public IImmutableList<Attribute> Attributes { get; init; }
+			public bool Equals(Token token1, Token token2)
+				=> token1.Name.Is(token2.Name, true) && Enum<T>.Comparer.Equals(token1.Value, token2.Value);
 
-			public string Name { get; init; }
-
-			public T Value { get; init; }
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public override int GetHashCode()
+				=> Enum<T>.Comparer.GetHashCode(this.Value);
 		}
 
 		private static Comparison<T> CreateCompare(Type underlyingType)
@@ -53,13 +55,9 @@ namespace TypeCache
 				.Compile();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Token CreateToken(StaticFieldMember field)
-			=> new Token
-			{
-				Attributes = field.Attributes,
-				Name = field.Name,
-				Value = (T)field.GetValue!()!
-			};
+			=> new Token(field.Name, (T)field.GetValue!()!, field.Attributes);
 
 		private static readonly TypeMember Type;
 

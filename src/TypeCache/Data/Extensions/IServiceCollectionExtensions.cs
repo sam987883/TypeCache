@@ -28,7 +28,8 @@ namespace TypeCache.Data.Extensions
 		/// <code>IValidationRule&lt;<see cref="BatchRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="BatchRequest" />&gt;</code>
 		/// <code>IValidationRule&lt;<see cref="SelectRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="SelectRequest" />&gt;</code>
 		/// <code>IValidationRule&lt;<see cref="UpdateRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="UpdateRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this)
@@ -43,25 +44,24 @@ namespace TypeCache.Data.Extensions
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for calling procedures.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="StoredProcedureRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="StoredProcedureRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiCallRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>, CallRuleHandler>()
-				.AddSingleton<IRule<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
 				.AddSingleton<IValidationRule<ISqlApi, StoredProcedureRequest>, StoredProcedureValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing deletes.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="DeleteRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="DeleteRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiDeleteRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, DeleteRequest, RowSet>, DataRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRuleHandler<DeleteRequest, string>, SqlRuleHandler<DeleteRequest>>()
-				.AddSingleton<IRule<ISqlApi, DeleteRequest, RowSet>, DeleteRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, DeleteRequest, RowSet>, DeleteRule>()
 				.AddSingleton<IRule<DeleteRequest, string>, DeleteRule>()
 				.AddSingleton<IValidationRule<ISqlApi, DeleteRequest>, DeleteValidationRule>();
 
@@ -69,13 +69,12 @@ namespace TypeCache.Data.Extensions
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing inserts.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="InsertRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="InsertRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiInsertRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, InsertRequest, RowSet>, DataRuleHandler<InsertRequest>>()
-				.AddSingleton<IRuleHandler<InsertRequest, string>, SqlRuleHandler<InsertRequest>>()
-				.AddSingleton<IRule<ISqlApi, InsertRequest, RowSet>, InsertRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, InsertRequest, RowSet>, InsertRule>()
 				.AddSingleton<IRule<InsertRequest, string>, InsertRule>()
 				.AddSingleton<IValidationRule<ISqlApi, InsertRequest>, InsertValidationRule>();
 
@@ -83,13 +82,12 @@ namespace TypeCache.Data.Extensions
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing merges.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="BatchRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="BatchRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiMergeRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, BatchRequest, RowSet>, DataRuleHandler<BatchRequest>>()
-				.AddSingleton<IRuleHandler<BatchRequest, string>, SqlRuleHandler<BatchRequest>>()
-				.AddSingleton<IRule<ISqlApi, BatchRequest, RowSet>, MergeRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, BatchRequest, RowSet>, MergeRule>()
 				.AddSingleton<IRule<BatchRequest, string>, MergeRule>()
 				.AddSingleton<IValidationRule<ISqlApi, BatchRequest>, MergeValidationRule>();
 
@@ -97,13 +95,12 @@ namespace TypeCache.Data.Extensions
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing selects.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="SelectRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="SelectRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiSelectRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, SelectRequest, RowSet>, DataRuleHandler<SelectRequest>>()
-				.AddSingleton<IRuleHandler<SelectRequest, string>, SqlRuleHandler<SelectRequest>>()
-				.AddSingleton<IRule<ISqlApi, SelectRequest, RowSet>, SelectRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, SelectRequest, RowSet>, SelectRule>()
 				.AddSingleton<IRule<SelectRequest, string>, SelectRule>()
 				.AddSingleton<IValidationRule<ISqlApi, SelectRequest>, SelectValidationRule>();
 
@@ -111,23 +108,22 @@ namespace TypeCache.Data.Extensions
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for doing updates.<br />
 		/// You can register the following validation rules to validate the request before the database call is made:
 		/// <code>IValidationRule&lt;<see cref="UpdateRequest" />&gt;, IValidationRule&lt;<see cref="ISqlApi" />, <see cref="UpdateRequest" />&gt;</code>
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiUpdateRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, UpdateRequest, RowSet>, DataRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRuleHandler<UpdateRequest, string>, SqlRuleHandler<UpdateRequest>>()
-				.AddSingleton<IRule<ISqlApi, UpdateRequest, RowSet>, UpdateRule>()
+			=> @this.AddSingleton<IRule<ISqlApi, UpdateRequest, RowSet>, UpdateRule>()
 				.AddSingleton<IRule<UpdateRequest, string>, UpdateRule>()
 				.AddSingleton<IValidationRule<ISqlApi, UpdateRequest>, UpdateValidationRule>();
 
 		/// <summary>
 		/// Registers Singleton Rules and RuleHandlers consumed by SQL API for executing raw SQL.<br />
-		/// <i><b>Requires call to:</b></i>
+		/// <i><b>Requires calls to:</b></i>
+		/// <code><see cref="TypeCache.Business.Extensions.IServiceCollectionExtensions.RegisterMediator"/></code>
 		/// <code><see cref="RegisterSqlApi"/></code>
 		/// </summary>
 		public static IServiceCollection RegisterSqlApiExecuteSqlRules(this IServiceCollection @this)
-			=> @this.AddSingleton<IRuleHandler<ISqlApi, SqlRequest, RowSet[]>, ExecuteSqlRuleHandler>()
-				.AddSingleton<IRule<ISqlApi, SqlRequest, RowSet[]>, ExecuteSqlRule>();
+			=> @this.AddSingleton<IRule<ISqlApi, SqlRequest, RowSet[]>, ExecuteSqlRule>();
 	}
 }

@@ -39,12 +39,12 @@ namespace TypeCache.Web.Middleware
 			var response = await this.Mediator.ApplyRuleAsync<ISqlApi, T, R>(this.SqlApi, request);
 
 			httpContext.Response.ContentType = "application/json";
-			if (!response.HasError)
+			if (response.Exception == null)
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response.Result);
 			else
 			{
 				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response.Messages);
+				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { response.Exception.Message, response.Exception.StackTrace });
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace TypeCache.Web.Middleware
 			var request = await this.GetRequest<T>(httpContext);
 			var response = await this.Mediator.ApplyRuleAsync<T, string>(request!);
 
-			if (!response.HasError)
+			if (response.Exception == null)
 			{
 				httpContext.Response.ContentType = "text/plain";
 				httpContext.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -63,7 +63,7 @@ namespace TypeCache.Web.Middleware
 			{
 				httpContext.Response.ContentType = "application/json";
 				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response.Messages);
+				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { response.Exception.Message, response.Exception.StackTrace });
 			}
 		}
 	}

@@ -1,11 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+
 namespace TypeCache.Business
 {
-	public readonly struct ValidationResponse
+	public record ValidationResponse(Exception? Exception)
 	{
-		public bool IsError { get; init; }
+		public static ValidationResponse Success
+			=> new ValidationResponse(null as Exception);
 
-		public string[] Messages { get; init; }
-	}
+		public bool HasError => this.Exception != null;
+	};
 }

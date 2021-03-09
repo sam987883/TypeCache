@@ -12,8 +12,8 @@ namespace TypeCache.Converters
 	{
 		public override ColumnSort Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			Sort sort = Sort.Ascending;
-			string expression = null!;
+			var sort = Sort.Ascending;
+			string? expression = null;
 
 			if (reader.TokenType == JsonTokenType.StartObject && reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
@@ -23,11 +23,7 @@ namespace TypeCache.Converters
 				reader.Read();
 			}
 
-			return new ColumnSort()
-			{
-				Expression = expression,
-				Sort = sort
-			};
+			return new ColumnSort(expression!, sort);
 		}
 
 		public override void Write(Utf8JsonWriter writer, ColumnSort columnSort, JsonSerializerOptions options)

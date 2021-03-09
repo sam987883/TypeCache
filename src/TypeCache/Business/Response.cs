@@ -1,45 +1,19 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business
 {
-	public readonly struct Response<T>
+	public record Response<T>(T? Result, Exception? Exception)
 	{
-		public static Response<T> Empty
-			=> new Response<T>
-			{
-				HasError = false,
-				Messages = Array.Empty<string>(),
-				Result = default
-			};
+		public static Response<T> Empty => new Response<T>(default, null);
 
-		public Response(T result)
+		public Response(T value) : this(value, null)
 		{
-			this.HasError = false;
-			this.Messages = Array.Empty<string>();
-			this.Result = result;
 		}
 
-		public Response(Exception ex)
+		public Response(Exception exception) : this(default, exception)
 		{
-			this.HasError = true;
-			this.Messages = new[] { ex.Message, ex.StackTrace! };
-			this.Result = default;
 		}
-
-		public Response(ValidationResponse[] validationResponses)
-		{
-			this.HasError = validationResponses.Any(_ => _.IsError);
-			this.Messages = validationResponses.ToMany(_ => _.Messages).ToArray();
-			this.Result = default;
-		}
-
-		public bool HasError { get; init; }
-
-		public string[] Messages { get; init; }
-
-		public T? Result { get; init; }
 	}
 }
