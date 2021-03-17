@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
@@ -123,6 +124,16 @@ FROM [sys].[parameters] AS p
 INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
 WHERE p.[object_id] = @ObjectId
 ORDER BY p.[parameter_id] ASC;";
+
+		public async ValueTask ExecuteTransactionAsync(Func<ISqlApi, CancellationToken, ValueTask> transaction, CancellationToken cancellationToken = default)
+		{
+			using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await dbConnection.OpenAsync(cancellationToken);
+			await transaction(this, cancellationToken);
+			transactionScope.Complete();
+			await dbConnection.CloseAsync();
+		}
 
 		public ObjectSchema GetObjectSchema(string name)
 		{

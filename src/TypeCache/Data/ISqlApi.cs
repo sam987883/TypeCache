@@ -11,9 +11,21 @@ namespace TypeCache.Data
 	/// </summary>
 	public interface ISqlApi
 	{
+		/// <summary>
+		/// The SQL Used to populate the ObjectSchema object.
+		/// </summary>
 		string ObjectSchemaSQL { get; }
 
+		/// <summary>
+		/// Gets a cached schema object that describes a table, view, table based function, or stored procedure.
+		/// </summary>
+		/// <param name="name">The database object name ie. Customers, dbo.Accounts, [Db]..s_Customers</param>
 		ObjectSchema GetObjectSchema(string name);
+
+		/// <summary>
+		/// All calls to ISqlApi within parameter transaction will be wrapped in a scoped async-enabled transaction.
+		/// </summary>
+		ValueTask ExecuteTransactionAsync(Func<ISqlApi, CancellationToken, ValueTask> transaction, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>EXECUTE ...</code>
