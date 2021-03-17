@@ -370,7 +370,7 @@ YieldBang:
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this)
 			where T : struct
-			=> @this?.FirstValue();
+			=> @this?.GetEnumerator().FirstValue();
 
 		public static T? FirstValue<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
 			where T : struct
@@ -665,7 +665,7 @@ YieldBang:
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : class
-			=> @this.If(_ => _ != null)!;
+			=> @this.If(_ => _ is not null)!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
@@ -673,10 +673,10 @@ YieldBang:
 			=> @this.If(_ => _.HasValue).To(_ => _!.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 			=> @this.ToHashSet().SetEquals(items ?? Empty<T>());
 
-		public static bool Is<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
@@ -693,7 +693,7 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map)
-			=> @this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
+			=> @this is not null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)
 			=> @this switch
@@ -705,12 +705,12 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map)
-			=> @this != null ? string.Join(delimeter, @this.To(map)) : string.Empty;
+			=> @this is not null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
 		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
 			var hashSet = @this.ToHashSet();
-			if (items != null)
+			if (items is not null)
 				hashSet.IntersectWith(items);
 			return hashSet;
 		}
@@ -718,7 +718,7 @@ YieldBang:
 		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			var hashSet = @this.ToHashSet(comparer);
-			if (items != null)
+			if (items is not null)
 				hashSet.IntersectWith(items);
 			return hashSet;
 		}
@@ -752,7 +752,7 @@ YieldBang:
 		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
 			var hashSet = @this.ToHashSet();
-			if (items != null)
+			if (items is not null)
 				hashSet.SymmetricExceptWith(items);
 			return hashSet;
 		}
@@ -760,7 +760,7 @@ YieldBang:
 		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			var hashSet = @this.ToHashSet(comparer);
-			if (items != null)
+			if (items is not null)
 				hashSet.SymmetricExceptWith(items);
 			return hashSet;
 		}
@@ -931,13 +931,13 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this)
-			=> @this != null ? new HashSet<T>(@this) : new HashSet<T>(0);
+			=> @this is not null ? new HashSet<T>(@this) : new HashSet<T>(0);
 
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T> comparer)
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
-			return @this != null ? new HashSet<T>(@this, comparer) : new HashSet<T>(comparer);
+			return @this is not null ? new HashSet<T>(@this, comparer) : new HashSet<T>(comparer);
 		}
 
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this)
@@ -947,7 +947,7 @@ YieldBang:
 		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this, int count)
 			where T : notnull
 		{
-			if (@this == null)
+			if (@this is null)
 				return ImmutableArray<T>.Empty;
 
 			var arrayBuilder = ImmutableArray.CreateBuilder<T>(count);
@@ -958,7 +958,7 @@ YieldBang:
 		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this)
 			where K : notnull
 		{
-			if (@this == null)
+			if (@this is null)
 				return ImmutableDictionary<K, V>.Empty;
 
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>();
@@ -971,7 +971,7 @@ YieldBang:
 		{
 			keyComparer.AssertNotNull(nameof(keyComparer));
 
-			if (@this == null)
+			if (@this is null)
 				return ImmutableDictionary<K, V>.Empty;
 
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>(keyComparer);
@@ -985,7 +985,7 @@ YieldBang:
 			keyComparer.AssertNotNull(nameof(keyComparer));
 			valueComparer.AssertNotNull(nameof(valueComparer));
 
-			if (@this == null)
+			if (@this is null)
 				return ImmutableDictionary<K, V>.Empty;
 
 			var dictionaryBuilder = ImmutableDictionary.CreateBuilder(keyComparer, valueComparer);
@@ -1045,7 +1045,7 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this)
-			=> @this != null ? new List<T>(@this) : new List<T>(0);
+			=> @this is not null ? new List<T>(@this) : new List<T>(0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
@@ -1053,7 +1053,7 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
-			=> @this != null ? new Queue<T>(@this) : new Queue<T>(0);
+			=> @this is not null ? new Queue<T>(@this) : new Queue<T>(0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
@@ -1069,12 +1069,12 @@ YieldBang:
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
-			=> @this != null ? new Stack<T>(@this) : new Stack<T>(0);
+			=> @this is not null ? new Stack<T>(@this) : new Stack<T>(0);
 
 		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
 			var hashSet = @this.ToHashSet();
-			if (items != null)
+			if (items is not null)
 				hashSet.UnionWith(items);
 			return hashSet;
 		}
@@ -1082,7 +1082,7 @@ YieldBang:
 		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			var hashSet = @this.ToHashSet(comparer);
-			if (items != null)
+			if (items is not null)
 				hashSet.UnionWith(items);
 			return hashSet;
 		}
@@ -1090,7 +1090,7 @@ YieldBang:
 		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 		{
 			var hashSet = @this.ToHashSet();
-			if (items != null)
+			if (items is not null)
 				hashSet.ExceptWith(items);
 			return hashSet;
 		}
@@ -1098,7 +1098,7 @@ YieldBang:
 		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
 		{
 			var hashSet = @this.ToHashSet(comparer);
-			if (items != null)
+			if (items is not null)
 				hashSet.ExceptWith(items);
 			return hashSet;
 		}

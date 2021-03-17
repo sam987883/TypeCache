@@ -22,13 +22,11 @@ namespace TypeCache.Business.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementation of IProcessHandler.</description></item>
-		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRuleHandler.</description></item>
-		/// <item><term><see cref="DefaultRulesHandler&lt;T,R&gt;"/>, <see cref="DefaultRulesHandler&lt;M,T,R&gt;"/></term> <description>Default implementation of IRulesHandler.</description></item>
+		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementations of IProcessHandler.</description></item>
+		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementations of IRuleHandler.</description></item>
+		/// <item><term><see cref="DefaultRulesHandler&lt;T,R&gt;"/>, <see cref="DefaultRulesHandler&lt;M,T,R&gt;"/></term> <description>Default implementations of IRulesHandler.</description></item>
 		/// </list>
 		/// </summary>
-		/// <param name="this"></param>
-		/// <returns></returns>
 		public static IServiceCollection RegisterMediator(this IServiceCollection @this)
 			=> @this.AddSingleton<IMediator, Mediator>()
 				.AddSingleton(typeof(DefaultProcessHandler<>), typeof(DefaultProcessHandler<>))

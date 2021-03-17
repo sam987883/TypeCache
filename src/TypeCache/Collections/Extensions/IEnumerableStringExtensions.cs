@@ -33,7 +33,7 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is(this IEnumerable<string>? @this, IEnumerable<string>? items, bool compareCase = false)
-			=> @this.Is(items, GetStringOrdinalComparer(compareCase));
+			=> @this.IsSet(items, GetStringOrdinalComparer(compareCase));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static HashSet<string> Match(this IEnumerable<string>? @this, IEnumerable<string>? items, bool compareCase = false)
@@ -70,7 +70,7 @@ namespace TypeCache.Collections.Extensions
 		public static IImmutableDictionary<string, V> ToImmutable<V>(this IEnumerable<KeyValuePair<string, V>>? @this, IEqualityComparer<V> valueComparer, bool compareCase = false)
 			=> @this.ToImmutable(GetStringOrdinalComparer(compareCase), valueComparer);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> ToIndex(this IEnumerable<string>? @this, string value, bool compareCase = false)
 			=> @this.ToIndex(value, GetStringOrdinalComparer(compareCase));
 

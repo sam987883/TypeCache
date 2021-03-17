@@ -34,10 +34,6 @@ namespace TypeCache.Reflection.Extensions
 				genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string GetName(this MemberInfo @this)
-			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
-
 		public static Kind GetKind(this Type @this)
 			=> @this switch
 			{
@@ -59,6 +55,10 @@ namespace TypeCache.Reflection.Extensions
 				_ => SystemType.Unknown
 			};
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetName(this MemberInfo @this)
+			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this ParameterInfo @this)
@@ -102,14 +102,14 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Implements(typeof(T));
 
 		public static bool Implements(this Type @this, Type type)
-			=> type.IsInterface && @this.GetInterfaces().Any(_ => _.Is(type)) || @this.BaseType.Is(type);
+			=> @this.BaseType.Is(type) || (type.IsInterface && @this.GetInterfaces().Any(_ => _.Is(type)));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this Type? @this)
 			=> @this == typeof(T);
 
 		public static bool Is(this Type? @this, Type type)
-			=> type == (@this.ToGenericType() ?? @this);
+			=> type == @this || (type.IsGenericTypeDefinition && type == @this.ToGenericType());
 
 		public static bool IsAsync(this Type @this)
 		{

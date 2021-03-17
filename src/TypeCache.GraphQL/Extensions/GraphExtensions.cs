@@ -10,6 +10,7 @@ using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Resolvers;
@@ -176,7 +177,7 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			return new FieldType
 			{
-				Type = column.TypeHandle.ToType(),
+				Type = column.Type.ToType(),
 				Name = column.Name,
 				Resolver = new FuncFieldResolver<object>(context => context.Source)
 			};

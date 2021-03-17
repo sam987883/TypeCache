@@ -23,7 +23,7 @@ namespace TypeCache.Data.Extensions
 		public static int AddOutputParameter(this IDbCommand @this, string name, object? value, DbType dbType)
 		{
 			var parameter = @this.CreateParameter();
-			parameter.Direction = value != null ? ParameterDirection.Output : ParameterDirection.InputOutput;
+			parameter.Direction = value is not null ? ParameterDirection.Output : ParameterDirection.InputOutput;
 			parameter.ParameterName = name;
 			parameter.Value = value;
 			parameter.DbType = dbType;
@@ -38,5 +38,14 @@ namespace TypeCache.Data.Extensions
 			@this.Transaction = transaction;
 			return transaction;
 		}
+
+		public static async ValueTask<DbDataReader> ReadSequentialAccessAsync(this DbCommand @this, CancellationToken cancellationToken = default)
+			=> await @this.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
+
+		public static async ValueTask<DbDataReader> ReadSingleRowAsync(this DbCommand @this, CancellationToken cancellationToken = default)
+			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleRow, cancellationToken);
+
+		public static async ValueTask<DbDataReader> ReadSingleResultAsync(this DbCommand @this, CancellationToken cancellationToken = default)
+			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
 	}
 }

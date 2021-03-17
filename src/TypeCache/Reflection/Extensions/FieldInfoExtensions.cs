@@ -17,7 +17,7 @@ namespace TypeCache.Reflection.Extensions
 			var getter = !@this.IsStatic ? field.Lambda(instance).Compile() : field.Lambda().Compile();
 			Delegate? setter = null;
 
-			if (!@this.IsInitOnly)
+			if (!@this.IsInitOnly && !@this.IsLiteral)
 			{
 				ParameterExpression value = nameof(value).Parameter(@this.FieldType);
 				setter = !@this.IsStatic ? field.Assign(value).LambdaAction(instance, value).Compile() : field.Assign(value).LambdaAction(value).Compile();
@@ -34,7 +34,7 @@ namespace TypeCache.Reflection.Extensions
 			var getValue = field.As<object>().Lambda<GetValue>(instance).Compile();
 			SetValue? setValue = null;
 
-			if (!@this.IsInitOnly)
+			if (!@this.IsInitOnly && !@this.IsLiteral)
 			{
 				ParameterExpression value = nameof(value).Parameter<object>();
 				setValue = field.Assign(value.SystemConvert(@this.FieldType)).Lambda<SetValue>(instance, value).Compile();
@@ -62,7 +62,7 @@ namespace TypeCache.Reflection.Extensions
 			var getValue = @this.StaticField().As<object>().Lambda<StaticGetValue>().Compile();
 			StaticSetValue? setValue = null;
 
-			if (!@this.IsInitOnly)
+			if (!@this.IsInitOnly && !@this.IsLiteral)
 			{
 				ParameterExpression value = nameof(value).Parameter<object>();
 				setValue = @this.StaticField().Assign(value.SystemConvert(@this.FieldType)).Lambda<StaticSetValue>(value).Compile();
@@ -72,7 +72,6 @@ namespace TypeCache.Reflection.Extensions
 
 		public static StaticFieldMember CreateStaticMember(this FieldInfo @this)
 		{
-			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", true);
 
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
@@ -80,7 +79,7 @@ namespace TypeCache.Reflection.Extensions
 			var (getValue, setValue) = @this.CreateStaticAccessors();
 			var type = MemberCache.Types[@this.FieldType.TypeHandle];
 
-			return new StaticFieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, getValue, setter, setValue, type);
+			return new StaticFieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, !@this.IsLiteral ? @this.FieldHandle : null, getter, getValue, setter, setValue, type);
 		}
 	}
 }

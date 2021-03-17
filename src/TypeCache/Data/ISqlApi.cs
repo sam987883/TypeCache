@@ -13,8 +13,6 @@ namespace TypeCache.Data
 	{
 		string ObjectSchemaSQL { get; }
 
-		ValueTask<ObjectSchema> CreateObjectSchema(string name);
-
 		ObjectSchema GetObjectSchema(string name);
 
 		/// <summary>

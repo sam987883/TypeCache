@@ -39,7 +39,7 @@ namespace TypeCache.Web.Middleware
 			var response = await this.Mediator.ApplyRuleAsync<ISqlApi, T, R>(this.SqlApi, request);
 
 			httpContext.Response.ContentType = "application/json";
-			if (response.Exception == null)
+			if (response.Exception is null)
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response.Result);
 			else
 			{
@@ -53,7 +53,7 @@ namespace TypeCache.Web.Middleware
 			var request = await this.GetRequest<T>(httpContext);
 			var response = await this.Mediator.ApplyRuleAsync<T, string>(request!);
 
-			if (response.Exception == null)
+			if (response.Exception is null)
 			{
 				httpContext.Response.ContentType = "text/plain";
 				httpContext.Response.StatusCode = (int)HttpStatusCode.OK;

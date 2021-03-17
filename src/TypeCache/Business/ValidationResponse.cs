@@ -9,6 +9,6 @@ namespace TypeCache.Business
 		public static ValidationResponse Success
 			=> new ValidationResponse(null as Exception);
 
-		public bool HasError => this.Exception != null;
+		public bool HasError => this.Exception is not null;
 	};
 }

@@ -33,7 +33,7 @@ namespace TypeCache.Converters
 							JsonTokenType.False => false,
 							_ => null
 						};
-						if (field.SetValue != null)
+						if (field.SetValue is not null)
 							field.SetValue(output, value);
 					}
 				}
@@ -46,14 +46,14 @@ namespace TypeCache.Converters
 
 		public override void Write(Utf8JsonWriter writer, T? input, JsonSerializerOptions options)
 		{
-			if (input != null)
+			if (input is not null)
 			{
 				writer.WriteStartObject();
-				TypeOf<T>.Fields.Values.If(field => field!.Getter != null).Do(field =>
+				TypeOf<T>.Fields.Values.If(field => field!.Getter is not null).Do(field =>
 				{
 					writer.WritePropertyName(field!.Name);
 					var value = field.GetValue!(input);
-					if (value != null)
+					if (value is not null)
 					{
 						switch (field.Type.SystemType)
 						{

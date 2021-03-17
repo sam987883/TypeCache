@@ -28,7 +28,7 @@ namespace TypeCache.Business
 				{
 					var validationResponses = await this._ValidationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)).AllAsync();
 					var exception = validationResponses.First(_ => _!.HasError)?.Exception;
-					if (exception != null)
+					if (exception is not null)
 						return new Response<R[]>(exception);
 				}
 
@@ -68,7 +68,7 @@ namespace TypeCache.Business
 				{
 					var validationResponses = await this._ValidationRulesWithMetadata.To(async validationRule => await validationRule.ApplyAsync(metadata, request, cancellationToken)).AllAsync();
 					var exception = validationResponses.First(_ => _!.HasError)?.Exception;
-					if (exception != null)
+					if (exception is not null)
 						return new Response<R[]>(exception);
 				}
 
@@ -76,7 +76,7 @@ namespace TypeCache.Business
 				{
 					var validationResponses = await this._ValidationRules.To(async validationRule => await validationRule.ApplyAsync(request, cancellationToken)).AllAsync();
 					var exception = validationResponses.First(_ => _!.HasError)?.Exception;
-					if (exception != null)
+					if (exception is not null)
 						return new Response<R[]>(exception);
 				}
 

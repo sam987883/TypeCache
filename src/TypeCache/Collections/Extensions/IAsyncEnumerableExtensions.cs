@@ -38,15 +38,15 @@ namespace TypeCache.Collections.Extensions
 
 		public static async IAsyncEnumerable<T> AndAsync<T>(this IAsyncEnumerable<T>? @this, IAsyncEnumerable<IAsyncEnumerable<T>?>? itemSets, [EnumeratorCancellation] CancellationToken token = default)
 		{
-			if (@this != null)
+			if (@this is not null)
 				await foreach (var item in @this)
 					yield return item;
 
-			if (itemSets != null)
+			if (itemSets is not null)
 			{
 				await foreach (var itemSet in itemSets)
 				{
-					if (itemSet != null)
+					if (itemSet is not null)
 					{
 						await foreach (var item in itemSet)
 							yield return item;
@@ -57,18 +57,18 @@ namespace TypeCache.Collections.Extensions
 
 		public static async IAsyncEnumerable<T> AndAsync<T>(this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? items, [EnumeratorCancellation] CancellationToken token = default)
 		{
-			if (@this != null)
+			if (@this is not null)
 				await foreach (var item in @this)
 					yield return item;
 
-			if (items != null)
+			if (items is not null)
 				await foreach (var item in items)
 					yield return item;
 		}
 
 		public static async ValueTask<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				return false;
 
 			await using var enumerator = @this.GetAsyncEnumerator(token);
@@ -81,7 +81,7 @@ namespace TypeCache.Collections.Extensions
 
 		public static async ValueTask<int> CountAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				return 0;
 
 			await using var enumerator = @this.GetAsyncEnumerator(token);
@@ -92,14 +92,14 @@ namespace TypeCache.Collections.Extensions
 		{
 			action.AssertNotNull(nameof(action));
 
-			if (@this == null)
+			if (@this is null)
 				return;
 
 			await using var enumerator = @this.GetAsyncEnumerator(token);
 			if (await enumerator.MoveNextAsync())
 			{
 				action(enumerator.Current);
-				if (between != null)
+				if (between is not null)
 				{
 					while (await enumerator.MoveNextAsync())
 					{
@@ -119,7 +119,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			action.AssertNotNull(nameof(action));
 
-			if (@this == null)
+			if (@this is null)
 				return;
 
 			await using var enumerator = @this.GetAsyncEnumerator(token);
@@ -127,7 +127,7 @@ namespace TypeCache.Collections.Extensions
 			{
 				var i = 0;
 				action(enumerator.Current, i);
-				if (between != null)
+				if (between is not null)
 				{
 					while (await enumerator.MoveNextAsync())
 					{
@@ -145,7 +145,7 @@ namespace TypeCache.Collections.Extensions
 
 		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken _ = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				return await Task.FromException<T>(new ArgumentNullException(nameof(@this), $"{nameof(IAsyncEnumerable<T>)} argument is null."));
 
 			await foreach (var item in @this)
@@ -164,7 +164,7 @@ namespace TypeCache.Collections.Extensions
 
 		public static async Task<T> GetAsync<T>(this IAsyncEnumerable<T>? @this, Index index, CancellationToken token = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				return await Task.FromException<T>(new ArgumentNullException(nameof(@this), $"{nameof(IAsyncEnumerable<T>)} argument is null."));
 
 			if (index.IsFromEnd)
@@ -181,7 +181,7 @@ namespace TypeCache.Collections.Extensions
 
 		public static async IAsyncEnumerable<T> GetAsync<T>(this IAsyncEnumerable<T>? @this, Range range, [EnumeratorCancellation] CancellationToken token = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			if (range.Start.IsFromEnd || range.End.IsFromEnd)
@@ -213,13 +213,13 @@ namespace TypeCache.Collections.Extensions
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var source in @this)
 			{
 				var items = map(source);
-				if (items == null)
+				if (items is null)
 					continue;
 
 				await foreach (var item in items)
@@ -229,7 +229,7 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value)
-			=> await @this.IfAsync(_ => _ != null && _.Equals(value)).AnyAsync();
+			=> await @this.IfAsync(_ => _ is not null && _.Equals(value)).AnyAsync();
 
 		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
 		{
@@ -240,10 +240,10 @@ namespace TypeCache.Collections.Extensions
 
 		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, IAsyncEnumerable<T>? values)
 		{
-			if (@this == null)
+			if (@this is null)
 				return false;
 
-			if (values == null)
+			if (values is null)
 				return true;
 
 			await foreach (var value in values)
@@ -257,10 +257,10 @@ namespace TypeCache.Collections.Extensions
 		{
 			comparer.AssertNotNull(nameof(comparer));
 
-			if (@this == null)
+			if (@this is null)
 				return false;
 
-			if (values == null)
+			if (values is null)
 				return true;
 
 			await foreach (var value in values)
@@ -274,7 +274,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var item in @this)
@@ -284,7 +284,7 @@ namespace TypeCache.Collections.Extensions
 
 		public static async IAsyncEnumerable<R> IfAsync<T, R>(this IAsyncEnumerable<T>? @this, [EnumeratorCancellation] CancellationToken _ = default)
 		{
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var item in @this)
@@ -296,17 +296,17 @@ namespace TypeCache.Collections.Extensions
 
 		public static async IAsyncEnumerable<T> IfNotNullAsync<T>(this IAsyncEnumerable<T?>? @this, [EnumeratorCancellation] CancellationToken _ = default) where T : class
 		{
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var item in @this)
-				if (item != null)
+				if (item is not null)
 					yield return item;
 		}
 
 		public static async IAsyncEnumerable<T> IfNotNullAsync<T>(this IAsyncEnumerable<T?>? @this, [EnumeratorCancellation] CancellationToken _ = default) where T : struct
 		{
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var item in @this)
@@ -340,7 +340,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (@this == null)
+			if (@this is null)
 				yield break;
 
 			await foreach (var item in @this)
@@ -356,7 +356,7 @@ namespace TypeCache.Collections.Extensions
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
 			var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-			if (@this != null)
+			if (@this is not null)
 				await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
 			return dictionary;
 		}
@@ -367,7 +367,7 @@ namespace TypeCache.Collections.Extensions
 			comparer.AssertNotNull(nameof(comparer));
 
 			var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-			if (@this != null)
+			if (@this is not null)
 				await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
 			return dictionary;
 		}
@@ -378,7 +378,7 @@ namespace TypeCache.Collections.Extensions
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
 			var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-			if (@this != null)
+			if (@this is not null)
 				await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
 			return dictionary;
 		}
@@ -390,7 +390,7 @@ namespace TypeCache.Collections.Extensions
 			comparer.AssertNotNull(nameof(comparer));
 
 			var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-			if (@this != null)
+			if (@this is not null)
 				await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
 			return dictionary;
 		}
@@ -398,7 +398,7 @@ namespace TypeCache.Collections.Extensions
 		public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 		{
 			var list = new List<T>();
-			if (@this != null)
+			if (@this is not null)
 			{
 				await using var enumerator = @this.GetAsyncEnumerator();
 				while (await enumerator.MoveNextAsync())

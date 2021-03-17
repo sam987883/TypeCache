@@ -46,7 +46,7 @@ namespace TypeCache.Converters
 			writer.WriteStartObject();
 			writer.WriteString(nameof(expression.Field), expression.Field);
 			writer.WritePropertyName(expression.Operator.Name());
-			if (expression.Value != null)
+			if (expression.Value is not null)
 				JsonSerializer.Serialize(writer, expression.Value, expression.Value.GetType());
 			else
 				writer.WriteNullValue();

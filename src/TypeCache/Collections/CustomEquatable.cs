@@ -11,7 +11,7 @@ namespace TypeCache.Collections
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(CustomEquatable<T>? other)
-			=> other != null && this.EqualityFactors.ToHashSet().SetEquals(other.EqualityFactors);
+			=> other is not null && this.EqualityFactors.ToHashSet().SetEquals(other.EqualityFactors);
 
 		/// <summary>
 		/// Override this and return the field or property values to use when considering equality.

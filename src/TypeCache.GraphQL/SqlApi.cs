@@ -49,7 +49,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Delete{0}_SQL")]
@@ -89,7 +89,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "DeleteBatch{0}_SQL")]
@@ -130,7 +130,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "InsertBatch{0}_SQL")]
@@ -173,7 +173,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Select{0}_SQL")]
@@ -222,7 +222,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Update{0}_SQL")]
@@ -270,7 +270,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows != null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "UpdateBatch{0}_SQL")]

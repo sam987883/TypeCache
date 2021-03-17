@@ -10,26 +10,26 @@ namespace TypeCache.Extensions
 {
 	public static class StringExtensions
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Assert(this string? @this, string name, string? value, bool compareCase = false, [CallerMemberName] string caller = null)
-			=> @this.Assert(name, value, compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase, caller);
+		private static StringComparer GetStringComparer(bool compareCase)
+			=> compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
-		public static void Assert(this string? @this, string name, string? value, StringComparer comparer, [CallerMemberName] string caller = null)
+		private static StringComparison GetStringComparison(bool compareCase)
+			=> compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+		public static void Assert(this string? @this, string name, string? value, bool compareCase = false, [CallerMemberName] string caller = null)
 		{
 			name.AssertNotNull(nameof(name), caller);
-			comparer.AssertNotNull(nameof(comparer), caller);
 
-			if (!comparer.Equals(@this, value))
-				throw new ArgumentException($"{nameof(Assert)}: [{(@this != null ? $"\"{@this}\"" : "null")}] <> {(value != null ? $"\"{value}\"" : "null")}.", name);
+			if (!GetStringComparer(compareCase).Equals(@this, value))
+				throw new ArgumentException($"{nameof(Assert)}: [{(@this is not null ? $"\"{@this}\"" : "null")}] <> {(value is not null ? $"\"{value}\"" : "null")}.", name);
 		}
 
 		public static void AssertNotBlank([AllowNull] this string @this, string name, [CallerMemberName] string caller = null)
 		{
-			if (@this == null)
+			if (@this is null)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? Enum<T>(this string? @this, bool compareCase = false) where T : struct, Enum
 			=> System.Enum.TryParse(@this, !compareCase, out T result) ? (T?)result : null;
 
@@ -39,11 +39,11 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has(this string @this, string value, bool compareCase = false)
-			=> @this.Contains(value, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+			=> @this.Contains(value, GetStringComparison(compareCase));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is(this string? @this, string value, bool compareCase = false)
-			=> compareCase ? StringComparer.Ordinal.Equals(@this, value) : StringComparer.OrdinalIgnoreCase.Equals(@this, value);
+			=> GetStringComparer(compareCase).Equals(@this, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBlank([NotNullWhen(false)] this string? @this)
@@ -59,15 +59,18 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Left(this string @this, string text, bool compareCase = false)
-			=> @this.StartsWith(text, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+			=> @this.StartsWith(text, GetStringComparison(compareCase));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Reverse(this string @this)
-			=> new string(@this.ToStack().ToArray());
+		{
+			var span = new Span<char>(@this.ToCharArray());
+			span.Reverse();
+			return new string(span);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Right(this string @this, string text, bool compareCase = false)
-			=> @this.EndsWith(text, compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+			=> @this.EndsWith(text, GetStringComparison(compareCase));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToBase64(this string @this, Encoding encoding)

@@ -21,7 +21,7 @@ namespace TypeCache.Extensions
 			{
 				case IEquatable<T> equatable when !equatable.Equals(value):
 					throw new ArgumentException($"{caller} -> {nameof(Assert)}: [{@this}] <> [{value?.ToString() ?? "null"}].", name);
-				case null when value != null:
+				case null when value is not null:
 					throw new ArgumentException($"{caller} -> {nameof(Assert)}: null <> [{value}].", name);
 				case IEquatable<T> _:
 				case null:
@@ -39,13 +39,13 @@ namespace TypeCache.Extensions
 			comparer.AssertNotNull(nameof(comparer));
 
 			if (!comparer.Equals(@this, value))
-				throw new ArgumentException($"{caller} -> {nameof(Assert)}: {(@this != null ? $"[{@this}]" : "null")} <> {(value != null ? $"[{value}]" : "null")}.", name);
+				throw new ArgumentException($"{caller} -> {nameof(Assert)}: {(@this is not null ? $"[{@this}]" : "null")} <> {(value is not null ? $"[{value}]" : "null")}.", name);
 		}
 
 		public static void AssertNotNull<T>(this T? @this, string name, [CallerMemberName] string caller = null)
 			where T : class
 		{
-			if (@this == null)
+			if (@this is null)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotNull)}: [{name}] is null.");
 		}
 
@@ -63,20 +63,20 @@ namespace TypeCache.Extensions
 
 		public static void MapFields<T>(this T @this, T source)
 		{
-			if (source != null)
+			if (source is not null)
 				@this?.GetTypeFields()
-					.If(_ => _.Value.IsPublic && _.Value.Getter != null && _.Value.Setter != null)
+					.If(_ => _.Value.IsPublic && _.Value.Getter is not null && _.Value.Setter is not null)
 					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
 		public static ISet<string> MapFields<T, FROM>(this T @this, FROM source, bool compareCase = false)
 		{
-			if (@this != null && source != null)
+			if (@this is not null && source is not null)
 			{
 				var fromFields = source.GetTypeFields();
 				var toFields = @this.GetTypeFields();
-				var fromNames = fromFields.If(_ => _.Value.Getter != null).To(_ => _.Key);
-				var toNames = toFields.If(_ => _.Value.Setter != null).To(_ => _.Key);
+				var fromNames = fromFields.If(_ => _.Value.Getter is not null).To(_ => _.Key);
+				var toNames = toFields.If(_ => _.Value.Setter is not null).To(_ => _.Key);
 				var names = fromNames.Match(toNames, compareCase);
 				names.Do(name => toFields[name].SetValue!(@this, fromFields[name].GetValue!(source)));
 				return names;
@@ -90,27 +90,27 @@ namespace TypeCache.Extensions
 
 			@this?.GetTypeFields().Do(_ =>
 			{
-				if (_.Value.SetValue != null && source.TryGetValue(_.Key, out var value))
+				if (_.Value.SetValue is not null && source.TryGetValue(_.Key, out var value))
 					_.Value.SetValue(@this, value);
 			});
 		}
 
 		public static void MapProperties<T>(this T @this, T source)
 		{
-			if (source != null)
+			if (source is not null)
 				@this?.GetTypeProperties()
-					.If(_ => _.Value.IsPublic && _.Value.GetValue != null && _.Value.SetValue != null)
+					.If(_ => _.Value.IsPublic && _.Value.GetValue is not null && _.Value.SetValue is not null)
 					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
 		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source, bool compareCase = false)
 		{
-			if (@this != null && source != null)
+			if (@this is not null && source is not null)
 			{
 				var fromProperties = source.GetTypeProperties();
 				var toProperties = @this.GetTypeProperties();
-				var fromNames = fromProperties.If(_ => _.Value.GetValue != null).To(_ => _.Key);
-				var toNames = toProperties.If(_ => _.Value.SetValue != null).To(_ => _.Key);
+				var fromNames = fromProperties.If(_ => _.Value.GetValue is not null).To(_ => _.Key);
+				var toNames = toProperties.If(_ => _.Value.SetValue is not null).To(_ => _.Key);
 				var names = fromNames.Match(toNames, compareCase);
 				names.Do(name => toProperties[name].SetValue!(@this, fromProperties[name].GetValue!(source)));
 				return names;
@@ -124,15 +124,15 @@ namespace TypeCache.Extensions
 
 			@this?.GetTypeProperties().Do(_ =>
 			{
-				if (_.Value.SetValue != null && source.TryGetValue(_.Key, out var value))
+				if (_.Value.SetValue is not null && source.TryGetValue(_.Key, out var value))
 					_.Value.SetValue(@this, value);
 			});
 		}
 
 		public static IDictionary<string, object?>? ToFieldDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue is not null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 
 		public static IDictionary<string, object?>? ToPropertyDictionary<T>(this T @this, bool compareCase = false)
-			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue != null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+			=> @this?.GetTypeProperties().If(_ => _.Value.GetValue is not null).ToDictionary(_ => _.Key, _ => _.Value.GetValue!(@this), compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 	}
 }

@@ -21,7 +21,7 @@ namespace TypeCache.Reflection.Converters
 					if (reader.Read())
 					{
 						var property = TypeOf<T>.Properties[name!];
-						if (property.SetValue != null)
+						if (property.SetValue is not null)
 							property.SetValue(output, reader.TokenType switch
 							{
 								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, property.Type.Handle.ToType(), options),
@@ -43,14 +43,14 @@ namespace TypeCache.Reflection.Converters
 
 		public override void Write(Utf8JsonWriter writer, T? input, JsonSerializerOptions options)
 		{
-			if (input != null)
+			if (input is not null)
 			{
 				writer.WriteStartObject();
-				TypeOf<T>.Properties.Values.If(property => property!.GetValue != null).Do(property =>
+				TypeOf<T>.Properties.Values.If(property => property!.GetValue is not null).Do(property =>
 				{
 					writer.WritePropertyName(property!.Name);
 					var value = property.GetValue!(input);
-					if (value != null)
+					if (value is not null)
 					{
 						switch (property.Type.SystemType)
 						{

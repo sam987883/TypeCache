@@ -114,7 +114,7 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Coalesce(@this, expression);
 
 		public static ConstantExpression Constant<T>(this T? @this)
-			=> @this != null ? Expression.Constant(@this, @this!.GetType()) : Expression.Constant(@this);
+			=> @this is not null ? Expression.Constant(@this, @this!.GetType()) : Expression.Constant(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DefaultExpression Default(this Type @this)

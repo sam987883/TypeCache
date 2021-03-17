@@ -13,14 +13,14 @@ namespace TypeCache.Reflection.Extensions
 		public static (MethodMember? getter, MethodMember? setter) CreateAccessorMethods(this PropertyInfo @this)
 		{
 			MethodMember? getter = null;
-			if (@this.GetMethod != null)
+			if (@this.GetMethod is not null)
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", false);
 				getter = @this.GetMethod.CreateMember();
 			}
 
 			MethodMember? setter = null;
-			if (@this.SetMethod != null)
+			if (@this.SetMethod is not null)
 			{
 				@this.SetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.SetMethod)}.{nameof(@this.SetMethod.IsStatic)}", false);
 				setter = @this.SetMethod.CreateMember();
@@ -34,14 +34,14 @@ namespace TypeCache.Reflection.Extensions
 			ParameterExpression instance = nameof(instance).Parameter<object>();
 
 			GetValue? getValue = null;
-			if (@this.GetMethod != null && @this.GetMethod.ReturnType.IsInvokable())
+			if (@this.GetMethod is not null && @this.GetMethod.ReturnType.IsInvokable())
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", false);
 				getValue = instance.Cast(@this.DeclaringType!).Property(@this).As<object>().Lambda<GetValue>(instance).Compile();
 			}
 
 			SetValue? setValue = null;
-			if (@this.SetMethod != null && @this.SetMethod.IsInvokable())
+			if (@this.SetMethod is not null && @this.SetMethod.IsInvokable())
 			{
 				ParameterExpression value = nameof(value).Parameter<object>();
 				@this.SetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.SetMethod)}.{nameof(@this.SetMethod.IsStatic)}", false);
@@ -57,8 +57,8 @@ namespace TypeCache.Reflection.Extensions
 
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
 			var methodInfo = @this.GetAccessors(true).First()!;
-			var getMethod = @this.GetMethod != null ? @this.GetMethod.CreateMember() : null;
-			var setMethod = @this.SetMethod != null ? @this.SetMethod.CreateMember() : null;
+			var getMethod = @this.GetMethod is not null ? @this.GetMethod.CreateMember() : null;
+			var setMethod = @this.SetMethod is not null ? @this.SetMethod.CreateMember() : null;
 			var type = MemberCache.Types[@this.PropertyType.TypeHandle];
 
 			return new IndexerMember(@this.GetName(), attributes, methodInfo!.IsAssembly, methodInfo.IsPublic, getMethod, setMethod, type);
@@ -78,14 +78,14 @@ namespace TypeCache.Reflection.Extensions
 		public static (StaticMethodMember? getter, StaticMethodMember? setter) CreateStaticAccessorMethods(this PropertyInfo @this)
 		{
 			StaticMethodMember? getter = null;
-			if (@this.GetMethod != null)
+			if (@this.GetMethod is not null)
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", true);
 				getter = @this.GetMethod.CreateStaticMember();
 			}
 
 			StaticMethodMember? setter = null;
-			if (@this.SetMethod != null)
+			if (@this.SetMethod is not null)
 			{
 				@this.SetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.SetMethod)}.{nameof(@this.SetMethod.IsStatic)}", true);
 				setter = @this.SetMethod.CreateStaticMember();
@@ -97,14 +97,14 @@ namespace TypeCache.Reflection.Extensions
 		public static (StaticGetValue? getValue, StaticSetValue? setValue) CreateStaticAccessors(this PropertyInfo @this)
 		{
 			StaticGetValue? getValue = null;
-			if (@this.GetMethod != null && @this.GetMethod.ReturnType.IsInvokable())
+			if (@this.GetMethod is not null && @this.GetMethod.ReturnType.IsInvokable())
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", true);
 				getValue = @this.StaticProperty().As<object>().Lambda<StaticGetValue>().Compile();
 			}
 
 			StaticSetValue? setValue = null;
-			if (@this.SetMethod != null && @this.SetMethod.IsInvokable())
+			if (@this.SetMethod is not null && @this.SetMethod.IsInvokable())
 			{
 				ParameterExpression value = nameof(value).Parameter<object>();
 				setValue = @this.StaticProperty().Assign(value.SystemConvert(@this.PropertyType)).Lambda<StaticSetValue>(value).Compile();

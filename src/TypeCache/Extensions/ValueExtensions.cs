@@ -13,7 +13,7 @@ namespace TypeCache.Extensions
 		public static void AssertNotNull<T>([AllowNull] this T? @this, string name, [CallerMemberName] string caller = null)
 			where T : struct
 		{
-			if (@this == null)
+			if (@this is null)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotNull)}: [{name}] is null.");
 		}
 

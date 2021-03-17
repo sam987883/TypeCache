@@ -55,7 +55,7 @@ namespace TypeCache.GraphQL.Resolvers
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create(parameterType);
-					if (argument != null)
+					if (argument is not null)
 						model.MapProperties(argument);
 					yield return model;
 				}
@@ -99,7 +99,7 @@ namespace TypeCache.GraphQL.Resolvers
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameterType.Create();
-					if (argument != null)
+					if (argument is not null)
 						model.MapProperties(argument);
 					yield return model;
 				}

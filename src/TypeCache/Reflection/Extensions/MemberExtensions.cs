@@ -46,22 +46,12 @@ namespace TypeCache.Reflection.Extensions
 			if (arguments.Any())
 			{
 				var argumentEnumerator = arguments.GetEnumerator();
-				for (var i = 0; i < @this.Count; ++i)
-				{
-					var parameter = @this[i];
-					if (argumentEnumerator.MoveNext())
-					{
-						if (argumentEnumerator.Current != null)
-						{
-							if (!parameter.Type.Supports(argumentEnumerator.Current.GetType()))
-								return false;
-						}
-						else if (!parameter.Type.IsNullable)
-							return false;
-					}
-					else if (!parameter.HasDefaultValue && !parameter.IsOptional)
-						return false;
-				}
+				if (!@this.All(parameter => argumentEnumerator.MoveNext()
+					? (argumentEnumerator.Current is not null
+						? parameter!.Type.Supports(argumentEnumerator.Current.GetType())
+						: parameter!.Type.IsNullable)
+					: (parameter!.HasDefaultValue || parameter.IsOptional)))
+					return false;
 				return !argumentEnumerator.MoveNext();
 			}
 			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
@@ -72,19 +62,7 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Handle.ToType().IsEnumerable();
 
 		public static bool Match(this IReadOnlyList<Parameter> @this, IReadOnlyList<Parameter> parameters)
-		{
-			if (@this.Count != parameters.Count)
-				return false;
-
-			for (var i = 0; i < @this.Count; ++i)
-			{
-				var parameter1 = @this[i];
-				var parameter2 = parameters[i];
-				if (!parameter1.Name.Is(parameter2.Name, true) || parameter1.Type != parameter2.Type)
-					return false;
-			}
-			return true;
-		}
+			=> @this.Count == parameters.Count && 0.Range(@this.Count).All(i => @this[i] == parameters[i]);
 
 		public static bool Supports(this TypeMember @this, Type type)
 			=> @this.Handle.Equals(type.TypeHandle) || type.IsSubclassOf(@this.Handle.ToType());

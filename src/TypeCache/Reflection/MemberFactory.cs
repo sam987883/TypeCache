@@ -50,7 +50,7 @@ namespace TypeCache.Reflection
 
 		public static IImmutableDictionary<string, StaticFieldMember> CreateStaticFieldMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetFields(STATIC_BINDINGS)
-				.If(fieldInfo => !fieldInfo!.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
+				.If(fieldInfo => !fieldInfo!.FieldType.IsByRefLike)
 				.To(fieldInfo => KeyValuePair.Create(fieldInfo!.Name, fieldInfo.CreateStaticMember()))
 				.ToImmutable(StringComparer.Ordinal);
 

@@ -26,6 +26,6 @@ namespace TypeCache
 
 		public static IImmutableList<Parameter> Parameters => MethodMember.Parameters;
 
-		public static ReturnParameter ReturnParameter => MethodMember.Return;
+		public static ReturnParameter Return => MethodMember.Return;
 	}
 }

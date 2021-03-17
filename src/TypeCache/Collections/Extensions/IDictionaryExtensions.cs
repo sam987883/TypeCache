@@ -23,7 +23,7 @@ namespace TypeCache.Collections.Extensions
 		public static IEnumerable<V> GetValues<K, V>(this IDictionary<K, V> @this, params K[] keys)
 			where K : notnull
 		{
-			if (keys != null)
+			if (keys is not null)
 			{
 				for (var i = 0; i < keys.Length; ++i)
 					if (@this.TryGetValue(keys[i], out var value))
@@ -34,7 +34,7 @@ namespace TypeCache.Collections.Extensions
 		public static IEnumerable<V> GetValues<K, V>(this IDictionary<K, V> @this, IEnumerable<K> keys)
 			where K : notnull
 		{
-			if (keys != null)
+			if (keys is not null)
 			{
 				foreach (var key in keys)
 					if (@this.TryGetValue(key, out var value))

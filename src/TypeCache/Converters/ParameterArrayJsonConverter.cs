@@ -28,14 +28,14 @@ namespace TypeCache.Converters
 
 		public override void Write(Utf8JsonWriter writer, Parameter[] parameters, JsonSerializerOptions options)
 		{
-			if (parameters != null)
+			if (parameters is not null)
 			{
 				writer.WriteStartArray();
 				writer.WriteStartObject();
 				parameters.Do(parameter =>
 				{
 					writer.WritePropertyName(parameter.Name);
-					if (parameter.Value != null)
+					if (parameter.Value is not null)
 						JsonSerializer.Serialize(writer, parameter.Value);
 					else
 						writer.WriteNullValue();
