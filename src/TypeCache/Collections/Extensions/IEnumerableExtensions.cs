@@ -111,81 +111,24 @@ namespace TypeCache.Collections.Extensions
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 		{
-			var enumerable = @this;
-			using var enumerator = sets?.GetEnumerator() ?? Empty<IEnumerable<T>?>().GetEnumerator();
+			if (@this is not null)
+				foreach (var item in @this)
+					yield return item;
 
-YieldBang:
-			int count;
-			switch (enumerable)
-			{
-				case null:
-					break;
-				case T[] array:
-					count = array.Length;
-					for (var i = 0; i < count; ++i)
-						yield return array[i];
-					break;
-				case ImmutableArray<T> immutableArray:
-					count = immutableArray.Length;
-					for (var i = 0; i < count; ++i)
-						yield return immutableArray[i];
-					break;
-				case List<T> list:
-					count = list.Count;
-					for (var i = 0; i < count; ++i)
-						yield return list[i];
-					break;
-				default:
-					foreach (var item in enumerable)
-						yield return item;
-					break;
-			}
-
-			if (enumerator.MoveNext())
-			{
-				enumerable = enumerator.Current;
-				goto YieldBang;
-			}
+			if (sets is not null)
+				foreach (var item in sets.Gather())
+					yield return item;
 		}
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params IEnumerable<T>?[] sets)
 		{
-			var enumerable = @this;
-			var setCount = sets?.Length ?? 0;
-			var setIndex = 0;
+			if (@this is not null)
+				foreach (var item in @this)
+					yield return item;
 
-YieldBang:
-			int count;
-			switch (enumerable)
-			{
-				case null:
-					break;
-				case T[] array:
-					count = array.Length;
-					for (var i = 0; i < count; ++i)
-						yield return array[i];
-					break;
-				case ImmutableArray<T> immutableArray:
-					count = immutableArray.Length;
-					for (var i = 0; i < count; ++i)
-						yield return immutableArray[i];
-					break;
-				case List<T> list:
-					count = list.Count;
-					for (var i = 0; i < count; ++i)
-						yield return list[i];
-					break;
-				default:
-					foreach (var item in enumerable)
-						yield return item;
-					break;
-			}
-
-			if (++setIndex < setCount)
-			{
-				enumerable = sets![setIndex];
-				goto YieldBang;
-			}
+			if (sets is not null)
+				foreach (var item in sets.Gather())
+					yield return item;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -570,57 +513,72 @@ YieldBang:
 			if (range.Start.Value < 0 || range.End.Value < 0)
 				range = new Range(range.Start.Value >= 0 ? range.Start : Index.Start, range.End.Value >= 0 ? range.End : Index.Start);
 
-			if (@this is T[] array)
+			if (!range.IsReverse())
 			{
-				if (!range.IsReverse())
+				if (@this is T[] array)
+				{
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
 						yield return array[i];
-				else
-					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
-						yield return array[i];
-			}
-			else if (@this is ImmutableArray<T> immutableArray)
-			{
-				if (!range.IsReverse())
+				}
+				else if (@this is ImmutableArray<T> immutableArray)
+				{
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
 						yield return immutableArray[i];
-				else
-					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
-						yield return immutableArray[i];
-			}
-			else if (@this is List<T> list)
-			{
-				if (!range.IsReverse())
+				}
+				else if (@this is List<T> list)
+				{
 					for (var i = range.Start.Value; i < range.End.Value; ++i)
 						yield return list[i];
+				}
 				else
-					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
-						yield return list[i];
-			}
-			else if (range.IsReverse())
-			{
-				var count = range.Start.Value - range.End.Value;
-				var items = new Stack<T>(count);
-
-				using var enumerator = @this.GetEnumerator();
-				if (range.End.Value > 0 && enumerator.Move(range.End.Value))
-					yield return enumerator.Current;
-
-				while (enumerator.MoveNext() && --count >= 0)
-					items.Push(enumerator.Current);
-
-				while (items.TryPop(out var item))
-					yield return item;
+				{
+					using var enumerator = @this.GetEnumerator();
+					if (range.Start.Value == 0 || enumerator.Move(range.Start.Value))
+					{
+						var count = range.End.Value - range.Start.Value + 1;
+						while (enumerator.MoveNext() && count > 0)
+						{
+							yield return enumerator.Current;
+							--count;
+						}
+					}
+				}
 			}
 			else
 			{
-				using var enumerator = @this.GetEnumerator();
-				if (range.Start.Value > 0 && enumerator.Move(range.Start.Value))
-					yield return enumerator.Current;
+				if (@this is T[] array)
+				{
+					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
+						yield return array[i];
+				}
+				else if (@this is ImmutableArray<T> immutableArray)
+				{
+					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
+						yield return immutableArray[i];
+				}
+				else if (@this is List<T> list)
+				{
+					for (var i = range.End.Value - 1; i >= range.Start.Value; --i)
+						yield return list[i];
+				}
+				else
+				{
+					using var enumerator = @this.GetEnumerator();
+					if (range.End.Value == 0 || enumerator.Move(range.End.Value))
+					{
+						var count = range.Start.Value - range.End.Value + 1;
+						var items = new Stack<T>(count);
 
-				var count = range.End.Value - range.Start.Value;
-				while (enumerator.MoveNext() && --count >= 0)
-					yield return enumerator.Current;
+						while (enumerator.MoveNext() && count > 0)
+						{
+							items.Push(enumerator.Current);
+							--count;
+						}
+
+						while (items.TryPop(out var item))
+							yield return item;
+					}
+				}
 			}
 		}
 
