@@ -8,44 +8,13 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data
 {
-	public sealed record ObjectSchema() : IEquatable<ObjectSchema>
+	public sealed record ObjectSchema(int Id, ObjectType Type, string DatabaseName, string SchemaName, string ObjectName,
+		IImmutableList<ColumnSchema> Columns, IImmutableList<ParameterSchema> Parameters) : IEquatable<ObjectSchema>
 	{
-		/// <summary>
-		/// The database unique object_id.
-		/// </summary>
-		public int Id { get; set; }
-
-		public ObjectType Type { get; set; }
-
-		/// <summary>
-		/// The database table/view/function/procedure name.
-		/// </summary>
-		public string ObjectName { get; set; } = string.Empty;
-
-		/// <summary>
-		/// The database schema name ie. dbo.
-		/// </summary>
-		public string SchemaName { get; set; } = string.Empty;
-
-		/// <summary>
-		/// The database name - pulled from the connection string.
-		/// </summary>
-		public string DatabaseName { get; set; } = string.Empty;
-
-		public IImmutableList<ColumnSchema> Columns { get; init; } = ImmutableArray<ColumnSchema>.Empty;
-
-		public IImmutableList<ParameterSchema> Parameters { get; init; } = ImmutableArray<ParameterSchema>.Empty;
-
 		/// <summary>
 		/// The fully qualified database object name.
 		/// </summary>
-		public string Name => this.ObjectName switch
-		{
-			_ when this.DatabaseName.IsBlank() && this.SchemaName.IsBlank() => $"[{this.ObjectName}]",
-			_ when this.DatabaseName.IsBlank() => $"[{this.SchemaName}].[{this.ObjectName}]",
-			_ when this.SchemaName.IsBlank() => $"[{this.DatabaseName}]..[{this.ObjectName}]",
-			_ => $"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]"
-		};
+		public string Name { get; init; } = $"[{DatabaseName}].[{SchemaName}].[{ObjectName}]";
 
 		public bool HasColumn(string column) =>
 			this.Columns.To(_ => _.Name).Has(column, false);
@@ -58,6 +27,6 @@ namespace TypeCache.Data
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> base.GetHashCode();
+			=> HashCode.Combine(this.Id, this.Name);
 	}
 }

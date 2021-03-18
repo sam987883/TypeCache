@@ -23,6 +23,10 @@ namespace TypeCache.Collections
 			=> other is T item && this.Equals(item);
 
 		public override int GetHashCode()
-			=> unchecked(this.EqualityFactors.To(factor => factor?.GetHashCode() ?? 0).Aggregate(17, (current, value) => current * 23 + value));
+		{
+			var hashCode = new HashCode();
+			this.EqualityFactors.Do(item => hashCode.Add(item));
+			return hashCode.ToHashCode();
+		}
 	}
 }

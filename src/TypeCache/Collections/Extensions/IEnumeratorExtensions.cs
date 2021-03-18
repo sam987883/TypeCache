@@ -38,5 +38,11 @@ namespace TypeCache.Collections.Extensions
 				--count;
 			return count == 0;
 		}
+
+		public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> @this)
+		{
+			while (@this.MoveNext())
+				yield return @this.Current;
+		}
 	}
 }

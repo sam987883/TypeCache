@@ -46,12 +46,21 @@ namespace TypeCache.Reflection.Extensions
 			if (arguments.Any())
 			{
 				var argumentEnumerator = arguments.GetEnumerator();
-				if (!@this.All(parameter => argumentEnumerator.MoveNext()
-					? (argumentEnumerator.Current is not null
-						? parameter!.Type.Supports(argumentEnumerator.Current.GetType())
-						: parameter!.Type.IsNullable)
-					: (parameter!.HasDefaultValue || parameter.IsOptional)))
-					return false;
+				foreach (var parameter in @this)
+				{
+					if (argumentEnumerator.MoveNext())
+					{
+						if (argumentEnumerator.Current is not null)
+						{
+							if (!parameter.Type.Supports(argumentEnumerator.Current.GetType()))
+								return false;
+						}
+						else if (!parameter.Type.IsNullable)
+							return false;
+					}
+					else if (!parameter.HasDefaultValue && !parameter.IsOptional)
+						return false;
+				}
 				return !argumentEnumerator.MoveNext();
 			}
 			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
@@ -65,6 +74,21 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Count == parameters.Count && 0.Range(@this.Count).All(i => @this[i] == parameters[i]);
 
 		public static bool Supports(this TypeMember @this, Type type)
-			=> @this.Handle.Equals(type.TypeHandle) || type.IsSubclassOf(@this.Handle.ToType());
+		{
+			if (@this.Handle.Equals(type.TypeHandle))
+				return true;
+
+			var parameterType = @this.Handle.ToType();
+			if (type.IsSubclassOf(parameterType))
+				return true;
+
+			if (type.IsEnum)
+				type = type.GetEnumUnderlyingType();
+
+			if (parameterType.IsEnum)
+				parameterType = parameterType.GetEnumUnderlyingType();
+
+			return type == parameterType;
+		}
 	}
 }

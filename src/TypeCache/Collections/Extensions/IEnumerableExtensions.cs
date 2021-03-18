@@ -220,6 +220,105 @@ YieldBang:
 				_ => @this.GetEnumerator().Count()
 			};
 
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
+		{
+			switch (@this)
+			{
+				case null:
+					first = default;
+					rest = Empty<T>();
+					return;
+				case T[] array:
+					first = array[0];
+					rest = array.Get(new Range(1, ^1));
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray[0];
+					rest = immutableArray.Get(new Range(2, ^1));
+					return;
+				case List<T> list:
+					first = list[0];
+					rest = list.Get(new Range(2, ^1));
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : default;
+					rest = enumerator.ToEnumerable();
+					return;
+			}
+		}
+
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
+		{
+			switch (@this)
+			{
+				case null:
+					first = default;
+					second = default;
+					rest = Empty<T>();
+					return;
+				case T[] array:
+					first = array[0];
+					second = array[1];
+					rest = array.Get(new Range(2, ^1));
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray[0];
+					second = immutableArray[1];
+					rest = immutableArray.Get(new Range(2, ^1));
+					return;
+				case List<T> list:
+					first = list[0];
+					second = list[1];
+					rest = list.Get(new Range(2, ^1));
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : default;
+					second = enumerator.MoveNext() ? enumerator.Current : default;
+					rest = enumerator.ToEnumerable();
+					return;
+			}
+		}
+
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
+		{
+			switch (@this)
+			{
+				case null:
+					first = default;
+					second = default;
+					third = default;
+					rest = Empty<T>();
+					return;
+				case T[] array:
+					first = array[0];
+					second = array[1];
+					third = array[2];
+					rest = array.Get(new Range(3, ^1));
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray[0];
+					second = immutableArray[1];
+					third = immutableArray[2];
+					rest = immutableArray.Get(new Range(3, ^1));
+					return;
+				case List<T> list:
+					first = list[0];
+					second = list[1];
+					third = list[2];
+					rest = list.Get(new Range(3, ^1));
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : default;
+					second = enumerator.MoveNext() ? enumerator.Current : default;
+					third = enumerator.MoveNext() ? enumerator.Current : default;
+					rest = enumerator.ToEnumerable();
+					return;
+			}
+		}
+
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action)
 		{
 			switch (@this)
@@ -766,6 +865,10 @@ YieldBang:
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
+			=> @this.Get(new Range(count, ^1));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T[] Sort<T>(this IEnumerable<T>? @this)
 			where T : IComparable<T>
 			=> @this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
@@ -781,6 +884,10 @@ YieldBang:
 			items.Sort(comparer);
 			return items;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
+			=> @this.Get(new Range(0, count));
 
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
 		{
@@ -927,6 +1034,13 @@ YieldBang:
 			var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
+		}
+
+		public static int ToHashCode<T>(this IEnumerable<T>? @this)
+		{
+			var hashCode = new HashCode();
+			@this.Do(hashCode.Add);
+			return hashCode.ToHashCode();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

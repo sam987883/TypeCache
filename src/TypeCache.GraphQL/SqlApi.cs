@@ -49,7 +49,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Delete{0}_SQL")]
@@ -79,7 +79,7 @@ namespace TypeCache.GraphQL
 			{
 				Delete = true,
 				Table = this.TableName,
-				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
+				Input = batch.MapRowSet(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
@@ -89,7 +89,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "DeleteBatch{0}_SQL")]
@@ -99,7 +99,7 @@ namespace TypeCache.GraphQL
 			{
 				Delete = true,
 				Table = this.TableName,
-				Input = batch.Map(TypeOf<T>.Properties.Keys.ToArray()),
+				Input = batch.MapRowSet(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
@@ -119,7 +119,7 @@ namespace TypeCache.GraphQL
 			var request = new BatchRequest
 			{
 				Table = this.TableName,
-				Input = batch.Map(columns),
+				Input = batch.MapRowSet(columns),
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
@@ -130,7 +130,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "InsertBatch{0}_SQL")]
@@ -140,7 +140,7 @@ namespace TypeCache.GraphQL
 			var request = new BatchRequest
 			{
 				Table = this.TableName,
-				Input = batch.Map(columns),
+				Input = batch.MapRowSet(columns),
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
@@ -173,7 +173,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Select{0}_SQL")]
@@ -222,7 +222,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "Update{0}_SQL")]
@@ -258,7 +258,7 @@ namespace TypeCache.GraphQL
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
-				Input = batch.Map(columns),
+				Input = batch.MapRowSet(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)
@@ -270,7 +270,7 @@ namespace TypeCache.GraphQL
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
-			return response.Result?.Rows is not null ? response.Result.Map<T>() : Array.Empty<T>();
+			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
 		[Graph(name: "UpdateBatch{0}_SQL")]
@@ -279,7 +279,7 @@ namespace TypeCache.GraphQL
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
 			var request = new BatchRequest
 			{
-				Input = batch.Map(columns),
+				Input = batch.MapRowSet(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) == true)

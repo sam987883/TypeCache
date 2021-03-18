@@ -15,7 +15,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data
 {
-	internal sealed class SqlApi : ISqlApi
+	public sealed class SqlApi : ISqlApi
 	{
 		private static readonly IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> SchemaCache =
 			new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(connectionString => new ConcurrentDictionary<string, ObjectSchema>(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
@@ -39,6 +39,9 @@ namespace TypeCache.Data
 		}
 
 		public string ObjectSchemaSQL { get; } = @$"
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+SET NOCOUNT ON;
+
 DECLARE @ObjectId AS INTEGER =
 (
 	SELECT o.[object_id]
@@ -87,10 +90,14 @@ VALUES ({SqlDbType.BigInt.Number()}, '{SqlDbType.BigInt.Name()}')
 , ({SqlDbType.Xml.Number()}, '{SqlDbType.Xml.Name()}');
 
 SELECT o.[object_id] AS [Id]
+, DB_NAME() AS [DatabaseName]
 , o.[name] AS [ObjectName]
-, IIF(o.[type] = 'U', {ObjectType.Table.Number()}
-	, IIF(o.[type] = 'V', {ObjectType.View.Number()}
-	, IIF(o.[type] = 'TF', {ObjectType.Function.Number()}, {ObjectType.StoredProcedure.Number()}))) AS [Type]
+, CASE o.[type]
+	WHEN 'U' THEN {ObjectType.Table.Number()}
+	WHEN 'V' THEN {ObjectType.View.Number()}
+	WHEN 'TF' THEN {ObjectType.Function.Number()}
+	ELSE {ObjectType.StoredProcedure.Number()}
+	END AS [Type]
 , s.[name] AS [SchemaName]
 FROM [sys].[objects] AS o
 INNER JOIN [sys].[schemas] AS s ON s.[schema_id] = o.[schema_id]
@@ -159,9 +166,6 @@ ORDER BY p.[parameter_id] ASC;";
 
 		private ObjectSchema _GetObjectSchema(string name)
 		{
-			using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			dbConnection.Open();
-
 			var objectName = name.Split('.').Get(^1)!.TrimStart('[').TrimEnd(']');
 			var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!.TrimStart('[').TrimEnd(']');
 			var request = new SqlRequest
@@ -173,23 +177,15 @@ ORDER BY p.[parameter_id] ASC;";
 				},
 				SQL = ObjectSchemaSQL
 			};
-			var rowSets = dbConnection.RunAsync(request).Result;
-			dbConnection.Close();
+			var (table, columns, parameters, _) = this.RunAsync(request).Result;
 
-			var table = rowSets[0];
-			var columns = rowSets[1].Map<ColumnSchema>();
-			var parameters = rowSets[2].Map<ParameterSchema>();
-
-			return new ObjectSchema
-			{
-				Columns = columns.ToImmutable(),
-				Id = (int)table[0, nameof(ObjectSchema.Id)]!,
-				DatabaseName = dbConnection.Database,
-				ObjectName = table[0, nameof(ObjectSchema.ObjectName)]!.ToString()!,
-				Parameters = parameters.ToImmutable(),
-				SchemaName = table[0, nameof(ObjectSchema.SchemaName)]!.ToString()!,
-				Type = (ObjectType)table[0, nameof(ObjectSchema.Type)]!
-			};
+			return new ObjectSchema((int)table![0, nameof(ObjectSchema.Id)]!,
+				(ObjectType)table[0, nameof(ObjectSchema.Type)]!,
+				table[0, nameof(ObjectSchema.DatabaseName)]!.ToString()!,
+				table[0, nameof(ObjectSchema.SchemaName)]!.ToString()!,
+				table[0, nameof(ObjectSchema.ObjectName)]!.ToString()!,
+				columns!.MapModels<ColumnSchema>().ToImmutable(),
+				parameters!.MapModels<ParameterSchema>().ToImmutable());
 		}
 
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)
