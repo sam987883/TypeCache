@@ -15,7 +15,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data
 {
-	public sealed class SqlApi : ISqlApi
+	internal sealed class SqlApi : ISqlApi
 	{
 		private static readonly IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> SchemaCache =
 			new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(connectionString => new ConcurrentDictionary<string, ObjectSchema>(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
