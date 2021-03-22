@@ -2,24 +2,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TypeCache.Extensions;
 
 namespace TypeCache.Converters
 {
 	public class ValueJsonConverter : JsonConverter<object?>
 	{
-		public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => reader.TokenType switch
-		{
-			JsonTokenType.StartObject => GetObject(ref reader, options),
-			JsonTokenType.StartArray => GetArray(ref reader, options),
-			JsonTokenType.String => reader.GetString(),
-			JsonTokenType.Number => reader.TryGetInt64(out var value) ? value : reader.GetDecimal(),
-			JsonTokenType.True => true,
-			JsonTokenType.False => false,
-			_ => null,
-		};
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			=> reader.GetValue();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
 			=> JsonSerializer.Serialize(writer, value, null);
 

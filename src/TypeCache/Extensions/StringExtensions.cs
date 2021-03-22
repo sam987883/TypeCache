@@ -63,7 +63,7 @@ namespace TypeCache.Extensions
 
 		public static string Reverse(this string @this)
 		{
-			var span = new Span<char>(@this.ToCharArray());
+			var span = @this.ToCharArray().AsSpan();
 			span.Reverse();
 			return new string(span);
 		}

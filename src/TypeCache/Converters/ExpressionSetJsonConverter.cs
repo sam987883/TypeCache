@@ -40,12 +40,7 @@ namespace TypeCache.Converters
 
 					while (reader.TokenType != JsonTokenType.EndObject && reader.Read()) { }
 
-					return new ExpressionSet
-					{
-						Operator = name.Enum<LogicalOperator>()!.Value,
-						Expressions = expressions.ToArray(),
-						ExpressionSets = expressionSets.ToArray()
-					};
+					return new ExpressionSet(name.Enum<LogicalOperator>()!.Value, expressionSets.ToArray(), expressions.ToArray());
 				}
 				else
 					throw new JsonException($"[{nameof(ExpressionSet)}] element [{name}] must contain an array.");
@@ -56,13 +51,13 @@ namespace TypeCache.Converters
 
 		public override void Write(Utf8JsonWriter writer, ExpressionSet? expressionSet, JsonSerializerOptions options)
 		{
-			if (expressionSet.HasValue)
+			if (expressionSet != null)
 			{
 				writer.WriteStartObject();
-				writer.WritePropertyName(expressionSet.Value.Operator.Name());
+				writer.WritePropertyName(expressionSet.Operator.Name());
 				writer.WriteStartArray();
-				expressionSet.Value.ExpressionSets?.Do(_ => JsonSerializer.Serialize(writer, _, options));
-				expressionSet.Value.Expressions?.Do(_ => JsonSerializer.Serialize(writer, _, options));
+				expressionSet.ExpressionSets?.Do(_ => JsonSerializer.Serialize(writer, _, options));
+				expressionSet.Expressions?.Do(_ => JsonSerializer.Serialize(writer, _, options));
 				writer.WriteEndArray();
 				writer.WriteEndObject();
 			}

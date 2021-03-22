@@ -73,6 +73,106 @@ namespace TypeCache.Reflection.Extensions
 		public static bool Match(this IReadOnlyList<Parameter> @this, IReadOnlyList<Parameter> parameters)
 			=> @this.Count == parameters.Count && 0.Range(@this.Count).All(i => @this[i] == parameters[i]);
 
+		public static bool IsConvertibleTo(this SystemType @this, SystemType type)
+			=> type switch
+			{
+				SystemType.BigInteger => @this switch
+				{
+					SystemType.BigInteger or SystemType.Boolean or SystemType.Char or SystemType.String => true,
+					SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt or SystemType.UInt64 => true,
+					_ => false
+				},
+				SystemType.Boolean => @this switch
+				{
+					SystemType.BigInteger or SystemType.Boolean or SystemType.Char or SystemType.String => true,
+					SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt or SystemType.UInt64 => true,
+					SystemType.Single or SystemType.Double or SystemType.Half or SystemType.Decimal => true,
+					_ => false
+				},
+				SystemType.Char => @this switch
+				{
+					SystemType.Boolean or SystemType.Char or SystemType.SByte or SystemType.Byte or SystemType.Int16 => true,
+					_ => false
+				},
+				SystemType.String => @this switch
+				{
+					SystemType.BigInteger or SystemType.Boolean or SystemType.Char or SystemType.String => true,
+					SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt or SystemType.UInt64 => true,
+					SystemType.Single or SystemType.Double or SystemType.Half or SystemType.Decimal => true,
+					_ => false
+				},
+				SystemType.SByte => @this switch
+				{
+					SystemType.Boolean or SystemType.SByte => true,
+					_ => false
+				},
+				SystemType.Int16 => @this switch
+				{
+					SystemType.Boolean or SystemType.Char or SystemType.SByte or SystemType.Int16 or SystemType.Byte => true,
+					_ => false
+				},
+				SystemType.Int32 or SystemType.NInt => @this switch
+				{
+					SystemType.Boolean or SystemType.Char or SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 => true,
+					_ => false
+				},
+				SystemType.Int64 => @this switch
+				{
+					SystemType.BigInteger or SystemType.Boolean or SystemType.Char or SystemType.String => true,
+					SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt => true,
+					_ => false
+				},
+				SystemType.Byte => @this switch
+				{
+					SystemType.Boolean or SystemType.SByte or SystemType.Byte => true,
+					_ => false
+				},
+				SystemType.UInt16 => @this switch
+				{
+					SystemType.Boolean or SystemType.Char or SystemType.SByte or SystemType.Int16 or SystemType.Byte or SystemType.UInt16 => true,
+					_ => false
+				},
+				SystemType.UInt32 or SystemType.NUInt => @this switch
+				{
+					SystemType.Boolean or SystemType.Char or SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt => true,
+					_ => false
+				},
+				SystemType.UInt64 => @this switch
+				{
+					SystemType.Boolean or SystemType.Char => true,
+					SystemType.SByte or SystemType.Int16 or SystemType.Int32 or SystemType.NInt or SystemType.Int64 => true,
+					SystemType.Byte or SystemType.UInt16 or SystemType.UInt32 or SystemType.NUInt or SystemType.UInt64 => true,
+					_ => false
+				},
+				SystemType.Single => @this switch
+				{
+					SystemType.Single => true,
+					_ => false
+				},
+				SystemType.Double => @this switch
+				{
+					SystemType.Single or SystemType.Double => true,
+					_ => false
+				},
+				SystemType.Half => @this switch
+				{
+					SystemType.Single or SystemType.Double or SystemType.Half => true,
+					_ => false
+				},
+				SystemType.Decimal => @this switch
+				{
+					SystemType.Single or SystemType.Double or SystemType.Half or SystemType.Decimal => true,
+					_ => false
+				},
+				_ => false
+			};
+
 		public static bool Supports(this TypeMember @this, Type type)
 		{
 			if (@this.Handle.Equals(type.TypeHandle))
@@ -80,6 +180,9 @@ namespace TypeCache.Reflection.Extensions
 
 			var parameterType = @this.Handle.ToType();
 			if (type.IsSubclassOf(parameterType))
+				return true;
+
+			if (type.GetSystemType().IsConvertibleTo(@this.SystemType))
 				return true;
 
 			if (type.IsEnum)

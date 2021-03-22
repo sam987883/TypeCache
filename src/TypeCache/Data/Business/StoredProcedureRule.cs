@@ -11,11 +11,7 @@ namespace TypeCache.Data.Business
 		public async ValueTask<StoredProcedureResponse> ApplyAsync(ISqlApi sqlApi, StoredProcedureRequest request, CancellationToken cancellationToken)
 		{
 			var schema = sqlApi.GetObjectSchema(request.Procedure);
-			request.Procedure = schema.Name;
-			return new StoredProcedureResponse(await sqlApi.CallAsync(request, cancellationToken))
-			{
-				Parameters = request.Parameters
-			};
+			return new StoredProcedureResponse(await sqlApi.CallAsync(request, cancellationToken), request.Parameters);
 		}
 	}
 }

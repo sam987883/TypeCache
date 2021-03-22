@@ -17,7 +17,7 @@ namespace TypeCache.GraphQL.Types
 			foreach (var property in TypeOf<T>.Properties.Values)
 			{
 				graphAttribute = property.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore == true)
+				if (graphAttribute?.Ignore is true)
 					continue;
 
 				var name = graphAttribute?.Name ?? property.Name;

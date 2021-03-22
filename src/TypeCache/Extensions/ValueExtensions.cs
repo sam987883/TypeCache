@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Extensions
@@ -81,23 +82,42 @@ namespace TypeCache.Extensions
 		public static Range Normalize(this Range @this, int count)
 			=> new Range(@this.Start.Normalize(count), @this.End.Normalize(count));
 
-		public static IEnumerable<int> Range(this int @this, int count, int increment = 1)
-			=> @this.To(@this + (count - 1) * increment, increment);
+		public static IEnumerable<int> Range(this int @this, int count, int increment = 0)
+			=> count != 0 ? @this.To(@this + (count - 1) * (increment == 0 ? (count > 0 ? 1 : -1) : increment), increment) : CustomEnumerable<int>.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Swap<T>(this ref T @this, ref T value) where T : struct
 			=> (@this, value) = (value, @this);
 
-		public static IEnumerable<int> To(this int @this, int end, int increment = 1)
+		public static IEnumerable<int> To(this int @this, int end, int increment = 0)
 		{
-			if (increment <= 0)
-				yield break;
-
-			while (@this <= end)
+			increment = increment switch
 			{
-				yield return @this;
-				@this += increment;
+				0 when @this < end => 1,
+				0 when @this > end => -1,
+				_ when increment < 0 && @this < end => 0,
+				_ when increment > 0 && @this > end => 0,
+				_ => increment
+			};
+
+			if (increment > 0)
+			{
+				while (@this <= end)
+				{
+					yield return @this;
+					@this += increment;
+				}
 			}
+			else if (increment < 0)
+			{
+				while (@this >= end)
+				{
+					yield return @this;
+					@this += increment;
+				}
+			}
+			else
+				yield return @this;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,5 +178,9 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double ToDouble(this long @this)
 			=> BitConverter.Int64BitsToDouble(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<int> Values(this Range @this)
+			=> @this.Start.Value.To(@this.End.Value, @this.IsReverse() ? -1 : 1);
 	}
 }

@@ -20,7 +20,7 @@ namespace TypeCache.GraphQL.Types
 			Enum<T>.Tokens.Values.Do(token =>
 			{
 				graphAttribute = token.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore == true)
+				if (graphAttribute?.Ignore is true)
 					return;
 
 				var name = token.Name;

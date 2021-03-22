@@ -40,116 +40,128 @@ namespace TypeCache.Data.Extensions
 			var sqlBuilder = new StringBuilder();
 			if (!@this.Delete && updateCsv.IsBlank())
 			{
-				sqlBuilder.Append(@$"INSERT INTO {@this.Table}
-(
-	{insertColumnCsv}
-)");
+				sqlBuilder.Append("INSERT INTO ").AppendLine(@this.Table)
+					.Append('\t').Append('(').AppendLine()
+					.Append('\t').AppendLine(insertColumnCsv)
+					.Append('\t').Append(')');
 
 				if (@this.Output.Any())
 					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
 
-				sqlBuilder.AppendLine().Append($"VALUES {batchDataCsv}");
+				sqlBuilder.AppendLine().Append("VALUES ").Append(batchDataCsv);
 			}
 			else
 			{
-				sqlBuilder.Append($@"MERGE {@this.Table} AS t
-USING
-(
-	VALUES {batchDataCsv}
-) AS s ({sourceColumnCsv})
-ON {onSql}");
+				sqlBuilder.Append("MERGE ").Append(@this.Table).AppendLine(" AS t")
+					.Append('\t').AppendLine("USING")
+					.Append('\t').Append('(').AppendLine()
+					.Append('\t').Append("VALUES ").AppendLine(batchDataCsv)
+					.Append('\t').Append(')').Append(" AS s ").Append('(').Append(sourceColumnCsv).Append(')').AppendLine()
+					.Append('\t').Append("ON ").Append(onSql);
 
 				if (!updateCsv.IsBlank())
 				{
-					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
-	UPDATE SET {updateCsv}");
+					sqlBuilder.AppendLine().AppendLine("WHEN MATCHED THEN")
+						.Append('\t').Append("UPDATE SET ").Append(updateCsv);
 					if (@this.Delete)
-						sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY SOURCE THEN
-	DELETE");
+						sqlBuilder.AppendLine().AppendLine("WHEN NOT MATCHED BY SOURCE THEN")
+							.Append('\t').Append("DELETE");
 				}
 				else if (@this.Delete)
-					sqlBuilder.AppendLine().Append(@$"WHEN MATCHED THEN
-	DELETE");
+					sqlBuilder.AppendLine().AppendLine("WHEN MATCHED THEN")
+						.Append('\t').Append("DELETE");
 
 				if (!insertColumnCsv.IsBlank())
-					sqlBuilder.AppendLine().Append(@$"WHEN NOT MATCHED BY TARGET THEN
-	INSERT
-	(
-	{insertColumnCsv}
-	)
-	VALUES
-	(
-	{insertValueCsv}
-	)");
+					sqlBuilder.AppendLine().AppendLine("WHEN NOT MATCHED BY TARGET THEN")
+						.Append('\t').AppendLine("INSERT")
+						.Append('\t').Append('(').AppendLine()
+						.Append('\t').AppendLine(insertColumnCsv)
+						.Append('\t').Append(')').AppendLine()
+						.Append('\t').AppendLine("VALUES")
+						.Append('\t').Append('(').AppendLine()
+						.Append('\t').AppendLine(insertValueCsv)
+						.Append('\t').Append(')');
 
 				if (@this.Output.Any())
 					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
 			}
 
-			return sqlBuilder.AppendLine(";").ToString();
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSql([NotNull] this DeleteRequest @this)
 		{
-			var sqlBuilder = new StringBuilder(@$"DELETE FROM {@this.From}");
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append($"WHERE {@this.Where}");
+			var sqlBuilder = new StringBuilder("DELETE FROM ").Append(@this.From);
 
 			if (@this.Output.Any())
 				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
 
-			return sqlBuilder.AppendLine(";").ToString();
+			if (!@this.Where.IsBlank())
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSql([NotNull] this InsertRequest @this)
-			=> new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
-				.AppendJoin(", ", @this.Insert.To(column => column.EscapeIdentifier())).AppendLine()
-				.Append(((SelectRequest)@this).ToSql())
-				.ToString();
+		{
+			var sqlBuilder = new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
+				.Append('(').AppendJoin(", ", @this.Insert.To(column => column.EscapeIdentifier())).Append(')');
+
+			if (@this.Output.Any())
+				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+
+			return sqlBuilder.AppendLine().Append(((SelectRequest)@this).ToSql()).ToString();
+		}
 
 		public static string ToSql([NotNull] this UpdateRequest @this)
 		{
 			var updateCsv = @this.Set.Join(SQL_DELIMETER, item => $"{item.Column.EscapeIdentifier()} = {item.Expression}");
 
-			var sqlBuilder = new StringBuilder(@$"UPDATE {@this.Table}
-SET {updateCsv}");
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append($"WHERE {@this.Where}");
+			var sqlBuilder = new StringBuilder("UPDATE ").AppendLine(@this.Table)
+				.Append("SET ").Append(updateCsv);
 
 			if (@this.Output.Any())
 				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
 
-			return sqlBuilder.AppendLine(";").ToString();
+			if (!@this.Where.IsBlank())
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSql(this object? @this) => @this switch
 		{
-			null => "NULL",
-			DBNull _ => "NULL",
-			bool boolean when boolean => "1",
-			bool boolean when !boolean => "0",
+			null or DBNull => "NULL",
+			bool boolean => boolean ? "1" : "0",
 			char text => text.Equals('\'') ? "N''''" : $"N'{text}'",
 			string text => $"N'{text.EscapeValue()}'",
 			DateTime dateTime => $"'{dateTime:o}'",
 			DateTimeOffset dateTimeOffset => $"'{dateTimeOffset:o}'",
 			TimeSpan time => $"'{time:c}'",
 			Guid guid => $"'{guid:D}'",
-			LogicalOperator token when token == LogicalOperator.And => "AND",
-			LogicalOperator token when token == LogicalOperator.Or => "OR",
-			LogicalOperator token => throw new NotImplementedException($"{nameof(LogicalOperator)}.{token.Name()} is not implemented for SQL."),
-			Sort token when token == Sort.Ascending => "ASC",
-			Sort token when token == Sort.Descending => "DESC",
-			Sort _ => string.Empty,
+			LogicalOperator token => token switch
+			{
+				LogicalOperator.And => "AND",
+				LogicalOperator.Or => "OR",
+				_ => throw new NotImplementedException($"{nameof(LogicalOperator)}.{token.Name()} is not implemented for SQL.")
+			},
+			Sort token => token switch
+			{
+				Sort.Ascending => "ASC",
+				Sort.Descending => "DESC",
+				_ => string.Empty
+			},
 			Enum token => token.Number(),
 			Index index => $"'{index}'",
-			JsonElement json when json.ValueKind == JsonValueKind.String => $"N'{json.GetString()!.EscapeValue()}'",
-			JsonElement json when json.ValueKind == JsonValueKind.Number => json.ToString()!,
-			JsonElement json when json.ValueKind == JsonValueKind.True => "1",
-			JsonElement json when json.ValueKind == JsonValueKind.False => "0",
-			JsonElement json when json.ValueKind == JsonValueKind.Null => "NULL",
-			JsonElement json => $"N'{json.ToString()!.EscapeValue()}'",
+			JsonElement json => json.ValueKind switch
+			{
+				JsonValueKind.String => $"N'{json.GetString()!.EscapeValue()}'",
+				JsonValueKind.Number => json.ToString()!,
+				JsonValueKind.True => "1",
+				JsonValueKind.False => "0",
+				JsonValueKind.Null => "NULL",
+				_ => $"N'{json.ToString()!.EscapeValue()}'"
+			},
 			Range range => $"'{range}'",
 			Uri uri => $"'{uri.ToString().EscapeValue()}'",
 			byte[] binary => Encoding.Default.GetString(binary),
@@ -168,18 +180,18 @@ SET {updateCsv}");
 			else
 				sqlBuilder.AppendLine("*");
 
-			sqlBuilder.Append($"FROM {@this.From}");
+			sqlBuilder.Append("FROM ").Append(@this.From);
 
 			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append($"WHERE {@this.Where}");
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
 
 			if (!@this.Having.IsBlank())
-				sqlBuilder.AppendLine().Append($"HAVING {@this.Having}");
+				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
 
 			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append($"ORDER BY {@this.OrderBy.Join(SQL_DELIMETER, _ => _.ToSql())}");
+				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.Join(SQL_DELIMETER, _ => _.ToSql()));
 
-			return sqlBuilder.AppendLine(";").ToString();
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 	}
 }

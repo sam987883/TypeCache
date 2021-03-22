@@ -52,7 +52,6 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterArrayJsonConverter))]
 		public Parameter[]? Parameters { get; set; }
 
 		/// <summary>

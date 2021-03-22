@@ -8,6 +8,11 @@ namespace TypeCache.Collections
 {
 	public sealed class CustomEnumerable<T>
 	{
+		public static IEnumerable<T> Empty
+		{
+			get { yield break; }
+		}
+
 		private readonly IEnumerable<T> _Enumerable;
 
 		public CustomEnumerable(IEnumerable<T> enumerable)

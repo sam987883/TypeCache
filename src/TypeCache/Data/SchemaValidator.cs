@@ -96,7 +96,7 @@ namespace TypeCache.Data
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", parameter);
 
-				var writableColumns = this._ObjectSchema.Columns.If(column => !column!.Readonly).To(column => column!.Name);
+				var writableColumns = this._ObjectSchema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
 				invalidColumnCsv = dataColumns.Without(writableColumns).ToCsv(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections for table {this._ObjectSchema.Name} contain non-writable columns: {invalidColumnCsv}", parameter);
@@ -131,7 +131,7 @@ namespace TypeCache.Data
 			if (columns.Any())
 			{
 				var writableColumns = this._ObjectSchema.Columns
-					.If(column => !column!.Readonly)
+					.If(column => !column!.ReadOnly)
 					.To(column => column!.Name);
 				var invalidColumnCsv = columns
 					.Without(writableColumns)

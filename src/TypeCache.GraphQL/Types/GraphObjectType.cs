@@ -16,7 +16,7 @@ namespace TypeCache.GraphQL.Types
 			this.Name = graphAttribute?.Name ?? TypeOf<T>.Name;
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter is not null && property.Attributes.First<GraphAttribute>()?.Ignore != true)
+				.If(property => property!.Getter is not null && property.Attributes.First<GraphAttribute>()?.Ignore is not true)
 				.Do(property => this.AddField(property!.CreateFieldType(false)));
 		}
 	}

@@ -23,7 +23,7 @@ namespace TypeCache.Web.Middleware
 			string procedure = httpContext.Request.Query[nameof(procedure)].First()!;
 			var parameters = httpContext.Request.Query
 				.If(query => !query.Key.Is(nameof(procedure)))
-				.To(query => new Parameter(query.Key, query.Value.First()))
+				.To(query => new Parameter(query.Key, query.Value.First()!))
 				.ToList();
 
 			var json = await JsonSerializer.DeserializeAsync<JsonElement>(httpContext.Request.Body);
@@ -33,27 +33,11 @@ namespace TypeCache.Web.Middleware
 				while (enumerator.MoveNext())
 				{
 					var property = enumerator.Current;
-					parameters.Add(new Parameter(property.Name, property.Value.ValueKind switch
-					{
-						JsonValueKind.Undefined => throw new NotImplementedException(),
-						JsonValueKind.Object => property.Value.ToString(),
-						JsonValueKind.Array => property.Value.ToString(),
-						JsonValueKind.String => property.Value.GetString(),
-						JsonValueKind.Number => property.Value.TryGetInt64(out var value) ? value : property.Value.GetDecimal(),
-						JsonValueKind.True => true,
-						JsonValueKind.False => false,
-						JsonValueKind.Null => DBNull.Value,
-						_ => DBNull.Value
-					}));
+					parameters.Add(new Parameter(property.Name, property.Value.GetValue() ?? DBNull.Value));
 				}
 			}
 
-			var request = new StoredProcedureRequest
-			{
-				Procedure = procedure,
-				Parameters = parameters.ToArray()
-			};
-
+			var request = new StoredProcedureRequest(procedure, parameters.ToArray());
 			await this.HandleRequest<StoredProcedureRequest, RowSet[]>(request, httpContext);
 		}
 	}

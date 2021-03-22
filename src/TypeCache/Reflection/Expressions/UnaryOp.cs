@@ -4,9 +4,9 @@ namespace TypeCache.Reflection.Expressions
 {
 	public enum UnaryOp
 	{
-		/// <summary><code>i == true</code></summary>
+		/// <summary><code>i is true</code></summary>
 		IsTrue,
-		/// <summary><code>i == false</code></summary>
+		/// <summary><code>i is false</code></summary>
 		IsFalse,
 		/// <summary><code>++i</code></summary>
 		PreIncrement,

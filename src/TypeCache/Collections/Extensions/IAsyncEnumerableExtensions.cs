@@ -173,7 +173,7 @@ namespace TypeCache.Collections.Extensions
 			if (index.Value >= 0)
 			{
 				await using var enumerator = @this.GetAsyncEnumerator();
-				return await enumerator.MoveAsync(index.Value);
+				return await enumerator.SkipAsync(index.Value);
 			}
 
 			return await Task.FromException<T>(new IndexOutOfRangeException($"Argument {nameof(index)} with normalized value {index.Value} it out of range."));
@@ -194,7 +194,7 @@ namespace TypeCache.Collections.Extensions
 			if (!range.IsReverse())
 			{
 				if (range.Start.Value > 0)
-					yield return await enumerator.MoveAsync(range.Start.Value);
+					yield return await enumerator.SkipAsync(range.Start.Value);
 				var count = range.End.Value - range.Start.Value;
 				while (await enumerator.MoveNextAsync() && --count >= 0)
 					yield return enumerator.Current;
@@ -202,7 +202,7 @@ namespace TypeCache.Collections.Extensions
 			else
 			{
 				if (range.End.Value > 0)
-					yield return await enumerator.MoveAsync(range.End.Value);
+					yield return await enumerator.SkipAsync(range.End.Value);
 				var count = range.Start.Value - range.End.Value;
 				while (await enumerator.MoveNextAsync() && --count >= 0)
 					yield return enumerator.Current;

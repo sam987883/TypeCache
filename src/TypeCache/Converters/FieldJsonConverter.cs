@@ -4,7 +4,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Collections.Extensions;
-using TypeCache.Reflection;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Converters
@@ -23,18 +23,13 @@ namespace TypeCache.Converters
 					if (reader.Read())
 					{
 						var field = TypeOf<T>.Fields[name];
-						var value = reader.TokenType switch
-						{
-							JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
-							JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
-							JsonTokenType.String => reader.GetString(),
-							JsonTokenType.Number => reader.TryGetInt64(out var number) ? number : reader.GetDecimal(),
-							JsonTokenType.True => true,
-							JsonTokenType.False => false,
-							_ => null
-						};
 						if (field.SetValue is not null)
-							field.SetValue(output, value);
+							field.SetValue(output, reader.TokenType switch
+							{
+								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
+								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
+								_ => reader.GetValue()
+							});
 					}
 				}
 
@@ -53,77 +48,7 @@ namespace TypeCache.Converters
 				{
 					writer.WritePropertyName(field!.Name);
 					var value = field.GetValue!(input);
-					if (value is not null)
-					{
-						switch (field.Type.SystemType)
-						{
-							case SystemType.DBNull:
-								writer.WriteNullValue();
-								break;
-							case SystemType.Boolean:
-								writer.WriteBooleanValue((bool)value);
-								break;
-							case SystemType.SByte:
-								writer.WriteNumberValue((sbyte)value);
-								break;
-							case SystemType.Byte:
-								writer.WriteNumberValue((byte)value);
-								break;
-							case SystemType.Int16:
-								writer.WriteNumberValue((short)value);
-								break;
-							case SystemType.UInt16:
-								writer.WriteNumberValue((ushort)value);
-								break;
-							case SystemType.Int32:
-								writer.WriteNumberValue((int)value);
-								break;
-							case SystemType.UInt32:
-								writer.WriteNumberValue((uint)value);
-								break;
-							case SystemType.Int64:
-								writer.WriteNumberValue((long)value);
-								break;
-							case SystemType.UInt64:
-								writer.WriteNumberValue((ulong)value);
-								break;
-							case SystemType.Single:
-								writer.WriteNumberValue((float)value);
-								break;
-							case SystemType.Double:
-								writer.WriteNumberValue((double)value);
-								break;
-							case SystemType.Decimal:
-								writer.WriteNumberValue((decimal)value);
-								break;
-							case SystemType.DateTime:
-								writer.WriteStringValue((DateTime)value);
-								break;
-							case SystemType.DateTimeOffset:
-								writer.WriteStringValue((DateTimeOffset)value);
-								break;
-							case SystemType.TimeSpan:
-								writer.WriteStringValue(((TimeSpan)value).ToString("c"));
-								break;
-							case SystemType.Guid:
-								writer.WriteStringValue((Guid)value);
-								break;
-							case SystemType.Char:
-							case SystemType.Index:
-							case SystemType.Range:
-							case SystemType.Uri:
-								writer.WriteStringValue(value.ToString());
-								break;
-							case SystemType.String:
-								writer.WriteStringValue((string)value);
-								break;
-							default:
-								JsonSerializer.Serialize(writer, value, options);
-								break;
-						}
-					}
-					else
-						writer.WriteNullValue();
+					writer.WriteValue(field.Type.SystemType, value, options);
 				});
 				writer.WriteEndObject();
 			}

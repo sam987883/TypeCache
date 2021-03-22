@@ -168,24 +168,23 @@ ORDER BY p.[parameter_id] ASC;";
 		{
 			var objectName = name.Split('.').Get(^1)!.TrimStart('[').TrimEnd(']');
 			var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!.TrimStart('[').TrimEnd(']');
-			var request = new SqlRequest
+			var request = new SqlRequest(ObjectSchemaSQL, new[]
 			{
-				Parameters = new[]
-				{
-					new Parameter(OBJECT_NAME, objectName),
-					new Parameter(SCHEMA_NAME, schemaName)
-				},
-				SQL = ObjectSchemaSQL
-			};
+				new Parameter(OBJECT_NAME, objectName),
+				new Parameter(SCHEMA_NAME, schemaName)
+			});
 			var (table, columns, parameters, _) = this.RunAsync(request).Result;
+
+			if (!table!.Rows.Any())
+				throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Database object was not found.", objectName);
 
 			return new ObjectSchema((int)table![0, nameof(ObjectSchema.Id)]!,
 				(ObjectType)table[0, nameof(ObjectSchema.Type)]!,
 				table[0, nameof(ObjectSchema.DatabaseName)]!.ToString()!,
 				table[0, nameof(ObjectSchema.SchemaName)]!.ToString()!,
 				table[0, nameof(ObjectSchema.ObjectName)]!.ToString()!,
-				columns!.MapModels<ColumnSchema>().ToImmutable(),
-				parameters!.MapModels<ParameterSchema>().ToImmutable());
+				columns!.MapRecords<ColumnSchema>().ToImmutable(),
+				parameters!.MapRecords<ParameterSchema>().ToImmutable());
 		}
 
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)

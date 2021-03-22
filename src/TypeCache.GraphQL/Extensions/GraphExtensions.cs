@@ -58,7 +58,7 @@ namespace TypeCache.GraphQL.Extensions
 			var deprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message;
 			var resolver = new MethodFieldResolver<T[]>(method, handler);
 			var arguments = new QueryArguments(method.Parameters
-				.If(parameter => parameter!.Attributes.First<GraphAttribute>()?.Ignore != true && !parameter.Type.Is<IResolveFieldContext>())
+				.If(parameter => parameter!.Attributes.First<GraphAttribute>()?.Ignore is not true && !parameter.Type.Is<IResolveFieldContext>())
 				.To(parameter =>
 				{
 					if (parameter!.Name.Is("output") || parameter.Name.Is("select"))
@@ -195,11 +195,9 @@ namespace TypeCache.GraphQL.Extensions
 			graphType = @this.Kind switch
 			{
 				Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(graphType!),
-				Kind.Class when isInputType => typeof(GraphInputType<>).MakeGenericType(graphType!),
-				Kind.Interface when isInputType => typeof(GraphInputType<>).MakeGenericType(graphType!),
-				Kind.Class => typeof(GraphObjectType<>).MakeGenericType(graphType!),
-				Kind.Interface => typeof(GraphObjectType<>).MakeGenericType(graphType!),
-				_ => typeof(GraphEnumType<>).MakeGenericType(graphType!)
+				Kind.Class or Kind.Interface or Kind.Struct when isInputType => typeof(GraphInputType<>).MakeGenericType(graphType!),
+				Kind.Class or Kind.Interface or Kind.Struct => typeof(GraphObjectType<>).MakeGenericType(graphType!),
+				_ => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}")
 			};
 
 			if (@this.IsEnumerable())
@@ -216,7 +214,7 @@ namespace TypeCache.GraphQL.Extensions
 				.If(parameter =>
 				{
 					var graphAttribute = parameter!.Attributes.First<GraphAttribute>();
-					return graphAttribute?.Ignore != true && !parameter.Type.Handle.Is<IResolveFieldContext>();
+					return graphAttribute?.Ignore is not true && !parameter.Type.Handle.Is<IResolveFieldContext>();
 				})
 				.To(parameter => parameter!.ToQueryArgument()));
 

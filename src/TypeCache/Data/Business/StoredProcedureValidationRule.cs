@@ -16,7 +16,6 @@ namespace TypeCache.Data.Business
 				try
 				{
 					var schema = sqlApi.GetObjectSchema(request.Procedure);
-					request.Procedure = schema.Name;
 
 					var validator = new SchemaValidator(schema);
 					validator.Validate(request);

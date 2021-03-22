@@ -12,6 +12,8 @@ namespace TypeCache.Reflection
 		UInt16,
 		Int32,
 		UInt32,
+		NInt,
+		NUInt,
 		Int64,
 		UInt64,
 		BigInteger,

@@ -1,5 +1,6 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
+using System;
 using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;

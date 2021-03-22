@@ -48,11 +48,11 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToDouble(@this, startIndex);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(this byte[] @this, int startIndex = 0)
+		public static string ToText(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToString(@this, startIndex);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(this byte[] @this, int startIndex, int length)
+		public static string ToText(this byte[] @this, int startIndex, int length)
 			=> BitConverter.ToString(@this, startIndex, length);
 	}
 }
