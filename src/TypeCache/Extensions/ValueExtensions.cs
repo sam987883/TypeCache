@@ -161,7 +161,7 @@ namespace TypeCache.Extensions
 			=> BitConverter.GetBytes(@this);
 
 		public static byte[] ToBytes(this decimal @this)
-			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray(sizeof(decimal));
+			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ToInt32(this float @this)

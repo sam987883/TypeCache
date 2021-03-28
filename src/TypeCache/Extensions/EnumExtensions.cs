@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions
@@ -28,5 +27,17 @@ namespace TypeCache.Extensions
 		public static string Number<T>(this T @this)
 			where T : Enum
 			=> @this.ToString("D");
+
+		public static StringComparer ToStringComparer(this StringComparison @this)
+			=> @this switch
+			{
+				StringComparison.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+				StringComparison.Ordinal => StringComparer.Ordinal,
+				StringComparison.InvariantCultureIgnoreCase => StringComparer.InvariantCultureIgnoreCase,
+				StringComparison.InvariantCulture => StringComparer.InvariantCulture,
+				StringComparison.CurrentCultureIgnoreCase => StringComparer.CurrentCultureIgnoreCase,
+				StringComparison.CurrentCulture => StringComparer.CurrentCulture,
+				_ => throw new NotImplementedException($"[{nameof(StringComparison)}] with a value of {@this.Number()} does not exist.")
+			};
 	}
 }

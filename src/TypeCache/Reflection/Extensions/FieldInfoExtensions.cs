@@ -47,7 +47,7 @@ namespace TypeCache.Reflection.Extensions
 			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", false);
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateAccessors();
 			var type = MemberCache.Types[@this.FieldType.TypeHandle];
@@ -74,7 +74,7 @@ namespace TypeCache.Reflection.Extensions
 		{
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", true);
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateStaticAccessors();
 			var type = MemberCache.Types[@this.FieldType.TypeHandle];

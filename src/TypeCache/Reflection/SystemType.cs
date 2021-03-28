@@ -65,6 +65,7 @@ namespace TypeCache.Reflection
 		Tuple,
 		ValueTuple,
 		Func,
-		Action
+		Action,
+		WeakReference
 	}
 }

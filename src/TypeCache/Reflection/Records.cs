@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Reflection
@@ -22,6 +21,60 @@ namespace TypeCache.Reflection
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 	}
+
+	public sealed record EventMember(string Name, IImmutableList<Attribute> Attributes, TypeMember Type,
+		bool IsInternal, bool IsPublic, MethodMember AddEventHandler, MethodMember RaiseEvent, MethodMember RemoveEventHandler)
+		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<EventMember>
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add(object instance, Delegate handler)
+			=> this.Add(instance, handler);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Raise(object instance)
+			=> this.RaiseEvent.Invoke!(instance);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Remove(object instance, Delegate handler)
+			=> this.RemoveEventHandler.Invoke!(instance, handler);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(EventMember? other)
+			=> this.RaiseEvent.Handle == other?.RaiseEvent.Handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.RaiseEvent.Handle.GetHashCode();
+	}
+
+	public sealed record EventHandlerReference(WeakReference InstanceReference, EventMember EventMember, Delegate EventHandler);
+
+	public sealed record StaticEventMember(string Name, IImmutableList<Attribute> Attributes, TypeMember Type,
+		bool IsInternal, bool IsPublic, StaticMethodMember AddEventHandler, StaticMethodMember RaiseEvent, StaticMethodMember RemoveEventHandler)
+		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<EventMember>
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add(Delegate handler)
+			=> this.AddEventHandler.Invoke!(handler);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Raise()
+			=> this.RaiseEvent.Invoke!();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Remove(Delegate handler)
+			=> this.RemoveEventHandler.Invoke!(handler);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(EventMember? other)
+			=> this.RaiseEvent.Handle == other?.RaiseEvent.Handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.RaiseEvent.Handle.GetHashCode();
+	}
+
+	public sealed record StaticEventHandlerReference(StaticEventMember StaticEventMember, Delegate EventHandler);
 
 	public sealed record FieldMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeFieldHandle Handle, Delegate? Getter, GetValue? GetValue, Delegate? Setter, SetValue? SetValue, TypeMember Type)
@@ -85,7 +138,7 @@ namespace TypeCache.Reflection
 	{
 		public bool Equals(Parameter? other)
 			=> other is not null
-				&& this.Name.Is(other.Name, true)
+				&& this.Name.Is(other.Name)
 				&& this.DefaultValue == other.DefaultValue
 				&& this.HasDefaultValue == other.HasDefaultValue
 				&& this.IsOptional == this.IsOptional

@@ -43,7 +43,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true
 						|| property.Name.Is(selection))!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Parameters = parameters,
 				Where = where
 			};
@@ -63,7 +63,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
-				}).ToArray(output.Length),
+				}).ToArray(),
 				Parameters = parameters,
 				Where = where
 			};
@@ -85,7 +85,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count)
+				}).ToArray()
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
@@ -105,7 +105,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count)
+				}).ToArray()
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
@@ -126,7 +126,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count)
+				}).ToArray()
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
@@ -147,7 +147,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count)
+				}).ToArray()
 			};
 
 			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
@@ -167,7 +167,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Parameters = parameters,
 				Where = where
 			};
@@ -189,7 +189,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Parameters = parameters,
 				Where = where
 			};
@@ -209,7 +209,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
@@ -236,7 +236,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
@@ -264,7 +264,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Table = this.TableName,
 				Update = columns
 			};
@@ -285,7 +285,7 @@ namespace TypeCache.GraphQL
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
-				}).ToArray(context.SubFields.Count),
+				}).ToArray(),
 				Table = this.TableName,
 				Update = columns
 			};

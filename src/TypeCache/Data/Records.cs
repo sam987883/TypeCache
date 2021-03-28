@@ -51,10 +51,10 @@ namespace TypeCache.Data
 		public string Name { get; init; } = $"[{DatabaseName}].[{SchemaName}].[{ObjectName}]";
 
 		public bool HasColumn(string column) =>
-			this.Columns.To(_ => _.Name).Has(column, false);
+			this.Columns.To(_ => _.Name).Has(column);
 
 		public bool HasParameter(string parameter) =>
-			this.Parameters.To(_ => _.Name).Has(parameter, false);
+			this.Parameters.To(_ => _.Name).Has(parameter);
 
 		public bool Equals(ObjectSchema? other)
 			=> this.Id == other?.Id && this.Name.Is(other.Name);
@@ -106,7 +106,7 @@ namespace TypeCache.Data
 	{
 		public static RowSet Empty { get; } = new RowSet(Array.Empty<string>(), Array.Empty<object[]>());
 
-		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column, false).FirstValue()!.Value];
+		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column).FirstValue()!.Value];
 	}
 
 	/// <summary>

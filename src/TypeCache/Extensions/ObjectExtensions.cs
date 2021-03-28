@@ -69,7 +69,7 @@ namespace TypeCache.Extensions
 					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
-		public static ISet<string> MapFields<T, FROM>(this T @this, FROM source, bool compareCase = false)
+		public static ISet<string> MapFields<T, FROM>(this T @this, FROM source)
 		{
 			if (@this is not null && source is not null)
 			{
@@ -77,7 +77,7 @@ namespace TypeCache.Extensions
 				var toFields = @this.GetTypeFields();
 				var fromNames = fromFields.If(_ => _.Value.Getter is not null).To(_ => _.Key);
 				var toNames = toFields.If(_ => _.Value.Setter is not null).To(_ => _.Key);
-				var names = fromNames.Match(toNames, compareCase);
+				var names = fromNames.Match(toNames);
 				names.Do(name => toFields[name].SetValue!(@this, fromFields[name].GetValue!(source)));
 				return names;
 			}
@@ -103,7 +103,7 @@ namespace TypeCache.Extensions
 					.Do(_ => _.Value.SetValue!(@this, _.Value.GetValue!(source)));
 		}
 
-		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source, bool compareCase = false)
+		public static ISet<string> MapProperties<T, FROM>(this T @this, FROM source)
 		{
 			if (@this is not null && source is not null)
 			{
@@ -111,7 +111,7 @@ namespace TypeCache.Extensions
 				var toProperties = @this.GetTypeProperties();
 				var fromNames = fromProperties.If(_ => _.Value.GetValue is not null).To(_ => _.Key);
 				var toNames = toProperties.If(_ => _.Value.SetValue is not null).To(_ => _.Key);
-				var names = fromNames.Match(toNames, compareCase);
+				var names = fromNames.Match(toNames);
 				names.Do(name => toProperties[name].SetValue!(@this, fromProperties[name].GetValue!(source)));
 				return names;
 			}

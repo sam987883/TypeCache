@@ -10,7 +10,10 @@ namespace TypeCache.Data.Business
 	internal class UpdateRule : IRule<ISqlApi, UpdateRequest, RowSet>, IRule<UpdateRequest, string>
 	{
 		async ValueTask<RowSet> IRule<ISqlApi, UpdateRequest, RowSet>.ApplyAsync(ISqlApi sqlApi, UpdateRequest request, CancellationToken cancellationToken)
-			=> await sqlApi.UpdateAsync(request, cancellationToken);
+		{
+			request.Table = sqlApi.GetObjectSchema(request.Table).Name;
+			return await sqlApi.UpdateAsync(request, cancellationToken);
+		}
 
 		async ValueTask<string> IRule<UpdateRequest, string>.ApplyAsync(UpdateRequest request, CancellationToken cancellationToken)
 			=> await ValueTask.FromResult(request.ToSql());

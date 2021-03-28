@@ -32,7 +32,7 @@ namespace TypeCache.Security
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public long[]? Decrypt(string[] hashIds)
-			=> hashIds?.To(this.Decrypt).ToArray(hashIds.Length);
+			=> hashIds?.ToArray(this.Decrypt);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public long[]? Decrypt(IEnumerable<string> hashIds)
@@ -47,7 +47,7 @@ namespace TypeCache.Security
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public string[]? Encrypt(long[] ids)
-			=> ids?.To(this.Encrypt).ToArray(ids.Length);
+			=> ids?.ToArray(this.Encrypt);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public string[]? Encrypt(IEnumerable<long> ids)

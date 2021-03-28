@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 
@@ -138,5 +139,53 @@ namespace TypeCache.Collections.Extensions
 			Array.Copy(@this, sourceIndex, array, 0, array.Length);
 			return array;
 		}
+
+		public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)
+		{
+			if (!@this.Any())
+				return Array.Empty<V>();
+
+			var array = new V[@this.Length];
+			@this.Do((item, index) => array[index] = map(item));
+			return array;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableArray<T> ToImmutableArray<T>(this T[]? @this)
+			where T : notnull
+			=> ImmutableArray.Create(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableHashSet<string> ToImmutableHashSet(this string[]? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> ImmutableHashSet.Create(comparison.ToStringComparer(), @this ?? Array.Empty<string>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableHashSet<T> ToImmutableHashSet<T>(this T[]? @this, IEqualityComparer<T>? comparer = null)
+			where T : notnull
+			=> ImmutableHashSet.Create(comparer, @this ?? Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableList<T> ToImmutableList<T>(this T[]? @this)
+			where T : notnull
+			=> ImmutableList.Create(@this ?? Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableQueue<T> ToImmutableQueue<T>(this T[]? @this)
+			where T : notnull
+			=> ImmutableQueue.Create(@this ?? Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableSortedSet<string> ToImmutableSortedSet(this string[]? @this, StringComparison comparison = StringComparison.Ordinal)
+			=> ImmutableSortedSet.Create(comparison.ToStringComparer(), @this ?? Array.Empty<string>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableSortedSet<T> ToImmutableSortedSet<T>(this T[]? @this, IComparer<T>? comparer = null)
+			where T : notnull
+			=> ImmutableSortedSet.Create(comparer, @this ?? Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
+			where T : notnull
+			=> ImmutableStack.Create(@this ?? Array.Empty<T>());
 	}
 }

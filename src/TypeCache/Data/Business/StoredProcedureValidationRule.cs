@@ -4,6 +4,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
@@ -16,9 +18,11 @@ namespace TypeCache.Data.Business
 				try
 				{
 					var schema = sqlApi.GetObjectSchema(request.Procedure);
+					schema.Type.Assert(nameof(StoredProcedureRequest), ObjectType.StoredProcedure);
 
-					var validator = new SchemaValidator(schema);
-					validator.Validate(request);
+					var invalidParameterCsv = request.Parameters.To(_ => _.Name).Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCsv();
+					if (!invalidParameterCsv.IsBlank())
+						throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(request.Parameters)}");
 
 					return ValidationResponse.Success;
 				}

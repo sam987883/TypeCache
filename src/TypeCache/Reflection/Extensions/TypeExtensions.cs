@@ -26,9 +26,9 @@ namespace TypeCache.Reflection.Extensions
 			var kind = @this.GetKind();
 			var systemType = @this.GetSystemType();
 			var isNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable;
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
-			var genericTypeHandles = @this.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutable();
-			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutable(interfaces.Length);
+			var attributes = IEnumerableExtensions.ToImmutableArray(@this.GetCustomAttributes<Attribute>(true));
+			var genericTypeHandles = IEnumerableExtensions.ToImmutableArray(@this.GenericTypeArguments.To(_ => _.TypeHandle));
+			var interfaceTypeHandles = IEnumerableExtensions.ToImmutableArray(interfaces.To(_ => _.TypeHandle));
 
 			return new TypeMember(@this.GetName(), attributes, !@this.IsVisible, @this.IsPublic, kind, systemType, @this.TypeHandle, @this.BaseType?.TypeHandle,
 				genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);

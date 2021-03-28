@@ -27,7 +27,7 @@ namespace TypeCache.Reflection.Extensions
 			Delegate? method = null;
 			if (@this.IsInvokable())
 			{
-				var methodParameters = parameterInfos.To(parameterInfo => parameterInfo.Parameter()).ToArray(parameterInfos.Length);
+				var methodParameters = parameterInfos.ToArray(parameterInfo => parameterInfo.Parameter());
 				method = parameterInfos.Any()
 					? @this.New(methodParameters).Lambda(methodParameters).Compile()
 					: @this.New().Lambda().Compile();
@@ -38,8 +38,8 @@ namespace TypeCache.Reflection.Extensions
 					: @this.New().Cast<object>().Lambda<CreateType>(callParameters).Compile();
 			}
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
-			var parameters = parameterInfos.To(CreateParameter!).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var parameters = parameterInfos.To(CreateParameter!).ToImmutableArray();
 			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
 
 			return new ConstructorMember(@this.Name, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, create, method, parameters, type);
@@ -47,9 +47,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static Delegate CreateDelegate(this MethodInfo @this)
 		{
-			var callParameters = @this.GetParameterInfos()
-				.To(parameterInfo => parameterInfo!.Parameter())
-				.ToArray(@this.GetParameters().Length);
+			var callParameters = @this.GetParameterInfos().ToArray(parameterInfo => parameterInfo!.Parameter());
 			var lambdaParameters = new ParameterExpression[callParameters.Length + 1];
 
 			ParameterExpression instance = nameof(instance).Parameter(@this.DeclaringType!);
@@ -80,11 +78,11 @@ namespace TypeCache.Reflection.Extensions
 		{
 			@this.IsStatic.Assert($"{nameof(@this)}.{nameof(@this.IsStatic)}", false);
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var invoke = @this.CreateInvokeType();
 			var method = @this.CreateDelegate();
-			var parameters = @this.GetParameterInfos().To(CreateParameter!).ToImmutable();
-			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var parameters = @this.GetParameterInfos().To(CreateParameter!).ToImmutableArray();
+			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
 
@@ -93,7 +91,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static Parameter CreateParameter(ParameterInfo parameterInfo)
 		{
-			var attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var type = MemberCache.Types[parameterInfo.ParameterType.TypeHandle];
 
 			return new Parameter(parameterInfo.GetName(), attributes, parameterInfo.IsOptional, parameterInfo.IsOut, parameterInfo.DefaultValue, parameterInfo.HasDefaultValue, type);
@@ -101,9 +99,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static Delegate CreateStaticDelegate(this MethodInfo @this)
 		{
-			var callParameters = @this.GetParameterInfos()
-				.To(parameterInfo => parameterInfo!.Parameter())
-				.ToArray(@this.GetParameters().Length);
+			var callParameters = @this.GetParameterInfos().ToArray(parameterInfo => parameterInfo!.Parameter());
 
 			return callParameters.Any()
 				? @this.CallStatic(callParameters).Lambda(callParameters).Compile()
@@ -127,11 +123,11 @@ namespace TypeCache.Reflection.Extensions
 		{
 			@this.IsStatic.Assert($"{nameof(@this)}.{nameof(@this.IsStatic)}", true);
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var invoke = @this.CreateStaticInvokeType();
 			var method = @this.CreateStaticDelegate();
-			var parameters = @this.GetParameterInfos().To(CreateParameter!).ToImmutable();
-			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var parameters = @this.GetParameterInfos().To(CreateParameter!).ToImmutableArray();
+			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
 

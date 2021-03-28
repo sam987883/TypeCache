@@ -15,14 +15,14 @@ namespace TypeCache.Data.Extensions
 		/// </summary>
 		public static T[] MapRecords<T>(this RowSet @this)
 		{
-			var constructor = TypeOf<T>.Constructors.First(_ => _!.Parameters.To(parameter => parameter.Name).IsSet(@this.Columns, StringComparer.OrdinalIgnoreCase));
+			var constructor = TypeOf<T>.Constructors.First(_ => _!.Parameters.To(parameter => parameter.Name).IsSet(@this.Columns));
 			constructor.AssertNotNull(nameof(constructor));
-			var columnIndexes = constructor!.Parameters.To(parameter => @this.Columns.ToIndex(parameter.Name, false)).Gather().ToArray();
+			var columnIndexes = constructor!.Parameters.To(parameter => @this.Columns.ToIndex(parameter.Name)).Gather().ToArray();
 
 			var items = new T[@this.Rows.Length];
 			@this.Rows.Do((row, rowIndex) =>
 			{
-				var item = TypeOf<T>.Create(columnIndexes.To(columnIndex => row[columnIndex]).ToArray(columnIndexes.Length)!);
+				var item = TypeOf<T>.Create(columnIndexes.ToArray(columnIndex => row[columnIndex])!);
 				items[rowIndex] = item;
 			});
 			return items;

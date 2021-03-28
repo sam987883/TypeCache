@@ -549,17 +549,14 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K> comparer)
+		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
-			comparer.AssertNotNull(nameof(comparer));
 
-			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), item)).ToArray(@this.Count());
-			return items
-				.To(pair => pair.Key)
-				.ToHashSet(comparer)
-				.ToDictionary(key => items.If(pair => comparer.Equals(pair.Key, key)).To(pair => pair.Value));
+			(K Key, V Value)[] items = @this.To(item => (keyFactory(item), item)).ToArray();
+			var keys = items.To(pair => pair.Key).ToHashSet(comparer);
+			return keys.ToDictionary(key => items.If(pair => keys.Comparer.Equals(pair.Key, key)).To(pair => pair.Value));
 		}
 
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index)
@@ -582,20 +579,11 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
-			=> @this.ToIndex(value).Any();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
 			=> @this.ToIndex(value, comparer).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
-			where T : struct
-			=> values.All(@this.Has);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
 			=> values.All(value => @this.Has(value, comparer!));
 
 		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter)
@@ -696,34 +684,14 @@ namespace TypeCache.Collections.Extensions
 			where T : struct
 			=> @this.If(_ => _.HasValue).To(_ => _!.Value);
 
-		public static bool IsSequence<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		public static bool IsSequence<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			if (@this is null && items is null)
 				return true;
 			else if (@this is null || items is null)
 				return false;
 
-			using var enumerator = @this.GetEnumerator();
-			using var itemsEnumerator = items.GetEnumerator();
-			while (enumerator.MoveNext())
-			{
-				if (!(itemsEnumerator.MoveNext()
-					&& (enumerator.Current is null && itemsEnumerator.Current is null)
-					&& enumerator.Current?.Equals(itemsEnumerator.Current) is true))
-					return false;
-			}
-
-			return !itemsEnumerator.MoveNext();
-		}
-
-		public static bool IsSequence<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
-		{
-			comparer.AssertNotNull(nameof(comparer));
-
-			if (@this is null && items is null)
-				return true;
-			else if (@this is null || items is null)
-				return false;
+			comparer ??= EqualityComparer<T>.Default;
 
 			using var enumerator = @this.GetEnumerator();
 			using var itemsEnumerator = items.GetEnumerator();
@@ -737,15 +705,8 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-			=> @this.ToHashSet().SetEquals(items ?? CustomEnumerable<T>.Empty);
-
-		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
-		{
-			comparer.AssertNotNull(nameof(comparer));
-
-			return @this.ToHashSet(comparer).SetEquals(items ?? CustomEnumerable<T>.Empty);
-		}
+		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
+			=> @this.ToHashSet(comparer).SetEquals(items ?? CustomEnumerable<T>.Empty);
 
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter)
 			=> @this switch
@@ -771,15 +732,7 @@ namespace TypeCache.Collections.Extensions
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map)
 			=> @this is not null ? string.Join(delimeter, @this.To(map)) : string.Empty;
 
-		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-		{
-			var hashSet = @this.ToHashSet();
-			if (items is not null)
-				hashSet.IntersectWith(items);
-			return hashSet;
-		}
-
-		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
 			if (items is not null)
@@ -787,41 +740,23 @@ namespace TypeCache.Collections.Extensions
 			return hashSet;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T Maximum<T>(this IEnumerable<T>? @this)
-			where T : unmanaged, IComparable<T>
-			=> @this.Aggregate(default(T), (x, y) => x.MoreThan(y) ? x : y);
-
-		public static T Maximum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		public static T Maximum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
 		{
-			comparer.AssertNotNull(nameof(comparer));
+			comparer ??= @this is IEnumerable<string> ? (IComparer<T>)StringComparer.Ordinal : Comparer<T>.Default;
 
 			return @this.Aggregate(default(T), comparer.Maximum);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T Minimum<T>(this IEnumerable<T>? @this)
-			where T : unmanaged, IComparable<T>
-			=> @this.Aggregate(default(T), (x, y) => x.LessThan(y) ? x : y);
-
-		public static T Minimum<T>(this IEnumerable<T>? @this, IComparer<T> comparer)
+		public static T Minimum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
 		{
-			comparer.AssertNotNull(nameof(comparer));
+			comparer ??= @this is IEnumerable<string> ? (IComparer<T>)StringComparer.Ordinal : Comparer<T>.Default;
 
 			return @this.Aggregate(default(T), comparer.Minimum);
 		}
 
-		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-		{
-			var hashSet = @this.ToHashSet();
-			if (items is not null)
-				hashSet.SymmetricExceptWith(items);
-			return hashSet;
-		}
-
-		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
 			if (items is not null)
@@ -833,20 +768,15 @@ namespace TypeCache.Collections.Extensions
 		public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(count, ^1));
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[] Sort<T>(this IEnumerable<T>? @this)
-			where T : IComparable<T>
-			=> @this.Sort(Comparer<T>.Create((x, y) => x.CompareTo(y)));
-
 		public static T[] Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 		{
 			var items = @this switch
 			{
-				null => Array.Empty<T>(),
+				_ when !@this.Any() => Array.Empty<T>(),
 				T[] array => array,
 				_ => @this.ToArray()
 			};
-			items.Sort(comparer);
+			items.Sort(comparer ?? Comparer<T>.Default);
 			return items;
 		}
 
@@ -886,20 +816,24 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		public static T[] ToArray<T>(this IEnumerable<T>? @this)
-			=> @this switch
+		{
+			return @this switch
 			{
+				null => Array.Empty<T>(),
+				T[] array => array.AsSpan().ToArray(),
 				ImmutableArray<T> array => array.AsSpan().ToArray(),
 				List<T> list => list.ToArray(),
 				Stack<T> stack => stack.ToArray(),
 				Queue<T> queue => queue.ToArray(),
-				_ => @this.ToArray(@this.Count())
+				_ => toArray(@this)
 			};
 
-		public static T[] ToArray<T>(this IEnumerable<T>? @this, int length)
-		{
-			var array = new T[length];
-			@this.Do((item, index) => array[index] = item);
-			return array;
+			static T[] toArray(IEnumerable<T> enumerable)
+			{
+				var array = new T[enumerable.Count()];
+				enumerable.Do((item, index) => array[index] = item);
+				return array;
+			}
 		}
 
 		public static async IAsyncEnumerable<V?> ToAsync<T, V>(this IEnumerable<T?>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
@@ -941,57 +875,61 @@ namespace TypeCache.Collections.Extensions
 			=> @this.Any() ? string.Join(',', @this.To(value => value switch
 			{
 				bool or sbyte or short or int or nint or long or byte or ushort or uint or nuint or ulong or float or double or Half or decimal _ => value.ToString(),
-				char text => text.Equals(',') ? "\",\"" : text.Equals('\"') ? "\"\"\"\"" : text.ToString(),
+				char character when character == ',' => "\",\"",
+				char character when character == '\"' => "\"\"\"\"",
+				char character => character.ToString(),
 				DateTime dateTime => dateTime.ToString("o"),
 				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
 				TimeSpan time => time.ToString("c"),
 				Guid guid => guid.ToString("D"),
 				Enum token => token.Number(),
-				string text => text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\""),
+				string text when text.Contains(',') => $"\"{text.Replace("\"", "\"\"")}\"",
+				string text => text.Replace("\"", "\"\""),
 				null => string.Empty,
 				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
 			})) : string.Empty;
 
-		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory)
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K>? comparer = null)
+			where K : notnull
+		{
+			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
+			@this?.Do(tuple => dictionary.Add(tuple.Key, tuple.Value));
+			return dictionary;
+		}
+
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<Tuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
+			where K : notnull
+		{
+			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
+			@this?.Do(tuple => dictionary.Add(tuple.Item1, tuple.Item2));
+			return dictionary;
+		}
+
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<ValueTuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
+			where K : notnull
+		{
+			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
+			@this?.Do(tuple => dictionary.Add(tuple.Item1, tuple.Item2));
+			return dictionary;
+		}
+
+		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
-			var dictionary = new Dictionary<K, V>(@this.Count());
+			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
 			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
 			return dictionary;
 		}
 
-		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K> comparer)
-			where K : notnull
-		{
-			valueFactory.AssertNotNull(nameof(valueFactory));
-			comparer.AssertNotNull(nameof(comparer));
-
-			var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
-			@this?.Do(key => dictionary.Add(key, valueFactory(key)));
-			return dictionary;
-		}
-
-		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory)
+		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
 			keyFactory.AssertNotNull(nameof(keyFactory));
 			valueFactory.AssertNotNull(nameof(valueFactory));
 
-			var dictionary = new Dictionary<K, V>(@this.Count());
-			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
-			return dictionary;
-		}
-
-		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K> comparer)
-			where K : notnull
-		{
-			keyFactory.AssertNotNull(nameof(keyFactory));
-			valueFactory.AssertNotNull(nameof(valueFactory));
-			comparer.AssertNotNull(nameof(comparer));
-
-			var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
+			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
 			@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 			return dictionary;
 		}
@@ -1003,69 +941,76 @@ namespace TypeCache.Collections.Extensions
 			return hashCode.ToHashCode();
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this)
-			=> @this is not null ? new HashSet<T>(@this) : new HashSet<T>(0);
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
+			=> @this.Any() ? new HashSet<T>(@this, comparer) : new HashSet<T>(0, comparer);
 
-		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T> comparer)
-		{
-			comparer.AssertNotNull(nameof(comparer));
-
-			return @this is not null ? new HashSet<T>(@this, comparer) : new HashSet<T>(comparer);
-		}
-
-		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this)
+		public static ImmutableArray<T> ToImmutableArray<T>(this IEnumerable<T>? @this)
 			where T : notnull
-			=> @this is T[] array ? Unsafe.As<T[], ImmutableArray<T>>(ref array) : @this.ToImmutable(@this.Count());
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableArray<T>.Empty,
+				T[] array => ImmutableArray.Create(array),
+				List<T> list => ImmutableArray.Create(list.ToArray()),
+				_ => ImmutableArray.CreateRange<T>(@this)
+			};
 
-		public static IImmutableList<T> ToImmutable<T>(this IEnumerable<T>? @this, int count)
+		public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K>? keyComparer = null, IEqualityComparer<V>? valueComparer = null)
+			where K : notnull
+			=> @this.Any() ? ImmutableDictionary.CreateRange(keyComparer, valueComparer, @this) : ImmutableDictionary<K, V>.Empty;
+
+		public static ImmutableHashSet<T> ToImmutableHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
 			where T : notnull
-		{
-			if (@this is null)
-				return ImmutableArray<T>.Empty;
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableHashSet<T>.Empty,
+				T[] array => ImmutableHashSet.Create(comparer, array),
+				List<T> list => ImmutableHashSet.Create(comparer, list.ToArray()),
+				_ => ImmutableHashSet.CreateRange(comparer, @this)
+			};
 
-			var arrayBuilder = ImmutableArray.CreateBuilder<T>(count);
-			arrayBuilder.AddRange(@this);
-			return arrayBuilder.ToImmutable();
-		}
+		public static ImmutableList<T> ToImmutableList<T>(this IEnumerable<T>? @this)
+			where T : notnull
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableList<T>.Empty,
+				T[] array => ImmutableList.Create(array),
+				List<T> list => ImmutableList.Create(list.ToArray()),
+				_ => ImmutableList.CreateRange<T>(@this)
+			};
 
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this)
+		public static ImmutableQueue<T> ToImmutableQueue<T>(this IEnumerable<T>? @this)
+			where T : notnull
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableQueue<T>.Empty,
+				T[] array => ImmutableQueue.Create(array),
+				List<T> list => ImmutableQueue.Create(list.ToArray()),
+				_ => ImmutableQueue.CreateRange<T>(@this)
+			};
+
+		public static ImmutableSortedDictionary<K, V> ToImmutableSortedDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IComparer<K>? keyComparer = null, IEqualityComparer<V>? valueComparer = null)
 			where K : notnull
-		{
-			if (@this is null)
-				return ImmutableDictionary<K, V>.Empty;
+			=> @this.Any() ? ImmutableSortedDictionary.CreateRange(keyComparer, valueComparer, @this) : ImmutableSortedDictionary.Create(keyComparer, valueComparer);
 
-			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>();
-			dictionaryBuilder.AddRange(@this);
-			return dictionaryBuilder.ToImmutable();
-		}
+		public static ImmutableSortedSet<T> ToImmutableSortedSet<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
+			where T : notnull
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableSortedSet.Create(comparer),
+				T[] array => ImmutableSortedSet.Create(comparer, array),
+				List<T> list => ImmutableSortedSet.Create(comparer, list.ToArray()),
+				_ => ImmutableSortedSet.CreateRange(comparer, @this)
+			};
 
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer)
-			where K : notnull
-		{
-			keyComparer.AssertNotNull(nameof(keyComparer));
-
-			if (@this is null)
-				return ImmutableDictionary<K, V>.Empty;
-
-			var dictionaryBuilder = ImmutableDictionary.CreateBuilder<K, V>(keyComparer);
-			dictionaryBuilder.AddRange(@this);
-			return dictionaryBuilder.ToImmutable();
-		}
-
-		public static IImmutableDictionary<K, V> ToImmutable<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K> keyComparer, IEqualityComparer<V> valueComparer)
-			where K : notnull
-		{
-			keyComparer.AssertNotNull(nameof(keyComparer));
-			valueComparer.AssertNotNull(nameof(valueComparer));
-
-			if (@this is null)
-				return ImmutableDictionary<K, V>.Empty;
-
-			var dictionaryBuilder = ImmutableDictionary.CreateBuilder(keyComparer, valueComparer);
-			dictionaryBuilder.AddRange(@this);
-			return dictionaryBuilder.ToImmutable();
-		}
+		public static ImmutableStack<T> ToImmutableStack<T>(this IEnumerable<T>? @this)
+			where T : notnull
+			=> @this switch
+			{
+				_ when !@this.Any() => ImmutableStack<T>.Empty,
+				T[] array => ImmutableStack.Create(array),
+				List<T> list => ImmutableStack.Create(list.ToArray()),
+				_ => ImmutableStack.CreateRange<T>(@this)
+			};
 
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
 		{
@@ -1106,16 +1051,14 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value)
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
 			=> value switch
 			{
+				_ when !@this.Any() => CustomEnumerable<int>.Empty,
+				_ when comparer is not null => @this.ToIndex(item => comparer.Equals(item, value)),
 				IEquatable<T> equatable => @this.ToIndex(equatable.Equals),
 				_ => @this.ToIndex(item => Equals(item, value))
 			};
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
-			=> @this.ToIndex(item => comparer.Equals(item, value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this)
@@ -1127,14 +1070,15 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
-			=> @this is not null ? new Queue<T>(@this) : new Queue<T>(0);
+			=> @this.Any() ? new Queue<T>(@this) : new Queue<T>(0);
 
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
 				null => Span<T>.Empty,
-				ImmutableArray<T> array => array.AsSpan(),
+				ImmutableArray<T> immutableArray => immutableArray.AsSpan(),
 				T[] array => array.AsSpan(),
+				List<T> list => list.ToArray().AsSpan(),
 				_ => @this.ToArray().AsSpan(),
 			};
 
@@ -1143,6 +1087,7 @@ namespace TypeCache.Collections.Extensions
 			{
 				null => Span<T>.Empty,
 				T[] array => array.AsSpan(),
+				List<T> list => list.ToArray().AsSpan(),
 				_ => @this.ToArray().AsSpan(),
 			};
 
@@ -1150,15 +1095,7 @@ namespace TypeCache.Collections.Extensions
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
 			=> @this is not null ? new Stack<T>(@this) : new Stack<T>(0);
 
-		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-		{
-			var hashSet = @this.ToHashSet();
-			if (items is not null)
-				hashSet.UnionWith(items);
-			return hashSet;
-		}
-
-		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
 			if (items is not null)
@@ -1166,15 +1103,7 @@ namespace TypeCache.Collections.Extensions
 			return hashSet;
 		}
 
-		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-		{
-			var hashSet = @this.ToHashSet();
-			if (items is not null)
-				hashSet.ExceptWith(items);
-			return hashSet;
-		}
-
-		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T> comparer)
+		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
 			if (items is not null)

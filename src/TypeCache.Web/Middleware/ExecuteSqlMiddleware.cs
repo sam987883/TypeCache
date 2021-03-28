@@ -22,7 +22,7 @@ namespace TypeCache.Web.Middleware
 			using var reader = new StreamReader(httpContext.Request.Body);
 			var parameters = httpContext.Request.Query
 				.To(query => new Parameter(query.Key, query.Value.First()!))
-				.ToArray(httpContext.Request.Query.Count);
+				.ToArray();
 			var request = new SqlRequest(reader.ReadToEnd(), parameters);
 
 			await this.HandleRequest<SqlRequest, RowSet[]>(request, httpContext);

@@ -29,9 +29,12 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			var arguments = this.GetArguments(context).ToArray();
 			var value = this._Method.Invoke!(this._Handler, arguments);
-			return this._Method.Return.IsValueTask
-				? ((ValueTask<T>)value!).AsTask()
-				: (Task<T>)value!;
+			return this._Method.Return.Type.SystemType switch
+			{
+				SystemType.Task => (Task<T>)value!,
+				SystemType.ValueTask => ((ValueTask<T>)value!).AsTask(),
+				_ => Task.FromResult<T>((T)value!)
+			};
 		}
 
 		object? IFieldResolver.Resolve(IResolveFieldContext context)

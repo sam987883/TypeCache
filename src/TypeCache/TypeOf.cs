@@ -43,6 +43,8 @@ namespace TypeCache
 
 		public static IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[Handle];
 
+		public static IImmutableDictionary<string, EventMember> Events => MemberCache.Events[Handle];
+
 		public static IImmutableDictionary<string, FieldMember> Fields => MemberCache.Fields[Handle];
 
 		public static IImmutableList<IndexerMember> Indexers => MemberCache.Indexers[Handle];
@@ -51,11 +53,33 @@ namespace TypeCache
 
 		public static IImmutableDictionary<string, PropertyMember> Properties => MemberCache.Properties[Handle];
 
+		public static IImmutableDictionary<string, StaticEventMember> StaticEvents => MemberCache.StaticEvents[Handle];
+
 		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => MemberCache.StaticFields[Handle];
 
 		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => MemberCache.StaticMethods[Handle];
 
 		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[Handle];
+
+		public static long AddEventHandler(object instance, string eventMemberName, Delegate handler)
+		{
+			var key = DateTime.UtcNow.Ticks;
+			var eventMember = Events[eventMemberName];
+			var reference = new EventHandlerReference(new WeakReference(instance), eventMember, handler);
+			eventMember.Add(instance, handler);
+			MemberCache.EventHandlers.Add(key, reference);
+			return key;
+		}
+
+		public static long AddStaticEventHandler(string eventMemberName, Delegate handler)
+		{
+			var key = DateTime.UtcNow.Ticks;
+			var staticEventMember = StaticEvents[eventMemberName];
+			var reference = new StaticEventHandlerReference(staticEventMember, handler);
+			staticEventMember.Add(handler);
+			MemberCache.StaticEventHandlers.Add(key, reference);
+			return key;
+		}
 
 		public static T Create(params object[] parameters)
 			=> (T?)Constructors.First(constructor => constructor!.IsCallableWith(parameters))?.Create!(parameters)
@@ -68,5 +92,27 @@ namespace TypeCache
 		public static D? GetStaticMethod<D>(string name)
 			where D : Delegate
 			=> StaticMethods.Get(name).To(_ => _.Method).First<D>();
+
+		public static bool RemoveEventHandler(long handlerKey)
+		{
+			if (MemberCache.EventHandlers.TryGetValue(handlerKey, out var value))
+			{
+				if (value.InstanceReference.IsAlive)
+					value.EventMember.Remove(value.InstanceReference.Target!, value.EventHandler);
+
+				return MemberCache.EventHandlers.Remove(handlerKey);
+			}
+			return false;
+		}
+
+		public static bool RemoveStaticEventHandler(long handlerKey)
+		{
+			if (MemberCache.StaticEventHandlers.TryGetValue(handlerKey, out var value))
+			{
+				value.StaticEventMember.Remove(value.EventHandler);
+				return MemberCache.EventHandlers.Remove(handlerKey);
+			}
+			return false;
+		}
 	}
 }

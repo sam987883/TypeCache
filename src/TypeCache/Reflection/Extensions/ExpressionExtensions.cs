@@ -176,19 +176,19 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetActionType(parameters.To(parameter => parameter.Type).ToArray(parameters.Length)), @this, parameters);
+			=> Expression.Lambda(Expression.GetActionType(parameters.ToArray(parameter => parameter.Type)), @this, parameters);
 
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray(parameters.Length + 1)), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
 
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray(parameters.Length + 1)), @this, parameters);
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MemberExpression Member(this Expression @this, string name)

@@ -149,7 +149,7 @@ ORDER BY p.[parameter_id] ASC;";
 			var database = connectionStringBuilder.TryGetValue(DATABASE, out var value)
 				|| connectionStringBuilder.TryGetValue(INITIAL_CATALOG, out value) ? value.ToString() : null;
 
-			var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries).To(part => part.TrimStart('[').TrimEnd(']')).ToArray();
+			var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries).ToArray(part => part.TrimStart('[').TrimEnd(']'));
 			var fullName = parts.Length switch
 			{
 				1 when !database.IsBlank() => $"[{database}]..[{HandleFunctionName(parts[0])}]",
@@ -183,8 +183,8 @@ ORDER BY p.[parameter_id] ASC;";
 				table[0, nameof(ObjectSchema.DatabaseName)]!.ToString()!,
 				table[0, nameof(ObjectSchema.SchemaName)]!.ToString()!,
 				table[0, nameof(ObjectSchema.ObjectName)]!.ToString()!,
-				columns!.MapRecords<ColumnSchema>().ToImmutable(),
-				parameters!.MapRecords<ParameterSchema>().ToImmutable());
+				columns!.MapRecords<ColumnSchema>().ToImmutableArray(),
+				parameters!.MapRecords<ParameterSchema>().ToImmutableArray());
 		}
 
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)

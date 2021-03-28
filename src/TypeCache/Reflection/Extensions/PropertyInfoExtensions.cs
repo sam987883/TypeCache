@@ -55,7 +55,7 @@ namespace TypeCache.Reflection.Extensions
 		{
 			@this.GetIndexParameters().Any().Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetIndexParameters)}().Any()", true);
 
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var methodInfo = @this.GetAccessors(true).First()!;
 			var getMethod = @this.GetMethod is not null ? @this.GetMethod.CreateMember() : null;
 			var setMethod = @this.SetMethod is not null ? @this.SetMethod.CreateMember() : null;
@@ -66,7 +66,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static PropertyMember CreateMember(this PropertyInfo @this)
 		{
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorMethods();
 			var (getValue, setValue) = @this.CreateAccessors();
 			var methodInfo = @this.GetAccessors(true).First()!;
@@ -115,7 +115,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static StaticPropertyMember CreateStaticMember(this PropertyInfo @this)
 		{
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutable();
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateStaticAccessorMethods();
 			var (getValue, setValue) = @this.CreateStaticAccessors();
 			var methodInfo = @this.GetAccessors(true).First()!;

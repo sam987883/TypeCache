@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Data.Business
 {
@@ -16,10 +17,14 @@ namespace TypeCache.Data.Business
 				try
 				{
 					var schema = sqlApi.GetObjectSchema(request.From);
-					request.From = schema.Name;
 
-					var validator = new SchemaValidator(schema);
-					validator.Validate(request);
+					if (request.Select.Any())
+					{
+						var aliases = request.Select.To(_ => _.As).IfNotBlank();
+						var uniqueAliases = aliases.ToHashSet(StringComparer.OrdinalIgnoreCase);
+						if (aliases.Count() != uniqueAliases.Count)
+							throw new ArgumentException($"Duplicate aliases found.", $"{nameof(SelectRequest)}.{nameof(request.Select)}");
+					}
 
 					return ValidationResponse.Success;
 				}

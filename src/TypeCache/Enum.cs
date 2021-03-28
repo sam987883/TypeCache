@@ -19,7 +19,7 @@ namespace TypeCache
 		public record Token(string Name, T Value, IImmutableList<Attribute> Attributes) : IEquatable<Token>
 		{
 			public bool Equals(Token token1, Token token2)
-				=> token1.Name.Is(token2.Name, true) && Enum<T>.Comparer.Equals(token1.Value, token2.Value);
+				=> token1.Name.Is(token2.Name, StringComparison.Ordinal) && Enum<T>.Comparer.Equals(token1.Value, token2.Value);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public override int GetHashCode()

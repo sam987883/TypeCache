@@ -10,17 +10,11 @@ namespace TypeCache.Extensions
 {
 	public static class StringExtensions
 	{
-		private static StringComparer GetStringComparer(bool compareCase)
-			=> compareCase ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
-
-		private static StringComparison GetStringComparison(bool compareCase)
-			=> compareCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-
-		public static void Assert(this string? @this, string name, string? value, bool compareCase = false, [CallerMemberName] string caller = null)
+		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase, [CallerMemberName] string caller = null)
 		{
 			name.AssertNotNull(nameof(name), caller);
 
-			if (!GetStringComparer(compareCase).Equals(@this, value))
+			if (!comparison.ToStringComparer().Equals(@this, value))
 				throw new ArgumentException($"{nameof(Assert)}: [{(@this is not null ? $"\"{@this}\"" : "null")}] <> {(value is not null ? $"\"{value}\"" : "null")}.", name);
 		}
 
@@ -38,12 +32,12 @@ namespace TypeCache.Extensions
 			=> encoding.GetString(Convert.FromBase64String(@this));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has(this string @this, string value, bool compareCase = false)
-			=> @this.Contains(value, GetStringComparison(compareCase));
+		public static bool Has(this string @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> @this.Contains(value, comparison);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is(this string? @this, string value, bool compareCase = false)
-			=> GetStringComparer(compareCase).Equals(@this, value);
+		public static bool Is(this string? @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> comparison.ToStringComparer().Equals(@this, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBlank([NotNullWhen(false)] this string? @this)
@@ -58,8 +52,78 @@ namespace TypeCache.Extensions
 			=> @this.Substring(0, length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Left(this string @this, string text, bool compareCase = false)
-			=> @this.StartsWith(text, GetStringComparison(compareCase));
+		public static bool Left(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> @this.StartsWith(text, comparison);
+
+		public static string Mask(this string @this, char mask = '*')
+		{
+			if (@this.IsBlank())
+				return @this;
+
+			var span = @this.ToCharArray().AsSpan();
+			var i = -1;
+			while (++i < span.Length)
+			{
+				if (span[i].IsLetterOrDigit())
+					span[i] = mask;
+			}
+
+			return new string(span);
+		}
+
+		public static string MaskHide(this string @this, char mask, params string[] hideTerms)
+		{
+			if (@this.IsBlank() || !hideTerms.Any())
+				return @this;
+
+			var count = 0;
+			var span = @this.ToCharArray().AsSpan();
+			var i = -1;
+			while (++i < span.Length)
+			{
+				foreach (var term in hideTerms)
+				{
+					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), StringComparison.OrdinalIgnoreCase))
+						count = term.Length;
+				}
+
+				if (count > 0)
+				{
+					if (span[i].IsLetterOrDigit())
+						span[i] = mask;
+					--count;
+				}
+			}
+
+			return new string(span);
+		}
+
+		public static string MaskShow(this string @this, char mask, params string[] showTerms)
+		{
+			if (@this.IsBlank())
+				return @this;
+
+			showTerms ??= Array.Empty<string>();
+
+			var count = 0;
+			var span = @this.ToCharArray().AsSpan();
+			var i = -1;
+			while (++i < span.Length)
+			{
+				foreach (var term in showTerms)
+				{
+					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), StringComparison.OrdinalIgnoreCase))
+						count = term.Length;
+				}
+
+				if (count > 0)
+					--count;
+				else if (span[i].IsLetterOrDigit())
+					span[i] = mask;
+			}
+
+			return new string(span);
+		}
 
 		public static string Reverse(this string @this)
 		{
@@ -69,8 +133,8 @@ namespace TypeCache.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Right(this string @this, string text, bool compareCase = false)
-			=> @this.EndsWith(text, GetStringComparison(compareCase));
+		public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> @this.EndsWith(text, comparison);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToBase64(this string @this, Encoding encoding)
