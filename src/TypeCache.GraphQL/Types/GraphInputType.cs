@@ -13,11 +13,16 @@ namespace TypeCache.GraphQL.Types
 		public GraphInputType()
 		{
 			var graphAttribute = typeof(T).GetCustomAttributes(true).First<GraphAttribute>();
-			this.Name = graphAttribute?.Name ?? $"{typeof(T).GetName()}Input";
+			var name = graphAttribute?.Name;
+			var description = graphAttribute?.Description;
+
+			this.Name = graphAttribute?.Name ?? (TypeOf<T>.EnclosedType != null ? $"{TypeOf<T>.Name}Of{TypeOf<T>.EnclosedType.Name}Input" : $"{TypeOf<T>.Name}Input");
+			this.Description = graphAttribute?.Description ?? $"An input object of type `{name}`.";
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter is not null && property!.Setter is not null && property.Attributes.First<GraphAttribute>()?.Ignore is not true)
-				.Do(property => this.AddField(property!.CreateFieldType(true)));
+				.If(property => property!.Getter is not null && property!.Setter is not null
+					&& !property.Attributes.Any<GraphIgnoreAttribute>())
+				.Do(this.AddField!);
 		}
 	}
 }

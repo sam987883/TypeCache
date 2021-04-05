@@ -17,7 +17,7 @@ namespace TypeCache.GraphQL.Types
 	/// <item><see cref="IServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
 	/// </list>
 	/// </summary>
-	public class GraphHashIdType : IdGraphType
+	public class GraphHashIdType : ScalarGraphType
 	{
 		private readonly IHashMaker _HashMaker;
 
@@ -26,13 +26,15 @@ namespace TypeCache.GraphQL.Types
 			hashMaker.AssertNotNull(nameof(hashMaker));
 
 			this._HashMaker = hashMaker;
+			this.Name = "HashID";
+			this.Description = "A hashed ID.";
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override object ParseLiteral(IValue value)
+		public override object? ParseLiteral(IValue value)
 			=> this.ParseValue(value.Value);
 
-		public override object ParseValue(object value)
+		public override object? ParseValue(object? value)
 			=> value switch
 			{
 				int id => id,
@@ -41,7 +43,7 @@ namespace TypeCache.GraphQL.Types
 				_ => value
 			};
 
-		public override object Serialize(object value)
+		public override object? Serialize(object? value)
 			=> value switch
 			{
 				int id => this._HashMaker.Encrypt(id),

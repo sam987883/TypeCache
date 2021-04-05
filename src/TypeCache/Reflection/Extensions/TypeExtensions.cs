@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Extensions
 {
@@ -26,12 +27,20 @@ namespace TypeCache.Reflection.Extensions
 			var kind = @this.GetKind();
 			var systemType = @this.GetSystemType();
 			var isNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable;
-			var attributes = IEnumerableExtensions.ToImmutableArray(@this.GetCustomAttributes<Attribute>(true));
-			var genericTypeHandles = IEnumerableExtensions.ToImmutableArray(@this.GenericTypeArguments.To(_ => _.TypeHandle));
-			var interfaceTypeHandles = IEnumerableExtensions.ToImmutableArray(interfaces.To(_ => _.TypeHandle));
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var enclosedTypeHandle = systemType switch
+			{
+				_ when @this.HasElementType => @this.GetElementType()!.TypeHandle,
+				SystemType.Dictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary or SystemType.SortedDictionary
+					=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).TypeHandle,
+				_ when @this.GenericTypeArguments.Length == 1 => @this.GenericTypeArguments[0].TypeHandle,
+				_ => (RuntimeTypeHandle?)null
+			};
+			var genericTypeHandles = @this.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutableArray();
+			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutableArray();
 
 			return new TypeMember(@this.GetName(), attributes, !@this.IsVisible, @this.IsPublic, kind, systemType, @this.TypeHandle, @this.BaseType?.TypeHandle,
-				genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
+				enclosedTypeHandle, genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
 		}
 
 		public static Kind GetKind(this Type @this)
@@ -45,20 +54,17 @@ namespace TypeCache.Reflection.Extensions
 			};
 
 		public static SystemType GetSystemType(this Type @this)
-		{
-			return @this switch
+			=> @this switch
 			{
-				_ when MemberCache.SystemTypeMap.TryGetValue(@this.TypeHandle, out var systemType) => systemType,
+				_ when MemberCache.SystemTypeMap.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
 				_ when @this.GetKind() == Kind.Enum => @this.GetEnumUnderlyingType().GetSystemType(),
 				_ when @this.IsArray => SystemType.Array,
 				_ when @this.IsEnumerable() => SystemType.Enumerable,
 				_ => SystemType.Unknown
 			};
-		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this MemberInfo @this)
-			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name;
+			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? (@this.Name.Contains('`') ? @this.Name.Left(@this.Name.IndexOf('`')) : @this.Name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this ParameterInfo @this)
@@ -97,6 +103,10 @@ namespace TypeCache.Reflection.Extensions
 			=> MemberCache.StaticProperties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TypeMember GetTypeMember(this Type @this)
+			=> MemberCache.Types[@this.TypeHandle];
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)
 			where T : class
 			=> @this.Implements(typeof(T));
@@ -123,7 +133,7 @@ namespace TypeCache.Reflection.Extensions
 		}
 
 		public static bool IsEnumerable(this Type @this)
-			=> @this.Is<IEnumerable>() || @this.ToGenericType() == typeof(IEnumerable);
+			=> @this.Is<IEnumerable>() || @this.Implements(typeof(IEnumerable));
 
 		public static bool IsInvokable(this Type @this)
 			=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;

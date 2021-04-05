@@ -11,7 +11,7 @@ namespace TypeCache.Extensions
 {
 	public static class ValueExtensions
 	{
-		public static void AssertNotNull<T>([AllowNull] this T? @this, string name, [CallerMemberName] string caller = null)
+		public static void AssertNotNull<T>([AllowNull] this T? @this, string name, [CallerMemberName] string? caller = null)
 			where T : struct
 		{
 			if (@this is null)
@@ -74,7 +74,7 @@ namespace TypeCache.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsReverse(this Range @this)
-			=> @this.End.Value > @this.Start.Value;
+			=> @this.End.Value < @this.Start.Value;
 
 		public static Index Normalize(this Index @this, int count)
 			=> @this.IsFromEnd ? new Index(@this.GetOffset(count)) : @this;
@@ -95,29 +95,19 @@ namespace TypeCache.Extensions
 			{
 				0 when @this < end => 1,
 				0 when @this > end => -1,
-				_ when increment < 0 && @this < end => 0,
-				_ when increment > 0 && @this > end => 0,
+				< 0 when @this < end => 0,
+				> 0 when @this > end => 0,
 				_ => increment
 			};
 
-			if (increment > 0)
+			if (increment == 0)
+				yield break;
+
+			while (@this != end)
 			{
-				while (@this <= end)
-				{
-					yield return @this;
-					@this += increment;
-				}
-			}
-			else if (increment < 0)
-			{
-				while (@this >= end)
-				{
-					yield return @this;
-					@this += increment;
-				}
-			}
-			else
 				yield return @this;
+				@this += increment;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

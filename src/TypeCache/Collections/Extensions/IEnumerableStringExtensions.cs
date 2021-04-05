@@ -78,7 +78,15 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableDictionary<string, V> ToImmutableDictionary<V>(this IEnumerable<KeyValuePair<string, V>>? @this, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
-			=> @this.ToImmutableDictionary(keyComparison.ToStringComparer(), valueComparer);
+			=> @this?.ToImmutableDictionary(keyComparison.ToStringComparer(), valueComparer) ?? ImmutableDictionary<string, V>.Empty;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableDictionary<string, V> ToImmutableDictionary<V>(this IEnumerable<V>? @this, Func<V, string> keyFactory, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
+			=> @this?.ToImmutableDictionary(keyFactory, keyComparison.ToStringComparer()) ?? ImmutableDictionary<string, V>.Empty;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableDictionary<string, V> ToImmutableDictionary<T, V>(this IEnumerable<T>? @this, Func<T, string> keyFactory, Func<T, V> valueFactory, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
+			=> @this?.ToImmutableDictionary(keyFactory, valueFactory, keyComparison.ToStringComparer()) ?? ImmutableDictionary<string, V>.Empty;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableHashSet<string> ToImmutableHashSet(this IEnumerable<string>? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)

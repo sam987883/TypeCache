@@ -10,7 +10,7 @@ namespace TypeCache.Reflection
 	public abstract record Member(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic);
 
 	public sealed record ConstructorMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
-		RuntimeMethodHandle Handle, CreateType? Create, Delegate? Method, IImmutableList<Parameter> Parameters, TypeMember Type)
+		RuntimeMethodHandle Handle, CreateType? Create, Delegate? Method, IImmutableList<MethodParameter> Parameters, TypeMember Type)
 		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<ConstructorMember>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,7 +107,7 @@ namespace TypeCache.Reflection
 		: Member(Name, Attributes, IsInternal, IsPublic);
 
 	public sealed record MethodMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
-		RuntimeMethodHandle Handle, InvokeType? Invoke, Delegate? Method, IImmutableList<Parameter> Parameters, ReturnParameter Return)
+		RuntimeMethodHandle Handle, InvokeType? Invoke, Delegate? Method, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
 		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<MethodMember>
 	{
 
@@ -121,7 +121,7 @@ namespace TypeCache.Reflection
 	}
 
 	public sealed record StaticMethodMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
-		RuntimeMethodHandle Handle, StaticInvokeType? Invoke, Delegate? Method, IImmutableList<Parameter> Parameters, ReturnParameter Return)
+		RuntimeMethodHandle Handle, StaticInvokeType? Invoke, Delegate? Method, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
 		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<StaticMethodMember>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,10 +133,10 @@ namespace TypeCache.Reflection
 			=> this.Handle.GetHashCode();
 	}
 
-	public sealed record Parameter(string Name, IImmutableList<Attribute> Attributes, bool IsOptional, bool IsOut,
+	public sealed record MethodParameter(string Name, IImmutableList<Attribute> Attributes, bool IsOptional, bool IsOut,
 		object? DefaultValue, bool HasDefaultValue, TypeMember Type)
 	{
-		public bool Equals(Parameter? other)
+		public bool Equals(MethodParameter? other)
 			=> other is not null
 				&& this.Name.Is(other.Name)
 				&& this.DefaultValue == other.DefaultValue
@@ -184,7 +184,7 @@ namespace TypeCache.Reflection
 	}
 
 	public sealed record TypeMember(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
-		Kind Kind, SystemType SystemType, RuntimeTypeHandle Handle, RuntimeTypeHandle? BaseTypeHandle, IImmutableList<RuntimeTypeHandle> GenericTypeHandles,
+		Kind Kind, SystemType SystemType, RuntimeTypeHandle Handle, RuntimeTypeHandle? BaseTypeHandle, RuntimeTypeHandle? EnclosedTypeHandle, IImmutableList<RuntimeTypeHandle> GenericTypeHandles,
 		IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles, bool IsEnumerable, bool IsNullable, bool IsPointer, bool IsRef)
 		: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<TypeMember>
 	{

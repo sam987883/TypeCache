@@ -5,7 +5,7 @@ using System;
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// Mark endpoint as a GraphQL query endpoint.
+	/// <b>Graph QL</b><br />Mark an endpoint as a query.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 	public class GraphQueryAttribute : Attribute

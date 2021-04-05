@@ -14,34 +14,19 @@ namespace TypeCache.Collections.Extensions
 {
 	public static class IEnumerableExtensions
 	{
-		public static IEnumerable<T> As<T>(this IEnumerable? @this)
-			where T : notnull
+		public static IEnumerable<T?> As<T>(this IEnumerable? @this)
 		{
-			int count;
-			switch (@this)
+			return @this switch
 			{
-				case null:
-					break;
-				case T[] array:
-					count = array.Length;
-					for (var i = 0; i < count; ++i)
-						yield return array[i];
-					break;
-				case ImmutableArray<T> immutableArray:
-					count = immutableArray.Length;
-					for (var i = 0; i < count; ++i)
-						yield return immutableArray[i];
-					break;
-				case List<T> list:
-					count = list.Count;
-					for (var i = 0; i < count; ++i)
-						yield return list[i];
-					break;
-				default:
-					foreach (var item in @this)
-						if (item is T value)
-							yield return value;
-					break;
+				null => CustomEnumerable<T>.Empty,
+				IEnumerable<T> enumerable => enumerable,
+				_ => getItems(@this)
+			};
+
+			static IEnumerable<T?> getItems(IEnumerable enumerable)
+			{
+				foreach (var item in enumerable)
+					yield return item is T value ? value : default;
 			}
 		}
 
@@ -86,7 +71,7 @@ namespace TypeCache.Collections.Extensions
 			return result;
 		}
 
-		public static async ValueTask<T> AggregateAsync<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, Task<T>> aggregator)
+		public static async ValueTask<T> AggregateAsync<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, ValueTask<T>> aggregator)
 			where T : unmanaged
 		{
 			aggregator.AssertNotNull(nameof(aggregator));
@@ -102,6 +87,14 @@ namespace TypeCache.Collections.Extensions
 
 			return !@this.If(item => !filter(item)).Any();
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask AllAsync<T>(this IEnumerable<Task> @this)
+			=> await Task.WhenAll(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
+			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array.Empty<T>());
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 		{
@@ -134,7 +127,6 @@ namespace TypeCache.Collections.Extensions
 			{
 				null => false,
 				T[] array => array.Length > 0,
-				IImmutableList<T> list => list.Count > 0,
 				ICollection<T> collection => collection.Count > 0,
 				IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection.Count > 0,
 				ICollection collection => collection.Count > 0,
@@ -145,12 +137,19 @@ namespace TypeCache.Collections.Extensions
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T?, bool> filter)
 			=> @this.If(filter).Any();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask AnyAsync<T>(this IEnumerable<Task> @this)
+			=> await Task.WhenAny(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask<Task<T>> AnyAsync<T>(this IEnumerable<Task<T>> @this)
+			=> await Task.WhenAny(@this);
+
 		public static int Count<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
 				null => 0,
 				T[] array => array.Length,
-				IImmutableList<T> list => list.Count,
 				ICollection<T> collection => collection.Count,
 				IReadOnlyCollection<T> collection => collection.Count,
 				ICollection collection => collection.Count,
@@ -158,6 +157,103 @@ namespace TypeCache.Collections.Extensions
 			};
 
 		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
+			where T : struct
+		{
+			switch (@this)
+			{
+				case null:
+					first = null;
+					rest = CustomEnumerable<T>.Empty;
+					return;
+				case T[] array:
+					(first, rest) = array;
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray.Length > 0 ? immutableArray[0] : null;
+					rest = immutableArray.Length > 1 ? immutableArray.Get(1..) : CustomEnumerable<T>.Empty;
+					return;
+				case List<T> list:
+					first = list.Count > 0 ? list[0] : null;
+					rest = list.Count > 1 ? list.Get(1..) : CustomEnumerable<T>.Empty;
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : null;
+					rest = enumerator.Rest();
+					return;
+			}
+		}
+
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
+			where T : struct
+		{
+			switch (@this)
+			{
+				case null:
+					first = null;
+					second = null;
+					rest = CustomEnumerable<T>.Empty;
+					return;
+				case T[] array:
+					(first, second, rest) = array;
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray.Length > 0 ? immutableArray[0] : null;
+					second = immutableArray.Length > 1 ? immutableArray[1] : null;
+					rest = immutableArray.Length > 2 ? immutableArray.Get(2..) : CustomEnumerable<T>.Empty;
+					return;
+				case List<T> list:
+					first = list.Count > 0 ? list[0] : null;
+					second = list.Count > 1 ? list[1] : null;
+					rest = list.Count > 2 ? list.Get(2..) : CustomEnumerable<T>.Empty;
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : null;
+					second = enumerator.MoveNext() ? enumerator.Current : null;
+					rest = enumerator.Rest();
+					return;
+			}
+		}
+
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
+			where T : struct
+		{
+			switch (@this)
+			{
+				case null:
+					first = null;
+					second = null;
+					third = null;
+					rest = CustomEnumerable<T>.Empty;
+					return;
+				case T[] array:
+					(first, second, third, rest) = array;
+					return;
+				case ImmutableArray<T> immutableArray:
+					first = immutableArray.Length > 0 ? immutableArray[0] : null;
+					second = immutableArray.Length > 1 ? immutableArray[1] : null;
+					third = immutableArray.Length > 2 ? immutableArray[2] : null;
+					rest = immutableArray.Length > 3 ? immutableArray.Get(3..) : CustomEnumerable<T>.Empty;
+					return;
+				case List<T> list:
+					first = list.Count > 0 ? list[0] : null;
+					second = list.Count > 1 ? list[1] : null;
+					third = list.Count > 2 ? list[2] : null;
+					rest = list.Count > 3 ? list.Get(3..) : CustomEnumerable<T>.Empty;
+					return;
+				default:
+					var enumerator = @this.GetEnumerator();
+					first = enumerator.MoveNext() ? enumerator.Current : null;
+					second = enumerator.MoveNext() ? enumerator.Current : null;
+					third = enumerator.MoveNext() ? enumerator.Current : null;
+					rest = enumerator.Rest();
+					return;
+			}
+		}
+
+		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
+			where T : class
 		{
 			switch (@this)
 			{
@@ -166,16 +262,14 @@ namespace TypeCache.Collections.Extensions
 					rest = CustomEnumerable<T>.Empty;
 					return;
 				case T[] array:
-					first = array[0];
-					rest = array.Get(new Range(1, ^1));
+					(first, rest) = array;
 					return;
 				case ImmutableArray<T> immutableArray:
-					first = immutableArray[0];
-					rest = immutableArray.Get(new Range(2, ^1));
+					(first, rest!) = immutableArray;
 					return;
 				case List<T> list:
-					first = list[0];
-					rest = list.Get(new Range(2, ^1));
+					first = list.Count > 0 ? list[0] : default;
+					rest = list.Count > 1 ? list.Get(1..) : CustomEnumerable<T>.Empty;
 					return;
 				default:
 					var enumerator = @this.GetEnumerator();
@@ -186,6 +280,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
+			where T : class
 		{
 			switch (@this)
 			{
@@ -195,19 +290,15 @@ namespace TypeCache.Collections.Extensions
 					rest = CustomEnumerable<T>.Empty;
 					return;
 				case T[] array:
-					first = array[0];
-					second = array[1];
-					rest = array.Get(new Range(2, ^1));
+					(first, second, rest) = array;
 					return;
 				case ImmutableArray<T> immutableArray:
-					first = immutableArray[0];
-					second = immutableArray[1];
-					rest = immutableArray.Get(new Range(2, ^1));
+					(first, second, rest!) = immutableArray;
 					return;
 				case List<T> list:
-					first = list[0];
-					second = list[1];
-					rest = list.Get(new Range(2, ^1));
+					first = list.Count > 0 ? list[0] : default;
+					second = list.Count > 1 ? list[1] : default;
+					rest = list.Count > 2 ? list.Get(2..) : CustomEnumerable<T>.Empty;
 					return;
 				default:
 					var enumerator = @this.GetEnumerator();
@@ -219,6 +310,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
+			where T : class
 		{
 			switch (@this)
 			{
@@ -229,22 +321,16 @@ namespace TypeCache.Collections.Extensions
 					rest = CustomEnumerable<T>.Empty;
 					return;
 				case T[] array:
-					first = array[0];
-					second = array[1];
-					third = array[2];
-					rest = array.Get(new Range(3, ^1));
+					(first, second, third, rest) = array;
 					return;
 				case ImmutableArray<T> immutableArray:
-					first = immutableArray[0];
-					second = immutableArray[1];
-					third = immutableArray[2];
-					rest = immutableArray.Get(new Range(3, ^1));
+					(first, second, third, rest!) = immutableArray;
 					return;
 				case List<T> list:
-					first = list[0];
-					second = list[1];
-					third = list[2];
-					rest = list.Get(new Range(3, ^1));
+					first = list.Count > 0 ? list[0] : default;
+					second = list.Count > 1 ? list[1] : default;
+					third = list.Count > 2 ? list[2] : default;
+					rest = list.Count > 3 ? list.Get(3..) : CustomEnumerable<T>.Empty;
 					return;
 				default:
 					var enumerator = @this.GetEnumerator();
@@ -463,9 +549,9 @@ namespace TypeCache.Collections.Extensions
 
 			return @this switch
 			{
-				T[] array when index.Value < array.Length => array[index.Value],
-				IList<T> list when index.Value < list.Count => list[index.Value],
-				IReadOnlyList<T> list when index.Value < list.Count => list[index.Value],
+				T[] array when index.Value < array.Length => array[index],
+				IList<T> list when index.Value < list.Count => list[index],
+				IReadOnlyList<T> list when index.Value < list.Count => list[index],
 				T[] or IList<T> or IReadOnlyList<T> _ => null,
 				_ => @this.GetEnumerator().Get(index)
 			};
@@ -482,9 +568,9 @@ namespace TypeCache.Collections.Extensions
 
 			return @this switch
 			{
-				T[] array when index.Value < array.Length => array[index.Value],
-				IList<T> list when index.Value < list.Count => list[index.Value],
-				IReadOnlyList<T> list when index.Value < list.Count => list[index.Value],
+				T[] array when index.Value < array.Length => array[index],
+				IList<T> list when index.Value < list.Count => list[index],
+				IReadOnlyList<T> list when index.Value < list.Count => list[index],
 				T[] or IList<T> or IReadOnlyList<T> _ => null,
 				_ => @this.GetEnumerator().GetValue(index)
 			};
@@ -874,9 +960,10 @@ namespace TypeCache.Collections.Extensions
 		public static string ToCsv<T>(this IEnumerable<T>? @this)
 			=> @this.Any() ? string.Join(',', @this.To(value => value switch
 			{
+				null => string.Empty,
 				bool or sbyte or short or int or nint or long or byte or ushort or uint or nuint or ulong or float or double or Half or decimal _ => value.ToString(),
-				char character when character == ',' => "\",\"",
-				char character when character == '\"' => "\"\"\"\"",
+				',' => "\",\"",
+				'\"' => "\"\"\"\"",
 				char character => character.ToString(),
 				DateTime dateTime => dateTime.ToString("o"),
 				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
@@ -885,7 +972,6 @@ namespace TypeCache.Collections.Extensions
 				Enum token => token.Number(),
 				string text when text.Contains(',') => $"\"{text.Replace("\"", "\"\"")}\"",
 				string text => text.Replace("\"", "\"\""),
-				null => string.Empty,
 				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
 			})) : string.Empty;
 
@@ -944,20 +1030,6 @@ namespace TypeCache.Collections.Extensions
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
 			=> @this.Any() ? new HashSet<T>(@this, comparer) : new HashSet<T>(0, comparer);
 
-		public static ImmutableArray<T> ToImmutableArray<T>(this IEnumerable<T>? @this)
-			where T : notnull
-			=> @this switch
-			{
-				_ when !@this.Any() => ImmutableArray<T>.Empty,
-				T[] array => ImmutableArray.Create(array),
-				List<T> list => ImmutableArray.Create(list.ToArray()),
-				_ => ImmutableArray.CreateRange<T>(@this)
-			};
-
-		public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K>? keyComparer = null, IEqualityComparer<V>? valueComparer = null)
-			where K : notnull
-			=> @this.Any() ? ImmutableDictionary.CreateRange(keyComparer, valueComparer, @this) : ImmutableDictionary<K, V>.Empty;
-
 		public static ImmutableHashSet<T> ToImmutableHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
 			where T : notnull
 			=> @this switch
@@ -966,16 +1038,6 @@ namespace TypeCache.Collections.Extensions
 				T[] array => ImmutableHashSet.Create(comparer, array),
 				List<T> list => ImmutableHashSet.Create(comparer, list.ToArray()),
 				_ => ImmutableHashSet.CreateRange(comparer, @this)
-			};
-
-		public static ImmutableList<T> ToImmutableList<T>(this IEnumerable<T>? @this)
-			where T : notnull
-			=> @this switch
-			{
-				_ when !@this.Any() => ImmutableList<T>.Empty,
-				T[] array => ImmutableList.Create(array),
-				List<T> list => ImmutableList.Create(list.ToArray()),
-				_ => ImmutableList.CreateRange<T>(@this)
 			};
 
 		public static ImmutableQueue<T> ToImmutableQueue<T>(this IEnumerable<T>? @this)
@@ -1075,7 +1137,7 @@ namespace TypeCache.Collections.Extensions
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
-				null => Span<T>.Empty,
+				null => ReadOnlySpan<T>.Empty,
 				ImmutableArray<T> immutableArray => immutableArray.AsSpan(),
 				T[] array => array.AsSpan(),
 				List<T> list => list.ToArray().AsSpan(),

@@ -5,7 +5,7 @@ using System;
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// Mark endpoint as a GraphQL mutation endpoint.
+	/// <b>Graph QL</b><br />Mark an endpoint as a mutation.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 	public class GraphMutationAttribute : Attribute

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Collections.Extensions;
@@ -42,19 +43,6 @@ namespace TypeCache.Reflection.Extensions
 			return (getValue, setValue);
 		}
 
-		public static FieldMember CreateMember(this FieldInfo @this)
-		{
-			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
-			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", false);
-
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var (getter, setter) = @this.CreateAccessorDelegates();
-			var (getValue, setValue) = @this.CreateAccessors();
-			var type = MemberCache.Types[@this.FieldType.TypeHandle];
-
-			return new FieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, getValue, setter, setValue, type);
-		}
-
 		public static (StaticGetValue getValue, StaticSetValue? setValue) CreateStaticAccessors(this FieldInfo @this)
 		{
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", true);
@@ -70,7 +58,20 @@ namespace TypeCache.Reflection.Extensions
 			return (getValue, setValue);
 		}
 
-		public static StaticFieldMember CreateStaticMember(this FieldInfo @this)
+		public static FieldMember ToMember(this FieldInfo @this)
+		{
+			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
+			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", false);
+
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var (getter, setter) = @this.CreateAccessorDelegates();
+			var (getValue, setValue) = @this.CreateAccessors();
+			var type = MemberCache.Types[@this.FieldType.TypeHandle];
+
+			return new FieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, getValue, setter, setValue, type);
+		}
+
+		public static StaticFieldMember ToStaticMember(this FieldInfo @this)
 		{
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", true);
 

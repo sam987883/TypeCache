@@ -13,7 +13,7 @@ namespace TypeCache.Extensions
 {
 	public static class ObjectExtensions
 	{
-		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value, [CallerMemberName] string caller = null)
+		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value, [CallerMemberName] string? caller = null)
 		{
 			name.AssertNotBlank(nameof(name));
 
@@ -33,7 +33,7 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value, IEqualityComparer<T> comparer, [CallerMemberName] string caller = null)
+		public static void Assert<T>([AllowNull] this T @this, string name, [AllowNull] T value, IEqualityComparer<T> comparer, [CallerMemberName] string? caller = null)
 		{
 			name.AssertNotBlank(nameof(name));
 			comparer.AssertNotNull(nameof(comparer));
@@ -42,7 +42,7 @@ namespace TypeCache.Extensions
 				throw new ArgumentException($"{caller} -> {nameof(Assert)}: {(@this is not null ? $"[{@this}]" : "null")} <> {(value is not null ? $"[{value}]" : "null")}.", name);
 		}
 
-		public static void AssertNotNull<T>(this T? @this, string name, [CallerMemberName] string caller = null)
+		public static void AssertNotNull<T>(this T? @this, string name, [CallerMemberName] string? caller = null)
 			where T : class
 		{
 			if (@this is null)

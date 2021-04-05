@@ -13,6 +13,10 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Equals(typeof(T).TypeHandle);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is(this RuntimeTypeHandle @this, Type type)
+			=> @this.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && @this.ToType().ToGenericType() == type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static FieldInfo ToFieldInfo(this RuntimeFieldHandle @this)
 			=> FieldInfo.GetFieldFromHandle(@this);
 

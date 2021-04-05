@@ -1,35 +1,34 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TypeCache.Extensions;
 
 namespace TypeCache.Collections
 {
-	public sealed class CustomEnumerable<T>
+	public sealed class CustomEnumerable<T> : IEnumerable<T>
 	{
 		public static IEnumerable<T> Empty
 		{
 			get { yield break; }
 		}
 
-		private readonly IEnumerable<T> _Enumerable;
+		private readonly Func<IEnumerator<T>> _GetEnumerator;
 
-		public CustomEnumerable(IEnumerable<T> enumerable)
+		public CustomEnumerable(Func<IEnumerator<T>> getEnumerator)
 		{
-			this._Enumerable = enumerable;
+			getEnumerator.AssertNotNull(nameof(getEnumerator));
+			this._GetEnumerator = getEnumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CustomEnumerator<T> GetEnumerator()
-		{
-			var enumerator = this._Enumerable.GetEnumerator();
-			return new CustomEnumerator<T>
-			{
-				Enumerator = enumerator,
-				CurrentFunc = () => enumerator.Current,
-				MoveNextFunc = enumerator.MoveNext
-			};
-		}
+		public IEnumerator<T> GetEnumerator()
+			=> this._GetEnumerator();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator IEnumerable.GetEnumerator()
+			=> this._GetEnumerator();
 	}
 }

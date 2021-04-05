@@ -16,57 +16,65 @@ namespace TypeCache.Reflection
 		public const BindingFlags STATIC_BINDINGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
 
 		public static IImmutableList<ConstructorMember> CreateConstructorMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableArray(typeHandle.ToType().GetConstructors(INSTANCE_BINDINGS)
+			=> typeHandle.ToType().GetConstructors(INSTANCE_BINDINGS)
 				.If(constructorInfo => !constructorInfo!.GetParameters().Any(_ => _!.ParameterType.IsPointer || _.ParameterType.IsByRefLike))!
-				.To(constructorInfo => (constructorInfo!).CreateMember()));
+				.To(constructorInfo => (constructorInfo!).ToMember())
+				.ToImmutableArray();
 
 		public static IImmutableDictionary<string, EventMember> CreateEventMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetEvents(INSTANCE_BINDINGS)
-				.To(eventInfo => KeyValuePair.Create(eventInfo!.Name, eventInfo.CreateMember())), StringComparer.Ordinal);
+			=> typeHandle.ToType().GetEvents(INSTANCE_BINDINGS)
+				.To(eventInfo => KeyValuePair.Create(eventInfo!.Name, eventInfo.ToMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, FieldMember> CreateFieldMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetFields(INSTANCE_BINDINGS)
+			=> typeHandle.ToType().GetFields(INSTANCE_BINDINGS)
 				.If(fieldInfo => !fieldInfo!.IsLiteral && !fieldInfo.FieldType.IsByRefLike)!
-				.To(fieldInfo => KeyValuePair.Create(fieldInfo!.Name, fieldInfo.CreateMember())), StringComparer.Ordinal);
+				.To(fieldInfo => KeyValuePair.Create(fieldInfo!.Name, fieldInfo.ToMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 
 		public static IImmutableList<IndexerMember> CreateIndexerMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableArray(typeHandle.ToType().GetProperties(INSTANCE_BINDINGS)
+			=> typeHandle.ToType().GetProperties(INSTANCE_BINDINGS)
 				.If(propertyInfo => propertyInfo!.GetIndexParameters().Any())!
-				.To(propertyInfo => (propertyInfo!).CreateIndexerMember()));
+				.To(propertyInfo => (propertyInfo!).ToIndexerMember())
+				.ToImmutableArray();
 
 		public static MethodMember CreateMethodMember(RuntimeTypeHandle delegateTypeHandle)
-			=> delegateTypeHandle.ToType().GetMethod("Invoke", INSTANCE_BINDINGS)!.CreateMember();
+			=> delegateTypeHandle.ToType().GetMethod("Invoke", INSTANCE_BINDINGS)!.ToMember();
 
 		public static IImmutableDictionary<string, IImmutableList<MethodMember>> CreateMethodMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetMethods(INSTANCE_BINDINGS)
 				.If(methodInfo => !methodInfo!.ContainsGenericParameters && !methodInfo.IsSpecialName)
-				.To(methodInfo => methodInfo!.CreateMember())
+				.To(methodInfo => methodInfo!.ToMember())
 				.Group(method => method!.Name, StringComparer.Ordinal)
-				.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)IEnumerableExtensions.ToImmutableArray(_.Value));
+				.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)_.Value.ToImmutableArray(), StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, PropertyMember> CreatePropertyMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetProperties(INSTANCE_BINDINGS)
+			=> typeHandle.ToType().GetProperties(INSTANCE_BINDINGS)
 				.If(propertyInfo => !propertyInfo!.GetIndexParameters().Any())!
-				.To(propertyInfo => KeyValuePair.Create(propertyInfo!.Name, propertyInfo.CreateMember())), StringComparer.Ordinal);
+				.To(propertyInfo => KeyValuePair.Create(propertyInfo!.Name, propertyInfo.ToMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, StaticEventMember> CreateStaticEventMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetEvents(STATIC_BINDINGS)
-				.To(eventInfo => KeyValuePair.Create(eventInfo!.Name, eventInfo.CreateStaticMember())), StringComparer.Ordinal);
+			=> typeHandle.ToType().GetEvents(STATIC_BINDINGS)
+				.To(eventInfo => KeyValuePair.Create(eventInfo!.Name, eventInfo.ToStaticMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, StaticFieldMember> CreateStaticFieldMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetFields(STATIC_BINDINGS)
+			=> typeHandle.ToType().GetFields(STATIC_BINDINGS)
 				.If(fieldInfo => !fieldInfo!.FieldType.IsByRefLike)!
-				.To(fieldInfo => KeyValuePair.Create(fieldInfo!.Name, fieldInfo.CreateStaticMember())), StringComparer.Ordinal);
+				.To(fieldInfo => KeyValuePair.Create(fieldInfo!.Name, fieldInfo.ToStaticMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> CreateStaticMethodMembers(RuntimeTypeHandle typeHandle)
 			=> typeHandle.ToType().GetMethods(STATIC_BINDINGS)
 				.If(methodInfo => !methodInfo!.ContainsGenericParameters && !methodInfo.IsSpecialName)
-				.To(methodInfo => methodInfo!.CreateStaticMember())
+				.To(methodInfo => methodInfo!.ToStaticMember())
 				.Group(method => method!.Name, StringComparer.Ordinal)
-				.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<StaticMethodMember>)IEnumerableExtensions.ToImmutableArray(_.Value));
+				.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<StaticMethodMember>)_.Value.ToImmutableArray(), StringComparison.Ordinal);
 
 		public static IImmutableDictionary<string, StaticPropertyMember> CreateStaticPropertyMembers(RuntimeTypeHandle typeHandle)
-			=> IEnumerableExtensions.ToImmutableDictionary(typeHandle.ToType().GetProperties(STATIC_BINDINGS)
-				.To(propertyInfo => KeyValuePair.Create(propertyInfo!.Name, propertyInfo.CreateStaticMember())), StringComparer.Ordinal);
+			=> typeHandle.ToType().GetProperties(STATIC_BINDINGS)
+				.To(propertyInfo => KeyValuePair.Create(propertyInfo!.Name, propertyInfo.ToStaticMember()))
+				.ToImmutableDictionary(StringComparison.Ordinal);
 	}
 }

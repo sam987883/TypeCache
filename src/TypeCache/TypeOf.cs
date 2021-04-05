@@ -17,17 +17,19 @@ namespace TypeCache
 
 		public static RuntimeTypeHandle? BaseTypeHandle => TypeMember.BaseTypeHandle;
 
-		public static TypeMember? BaseType => TypeMember.BaseTypeHandle.HasValue ? MemberCache.Types[TypeMember.BaseTypeHandle.Value] : null;
+		public static TypeMember? BaseType { get; } = TypeMember.BaseTypeHandle.HasValue ? MemberCache.Types[TypeMember.BaseTypeHandle.Value] : null;
 
-		public static IImmutableList<RuntimeTypeHandle> GenericTypeHandles => TypeMember.GenericTypeHandles;
+		public static TypeMember? EnclosedType { get; } = TypeMember.EnclosedTypeHandle.HasValue ? MemberCache.Types[TypeMember.EnclosedTypeHandle.Value] : null;
 
-		public static TypeMember[] GenericTypes => TypeMember.GenericTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
+		public static IImmutableList<TypeMember> GenericTypes { get; } = TypeMember.GenericTypeHandles.To(handle => MemberCache.Types[handle]).ToImmutableArray();
 
 		public static RuntimeTypeHandle Handle => TypeMember.Handle;
 
-		public static IImmutableList<RuntimeTypeHandle> InterfaceTypeHandles => TypeMember.InterfaceTypeHandles;
+		public static IImmutableList<TypeMember> InterfaceTypes { get; } = TypeMember.InterfaceTypeHandles.To(handle => MemberCache.Types[handle]).ToImmutableArray();
 
-		public static TypeMember[] InterfaceTypes => TypeMember.InterfaceTypeHandles.To(handle => MemberCache.Types[handle]).ToArray();
+		public static bool Is<T2>() => TypeMember.Handle.Is<T2>();
+
+		public static bool Is(Type type) => TypeMember.Handle.Is(type);
 
 		public static bool IsEnumerable => TypeMember.IsEnumerable;
 

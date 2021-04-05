@@ -57,7 +57,7 @@ namespace TypeCache.Reflection.Mappers
 				else
 					settings.Remove(setting.To);
 			});
-			this.Settings = IEnumerableExtensions.ToImmutableArray(settings.Values);
+			this.Settings = settings.Values.ToImmutableArray();
 		}
 
 		public void Map(FROM from, TO to) => this.Settings.Do(setting =>

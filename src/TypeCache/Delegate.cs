@@ -24,7 +24,7 @@ namespace TypeCache
 
 		public static string Name { get; } = typeof(T).GetName();
 
-		public static IImmutableList<Parameter> Parameters => MethodMember.Parameters;
+		public static IImmutableList<MethodParameter> Parameters => MethodMember.Parameters;
 
 		public static ReturnParameter Return => MethodMember.Return;
 	}

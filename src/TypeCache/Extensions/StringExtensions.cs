@@ -10,7 +10,7 @@ namespace TypeCache.Extensions
 {
 	public static class StringExtensions
 	{
-		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase, [CallerMemberName] string caller = null)
+		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase, [CallerMemberName] string? caller = null)
 		{
 			name.AssertNotNull(nameof(name), caller);
 
@@ -18,7 +18,7 @@ namespace TypeCache.Extensions
 				throw new ArgumentException($"{nameof(Assert)}: [{(@this is not null ? $"\"{@this}\"" : "null")}] <> {(value is not null ? $"\"{value}\"" : "null")}.", name);
 		}
 
-		public static void AssertNotBlank([AllowNull] this string @this, string name, [CallerMemberName] string caller = null)
+		public static void AssertNotBlank([AllowNull] this string @this, string name, [CallerMemberName] string? caller = null)
 		{
 			if (@this is null)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
@@ -71,7 +71,7 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
-		public static string MaskHide(this string @this, char mask, params string[] hideTerms)
+		public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] hideTerms)
 		{
 			if (@this.IsBlank() || !hideTerms.Any())
 				return @this;
@@ -83,7 +83,7 @@ namespace TypeCache.Extensions
 			{
 				foreach (var term in hideTerms)
 				{
-					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), StringComparison.OrdinalIgnoreCase))
+					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
 						count = term.Length;
 				}
 
@@ -98,7 +98,7 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
-		public static string MaskShow(this string @this, char mask, params string[] showTerms)
+		public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] showTerms)
 		{
 			if (@this.IsBlank())
 				return @this;
@@ -112,7 +112,7 @@ namespace TypeCache.Extensions
 			{
 				foreach (var term in showTerms)
 				{
-					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), StringComparison.OrdinalIgnoreCase))
+					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
 						count = term.Length;
 				}
 

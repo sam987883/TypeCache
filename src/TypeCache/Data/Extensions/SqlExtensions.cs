@@ -139,18 +139,12 @@ namespace TypeCache.Data.Extensions
 			DateTimeOffset dateTimeOffset => $"'{dateTimeOffset:o}'",
 			TimeSpan time => $"'{time:c}'",
 			Guid guid => $"'{guid:D}'",
-			LogicalOperator token => token switch
-			{
-				LogicalOperator.And => "AND",
-				LogicalOperator.Or => "OR",
-				_ => throw new NotImplementedException($"{nameof(LogicalOperator)}.{token.Name()} is not implemented for SQL.")
-			},
-			Sort token => token switch
-			{
-				Sort.Ascending => "ASC",
-				Sort.Descending => "DESC",
-				_ => string.Empty
-			},
+			LogicalOperator.And => "AND",
+			LogicalOperator.Or => "OR",
+			LogicalOperator _ => throw new NotImplementedException($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL."),
+			Sort.Ascending => "ASC",
+			Sort.Descending => "DESC",
+			Sort _ => string.Empty,
 			Enum token => token.Number(),
 			Index index => $"'{index}'",
 			JsonElement json => json.ValueKind switch

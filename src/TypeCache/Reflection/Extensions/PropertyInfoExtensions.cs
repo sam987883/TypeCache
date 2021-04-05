@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Immutable;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Collections.Extensions;
@@ -16,14 +17,14 @@ namespace TypeCache.Reflection.Extensions
 			if (@this.GetMethod is not null)
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", false);
-				getter = @this.GetMethod.CreateMember();
+				getter = @this.GetMethod.ToMember();
 			}
 
 			MethodMember? setter = null;
 			if (@this.SetMethod is not null)
 			{
 				@this.SetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.SetMethod)}.{nameof(@this.SetMethod.IsStatic)}", false);
-				setter = @this.SetMethod.CreateMember();
+				setter = @this.SetMethod.ToMember();
 			}
 
 			return (getter, setter);
@@ -51,44 +52,20 @@ namespace TypeCache.Reflection.Extensions
 			return (getValue, setValue);
 		}
 
-		public static IndexerMember CreateIndexerMember(this PropertyInfo @this)
-		{
-			@this.GetIndexParameters().Any().Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetIndexParameters)}().Any()", true);
-
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var methodInfo = @this.GetAccessors(true).First()!;
-			var getMethod = @this.GetMethod is not null ? @this.GetMethod.CreateMember() : null;
-			var setMethod = @this.SetMethod is not null ? @this.SetMethod.CreateMember() : null;
-			var type = MemberCache.Types[@this.PropertyType.TypeHandle];
-
-			return new IndexerMember(@this.GetName(), attributes, methodInfo!.IsAssembly, methodInfo.IsPublic, getMethod, setMethod, type);
-		}
-
-		public static PropertyMember CreateMember(this PropertyInfo @this)
-		{
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var (getter, setter) = @this.CreateAccessorMethods();
-			var (getValue, setValue) = @this.CreateAccessors();
-			var methodInfo = @this.GetAccessors(true).First()!;
-			var type = MemberCache.Types[@this.PropertyType.TypeHandle];
-
-			return new PropertyMember(@this.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, getValue, setter, setValue, type);
-		}
-
 		public static (StaticMethodMember? getter, StaticMethodMember? setter) CreateStaticAccessorMethods(this PropertyInfo @this)
 		{
 			StaticMethodMember? getter = null;
 			if (@this.GetMethod is not null)
 			{
 				@this.GetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetMethod)}.{nameof(@this.GetMethod.IsStatic)}", true);
-				getter = @this.GetMethod.CreateStaticMember();
+				getter = @this.GetMethod.ToStaticMember();
 			}
 
 			StaticMethodMember? setter = null;
 			if (@this.SetMethod is not null)
 			{
 				@this.SetMethod.IsStatic.Assert($"{nameof(PropertyInfo)}.{nameof(@this.SetMethod)}.{nameof(@this.SetMethod.IsStatic)}", true);
-				setter = @this.SetMethod.CreateStaticMember();
+				setter = @this.SetMethod.ToStaticMember();
 			}
 
 			return (getter, setter);
@@ -113,7 +90,31 @@ namespace TypeCache.Reflection.Extensions
 			return (getValue, setValue);
 		}
 
-		public static StaticPropertyMember CreateStaticMember(this PropertyInfo @this)
+		public static IndexerMember ToIndexerMember(this PropertyInfo @this)
+		{
+			@this.GetIndexParameters().Any().Assert($"{nameof(PropertyInfo)}.{nameof(@this.GetIndexParameters)}().Any()", true);
+
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var methodInfo = @this.GetAccessors(true).First()!;
+			var getMethod = @this.GetMethod is not null ? @this.GetMethod.ToMember() : null;
+			var setMethod = @this.SetMethod is not null ? @this.SetMethod.ToMember() : null;
+			var type = MemberCache.Types[@this.PropertyType.TypeHandle];
+
+			return new IndexerMember(@this.GetName(), attributes, methodInfo!.IsAssembly, methodInfo.IsPublic, getMethod, setMethod, type);
+		}
+
+		public static PropertyMember ToMember(this PropertyInfo @this)
+		{
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var (getter, setter) = @this.CreateAccessorMethods();
+			var (getValue, setValue) = @this.CreateAccessors();
+			var methodInfo = @this.GetAccessors(true).First()!;
+			var type = MemberCache.Types[@this.PropertyType.TypeHandle];
+
+			return new PropertyMember(@this.GetName(), attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, getValue, setter, setValue, type);
+		}
+
+		public static StaticPropertyMember ToStaticMember(this PropertyInfo @this)
 		{
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateStaticAccessorMethods();

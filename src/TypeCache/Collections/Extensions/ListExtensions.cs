@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 
 namespace TypeCache.Collections.Extensions
@@ -59,5 +61,15 @@ namespace TypeCache.Collections.Extensions
 				}
 			}
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableArray<T> ToImmutableArray<T>(this List<T>? @this)
+			where T : notnull
+			=> ImmutableArray.Create(@this?.ToArray());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ImmutableList<T> ToImmutableList<T>(this List<T>? @this)
+			where T : notnull
+			=> ImmutableList.Create(@this?.ToArray() ?? Array.Empty<T>());
 	}
 }

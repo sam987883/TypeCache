@@ -4,12 +4,30 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using TypeCache.Extensions;
 
 namespace TypeCache.Collections.Extensions
 {
 	public static class ArrayExtensions
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask AllAsync<T>(this Task[] @this)
+			=> await Task.WhenAll(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask<T[]> AllAsync<T>(this Task<T>[]? @this)
+			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask AnyAsync<T>(this Task[] @this)
+			=> await Task.WhenAny(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask<Task<T>> AnyAsync<T>(this Task<T>[] @this)
+			=> await Task.WhenAny(@this);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 			=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
@@ -26,6 +44,54 @@ namespace TypeCache.Collections.Extensions
 			target.AssertNotNull(nameof(target));
 
 			Array.Copy(@this, sourceIndex, target, targetIndex, length < 1 ? @this.Length : length);
+		}
+
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T[] rest)
+			where T : struct
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			rest = @this?.Length > 1 ? @this[1..] : Array.Empty<T>();
+		}
+
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T[] rest)
+			where T : struct
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			second = @this?.Length > 1 ? @this[1] : null;
+			rest = @this?.Length > 2 ? @this[2..] : Array.Empty<T>();
+		}
+
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T? third, out T[] rest)
+			where T : struct
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			second = @this?.Length > 1 ? @this[1] : null;
+			third = @this?.Length > 2 ? @this[2] : null;
+			rest = @this?.Length > 3 ? @this[3..] : Array.Empty<T>();
+		}
+
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T[] rest)
+			where T : class
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			rest = @this?.Length > 1 ? @this[1..] : Array.Empty<T>();
+		}
+
+		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T[] rest)
+			where T : class
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			second = @this?.Length > 1 ? @this[1] : null;
+			rest = @this?.Length > 2 ? @this[2..] : Array.Empty<T>();
+		}
+
+		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T? third, out T[] rest)
+			where T : class
+		{
+			first = @this?.Length > 0 ? @this[0] : null;
+			second = @this?.Length > 1 ? @this[1] : null;
+			third = @this?.Length > 2 ? @this[2] : null;
+			rest = @this?.Length > 3 ? @this[3..] : Array.Empty<T>();
 		}
 
 		public static void Do<T>(this T[]? @this, Action<T> action)
@@ -112,7 +178,7 @@ namespace TypeCache.Collections.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Reverse<T>(this T[] @this)
-			=> Array.Reverse(@this);
+			=> Reverse(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Search<T>(this T[] @this, T value, IComparer<T>? comparer = null)
@@ -187,5 +253,21 @@ namespace TypeCache.Collections.Extensions
 		public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
 			where T : notnull
 			=> ImmutableStack.Create(@this ?? Array.Empty<T>());
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WaitForAll<T>(this Task[] @this, CancellationToken cancellationToken)
+			=> Task.WaitAll(@this, cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WaitForAll<T>(this Task[] @this, int milliseconds, CancellationToken cancellationToken)
+			=> Task.WaitAll(@this, milliseconds, cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WaitForAny<T>(this Task[] @this, CancellationToken cancellationToken)
+			=> Task.WaitAny(@this, cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WaitForAny<T>(this Task[] @this, int milliseconds, CancellationToken cancellationToken)
+			=> Task.WaitAny(@this, milliseconds, cancellationToken);
 	}
 }

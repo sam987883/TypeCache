@@ -14,12 +14,9 @@ namespace TypeCache.GraphQL.Types
 			var graphAttribute = TypeOf<T>.Attributes.First<GraphAttribute>();
 			this.Name = graphAttribute?.Name ?? $"{TypeOf<T>.Name}Fields";
 
-			foreach (var property in TypeOf<T>.Properties.Values)
+			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property!.Attributes.Any<GraphIgnoreAttribute>()))
 			{
-				graphAttribute = property.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore is true)
-					continue;
-
+				graphAttribute = property!.Attributes.First<GraphAttribute>();
 				var name = graphAttribute?.Name ?? property.Name;
 				var description = graphAttribute?.Description;
 				var deprecationReason = property.Attributes.First<ObsoleteAttribute>()?.Message;

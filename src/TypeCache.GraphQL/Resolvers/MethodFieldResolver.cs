@@ -48,7 +48,7 @@ namespace TypeCache.GraphQL.Resolvers
 			foreach (var parameter in this._Method.Parameters)
 			{
 				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore is true)
+				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 
 				var parameterType = parameter.Type.Handle.ToType();
@@ -92,7 +92,7 @@ namespace TypeCache.GraphQL.Resolvers
 			foreach (var parameter in this._Method.Parameters)
 			{
 				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
-				if (graphAttribute?.Ignore is true)
+				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 
 				var parameterType = parameter.Type.Handle.ToType();
