@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
@@ -19,7 +20,11 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public InstanceMethodFieldResolver(InstanceMethodMember method, object handler)
 		{
+			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
+
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(InstanceMethodFieldResolver)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
 
 			this._Method = method;
 			this._Handler = handler;

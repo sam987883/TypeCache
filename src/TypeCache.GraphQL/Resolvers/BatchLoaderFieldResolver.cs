@@ -26,9 +26,13 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public BatchLoaderFieldResolver(InstanceMethodMember method, object handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		{
-			getParentKey.AssertNotNull(nameof(handler));
+			method.AssertNotNull(nameof(method));
+			handler.AssertNotNull(nameof(handler));
 			getParentKey.AssertNotNull(nameof(getParentKey));
 			getChildKey.AssertNotNull(nameof(getChildKey));
+
+			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
+				throw new ArgumentException($"{nameof(BatchLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
 			var graphAttribute = method.Attributes.First<GraphAttribute>();
 			var name = graphAttribute?.Name ?? method.Name.ToEndpointName();

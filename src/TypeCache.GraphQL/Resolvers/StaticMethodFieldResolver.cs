@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
@@ -18,6 +19,11 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public StaticMethodFieldResolver(StaticMethodMember method)
 		{
+			method.AssertNotNull(nameof(method));
+
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(StaticMethodFieldResolver)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
+
 			this._Method = method;
 		}
 

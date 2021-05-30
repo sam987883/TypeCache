@@ -26,8 +26,8 @@ namespace TypeCache.Converters
 						if (field.SetValue is not null)
 							field.SetValue(output, reader.TokenType switch
 							{
-								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
-								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type.Handle.ToType(), options),
+								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type, options),
+								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type, options),
 								_ => reader.GetValue()
 							});
 					}

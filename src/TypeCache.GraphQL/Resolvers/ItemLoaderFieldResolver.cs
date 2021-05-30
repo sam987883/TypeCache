@@ -24,6 +24,13 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public ItemLoaderFieldResolver(InstanceMethodMember method, object handler, IDataLoaderContextAccessor dataLoader)
 		{
+			method.AssertNotNull(nameof(method));
+			handler.AssertNotNull(nameof(handler));
+			dataLoader.AssertNotNull(nameof(dataLoader));
+
+			if (!method.Return.Type.Is<T>())
+				throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
+
 			this._Method = method;
 			this._Handler = handler;
 			this._DataLoader = dataLoader;

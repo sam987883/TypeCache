@@ -35,7 +35,7 @@ namespace TypeCache.GraphQL.Types
 				name ??= TypeOf<T>.Name;
 				description ??= $"An object of type `{TypeOf<T>.Name}`.";
 
-				TypeOf<T>.InterfaceTypes.Do(type => this.Interface(type.Handle.ToType()));
+				TypeOf<T>.InterfaceTypes.Do(type => this.Interface(type));
 			}
 
 			this.Name = name;

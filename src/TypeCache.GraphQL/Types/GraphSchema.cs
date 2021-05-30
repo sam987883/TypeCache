@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using GraphQL.DataLoader;
+using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
@@ -49,10 +50,7 @@ namespace TypeCache.GraphQL.Types
 		/// <returns></returns>
 		public FieldType AddMutation(InstanceMethodMember method)
 		{
-			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(AddMutation)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
-
-			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 			var resolver = new InstanceMethodFieldResolver(method, handler);
 			return this.Mutation.AddField(method.ToFieldType(resolver));
 		}
@@ -63,9 +61,6 @@ namespace TypeCache.GraphQL.Types
 		/// <returns></returns>
 		public FieldType AddMutation(StaticMethodMember method)
 		{
-			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(AddMutation)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
-
 			var resolver = new StaticMethodFieldResolver(method);
 			return this.Mutation.AddField(method.ToFieldType(resolver));
 		}
@@ -77,10 +72,7 @@ namespace TypeCache.GraphQL.Types
 		/// <returns></returns>
 		public FieldType AddQuery(InstanceMethodMember method)
 		{
-			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(AddQuery)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
-
-			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 			var resolver = new InstanceMethodFieldResolver(method, handler);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
@@ -91,9 +83,6 @@ namespace TypeCache.GraphQL.Types
 		/// <returns></returns>
 		public FieldType AddQuery(StaticMethodMember method)
 		{
-			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(AddQuery)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
-
 			var resolver = new StaticMethodFieldResolver(method);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
@@ -107,10 +96,7 @@ namespace TypeCache.GraphQL.Types
 		public FieldType AddSubquery<T>(InstanceMethodMember method)
 			where T : class
 		{
-			if (!method.Return.Type.Is<T>())
-				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
-
-			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 			var resolver = new ItemLoaderFieldResolver<T>(method, handler, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
@@ -129,11 +115,29 @@ namespace TypeCache.GraphQL.Types
 		public FieldType AddSubquery<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
-			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
-				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
-
-			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 			var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <param name="parentPropertyKey">Parent property containing the key value</param>
+		/// <param name="childPropertyKey">Child property containing the key value</param>
+		/// <returns></returns>
+		public FieldType AddSubquery(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
+		{
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+
+			if (parentPropertyKey.PropertyType != childPropertyKey.PropertyType)
+				throw new ArgumentException($"{nameof(AddSubquery)}: Expected properties [{parentPropertyKey.Name}] and [{childPropertyKey.Name}] to have the same type; instead of [{parentPropertyKey.PropertyType.Name}] and [{childPropertyKey.PropertyType.Name}].");
+
+			var resolverType = typeof(BatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
+
+			var resolver = (IFieldResolver)resolverType.GetConstructorCache().First()!.Create!(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
@@ -154,8 +158,29 @@ namespace TypeCache.GraphQL.Types
 			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
 				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
-			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 			var resolver = new CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <param name="parentPropertyKey">Parent property containing the key value</param>
+		/// <param name="childPropertyKey">Child property containing the key value</param>
+		/// <returns></returns>
+		public FieldType AddSubqueryCollection(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
+		{
+			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+
+			if (parentPropertyKey.PropertyType != childPropertyKey.PropertyType)
+				throw new ArgumentException($"{nameof(AddSubquery)}: Expected properties [{parentPropertyKey.Name}] and [{childPropertyKey.Name}] to have the same type; instead of [{parentPropertyKey.PropertyType.Name}] and [{childPropertyKey.PropertyType.Name}].");
+
+			var resolverType = typeof(CollectionBatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
+
+			var resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 

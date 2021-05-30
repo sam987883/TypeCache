@@ -234,7 +234,7 @@ namespace TypeCache.GraphQL.Extensions
 			=> @this.SystemType switch
 			{
 				_ when @this.Kind is Kind.Delegate => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-				_ when @this.Kind is Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this.Handle.ToType()),
+				_ when @this.Kind is Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
 				SystemType.String => typeof(StringGraphType),
 				SystemType.Uri => typeof(UriGraphType),
 				_ when @this.IsEnumerable => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType)),
@@ -255,9 +255,9 @@ namespace TypeCache.GraphQL.Extensions
 				SystemType.Guid => typeof(GuidGraphType),
 				SystemType.Range => typeof(StringGraphType),
 				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType),
-				_ when @this.Kind is Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this.Handle.ToType()),
-				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this.Handle.ToType()),
-				_ => typeof(GraphObjectType<>).MakeGenericType(@this.Handle.ToType())
+				_ when @this.Kind is Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
+				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
+				_ => typeof(GraphObjectType<>).MakeGenericType(@this)
 			};
 
 		private static QueryArgument ToQueryArgument(this MethodParameter @this)
