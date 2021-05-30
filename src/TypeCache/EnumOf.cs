@@ -13,23 +13,24 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {
-	public static class Enum<T>
+	public static class EnumOf<T>
 		where T : struct, Enum
 	{
-		public record Token(string Name, T Value, IImmutableList<Attribute> Attributes) : IEquatable<Token>
+		public sealed record Token(string Name, string Number, string Hex, T Value, IImmutableList<Attribute> Attributes) : IEquatable<Token>
 		{
-			public bool Equals(Token token1, Token token2)
-				=> token1.Name.Is(token2.Name, StringComparison.Ordinal) && Enum<T>.Comparer.Equals(token1.Value, token2.Value);
+			public bool Equals(Token? other)
+				=> other?.Name.Is(this.Name, StringComparison.Ordinal) is true && Comparer.Equals(this.Value, other.Value);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public override int GetHashCode()
-				=> Enum<T>.Comparer.GetHashCode(this.Value);
+				=> EnumOf<T>.Comparer.GetHashCode(this.Value);
 		}
 
 		private static Comparison<T> CreateCompare(Type underlyingType)
 		{
 			ParameterExpression value1 = nameof(value1).Parameter<T>();
 			ParameterExpression value2 = nameof(value2).Parameter<T>();
+
 			return value1.Cast(underlyingType)
 				.Call(nameof(IComparable<T>.CompareTo), value2.Cast(underlyingType))
 				.Lambda<Comparison<T>>(value1, value2)
@@ -40,6 +41,7 @@ namespace TypeCache
 		{
 			ParameterExpression value1 = nameof(value1).Parameter<T>();
 			ParameterExpression value2 = nameof(value2).Parameter<T>();
+
 			return value1.Cast(underlyingType)
 				.Operation(EqualityOp.EqualTo, value2.Cast(underlyingType))
 				.Lambda<Func<T, T, bool>>(value1, value2)
@@ -49,51 +51,61 @@ namespace TypeCache
 		private static Func<T, int> CreateGetHashCode(Type underlyingType)
 		{
 			ParameterExpression value = nameof(value).Parameter<T>();
+
 			return value.Cast(underlyingType)
 				.Call(nameof(object.GetHashCode))
 				.Lambda<Func<T, int>>(value)
 				.Compile();
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Token CreateToken(StaticFieldMember field)
-			=> new Token(field.Name, (T)field.GetValue!()!, field.Attributes);
-
-		private static readonly TypeMember Type;
-
-		static Enum()
 		{
-			Type = MemberCache.Types[typeof(T).TypeHandle];
+			var value = (T)field.GetValue!()!;
+			return new Token(field.Name, value.ToString("D"), value.ToString("X"), value, field.Attributes);
+		}
 
+		static EnumOf()
+		{
+			var typeMember = typeof(T).ToMember();
 			var underlyingType = typeof(T).GetEnumUnderlyingType();
 			var compare = CreateCompare(underlyingType);
 			var equals = CreateEquals(underlyingType);
 			var getHashCode = CreateGetHashCode(underlyingType);
 
+			Attributes = typeMember.Attributes;
 			Comparer = new CustomComparer<T>(compare, equals, getHashCode);
-			HasFlags = Type.Attributes.Any<FlagsAttribute>();
+			Handle = typeMember.Handle;
+			IsFlags = typeMember.Attributes.Any<FlagsAttribute>();
+			IsInternal = typeMember.IsInternal;
+			IsPublic = typeMember.IsPublic;
+			Name = typeMember.Name;
+			UnderlyingType = typeMember.SystemType;
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
 			Tokens = TypeOf<T>.StaticFields.Values.To(CreateToken).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
-		public static IImmutableList<Attribute> Attributes => Type.Attributes;
+		public static IImmutableList<Attribute> Attributes { get; }
 
 		public static CustomComparer<T> Comparer { get; }
 
-		public static RuntimeTypeHandle Handle => Type.Handle;
+		public static RuntimeTypeHandle Handle { get; }
 
-		public static bool HasFlags { get; }
+		public static bool IsFlags { get; }
 
-		public static bool IsInternal => Type.IsInternal;
+		public static bool IsInternal { get; }
 
-		public static bool IsPublic => Type.IsPublic;
+		public static bool IsPublic { get; }
 
-		public static string Name => Type.Name;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsValid(T token)
+			=> Tokens.Keys.Has(token, Comparer);
 
-		public static IImmutableDictionary<T, Enum<T>.Token> Tokens { get; }
+		public static string Name { get; }
 
-		public static SystemType UnderlyingType => Type.SystemType;
+		public static IImmutableDictionary<T, Token> Tokens { get; }
+
+		public static SystemType UnderlyingType { get; }
 
 		public static RuntimeTypeHandle UnderlyingTypeHandle { get; }
 	}

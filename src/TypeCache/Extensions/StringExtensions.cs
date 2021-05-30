@@ -24,19 +24,18 @@ namespace TypeCache.Extensions
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
 		}
 
-		public static T? Enum<T>(this string? @this, bool compareCase = false) where T : struct, Enum
-			=> System.Enum.TryParse(@this, !compareCase, out T result) ? (T?)result : null;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string FromBase64(this string @this, Encoding encoding)
-			=> encoding.GetString(Convert.FromBase64String(@this));
+		{
+			Span<byte> span = stackalloc byte[@this.Length];
+			return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has(this string @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.Contains(value, comparison);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is(this string? @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Is([NotNullWhen(true)] this string? @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> comparison.ToStringComparer().Equals(@this, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,7 +59,7 @@ namespace TypeCache.Extensions
 			if (@this.IsBlank())
 				return @this;
 
-			var span = @this.ToCharArray().AsSpan();
+			var span = @this.ToSpan();
 			var i = -1;
 			while (++i < span.Length)
 			{
@@ -77,7 +76,7 @@ namespace TypeCache.Extensions
 				return @this;
 
 			var count = 0;
-			var span = @this.ToCharArray().AsSpan();
+			var span = @this.ToSpan();
 			var i = -1;
 			while (++i < span.Length)
 			{
@@ -106,7 +105,7 @@ namespace TypeCache.Extensions
 			showTerms ??= Array.Empty<string>();
 
 			var count = 0;
-			var span = @this.ToCharArray().AsSpan();
+			var span = @this.ToSpan();
 			var i = -1;
 			while (++i < span.Length)
 			{
@@ -127,7 +126,8 @@ namespace TypeCache.Extensions
 
 		public static string Reverse(this string @this)
 		{
-			var span = @this.ToCharArray().AsSpan();
+			Span<char> span = stackalloc char[@this.Length];
+			@this.AsSpan().CopyTo(span);
 			span.Reverse();
 			return new string(span);
 		}
@@ -136,12 +136,24 @@ namespace TypeCache.Extensions
 		public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.EndsWith(text, comparison);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToBase64(this string @this, Encoding encoding)
-			=> Convert.ToBase64String(@this.ToBytes(encoding));
+		{
+			Span<byte> bytes = stackalloc byte[@this.Length * sizeof(int)];
+			@this.ToBytes(encoding, bytes);
+			Span<char> chars = stackalloc char[bytes.Length * sizeof(int)];
+			return Convert.TryToBase64Chars(bytes, chars, out var count) ? new string(chars.Slice(0, count)) : @this;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this string @this, Encoding encoding)
 			=> encoding.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
+			=> encoding.GetBytes(@this, bytes);
+
+		public static T? ToEnum<T>(this string? @this)
+			where T : struct, Enum
+			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
 	}
 }

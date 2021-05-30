@@ -58,7 +58,7 @@ namespace TypeCache.Reflection.Extensions
 			return (getValue, setValue);
 		}
 
-		public static FieldMember ToMember(this FieldInfo @this)
+		public static InstanceFieldMember ToMember(this FieldInfo @this)
 		{
 			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", false);
@@ -66,21 +66,24 @@ namespace TypeCache.Reflection.Extensions
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateAccessors();
-			var type = MemberCache.Types[@this.FieldType.TypeHandle];
+			var fieldType = MemberCache.Types[@this.FieldType.TypeHandle];
+			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
 
-			return new FieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, getValue, setter, setValue, type);
+			return new InstanceFieldMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, setter, getValue, setValue, fieldType);
 		}
 
 		public static StaticFieldMember ToStaticMember(this FieldInfo @this)
 		{
+			@this.IsLiteral.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsLiteral)}", false);
 			@this.IsStatic.Assert($"{nameof(FieldInfo)}.{nameof(@this.IsStatic)}", true);
 
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateStaticAccessors();
-			var type = MemberCache.Types[@this.FieldType.TypeHandle];
+			var fieldType = MemberCache.Types[@this.FieldType.TypeHandle];
+			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
 
-			return new StaticFieldMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, !@this.IsLiteral ? @this.FieldHandle : null, getter, getValue, setter, setValue, type);
+			return new StaticFieldMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, setter, getValue, setValue, fieldType);
 		}
 	}
 }

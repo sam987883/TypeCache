@@ -40,7 +40,7 @@ namespace TypeCache.Converters
 
 					while (reader.TokenType != JsonTokenType.EndObject && reader.Read()) { }
 
-					return new ExpressionSet(name.Enum<LogicalOperator>()!.Value, expressionSets.ToArray(), expressions.ToArray());
+					return new ExpressionSet(name.ToEnum<LogicalOperator>()!.Value, expressionSets.ToArray(), expressions.ToArray());
 				}
 				else
 					throw new JsonException($"[{nameof(ExpressionSet)}] element [{name}] must contain an array.");

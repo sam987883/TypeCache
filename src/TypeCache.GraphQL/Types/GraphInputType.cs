@@ -22,7 +22,7 @@ namespace TypeCache.GraphQL.Types
 			TypeOf<T>.Properties.Values
 				.If(property => property!.Getter is not null && property!.Setter is not null
 					&& !property.Attributes.Any<GraphIgnoreAttribute>())
-				.Do(this.AddField!);
+				.Do(property => this.AddField(property!.ToFieldType(true)));
 		}
 	}
 }

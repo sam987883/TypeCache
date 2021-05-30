@@ -46,7 +46,7 @@ namespace TypeCache.GraphQL.Types
 				.If(property => property!.Getter is not null
 					&& !property.Attributes.Any<GraphIgnoreAttribute>()
 					&& !property.Attributes.Any<GraphCursorAttribute>())
-				.Do(this.AddField!);
+				.Do(property => this.AddField(property!.ToFieldType(false)));
 		}
 	}
 }

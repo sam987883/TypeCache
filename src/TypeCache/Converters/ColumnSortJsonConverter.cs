@@ -17,7 +17,7 @@ namespace TypeCache.Converters
 
 			if (reader.TokenType == JsonTokenType.StartObject && reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
-				sort = reader.GetString().Enum<Sort>()!.Value;
+				sort = reader.GetString().ToEnum<Sort>()!.Value;
 				reader.Read();
 				expression = reader.GetString()!;
 				reader.Read();

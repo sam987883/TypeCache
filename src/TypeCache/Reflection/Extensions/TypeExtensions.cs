@@ -21,28 +21,6 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.GetConstructorCache().First(constructor => constructor!.IsCallableWith(parameters))?.Create!(parameters)
 				?? throw new ArgumentException($"Create instance of class {@this.Name} failed with {parameters?.Length ?? 0} parameters.");
 
-		public static TypeMember CreateMember(this Type @this)
-		{
-			var interfaces = @this.GetInterfaces();
-			var kind = @this.GetKind();
-			var systemType = @this.GetSystemType();
-			var isNullable = kind == Kind.Class || kind == Kind.Delegate || kind == Kind.Interface || systemType == SystemType.Nullable;
-			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var enclosedTypeHandle = systemType switch
-			{
-				_ when @this.HasElementType => @this.GetElementType()!.TypeHandle,
-				SystemType.Dictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary or SystemType.SortedDictionary
-					=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).TypeHandle,
-				_ when @this.GenericTypeArguments.Length == 1 => @this.GenericTypeArguments[0].TypeHandle,
-				_ => (RuntimeTypeHandle?)null
-			};
-			var genericTypeHandles = @this.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutableArray();
-			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutableArray();
-
-			return new TypeMember(@this.GetName(), attributes, !@this.IsVisible, @this.IsPublic, kind, systemType, @this.TypeHandle, @this.BaseType?.TypeHandle,
-				enclosedTypeHandle, genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), isNullable, @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
-		}
-
 		public static Kind GetKind(this Type @this)
 			=> @this switch
 			{
@@ -75,7 +53,7 @@ namespace TypeCache.Reflection.Extensions
 			=> MemberCache.Constructors[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, FieldMember> GetFieldMembers(this Type @this)
+		public static IImmutableDictionary<string, InstanceFieldMember> GetFieldMembers(this Type @this)
 			=> MemberCache.Fields[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,11 +61,11 @@ namespace TypeCache.Reflection.Extensions
 			=> MemberCache.Indexers[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IImmutableList<MethodMember>> GetMethodMembers(this Type @this)
+		public static IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> GetMethodMembers(this Type @this)
 			=> MemberCache.Methods[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, PropertyMember> GetPropertyMembers(this Type @this)
+		public static IImmutableDictionary<string, InstancePropertyMember> GetPropertyMembers(this Type @this)
 			=> MemberCache.Properties[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,10 +104,10 @@ namespace TypeCache.Reflection.Extensions
 			var systemType = @this.GetSystemType();
 			return systemType == SystemType.Task
 				|| systemType == SystemType.ValueTask
-				|| @this.Implements(typeof(IAsyncDisposable))
-				|| @this.Implements(typeof(IAsyncEnumerable<>))
 				|| @this.Is(typeof(IAsyncDisposable))
-				|| @this.Is(typeof(IAsyncEnumerable<>));
+				|| @this.Is(typeof(IAsyncEnumerable<>))
+				|| @this.Implements(typeof(IAsyncDisposable))
+				|| @this.Implements(typeof(IAsyncEnumerable<>));
 		}
 
 		public static bool IsEnumerable(this Type @this)
@@ -146,5 +124,27 @@ namespace TypeCache.Reflection.Extensions
 				_ when @this.IsGenericType => @this.GetGenericTypeDefinition(),
 				_ => null
 			};
+
+		public static TypeMember ToMember(this Type @this)
+		{
+			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			var kind = @this.GetKind();
+			var systemType = @this.GetSystemType();
+			var baseTypeHandle = @this.BaseType?.TypeHandle ?? typeof(object).TypeHandle;
+			var interfaces = @this.GetInterfaces();
+			var enclosedTypeHandle = systemType switch
+			{
+				_ when @this.HasElementType => @this.GetElementType()!.TypeHandle,
+				SystemType.Dictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary or SystemType.SortedDictionary
+					=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).TypeHandle,
+				_ when @this.GenericTypeArguments.Length == 1 => @this.GenericTypeArguments[0].TypeHandle,
+				_ => (RuntimeTypeHandle?)null
+			};
+			var genericTypeHandles = @this.GenericTypeArguments.To(_ => _.TypeHandle).ToImmutableArray();
+			var interfaceTypeHandles = interfaces.To(_ => _.TypeHandle).ToImmutableArray();
+
+			return new TypeMember(@this.GetName(), attributes, !@this.IsVisible, @this.IsPublic, kind, systemType, @this.TypeHandle, baseTypeHandle,
+				enclosedTypeHandle, genericTypeHandles, interfaceTypeHandles, @this.IsEnumerable(), @this.IsPointer, @this.IsByRef || @this.IsByRefLike);
+		}
 	}
 }

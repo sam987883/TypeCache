@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
@@ -9,20 +11,25 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Resolvers;
+using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Types
 {
 	public class GraphSchema : Schema
 	{
+		private readonly IDataLoaderContextAccessor _DataLoader;
 		private readonly IMediator _Mediator;
 		private readonly IServiceProvider _ServiceProvider;
 		private readonly ISqlApi _SqlApi;
 
-		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, Action<GraphSchema> addEndpoints) : base(provider)
+		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, IDataLoaderContextAccessor dataLoader, Action<GraphSchema> addEndpoints) : base(provider)
 		{
-			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
-			this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
+			this.Query = new ObjectGraphType { Name = nameof(Query) };
+			this.Mutation = new ObjectGraphType { Name = nameof(Mutation) };
 
+			this._DataLoader = dataLoader;
 			this._Mediator = mediator;
 			this._ServiceProvider = provider;
 			this._SqlApi = sqlApi!;
@@ -36,27 +43,120 @@ namespace TypeCache.GraphQL.Types
 			=> new SqlApi<T>(this._Mediator, this._SqlApi, objectSchema.Name);
 
 		/// <summary>
-		/// Use this to create GraphQL endpoints based on methods defined in the specified class tagged with either <see cref="GraphMutationAttribute"/> or <see cref="GraphQueryAttribute"/>
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
 		/// </summary>
-		public void AddHandlerEndpoints<T>()
-			where T : notnull
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <returns></returns>
+		public FieldType AddMutation(InstanceMethodMember method)
 		{
-			var handler = this._ServiceProvider.GetRequiredService<T>();
-			TypeOf<T>.Methods.Values.Gather().If(method => method!.Attributes.Any<GraphMutationAttribute>()).Do(method =>
-			{
-				if (method!.Return.IsVoid)
-					throw new NotSupportedException("Queries cannot have a return type that is void, Task or ValueTask.");
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(AddMutation)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
 
-				this.Mutation.AddField(method, handler);
-			});
+			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var resolver = new InstanceMethodFieldResolver(method, handler);
+			return this.Mutation.AddField(method.ToFieldType(resolver));
+		}
 
-			TypeOf<T>.Methods.Values.Gather().If(method => method!.Attributes.Any<GraphQueryAttribute>()).Do(method =>
-			{
-				if (method!.Return.IsVoid)
-					throw new NotSupportedException("Mutations cannot have a return type that is void, Task or ValueTask.");
+		/// <summary>
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <returns></returns>
+		public FieldType AddMutation(StaticMethodMember method)
+		{
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(AddMutation)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
 
-				this.Query.AddField(method, handler);
-			});
+			var resolver = new StaticMethodFieldResolver(method);
+			return this.Mutation.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <returns></returns>
+		public FieldType AddQuery(InstanceMethodMember method)
+		{
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(AddQuery)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
+
+			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var resolver = new InstanceMethodFieldResolver(method, handler);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <returns></returns>
+		public FieldType AddQuery(StaticMethodMember method)
+		{
+			if (method.Return.IsVoid)
+				throw new NotSupportedException($"{nameof(AddQuery)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
+
+			var resolver = new StaticMethodFieldResolver(method);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a single item.
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <returns></returns>
+		public FieldType AddSubquery<T>(InstanceMethodMember method)
+			where T : class
+		{
+			if (!method.Return.Type.Is<T>())
+				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
+
+			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var resolver = new ItemLoaderFieldResolver<T>(method, handler, this._DataLoader);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
+		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
+		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <param name="getParentKey">Gets the key value from the parent instance</param>
+		/// <param name="getChildKey">Gets the key value from the child instance</param>
+		/// <returns></returns>
+		public FieldType AddSubquery<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+			where PARENT : class
+		{
+			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
+				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
+
+			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+			return this.Query.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
+		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// </summary>
+		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
+		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
+		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
+		/// <param name="method">Graph endpoint implementation</param>
+		/// <param name="getParentKey">Gets the key value from the parent instance</param>
+		/// <param name="getChildKey">Gets the key value from the child instance</param>
+		/// <returns></returns>
+		public FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+			where PARENT : class
+		{
+			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
+				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
+
+			var handler = this._ServiceProvider.GetRequiredService(method.Type.Handle.ToType());
+			var resolver = new CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
 		/// <summary>
@@ -80,14 +180,14 @@ namespace TypeCache.GraphQL.Types
 
 			if (objectSchema.Type == ObjectType.Table)
 			{
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Delete"][0], sqlApi);
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["DeleteBatch"][0], sqlApi);
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["InsertBatch"][0], sqlApi);
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Update"][0], sqlApi);
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["UpdateBatch"][0], sqlApi);
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Delete"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["DeleteBatch"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["InsertBatch"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Update"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["UpdateBatch"][0].ToFieldType(sqlApi));
 			}
 
-			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["Select"][0], sqlApi);
+			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["Select"][0].ToFieldType(sqlApi));
 		}
 
 		/// <summary>
@@ -111,14 +211,14 @@ namespace TypeCache.GraphQL.Types
 
 			if (objectSchema.Type == ObjectType.Table)
 			{
-				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["DeleteSQL"][0], sqlApi);
-				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["DeleteBatchSQL"][0], sqlApi);
-				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["InsertBatchSQL"][0], sqlApi);
-				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["UpdateSQL"][0], sqlApi);
-				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["UpdateBatchSQL"][0], sqlApi);
+				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["DeleteSQL"][0].ToFieldType(sqlApi));
+				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["DeleteBatchSQL"][0].ToFieldType(sqlApi));
+				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["InsertBatchSQL"][0].ToFieldType(sqlApi));
+				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["UpdateSQL"][0].ToFieldType(sqlApi));
+				this.Query.AddField(TypeOf<SqlApi<T>>.Methods["UpdateBatchSQL"][0].ToFieldType(sqlApi));
 			}
 
-			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["SelectSQL"][0], sqlApi);
+			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["SelectSQL"][0].ToFieldType(sqlApi));
 		}
 
 		/// <summary>
@@ -136,8 +236,8 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["Delete"].Do(method => this.Mutation.AddField(method, sqlApi));
-			TypeOf<SqlApi<T>>.Methods["DeleteBatch"].Do(method => this.Mutation.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["Delete"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["DeleteBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -155,8 +255,8 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["DeleteSQL"].Do(method => this.Query.AddField(method, sqlApi));
-			TypeOf<SqlApi<T>>.Methods["DeleteBatchSQL"].Do(method => this.Query.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["DeleteSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["DeleteBatchSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -173,7 +273,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["InsertBatch"].Do(method => this.Mutation.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["InsertBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -190,7 +290,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["InsertBatchSQL"].Do(method => this.Query.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["InsertBatchSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -207,7 +307,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -224,7 +324,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["SelectSQL"].Do(method => this.Query.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["SelectSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -242,8 +342,8 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["Update"].Do(method => this.Mutation.AddField(method, sqlApi));
-			TypeOf<SqlApi<T>>.Methods["UpdateBatch"].Do(method => this.Mutation.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["Update"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["UpdateBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -261,8 +361,8 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
-			TypeOf<SqlApi<T>>.Methods["UpdateSQL"].Do(method => this.Query.AddField(method, sqlApi));
-			TypeOf<SqlApi<T>>.Methods["UpdateBatchSQL"].Do(method => this.Query.AddField(method, sqlApi));
+			TypeOf<SqlApi<T>>.Methods["UpdateSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["UpdateBatchSQL"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 	}
 }

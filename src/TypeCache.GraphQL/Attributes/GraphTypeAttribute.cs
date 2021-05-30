@@ -2,13 +2,19 @@
 
 using System;
 using GraphQL;
+using GraphQL.Types;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// <b>Graph QL</b><br />
-	/// Overrides the Graph Type of the object property or endpoint parameter.<br />
+	/// <b>Graph QL</b>
+	/// <list type="number">
+	/// <item><term>graphType</term> <description>Overrides the Graph Type of the object property or endpoint parameter.</description></item>
+	/// <item><term>scalarType, nullable</term> <description>Overrides only the Scalar Graph Type used by the generated Graph Type of the object property or endpoint parameter.</description></item>
+	/// </list>
 	/// If the parameter a type of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext&lt;Object&gt;"/>, then it will not show up in the endpoint-<br />
 	/// Instead it will be injected with the instance of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext&lt;Object&gt;"/>.
 	/// </summary>
@@ -23,19 +29,25 @@ namespace TypeCache.GraphQL.Attributes
 			this.GraphType = graphType;
 		}
 
-		public GraphTypeAttribute(ScalarType scalarType)
+		public GraphTypeAttribute(ScalarType scalar)
 		{
-			this.ScalarType = scalarType;
+			this.GraphType = scalar.ToGraphType();
+		}
+
+		public GraphTypeAttribute(ListType list, ScalarType scalar)
+		{
+			var scalarType = scalar.ToGraphType();
+			this.GraphType = list switch
+			{
+				ListType.List => typeof(ListGraphType<>).MakeGenericType(scalarType),
+				ListType.NonNullList => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>)).MakeGenericType(scalarType),
+				_ => scalarType
+			};
 		}
 
 		/// <summary>
 		/// The Graph Type for override.
 		/// </summary>
-		public Type? GraphType { get; }
-
-		/// <summary>
-		/// The Graph Scalar Type to use.
-		/// </summary>
-		public ScalarType? ScalarType { get; }
+		public Type GraphType { get; }
 	}
 }

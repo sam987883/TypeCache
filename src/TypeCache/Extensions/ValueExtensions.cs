@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Extensions
 {
@@ -14,12 +13,12 @@ namespace TypeCache.Extensions
 		public static void AssertNotNull<T>([AllowNull] this T? @this, string name, [CallerMemberName] string? caller = null)
 			where T : struct
 		{
-			if (@this is null)
+			if (!@this.HasValue)
 				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotNull)}: [{name}] is null.");
 		}
 
 		public static IEnumerable<T> Repeat<T>(this T @this, int count)
-			where T : struct
+			where T : unmanaged
 		{
 			while (count > 0)
 			{
@@ -27,50 +26,6 @@ namespace TypeCache.Extensions
 				--count;
 			}
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTime As(this DateTime @this, DateTimeKind kind)
-			=> DateTime.SpecifyKind(@this, kind);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTime ConvertTime(this DateTime @this, TimeZoneInfo sourceTimeZone, TimeZoneInfo targetTimeZone)
-			=> TimeZoneInfo.ConvertTime(@this, sourceTimeZone, targetTimeZone);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTime ConvertTime(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
-			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTimeOffset ConvertTime(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
-			=> TimeZoneInfo.ConvertTime(@this, targetTimeZone);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTimeOffset ConvertTime(this DateTimeOffset @this, string targetSystemTimeZoneId)
-			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTime ConvertTimeFromUTC(this DateTime @this, TimeZoneInfo targetTimeZone)
-			=> TimeZoneInfo.ConvertTimeFromUtc(@this, targetTimeZone);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DateTime ConvertTimeToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
-			=> TimeZoneInfo.ConvertTimeToUtc(@this, sourceTimeZone);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join(this char @this, params string[] values)
-			=> string.Join(@this, values);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join(this char @this, IEnumerable<string> values)
-			=> string.Join(@this, values);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join(this char @this, params object[] values)
-			=> string.Join(@this, values);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join(this char @this, IEnumerable<object> values)
-			=> string.Join(@this, values);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsReverse(this Range @this)
@@ -110,66 +65,6 @@ namespace TypeCache.Extensions
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this bool @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this char @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this short @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this int @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this long @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this ushort @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this uint @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this ulong @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this float @this)
-			=> BitConverter.GetBytes(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static byte[] ToBytes(this double @this)
-			=> BitConverter.GetBytes(@this);
-
-		public static byte[] ToBytes(this decimal @this)
-			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int ToInt32(this float @this)
-			=> BitConverter.SingleToInt32Bits(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long ToInt64(this double @this)
-			=> BitConverter.DoubleToInt64Bits(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static float ToSingle(this int @this)
-			=> BitConverter.Int32BitsToSingle(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double ToDouble(this long @this)
-			=> BitConverter.Int64BitsToDouble(@this);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<int> Values(this Range @this)
 			=> @this.Start.Value.To(@this.End.Value, @this.IsReverse() ? -1 : 1);
 	}

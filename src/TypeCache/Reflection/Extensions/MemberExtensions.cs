@@ -34,7 +34,7 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Parameters.IsCallableWith(arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsCallableWith(this MethodMember @this, params object?[]? arguments)
+		public static bool IsCallableWith(this InstanceMethodMember @this, params object?[]? arguments)
 			=> @this.Parameters.IsCallableWith(arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,7 +55,7 @@ namespace TypeCache.Reflection.Extensions
 							if (!parameter.Type.Supports(argumentEnumerator.Current.GetType()))
 								return false;
 						}
-						else if (!parameter.Type.IsNullable)
+						else if (!parameter.Type.IsNullable())
 							return false;
 					}
 					else if (!parameter.HasDefaultValue && !parameter.IsOptional)
@@ -65,6 +65,9 @@ namespace TypeCache.Reflection.Extensions
 			}
 			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 		}
+
+		public static bool IsNullable(this TypeMember @this)
+			=> @this.Kind is not Kind.Struct || @this.SystemType is SystemType.Nullable;
 
 		public static bool Match(this IReadOnlyList<MethodParameter> @this, IReadOnlyList<MethodParameter> parameters)
 			=> @this.Count == parameters.Count && 0.Range(@this.Count).All(i => @this[i] == parameters[i]);

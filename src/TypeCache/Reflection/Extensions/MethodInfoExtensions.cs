@@ -10,7 +10,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Extensions
 {
-	public static class MethodBaseExtensions
+	public static class MethodInfoExtensions
 	{
 		private static readonly IComparer<ParameterInfo> ParameterSortComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position)!;
 
@@ -72,20 +72,23 @@ namespace TypeCache.Reflection.Extensions
 					? @this.New(methodParameters).Lambda(methodParameters).Compile()
 					: @this.New().Lambda().Compile();
 
-				ParameterExpression callParameters = nameof(callParameters).Parameter<object?[]?>();
+				ParameterExpression arguments = nameof(arguments).Parameter<object?[]?>();
+				var callParameters = parameterInfos
+					.To(parameterInfo => arguments.Array()[parameterInfo!.Position].SystemConvert(parameterInfo.ParameterType));
 				create = parameterInfos.Any()
-					? @this.New(callParameters.ToParameterArray(parameterInfos)).Cast<object>().Lambda<CreateType>(callParameters).Compile()
-					: @this.New().Cast<object>().Lambda<CreateType>(callParameters).Compile();
+					? @this.New(callParameters).Cast<object>().Lambda<CreateType>(arguments).Compile()
+					: @this.New().Cast<object>().Lambda<CreateType>(arguments).Compile();
 			}
 
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var parameters = parameterInfos.To(ToParameter!).ToImmutableArray();
 			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var returnParameter = new ReturnParameter(ImmutableArray<Attribute>.Empty, type);
 
-			return new ConstructorMember(@this.Name, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, create, method, parameters, type);
+			return new ConstructorMember(@this.Name, type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, create, method, parameters, returnParameter);
 		}
 
-		public static MethodMember ToMember(this MethodInfo @this)
+		public static InstanceMethodMember ToMember(this MethodInfo @this)
 		{
 			@this.IsStatic.Assert($"{nameof(@this)}.{nameof(@this.IsStatic)}", false);
 
@@ -96,8 +99,9 @@ namespace TypeCache.Reflection.Extensions
 			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
+			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
 
-			return new MethodMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, invoke, method, parameters, returnParameter);
+			return new InstanceMethodMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, method, invoke, parameters, returnParameter);
 		}
 
 		public static MethodParameter ToParameter(ParameterInfo parameterInfo)
@@ -132,8 +136,9 @@ namespace TypeCache.Reflection.Extensions
 			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
+			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
 
-			return new StaticMethodMember(@this.GetName(), attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, invoke, method, parameters, returnParameter);
+			return new StaticMethodMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, method, invoke, parameters, returnParameter);
 		}
 	}
 }

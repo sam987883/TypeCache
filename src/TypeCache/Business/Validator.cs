@@ -7,7 +7,7 @@ namespace TypeCache.Business
 {
 	public class Validator
 	{
-		public bool Validate<T>(T value, Expression<Func<T, bool>> test, out string? message)
+		public bool Validate<T>(T value, Expression<Predicate<T>> test, out string? message)
 		{
 			if (test.Compile()(value))
 			{

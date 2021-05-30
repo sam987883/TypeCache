@@ -1,0 +1,52 @@
+﻿// Copyright (c) 2021 Samuel Abraham
+
+namespace TypeCache.GraphQL.Types
+{
+	public enum ScalarType
+	{
+		ID,
+		HashID,
+		Boolean,
+		SByte,
+		Byte,
+		Short,
+		UShort,
+		Int,
+		UInt,
+		Long,
+		ULong,
+		BigInteger,
+		Float,
+		Decimal,
+		Date,
+		DateTime,
+		DateTimeOffset,
+		TimeSpanSeconds,
+		TimeSpanMilliseconds,
+		Guid,
+		String,
+		Uri,
+		NonNullableID,
+		NonNullableHashID,
+		NonNullableBoolean,
+		NonNullableSByte,
+		NonNullableByte,
+		NonNullableShort,
+		NonNullableUShort,
+		NonNullableInt,
+		NonNullableUInt,
+		NonNullableLong,
+		NonNullableULong,
+		NonNullableBigInteger,
+		NonNullableFloat,
+		NonNullableDecimal,
+		NonNullableDate,
+		NonNullableDateTime,
+		NonNullableDateTimeOffset,
+		NonNullableTimeSpanSeconds,
+		NonNullableTimeSpanMilliseconds,
+		NonNullableGuid,
+		NonNullableString,
+		NonNullableUri
+	}
+}

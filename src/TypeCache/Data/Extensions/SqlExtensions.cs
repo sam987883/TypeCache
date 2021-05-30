@@ -145,7 +145,7 @@ namespace TypeCache.Data.Extensions
 			Sort.Ascending => "ASC",
 			Sort.Descending => "DESC",
 			Sort _ => string.Empty,
-			Enum token => token.Number(),
+			Enum token => token.ToString("D"),
 			Index index => $"'{index}'",
 			JsonElement json => json.ValueKind switch
 			{

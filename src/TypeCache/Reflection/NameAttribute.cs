@@ -5,7 +5,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection
 {
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+	[AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = false)]
 	public class NameAttribute : Attribute
 	{
 		public NameAttribute(string name)

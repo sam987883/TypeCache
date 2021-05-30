@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection.Mappers
 {
@@ -24,15 +25,15 @@ namespace TypeCache.Reflection.Mappers
 				var toProperty = TypeOf<TO>.Properties[name];
 
 				if (toProperty.Type.Equals(fromProperty.Type))
-					settings.Add(name, new MapperSetting(name, name, !toProperty.Type.IsNullable));
+					settings.Add(name, new MapperSetting(name, name, !toProperty.Type.IsNullable()));
 			});
 
 			overrides.Do(setting =>
 			{
 				var toProperty = TypeOf<TO>.Properties.Get(setting.To) switch
 				{
-					PropertyMember property when property.Setter is not null => property,
-					PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable."),
+					InstancePropertyMember property when property.Setter is not null => property,
+					InstancePropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] is not writable."),
 					_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} property [{setting.To}] was not found for mapping.")
 				};
 
@@ -40,8 +41,8 @@ namespace TypeCache.Reflection.Mappers
 				{
 					var fromProperty = TypeOf<FROM>.Properties.Get(setting.From) switch
 					{
-						PropertyMember property when property.Getter is not null => property,
-						PropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not readable."),
+						InstancePropertyMember property when property.Getter is not null => property,
+						InstancePropertyMember property => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] is not readable."),
 						_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} property [{setting.From}] was not found for mapping.")
 					};
 

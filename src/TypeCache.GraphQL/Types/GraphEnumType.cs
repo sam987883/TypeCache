@@ -14,10 +14,10 @@ namespace TypeCache.GraphQL.Types
 
 		public GraphEnumType()
 		{
-			var enumGraphAttribute = Enum<T>.Attributes.First<GraphAttribute>();
-			this.Name = enumGraphAttribute?.Name ?? Enum<T>.Name;
+			var enumGraphAttribute = EnumOf<T>.Attributes.First<GraphAttribute>();
+			this.Name = enumGraphAttribute?.Name ?? EnumOf<T>.Name;
 
-			Enum<T>.Tokens.Values.If(token => !token!.Attributes.Any<GraphIgnoreAttribute>()).Do(token =>
+			EnumOf<T>.Tokens.Values.If(token => !token!.Attributes.Any<GraphIgnoreAttribute>()).Do(token =>
 			{
 				var tokenGraphAttribute = token!.Attributes.First<GraphAttribute>();
 				var name = token.Name;

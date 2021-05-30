@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -63,6 +64,22 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsWhiteSpace(this char @this)
 			=> char.IsWhiteSpace(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Join(this char @this, params string[] values)
+			=> string.Join(@this, values);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Join(this char @this, IEnumerable<string> values)
+			=> string.Join(@this, values);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Join(this char @this, params object[] values)
+			=> string.Join(@this, values);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Join(this char @this, IEnumerable<object> values)
+			=> string.Join(@this, values);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Char ToLower(this char @this)

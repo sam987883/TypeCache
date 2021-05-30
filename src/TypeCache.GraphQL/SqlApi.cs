@@ -53,7 +53,11 @@ namespace TypeCache.GraphQL
 		}
 
 		[Graph(name: "Delete{0}_SQL")]
-		public async Task<string> DeleteSQL(string where, string[] output, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
+		public async Task<string> DeleteSQL(
+			string where,
+			string[] output,
+			[AllowNull] Parameter[] parameters,
+			IResolveFieldContext context)
 		{
 			var request = new DeleteRequest
 			{

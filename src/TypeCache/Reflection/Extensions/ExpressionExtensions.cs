@@ -366,9 +366,6 @@ namespace TypeCache.Reflection.Extensions
 				_ => @this.Cast(type)
 			};
 
-		public static IEnumerable<Expression> ToParameterArray(this ParameterExpression @this, params ParameterInfo[] parameterInfos)
-			=> parameterInfos.To(parameterInfo => @this.Array()[parameterInfo.Position].SystemConvert(parameterInfo.ParameterType));
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeBinaryExpression TypeEqual<T>(this Expression @this)
 			=> Expression.TypeEqual(@this, typeof(T));

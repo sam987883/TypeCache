@@ -3,7 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using GraphQL;
+using GraphQL.DataLoader;
+using GraphQL.Language.AST;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
@@ -20,6 +23,32 @@ namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphExtensions
 	{
+		public static Type GetGraphType(this MethodParameter @this)
+			=> GetGraphType(@this.Type, @this.Attributes, true);
+
+		public static Type GetGraphType(this InstancePropertyMember @this, bool isInputType)
+			=> GetGraphType(@this.Type, @this.Attributes, isInputType);
+
+		public static Type GetGraphType(this ReturnParameter @this)
+			=> GetGraphType(@this.Type, @this.Attributes, false);
+
+		/// <summary>
+		/// Gets a list of query selections including nested selections and fragments.
+		/// </summary>
+		public static IEnumerable<string> GetQuerySelections(this IResolveFieldContext @this)
+		{
+			foreach (var subField in @this.SubFields)
+			{
+				if (subField.Value.SelectionSet.Selections.Any())
+				{
+					foreach (var selection in subField.Value.GetSelections(@this.Document.Fragments, subField.Key))
+						yield return selection;
+				}
+				else
+					yield return subField.Key;
+			}
+		}
+
 		/// <summary>
 		/// Use this to create a Graph QL Connection object to return in your endpoint to support paging.
 		/// </summary>
@@ -54,72 +83,7 @@ namespace TypeCache.GraphQL.Extensions
 			return connection;
 		}
 
-		internal static void AddField(this IObjectGraphType @this, MethodMember method, object handler)
-		{
-			var graphAttribute = method.Attributes.First<GraphAttribute>();
-			var graphTypeAttribute = method.Return.Attributes.First<GraphTypeAttribute>();
-			var name = graphAttribute?.Name ?? (method.Name.EndsWith("Async", StringComparison.OrdinalIgnoreCase)
-				? method.Name.Left(method.Name.LastIndexOf("Async", StringComparison.OrdinalIgnoreCase))
-				: method.Name);
-
-			@this.AddField(new FieldType
-			{
-				Arguments = method.ToQueryArguments(),
-				Name = name,
-				Description = graphAttribute?.Description,
-				DeprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message,
-				Resolver = new MethodFieldResolver(method, handler),
-				Type = graphTypeAttribute?.GraphType ?? method.Return.GetGraphType()
-			});
-		}
-
-		internal static void AddField<T>(this IObjectGraphType @this, MethodMember method, SqlApi<T> handler)
-			where T : class, new()
-		{
-			var graphAttribute = method.Attributes.First<GraphAttribute>();
-			var graphTypeAttribute = method.Return.Attributes.First<GraphTypeAttribute>();
-			var graphName = TypeOf<T>.Attributes.First<GraphAttribute>()?.Name ?? TypeOf<T>.Name;
-			var hasNotNull = method.Return.Attributes.Any<NotNullAttribute>();
-			var arguments = new QueryArguments(method.Parameters
-				.If(parameter => parameter!.Attributes.Any<GraphIgnoreAttribute>() && !parameter.Type.Is<IResolveFieldContext>())
-				.To(parameter => parameter!.Name.Is("output") || parameter.Name.Is("select")
-					? new QueryArgument(new ListGraphType<GraphObjectEnumType<T>>()) { Name = parameter.Name }
-					: parameter.ToQueryArgument()));
-
-			@this.AddField(new FieldType
-			{
-				Arguments = arguments,
-				Name = string.Format(graphAttribute!.Name!, graphName),
-				Description = !graphAttribute.Description.IsBlank() ? string.Format(graphAttribute.Description, handler.TableName) : null,
-				DeprecationReason = method.Attributes.First<ObsoleteAttribute>()?.Message,
-				Resolver = new MethodFieldResolver(method, handler),
-				Type = graphTypeAttribute?.GraphType ?? method.Return.GetGraphType()
-			});
-		}
-
-		internal static void AddField(this IInterfaceGraphType @this, PropertyMember property)
-			=> @this.AddField(property.CreateFieldType(false));
-
-		internal static void AddField(this IInputObjectGraphType @this, PropertyMember property)
-			=> @this.AddField(property.CreateFieldType(true));
-
-		internal static void AddField(this IObjectGraphType @this, PropertyMember property)
-			=> @this.AddField(property.CreateFieldType(false));
-
-		private static FieldType CreateFieldType(this PropertyMember @this, bool isInputType)
-		{
-			var graphAttribute = @this.Attributes.First<GraphAttribute>();
-			return new FieldType
-			{
-				Type = @this.Attributes.First<GraphTypeAttribute>()?.GraphType ?? @this.GetGraphType(isInputType),
-				Name = graphAttribute?.Name ?? @this.Name,
-				Description = graphAttribute?.Description,
-				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
-				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
-			};
-		}
-
-		private static Type? GetGraphType(this ScalarType @this)
+		public static Type ToGraphType(this ScalarType @this)
 			=> @this switch
 			{
 				ScalarType.ID => typeof(IdGraphType),
@@ -143,78 +107,158 @@ namespace TypeCache.GraphQL.Extensions
 				ScalarType.Guid => typeof(GuidGraphType),
 				ScalarType.String => typeof(StringGraphType),
 				ScalarType.Uri => typeof(UriGraphType),
-				_ => null
+				ScalarType.NonNullableID => typeof(NonNullGraphType<IdGraphType>),
+				ScalarType.NonNullableHashID => typeof(NonNullGraphType<GraphHashIdType>),
+				ScalarType.NonNullableBoolean => typeof(NonNullGraphType<BooleanGraphType>),
+				ScalarType.NonNullableSByte => typeof(NonNullGraphType<SByteGraphType>),
+				ScalarType.NonNullableShort => typeof(NonNullGraphType<ShortGraphType>),
+				ScalarType.NonNullableInt => typeof(NonNullGraphType<IntGraphType>),
+				ScalarType.NonNullableLong => typeof(NonNullGraphType<LongGraphType>),
+				ScalarType.NonNullableByte => typeof(NonNullGraphType<ByteGraphType>),
+				ScalarType.NonNullableUShort => typeof(NonNullGraphType<UShortGraphType>),
+				ScalarType.NonNullableUInt => typeof(NonNullGraphType<UIntGraphType>),
+				ScalarType.NonNullableULong => typeof(NonNullGraphType<ULongGraphType>),
+				ScalarType.NonNullableFloat => typeof(NonNullGraphType<FloatGraphType>),
+				ScalarType.NonNullableDecimal => typeof(NonNullGraphType<DecimalGraphType>),
+				ScalarType.NonNullableDate => typeof(NonNullGraphType<DateGraphType>),
+				ScalarType.NonNullableDateTime => typeof(NonNullGraphType<DateTimeGraphType>),
+				ScalarType.NonNullableDateTimeOffset => typeof(NonNullGraphType<DateTimeOffsetGraphType>),
+				ScalarType.NonNullableTimeSpanMilliseconds => typeof(NonNullGraphType<TimeSpanMillisecondsGraphType>),
+				ScalarType.NonNullableTimeSpanSeconds => typeof(NonNullGraphType<TimeSpanSecondsGraphType>),
+				ScalarType.NonNullableGuid => typeof(NonNullGraphType<GuidGraphType>),
+				ScalarType.NonNullableString => typeof(NonNullGraphType<StringGraphType>),
+				ScalarType.NonNullableUri => typeof(NonNullGraphType<UriGraphType>),
+				_ => typeof(StringGraphType)
 			};
 
-		private static Type GetGraphType(this TypeMember @this, bool isInputType, ScalarType? scalarType)
+		internal static string ToEndpointName(this string @this)
+			=> @this switch
+			{
+				_ when @this.Left("Get") && @this.Right("Async") && @this.Length > 8 => @this.Substring(3, @this.Length - 8),
+				_ when @this.Left("Get") => @this.Substring(3),
+				_ when @this.Right("Async") => @this.Left(@this.Length - 5),
+				_ => @this
+			};
+
+		internal static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
+		{
+			var graphAttribute = @this.Attributes.First<GraphAttribute>();
+			var graphTypeAttribute = @this.Return.Attributes.First<GraphTypeAttribute>();
+
+			return new FieldType
+			{
+				Arguments = @this.Parameters.ToQueryArguments(),
+				Name = graphAttribute?.Name ?? @this.Name.ToEndpointName(),
+				Description = graphAttribute?.Description,
+				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
+				Resolver = resolver,
+				Type = graphTypeAttribute?.GraphType ?? @this.Return.GetGraphType()
+			};
+		}
+
+		internal static FieldType ToFieldType(this InstancePropertyMember @this, bool isInputType)
+		{
+			var graphAttribute = @this.Attributes.First<GraphAttribute>();
+			return new FieldType
+			{
+				Type = @this.Attributes.First<GraphTypeAttribute>()?.GraphType ?? @this.GetGraphType(isInputType),
+				Name = graphAttribute?.Name ?? @this.Name,
+				Description = graphAttribute?.Description,
+				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
+				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
+			};
+		}
+
+		internal static FieldType ToFieldType<T>(this InstanceMethodMember @this, SqlApi<T> sqlApi)
+			where T : class, new()
+		{
+			var graphAttribute = @this.Attributes.First<GraphAttribute>();
+			var graphTypeAttribute = @this.Return.Attributes.First<GraphTypeAttribute>();
+			var arguments = new QueryArguments(@this.Parameters
+				.If(parameter => parameter!.Attributes.Any<GraphIgnoreAttribute>() && !parameter.Type.Is<IResolveFieldContext>())
+				.To(parameter => parameter!.Name.Is("output") || parameter.Name.Is("select")
+					? new QueryArgument(new ListGraphType<GraphObjectEnumType<T>>()) { Name = parameter.Name }
+					: parameter.ToQueryArgument()));
+
+			return new FieldType
+			{
+				Arguments = @this.Parameters.ToQueryArguments(),
+				Name = string.Format(graphAttribute!.Name!, sqlApi.TableName),
+				Description = graphAttribute?.Description != null ? string.Format(graphAttribute.Description, sqlApi.TableName) : null,
+				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
+				Resolver = new InstanceMethodFieldResolver(@this, sqlApi),
+				Type = graphTypeAttribute?.GraphType ?? @this.Return.GetGraphType()
+			};
+		}
+
+		private static Type GetGraphType(TypeMember type, IEnumerable<Attribute> attributes, bool isInputType)
+		{
+			var graphType = attributes.First<GraphTypeAttribute>()?.GraphType;
+			if (graphType is not null)
+				return graphType;
+
+			graphType = type.ToGraphType(isInputType);
+
+			if (attributes.Any<NotNullAttribute>() || !type.IsNullable())
+				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
+
+			return graphType;
+		}
+
+		private static IEnumerable<string> GetSelections(this IHaveSelectionSet @this, Fragments fragments, string prefix)
+		{
+			foreach (var selection in @this.SelectionSet.Selections)
+			{
+				var current = @this is IHaveName haveName ? $"{prefix}.{haveName.NameNode.Name}" : prefix;
+
+				if (selection is FragmentSpread fragmentSpread)
+				{
+					var selectionSet = fragments.FindDefinition(fragmentSpread.Name) as IHaveSelectionSet;
+					if (selectionSet is not null)
+					{
+						foreach (var fragmentSelection in selectionSet.GetSelections(fragments, prefix))
+							yield return fragmentSelection;
+					}
+				}
+				else if (selection is IHaveSelectionSet selectionSet && selectionSet.SelectionSet.Selections.Any())
+				{
+					foreach (var subSelection in selectionSet.GetSelections(fragments, current))
+						yield return subSelection;
+				}
+				else if (selection is Field field)
+					yield return current;
+			}
+		}
+
+		private static Type ToGraphType(this TypeMember @this, bool isInputType)
 			=> @this.SystemType switch
 			{
-				_ when @this.Kind == Kind.Delegate => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-				_ when @this.Kind == Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this.Handle.ToType()),
-				SystemType.String => scalarType?.GetGraphType() ?? typeof(StringGraphType),
-				SystemType.Uri => scalarType?.GetGraphType() ?? typeof(UriGraphType),
-				_ when @this.IsEnumerable => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedTypeHandle!.Value.ToType().GetTypeMember().GetGraphType(isInputType, scalarType)),
-				SystemType.Boolean => scalarType?.GetGraphType() ?? typeof(BooleanGraphType),
-				SystemType.SByte => scalarType?.GetGraphType() ?? typeof(SByteGraphType),
-				SystemType.Int16 => scalarType?.GetGraphType() ?? typeof(ShortGraphType),
-				SystemType.Int32 or SystemType.Index => scalarType?.GetGraphType() ?? typeof(IntGraphType),
-				SystemType.Int64 or SystemType.NInt => scalarType?.GetGraphType() ?? typeof(LongGraphType),
-				SystemType.Byte => scalarType?.GetGraphType() ?? typeof(ByteGraphType),
-				SystemType.UInt16 => scalarType?.GetGraphType() ?? typeof(UShortGraphType),
-				SystemType.UInt32 => scalarType?.GetGraphType() ?? typeof(UIntGraphType),
-				SystemType.UInt64 or SystemType.NUInt => scalarType?.GetGraphType() ?? typeof(ULongGraphType),
-				SystemType.Single or SystemType.Double => scalarType?.GetGraphType() ?? typeof(FloatGraphType),
-				SystemType.Decimal => scalarType?.GetGraphType() ?? typeof(DecimalGraphType),
-				SystemType.DateTime => scalarType?.GetGraphType() ?? typeof(DateTimeGraphType),
-				SystemType.DateTimeOffset => scalarType?.GetGraphType() ?? typeof(DateTimeOffsetGraphType),
-				SystemType.TimeSpan => scalarType?.GetGraphType() ?? typeof(TimeSpanSecondsGraphType),
-				SystemType.Guid => scalarType?.GetGraphType() ?? typeof(GuidGraphType),
-				SystemType.Range => scalarType?.GetGraphType() ?? typeof(StringGraphType),
-				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedTypeHandle!.Value.ToType().GetTypeMember().GetGraphType(isInputType, scalarType),
-				_ when @this.Kind == Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this.Handle.ToType()),
+				_ when @this.Kind is Kind.Delegate => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+				_ when @this.Kind is Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this.Handle.ToType()),
+				SystemType.String => typeof(StringGraphType),
+				SystemType.Uri => typeof(UriGraphType),
+				_ when @this.IsEnumerable => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType)),
+				SystemType.Boolean => typeof(BooleanGraphType),
+				SystemType.SByte => typeof(SByteGraphType),
+				SystemType.Int16 => typeof(ShortGraphType),
+				SystemType.Int32 or SystemType.Index => typeof(IntGraphType),
+				SystemType.Int64 or SystemType.NInt => typeof(LongGraphType),
+				SystemType.Byte => typeof(ByteGraphType),
+				SystemType.UInt16 => typeof(UShortGraphType),
+				SystemType.UInt32 => typeof(UIntGraphType),
+				SystemType.UInt64 or SystemType.NUInt => typeof(ULongGraphType),
+				SystemType.Single or SystemType.Double => typeof(FloatGraphType),
+				SystemType.Decimal => typeof(DecimalGraphType),
+				SystemType.DateTime => typeof(DateTimeGraphType),
+				SystemType.DateTimeOffset => typeof(DateTimeOffsetGraphType),
+				SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
+				SystemType.Guid => typeof(GuidGraphType),
+				SystemType.Range => typeof(StringGraphType),
+				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType),
+				_ when @this.Kind is Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this.Handle.ToType()),
 				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this.Handle.ToType()),
 				_ => typeof(GraphObjectType<>).MakeGenericType(@this.Handle.ToType())
 			};
-
-		private static Type GetGraphType(this MethodParameter @this)
-		{
-			var graphTypeAttribute = @this.Attributes.First<GraphTypeAttribute>();
-			var graphType = graphTypeAttribute?.GraphType;
-			if (graphType != null)
-				return graphType;
-
-			graphType = @this.Type.GetGraphType(true, graphTypeAttribute?.ScalarType);
-
-			if (@this.Attributes.Any<NotNullAttribute>() || !@this.Type.IsNullable)
-				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
-
-			return graphType;
-		}
-
-		private static Type GetGraphType(this PropertyMember @this, bool isInputType)
-		{
-			var graphTypeAttribute = @this.Attributes.First<GraphTypeAttribute>();
-			var graphType = graphTypeAttribute?.GraphType;
-			if (graphType != null)
-				return graphType;
-
-			graphType = @this.Type.GetGraphType(isInputType, graphTypeAttribute?.ScalarType);
-
-			if (@this.Attributes.Any<NotNullAttribute>() || !@this.Type.IsNullable)
-				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
-
-			return graphType;
-		}
-
-		private static Type GetGraphType(this ReturnParameter @this)
-		{
-			var graphTypeAttribute = @this.Attributes.First<GraphTypeAttribute>();
-			var graphType = graphTypeAttribute?.GraphType;
-			if (graphType != null)
-				return graphType;
-
-			return @this.Type.GetGraphType(false, graphTypeAttribute?.ScalarType);
-		}
 
 		private static QueryArgument ToQueryArgument(this MethodParameter @this)
 		{
@@ -226,9 +270,10 @@ namespace TypeCache.GraphQL.Extensions
 			};
 		}
 
-		private static QueryArguments ToQueryArguments(this MethodMember @this)
-			=> new QueryArguments(@this.Parameters
-				.If(parameter => !parameter!.Attributes.Any<GraphIgnoreAttribute>() && !parameter.Type.Handle.Is<IResolveFieldContext>())
+		private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
+			=> new QueryArguments(@this
+				.If(parameter => !parameter!.Attributes.Any<GraphIgnoreAttribute>()
+					&& !parameter.Type.Handle.Is<IResolveFieldContext>())
 				.To(parameter => parameter!.ToQueryArgument()));
 	}
 }

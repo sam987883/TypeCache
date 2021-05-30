@@ -3,26 +3,27 @@
 using System;
 using System.Collections.Immutable;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {
-	public static class Delegate<T>
+	public static class DelegateOf<T>
 		where T : Delegate
 	{
-		private static readonly MethodMember MethodMember = MemberCache.Delegates[typeof(T).TypeHandle];
+		private static readonly InstanceMethodMember MethodMember = MemberCache.Delegates[typeof(T).TypeHandle];
+
+		public static IImmutableList<Attribute> Attributes => MethodMember.Attributes;
 
 		public static RuntimeMethodHandle Handle => MethodMember.Handle;
 
 		public static InvokeType Invoke => MethodMember.Invoke!;
 
-		public static bool IsInternal { get; } = !typeof(T).IsVisible;
+		public static bool IsInternal => MethodMember.IsInternal;
 
-		public static bool IsPublic { get; } = typeof(T).IsPublic;
+		public static bool IsPublic => MethodMember.IsPublic;
 
 		public static Delegate Method => MethodMember.Method!;
 
-		public static string Name { get; } = typeof(T).GetName();
+		public static string Name => MethodMember.Name;
 
 		public static IImmutableList<MethodParameter> Parameters => MethodMember.Parameters;
 

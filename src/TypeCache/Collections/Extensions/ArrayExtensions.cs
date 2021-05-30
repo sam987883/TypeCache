@@ -184,7 +184,6 @@ namespace TypeCache.Collections.Extensions
 		public static int Search<T>(this T[] @this, T value, IComparer<T>? comparer = null)
 			=> Array.BinarySearch(@this, value, comparer);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Search<T>(this T[] @this, T value, int start, int length = 0, IComparer<T>? comparer = null)
 			=> Array.BinarySearch(@this, start, length > 0 ? length : @this.Length, value, comparer);
 
@@ -192,7 +191,6 @@ namespace TypeCache.Collections.Extensions
 		public static void Sort<T>(this T[] @this, IComparer<T>? comparer = null)
 			=> Array.Sort(@this, comparer);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null)
 			=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 

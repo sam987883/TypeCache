@@ -26,11 +26,11 @@ namespace TypeCache.Converters
 						if (name.Is(nameof(ComparisonExpression.Field)))
 							field = reader.GetString()!;
 						else if (name!.Is(nameof(ComparisonExpression.Operator)))
-							comparisonOperator = reader.GetString().Enum<ComparisonOperator>()!.Value;
+							comparisonOperator = reader.GetString().ToEnum<ComparisonOperator>()!.Value;
 						else
 						{
 							if (!name.Is(nameof(ComparisonExpression.Value)))
-								comparisonOperator = name.Enum<ComparisonOperator>()!.Value;
+								comparisonOperator = name.ToEnum<ComparisonOperator>()!.Value;
 
 							value = JsonSerializer.Deserialize<object>(ref reader, options)!;
 						}

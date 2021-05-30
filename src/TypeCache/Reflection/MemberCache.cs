@@ -16,19 +16,18 @@ namespace TypeCache.Reflection
 		static MemberCache()
 		{
 			Constructors = new LazyDictionary<RuntimeTypeHandle, IImmutableList<ConstructorMember>>(MemberFactory.CreateConstructorMembers);
-			Delegates = new LazyDictionary<RuntimeTypeHandle, MethodMember>(MemberFactory.CreateMethodMember);
-			EventHandlers = new Dictionary<long, EventHandlerReference>();
+			Delegates = new LazyDictionary<RuntimeTypeHandle, InstanceMethodMember>(MemberFactory.CreateDelegateMethodMember);
 			Events = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, EventMember>>(MemberFactory.CreateEventMembers);
-			Fields = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, FieldMember>>(MemberFactory.CreateFieldMembers);
+			Fields = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, InstanceFieldMember>>(MemberFactory.CreateFieldMembers);
 			Indexers = new LazyDictionary<RuntimeTypeHandle, IImmutableList<IndexerMember>>(MemberFactory.CreateIndexerMembers);
-			Methods = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<MethodMember>>>(MemberFactory.CreateMethodMembers);
-			Properties = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, PropertyMember>>(MemberFactory.CreatePropertyMembers);
-			StaticEventHandlers = new Dictionary<long, StaticEventHandlerReference>();
+			Methods = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<InstanceMethodMember>>>(MemberFactory.CreateMethodMembers);
+			Properties = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, InstancePropertyMember>>(MemberFactory.CreatePropertyMembers);
 			StaticEvents = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticEventMember>>(MemberFactory.CreateStaticEventMembers);
 			StaticFields = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticFieldMember>>(MemberFactory.CreateStaticFieldMembers);
 			StaticMethods = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<StaticMethodMember>>>(MemberFactory.CreateStaticMethodMembers);
 			StaticProperties = new LazyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticPropertyMember>>(MemberFactory.CreateStaticPropertyMembers);
-			Types = new LazyDictionary<RuntimeTypeHandle, TypeMember>(typeHandle => typeHandle.ToType().CreateMember());
+			Types = new LazyDictionary<RuntimeTypeHandle, TypeMember>(typeHandle => typeHandle.ToType().ToMember());
+
 			SystemTypeMap = new Dictionary<RuntimeTypeHandle, SystemType>
 			{
 				{ typeof(bool).TypeHandle, SystemType.Boolean},
@@ -138,27 +137,25 @@ namespace TypeCache.Reflection
 				{ typeof(Func<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func},
 				{ typeof(Func<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func},
 				{ typeof(Func<,,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func},
-				{ typeof(WeakReference).TypeHandle, SystemType.WeakReference }
+				{ typeof(WeakReference).TypeHandle, SystemType.WeakReference },
+				{ typeof(WeakReference<>).TypeHandle, SystemType.WeakReference },
+				{ typeof(Type).TypeHandle, SystemType.Type },
 			}.ToImmutableDictionary();
 		}
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableList<ConstructorMember>> Constructors { get; }
 
-		public static IReadOnlyDictionary<RuntimeTypeHandle, MethodMember> Delegates { get; }
-
-		public static IDictionary<long, EventHandlerReference> EventHandlers { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, InstanceMethodMember> Delegates { get; }
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, EventMember>> Events { get; }
 
-		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, FieldMember>> Fields { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, InstanceFieldMember>> Fields { get; }
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableList<IndexerMember>> Indexers { get; }
 
-		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<MethodMember>>> Methods { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, IImmutableList<InstanceMethodMember>>> Methods { get; }
 
-		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, PropertyMember>> Properties { get; }
-
-		public static IDictionary<long, StaticEventHandlerReference> StaticEventHandlers { get; }
+		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, InstancePropertyMember>> Properties { get; }
 
 		public static IReadOnlyDictionary<RuntimeTypeHandle, IImmutableDictionary<string, StaticEventMember>> StaticEvents { get; }
 

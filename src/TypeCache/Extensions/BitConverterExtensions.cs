@@ -2,14 +2,58 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Extensions
 {
-	public static class ByteArrayExtensions
+	public static class BitConverterExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool ToBoolean(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToBoolean(@this, startIndex);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this bool @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this char @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this short @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this int @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this long @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this ushort @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this uint @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this ulong @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this float @this)
+			=> BitConverter.GetBytes(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte[] ToBytes(this double @this)
+			=> BitConverter.GetBytes(@this);
+
+		public static byte[] ToBytes(this decimal @this)
+			=> decimal.GetBits(@this).ToMany(BitConverter.GetBytes).ToArray();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static char ToChar(this byte[] @this, int startIndex = 0)
@@ -20,8 +64,16 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToInt16(@this, startIndex);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ToInt32(this float @this)
+			=> BitConverter.SingleToInt32Bits(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ToInt32(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToInt32(@this, startIndex);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ToInt64(this double @this)
+			=> BitConverter.DoubleToInt64Bits(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long ToInt64(this byte[] @this, int startIndex = 0)
@@ -40,8 +92,16 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToUInt64(@this, startIndex);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float ToSingle(this int @this)
+			=> BitConverter.Int32BitsToSingle(@this);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float ToSingle(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToSingle(@this, startIndex);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double ToDouble(this long @this)
+			=> BitConverter.Int64BitsToDouble(@this);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double ToDouble(this byte[] @this, int startIndex = 0)

@@ -81,7 +81,7 @@ namespace TypeCache.Collections.Extensions
 			return result;
 		}
 
-		public static bool All<T>(this IEnumerable<T>? @this, Func<T?, bool> filter)
+		public static bool All<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -134,7 +134,7 @@ namespace TypeCache.Collections.Extensions
 			};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Func<T?, bool> filter)
+		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter)
 			=> @this.If(filter).Any();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -481,7 +481,7 @@ namespace TypeCache.Collections.Extensions
 			where T : class
 			=> @this?.GetEnumerator().Next();
 
-		public static T? First<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter)
+		public static T? First<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
 			where T : class
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -494,7 +494,7 @@ namespace TypeCache.Collections.Extensions
 			where T : struct
 			=> @this?.GetEnumerator().NextValue();
 
-		public static T? FirstValue<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+		public static T? FirstValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -672,7 +672,7 @@ namespace TypeCache.Collections.Extensions
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
 			=> values.All(value => @this.Has(value, comparer!));
 
-		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Func<T?, bool> filter)
+		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -710,13 +710,13 @@ namespace TypeCache.Collections.Extensions
 					yield break;
 				default:
 					foreach (var item in @this)
-						if (filter(item))
+						if (filter(item!))
 							yield return item;
 					yield break;
 			}
 		}
 
-		public static async IAsyncEnumerable<T?> IfAsync<T>(this IEnumerable<T?>? @this, Func<T?, Task<bool>> filter, [EnumeratorCancellation] CancellationToken _ = default)
+		public static async IAsyncEnumerable<T?> IfAsync<T>(this IEnumerable<T?>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -754,7 +754,7 @@ namespace TypeCache.Collections.Extensions
 					yield break;
 				default:
 					foreach (var item in @this)
-						if (await filter(item))
+						if (await filter(item!))
 							yield return item;
 					yield break;
 			}
@@ -969,7 +969,7 @@ namespace TypeCache.Collections.Extensions
 				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
 				TimeSpan time => time.ToString("c"),
 				Guid guid => guid.ToString("D"),
-				Enum token => token.Number(),
+				Enum token => token.ToString("D"),
 				string text when text.Contains(',') => $"\"{text.Replace("\"", "\"\"")}\"",
 				string text => text.Replace("\"", "\"\""),
 				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
@@ -1074,7 +1074,7 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableStack.CreateRange<T>(@this)
 			};
 
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Func<T, bool> filter)
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
