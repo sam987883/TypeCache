@@ -79,17 +79,22 @@ namespace TypeCache.GraphQL.Resolvers
 					continue;
 
 				var parameterType = parameter.Type.Handle.ToType();
-				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
+				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is<IResolveFieldContext<PARENT>>())
 					yield return context;
 				else if (parameterType.Is<IEnumerable<KEY>>())
 					yield return keys;
+				else if (parameterType.Is<PARENT>())
+					yield return context.Source;
 				else if (parameter.Type.SystemType == SystemType.Unknown)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					var model = parameterType.Create();
 					if (argument is not null)
+					{
+						var model = parameterType.Create();
 						model.MapProperties(argument);
-					yield return model;
+						yield return model;
+					}
+					yield return null;
 				}
 				else
 					yield return context.GetArgument(parameterType, parameter.Name); // TODO: Support a default value?

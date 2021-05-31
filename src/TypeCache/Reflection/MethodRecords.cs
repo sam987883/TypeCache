@@ -2,14 +2,21 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
 	public sealed record ConstructorMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeMethodHandle Handle, CreateType? Create, Delegate? Method, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
-		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return);
+		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator ConstructorInfo(ConstructorMember constructorMember)
+			=> (ConstructorInfo)ConstructorInfo.GetMethodFromHandle(constructorMember.Handle)!;
+	}
 
 	public abstract record MethodMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeMethodHandle Handle, Delegate? Method, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
@@ -26,11 +33,21 @@ namespace TypeCache.Reflection
 
 	public sealed record InstanceMethodMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeMethodHandle Handle, Delegate? Method, InvokeType? Invoke, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
-		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return);
+		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator MethodInfo(InstanceMethodMember methodMember)
+			=> (MethodInfo)MethodInfo.GetMethodFromHandle(methodMember.Handle)!;
+	}
 
 	public sealed record StaticMethodMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeMethodHandle Handle, Delegate? Method, StaticInvokeType? Invoke, IImmutableList<MethodParameter> Parameters, ReturnParameter Return)
-		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return);
+		: MethodMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Method, Parameters, Return)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator MethodInfo(StaticMethodMember methodMember)
+			=> (MethodInfo)MethodInfo.GetMethodFromHandle(methodMember.Handle)!;
+	}
 
 	public sealed record MethodParameter(string Name, IImmutableList<Attribute> Attributes, bool IsOptional, bool IsOut,
 		object? DefaultValue, bool HasDefaultValue, TypeMember Type)

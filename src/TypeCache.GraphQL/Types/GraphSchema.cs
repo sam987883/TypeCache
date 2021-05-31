@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using GraphQL.Types;
@@ -44,10 +45,14 @@ namespace TypeCache.GraphQL.Types
 			=> new SqlApi<T>(this._Mediator, this._SqlApi, objectSchema.Name);
 
 		/// <summary>
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <param name="method">Graph endpoint implementation</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddMutation(InstanceMethodMember method)
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
@@ -56,9 +61,13 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
 		/// </summary>
 		/// <param name="method">Graph endpoint implementation</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddMutation(StaticMethodMember method)
 		{
 			var resolver = new StaticMethodFieldResolver(method);
@@ -66,10 +75,14 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
 		/// </summary>
 		/// <param name="method">Graph endpoint implementation</param>
-		/// <returns></returns>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddQuery(InstanceMethodMember method)
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
@@ -78,9 +91,13 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
 		/// </summary>
 		/// <param name="method">Graph endpoint implementation</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddQuery(StaticMethodMember method)
 		{
 			var resolver = new StaticMethodFieldResolver(method);
@@ -88,11 +105,16 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a single item.
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Adds a subquery to an existing parent type that returns a single item.<br />
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item>T</item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <param name="method">Graph endpoint implementation</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddSubquery<T>(InstanceMethodMember method)
 			where T : class
 		{
@@ -102,16 +124,22 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.<br />
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item>PARENT</item>
+		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
 		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
 		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
 		/// <param name="method">Graph endpoint implementation</param>
 		/// <param name="getParentKey">Gets the key value from the parent instance</param>
 		/// <param name="getChildKey">Gets the key value from the child instance</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddSubquery<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
@@ -121,13 +149,19 @@ namespace TypeCache.GraphQL.Types
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.<br />
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item>PARENT</item>
+		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <param name="method">Graph endpoint implementation</param>
 		/// <param name="parentPropertyKey">Parent property containing the key value</param>
 		/// <param name="childPropertyKey">Child property containing the key value</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddSubquery(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
@@ -143,15 +177,21 @@ namespace TypeCache.GraphQL.Types
 
 		/// <summary>
 		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item>PARENT</item>
+		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
 		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
 		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
 		/// <param name="method">Graph endpoint implementation</param>
 		/// <param name="getParentKey">Gets the key value from the parent instance</param>
 		/// <param name="getChildKey">Gets the key value from the child instance</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
@@ -165,12 +205,18 @@ namespace TypeCache.GraphQL.Types
 
 		/// <summary>
 		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
-		/// The method's type must be registered in the <see cref="IServiceCollection"/>.
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item>PARENT</item>
+		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// </list>
 		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 		/// <param name="method">Graph endpoint implementation</param>
 		/// <param name="parentPropertyKey">Parent property containing the key value</param>
 		/// <param name="childPropertyKey">Child property containing the key value</param>
-		/// <returns></returns>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
 		public FieldType AddSubqueryCollection(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
@@ -179,7 +225,6 @@ namespace TypeCache.GraphQL.Types
 				throw new ArgumentException($"{nameof(AddSubquery)}: Expected properties [{parentPropertyKey.Name}] and [{childPropertyKey.Name}] to have the same type; instead of [{parentPropertyKey.PropertyType.Name}] and [{childPropertyKey.PropertyType.Name}].");
 
 			var resolverType = typeof(CollectionBatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
-
 			var resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}

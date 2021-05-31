@@ -155,5 +155,11 @@ namespace TypeCache.Extensions
 		public static T? ToEnum<T>(this string? @this)
 			where T : struct, Enum
 			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
+
+		public static string? TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> text != null && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : @this;
+
+		public static string? TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> text != null && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : @this;
 	}
 }

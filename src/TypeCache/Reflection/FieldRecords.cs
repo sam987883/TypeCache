@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TypeCache.Reflection
@@ -21,13 +22,28 @@ namespace TypeCache.Reflection
 
 	public sealed record ConstantMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		Delegate? Getter, object Value, TypeMember FieldType)
-		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, default, Getter, null, FieldType);
+		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, default, Getter, null, FieldType)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator FieldInfo(ConstantMember fieldMember)
+			=> FieldInfo.GetFieldFromHandle(fieldMember.Handle)!;
+	}
 
 	public sealed record InstanceFieldMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeFieldHandle Handle, Delegate? Getter, Delegate? Setter, GetValue? GetValue, SetValue? SetValue, TypeMember FieldType)
-		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Getter, Setter, FieldType);
+		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Getter, Setter, FieldType)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator FieldInfo(InstanceFieldMember fieldMember)
+			=> FieldInfo.GetFieldFromHandle(fieldMember.Handle)!;
+	}
 
 	public sealed record StaticFieldMember(string Name, TypeMember Type, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic,
 		RuntimeFieldHandle Handle, Delegate? Getter, Delegate? Setter, StaticGetValue? GetValue, StaticSetValue? SetValue, TypeMember FieldType)
-		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Getter, Setter, FieldType);
+		: FieldMember(Name, Type, Attributes, IsInternal, IsPublic, Handle, Getter, Setter, FieldType)
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator FieldInfo(StaticFieldMember fieldMember)
+			=> FieldInfo.GetFieldFromHandle(fieldMember.Handle)!;
+	}
 }

@@ -132,13 +132,7 @@ namespace TypeCache.GraphQL.Extensions
 			};
 
 		internal static string ToEndpointName(this string @this)
-			=> @this switch
-			{
-				_ when @this.Left("Get") && @this.Right("Async") && @this.Length > 8 => @this.Substring(3, @this.Length - 8),
-				_ when @this.Left("Get") => @this.Substring(3),
-				_ when @this.Right("Async") => @this.Left(@this.Length - 5),
-				_ => @this
-			};
+			=> @this.TrimStart("Get")!.TrimEnd("Async")!;
 
 		internal static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
 		{
