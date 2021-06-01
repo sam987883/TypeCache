@@ -5,7 +5,8 @@ using System;
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// <b>Graph QL</b><br />When using paging with the GraphQL Connection object, use this to mark the property of the model to use as the cursor value.
+	/// <b>GraphQL</b><br />
+	/// When using paging with the GraphQL Connection object, use this to mark the property of the model to use as the cursor value.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property)]
     public class GraphCursorAttribute : Attribute

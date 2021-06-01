@@ -5,7 +5,7 @@ using System;
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// <b>Graph QL</b>
+	/// <b>GraphQL</b>
 	/// <list type="number">
 	/// <item><term>Name</term> <description>Sets the name of the enum field, object property, object type, endpoint or endpoint parameter.</description></item>
 	/// <item><term>Description</term> <description>Sets the description of the enum field, object property, endpoint or endpoint parameter.</description></item>

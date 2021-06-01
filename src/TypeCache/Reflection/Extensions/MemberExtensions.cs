@@ -27,7 +27,7 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Handle.Equals(typeof(T).TypeHandle);
 
 		public static bool Is(this TypeMember @this, Type type)
-			=> @this.Handle.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && @this.Handle.ToType().ToGenericType() == type);
+			=> @this.Handle.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && ((Type)@this).ToGenericType() == type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsCallableWith(this ConstructorMember @this, params object?[]? arguments)
@@ -83,24 +83,6 @@ namespace TypeCache.Reflection.Extensions
 			};
 
 		public static bool Supports(this TypeMember @this, Type type)
-		{
-			if (@this.Handle.Equals(type.TypeHandle))
-				return true;
-
-			var parameterType = @this.Handle.ToType();
-			if (type.IsSubclassOf(parameterType))
-				return true;
-
-			if (type.GetSystemType().IsConvertible() && @this.SystemType.IsConvertible())
-				return true;
-
-			if (type.IsEnum)
-				type = type.GetEnumUnderlyingType();
-
-			if (parameterType.IsEnum)
-				parameterType = parameterType.GetEnumUnderlyingType();
-
-			return type == parameterType;
-		}
+			=> @this.Handle.Equals(type.TypeHandle) || type.IsSubclassOf(@this) || (type.GetSystemType().IsConvertible() && @this.SystemType.IsConvertible());
 	}
 }

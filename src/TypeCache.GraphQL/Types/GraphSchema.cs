@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
@@ -44,6 +45,119 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 			=> new SqlApi<T>(this._Mediator, this._SqlApi, objectSchema.Name);
 
+#nullable disable
+
+		/// <summary>
+		/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
+		/// <list type="bullet">
+		/// <item><see cref="GraphQueryAttribute"/></item>
+		/// <item><see cref="GraphMutationAttribute"/></item>
+		/// <item><see cref="GraphSubqueryAttribute"/></item>
+		/// <item><see cref="GraphSubqueryBatchAttribute"/></item>
+		/// <item><see cref="GraphSubqueryCollectionAttribute"/></item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="T">The class containing the decorated methods that will be converted into GraphQL endpoints.</typeparam>
+		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		public FieldType[] AddEndpoints<T>()
+		{
+			var fieldTypes = new List<FieldType>();
+
+			var instanceMethods = TypeOf<T>.Methods.Values.Gather().ToArray();
+			fieldTypes.AddRange(instanceMethods.If(method => method.Attributes.Any<GraphQueryAttribute>()).To(this.AddQuery));
+			fieldTypes.AddRange(instanceMethods.If(method => method.Attributes.Any<GraphMutationAttribute>()).To(this.AddMutation));
+			fieldTypes.AddRange(instanceMethods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).To(method =>
+			{
+				var parentType = method.Attributes.First<GraphSubqueryAttribute>().ParentType;
+				var handler = this._ServiceProvider.GetRequiredService(method.Type);
+				var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
+				return this.Query.AddField(method.ToFieldType(resolver));
+			}));
+			fieldTypes.AddRange(instanceMethods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).To(method =>
+			{
+				var attribute = method.Attributes.First<GraphSubqueryBatchAttribute>();
+				var parentType = attribute.ParentType.GetTypeMember();
+				var key = attribute.Key;
+				var handler = this._ServiceProvider.GetRequiredService(method.Type);
+
+				if (!method.Return.Type.Implements(typeof(IEnumerable<>)))
+					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+
+				var parentKeyProperty = attribute.ParentType.GetTypeMember().Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(key));
+				if (parentKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
+
+				var childType = method.Return.Type.EnclosedTypeHandle.Value.GetTypeMember();
+				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(attribute.Key));
+				if (childKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
+
+				return this.AddSubqueryBatch(method, parentKeyProperty, childKeyProperty);
+			}));
+			fieldTypes.AddRange(instanceMethods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).To(method =>
+			{
+				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>();
+				var parentType = attribute.ParentType.GetTypeMember();
+				var key = attribute.Key;
+				var handler = this._ServiceProvider.GetRequiredService(method.Type);
+
+				if (!method.Return.Type.Implements(typeof(IEnumerable<>)))
+					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+
+				var parentKeyProperty = attribute.ParentType.GetTypeMember().Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(key));
+				if (parentKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
+
+				var childType = method.Return.Type.EnclosedTypeHandle.Value.GetTypeMember();
+				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(attribute.Key));
+				if (childKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
+
+				return this.AddSubqueryCollection(method, parentKeyProperty, childKeyProperty);
+			}));
+
+			var staticMethods = TypeOf<T>.StaticMethods.Values.Gather().ToArray();
+			fieldTypes.AddRange(staticMethods.If(method => method.Attributes.Any<GraphQueryAttribute>()).To(this.AddQuery));
+			fieldTypes.AddRange(staticMethods.If(method => method.Attributes.Any<GraphMutationAttribute>()).To(this.AddMutation));
+
+			return fieldTypes.ToArray();
+		}
+
+#nullable enable
+
+		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="T">The class that holds the instance or static method to create a mutation endpoint from.</typeparam>
+		/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		public FieldType[] AddMutation<T>(string method)
+			where T : class
+		{
+			var instanceMethods = TypeOf<T>.Methods[method];
+			if (instanceMethods.Any())
+			{
+				var handler = this._ServiceProvider.GetRequiredService<T>();
+				return instanceMethods.To(instanceMethod =>
+				{
+					var resolver = new InstanceMethodFieldResolver(instanceMethod, handler);
+					return this.Mutation.AddField(instanceMethod.ToFieldType(resolver));
+				}).ToArray();
+			}
+			else
+			{
+				var staticMethods = TypeOf<T>.StaticMethods[method];
+				return staticMethods.To(staticMethod =>
+				{
+					var resolver = new StaticMethodFieldResolver(staticMethod);
+					return this.Mutation.AddField(staticMethod.ToFieldType(resolver));
+				}).ToArray();
+			}
+		}
+
 		/// <summary>
 		/// Method parameters with the following type are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
@@ -72,6 +186,39 @@ namespace TypeCache.GraphQL.Types
 		{
 			var resolver = new StaticMethodFieldResolver(method);
 			return this.Mutation.AddField(method.ToFieldType(resolver));
+		}
+
+		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
+		/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		public FieldType[] AddQuery<T>(string method)
+			where T : class
+		{
+			var instanceMethods = TypeOf<T>.Methods[method];
+			if (instanceMethods.Any())
+			{
+				var handler = this._ServiceProvider.GetRequiredService<T>();
+				return instanceMethods.To(instanceMethod =>
+				{
+					var resolver = new InstanceMethodFieldResolver(instanceMethod, handler);
+					return this.Query.AddField(instanceMethod.ToFieldType(resolver));
+				}).ToArray();
+			}
+			else
+			{
+				var staticMethods = TypeOf<T>.StaticMethods[method];
+				return staticMethods.To(staticMethod =>
+				{
+					var resolver = new StaticMethodFieldResolver(staticMethod);
+					return this.Query.AddField(staticMethod.ToFieldType(resolver));
+				}).ToArray();
+			}
 		}
 
 		/// <summary>
@@ -140,7 +287,7 @@ namespace TypeCache.GraphQL.Types
 		/// <param name="getParentKey">Gets the key value from the parent instance</param>
 		/// <param name="getChildKey">Gets the key value from the child instance</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
-		public FieldType AddSubquery<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+		public FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(InstanceMethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
@@ -162,7 +309,7 @@ namespace TypeCache.GraphQL.Types
 		/// <param name="parentPropertyKey">Parent property containing the key value</param>
 		/// <param name="childPropertyKey">Child property containing the key value</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
-		public FieldType AddSubquery(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
+		public FieldType AddSubqueryBatch(InstanceMethodMember method, InstancePropertyMember parentPropertyKey, InstancePropertyMember childPropertyKey)
 		{
 			var handler = this._ServiceProvider.GetRequiredService(method.Type);
 
@@ -171,7 +318,7 @@ namespace TypeCache.GraphQL.Types
 
 			var resolverType = typeof(BatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
 
-			var resolver = (IFieldResolver)resolverType.GetConstructorCache().First()!.Create!(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
+			var resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 

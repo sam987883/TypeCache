@@ -66,8 +66,8 @@ namespace TypeCache.Reflection.Extensions
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateAccessors();
-			var fieldType = MemberCache.Types[@this.FieldType.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var fieldType = @this.FieldType.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new InstanceFieldMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, setter, getValue, setValue, fieldType);
 		}
@@ -80,8 +80,8 @@ namespace TypeCache.Reflection.Extensions
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var (getter, setter) = @this.CreateAccessorDelegates();
 			var (getValue, setValue) = @this.CreateStaticAccessors();
-			var fieldType = MemberCache.Types[@this.FieldType.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var fieldType = @this.FieldType.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new StaticFieldMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.FieldHandle, getter, setter, getValue, setValue, fieldType);
 		}

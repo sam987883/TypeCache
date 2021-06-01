@@ -10,7 +10,7 @@ using TypeCache.GraphQL.Types;
 namespace TypeCache.GraphQL.Attributes
 {
 	/// <summary>
-	/// <b>Graph QL</b>
+	/// <b>GraphQL</b>
 	/// <list type="number">
 	/// <item><term>graphType</term> <description>Overrides the Graph Type of the object property or endpoint parameter.</description></item>
 	/// <item><term>scalarType, nullable</term> <description>Overrides only the Scalar Graph Type used by the generated Graph Type of the object property or endpoint parameter.</description></item>

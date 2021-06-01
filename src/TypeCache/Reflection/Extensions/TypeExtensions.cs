@@ -17,10 +17,6 @@ namespace TypeCache.Reflection.Extensions
 		public static bool Any(this Type? @this, params Type[] types)
 			=> types.Any(@this.Is!);
 
-		public static object Create(this Type @this, params object[] parameters)
-			=> @this.GetConstructorCache().First(constructor => constructor!.IsCallableWith(parameters))?.Create!(parameters)
-				?? throw new ArgumentException($"Create instance of class {@this.Name} failed with {parameters?.Length ?? 0} parameters.");
-
 		public static Kind GetKind(this Type @this)
 			=> @this switch
 			{
@@ -47,42 +43,6 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetName(this ParameterInfo @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name!;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableList<ConstructorMember> GetConstructorCache(this Type @this)
-			=> MemberCache.Constructors[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, InstanceFieldMember> GetFieldMembers(this Type @this)
-			=> MemberCache.Fields[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableList<IndexerMember> GetIndexerMembers(this Type @this)
-			=> MemberCache.Indexers[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> GetMethodMembers(this Type @this)
-			=> MemberCache.Methods[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, InstancePropertyMember> GetPropertyMembers(this Type @this)
-			=> MemberCache.Properties[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, StaticFieldMember> GetStaticFieldMembers(this Type @this)
-			=> MemberCache.StaticFields[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> GetStaticMethodMembers(this Type @this)
-			=> MemberCache.StaticMethods[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IImmutableDictionary<string, StaticPropertyMember> GetStaticPropertyMembers(this Type @this)
-			=> MemberCache.StaticProperties[@this.TypeHandle];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TypeMember GetTypeMember(this Type @this)
-			=> MemberCache.Types[@this.TypeHandle];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Immutable;
 using System.Reflection;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Extensions
 {
@@ -15,8 +16,8 @@ namespace TypeCache.Reflection.Extensions
 			var addEventMethodInfo = @this.AddMethod!;
 			var raiseEventMethodInfo = @this.RaiseMethod!;
 			var removeEventMethodInfo = @this.RemoveMethod!;
-			var eventHandlerType = MemberCache.Types[@this.EventHandlerType!.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var eventHandlerType = @this.EventHandlerType!.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new EventMember(@this.GetName(), type, attributes, raiseEventMethodInfo.IsAssembly, raiseEventMethodInfo.IsPublic,
 				addEventMethodInfo.ToMember(), raiseEventMethodInfo.ToMember(), removeEventMethodInfo.ToMember(), eventHandlerType);
@@ -28,8 +29,8 @@ namespace TypeCache.Reflection.Extensions
 			var addEventMethodInfo = @this.AddMethod!;
 			var raiseEventMethodInfo = @this.RaiseMethod!;
 			var removeEventMethodInfo = @this.RemoveMethod!;
-			var eventHandlerType = MemberCache.Types[@this.EventHandlerType!.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var eventHandlerType = @this.EventHandlerType!.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new StaticEventMember(@this.GetName(), type, attributes, raiseEventMethodInfo.IsAssembly, raiseEventMethodInfo.IsPublic,
 				addEventMethodInfo.ToStaticMember(), raiseEventMethodInfo.ToStaticMember(), removeEventMethodInfo.ToStaticMember(), eventHandlerType);

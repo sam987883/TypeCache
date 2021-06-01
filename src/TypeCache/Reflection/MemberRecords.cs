@@ -27,9 +27,29 @@ namespace TypeCache.Reflection
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 
+		public IImmutableList<ConstructorMember> Constructors => MemberCache.Constructors[this.Handle];
+
+		public IImmutableDictionary<string, EventMember> Events => MemberCache.Events[this.Handle];
+
+		public IImmutableDictionary<string, StaticEventMember> StaticEvents => MemberCache.StaticEvents[this.Handle];
+
+		public IImmutableDictionary<string, InstanceFieldMember> Fields => MemberCache.Fields[this.Handle];
+
+		public IImmutableList<IndexerMember> Indexers => MemberCache.Indexers[this.Handle];
+
+		public IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> Methods => MemberCache.Methods[this.Handle];
+
+		public IImmutableDictionary<string, InstancePropertyMember> Properties => MemberCache.Properties[this.Handle];
+
+		public IImmutableDictionary<string, StaticFieldMember> StaticFields => MemberCache.StaticFields[this.Handle];
+
+		public IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => MemberCache.StaticMethods[this.Handle];
+
+		public IImmutableDictionary<string, StaticPropertyMember> StaticProperties => MemberCache.StaticProperties[this.Handle];
+
 		public object Create(params object?[]? parameters)
 		{
-			var constructor = MemberCache.Constructors[this.Handle].First(constructor => constructor!.IsCallableWith(parameters));
+			var constructor = this.Constructors.First(constructor => constructor!.IsCallableWith(parameters));
 			if (constructor != null)
 				return constructor.Create!(parameters);
 			throw new ArgumentException($"{this.Name}.{nameof(Create)}(...): no constructor found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
@@ -37,10 +57,10 @@ namespace TypeCache.Reflection
 
 		public D? GetMethod<D>(string name)
 			where D : Delegate
-			=> MemberCache.Methods[this.Handle].Get(name).To(_ => _.Method).First<D>();
+			=> this.Methods.Get(name).To(_ => _.Method).First<D>();
 
 		public D? GetStaticMethod<D>(string name)
 			where D : Delegate
-			=> MemberCache.StaticMethods[this.Handle].Get(name).To(_ => _.Method).First<D>();
+			=> this.StaticMethods.Get(name).To(_ => _.Method).First<D>();
 	}
 }

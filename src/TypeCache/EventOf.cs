@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {
 	public static class EventOf<T>
 		where T : class
 	{
-		private static readonly TypeMember TypeMember = MemberCache.Types[typeof(T).TypeHandle];
+		private static readonly TypeMember TypeMember = typeof(T).GetTypeMember();
 
 		private sealed record HandlerReference(WeakReference<T> Instance, EventMember EventMember, Delegate EventHandler);
 
@@ -21,9 +22,9 @@ namespace TypeCache
 
 		private static IDictionary<long, StaticHandlerReference> StaticEventHandlers { get; } = new Dictionary<long, StaticHandlerReference>();
 
-		public static IImmutableDictionary<string, EventMember> Events => MemberCache.Events[TypeMember.Handle];
+		public static IImmutableDictionary<string, EventMember> Events => TypeMember.Events;
 
-		public static IImmutableDictionary<string, StaticEventMember> StaticEvents => MemberCache.StaticEvents[TypeMember.Handle];
+		public static IImmutableDictionary<string, StaticEventMember> StaticEvents => TypeMember.StaticEvents;
 
 		public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 		{

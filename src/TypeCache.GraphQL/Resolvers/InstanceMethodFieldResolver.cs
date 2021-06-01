@@ -44,19 +44,18 @@ namespace TypeCache.GraphQL.Resolvers
 				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 
-				var parameterType = parameter.Type.Handle.ToType();
-				if (parameterType.Is<IResolveFieldContext>() || parameterType.Is(typeof(IResolveFieldContext<>)))
+				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is(typeof(IResolveFieldContext<>)))
 					yield return context;
 				else if (parameter.Type.SystemType == SystemType.Unknown)
 				{
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					var model = parameterType.Create();
+					var model = parameter.Type.Create();
 					if (argument is not null)
 						model.MapProperties(argument);
 					yield return model;
 				}
 				else
-					yield return context.GetArgument(parameterType, parameter.Name); // TODO: Support a default value?
+					yield return context.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
 			}
 		}
 	}

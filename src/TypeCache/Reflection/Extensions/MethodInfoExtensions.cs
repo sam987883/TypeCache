@@ -82,7 +82,7 @@ namespace TypeCache.Reflection.Extensions
 
 			var attributes = @this.GetCustomAttributes<Attribute>(true).ToImmutableArray();
 			var parameters = parameterInfos.To(ToParameter!).ToImmutableArray();
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var type = @this.DeclaringType!.GetTypeMember();
 			var returnParameter = new ReturnParameter(ImmutableArray<Attribute>.Empty, type);
 
 			return new ConstructorMember(@this.Name, type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, create, method, parameters, returnParameter);
@@ -97,9 +97,9 @@ namespace TypeCache.Reflection.Extensions
 			var method = @this.ToDelegate();
 			var parameters = @this.GetParameterInfos().To(ToParameter!).ToImmutableArray();
 			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
+			var returnType = @this.ReturnType.GetTypeMember();
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new InstanceMethodMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, method, invoke, parameters, returnParameter);
 		}
@@ -107,7 +107,7 @@ namespace TypeCache.Reflection.Extensions
 		public static MethodParameter ToParameter(ParameterInfo parameterInfo)
 		{
 			var attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var type = MemberCache.Types[parameterInfo.ParameterType.TypeHandle];
+			var type = parameterInfo.ParameterType.GetTypeMember();
 
 			return new MethodParameter(parameterInfo.GetName(), attributes, parameterInfo.IsOptional, parameterInfo.IsOut, parameterInfo.DefaultValue, parameterInfo.HasDefaultValue, type);
 		}
@@ -134,9 +134,9 @@ namespace TypeCache.Reflection.Extensions
 			var method = @this.ToDelegate();
 			var parameters = @this.GetParameterInfos().To(ToParameter!).ToImmutableArray();
 			var returnAttributes = @this.ReturnParameter.GetCustomAttributes<Attribute>(true).ToImmutableArray();
-			var returnType = MemberCache.Types[@this.ReturnType.TypeHandle];
+			var returnType = @this.ReturnType.GetTypeMember();
 			var returnParameter = new ReturnParameter(returnAttributes, returnType);
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new StaticMethodMember(@this.GetName(), type, attributes, @this.IsAssembly, @this.IsPublic, @this.MethodHandle, method, invoke, parameters, returnParameter);
 		}

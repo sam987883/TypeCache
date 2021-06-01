@@ -25,7 +25,7 @@ namespace TypeCache.Reflection.Extensions
 			=> FieldInfo.GetFieldFromHandle(@this);
 
 		public static Type? ToGenericType(this RuntimeTypeHandle @this)
-			=> @this.ToType() switch
+			=> (Type)@this.ToType() switch
 			{
 				Type type when type.IsGenericType => type.GetGenericTypeDefinition(),
 				_ => null

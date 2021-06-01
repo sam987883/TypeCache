@@ -98,8 +98,8 @@ namespace TypeCache.Reflection.Extensions
 			var methodInfo = @this.GetAccessors(true).First()!;
 			var getMethod = @this.GetMethod is not null ? @this.GetMethod.ToMember() : null;
 			var setMethod = @this.SetMethod is not null ? @this.SetMethod.ToMember() : null;
-			var propertyType = MemberCache.Types[@this.PropertyType.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var propertyType = @this.PropertyType.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new IndexerMember(@this.GetName(), propertyType, attributes, methodInfo!.IsAssembly, methodInfo.IsPublic, getMethod, setMethod, type);
 		}
@@ -110,8 +110,8 @@ namespace TypeCache.Reflection.Extensions
 			var (getter, setter) = @this.CreateAccessorMethods();
 			var (getValue, setValue) = @this.CreateAccessors();
 			var methodInfo = @this.GetAccessors(true).First()!;
-			var propertyType = MemberCache.Types[@this.PropertyType.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var propertyType = @this.PropertyType.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new InstancePropertyMember(@this.GetName(), propertyType, attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, setter, getValue, setValue, type);
 		}
@@ -122,8 +122,8 @@ namespace TypeCache.Reflection.Extensions
 			var (getter, setter) = @this.CreateStaticAccessorMethods();
 			var (getValue, setValue) = @this.CreateStaticAccessors();
 			var methodInfo = @this.GetAccessors(true).First()!;
-			var propertyType = MemberCache.Types[@this.PropertyType.TypeHandle];
-			var type = MemberCache.Types[@this.DeclaringType!.TypeHandle];
+			var propertyType = @this.PropertyType.GetTypeMember();
+			var type = @this.DeclaringType!.GetTypeMember();
 
 			return new StaticPropertyMember(@this.GetName(), propertyType, attributes, methodInfo.IsAssembly, methodInfo.IsPublic, getter, setter, getValue, setValue, type);
 		}
