@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
@@ -13,6 +14,9 @@ namespace TypeCache.Reflection.Extensions
 {
 	public static class TypeExtensions
 	{
+		/// <summary>
+		/// <c><paramref name="types"/>.Any(@<paramref name="this"/>.Is)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any(this Type? @this, params Type[] types)
 			=> types.Any(@this.Is!);
@@ -44,21 +48,49 @@ namespace TypeCache.Reflection.Extensions
 		public static string GetName(this ParameterInfo @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name!;
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Implements(typeof(<typeparamref name="T"/>))</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)
 			where T : class
 			=> @this.Implements(typeof(T));
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/>BaseType.Is(<paramref name="type"/>)
+		/// || (<paramref name="type"/>.IsInterface &amp;&amp; @<paramref name="this"/>.GetInterfaces().Any(_ => _.Is(<paramref name="type"/>)))
+		/// </code>
+		/// </summary>
 		public static bool Implements(this Type @this, Type type)
 			=> @this.BaseType.Is(type) || (type.IsInterface && @this.GetInterfaces().Any(_ => _.Is(type)));
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> == typeof(<typeparamref name="T"/>)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this Type? @this)
 			=> @this == typeof(T);
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> == <paramref name="type"/>
+		/// || (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType())
+		/// </code>
+		/// </summary>
 		public static bool Is(this Type? @this, Type type)
-			=> type == @this || (type.IsGenericTypeDefinition && type == @this.ToGenericType());
+			=> @this == type || (type.IsGenericTypeDefinition && type == @this.ToGenericType());
 
+		/// <summary>
+		/// <code>
+		/// <list type="table">
+		/// <item><see cref="Task"/>, <see cref="Task{TResult}"/></item>
+		/// <item><see cref="ValueTask"/>, <see cref="ValueTask{TResult}"/></item>
+		/// <item><see cref="IAsyncDisposable"/></item>
+		/// <item><see cref="IAsyncEnumerable{T}"/></item>
+		/// </list>
+		/// </code>
+		/// </summary>
 		public static bool IsAsync(this Type @this)
 		{
 			var systemType = @this.GetSystemType();
@@ -70,12 +102,21 @@ namespace TypeCache.Reflection.Extensions
 				|| @this.Implements(typeof(IAsyncEnumerable<>));
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Is&lt;<see cref="IEnumerable"/>&gt;() || @<paramref name="this"/>.Implements(typeof(<see cref="IEnumerable"/>))</c>
+		/// </summary>
 		public static bool IsEnumerable(this Type @this)
 			=> @this.Is<IEnumerable>() || @this.Implements(typeof(IEnumerable));
 
+		/// <summary>
+		/// <c>!@<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike</c>
+		/// </summary>
 		public static bool IsInvokable(this Type @this)
 			=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 
+		/// <summary>
+		/// <c><see cref="Type.GetGenericTypeDefinition"/></c>
+		/// </summary>
 		public static Type? ToGenericType(this Type? @this)
 			=> @this switch
 			{

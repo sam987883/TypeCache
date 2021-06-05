@@ -27,6 +27,9 @@ namespace TypeCache.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c><see cref="Range.End"/> &lt; <see cref="Range.Start"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsReverse(this Range @this)
 			=> @this.End.Value < @this.Start.Value;
@@ -40,6 +43,9 @@ namespace TypeCache.Extensions
 		public static IEnumerable<int> Range(this int @this, int count, int increment = 0)
 			=> count != 0 ? @this.To(@this + (count - 1) * (increment == 0 ? (count > 0 ? 1 : -1) : increment), increment) : CustomEnumerable<int>.Empty;
 
+		/// <summary>
+		/// <c>(@this, value) = (value, @this)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Swap<T>(this ref T @this, ref T value) where T : struct
 			=> (@this, value) = (value, @this);

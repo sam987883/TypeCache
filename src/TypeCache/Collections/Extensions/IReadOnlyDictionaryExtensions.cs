@@ -7,12 +7,18 @@ namespace TypeCache.Collections.Extensions
 {
 	public static class IReadOnlyDictionaryExtensions
 	{
+		/// <summary>
+		/// <c><see cref="IReadOnlyDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static V? Get<K, V>(this IReadOnlyDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : class
 			=> @this.TryGetValue(key, out var value) ? value : null;
 
+		/// <summary>
+		/// <c><see cref="IReadOnlyDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static V? GetValue<K, V>(this IReadOnlyDictionary<K, V> @this, K key)
 			where K : notnull

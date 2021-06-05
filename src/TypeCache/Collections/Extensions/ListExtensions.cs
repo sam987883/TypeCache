@@ -62,11 +62,17 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c><see cref="ImmutableArray.Create{T}(T[])"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableArray<T> ToImmutableArray<T>(this List<T>? @this)
 			where T : notnull
 			=> ImmutableArray.Create(@this?.ToArray());
 
+		/// <summary>
+		/// <c><see cref="ImmutableArray.Create{T}(T[])"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableList<T> ToImmutableList<T>(this List<T>? @this)
 			where T : notnull

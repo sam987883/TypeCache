@@ -11,21 +11,42 @@ namespace TypeCache.Reflection.Extensions
 {
 	public static class MemberExtensions
 	{
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Implements(typeof(<typeparamref name="T"/>))</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this TypeMember @this)
 			where T : class
 			=> @this.Implements(typeof(T));
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.BaseTypeHandle.Equals(<paramref name="handle"/>) || @<paramref name="this"/>.InterfaceTypeHandles.Any(<paramref name="handle"/>.Equals)</c>
+		/// </summary>
 		public static bool Implements(this TypeMember @this, RuntimeTypeHandle handle)
 			=> @this.BaseTypeHandle.Equals(handle) || @this.InterfaceTypeHandles.Any(handle.Equals);
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/>.BaseTypeHandle.Equals(<paramref name="type"/>.TypeHandle)
+		/// || (<see cref="Type.IsInterface"/> &amp;&amp; @<paramref name="this"/>.InterfaceTypeHandles.Any(<see cref="RuntimeTypeHandle.Equals(RuntimeTypeHandle)"/>))
+		/// </code>
+		/// </summary>
 		public static bool Implements(this TypeMember @this, Type type)
 			=> @this.BaseTypeHandle.Equals(type.TypeHandle) || (type.IsInterface && @this.InterfaceTypeHandles.Any(type.TypeHandle.Equals));
 
+		/// <summary>
+		/// <c><see cref="RuntimeTypeHandle.Equals(RuntimeTypeHandle)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is<T>(this TypeMember @this)
 			=> @this.Handle.Equals(typeof(T).TypeHandle);
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/>.BaseTypeHandle.Equals(<see cref="Type.TypeHandle"/>)
+		/// || (<see cref="Type.IsGenericTypeDefinition"/> &amp;&amp; ((<see cref="Type"/>)@<paramref name="this"/>).ToGenericType() == <paramref name="type"/>)
+		/// </code>
+		/// </summary>
 		public static bool Is(this TypeMember @this, Type type)
 			=> @this.Handle.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && ((Type)@this).ToGenericType() == type);
 
@@ -66,12 +87,33 @@ namespace TypeCache.Reflection.Extensions
 			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Kind is not <see cref="Kind.Struct"/> || @<paramref name="this"/>.SystemType is <see cref="SystemType.Nullable"/></c>
+		/// </summary>
 		public static bool IsNullable(this TypeMember @this)
 			=> @this.Kind is not Kind.Struct || @this.SystemType is SystemType.Nullable;
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Count == <paramref name="parameters"/>.Count &amp;&amp; 0.Range(@<paramref name="this"/>.Count).All(i => @<paramref name="this"/>[i] == <paramref name="parameters"/>[i])</c>
+		/// </summary>
 		public static bool Match(this IReadOnlyList<MethodParameter> @this, IReadOnlyList<MethodParameter> parameters)
 			=> @this.Count == parameters.Count && 0.Range(@this.Count).All(i => @this[i] == parameters[i]);
 
+		/// <summary>
+		/// <code>
+		/// <list type="table">
+		/// <item><see cref="SystemType.Boolean"/></item>
+		/// <item><see cref="SystemType.SByte"/>, <see cref="SystemType.Byte"/></item>
+		/// <item><see cref="SystemType.Int16"/>, <see cref="SystemType.UInt16"/></item>
+		/// <item><see cref="SystemType.Int32"/>, <see cref="SystemType.UInt32"/></item>
+		/// <item><see cref="SystemType.Int64"/>, <see cref="SystemType.UInt64"/></item>
+		/// <item><see cref="SystemType.NInt"/>, <see cref="SystemType.NUInt"/></item>
+		/// <item><see cref="SystemType.Single"/></item>
+		/// <item><see cref="SystemType.Double"/></item>
+		/// <item><see cref="SystemType.Decimal"/></item>
+		/// </list>
+		/// </code>
+		/// </summary>
 		public static bool IsConvertible(this SystemType @this)
 			=> @this switch
 			{
@@ -82,6 +124,13 @@ namespace TypeCache.Reflection.Extensions
 				_ => false
 			};
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/>.Handle.Equals(<paramref name="type"/>.TypeHandle)
+		/// || <paramref name="type"/>.IsSubclassOf(@<paramref name="this"/>)
+		/// || (<paramref name="type"/>.GetSystemType().IsConvertible() &amp;&amp; @<paramref name="this"/>.SystemType.IsConvertible())
+		/// </code>
+		/// </summary>
 		public static bool Supports(this TypeMember @this, Type type)
 			=> @this.Handle.Equals(type.TypeHandle) || type.IsSubclassOf(@this) || (type.GetSystemType().IsConvertible() && @this.SystemType.IsConvertible());
 	}

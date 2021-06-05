@@ -30,12 +30,12 @@ namespace TypeCache.Data.Extensions
 
 		public static string ToSql([NotNull] this BatchRequest @this)
 		{
-			var batchDataCsv = @this.Input.Rows.Join(SQL_DELIMETER, row => $"({row.ToCsv(value => value.ToSql())})");
-			var sourceColumnCsv = @this.Input.Columns.Join(", ", column => column.EscapeIdentifier());
-			var onSql = @this.On.Join($" {LogicalOperator.And.ToSql()} ", column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}");
-			var updateCsv = @this.Update.Join(SQL_DELIMETER, column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}");
-			var insertColumnCsv = @this.Insert.Join(SQL_DELIMETER, column => column.EscapeIdentifier());
-			var insertValueCsv = @this.Insert.Join(SQL_DELIMETER, column => $"s.{column.EscapeIdentifier()}");
+			var batchDataCsv = @this.Input.Rows.To(row => $"({row.ToCsv(value => value.ToSql())})").Join(SQL_DELIMETER);
+			var sourceColumnCsv = @this.Input.Columns.To(column => column.EscapeIdentifier()).Join(", ");
+			var onSql = @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}").Join($" {LogicalOperator.And.ToSql()} ");
+			var updateCsv = @this.Update.To(column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
+			var insertColumnCsv = @this.Insert.To(column => column.EscapeIdentifier()).Join(SQL_DELIMETER);
+			var insertValueCsv = @this.Insert.To(column => $"s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
 
 			var sqlBuilder = new StringBuilder();
 			if (!@this.Delete && updateCsv.IsBlank())
@@ -115,7 +115,7 @@ namespace TypeCache.Data.Extensions
 
 		public static string ToSql([NotNull] this UpdateRequest @this)
 		{
-			var updateCsv = @this.Set.Join(SQL_DELIMETER, item => $"{item.Column.EscapeIdentifier()} = {item.Expression}");
+			var updateCsv = @this.Set.To(item => $"{item.Column.EscapeIdentifier()} = {item.Expression}").Join(SQL_DELIMETER);
 
 			var sqlBuilder = new StringBuilder("UPDATE ").AppendLine(@this.Table)
 				.Append("SET ").Append(updateCsv);
@@ -161,7 +161,7 @@ namespace TypeCache.Data.Extensions
 			byte[] binary => Encoding.Default.GetString(binary),
 			ColumnSort columnSort => $"{columnSort.Expression} {columnSort.Sort.ToSql()}",
 			OutputExpression output => !output.As.IsBlank() ? $"{output.Expression} AS {output.As.EscapeIdentifier()}" : output.Expression,
-			IEnumerable enumerable => $"({enumerable.As<object>().Join(", ", _ => _.ToSql())})",
+			IEnumerable enumerable => $"({enumerable.As<object>().To(_ => _.ToSql()).Join(", ")})",
 			_ => @this.ToString() ?? "NULL"
 		};
 
@@ -183,7 +183,7 @@ namespace TypeCache.Data.Extensions
 				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
 
 			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.Join(SQL_DELIMETER, _ => _.ToSql()));
+				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.To(_ => _.ToSql()).Join(SQL_DELIMETER));
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}

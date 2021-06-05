@@ -30,15 +30,24 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().Any()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable? @this)
 			=> @this.If<T>().Any();
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().First()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? First<T>(this IEnumerable? @this)
 			where T : class
 			=> @this.If<T>().First();
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().FirstValue()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? FirstValue<T>(this IEnumerable? @this)
 			where T : struct
@@ -61,6 +70,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static T Aggregate<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, T> aggregator)
 			where T : unmanaged
 		{
@@ -71,6 +81,7 @@ namespace TypeCache.Collections.Extensions
 			return result;
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static async ValueTask<T> AggregateAsync<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, ValueTask<T>> aggregator)
 			where T : unmanaged
 		{
@@ -81,6 +92,10 @@ namespace TypeCache.Collections.Extensions
 			return result;
 		}
 
+		/// <summary>
+		/// <c>!@<paramref name="this"/>.If(item =&gt; !<paramref name="filter"/>(item)).Any()</c>
+		/// </summary>
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static bool All<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -88,10 +103,16 @@ namespace TypeCache.Collections.Extensions
 			return !@this.If(item => !filter(item)).Any();
 		}
 
+		/// <summary>
+		/// <c><see cref="Task.WhenAll(IEnumerable{Task})"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask AllAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAll(@this);
 
+		/// <summary>
+		/// <c><see cref="Task.WhenAll{TResult}(IEnumerable{Task{TResult}})"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
 			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array.Empty<T>());
@@ -118,6 +139,9 @@ namespace TypeCache.Collections.Extensions
 					yield return item;
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.And(<paramref name="items"/> as <see cref="IEnumerable{T}"/>)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[] items)
 			=> @this.And(items as IEnumerable<T>);
@@ -133,14 +157,23 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.GetEnumerator().MoveNext()
 			};
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).Any()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter)
 			=> @this.If(filter).Any();
 
+		/// <summary>
+		/// <c><see cref="Task.WhenAny(IEnumerable{Task})"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask AnyAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAny(@this);
 
+		/// <summary>
+		/// <c><see cref="Task.WhenAny{TResult}(IEnumerable{Task{TResult}})"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<Task<T>> AnyAsync<T>(this IEnumerable<Task<T>> @this)
 			=> await Task.WhenAny(@this);
@@ -342,6 +375,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action)
 		{
 			switch (@this)
@@ -366,6 +400,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action)
 		{
 			switch (@this)
@@ -391,6 +426,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action, Action between)
 		{
 			switch (@this)
@@ -423,11 +459,9 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action, Action between)
 		{
-			action.AssertNotNull(nameof(action));
-			between.AssertNotNull(nameof(between));
-
 			if (!@this.Any())
 				return;
 
@@ -446,6 +480,9 @@ namespace TypeCache.Collections.Extensions
 					list.Do(action, between);
 					return;
 				default:
+					action.AssertNotNull(nameof(action));
+					between.AssertNotNull(nameof(between));
+
 					foreach (var item in @this)
 					{
 						if (i > 0)
@@ -456,6 +493,10 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.To(<paramref name="action"/>).AllAsync&lt;<typeparamref name="T"/>&gt;()</c>
+		/// </summary>
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static async ValueTask DoAsync<T>(this IEnumerable<T>? @this, Func<T, Task> action)
 		{
 			action.AssertNotNull(nameof(action));
@@ -463,9 +504,13 @@ namespace TypeCache.Collections.Extensions
 			if (!@this.Any())
 				return;
 
-			await @this.To(item => action(item)).AllAsync<T>();
+			await @this.To(action).AllAsync<T>();
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.To(item => <paramref name="action"/>(item, <paramref name="cancellationToken"/>)).AllAsync&lt;<typeparamref name="T"/>&gt;()</c>
+		/// </summary>
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static async ValueTask DoAsync<T>(this IEnumerable<T>? @this, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken = default)
 		{
 			action.AssertNotNull(nameof(action));
@@ -476,11 +521,18 @@ namespace TypeCache.Collections.Extensions
 			await @this.To(item => action(item, cancellationToken)).AllAsync<T>();
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>?.GetEnumerator().Next()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? First<T>(this IEnumerable<T?>? @this)
 			where T : class
 			=> @this?.GetEnumerator().Next();
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).First()</c>
+		/// </summary>
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static T? First<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
 			where T : class
 		{
@@ -489,11 +541,18 @@ namespace TypeCache.Collections.Extensions
 			return @this.If(filter).First();
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>?.GetEnumerator().NextValue()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this)
 			where T : struct
 			=> @this?.GetEnumerator().NextValue();
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).FirstValue()</c>
+		/// </summary>
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static T? FirstValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
 		{
@@ -635,6 +694,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -664,14 +724,21 @@ namespace TypeCache.Collections.Extensions
 			};
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.ToIndex(value, <paramref name="comparer"/>).Any()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
 			=> @this.ToIndex(value, comparer).Any();
 
+		/// <summary>
+		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value, <paramref name="comparer"/>))</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
-			=> values.All(value => @this.Has(value, comparer!));
+			=> values.All(value => @this.Has(value, comparer));
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -716,6 +783,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static async IAsyncEnumerable<T?> IfAsync<T>(this IEnumerable<T?>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -760,11 +828,17 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If(_ =&gt; _ is not null)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : class
 			=> @this.If(_ => _ is not null)!;
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.If(_ =&gt; _.HasValue).To(_ => _.Value)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : struct
@@ -790,34 +864,30 @@ namespace TypeCache.Collections.Extensions
 			return !itemsEnumerator.MoveNext();
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.ToHashSet(<paramref name="comparer"/>).SetEquals(<paramref name="items"/> ?? <see cref="CustomEnumerable{T}.Empty"/>)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 			=> @this.ToHashSet(comparer).SetEquals(items ?? CustomEnumerable<T>.Empty);
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>) : <see cref="string.Empty"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter)
-			=> @this switch
-			{
-				null => string.Empty,
-				T[] array => string.Join(delimeter, array),
-				_ => string.Join(delimeter, @this)
-			};
+			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>.To(<paramref name="map"/>)) : <see cref="string.Empty"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, char delimeter, Func<T, string> map)
-			=> @this is not null ? string.Join(delimeter, @this.To(map)) : string.Empty;
-
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)
-			=> @this switch
-			{
-				null => string.Empty,
-				T[] array => string.Join(delimeter, array),
-				_ => string.Join(delimeter, @this)
-			};
+			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Join<T>(this IEnumerable<T>? @this, string delimeter, Func<T, string> map)
-			=> @this is not null ? string.Join(delimeter, @this.To(map)) : string.Empty;
-
+		/// <summary>
+		/// <c><see cref="HashSet{T}.IntersectWith(IEnumerable{T})"/></c>
+		/// </summary>
 		public static HashSet<T> Match<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
@@ -826,22 +896,31 @@ namespace TypeCache.Collections.Extensions
 			return hashSet;
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Aggregate(default, <paramref name="comparer"/>.Maximum)</c>
+		/// </summary>
 		public static T Maximum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
 		{
 			comparer ??= @this is IEnumerable<string> ? (IComparer<T>)StringComparer.Ordinal : Comparer<T>.Default;
 
-			return @this.Aggregate(default(T), comparer.Maximum);
+			return @this.Aggregate(default, comparer.Maximum);
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Aggregate(default, <paramref name="comparer"/>.Minimum)</c>
+		/// </summary>
 		public static T Minimum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
 		{
 			comparer ??= @this is IEnumerable<string> ? (IComparer<T>)StringComparer.Ordinal : Comparer<T>.Default;
 
-			return @this.Aggregate(default(T), comparer.Minimum);
+			return @this.Aggregate(default, comparer.Minimum);
 		}
 
+		/// <summary>
+		/// <c><see cref="HashSet{T}.SymmetricExceptWith(IEnumerable{T})"/></c>
+		/// </summary>
 		public static HashSet<T> Neither<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
@@ -850,10 +929,16 @@ namespace TypeCache.Collections.Extensions
 			return hashSet;
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Get(new Range(count, ^1))</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(count, ^1));
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Sort(<paramref name="comparer"/> ?? <see cref="Comparer{T}.Default"/>)</c>
+		/// </summary>
 		public static T[] Sort<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 		{
 			var items = @this switch
@@ -866,10 +951,14 @@ namespace TypeCache.Collections.Extensions
 			return items;
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Get(new Range(0, <paramref name="count"/>))</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(0, count));
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -922,6 +1011,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static async IAsyncEnumerable<V?> ToAsync<T, V>(this IEnumerable<T?>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			map.AssertNotNull(nameof(map));
@@ -953,6 +1043,9 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.To(<paramref name="map"/>).ToCsv()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToCsv<T>(this IEnumerable<T>? @this, Func<T, string> map)
 			=> @this.To(map).ToCsv();
@@ -999,6 +1092,7 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -1009,6 +1103,7 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -1027,6 +1122,9 @@ namespace TypeCache.Collections.Extensions
 			return hashCode.ToHashCode();
 		}
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any() ? new <see cref="HashSet{T}"/>(@<paramref name="this"/>, <paramref name="comparer"/>) : new <see cref="HashSet{T}"/>(0, <paramref name="comparer"/>)</c>
+		/// </summary>
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
 			=> @this.Any() ? new HashSet<T>(@this, comparer) : new HashSet<T>(0, comparer);
 
@@ -1050,10 +1148,26 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableQueue.CreateRange<T>(@this)
 			};
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/>.Any()
+		/// ? new <see cref="ImmutableSortedDictionary"/>CreateRange(<paramref name="keyComparer"/>, <paramref name="valueComparer"/>, @<paramref name="this"/>)
+		/// : new <see cref="ImmutableSortedDictionary"/>CreateRange(<paramref name="keyComparer"/>, <paramref name="valueComparer"/>)
+		/// </code>
+		/// </summary>
 		public static ImmutableSortedDictionary<K, V> ToImmutableSortedDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IComparer<K>? keyComparer = null, IEqualityComparer<V>? valueComparer = null)
 			where K : notnull
 			=> @this.Any() ? ImmutableSortedDictionary.CreateRange(keyComparer, valueComparer, @this) : ImmutableSortedDictionary.Create(keyComparer, valueComparer);
 
+		/// <summary>
+		/// <code>
+		/// <list type="table">
+		/// <item><see cref="ImmutableSortedSet.CreateRange{T}(IComparer{T}?, IEnumerable{T})"/></item>
+		/// <item><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?, T[])"/></item>
+		/// <item><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?)"/></item>
+		/// </list>
+		/// </code>
+		/// </summary>
 		public static ImmutableSortedSet<T> ToImmutableSortedSet<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : notnull
 			=> @this switch
@@ -1064,6 +1178,15 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableSortedSet.CreateRange(comparer, @this)
 			};
 
+		/// <summary>
+		/// <code>
+		/// <list type="table">
+		/// <item><see cref="ImmutableStack.CreateRange{T}(IEnumerable{T})"/></item>
+		/// <item><see cref="ImmutableStack.Create{T}(T[])"/></item>
+		/// <item><see cref="ImmutableStack{T}.Empty"/></item>
+		/// </list>
+		/// </code>
+		/// </summary>
 		public static ImmutableStack<T> ToImmutableStack<T>(this IEnumerable<T>? @this)
 			where T : notnull
 			=> @this switch
@@ -1074,6 +1197,7 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableStack.CreateRange<T>(@this)
 			};
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -1122,14 +1246,23 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.ToIndex(item => Equals(item, value))
 			};
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> is not null ? new <see cref="List{T}"/>(@<paramref name="this"/>) : new <see cref="List{T}"/>(0)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this)
 			=> @this is not null ? new List<T>(@this) : new List<T>(0);
 
+		/// <summary>
+		/// <c>@<paramref name="this"/>.To(<paramref name="map"/>).Gather()</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
 			=> @this.To(map).Gather();
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> is not null ? new <see cref="Queue{T}"/>(@<paramref name="this"/>) : new <see cref="Queue{T}"/>(0)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
 			=> @this.Any() ? new Queue<T>(@this) : new Queue<T>(0);
@@ -1153,10 +1286,16 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.ToArray().AsSpan(),
 			};
 
+		/// <summary>
+		/// <c>@<paramref name="this"/> is not null ? new <see cref="Stack{T}"/>(@<paramref name="this"/>) : new <see cref="Stack{T}"/>(0)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
 			=> @this is not null ? new Stack<T>(@this) : new Stack<T>(0);
 
+		/// <summary>
+		/// <c><see cref="HashSet{T}.UnionWith(IEnumerable{T})"/></c>
+		/// </summary>
 		public static HashSet<T> Union<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);
@@ -1165,6 +1304,9 @@ namespace TypeCache.Collections.Extensions
 			return hashSet;
 		}
 
+		/// <summary>
+		/// <c><see cref="HashSet{T}.ExceptWith(IEnumerable{T})"/></c>
+		/// </summary>
 		public static HashSet<T> Without<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 		{
 			var hashSet = @this.ToHashSet(comparer);

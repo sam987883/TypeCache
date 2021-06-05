@@ -30,26 +30,51 @@ namespace TypeCache.Extensions
 			return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
 		}
 
+		/// <summary>
+		/// <c><see cref="string.Contains(string, StringComparison)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has(this string @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.Contains(value, comparison);
 
+		/// <summary>
+		/// <c><see cref="StringComparer.Equals(string?, string?)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Is([NotNullWhen(true)] this string? @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> comparison.ToStringComparer().Equals(@this, value);
 
+		/// <summary>
+		/// <c><see cref="string.IsNullOrWhiteSpace(string?)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBlank([NotNullWhen(false)] this string? @this)
 			=> string.IsNullOrWhiteSpace(@this);
 
+		/// <summary>
+		/// <c><see cref="string.Join(string?, string?[])"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join(this string? @this, params string[] values)
 			=> string.Join(@this, values);
 
+		/// <summary>
+		/// <c><see cref="string.Substring(int, int)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Left(this string @this, int length)
 			=> @this.Substring(0, length);
 
+		/// <summary>
+		/// <c><see cref="string.StartsWith(char)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Left(this string @this, char text)
+			=> @this.StartsWith(text);
+
+		/// <summary>
+		/// <c><see cref="string.StartsWith(string, StringComparison)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Left(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.StartsWith(text, comparison);
@@ -132,6 +157,16 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
+		/// <summary>
+		/// <c><see cref="string.EndsWith(char)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Right(this string @this, char text)
+			=> @this.EndsWith(text);
+
+		/// <summary>
+		/// <c><see cref="string.EndsWith(string, StringComparison)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.EndsWith(text, comparison);
@@ -144,14 +179,23 @@ namespace TypeCache.Extensions
 			return Convert.TryToBase64Chars(bytes, chars, out var count) ? new string(chars.Slice(0, count)) : @this;
 		}
 
+		/// <summary>
+		/// <c><see cref="Encoding.GetBytes(string)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static byte[] ToBytes(this string @this, Encoding encoding)
 			=> encoding.GetBytes(@this);
 
+		/// <summary>
+		/// <c><see cref="Encoding.GetBytes(ReadOnlySpan{char}, Span{byte})"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
 			=> encoding.GetBytes(@this, bytes);
 
+		/// <summary>
+		/// <c><see cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/></c>
+		/// </summary>
 		public static T? ToEnum<T>(this string? @this)
 			where T : struct, Enum
 			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;

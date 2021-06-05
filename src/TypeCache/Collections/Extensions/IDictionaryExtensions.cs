@@ -8,12 +8,18 @@ namespace TypeCache.Collections.Extensions
 {
 	public static class IDictionaryExtensions
 	{
+		/// <summary>
+		/// <c><see cref="IDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static V? Get<K, V>(this IDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : class
 			=> @this.TryGetValue(key, out var value) ? value : null;
 
+		/// <summary>
+		/// <c><see cref="IDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static V? GetValue<K, V>(this IDictionary<K, V> @this, K key)
 			where K : notnull
@@ -42,6 +48,9 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <c>new <see cref="ReadOnlyDictionary{K, V}"/>(@<paramref name="this"/>)</c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IReadOnlyDictionary<K, V> ToReadOnly<K, V>(this IDictionary<K, V> @this)
 			where K : notnull

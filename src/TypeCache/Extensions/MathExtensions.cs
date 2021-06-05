@@ -2,142 +2,219 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using static System.Math;
 
 namespace TypeCache.Extensions
 {
 	public static class MathExtensions
 	{
+		/// <summary>
+		/// <c><see cref="Math.Abs(sbyte)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static sbyte AbsoluteValue(this sbyte @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(short)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static short AbsoluteValue(this short @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(int)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int AbsoluteValue(this int @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(long)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long AbsoluteValue(this long @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(float)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float AbsoluteValue(this float @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double AbsoluteValue(this double @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Abs(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal AbsoluteValue(this decimal @this)
-			=> Abs(@this);
+			=> Math.Abs(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.BitDecrement(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double BitDecrement(this double @this)
-			=> BitDecrement(@this);
+			=> Math.BitDecrement(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.BitIncrement(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double BitIncrement(this double @this)
-			=> BitIncrement(@this);
+			=> Math.BitIncrement(@this);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double Ceiling(this float @this)
-			=> Ceiling(@this);
-
+		/// <summary>
+		/// <c><see cref="Math.Ceiling(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Ceiling(this double @this)
-			=> Ceiling(@this);
+			=> Math.Ceiling(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Ceiling(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Ceiling(this decimal @this)
-			=> Ceiling(@this);
+			=> Math.Ceiling(@this);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double Floor(this float @this)
-			=> Floor(@this);
-
+		/// <summary>
+		/// <c><see cref="Math.Floor(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Floor(this double @this)
-			=> Floor(@this);
+			=> Math.Floor(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Floor(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Floor(this decimal @this)
-			=> Floor(@this);
+			=> Math.Floor(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Round(this double @this)
-			=> Round(@this);
+			=> Math.Round(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(double, int)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Round(this double @this, int digits)
-			=> Round(@this, digits);
+			=> Math.Round(@this, digits);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(double, MidpointRounding)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Round(this double @this, MidpointRounding rounding)
-			=> Round(@this, rounding);
+			=> Math.Round(@this, rounding);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(double, int, MidpointRounding)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Round(this double @this, int digits, MidpointRounding rounding)
-			=> Round(@this, digits, rounding);
+			=> Math.Round(@this, digits, rounding);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Round(this decimal @this)
-			=> Round(@this);
+			=> Math.Round(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(decimal, int)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Round(this decimal @this, int digits)
-			=> Round(@this, digits);
+			=> Math.Round(@this, digits);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(decimal, MidpointRounding)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Round(this decimal @this, MidpointRounding rounding)
-			=> Round(@this, rounding);
+			=> Math.Round(@this, rounding);
 
+		/// <summary>
+		/// <c><see cref="Math.Round(decimal, int, MidpointRounding)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Round(this decimal @this, int digits, MidpointRounding rounding)
-			=> Round(@this, digits, rounding);
+			=> Math.Round(@this, digits, rounding);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(sbyte)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this sbyte @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(short)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this short @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(int)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this int @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(long)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this long @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(float)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this float @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this double @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Sign(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this decimal @this)
-			=> Sign(@this);
+			=> Math.Sign(@this);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static double Truncate(this float @this)
-			=> Truncate(@this);
-
+		/// <summary>
+		/// <c><see cref="Math.Truncate(double)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static double Truncate(this double @this)
-			=> Truncate(@this);
+			=> Math.Truncate(@this);
 
+		/// <summary>
+		/// <c><see cref="Math.Truncate(decimal)"/></c>
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static decimal Truncate(this decimal @this)
-			=> Truncate(@this);
+			=> Math.Truncate(@this);
 	}
 }
