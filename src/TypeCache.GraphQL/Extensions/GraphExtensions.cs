@@ -23,6 +23,25 @@ namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphExtensions
 	{
+		public static string? GetGraphDescription(this Member @this)
+			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
+
+		public static string? GetGraphDescription(this MethodParameter @this)
+			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
+
+		public static string GetGraphName<T>(this EnumOf<T>.Token @this)
+			where T : struct, Enum
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
+
+		public static string GetGraphName(this Member @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
+
+		public static string GetGraphName(this MethodMember @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name.TrimStart("Get")!.TrimEnd("Async")!;
+
+		public static string GetGraphName(this MethodParameter @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
+
 		public static Type GetGraphType(this MethodParameter @this)
 			=> GetGraphType(@this.Type, @this.Attributes, true);
 
@@ -31,6 +50,38 @@ namespace TypeCache.GraphQL.Extensions
 
 		public static Type GetGraphType(this ReturnParameter @this)
 			=> GetGraphType(@this.Type, @this.Attributes, false);
+
+		/// <summary>
+		/// Gets the query selections for the Connection GraphQL Relay type including nested selections and fragments.
+		/// </summary>
+		public static ConnectionSelections GetQueryConnectionSelections(this IResolveFieldContext @this)
+		{
+			var selections = new ConnectionSelections();
+			selections.TotalCount = @this.SubFields.ContainsKey("totalCount");
+
+			if (@this.SubFields.TryGetValue("pageInfo", out var pageInfo))
+			{
+				var fields = pageInfo.SelectionSet.Selections.If<Field>().ToArray();
+				selections.HasNextPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasNextPage)));
+				selections.HasPreviousPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasPreviousPage)));
+				selections.StartCursor = fields.Any(field => field.Name.Is(nameof(PageInfo.StartCursor)));
+				selections.EndCursor = fields.Any(field => field.Name.Is(nameof(PageInfo.EndCursor)));
+			}
+
+			if (@this.SubFields.TryGetValue("edges", out var edges))
+			{
+				selections.Cursor = edges.SelectionSet.Selections.If<Field>().Any(field => field.Name.Is("cursor"));
+				var node = edges.SelectionSet.Selections.First(selection => selection is IHaveName name && name.NameNode.Name.Is("node"));
+
+				if (node is IHaveSelectionSet selectionSet)
+					selections.EdgeNodeFields = selectionSet.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
+			}
+
+			if (@this.SubFields.TryGetValue("items", out var items) && items.SelectionSet.Selections.Any())
+				selections.ItemFields = items.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
+
+			return selections;
+		}
 
 		/// <summary>
 		/// Gets a list of query selections including nested selections and fragments.
@@ -131,57 +182,45 @@ namespace TypeCache.GraphQL.Extensions
 				_ => typeof(StringGraphType)
 			};
 
-		internal static string ToEndpointName(this string @this)
-			=> @this.TrimStart("Get")!.TrimEnd("Async")!;
-
 		internal static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
-		{
-			var graphAttribute = @this.Attributes.First<GraphAttribute>();
-			var graphTypeAttribute = @this.Return.Attributes.First<GraphTypeAttribute>();
-
-			return new FieldType
+			=> new FieldType
 			{
 				Arguments = @this.Parameters.ToQueryArguments(),
-				Name = graphAttribute?.Name ?? @this.Name.ToEndpointName(),
-				Description = graphAttribute?.Description,
+				Name = @this.GetGraphName(),
+				Description = @this.GetGraphDescription(),
 				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
 				Resolver = resolver,
-				Type = graphTypeAttribute?.GraphType ?? @this.Return.GetGraphType()
+				Type = @this.Return.GetGraphType()
 			};
-		}
 
 		internal static FieldType ToFieldType(this InstancePropertyMember @this, bool isInputType)
-		{
-			var graphAttribute = @this.Attributes.First<GraphAttribute>();
-			return new FieldType
+			=> new FieldType
 			{
-				Type = @this.Attributes.First<GraphTypeAttribute>()?.GraphType ?? @this.GetGraphType(isInputType),
-				Name = graphAttribute?.Name ?? @this.Name,
-				Description = graphAttribute?.Description,
+				Type = @this.GetGraphType(isInputType),
+				Name = @this.GetGraphName(),
+				Description = @this.GetGraphDescription(),
 				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
 				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
 			};
-		}
 
 		internal static FieldType ToFieldType<T>(this InstanceMethodMember @this, SqlApi<T> sqlApi)
 			where T : class, new()
 		{
-			var graphAttribute = @this.Attributes.First<GraphAttribute>();
-			var graphTypeAttribute = @this.Return.Attributes.First<GraphTypeAttribute>();
 			var arguments = new QueryArguments(@this.Parameters
 				.If(parameter => parameter!.Attributes.Any<GraphIgnoreAttribute>() && !parameter.Type.Is<IResolveFieldContext>())
 				.To(parameter => parameter!.Name.Is("output") || parameter.Name.Is("select")
 					? new QueryArgument(new ListGraphType<GraphObjectEnumType<T>>()) { Name = parameter.Name }
 					: parameter.ToQueryArgument()));
+			var description = @this.GetGraphDescription();
 
 			return new FieldType
 			{
 				Arguments = @this.Parameters.ToQueryArguments(),
-				Name = string.Format(graphAttribute!.Name!, sqlApi.TableName),
-				Description = graphAttribute?.Description != null ? string.Format(graphAttribute.Description, sqlApi.TableName) : null,
+				Name = @this.GetGraphName(),
+				Description = description != null ? string.Format(description, sqlApi.TableName) : null,
 				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
 				Resolver = new InstanceMethodFieldResolver(@this, sqlApi),
-				Type = graphTypeAttribute?.GraphType ?? @this.Return.GetGraphType()
+				Type = @this.Return.GetGraphType()
 			};
 		}
 
@@ -203,7 +242,12 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			foreach (var selection in @this.SelectionSet.Selections)
 			{
-				var current = @this is IHaveName haveName ? $"{prefix}.{haveName.NameNode.Name}" : prefix;
+				var current = @this switch
+				{
+					IHaveName name when !prefix.IsBlank() => $"{prefix}.{name.NameNode.Name}",
+					IHaveName name => name.NameNode.Name,
+					_ => prefix
+				};
 
 				if (selection is FragmentSpread fragmentSpread)
 				{
@@ -255,14 +299,11 @@ namespace TypeCache.GraphQL.Extensions
 			};
 
 		private static QueryArgument ToQueryArgument(this MethodParameter @this)
-		{
-			var graphAttribute = @this.Attributes.First<GraphAttribute>();
-			return new QueryArgument(@this.GetGraphType())
+			=> new QueryArgument(@this.GetGraphType())
 			{
-				Name = graphAttribute?.Name ?? @this.Name,
-				Description = graphAttribute?.Description
+				Name = @this.GetGraphName(),
+				Description = @this.GetGraphDescription(),
 			};
-		}
 
 		private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 			=> new QueryArguments(@this

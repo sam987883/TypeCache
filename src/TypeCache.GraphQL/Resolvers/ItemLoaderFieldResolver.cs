@@ -40,12 +40,8 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			context.Source.AssertNotNull($"{nameof(context)}.{nameof(context.Source)}");
 
-			var methodGraphAttribute = this._Method.Attributes.First<GraphAttribute>();
-			var parentType = context.Source.GetType();
-			var parentGraphAttribute = parentType.GetTypeMember().Attributes.First<GraphAttribute>();
-			var child = methodGraphAttribute?.Name ?? this._Method.Name.ToEndpointName();
-			var parent = parentGraphAttribute?.Name ?? parentType.Name.ToEndpointName();
-
+			var child = this._Method.GetGraphName();
+			var parent = context.Source.GetTypeMember().GetGraphName();
 			var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
 				$"{parent}.{child}",
 				() =>
@@ -71,7 +67,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
+				var graphAttribute = parameter.Attributes.First<GraphNameAttribute>();
 				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 

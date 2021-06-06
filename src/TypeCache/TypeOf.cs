@@ -11,63 +11,63 @@ namespace TypeCache
 {
 	public static class TypeOf<T>
 	{
-		private static readonly TypeMember TypeMember = typeof(T).GetTypeMember();
+		public static TypeMember Member { get; } = typeof(T).GetTypeMember();
 
-		public static IImmutableList<Attribute> Attributes => TypeMember.Attributes;
+		public static IImmutableList<Attribute> Attributes => Member.Attributes;
 
-		public static RuntimeTypeHandle BaseTypeHandle => TypeMember.BaseTypeHandle;
+		public static RuntimeTypeHandle BaseTypeHandle => Member.BaseTypeHandle;
 
-		public static TypeMember BaseType { get; } = TypeMember.BaseTypeHandle.GetTypeMember();
+		public static TypeMember BaseType { get; } = Member.BaseTypeHandle.GetTypeMember();
 
-		public static TypeMember? EnclosedType { get; } = TypeMember.EnclosedTypeHandle?.GetTypeMember();
+		public static TypeMember? EnclosedType { get; } = Member.EnclosedTypeHandle?.GetTypeMember();
 
-		public static IImmutableList<TypeMember> GenericTypes { get; } = TypeMember.GenericTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
+		public static IImmutableList<TypeMember> GenericTypes { get; } = Member.GenericTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
 
-		public static RuntimeTypeHandle Handle => TypeMember.Handle;
+		public static RuntimeTypeHandle Handle => Member.Handle;
 
-		public static IImmutableList<TypeMember> InterfaceTypes { get; } = TypeMember.InterfaceTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
+		public static IImmutableList<TypeMember> InterfaceTypes { get; } = Member.InterfaceTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
 
-		public static bool Is<V>() => TypeMember.Handle.Is<V>();
+		public static bool Is<V>() => Member.Handle.Is<V>();
 
-		public static bool Is(Type type) => TypeMember.Handle.Is(type);
+		public static bool Is(Type type) => Member.Handle.Is(type);
 
-		public static bool IsEnumerable => TypeMember.IsEnumerable;
+		public static bool IsEnumerable => Member.IsEnumerable;
 
-		public static bool IsInternal => TypeMember.IsInternal;
+		public static bool IsInternal => Member.IsInternal;
 
-		public static bool IsPublic => TypeMember.IsPublic;
+		public static bool IsPublic => Member.IsPublic;
 
-		public static Kind Kind => TypeMember.Kind;
+		public static Kind Kind => Member.Kind;
 
-		public static string Name => TypeMember.Name;
+		public static string Name => Member.Name;
 
-		public static SystemType SystemType => TypeMember.SystemType;
+		public static SystemType SystemType => Member.SystemType;
 
-		public static IImmutableList<ConstructorMember> Constructors => TypeMember.Constructors;
+		public static IImmutableList<ConstructorMember> Constructors => Member.Constructors;
 
-		public static IImmutableDictionary<string, InstanceFieldMember> Fields => TypeMember.Fields;
+		public static IImmutableDictionary<string, InstanceFieldMember> Fields => Member.Fields;
 
-		public static IImmutableList<IndexerMember> Indexers => TypeMember.Indexers;
+		public static IImmutableList<IndexerMember> Indexers => Member.Indexers;
 
-		public static IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> Methods => TypeMember.Methods;
+		public static IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> Methods => Member.Methods;
 
-		public static IImmutableDictionary<string, InstancePropertyMember> Properties => TypeMember.Properties;
+		public static IImmutableDictionary<string, InstancePropertyMember> Properties => Member.Properties;
 
-		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => TypeMember.StaticFields;
+		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => Member.StaticFields;
 
-		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => TypeMember.StaticMethods;
+		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => Member.StaticMethods;
 
-		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => TypeMember.StaticProperties;
+		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => Member.StaticProperties;
 
 		public static T Create(params object?[]? parameters)
-			=> (T)TypeMember.Create(parameters);
+			=> (T)Member.Create(parameters);
 
 		public static D? GetMethod<D>(string name)
 			where D : Delegate
-			=> TypeMember.GetMethod<D>(name);
+			=> Member.GetMethod<D>(name);
 
 		public static D? GetStaticMethod<D>(string name)
 			where D : Delegate
-			=> TypeMember.GetStaticMethod<D>(name);
+			=> Member.GetStaticMethod<D>(name);
 	}
 }

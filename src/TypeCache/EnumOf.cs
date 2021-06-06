@@ -16,7 +16,8 @@ namespace TypeCache
 	public static class EnumOf<T>
 		where T : struct, Enum
 	{
-		public sealed record Token(string Name, string Number, string Hex, T Value, IImmutableList<Attribute> Attributes) : IEquatable<Token>
+		public sealed record Token(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic, string Number, string Hex, T Value)
+			: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<Token>
 		{
 			public bool Equals(Token? other)
 				=> other?.Name.Is(this.Name, StringComparison.Ordinal) is true && Comparer.Equals(this.Value, other.Value);
@@ -61,7 +62,7 @@ namespace TypeCache
 		private static Token CreateToken(StaticFieldMember field)
 		{
 			var value = (T)field.GetValue!()!;
-			return new Token(field.Name, value.ToString("D"), value.ToString("X"), value, field.Attributes);
+			return new Token(field.Name, field.Attributes, IsInternal, IsPublic, value.ToString("D"), value.ToString("X"), value);
 		}
 
 		static EnumOf()

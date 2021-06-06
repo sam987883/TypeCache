@@ -34,9 +34,6 @@ namespace TypeCache.GraphQL.Resolvers
 			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
 				throw new ArgumentException($"{nameof(BatchLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
-			var graphAttribute = method.Attributes.First<GraphAttribute>();
-			var name = graphAttribute?.Name ?? method.Name.ToEndpointName();
-
 			this._Method = method;
 			this._Handler = handler;
 			this._DataLoader = dataLoader;
@@ -48,9 +45,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			context.Source.AssertNotNull($"{nameof(context)}.{nameof(context.Source)}");
 
-			var graphAttribute = this._Method.Attributes.First<GraphAttribute>();
-			var name = graphAttribute?.Name ?? this._Method.Name.ToEndpointName();
-
+			var name = this._Method.GetGraphName();
 			var dataLoader = this._DataLoader!.Context.GetOrAddBatchLoader<KEY, CHILD>(
 				$"{TypeOf<PARENT>.Name}.{name}",
 				keys =>
@@ -77,7 +72,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
+				var graphAttribute = parameter.Attributes.First<GraphNameAttribute>();
 				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 

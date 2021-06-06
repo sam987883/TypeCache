@@ -4,7 +4,6 @@ using System;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -16,9 +15,8 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectType()
 		{
-			var graphAttribute = TypeOf<T>.Attributes.First<GraphAttribute>();
-			var name = graphAttribute?.Name;
-			var description = graphAttribute?.Description;
+			var name = TypeOf<T>.Attributes.First<GraphNameAttribute>()?.Name;
+			var description = TypeOf<T>.Attributes.First<GraphDescriptionAttribute>()?.Description;
 
 			if (TypeOf<T>.Is(typeof(Connection<>)))
 			{

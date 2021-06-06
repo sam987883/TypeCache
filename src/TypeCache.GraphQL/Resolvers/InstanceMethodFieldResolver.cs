@@ -40,7 +40,7 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<GraphAttribute>();
+				var graphAttribute = parameter.Attributes.First<GraphNameAttribute>();
 				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
 					continue;
 

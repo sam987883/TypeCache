@@ -879,7 +879,7 @@ namespace TypeCache.Collections.Extensions
 			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>.To(<paramref name="map"/>)) : <see cref="string.Empty"/></c>
+		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>)) : <see cref="string.Empty"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)

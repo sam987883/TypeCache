@@ -16,7 +16,7 @@ namespace TypeCache.GraphQL.Types
 		{
 			TypeOf<T>.Kind.Assert(TypeOf<T>.Name, Kind.Interface);
 
-			var graphAttribute = TypeOf<T>.Attributes.First<GraphAttribute>();
+			var graphAttribute = TypeOf<T>.Attributes.First<GraphNameAttribute>();
 			this.Name = graphAttribute?.Name ?? TypeOf<T>.Name;
 
 			TypeOf<T>.Properties.Values

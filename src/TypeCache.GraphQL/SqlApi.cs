@@ -12,6 +12,7 @@ using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
+using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL
@@ -32,15 +33,16 @@ namespace TypeCache.GraphQL
 			this.TableName = tableName;
 		}
 
-		[Graph(name: "Delete{0}", description: "DELETE FROM {0} WHERE ...")]
+		[GraphName("Delete{0}")]
+		[GraphDescription("DELETE FROM {0} WHERE ...")]
 		public async Task<T[]> Delete(string where, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
 		{
 			var request = new DeleteRequest
 			{
 				From = this.TableName,
-				Output = context.SubFields.Keys.To(selection =>
+				Output = context.GetQuerySelections().To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true
 						|| property.Name.Is(selection))!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
 				}).ToArray(),
@@ -52,7 +54,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "Delete{0}_SQL")]
+		[GraphName("Delete{0}_SQL")]
 		public async Task<string> DeleteSQL(
 			string where,
 			string[] output,
@@ -64,7 +66,7 @@ namespace TypeCache.GraphQL
 				From = this.TableName,
 				Output = output?.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
 				}).ToArray(),
@@ -76,7 +78,8 @@ namespace TypeCache.GraphQL
 			return response.Result!;
 		}
 
-		[Graph(name: "DeleteBatch{0}", description: "DELETE FROM {0} ...")]
+		[GraphName("DeleteBatch{0}")]
+		[GraphDescription("DELETE FROM {0} ...")]
 		public async Task<T[]> DeleteBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var request = new BatchRequest
@@ -86,7 +89,7 @@ namespace TypeCache.GraphQL
 				Input = batch.MapRowSet(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
 				}).ToArray()
@@ -96,7 +99,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "DeleteBatch{0}_SQL")]
+		[GraphName("DeleteBatch{0}_SQL")]
 		public async Task<string> DeleteBatchSQL([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var request = new BatchRequest
@@ -106,7 +109,7 @@ namespace TypeCache.GraphQL
 				Input = batch.MapRowSet(TypeOf<T>.Properties.Keys.ToArray()),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"DELETED.[{property.Name}]", selection);
 				}).ToArray()
@@ -116,7 +119,8 @@ namespace TypeCache.GraphQL
 			return response.Result!;
 		}
 
-		[Graph(name: "InsertBatch{0}", description: "INSERT INTO {0} ...")]
+		[GraphName("InsertBatch{0}")]
+		[GraphDescription("INSERT INTO {0} ...")]
 		public async Task<T[]> InsertBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
@@ -127,7 +131,7 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray()
@@ -137,7 +141,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "InsertBatch{0}_SQL")]
+		[GraphName("InsertBatch{0}_SQL")]
 		public async Task<string> InsertBatchSQL([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
@@ -148,7 +152,7 @@ namespace TypeCache.GraphQL
 				Insert = columns,
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray()
@@ -158,7 +162,8 @@ namespace TypeCache.GraphQL
 			return response.Result!;
 		}
 
-		[Graph(name: "Select{0}", description: "SELLECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
+		[GraphName("Select{0}")]
+		[GraphDescription("SELLECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
 		public async Task<T[]> Select(string having, ColumnSort[] orderBy, string where, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
 		{
 			var request = new SelectRequest
@@ -168,7 +173,7 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"[{property.Name}]", selection);
 				}).ToArray(),
@@ -180,7 +185,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "Select{0}_SQL")]
+		[GraphName("Select{0}_SQL")]
 		public async Task<string> SelectSQL(string having, ColumnSort[] orderBy, string where, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
 		{
 			var request = new SelectRequest
@@ -190,7 +195,7 @@ namespace TypeCache.GraphQL
 				OrderBy = orderBy,
 				Select = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"[{property.Name}]", selection);
 				}).ToArray(),
@@ -202,7 +207,8 @@ namespace TypeCache.GraphQL
 			return response.Result!;
 		}
 
-		[Graph(name: "Update{0}", description: "UPDATE {0} SET ... WHERE ...")]
+		[GraphName("Update{0}")]
+		[GraphDescription("UPDATE {0} SET ... WHERE ...")]
 		public async Task<T[]> Update([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set)).Keys.ToArray();
@@ -210,14 +216,14 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray(),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(column) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true)
 						?? TypeOf<T>.Properties.Get(column)!;
 					return new ColumnSet(column, property.GetValue!(set));
 				}).ToArray(),
@@ -229,7 +235,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "Update{0}_SQL")]
+		[GraphName("Update{0}_SQL")]
 		public async Task<string> UpdateSQL([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set)).Keys.ToArray();
@@ -237,14 +243,14 @@ namespace TypeCache.GraphQL
 			{
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray(),
 				Parameters = parameters,
 				Set = columns.To(column =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(column) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true)
 						?? TypeOf<T>.Properties.Get(column)!;
 					return new ColumnSet(column, property.GetValue!(set));
 				}).ToArray(),
@@ -256,7 +262,8 @@ namespace TypeCache.GraphQL
 			return response.Result!;
 		}
 
-		[Graph(name: "UpdateBatch{0}", description: "UPDATE {0} SET ...")]
+		[GraphName("UpdateBatch{0}")]
+		[GraphDescription("UPDATE {0} SET ...")]
 		public async Task<T[]> UpdateBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
@@ -265,7 +272,7 @@ namespace TypeCache.GraphQL
 				Input = batch.MapRowSet(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray(),
@@ -277,7 +284,7 @@ namespace TypeCache.GraphQL
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
-		[Graph(name: "UpdateBatch{0}_SQL")]
+		[GraphName("UpdateBatch{0}_SQL")]
 		public async Task<string> UpdateBatchSQL([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array.Empty<string>();
@@ -286,7 +293,7 @@ namespace TypeCache.GraphQL
 				Input = batch.MapRowSet(columns),
 				Output = context.SubFields.Keys.To(selection =>
 				{
-					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphAttribute>()?.Name.Is(selection) is true)
+					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(selection) is true)
 						?? TypeOf<T>.Properties.Get(selection)!;
 					return new OutputExpression($"INSERTED.[{property.Name}]", selection);
 				}).ToArray(),
