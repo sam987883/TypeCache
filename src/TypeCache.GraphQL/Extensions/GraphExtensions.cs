@@ -45,8 +45,8 @@ namespace TypeCache.GraphQL.Extensions
 		public static Type GetGraphType(this MethodParameter @this)
 			=> GetGraphType(@this.Type, @this.Attributes, true);
 
-		public static Type GetGraphType(this InstancePropertyMember @this, bool isInputType)
-			=> GetGraphType(@this.Type, @this.Attributes, isInputType);
+		public static Type GetGraphType(this PropertyMember @this, bool isInputType)
+			=> GetGraphType(@this.PropertyType, @this.Attributes, isInputType);
 
 		public static Type GetGraphType(this ReturnParameter @this)
 			=> GetGraphType(@this.Type, @this.Attributes, false);
@@ -118,13 +118,13 @@ namespace TypeCache.GraphQL.Extensions
 			{
 				Edges = items.To(item => new Edge<T>
 				{
-					Cursor = cursorProperty?.GetValue!(item)?.ToString(),
+					Cursor = cursorProperty?.GetValue(item)?.ToString(),
 					Node = item
 				}).ToList(),
 				PageInfo = new PageInfo
 				{
-					StartCursor = items.Length > 0 ? cursorProperty?.GetValue!(items[0])?.ToString() : null,
-					EndCursor = items.Length > 0 ? cursorProperty?.GetValue!(items[^1])?.ToString() : null,
+					StartCursor = items.Length > 0 ? cursorProperty?.GetValue(items[0])?.ToString() : null,
+					EndCursor = items.Length > 0 ? cursorProperty?.GetValue(items[^1])?.ToString() : null,
 					HasNextPage = hasNextPage,
 					HasPreviousPage = hasPreviousPage
 				},
@@ -193,7 +193,7 @@ namespace TypeCache.GraphQL.Extensions
 				Type = @this.Return.GetGraphType()
 			};
 
-		internal static FieldType ToFieldType(this InstancePropertyMember @this, bool isInputType)
+		internal static FieldType ToFieldType(this PropertyMember @this, bool isInputType)
 			=> new FieldType
 			{
 				Type = @this.GetGraphType(isInputType),
@@ -203,7 +203,7 @@ namespace TypeCache.GraphQL.Extensions
 				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
 			};
 
-		internal static FieldType ToFieldType<T>(this InstanceMethodMember @this, SqlApi<T> sqlApi)
+		internal static FieldType ToFieldType<T>(this MethodMember @this, SqlApi<T> sqlApi)
 			where T : class, new()
 		{
 			var arguments = new QueryArguments(@this.Parameters
@@ -219,7 +219,7 @@ namespace TypeCache.GraphQL.Extensions
 				Name = @this.GetGraphName(),
 				Description = description != null ? string.Format(description, sqlApi.TableName) : null,
 				DeprecationReason = @this.Attributes.First<ObsoleteAttribute>()?.Message,
-				Resolver = new InstanceMethodFieldResolver(@this, sqlApi),
+				Resolver = new MethodFieldResolver(@this, sqlApi),
 				Type = @this.Return.GetGraphType()
 			};
 		}

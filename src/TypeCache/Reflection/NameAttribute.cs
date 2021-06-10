@@ -5,6 +5,9 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection
 {
+	/// <summary>
+	/// Rename any cached item within the TypeCache system.
+	/// </summary>
 	[AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = false)]
 	public class NameAttribute : Attribute
 	{

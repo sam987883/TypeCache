@@ -32,18 +32,16 @@ namespace TypeCache.Reflection.Mappers
 			{
 				var toField = TypeOf<TO>.Fields.Get(setting.To) switch
 				{
-					InstanceFieldMember member when member.SetValue is not null => member,
-					InstanceFieldMember _ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] is not writable."),
-					_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] was not found for mapping.")
+					FieldMember field when field.Setter is not null => field,
+					_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.To)} field [{setting.To}] is not writable.")
 				};
 
 				if (!setting.From.IsBlank())
 				{
 					var fromField = TypeOf<FROM>.Fields.Get(setting.From) switch
 					{
-						InstanceFieldMember member when member.GetValue is not null => member,
-						InstanceFieldMember _ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] is not readable."),
-						_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] was not found for mapping.")
+						FieldMember field when field.Getter is not null => field,
+						_ => throw new ArgumentOutOfRangeException(nameof(overrides), $"{nameof(setting.From)} field [{setting.From}] is not readable.")
 					};
 
 					if (fromField.Type == toField.Type)
@@ -66,9 +64,9 @@ namespace TypeCache.Reflection.Mappers
 			var fromField = TypeOf<FROM>.Fields[setting.From];
 			var toField = TypeOf<TO>.Fields[setting.To];
 
-			var fromValue = fromField.GetValue!(from);
+			var fromValue = fromField.GetValue(from);
 			if (!setting.IgnoreNullValue || fromValue is not null)
-				toField.SetValue!(to, fromValue);
+				toField.SetValue(to, fromValue);
 		});
 	}
 }

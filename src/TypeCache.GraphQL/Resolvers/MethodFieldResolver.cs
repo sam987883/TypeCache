@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
@@ -13,24 +12,28 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
-	public class StaticMethodFieldResolver : IFieldResolver
+	public class MethodFieldResolver : IFieldResolver
 	{
-		private readonly StaticMethodMember _Method;
+		private readonly MethodMember _Method;
+		private readonly object? _Handler;
 
-		public StaticMethodFieldResolver(StaticMethodMember method)
+		public MethodFieldResolver(MethodMember method, object? handler)
 		{
 			method.AssertNotNull(nameof(method));
+			if (!method.Static)
+				handler.AssertNotNull(nameof(handler));
 
 			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(StaticMethodFieldResolver)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
+				throw new NotSupportedException($"{nameof(MethodFieldResolver)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
 
 			this._Method = method;
+			this._Handler = handler;
 		}
 
 		public object? Resolve(IResolveFieldContext context)
 		{
 			var arguments = this.GetArguments(context).ToArray();
-			return this._Method.Invoke!(arguments);
+			return this._Method.Invoke(this._Handler, arguments);
 		}
 
 		private IEnumerable<object> GetArguments(IResolveFieldContext context)

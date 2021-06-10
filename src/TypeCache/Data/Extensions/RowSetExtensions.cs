@@ -43,7 +43,7 @@ namespace TypeCache.Data.Extensions
 			@this.Rows.Do((row, rowIndex) =>
 			{
 				var item = TypeOf<T>.Create();
-				properties.Do((property, columnIndex) => property?.Setter?.Invoke!(item!, row[columnIndex]));
+				properties.Do((property, columnIndex) => property?.SetValue(item, row[columnIndex]));
 				items[rowIndex] = item;
 			});
 			return items;
@@ -56,13 +56,13 @@ namespace TypeCache.Data.Extensions
 		public static RowSet MapRowSet<T>(this T[] @this, string[] columns)
 		{
 			var properties = TypeOf<T>.Properties;
-			var getters = properties.Values.If(property => property!.GetValue is not null).To(property => property!.Name);
+			var getters = properties.Values.If(property => property!.Getter is not null).To(property => property!.Name);
 
 			var rowSet = new RowSet(columns.Any() ? columns.Match(getters, StringComparer.OrdinalIgnoreCase).ToArray() : getters.ToArray(), new object?[@this.Length][]);
 			@this.Do((item, rowIndex) =>
 			{
 				var row = new object?[rowSet.Columns.Length];
-				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = properties[column].GetValue!(item!));
+				rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = properties[column].GetValue(item));
 				rowSet.Rows[rowIndex] = row;
 			});
 			return rowSet;

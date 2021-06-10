@@ -22,11 +22,11 @@ namespace TypeCache.Reflection.Converters
 					if (reader.Read())
 					{
 						var property = TypeOf<T>.Properties[name!];
-						if (property.SetValue is not null)
+						if (property.Setter is not null)
 							property.SetValue(output, reader.TokenType switch
 							{
-								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, property.Type, options),
-								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.Type, options),
+								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
+								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
 								_ => reader.GetValue()
 							});
 					}
@@ -43,11 +43,11 @@ namespace TypeCache.Reflection.Converters
 			if (input is not null)
 			{
 				writer.WriteStartObject();
-				TypeOf<T>.Properties.Values.If(property => property!.GetValue is not null).Do(property =>
+				TypeOf<T>.Properties.Values.If(property => property!.Getter is not null).Do(property =>
 				{
 					writer.WritePropertyName(property!.Name);
-					var value = property.GetValue!(input);
-					writer.WriteValue(property.Type.SystemType, value, options);
+					var value = property.GetValue(input);
+					writer.WriteValue(property.PropertyType.SystemType, value, options);
 				});
 				writer.WriteEndObject();
 			}

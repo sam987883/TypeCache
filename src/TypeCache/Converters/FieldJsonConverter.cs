@@ -23,11 +23,11 @@ namespace TypeCache.Converters
 					if (reader.Read())
 					{
 						var field = TypeOf<T>.Fields[name];
-						if (field.SetValue is not null)
+						if (field.Setter is not null)
 							field.SetValue(output, reader.TokenType switch
 							{
-								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.Type, options),
-								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.Type, options),
+								JsonTokenType.StartObject => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
+								JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
 								_ => reader.GetValue()
 							});
 					}
@@ -47,7 +47,7 @@ namespace TypeCache.Converters
 				TypeOf<T>.Fields.Values.If(field => field!.Getter is not null).Do(field =>
 				{
 					writer.WritePropertyName(field!.Name);
-					var value = field.GetValue!(input);
+					var value = field.GetValue(input);
 					writer.WriteValue(field.Type.SystemType, value, options);
 				});
 				writer.WriteEndObject();

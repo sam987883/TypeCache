@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
@@ -33,9 +34,9 @@ namespace TypeCache
 
 		public static bool IsEnumerable => Member.IsEnumerable;
 
-		public static bool IsInternal => Member.IsInternal;
+		public static bool IsInternal => Member.Internal;
 
-		public static bool IsPublic => Member.IsPublic;
+		public static bool IsPublic => Member.Public;
 
 		public static Kind Kind => Member.Kind;
 
@@ -45,29 +46,19 @@ namespace TypeCache
 
 		public static IImmutableList<ConstructorMember> Constructors => Member.Constructors;
 
-		public static IImmutableDictionary<string, InstanceFieldMember> Fields => Member.Fields;
+		public static IImmutableDictionary<string, FieldMember> Fields => Member.Fields;
 
-		public static IImmutableList<IndexerMember> Indexers => Member.Indexers;
+		public static IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => Member.Methods;
 
-		public static IImmutableDictionary<string, IImmutableList<InstanceMethodMember>> Methods => Member.Methods;
+		public static IImmutableDictionary<string, PropertyMember> Properties => Member.Properties;
 
-		public static IImmutableDictionary<string, InstancePropertyMember> Properties => Member.Properties;
-
-		public static IImmutableDictionary<string, StaticFieldMember> StaticFields => Member.StaticFields;
-
-		public static IImmutableDictionary<string, IImmutableList<StaticMethodMember>> StaticMethods => Member.StaticMethods;
-
-		public static IImmutableDictionary<string, StaticPropertyMember> StaticProperties => Member.StaticProperties;
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T Create(params object?[]? parameters)
 			=> (T)Member.Create(parameters);
 
-		public static D? GetMethod<D>(string name)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static D? GetMethod<D>(string name, bool isStatic = false)
 			where D : Delegate
-			=> Member.GetMethod<D>(name);
-
-		public static D? GetStaticMethod<D>(string name)
-			where D : Delegate
-			=> Member.GetStaticMethod<D>(name);
+			=> Member.GetMethod<D>(name, isStatic);
 	}
 }

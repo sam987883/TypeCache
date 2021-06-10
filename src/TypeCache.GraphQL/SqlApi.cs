@@ -225,7 +225,7 @@ namespace TypeCache.GraphQL
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true)
 						?? TypeOf<T>.Properties.Get(column)!;
-					return new ColumnSet(column, property.GetValue!(set));
+					return new ColumnSet(column, property.GetValue(set));
 				}).ToArray(),
 				Table = this.TableName,
 				Where = where
@@ -252,7 +252,7 @@ namespace TypeCache.GraphQL
 				{
 					var property = TypeOf<T>.Properties.Values.First(property => property!.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true)
 						?? TypeOf<T>.Properties.Get(column)!;
-					return new ColumnSet(column, property.GetValue!(set));
+					return new ColumnSet(column, property.GetValue(set));
 				}).ToArray(),
 				Table = this.TableName,
 				Where = where

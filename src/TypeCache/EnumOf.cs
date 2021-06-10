@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -16,15 +17,29 @@ namespace TypeCache
 	public static class EnumOf<T>
 		where T : struct, Enum
 	{
-		public sealed record Token(string Name, IImmutableList<Attribute> Attributes, bool IsInternal, bool IsPublic, string Number, string Hex, T Value)
-			: Member(Name, Attributes, IsInternal, IsPublic), IEquatable<Token>
+		public sealed class Token
+			: Member, IEquatable<Token>
 		{
+			internal Token(FieldInfo fieldInfo)
+				: base(fieldInfo, fieldInfo.IsAssembly, fieldInfo.IsPublic)
+			{
+				this.Value = (T)Enum.Parse<T>(fieldInfo.Name);
+				this.Hex = this.Value.ToString("X");
+				this.Number = this.Value.ToString("D");
+			}
+
+			public string Hex { get; }
+
+			public string Number { get; }
+
+			public T Value { get; }
+
 			public bool Equals(Token? other)
-				=> other?.Name.Is(this.Name, StringComparison.Ordinal) is true && Comparer.Equals(this.Value, other.Value);
+				=> other != null && Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public override int GetHashCode()
-				=> EnumOf<T>.Comparer.GetHashCode(this.Value);
+				=> Comparer.GetHashCode(this.Value);
 		}
 
 		private static Comparison<T> CreateCompare(Type underlyingType)
@@ -59,31 +74,25 @@ namespace TypeCache
 				.Compile();
 		}
 
-		private static Token CreateToken(StaticFieldMember field)
-		{
-			var value = (T)field.GetValue!()!;
-			return new Token(field.Name, field.Attributes, IsInternal, IsPublic, value.ToString("D"), value.ToString("X"), value);
-		}
-
 		static EnumOf()
 		{
-			var typeMember = typeof(T).ToMember();
-			var underlyingType = typeof(T).GetEnumUnderlyingType();
+			var type = typeof(T);
+			var underlyingType = type.GetEnumUnderlyingType();
 			var compare = CreateCompare(underlyingType);
 			var equals = CreateEquals(underlyingType);
 			var getHashCode = CreateGetHashCode(underlyingType);
 
-			Attributes = typeMember.Attributes;
+			Attributes = type.GetCustomAttributes<Attribute>().ToImmutableArray();
 			Comparer = new CustomComparer<T>(compare, equals, getHashCode);
-			Handle = typeMember.Handle;
-			IsFlags = typeMember.Attributes.Any<FlagsAttribute>();
-			IsInternal = typeMember.IsInternal;
-			IsPublic = typeMember.IsPublic;
-			Name = typeMember.Name;
-			UnderlyingType = typeMember.SystemType;
+			Handle = type.TypeHandle;
+			IsFlags = Attributes.Any<FlagsAttribute>();
+			IsInternal = !type.IsVisible;
+			IsPublic = type.IsPublic;
+			Name = type.GetName();
+			UnderlyingType = type.GetSystemType();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
-			Tokens = TypeOf<T>.StaticFields.Values.To(CreateToken).ToImmutableDictionary(_ => _.Value, Comparer);
+			Tokens = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
 		public static IImmutableList<Attribute> Attributes { get; }

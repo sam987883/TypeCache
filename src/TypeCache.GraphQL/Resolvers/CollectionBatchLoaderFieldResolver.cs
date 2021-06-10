@@ -18,13 +18,13 @@ namespace TypeCache.GraphQL.Resolvers
 {
 	public class CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IDataLoaderResult<IEnumerable<CHILD>>>
 	{
-		private readonly InstanceMethodMember _Method;
+		private readonly MethodMember _Method;
 		private readonly object _Handler;
 		private readonly IDataLoaderContextAccessor _DataLoader;
 		private readonly Func<PARENT, KEY> _GetParentKey;
 		private readonly Func<CHILD, KEY> _GetChildKey;
 
-		public CollectionBatchLoaderFieldResolver(InstanceMethodMember method, object handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+		public CollectionBatchLoaderFieldResolver(MethodMember method, object handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		{
 			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
@@ -51,7 +51,7 @@ namespace TypeCache.GraphQL.Resolvers
 				keys =>
 				{
 					var arguments = this.GetArguments(context, keys).ToArray();
-					var result = this._Method.Invoke!(this._Handler, arguments);
+					var result = this._Method.Invoke(this._Handler, arguments);
 					return result switch
 					{
 						ValueTask<IEnumerable<CHILD>> valueTask => valueTask.AsTask(),

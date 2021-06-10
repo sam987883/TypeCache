@@ -55,11 +55,7 @@ namespace TypeCache.Reflection.Extensions
 			=> @this.Parameters.IsCallableWith(arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsCallableWith(this InstanceMethodMember @this, params object?[]? arguments)
-			=> @this.Parameters.IsCallableWith(arguments);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsCallableWith(this StaticMethodMember @this, params object?[]? arguments)
+		public static bool IsCallableWith(this MethodMember @this, params object?[]? arguments)
 			=> @this.Parameters.IsCallableWith(arguments);
 
 		private static bool IsCallableWith(this IImmutableList<MethodParameter> @this, params object?[]? arguments)

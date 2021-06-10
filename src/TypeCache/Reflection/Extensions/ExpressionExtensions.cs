@@ -285,6 +285,20 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.TypeIs(@this, type);
 
 		/// <summary>
+		/// <c><see cref="Expression"/>.ReferenceNotEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(null))</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BinaryExpression IsNotNull(this Expression @this)
+			=> Expression.ReferenceNotEqual(@this, Expression.Constant(null));
+
+		/// <summary>
+		/// <c><see cref="Expression"/>.ReferenceEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(null))</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BinaryExpression IsNull(this Expression @this)
+			=> Expression.ReferenceEqual(@this, Expression.Constant(null));
+
+		/// <summary>
 		/// <c><see cref="Expression.Lambda(Expression, IEnumerable{ParameterExpression}?)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

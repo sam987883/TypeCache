@@ -18,11 +18,11 @@ namespace TypeCache.GraphQL.Resolvers
 {
 	public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 	{
-		private readonly InstanceMethodMember _Method;
+		private readonly MethodMember _Method;
 		private readonly object _Handler;
 		private readonly IDataLoaderContextAccessor _DataLoader;
 
-		public ItemLoaderFieldResolver(InstanceMethodMember method, object handler, IDataLoaderContextAccessor dataLoader)
+		public ItemLoaderFieldResolver(MethodMember method, object handler, IDataLoaderContextAccessor dataLoader)
 		{
 			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
@@ -47,7 +47,7 @@ namespace TypeCache.GraphQL.Resolvers
 				() =>
 				{
 					var arguments = this.GetArguments(context).ToArray();
-					var result = this._Method.Invoke!(this._Handler, arguments);
+					var result = this._Method.Invoke(this._Handler, arguments);
 					return result switch
 					{
 						ValueTask<T> valueTask => valueTask.AsTask(),
