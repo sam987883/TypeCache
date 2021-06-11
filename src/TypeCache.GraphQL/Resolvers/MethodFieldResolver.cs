@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
@@ -24,7 +25,7 @@ namespace TypeCache.GraphQL.Resolvers
 				handler.AssertNotNull(nameof(handler));
 
 			if (method.Return.IsVoid)
-				throw new NotSupportedException($"{nameof(MethodFieldResolver)}: Graph endpoints cannot have a return type that is void, Task or ValueTask.");
+				throw new NotSupportedException($"{nameof(MethodFieldResolver)}: Graph endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
 			this._Method = method;
 			this._Handler = handler;

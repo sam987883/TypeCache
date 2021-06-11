@@ -15,7 +15,7 @@ namespace TypeCache.Reflection
 		internal MethodParameter(RuntimeMethodHandle methodHandle, ParameterInfo parameterInfo)
 		{
 			this._MethodHandle = methodHandle;
-			this.Attributes = parameterInfo.GetCustomAttributes<Attribute>(true).ToImmutableArray();
+			this.Attributes = parameterInfo.GetCustomAttributes<Attribute>(true)?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.DefaultValue = parameterInfo.DefaultValue;
 			this.HasDefaultValue = parameterInfo.HasDefaultValue;
 			this.IsOptional = parameterInfo.IsOptional;

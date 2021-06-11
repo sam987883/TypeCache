@@ -269,33 +269,36 @@ namespace TypeCache.GraphQL.Extensions
 		}
 
 		private static Type ToGraphType(this TypeMember @this, bool isInputType)
-			=> @this.SystemType switch
+			=> @this.Kind switch
 			{
-				_ when @this.Kind is Kind.Delegate => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-				_ when @this.Kind is Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
-				SystemType.String => typeof(StringGraphType),
-				SystemType.Uri => typeof(UriGraphType),
-				_ when @this.IsEnumerable => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType)),
-				SystemType.Boolean => typeof(BooleanGraphType),
-				SystemType.SByte => typeof(SByteGraphType),
-				SystemType.Int16 => typeof(ShortGraphType),
-				SystemType.Int32 or SystemType.Index => typeof(IntGraphType),
-				SystemType.Int64 or SystemType.NInt => typeof(LongGraphType),
-				SystemType.Byte => typeof(ByteGraphType),
-				SystemType.UInt16 => typeof(UShortGraphType),
-				SystemType.UInt32 => typeof(UIntGraphType),
-				SystemType.UInt64 or SystemType.NUInt => typeof(ULongGraphType),
-				SystemType.Single or SystemType.Double => typeof(FloatGraphType),
-				SystemType.Decimal => typeof(DecimalGraphType),
-				SystemType.DateTime => typeof(DateTimeGraphType),
-				SystemType.DateTimeOffset => typeof(DateTimeOffsetGraphType),
-				SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
-				SystemType.Guid => typeof(GuidGraphType),
-				SystemType.Range => typeof(StringGraphType),
-				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedTypeHandle!.Value.GetTypeMember().ToGraphType(isInputType),
-				_ when @this.Kind is Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
-				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
-				_ => typeof(GraphObjectType<>).MakeGenericType(@this)
+				Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+				Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
+				Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.ToGraphType(isInputType)),
+				Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
+				_ => @this.SystemType switch
+				{
+					SystemType.String => typeof(StringGraphType),
+					SystemType.Uri => typeof(UriGraphType),
+					SystemType.Boolean => typeof(BooleanGraphType),
+					SystemType.SByte => typeof(SByteGraphType),
+					SystemType.Int16 => typeof(ShortGraphType),
+					SystemType.Int32 or SystemType.Index => typeof(IntGraphType),
+					SystemType.Int64 or SystemType.NInt => typeof(LongGraphType),
+					SystemType.Byte => typeof(ByteGraphType),
+					SystemType.UInt16 => typeof(UShortGraphType),
+					SystemType.UInt32 => typeof(UIntGraphType),
+					SystemType.UInt64 or SystemType.NUInt => typeof(ULongGraphType),
+					SystemType.Single or SystemType.Double => typeof(FloatGraphType),
+					SystemType.Decimal => typeof(DecimalGraphType),
+					SystemType.DateTime => typeof(DateTimeGraphType),
+					SystemType.DateTimeOffset => typeof(DateTimeOffsetGraphType),
+					SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
+					SystemType.Guid => typeof(GuidGraphType),
+					SystemType.Range => typeof(StringGraphType),
+					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.ToGraphType(isInputType),
+					_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
+					_ => typeof(GraphObjectType<>).MakeGenericType(@this)
+				}
 			};
 
 		private static QueryArgument ToQueryArgument(this MethodParameter @this)

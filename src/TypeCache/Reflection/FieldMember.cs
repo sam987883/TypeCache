@@ -15,10 +15,13 @@ namespace TypeCache.Reflection
 	{
 		static FieldMember()
 		{
-			Cache = new LazyDictionary<RuntimeFieldHandle, FieldMember>(handle => new FieldMember(handle.ToFieldInfo()));
+			Cache = new LazyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember>(CreateFieldMember);
+
+			static FieldMember CreateFieldMember((RuntimeFieldHandle FieldHandle, RuntimeTypeHandle TypeHandle) handle)
+				=> new FieldMember((FieldInfo)handle.TypeHandle.ToFieldInfo(handle.FieldHandle)!);
 		}
 
-		internal static IReadOnlyDictionary<RuntimeFieldHandle, FieldMember> Cache { get; }
+		internal static IReadOnlyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember> Cache { get; }
 
 		internal FieldMember(FieldInfo fieldInfo)
 			: base(fieldInfo, fieldInfo.IsAssembly, fieldInfo.IsPublic)
@@ -52,6 +55,10 @@ namespace TypeCache.Reflection
 		public bool Static { get; }
 
 		public TypeMember Type { get; }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator FieldInfo(FieldMember member)
+			=> member.Handle.ToFieldInfo();
 
 		/// <param name="instance">Pass null if the field is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

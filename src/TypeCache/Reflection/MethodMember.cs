@@ -17,10 +17,13 @@ namespace TypeCache.Reflection
 	{
 		static MethodMember()
 		{
-			Cache = new LazyDictionary<RuntimeMethodHandle, MethodMember>(handle => new MethodMember((MethodInfo)handle.ToMethodBase()!));
+			Cache = new LazyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember>(CreateMethodMember);
+
+			static MethodMember CreateMethodMember((RuntimeMethodHandle MethodHandle, RuntimeTypeHandle TypeHandle) handle)
+				=> new MethodMember((MethodInfo)handle.TypeHandle.ToMethodBase(handle.MethodHandle)!);
 		}
 
-		internal static IReadOnlyDictionary<RuntimeMethodHandle, MethodMember> Cache { get; }
+		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
 
 		internal MethodMember(MethodInfo methodInfo)
 			: base(methodInfo, methodInfo.IsAssembly, methodInfo.IsPublic)
@@ -39,7 +42,7 @@ namespace TypeCache.Reflection
 
 		public RuntimeMethodHandle Handle { get; }
 
-		public Delegate? Method { get; }
+		public Delegate Method { get; }
 
 		public IImmutableList<MethodParameter> Parameters { get; }
 
@@ -48,6 +51,10 @@ namespace TypeCache.Reflection
 		public bool Static { get; }
 
 		public TypeMember Type { get; }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator MethodInfo(MethodMember member)
+			=> (MethodInfo)member.Handle.ToMethodBase()!;
 
 		/// <param name="instance">Pass null if the method is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

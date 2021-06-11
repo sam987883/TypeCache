@@ -45,8 +45,6 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 			=> new SqlApi<T>(this._Mediator, this._SqlApi, objectSchema.Name);
 
-#nullable disable
-
 		/// <summary>
 		/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
 		/// <list type="bullet">
@@ -68,58 +66,46 @@ namespace TypeCache.GraphQL.Types
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphMutationAttribute>()).To(this.AddMutation));
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).To(method =>
 			{
-				var parentType = method.Attributes.First<GraphSubqueryAttribute>().ParentType;
-				var handler = this._ServiceProvider.GetRequiredService(method.Type);
+				var parentType = method.Attributes.First<GraphSubqueryAttribute>()!.ParentType;
+				var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
 				var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
 				return this.Query.AddField(method.ToFieldType(resolver));
 			}));
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).To(method =>
 			{
-				var attribute = method.Attributes.First<GraphSubqueryBatchAttribute>();
-				var parentType = attribute.ParentType.GetTypeMember();
-				var key = attribute.Key;
-				var handler = this._ServiceProvider.GetRequiredService(method.Type);
-
-				if (!method.Return.Type.Implements(typeof(IEnumerable<>)))
-					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
-
-				var parentKeyProperty = attribute.ParentType.GetTypeMember().Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(key));
-				if (parentKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
-
-				var childType = method.Return.Type.EnclosedTypeHandle.Value.GetTypeMember();
-				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(attribute.Key));
-				if (childKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
-
-				return this.AddSubqueryBatch(method, parentKeyProperty, childKeyProperty);
+				var (parentProperty, childProperty) = getParentChildProperties(method);
+				return this.AddSubqueryBatch(method, parentProperty, childProperty);
 			}));
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).To(method =>
 			{
-				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>();
-				var parentType = attribute.ParentType.GetTypeMember();
-				var key = attribute.Key;
-				var handler = this._ServiceProvider.GetRequiredService(method.Type);
-
-				if (!method.Return.Type.Implements(typeof(IEnumerable<>)))
-					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
-
-				var parentKeyProperty = attribute.ParentType.GetTypeMember().Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(key));
-				if (parentKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
-
-				var childType = method.Return.Type.EnclosedTypeHandle.Value.GetTypeMember();
-				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>().Name.Is(attribute.Key));
-				if (childKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with {nameof(key)} \"{key}\".");
-
-				return this.AddSubqueryCollection(method, parentKeyProperty, childKeyProperty);
+				var (parentProperty, childProperty) = getParentChildProperties(method);
+				return this.AddSubqueryCollection(method, parentProperty, childProperty);
 			}));
 
 			return fieldTypes.ToArray();
-		}
 
-#nullable enable
+			(PropertyMember, PropertyMember) getParentChildProperties(MethodMember method)
+			{
+				if (method.Return.Type.Kind is not Kind.Collection)
+					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+
+				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
+				var parentType = attribute.ParentType.GetTypeMember();
+				var key = attribute.Key;
+				var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+
+				var parentKeyProperty = parentType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
+				if (parentKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
+
+				var childType = method.Return.Type.EnclosedType!;
+				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
+				if (childKeyProperty is null)
+					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
+
+				return (parentKeyProperty, childKeyProperty);
+			}
+		}
 
 		/// <summary>
 		/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -344,6 +330,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddSqlApiEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -375,6 +363,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddSqlOnlyEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -402,6 +392,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddDeleteEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -421,6 +413,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddDeleteSqlEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -439,6 +433,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddInsertEndpoint<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -456,6 +452,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddInsertSqlEndpoint<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -473,6 +471,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddSelectEndpoint<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -490,6 +490,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddSelectSqlEndpoint<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -508,6 +510,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddUpdateEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 
@@ -527,6 +531,8 @@ namespace TypeCache.GraphQL.Types
 		public void AddUpdateSqlEndpoints<T>(string table)
 			where T : class, new()
 		{
+			table.AssertNotBlank(nameof(table));
+
 			var objectSchema = this._SqlApi.GetObjectSchema(table);
 			var sqlApi = this.CreateSqlApi<T>(objectSchema);
 

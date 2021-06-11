@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
@@ -12,17 +11,16 @@ namespace TypeCache.Reflection.Extensions
 {
 	public static class ReflectionExtensions
 	{
-		private static readonly IComparer<ParameterInfo> ParameterSortComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position)!;
+		private static readonly IComparer<ParameterInfo> ParameterSortComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
 
 		public static string GetName(this MemberInfo @this)
 			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? (@this.Name.Contains('`') ? @this.Name.Left(@this.Name.IndexOf('`')) : @this.Name);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string GetName(this ParameterInfo @this)
-			=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name!;
+		public static bool IsInvokable(this ConstructorInfo @this)
+			=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
 
-		public static bool IsInvokable(this MethodBase @this)
-			=> @this.GetParameters().All(_ => !_!.IsOut && _.ParameterType.IsInvokable());
+		public static bool IsInvokable(this MethodInfo @this)
+			=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable()) && !@this.ReturnType.IsByRef && !@this.ReturnType.IsByRefLike;
 
 		public static CreateType ToCreateType(this ConstructorInfo @this)
 		{
@@ -60,10 +58,10 @@ namespace TypeCache.Reflection.Extensions
 				{ Length: 0 } when @this.IsStatic => @this.CallStatic().Lambda().Compile(),
 				{ Length: 0 } => instance.Call(@this).Lambda(instance).Compile(),
 				_ when @this.IsStatic => @this.CallStatic(parameters).Lambda(parameters).Compile(),
-				_ => instance.Call(@this, parameters).Lambda(getLambdaParameters(@this, instance, parameters)).Compile()
+				_ => instance.Call(@this, parameters).Lambda(getLambdaParameters(instance, parameters)).Compile()
 			};
 
-			static IEnumerable<ParameterExpression> getLambdaParameters(MethodInfo methodInfo, ParameterExpression instance, ParameterExpression[] parameters)
+			static IEnumerable<ParameterExpression> getLambdaParameters(ParameterExpression instance, ParameterExpression[] parameters)
 			{
 				yield return instance;
 				var count = parameters.Length;

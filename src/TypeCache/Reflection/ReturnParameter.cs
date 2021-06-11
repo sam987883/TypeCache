@@ -14,7 +14,7 @@ namespace TypeCache.Reflection
 		internal ReturnParameter(MethodInfo methodInfo)
 		{
 			this._MethodHandle = methodInfo.MethodHandle;
-			this.Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>().ToImmutableArray();
+			this.Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true)?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.Type = methodInfo.ReturnType.GetTypeMember();
 		}
 

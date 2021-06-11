@@ -11,7 +11,7 @@ namespace TypeCache.Reflection
 	{
 		internal Member(MemberInfo memberInfo, bool isInternal, bool isPublic)
 		{
-			this.Attributes = memberInfo.GetCustomAttributes<Attribute>().ToImmutableArray();
+			this.Attributes = memberInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.Internal = isInternal;
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? memberInfo.Name;
 			this.Public = isPublic;

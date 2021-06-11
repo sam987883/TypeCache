@@ -5,9 +5,11 @@ namespace TypeCache.Reflection
 	public enum Kind
 	{
 		Class,
-		Struct,
 		Interface,
 		Delegate,
-		Enum
+		Struct,
+		Enum,
+		Collection,
+		Pointer
 	}
 }

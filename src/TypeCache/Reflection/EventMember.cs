@@ -15,9 +15,9 @@ namespace TypeCache.Reflection
 			: base(eventInfo, eventInfo.RaiseMethod!.IsAssembly, eventInfo.RaiseMethod.IsPublic)
 		{
 			this.Type = eventInfo.DeclaringType!.GetTypeMember();
-			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember();
-			this.RaiseEvent = eventInfo.RaiseMethod.MethodHandle.GetMethodMember();
-			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember();
+			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.RaiseEvent = eventInfo.RaiseMethod.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 			this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
 		}
 

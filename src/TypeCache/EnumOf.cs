@@ -17,6 +17,8 @@ namespace TypeCache
 	public static class EnumOf<T>
 		where T : struct, Enum
 	{
+		private const BindingFlags STATIC_BINDINGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+
 		public sealed class Token
 			: Member, IEquatable<Token>
 		{
@@ -92,7 +94,7 @@ namespace TypeCache
 			UnderlyingType = type.GetSystemType();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
-			Tokens = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
+			Tokens = type.GetFields(STATIC_BINDINGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
 		public static IImmutableList<Attribute> Attributes { get; }

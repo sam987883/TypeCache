@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -16,31 +15,23 @@ namespace TypeCache
 
 		public static IImmutableList<Attribute> Attributes => Member.Attributes;
 
-		public static RuntimeTypeHandle BaseTypeHandle => Member.BaseTypeHandle;
+		public static TypeMember BaseType => Member.BaseType;
 
-		public static TypeMember BaseType { get; } = Member.BaseTypeHandle.GetTypeMember();
+		public static TypeMember? EnclosedType => Member.EnclosedType;
 
-		public static TypeMember? EnclosedType { get; } = Member.EnclosedTypeHandle?.GetTypeMember();
-
-		public static IImmutableList<TypeMember> GenericTypes { get; } = Member.GenericTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
+		public static IImmutableList<TypeMember> GenericTypes => Member.GenericTypes;
 
 		public static RuntimeTypeHandle Handle => Member.Handle;
 
-		public static IImmutableList<TypeMember> InterfaceTypes { get; } = Member.InterfaceTypeHandles.To(handle => handle.GetTypeMember()).ToImmutableArray();
+		public static IImmutableList<TypeMember> InterfaceTypes => Member.InterfaceTypes;
 
-		public static bool Is<V>() => Member.Handle.Is<V>();
-
-		public static bool Is(Type type) => Member.Handle.Is(type);
-
-		public static bool IsEnumerable => Member.IsEnumerable;
-
-		public static bool IsInternal => Member.Internal;
-
-		public static bool IsPublic => Member.Public;
+		public static bool Internal => Member.Internal;
 
 		public static Kind Kind => Member.Kind;
 
 		public static string Name => Member.Name;
+
+		public static bool Public => Member.Public;
 
 		public static SystemType SystemType => Member.SystemType;
 
@@ -55,6 +46,32 @@ namespace TypeCache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T Create(params object?[]? parameters)
 			=> (T)Member.Create(parameters);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Implements<V>()
+			where V : class
+			=> Member.Implements<V>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Implements(Type type)
+			=> Member.Implements(type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static object? Invoke(string name, params object?[]? parameters)
+			=> Member.Invoke(name, parameters);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is<V>()
+			=> Member.Is<V>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Is(Type type)
+			=> Member.Is(type);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static D? GetConstructor<D>()
+			where D : Delegate
+			=> Member.GetConstructor<D>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static D? GetMethod<D>(string name, bool isStatic = false)

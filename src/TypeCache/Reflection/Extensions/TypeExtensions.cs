@@ -27,8 +27,6 @@ namespace TypeCache.Reflection.Extensions
 				{ typeof(uint).TypeHandle, SystemType.UInt32},
 				{ typeof(long).TypeHandle, SystemType.Int64},
 				{ typeof(ulong).TypeHandle, SystemType.UInt64},
-				{ typeof(nint).TypeHandle, SystemType.Int32},
-				{ typeof(nuint).TypeHandle, SystemType.UInt32},
 				{ typeof(IntPtr).TypeHandle, SystemType.IntPtr},
 				{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr},
 				{ typeof(BigInteger).TypeHandle, SystemType.BigInteger},
@@ -142,6 +140,28 @@ namespace TypeCache.Reflection.Extensions
 		public static bool Any(this Type? @this, params Type[] types)
 			=> types.Any(@this.Is!);
 
+		public static Kind GetKind(this Type @this)
+			=> @this switch
+			{
+				_ when @this.IsPointer => Kind.Pointer,
+				_ when typeof(Delegate).IsAssignableFrom(@this.BaseType) => Kind.Delegate,
+				_ when @this.IsEnum => Kind.Enum,
+				_ when @this.IsInterface => Kind.Interface,
+				_ when @this.IsValueType => Kind.Struct,
+				_ when @this != typeof(string) && @this.IsEnumerable() => Kind.Collection,
+				_ => Kind.Class,
+			};
+
+		public static SystemType GetSystemType(this Type @this)
+			=> @this switch
+			{
+				_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
+				_ when @this.IsEnum => @this.GetEnumUnderlyingType().GetSystemType(),
+				_ when @this.IsArray => SystemType.Array,
+				_ when @this.IsEnumerable() => SystemType.Enumerable,
+				_ => SystemType.Unknown
+			};
+
 		/// <summary>
 		/// <c>@<paramref name="this"/>.Implements(typeof(<typeparamref name="T"/>))</c>
 		/// </summary>
@@ -186,16 +206,6 @@ namespace TypeCache.Reflection.Extensions
 		/// </summary>
 		public static bool IsInvokable(this Type @this)
 			=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
-
-		public static SystemType GetSystemType(this Type @this)
-			=> @this switch
-			{
-				_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
-				_ when @this.IsEnum => @this.GetEnumUnderlyingType().GetSystemType(),
-				_ when @this.IsArray => SystemType.Array,
-				_ when @this.IsEnumerable() => SystemType.Enumerable,
-				_ => SystemType.Unknown
-			};
 
 		/// <summary>
 		/// <c><see cref="Type.GetGenericTypeDefinition"/></c>

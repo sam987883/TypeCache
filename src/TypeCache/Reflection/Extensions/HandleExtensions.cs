@@ -12,22 +12,22 @@ namespace TypeCache.Reflection.Extensions
 		/// <c><see cref="ConstructorMember.Cache"/>[@<paramref name="this"/>]</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ConstructorMember GetConstructorMember(this RuntimeMethodHandle @this)
-			=> ConstructorMember.Cache[@this];
+		public static ConstructorMember GetConstructorMember(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
+			=> ConstructorMember.Cache[(@this, typeHandle)];
 
 		/// <summary>
 		/// <c><see cref="FieldMember.Cache"/>[@<paramref name="this"/>]</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static FieldMember GetFieldMember(this RuntimeFieldHandle @this)
-			=> FieldMember.Cache[@this];
+		public static FieldMember GetFieldMember(this RuntimeFieldHandle @this, RuntimeTypeHandle typeHandle)
+			=> FieldMember.Cache[(@this, typeHandle)];
 
 		/// <summary>
 		/// <c><see cref="MethodMember.Cache"/>[@<paramref name="this"/>]</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MethodMember GetMethodMember(this RuntimeMethodHandle @this)
-			=> MethodMember.Cache[@this];
+		public static MethodMember GetMethodMember(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
+			=> MethodMember.Cache[(@this, typeHandle)];
 
 		/// <summary>
 		/// <c><see cref="TypeMember.Cache"/>[@<paramref name="this"/>]</c>
@@ -61,6 +61,13 @@ namespace TypeCache.Reflection.Extensions
 			=> FieldInfo.GetFieldFromHandle(@this);
 
 		/// <summary>
+		/// <c><see cref="FieldInfo.GetFieldFromHandle(RuntimeFieldHandle, RuntimeTypeHandle)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static FieldInfo ToFieldInfo(this RuntimeTypeHandle @this, RuntimeFieldHandle fieldHandle)
+			=> FieldInfo.GetFieldFromHandle(fieldHandle, @this);
+
+		/// <summary>
 		/// <c><see cref="Type.GetGenericTypeDefinition"/></c>
 		/// </summary>
 		public static Type? ToGenericType(this RuntimeTypeHandle @this)
@@ -75,6 +82,13 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MethodBase? ToMethodBase(this RuntimeMethodHandle @this)
 			=> MethodBase.GetMethodFromHandle(@this);
+
+		/// <summary>
+		/// <c><see cref="MethodBase.GetMethodFromHandle(RuntimeMethodHandle, RuntimeTypeHandle)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MethodBase? ToMethodBase(this RuntimeTypeHandle @this, RuntimeMethodHandle methodHandle)
+			=> MethodBase.GetMethodFromHandle(methodHandle, @this);
 
 		/// <summary>
 		/// <c><see cref="Type.GetTypeFromHandle(RuntimeTypeHandle)"/></c>

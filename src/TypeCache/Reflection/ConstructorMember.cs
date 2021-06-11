@@ -17,22 +17,26 @@ namespace TypeCache.Reflection
 	{
 		static ConstructorMember()
 		{
-			Cache = new LazyDictionary<RuntimeMethodHandle, ConstructorMember>(handle => new ConstructorMember((ConstructorInfo)handle.ToMethodBase()!));
+			Cache = new LazyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), ConstructorMember>(CreateConstructorMember);
+
+			static ConstructorMember CreateConstructorMember((RuntimeMethodHandle MethodHandle, RuntimeTypeHandle TypeHandle) handle)
+				=> new ConstructorMember((ConstructorInfo)handle.TypeHandle.ToMethodBase(handle.MethodHandle)!);
 		}
 
-		internal static IReadOnlyDictionary<RuntimeMethodHandle, ConstructorMember> Cache { get; }
+		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), ConstructorMember> Cache { get; }
 
 		internal ConstructorMember(ConstructorInfo constructorInfo)
 			: base(constructorInfo, constructorInfo.IsAssembly, constructorInfo.IsPublic)
 		{
-			this.Create = constructorInfo.ToCreateType();
 			this.Handle = constructorInfo.MethodHandle;
 			this.Method = constructorInfo.ToDelegate();
 			this.Parameters = constructorInfo.GetParameters().To(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
 			this.Type = constructorInfo.GetTypeMember();
+
+			this._Create = constructorInfo.ToCreateType();
 		}
 
-		public CreateType? Create { get; }
+		private readonly CreateType _Create;
 
 		public RuntimeMethodHandle Handle { get; }
 
@@ -41,6 +45,14 @@ namespace TypeCache.Reflection
 		public IImmutableList<MethodParameter> Parameters { get; }
 
 		public TypeMember Type { get; }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator ConstructorInfo(ConstructorMember member)
+			=> (ConstructorInfo)member.Handle.ToMethodBase()!;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public object Create(params object?[]? arguments)
+			=> this._Create(arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(MethodMember? other)

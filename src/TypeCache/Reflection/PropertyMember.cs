@@ -15,11 +15,11 @@ namespace TypeCache.Reflection
 		internal PropertyMember(PropertyInfo propertyInfo)
 			: base(propertyInfo, propertyInfo.GetAccessors(true).First()!.IsAssembly, propertyInfo.GetAccessors(true).First()!.IsPublic)
 		{
+			this.Type = propertyInfo.GetTypeMember();
 			this.PropertyType = propertyInfo.PropertyType.GetTypeMember();
 			this.Indexer = propertyInfo.GetIndexParameters().Any();
-			this.Getter = propertyInfo.GetMethod?.MethodHandle.GetMethodMember();
-			this.Setter = propertyInfo.SetMethod?.MethodHandle.GetMethodMember();
-			this.Type = propertyInfo.GetTypeMember();
+			this.Getter = propertyInfo.GetMethod?.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.Setter = propertyInfo.SetMethod?.MethodHandle.GetMethodMember(this.Type.Handle);
 
 			this._Handle = this.Getter?.Handle ?? this.Setter!.Handle;
 		}

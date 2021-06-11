@@ -739,7 +739,7 @@ namespace TypeCache.Collections.Extensions
 			=> values.All(value => @this.Has(value, comparer));
 
 		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
-		public static IEnumerable<T?> If<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
+		public static IEnumerable<T> If<T>(this IEnumerable<T?>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -753,7 +753,7 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = array[i];
-						if (filter(item))
+						if (item is not null && filter(item))
 							yield return item;
 					}
 					yield break;
@@ -762,7 +762,7 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = immutableArray[i];
-						if (filter(item))
+						if (item is not null && filter(item))
 							yield return item;
 					}
 					yield break;
@@ -771,20 +771,20 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = list[i];
-						if (filter(item))
+						if (item is not null && filter(item))
 							yield return item;
 					}
 					yield break;
 				default:
 					foreach (var item in @this)
-						if (filter(item!))
+						if (item is not null && filter(item!))
 							yield return item;
 					yield break;
 			}
 		}
 
 		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
-		public static async IAsyncEnumerable<T?> IfAsync<T>(this IEnumerable<T?>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
+		public static async IAsyncEnumerable<T> IfAsync<T>(this IEnumerable<T?>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
 
@@ -798,7 +798,7 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = array[i];
-						if (await filter(item))
+						if (item is not null && await filter(item))
 							yield return item;
 					}
 					yield break;
@@ -807,7 +807,7 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = immutableArray[i];
-						if (await filter(item))
+						if (item is not null && await filter(item))
 							yield return item;
 					}
 					yield break;
@@ -816,13 +816,13 @@ namespace TypeCache.Collections.Extensions
 					for (var i = 0; i < count; ++i)
 					{
 						var item = list[i];
-						if (await filter(item))
+						if (item is not null && await filter(item))
 							yield return item;
 					}
 					yield break;
 				default:
 					foreach (var item in @this)
-						if (await filter(item!))
+						if (item is not null && await filter(item!))
 							yield return item;
 					yield break;
 			}
@@ -834,7 +834,7 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : class
-			=> @this.If(_ => _ is not null)!;
+			=> @this.If(_ => _ is not null);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(_ =&gt; _.HasValue).To(_ => _.Value)</c>
