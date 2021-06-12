@@ -24,7 +24,7 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<RuntimeTypeHandle, TypeMember> Cache { get; }
 
 		internal TypeMember(Type type)
-			: base(type, !type.IsVisible, type.IsPublic)
+			: base(type)
 		{
 			this.Handle = type.TypeHandle;
 			this.Kind = type.GetKind();
@@ -179,9 +179,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(TypeMember? other)
 			=> this.Handle == other?.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
 	}
 }

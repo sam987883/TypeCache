@@ -24,12 +24,11 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember> Cache { get; }
 
 		internal FieldMember(FieldInfo fieldInfo)
-			: base(fieldInfo, fieldInfo.IsAssembly, fieldInfo.IsPublic)
+			: base(fieldInfo)
 		{
 			this.FieldType = fieldInfo.FieldType.GetTypeMember();
 			this.Handle = fieldInfo.FieldHandle;
 			this.Static = fieldInfo.IsStatic;
-			this.Type = fieldInfo.GetTypeMember();
 			this.Getter = fieldInfo.ToGetter();
 			this._GetValue = fieldInfo.ToGetValue();
 
@@ -54,11 +53,11 @@ namespace TypeCache.Reflection
 
 		public bool Static { get; }
 
-		public TypeMember Type { get; }
+		public new TypeMember Type => base.Type!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator FieldInfo(FieldMember member)
-			=> member.Handle.ToFieldInfo();
+			=> member.Type!.Handle.ToFieldInfo(member.Handle);
 
 		/// <param name="instance">Pass null if the field is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,9 +73,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(FieldMember? other)
 			=> this.Handle == other?.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
 	}
 }

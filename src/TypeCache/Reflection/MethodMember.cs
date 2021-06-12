@@ -26,13 +26,12 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
 
 		internal MethodMember(MethodInfo methodInfo)
-			: base(methodInfo, methodInfo.IsAssembly, methodInfo.IsPublic)
+			: base(methodInfo)
 		{
 			this.Handle = methodInfo.MethodHandle;
 			this.Method = methodInfo.ToDelegate();
 			this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 			this.Static = methodInfo.IsStatic;
-			this.Type = methodInfo.GetTypeMember();
 			this.Return = new ReturnParameter(methodInfo);
 
 			this._Invoke = methodInfo.ToInvokeType();
@@ -50,11 +49,11 @@ namespace TypeCache.Reflection
 
 		public bool Static { get; }
 
-		public TypeMember Type { get; }
+		public new TypeMember Type => base.Type!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator MethodInfo(MethodMember member)
-			=> (MethodInfo)member.Handle.ToMethodBase()!;
+			=> (MethodInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
 
 		/// <param name="instance">Pass null if the method is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,9 +63,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(MethodMember? other)
 			=> this.Handle == other?.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
 	}
 }

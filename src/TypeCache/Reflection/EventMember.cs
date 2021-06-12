@@ -12,16 +12,15 @@ namespace TypeCache.Reflection
 		: Member, IEquatable<EventMember>
 	{
 		public EventMember(EventInfo eventInfo)
-			: base(eventInfo, eventInfo.RaiseMethod!.IsAssembly, eventInfo.RaiseMethod.IsPublic)
+			: base(eventInfo)
 		{
-			this.Type = eventInfo.DeclaringType!.GetTypeMember();
-			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
-			this.RaiseEvent = eventInfo.RaiseMethod.MethodHandle.GetMethodMember(this.Type.Handle);
-			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 			this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
+			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.RaiseEvent = eventInfo.RaiseMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 		}
 
-		public TypeMember Type { get; }
+		public TypeMember EventHandlerType { get; }
 
 		public MethodMember AddEventHandler { get; }
 
@@ -29,26 +28,25 @@ namespace TypeCache.Reflection
 
 		public MethodMember RemoveEventHandler { get; }
 
-		public TypeMember EventHandlerType { get; }
+		public new TypeMember Type => base.Type!;
 
+		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(object instance, Delegate handler)
+		public void Add(object? instance, Delegate handler)
 			=> this.AddEventHandler.Invoke(instance, handler);
 
+		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Raise(object instance)
+		public void Raise(object? instance)
 			=> this.RaiseEvent.Invoke(instance);
 
+		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Remove(object instance, Delegate handler)
+		public void Remove(object? instance, Delegate handler)
 			=> this.RemoveEventHandler.Invoke(instance, handler);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(EventMember? other)
 			=> this.RaiseEvent.Handle == other?.RaiseEvent.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.RaiseEvent.Handle.GetHashCode();
 	}
 }

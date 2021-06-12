@@ -23,7 +23,7 @@ namespace TypeCache
 			: Member, IEquatable<Token>
 		{
 			internal Token(FieldInfo fieldInfo)
-				: base(fieldInfo, fieldInfo.IsAssembly, fieldInfo.IsPublic)
+				: base(fieldInfo)
 			{
 				this.Value = (T)Enum.Parse<T>(fieldInfo.Name);
 				this.Hex = this.Value.ToString("X");

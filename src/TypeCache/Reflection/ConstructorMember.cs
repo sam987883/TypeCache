@@ -26,12 +26,11 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), ConstructorMember> Cache { get; }
 
 		internal ConstructorMember(ConstructorInfo constructorInfo)
-			: base(constructorInfo, constructorInfo.IsAssembly, constructorInfo.IsPublic)
+			: base(constructorInfo)
 		{
 			this.Handle = constructorInfo.MethodHandle;
 			this.Method = constructorInfo.ToDelegate();
 			this.Parameters = constructorInfo.GetParameters().To(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
-			this.Type = constructorInfo.GetTypeMember();
 
 			this._Create = constructorInfo.ToCreateType();
 		}
@@ -44,11 +43,11 @@ namespace TypeCache.Reflection
 
 		public IImmutableList<MethodParameter> Parameters { get; }
 
-		public TypeMember Type { get; }
+		public new TypeMember Type => base.Type!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ConstructorInfo(ConstructorMember member)
-			=> (ConstructorInfo)member.Handle.ToMethodBase()!;
+			=> (ConstructorInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public object Create(params object?[]? arguments)
@@ -57,9 +56,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(MethodMember? other)
 			=> this.Handle == other?.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
 	}
 }

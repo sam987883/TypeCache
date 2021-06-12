@@ -26,7 +26,7 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<RuntimeTypeHandle, DelegateMember> Cache { get; }
 
 		internal DelegateMember(Type type)
-			: base(type, !type.IsVisible, type.IsPublic)
+			: base(type)
 		{
 			typeof(Delegate).IsAssignableFrom(type.BaseType).Assert($"{nameof(type)}.{nameof(Type.BaseType)}", true);
 
@@ -59,9 +59,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(DelegateMember? other)
 			=> this.Handle == other?.Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
 	}
 }

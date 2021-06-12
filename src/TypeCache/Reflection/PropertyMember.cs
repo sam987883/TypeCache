@@ -13,9 +13,8 @@ namespace TypeCache.Reflection
 		: Member, IEquatable<PropertyMember>
 	{
 		internal PropertyMember(PropertyInfo propertyInfo)
-			: base(propertyInfo, propertyInfo.GetAccessors(true).First()!.IsAssembly, propertyInfo.GetAccessors(true).First()!.IsPublic)
+			: base(propertyInfo)
 		{
-			this.Type = propertyInfo.GetTypeMember();
 			this.PropertyType = propertyInfo.PropertyType.GetTypeMember();
 			this.Indexer = propertyInfo.GetIndexParameters().Any();
 			this.Getter = propertyInfo.GetMethod?.MethodHandle.GetMethodMember(this.Type.Handle);
@@ -34,7 +33,7 @@ namespace TypeCache.Reflection
 
 		public MethodMember? Setter { get; }
 
-		public TypeMember Type { get; }
+		public new TypeMember Type => base.Type!;
 
 		/// <param name="instance">Pass null if the property getter is static.</param>
 		/// <param name="indexers">Ignore if property is not an indexer.</param>
@@ -47,7 +46,7 @@ namespace TypeCache.Reflection
 		/// <param name="indexers">Ignore if property is not an indexer.</param>
 		public void SetValue(object? instance, object? value, params object?[]? indexers)
 		{
-			if (indexers?.Any() is true)
+			if (this.Indexer)
 				this.Setter?.Invoke(instance, indexers.And(value).ToArray());
 			else
 				this.Setter?.Invoke(instance, value);
@@ -56,9 +55,5 @@ namespace TypeCache.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(PropertyMember? other)
 			=> this._Handle == other?._Handle;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override int GetHashCode()
-			=> this._Handle.GetHashCode();
 	}
 }
