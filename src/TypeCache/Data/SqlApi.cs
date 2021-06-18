@@ -168,11 +168,15 @@ ORDER BY p.[parameter_id] ASC;";
 		{
 			var objectName = name.Split('.').Get(^1)!.TrimStart('[').TrimEnd(']');
 			var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!.TrimStart('[').TrimEnd(']');
-			var request = new SqlRequest(ObjectSchemaSQL, new[]
+			var request = new SqlRequest
 			{
-				new Parameter(OBJECT_NAME, objectName),
-				new Parameter(SCHEMA_NAME, schemaName)
-			});
+				SQL = ObjectSchemaSQL,
+				Parameters = new[]
+				{
+					new Parameter(OBJECT_NAME, objectName),
+					new Parameter(SCHEMA_NAME, schemaName)
+				}
+			};
 			var (table, columns, parameters, _) = this.RunAsync(request).Result;
 
 			if (!table!.Rows.Any())

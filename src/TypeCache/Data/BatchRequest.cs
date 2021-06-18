@@ -1,5 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Text.Json.Serialization;
+using TypeCache.Converters;
+
 namespace TypeCache.Data
 {
 	/// <summary>
@@ -46,6 +49,7 @@ namespace TypeCache.Data
 		/// JSON: <code>"Output": { "Alias 1": "SQL Expression", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
 		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
+		[JsonConverter(typeof(OutputExpressionArrayJsonConverter))]
 		public OutputExpression[]? Output { get; set; }
 
 		/// <summary>

@@ -36,7 +36,7 @@ namespace TypeCache.Web.Middleware
 
 		protected async ValueTask HandleRequest<T, R>(T request, HttpContext httpContext)
 		{
-			var response = await this.Mediator.ApplyRuleAsync<ISqlApi, T, R>(this.SqlApi, request);
+			var response = await this.Mediator.ApplyRulesAsync<ISqlApi, T, R>(this.SqlApi, request);
 
 			httpContext.Response.ContentType = "application/json";
 			if (response.Exception is null)
@@ -51,7 +51,7 @@ namespace TypeCache.Web.Middleware
 		protected async ValueTask HandleSqlRequest<T>(HttpContext httpContext)
 		{
 			var request = await this.GetRequest<T>(httpContext);
-			var response = await this.Mediator.ApplyRuleAsync<T, string>(request!);
+			var response = await this.Mediator.ApplyRulesAsync<T, string>(request!);
 
 			if (response.Exception is null)
 			{

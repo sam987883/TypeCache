@@ -37,7 +37,11 @@ namespace TypeCache.Web.Middleware
 				}
 			}
 
-			var request = new StoredProcedureRequest(procedure, parameters.ToArray());
+			var request = new StoredProcedureRequest
+			{
+				Procedure = procedure,
+				Parameters = parameters.ToArray()
+			};
 			await this.HandleRequest<StoredProcedureRequest, RowSet[]>(request, httpContext);
 		}
 	}

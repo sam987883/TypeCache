@@ -50,7 +50,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, DeleteRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -74,7 +74,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, DeleteRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, DeleteRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -95,7 +95,7 @@ namespace TypeCache.GraphQL
 				}).ToArray()
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -115,7 +115,7 @@ namespace TypeCache.GraphQL
 				}).ToArray()
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -137,7 +137,7 @@ namespace TypeCache.GraphQL
 				}).ToArray()
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -158,7 +158,7 @@ namespace TypeCache.GraphQL
 				}).ToArray()
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -181,7 +181,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, SelectRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -203,7 +203,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, SelectRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, SelectRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -231,7 +231,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, UpdateRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -258,7 +258,7 @@ namespace TypeCache.GraphQL
 				Where = where
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, UpdateRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, UpdateRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 
@@ -280,7 +280,7 @@ namespace TypeCache.GraphQL
 				Update = columns
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, RowSet>(this._SqlApi, request);
 			return response.Result?.Rows is not null ? response.Result.MapModels<T>() : Array.Empty<T>();
 		}
 
@@ -301,7 +301,7 @@ namespace TypeCache.GraphQL
 				Update = columns
 			};
 
-			var response = await this._Mediator.ApplyRuleAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
+			var response = await this._Mediator.ApplyRulesAsync<ISqlApi, BatchRequest, string>(this._SqlApi, request);
 			return response.Result!;
 		}
 	}

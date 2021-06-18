@@ -12,9 +12,10 @@ namespace TypeCache.Data
 	public class UpdateRequest
 	{
 		/// <summary>
-		/// JSON: <code>"Output": { "Alias 1": "SQL Expression", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
-		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
+		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
+		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
+		[JsonConverter(typeof(OutputExpressionArrayJsonConverter))]
 		public OutputExpression[]? Output { get; set; }
 
 		/// <summary>
@@ -26,6 +27,7 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
+		[JsonConverter(typeof(ParameterArrayJsonConverter))]
 		public Parameter[]? Parameters { get; set; }
 
 		/// <summary>
@@ -38,6 +40,7 @@ namespace TypeCache.Data
 		/// JSON: <code>[ { "Column1": "Value1" }, { "Column2": NULL }, { "Column3": false } ]</code>
 		/// SQL: <code>SET [Column1] = N'Value1', [Column2] = NULL, [Column3] = 0</code>
 		/// </summary>
+		[JsonConverter(typeof(ColumnSetArrayJsonConverter))]
 		public ColumnSet[] Set { get; set; } = new ColumnSet[0];
 
 		/// <summary>

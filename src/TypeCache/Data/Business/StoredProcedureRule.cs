@@ -10,8 +10,12 @@ namespace TypeCache.Data.Business
 	{
 		public async ValueTask<StoredProcedureResponse> ApplyAsync(ISqlApi sqlApi, StoredProcedureRequest request, CancellationToken cancellationToken)
 		{
-			request = new StoredProcedureRequest(sqlApi.GetObjectSchema(request.Procedure).Name, request.Parameters);
-			return new StoredProcedureResponse(await sqlApi.CallAsync(request, cancellationToken), request.Parameters);
+			request.Procedure = sqlApi.GetObjectSchema(request.Procedure).Name;
+			return new StoredProcedureResponse
+			{
+				Output = await sqlApi.CallAsync(request, cancellationToken),
+				Parameters = request.Parameters
+			};
 		}
 	}
 }

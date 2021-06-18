@@ -20,10 +20,11 @@ namespace TypeCache.Web.Middleware
 		public async Task Invoke(HttpContext httpContext)
 		{
 			using var reader = new StreamReader(httpContext.Request.Body);
-			var parameters = httpContext.Request.Query
-				.To(query => new Parameter(query.Key, query.Value.First()!))
-				.ToArray();
-			var request = new SqlRequest(reader.ReadToEnd(), parameters);
+			var request = new SqlRequest
+			{
+				SQL = reader.ReadToEnd(),
+				Parameters = httpContext.Request.Query.To(query => new Parameter(query.Key, query.Value.First()!)).ToArray()
+			};
 
 			await this.HandleRequest<SqlRequest, RowSet[]>(request, httpContext);
 		}

@@ -14,32 +14,18 @@ namespace TypeCache.Business
 		public Mediator(IServiceProvider serviceProvider)
 			=> this._ServiceProvider = serviceProvider;
 
-		public async ValueTask<Response<R>> ApplyRuleAsync<T, R>(T request, CancellationToken cancellationToken = default)
+		public async ValueTask<Response<R>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default)
 		{
 			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<T, R>>()
 				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<T, R>>();
 			return await ruleHandler.HandleAsync(request, cancellationToken);
 		}
 
-		public async ValueTask<Response<R>> ApplyRuleAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
+		public async ValueTask<Response<R>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
 		{
 			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<M, T, R>>()
 				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<M, T, R>>();
 			return await ruleHandler.HandleAsync(metadata, request, cancellationToken);
-		}
-
-		public async ValueTask<Response<R[]>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default)
-		{
-			var rulesHandler = this._ServiceProvider.GetService<IRulesHandler<T, R>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultRulesHandler<T, R>>();
-			return await rulesHandler.HandleAsync(request, cancellationToken);
-		}
-
-		public async ValueTask<Response<R[]>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
-		{
-			var rulesHandler = this._ServiceProvider.GetService<IRulesHandler<M, T, R>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultRulesHandler<M, T, R>>();
-			return await rulesHandler.HandleAsync(metadata, request, cancellationToken);
 		}
 
 		public async ValueTask RunProcessAsync<T>(T request, CancellationToken cancellationToken = default)

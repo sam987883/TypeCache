@@ -12,9 +12,9 @@ namespace TypeCache.Converters
 	{
 		public override ComparisonExpression Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			string field = string.Empty;
+			var field = string.Empty;
 			var comparisonOperator = ComparisonOperator.Equal;
-			object value = null!;
+			object? value = null;
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
 				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
@@ -25,14 +25,10 @@ namespace TypeCache.Converters
 					{
 						if (name.Is(nameof(ComparisonExpression.Field)))
 							field = reader.GetString()!;
-						else if (name!.Is(nameof(ComparisonExpression.Operator)))
-							comparisonOperator = reader.GetString().ToEnum<ComparisonOperator>()!.Value;
 						else
 						{
-							if (!name.Is(nameof(ComparisonExpression.Value)))
-								comparisonOperator = name.ToEnum<ComparisonOperator>()!.Value;
-
-							value = JsonSerializer.Deserialize<object>(ref reader, options)!;
+							comparisonOperator = name.ToEnum<ComparisonOperator>()!.Value;
+							value = JsonSerializer.Deserialize<object>(ref reader, options);
 						}
 					}
 				}

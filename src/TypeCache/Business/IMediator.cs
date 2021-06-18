@@ -7,13 +7,9 @@ namespace TypeCache.Business
 {
 	public interface IMediator
 	{
-		ValueTask<Response<R>> ApplyRuleAsync<T, R>(T request, CancellationToken cancellationToken = default);
+		ValueTask<Response<R>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default);
 
-		ValueTask<Response<R>> ApplyRuleAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default);
-
-		ValueTask<Response<R[]>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default);
-
-		ValueTask<Response<R[]>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default);
+		ValueTask<Response<R>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default);
 
 		ValueTask RunProcessAsync<T>(T request, CancellationToken cancellationToken = default);
 

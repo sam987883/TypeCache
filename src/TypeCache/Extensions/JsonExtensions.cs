@@ -3,24 +3,35 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 
 namespace TypeCache.Extensions
 {
 	public static class JsonExtensions
 	{
-		public static IEnumerable<JsonElement> GetArrayValues(this JsonElement @this)
+		private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)
+		{
+			using var enumerator = @this.EnumerateArray();
+			while (enumerator.MoveNext())
+				yield return enumerator.Current;
+		}
+
+		public static JsonElement[] GetArrayElements(this JsonElement @this)
 		{
 			@this.ValueKind.Assert(nameof(GetArrayValues), JsonValueKind.Array);
 
-			using var enumerator = @this.EnumerateArray();
-			while (enumerator.MoveNext())
-			{
-				yield return enumerator.Current;
-			}
+			return @this.EnumerateArrayValues().ToArray();
 		}
 
-		public static IDictionary<string, JsonElement> GetObjectValues(this JsonElement @this)
+		public static object?[]? GetArrayValues(this JsonElement @this)
+		{
+			@this.ValueKind.Assert(nameof(GetArrayValues), JsonValueKind.Array);
+
+			return @this.EnumerateArrayValues().To(jsonElement => jsonElement.GetValue()).ToArray();
+		}
+
+		public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)
 		{
 			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
 
@@ -29,6 +40,19 @@ namespace TypeCache.Extensions
 			while (enumerator.MoveNext())
 			{
 				properties.Add(enumerator.Current.Name, enumerator.Current.Value);
+			}
+			return properties;
+		}
+
+		public static IDictionary<string, object?> GetObjectValues(this JsonElement @this)
+		{
+			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
+
+			var properties = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+			using var enumerator = @this.EnumerateObject();
+			while (enumerator.MoveNext())
+			{
+				properties.Add(enumerator.Current.Name, enumerator.Current.Value.GetValue());
 			}
 			return properties;
 		}
@@ -45,7 +69,8 @@ namespace TypeCache.Extensions
 				JsonValueKind.String when @this.TryGetDateTime(out var value) => value,
 				JsonValueKind.String when @this.TryGetGuid(out var value) => value,
 				JsonValueKind.String => @this.GetString()!,
-				JsonValueKind.Object or JsonValueKind.Array => @this.ToString()!,
+				JsonValueKind.Array => @this.GetArrayValues(),
+				JsonValueKind.Object => @this.GetObjectValues(),
 				_ => null
 			};
 

@@ -38,10 +38,6 @@ namespace TypeCache
 
 			public bool Equals(Token? other)
 				=> other != null && Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public override int GetHashCode()
-				=> Comparer.GetHashCode(this.Value);
 		}
 
 		private static Comparison<T> CreateCompare(Type underlyingType)

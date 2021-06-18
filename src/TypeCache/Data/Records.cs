@@ -23,10 +23,9 @@ namespace TypeCache.Data
 	}
 
 	/// <summary>
-	/// JSON: <code>{ "Column": "N'Expression 1'" }</code>
+	/// JSON: <code>{ "Column1": "N'Expression 1'" }</code>
 	/// SQL: <code>[Column] = N'Expression 1'</code>
 	/// </summary>
-	[JsonConverter(typeof(ColumnSetJsonConverter))]
 	public sealed record ColumnSet(string Column, object? Expression);
 
 	/// <summary>
@@ -79,17 +78,15 @@ namespace TypeCache.Data
 	public sealed record Output(RowSet Deleted, RowSet Inserted);
 
 	/// <summary>
-	/// JSON: <code>{ "Alias 1": "SQL Expression", "Alias 2": "ColumnName" }</code>
+	/// JSON: <code>{ "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "ColumnName" }</code>
 	/// SQL: <code>NULLIF([Column1], 22) AS [Alias 1]</code>
 	/// </summary>
-	[JsonConverter(typeof(OutputExpressionJsonConverter))]
 	public sealed record OutputExpression(string Expression, string As);
 
 	/// <summary>
 	/// JSON: <code>{ "ParameterName": "ParameterValue" }</code>
 	/// SQL: <code>SET @ParameterName = N'ParameterValue';</code>
 	/// </summary>
-	[JsonConverter(typeof(ParameterJsonConverter))]
 	public sealed record Parameter(string Name, object Value);
 
 	public sealed record ParameterSchema(int Id, string Name, SqlDbType Type, bool Output, bool Return);
@@ -108,29 +105,4 @@ namespace TypeCache.Data
 
 		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column).FirstValue()!.Value];
 	}
-
-	/// <summary>
-	/// Use Parameters to take in user input to avoid SQL Injection.
-	/// </summary>
-	public sealed record SqlRequest(string SQL, params Parameter[]? Parameters);
-
-	/// <summary>
-	/// JSON: <code>{ "Procedure": "Procedure1", "Parameters": [ { "Parameter1": "Value1" }, { "Parameter2": null }, { "Parameter3": true } ] }</code>
-	/// SQL: <code>EXECUTE [Database1]..[Procedure1] (@Parameter1 = N'Value1', @Parameter2 = NULL, @Parameter3 = 1);</code>
-	/// </summary>
-	public sealed record StoredProcedureRequest(string Procedure, params Parameter[]? Parameters);
-
-	/// <summary>
-	/// JSON: <code>
-	/// {<br />
-	///		"Parameters": [ ... ],<br />
-	///		"Output":<br />
-	///		{<br />
-	///			"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
-	///			"Rows": [ [ "Data", 123, null ], [ ... ], ... ]<br />
-	///		}<br />
-	///	}
-	/// </code>
-	/// </summary>
-	public sealed record StoredProcedureResponse(IEnumerable<RowSet> Output, params Parameter[]? Parameters);
 }

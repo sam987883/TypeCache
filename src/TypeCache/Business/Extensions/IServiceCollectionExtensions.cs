@@ -24,7 +24,6 @@ namespace TypeCache.Business.Extensions
 		/// <list type="bullet">
 		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementations of IProcessHandler.</description></item>
 		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementations of IRuleHandler.</description></item>
-		/// <item><term><see cref="DefaultRulesHandler&lt;T,R&gt;"/>, <see cref="DefaultRulesHandler&lt;M,T,R&gt;"/></term> <description>Default implementations of IRulesHandler.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterMediator(this IServiceCollection @this)
@@ -32,9 +31,7 @@ namespace TypeCache.Business.Extensions
 				.AddSingleton(typeof(DefaultProcessHandler<>), typeof(DefaultProcessHandler<>))
 				.AddSingleton(typeof(DefaultProcessHandler<,>), typeof(DefaultProcessHandler<,>))
 				.AddSingleton(typeof(DefaultRuleHandler<,>), typeof(DefaultRuleHandler<,>))
-				.AddSingleton(typeof(DefaultRuleHandler<,,>), typeof(DefaultRuleHandler<,,>))
-				.AddSingleton(typeof(DefaultRulesHandler<,>), typeof(DefaultRulesHandler<,>))
-				.AddSingleton(typeof(DefaultRulesHandler<,,>), typeof(DefaultRulesHandler<,,>));
+				.AddSingleton(typeof(DefaultRuleHandler<,,>), typeof(DefaultRuleHandler<,,>));
 
 		/// <summary>
 		/// Registers Singleton:
