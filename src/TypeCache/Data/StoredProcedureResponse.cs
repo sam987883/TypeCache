@@ -1,7 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using TypeCache.Converters;
+using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
 {
@@ -29,7 +30,7 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterArrayJsonConverter))]
-		public Parameter[]? Parameters { get; set; }
+		[JsonConverter(typeof(ParameterJsonConverter))]
+		public IDictionary<string, object?>? Parameters { get; set; }
 	}
 }

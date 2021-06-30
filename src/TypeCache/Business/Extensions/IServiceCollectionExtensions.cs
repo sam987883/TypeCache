@@ -11,7 +11,7 @@ namespace TypeCache.Business.Extensions
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><term><see cref="IFieldMapper&lt;FROM, TO&gt;"/></term> <description>Field mapper where types: FROM &lt;&gt; TO.</description></item>
+		/// <item><term><see cref="IFieldMapper{FROM, TO}"/></term> <description>Field mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterFieldMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)
@@ -22,21 +22,19 @@ namespace TypeCache.Business.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="DefaultProcessHandler&lt;T&gt;"/>, <see cref="DefaultProcessHandler&lt;M,T&gt;"/></term> <description>Default implementations of IProcessHandler.</description></item>
-		/// <item><term><see cref="DefaultRuleHandler&lt;T,R&gt;"/>, <see cref="DefaultRuleHandler&lt;M,T,R&gt;"/></term> <description>Default implementations of IRuleHandler.</description></item>
+		/// <item><term><see cref="DefaultProcessIntermediary{I}"/></term> <description>Default implementation of <see cref="IProcessIntermediary{I}"/>.</description></item>
+		/// <item><term><see cref="DefaultRuleIntermediary{I, O}"/></term> <description>Default implementation of <see cref="IRuleIntermediary{I, O}"/>.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterMediator(this IServiceCollection @this)
 			=> @this.AddSingleton<IMediator, Mediator>()
-				.AddSingleton(typeof(DefaultProcessHandler<>), typeof(DefaultProcessHandler<>))
-				.AddSingleton(typeof(DefaultProcessHandler<,>), typeof(DefaultProcessHandler<,>))
-				.AddSingleton(typeof(DefaultRuleHandler<,>), typeof(DefaultRuleHandler<,>))
-				.AddSingleton(typeof(DefaultRuleHandler<,,>), typeof(DefaultRuleHandler<,,>));
+				.AddSingleton(typeof(DefaultProcessIntermediary<>), typeof(DefaultProcessIntermediary<>))
+				.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><term><see cref="IPropertyMapper&lt;FROM, TO&gt;"/></term> <description>Property mapper where types: FROM &lt;&gt; TO.</description></item>
+		/// <item><term><see cref="IPropertyMapper{FROM, TO}"/></term> <description>Property mapper where types: FROM &lt;&gt; TO.</description></item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterPropertyMapper<FROM, TO>(this IServiceCollection @this, params MapperSetting[] overrides)

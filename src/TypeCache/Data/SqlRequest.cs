@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using TypeCache.Converters;
+using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
 {
@@ -10,6 +12,15 @@ namespace TypeCache.Data
 	/// </summary>
 	public class SqlRequest
 	{
+		public SqlRequest()
+		{
+		}
+
+		public SqlRequest(string sql)
+		{
+			this.SQL = sql;
+		}
+
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
 		/// SQL:
@@ -19,8 +30,8 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterArrayJsonConverter))]
-		public Parameter[]? Parameters { get; set; }
+		[JsonConverter(typeof(ParameterJsonConverter))]
+		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		public string SQL { get; set; } = string.Empty;
 	}

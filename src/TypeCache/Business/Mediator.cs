@@ -12,34 +12,22 @@ namespace TypeCache.Business
 		private readonly IServiceProvider _ServiceProvider;
 
 		public Mediator(IServiceProvider serviceProvider)
-			=> this._ServiceProvider = serviceProvider;
-
-		public async ValueTask<Response<R>> ApplyRulesAsync<T, R>(T request, CancellationToken cancellationToken = default)
 		{
-			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<T, R>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<T, R>>();
+			this._ServiceProvider = serviceProvider;
+		}
+
+		public async ValueTask<O> ApplyRulesAsync<I, O>(I request, CancellationToken cancellationToken = default)
+		{
+			var ruleHandler = this._ServiceProvider.GetService<IRuleIntermediary<I, O>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultRuleIntermediary<I, O>>();
 			return await ruleHandler.HandleAsync(request, cancellationToken);
 		}
 
-		public async ValueTask<Response<R>> ApplyRulesAsync<M, T, R>(M metadata, T request, CancellationToken cancellationToken = default)
+		public async ValueTask RunProcessAsync<I>(I request, CancellationToken cancellationToken = default)
 		{
-			var ruleHandler = this._ServiceProvider.GetService<IRuleHandler<M, T, R>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultRuleHandler<M, T, R>>();
-			return await ruleHandler.HandleAsync(metadata, request, cancellationToken);
-		}
-
-		public async ValueTask RunProcessAsync<T>(T request, CancellationToken cancellationToken = default)
-		{
-			var processHandler = this._ServiceProvider.GetService<IProcessHandler<T>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultProcessHandler<T>>();
+			var processHandler = this._ServiceProvider.GetService<IProcessIntermediary<I>>()
+				?? this._ServiceProvider.GetRequiredService<DefaultProcessIntermediary<I>>();
 			await processHandler.HandleAsync(request, cancellationToken);
-		}
-
-		public async ValueTask RunProcessAsync<M, T>(M metadata, T request, CancellationToken cancellationToken = default)
-		{
-			var processHandler = this._ServiceProvider.GetService<IProcessHandler<M, T>>()
-				?? this._ServiceProvider.GetRequiredService<DefaultProcessHandler<M, T>>();
-			await processHandler.HandleAsync(metadata, request, cancellationToken);
 		}
 	}
 }

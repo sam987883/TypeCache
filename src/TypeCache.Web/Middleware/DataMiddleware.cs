@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -36,34 +37,34 @@ namespace TypeCache.Web.Middleware
 
 		protected async ValueTask HandleRequest<T, R>(T request, HttpContext httpContext)
 		{
-			var response = await this.Mediator.ApplyRulesAsync<ISqlApi, T, R>(this.SqlApi, request);
-
-			httpContext.Response.ContentType = "application/json";
-			if (response.Exception is null)
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response.Result);
-			else
+			try
+			{
+				var response = await this.Mediator.ApplyRulesAsync<(ISqlApi, T), R>((this.SqlApi, request));
+				httpContext.Response.ContentType = "application/json";
+				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response);
+			}
+			catch (Exception exception)
 			{
 				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { response.Exception.Message, response.Exception.StackTrace });
+				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { exception.Message, exception.StackTrace });
 			}
 		}
 
 		protected async ValueTask HandleSqlRequest<T>(HttpContext httpContext)
 		{
 			var request = await this.GetRequest<T>(httpContext);
-			var response = await this.Mediator.ApplyRulesAsync<T, string>(request!);
-
-			if (response.Exception is null)
+			try
 			{
+				var response = await this.Mediator.ApplyRulesAsync<T, string>(request!);
 				httpContext.Response.ContentType = "text/plain";
 				httpContext.Response.StatusCode = (int)HttpStatusCode.OK;
-				await httpContext.Response.WriteAsync(response.Result);
+				await httpContext.Response.WriteAsync(response);
 			}
-			else
+			catch (Exception exception)
 			{
 				httpContext.Response.ContentType = "application/json";
 				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { response.Exception.Message, response.Exception.StackTrace });
+				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new[] { exception.Message, exception.StackTrace });
 			}
 		}
 	}

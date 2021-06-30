@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using TypeCache.Converters;
+using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
 {
@@ -49,8 +51,8 @@ namespace TypeCache.Data
 		/// JSON: <code>"Output": { "Alias 1": "SQL Expression", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
 		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputExpressionArrayJsonConverter))]
-		public OutputExpression[]? Output { get; set; }
+		[JsonConverter(typeof(OutputJsonConverter))]
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// <para>Table must have primary key(s) defined to be used for batch DELETE/UPDATE.</para>

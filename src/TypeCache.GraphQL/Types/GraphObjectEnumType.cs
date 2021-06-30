@@ -1,12 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
-
-#nullable disable
 
 namespace TypeCache.GraphQL.Types
 {
@@ -14,14 +10,15 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectEnumType()
 		{
-			this.Name = TypeOf<T>.Attributes.First<GraphNameAttribute>()?.Name ?? $"{TypeOf<T>.Name}Fields";
-			this.Description = $"Fields of type `{TypeOf<T>.Name}`.";
+			var graphName = TypeOf<T>.Attributes.GraphName();
+			this.Name = graphName ?? $"{TypeOf<T>.Name}_Fields";
+			this.Description = $"Fields of type `{graphName ?? TypeOf<T>.Name}`.";
 
-			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property!.Attributes.Any<GraphIgnoreAttribute>()))
+			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.Attributes.GraphIgnore()))
 			{
-				var name = property.GetGraphName();
-				var description = property.GetGraphDescription();
-				var deprecationReason = property.Attributes.First<ObsoleteAttribute>()?.Message;
+				var name = property.Attributes.GraphName() ?? property.Name;
+				var description = property.Attributes.GraphDescription();
+				var deprecationReason = property.Attributes.ObsoleteMessage();
 
 				this.AddValue(name, description, name, deprecationReason);
 			}

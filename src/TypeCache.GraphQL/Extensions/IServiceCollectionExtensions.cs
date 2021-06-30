@@ -7,7 +7,6 @@ using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
 using TypeCache.Data;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Extensions

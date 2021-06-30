@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
 {
@@ -22,9 +21,9 @@ namespace TypeCache.Web.Middleware
 			using var reader = new StreamReader(httpContext.Request.Body);
 			var request = new SqlRequest
 			{
-				SQL = reader.ReadToEnd(),
-				Parameters = httpContext.Request.Query.To(query => new Parameter(query.Key, query.Value.First()!)).ToArray()
+				SQL = reader.ReadToEnd()
 			};
+			httpContext.Request.Query.Do(query => request.Parameters[query.Key] = query.Value.First());
 
 			await this.HandleRequest<SqlRequest, RowSet[]>(request, httpContext);
 		}

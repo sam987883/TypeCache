@@ -9,7 +9,6 @@ using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -40,8 +39,8 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			context.Source.AssertNotNull($"{nameof(context)}.{nameof(context.Source)}");
 
-			var child = this._Method.GetGraphName();
-			var parent = context.Source.GetTypeMember().GetGraphName();
+			var child = this._Method.Attributes.GraphName() ?? this._Method.Name.TrimStart("Get")!.TrimEnd("Async");
+			var parent = context.Source.GetTypeMember().Attributes.GraphName();
 			var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
 				$"{parent}.{child}",
 				() =>
@@ -67,8 +66,8 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<GraphNameAttribute>();
-				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
+				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
+				if (parameter.Attributes.GraphIgnore())
 					continue;
 
 				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is(typeof(IResolveFieldContext<>).MakeGenericType(context.Source.GetType())))

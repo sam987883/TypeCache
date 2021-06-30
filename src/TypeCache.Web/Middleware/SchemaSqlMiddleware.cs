@@ -6,6 +6,7 @@ using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
@@ -21,8 +22,8 @@ namespace TypeCache.Web.Middleware
 		{
 			var name = httpContext.Request.Query["object"].First();
 			await httpContext.Response.WriteAsync(!name.IsBlank()
-				? $"DECLARE @ObjectName AS VARCHAR(MAX) = '{name.EscapeValue()}';\r\n{this.SqlApi.ObjectSchemaSQL}"
-				: this.SqlApi.ObjectSchemaSQL);
+				? $"DECLARE @ObjectName AS VARCHAR(MAX) = '{name.EscapeValue()}';\r\n{ObjectSchema.SQL}"
+				: ObjectSchema.SQL);
 		}
 	}
 }

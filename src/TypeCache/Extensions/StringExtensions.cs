@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Extensions
@@ -127,7 +128,7 @@ namespace TypeCache.Extensions
 			if (@this.IsBlank())
 				return @this;
 
-			showTerms ??= Array.Empty<string>();
+			showTerms ??= Array<string>.Empty;
 
 			var count = 0;
 			var span = @this.ToSpan();

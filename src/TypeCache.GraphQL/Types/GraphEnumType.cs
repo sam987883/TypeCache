@@ -4,7 +4,6 @@ using System;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.Types
@@ -13,24 +12,19 @@ namespace TypeCache.GraphQL.Types
 	{
 		private readonly Func<string, string> _ChangeEnumCase = DefaultChangeEnumCase;
 
-#nullable disable
-
 		public GraphEnumType()
 		{
-			var enumGraphAttribute = EnumOf<T>.Attributes.First<GraphNameAttribute>();
-			this.Name = enumGraphAttribute?.Name ?? EnumOf<T>.Name;
+			this.Name = EnumOf<T>.Attributes.GraphName() ?? EnumOf<T>.Name;
 
-			EnumOf<T>.Tokens.Values.If(token => !token.Attributes.Any<GraphIgnoreAttribute>()).Do(token =>
+			EnumOf<T>.Tokens.Values.If(token => !token.Attributes.GraphIgnore()).Do(token =>
 			{
-				var name = token.GetGraphName();
-				var description = token.GetGraphDescription();
-				var deprecationReason = token.Attributes.First<ObsoleteAttribute>()?.Message;
+				var name = token.Attributes.GraphName() ?? token.Name;
+				var description = token.Attributes.GraphDescription();
+				var deprecationReason = token.Attributes.ObsoleteMessage();
 
-				this.AddValue(name, description, token, deprecationReason);
+				this.AddValue(name, description, token.Value, deprecationReason);
 			});
 		}
-
-#nullable enable
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override string ChangeEnumCase(string value)

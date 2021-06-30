@@ -115,7 +115,7 @@ namespace TypeCache.Collections.Extensions
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
-			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array.Empty<T>());
+			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
 
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 		{
@@ -943,7 +943,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			var items = @this switch
 			{
-				_ when !@this.Any() => Array.Empty<T>(),
+				_ when !@this.Any() => Array<T>.Empty,
 				T[] array => array,
 				_ => @this.ToArray()
 			};
@@ -994,7 +994,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			return @this switch
 			{
-				null => Array.Empty<T>(),
+				null => Array<T>.Empty,
 				T[] array => array.AsSpan().ToArray(),
 				ImmutableArray<T> array => array.AsSpan().ToArray(),
 				List<T> list => list.ToArray(),

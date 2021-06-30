@@ -3,7 +3,6 @@
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 
@@ -16,14 +15,11 @@ namespace TypeCache.GraphQL.Types
 		{
 			TypeOf<T>.Kind.Assert(TypeOf<T>.Name, Kind.Interface);
 
-			var graphAttribute = TypeOf<T>.Attributes.First<GraphNameAttribute>();
-			this.Name = graphAttribute?.Name ?? TypeOf<T>.Name;
+			this.Name = TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name;
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter is not null
-					&& !property.Attributes.Any<GraphIgnoreAttribute>()
-					&& !property.Attributes.Any<GraphCursorAttribute>())
-				.Do(property => this.AddField(property!.ToFieldType(false)));
+				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore() && !property.Attributes.GraphCursor())
+				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}
 }

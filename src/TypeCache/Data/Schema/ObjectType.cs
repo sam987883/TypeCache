@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Schema
 {
 	public enum ObjectType
 	{

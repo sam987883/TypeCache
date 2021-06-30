@@ -6,15 +6,17 @@ using TypeCache.Business;
 
 namespace TypeCache.Data.Business
 {
-	internal class StoredProcedureRule : IRule<ISqlApi, StoredProcedureRequest, StoredProcedureResponse>
+	internal class StoredProcedureRule : IRule<(ISqlApi SqlApi, StoredProcedureRequest Procedure), StoredProcedureResponse>
 	{
-		public async ValueTask<StoredProcedureResponse> ApplyAsync(ISqlApi sqlApi, StoredProcedureRequest request, CancellationToken cancellationToken)
+		public async ValueTask<StoredProcedureResponse> ApplyAsync((ISqlApi SqlApi, StoredProcedureRequest Procedure) request, CancellationToken cancellationToken)
 		{
-			request.Procedure = sqlApi.GetObjectSchema(request.Procedure).Name;
+			var procedure = request.Procedure;
+
+			procedure.Procedure = request.SqlApi.GetObjectSchema(procedure.Procedure).Name;
 			return new StoredProcedureResponse
 			{
-				Output = await sqlApi.CallAsync(request, cancellationToken),
-				Parameters = request.Parameters
+				Output = await request.SqlApi.CallAsync(procedure, cancellationToken),
+				Parameters = procedure.Parameters
 			};
 		}
 	}

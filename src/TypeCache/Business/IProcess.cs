@@ -7,11 +7,6 @@ namespace TypeCache.Business
 {
 	public interface IProcess<in T>
 	{
-		ValueTask RunAsync(T request, CancellationToken cancellationToken);
-	}
-
-	public interface IProcess<in M, in T>
-	{
-		ValueTask RunAsync(M metadata, T request, CancellationToken cancellationToken);
+		ValueTask RunAsync(T request, CancellationToken cancellationToken = default);
 	}
 }

@@ -3,6 +3,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
+using TypeCache.Data.Schema;
 
 namespace TypeCache.Data
 {
@@ -12,11 +14,6 @@ namespace TypeCache.Data
 	public interface ISqlApi
 	{
 		/// <summary>
-		/// The SQL Used to populate the ObjectSchema object.
-		/// </summary>
-		string ObjectSchemaSQL { get; }
-
-		/// <summary>
 		/// Gets a cached schema object that describes a table, view, table based function, or stored procedure.
 		/// </summary>
 		/// <param name="name">The database object name ie. Customers, dbo.Accounts, [Db]..s_Customers</param>
@@ -25,7 +22,10 @@ namespace TypeCache.Data
 		/// <summary>
 		/// All calls to ISqlApi within parameter transaction will be wrapped in a scoped async-enabled transaction.
 		/// </summary>
-		ValueTask ExecuteTransactionAsync(Func<ISqlApi, CancellationToken, ValueTask> transaction, CancellationToken cancellationToken = default);
+		ValueTask ExecuteTransactionAsync(
+			Func<IBatchSqlApi, ValueTask> transaction
+			, TransactionScopeOption option = TransactionScopeOption.Required
+			, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>EXECUTE ...</code>

@@ -1,12 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace TypeCache.Business
 {
-	public interface IValidationRule<in T> : IRule<T, ValidationResponse>
+	public interface IValidationRule<in I>
 	{
-	}
-
-	public interface IValidationRule<in M, in T> : IRule<M, T, ValidationResponse>
-	{
+		ValueTask ValidateAsync(I request, CancellationToken cancellationToken = default);
 	}
 }

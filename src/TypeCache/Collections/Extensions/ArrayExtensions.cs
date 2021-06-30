@@ -24,7 +24,7 @@ namespace TypeCache.Collections.Extensions
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<T[]> AllAsync<T>(this Task<T>[]? @this)
-			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array.Empty<T>());
+			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="Task.WhenAny(Task[])"/></c>
@@ -73,7 +73,7 @@ namespace TypeCache.Collections.Extensions
 			where T : struct
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
-			rest = @this?.Length > 1 ? @this[1..] : Array.Empty<T>();
+			rest = @this?.Length > 1 ? @this[1..] : Array<T>.Empty;
 		}
 
 		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T[] rest)
@@ -81,7 +81,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
-			rest = @this?.Length > 2 ? @this[2..] : Array.Empty<T>();
+			rest = @this?.Length > 2 ? @this[2..] : Array<T>.Empty;
 		}
 
 		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T? third, out T[] rest)
@@ -90,14 +90,14 @@ namespace TypeCache.Collections.Extensions
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
 			third = @this?.Length > 2 ? @this[2] : null;
-			rest = @this?.Length > 3 ? @this[3..] : Array.Empty<T>();
+			rest = @this?.Length > 3 ? @this[3..] : Array<T>.Empty;
 		}
 
 		public static void Deconstruct<T>(this T[]? @this, out T? first, out T[] rest)
 			where T : class
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
-			rest = @this?.Length > 1 ? @this[1..] : Array.Empty<T>();
+			rest = @this?.Length > 1 ? @this[1..] : Array<T>.Empty;
 		}
 
 		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T[] rest)
@@ -105,7 +105,7 @@ namespace TypeCache.Collections.Extensions
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
-			rest = @this?.Length > 2 ? @this[2..] : Array.Empty<T>();
+			rest = @this?.Length > 2 ? @this[2..] : Array<T>.Empty;
 		}
 
 		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T? third, out T[] rest)
@@ -114,7 +114,7 @@ namespace TypeCache.Collections.Extensions
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
 			third = @this?.Length > 2 ? @this[2] : null;
-			rest = @this?.Length > 3 ? @this[3..] : Array.Empty<T>();
+			rest = @this?.Length > 3 ? @this[3..] : Array<T>.Empty;
 		}
 
 		public static void Do<T>(this T[]? @this, Action<T> action)
@@ -261,7 +261,7 @@ namespace TypeCache.Collections.Extensions
 		public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)
 		{
 			if (!@this.Any())
-				return Array.Empty<V>();
+				return Array<V>.Empty;
 
 			var array = new V[@this.Length];
 			@this.Do((item, index) => array[index] = map(item));
@@ -281,7 +281,7 @@ namespace TypeCache.Collections.Extensions
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableHashSet<string> ToImmutableHashSet(this string[]? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> ImmutableHashSet.Create(comparison.ToStringComparer(), @this ?? Array.Empty<string>());
+			=> ImmutableHashSet.Create(comparison.ToStringComparer(), @this ?? Array<string>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableHashSet.Create{T}(IEqualityComparer{T}?, T[])"/></c>
@@ -289,7 +289,7 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableHashSet<T> ToImmutableHashSet<T>(this T[]? @this, IEqualityComparer<T>? comparer)
 			where T : notnull
-			=> ImmutableHashSet.Create(comparer, @this ?? Array.Empty<T>());
+			=> ImmutableHashSet.Create(comparer, @this ?? Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableList.Create{T}(T[])"/></c>
@@ -297,7 +297,7 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableList<T> ToImmutableList<T>(this T[]? @this)
 			where T : notnull
-			=> ImmutableList.Create(@this ?? Array.Empty<T>());
+			=> ImmutableList.Create(@this ?? Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableQueue.Create{T}(T[])"/></c>
@@ -305,14 +305,14 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableQueue<T> ToImmutableQueue<T>(this T[]? @this)
 			where T : notnull
-			=> ImmutableQueue.Create(@this ?? Array.Empty<T>());
+			=> ImmutableQueue.Create(@this ?? Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?, T[])"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableSortedSet<string> ToImmutableSortedSet(this string[]? @this, StringComparison comparison = StringComparison.Ordinal)
-			=> ImmutableSortedSet.Create(comparison.ToStringComparer(), @this ?? Array.Empty<string>());
+			=> ImmutableSortedSet.Create(comparison.ToStringComparer(), @this ?? Array<string>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?, T[])"/></c>
@@ -320,7 +320,7 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableSortedSet<T> ToImmutableSortedSet<T>(this T[]? @this, IComparer<T>? comparer)
 			where T : notnull
-			=> ImmutableSortedSet.Create(comparer, @this ?? Array.Empty<T>());
+			=> ImmutableSortedSet.Create(comparer, @this ?? Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="ImmutableStack.Create{T}(T[])"/></c>
@@ -328,7 +328,7 @@ namespace TypeCache.Collections.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
 			where T : notnull
-			=> ImmutableStack.Create(@this ?? Array.Empty<T>());
+			=> ImmutableStack.Create(@this ?? Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="Task.WaitAll(Task[], CancellationToken)"/></c>

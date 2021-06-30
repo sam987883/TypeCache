@@ -7,9 +7,9 @@ using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Attributes;
+using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.SQL;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -41,8 +41,8 @@ namespace TypeCache.GraphQL.Resolvers
 		{
 			foreach (var parameter in this._Method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.First<GraphNameAttribute>();
-				if (parameter.Attributes.Any<GraphIgnoreAttribute>())
+				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
+				if (parameter.Attributes.GraphIgnore())
 					continue;
 
 				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is(typeof(IResolveFieldContext<>)))

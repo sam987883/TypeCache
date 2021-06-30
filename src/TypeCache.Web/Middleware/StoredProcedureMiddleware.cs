@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -21,10 +20,10 @@ namespace TypeCache.Web.Middleware
 		public async Task Invoke(HttpContext httpContext)
 		{
 			string procedure = httpContext.Request.Query[nameof(procedure)].First()!;
-			var parameters = httpContext.Request.Query
+			var request = new StoredProcedureRequest(procedure);
+			httpContext.Request.Query
 				.If(query => !query.Key.Is(nameof(procedure)))
-				.To(query => new Parameter(query.Key, query.Value.First()!))
-				.ToList();
+				.Do(query => request.Parameters.Add(query.Key, query.Value.First()));
 
 			var json = await JsonSerializer.DeserializeAsync<JsonElement>(httpContext.Request.Body);
 			if (json.ValueKind == JsonValueKind.Object)
@@ -33,15 +32,10 @@ namespace TypeCache.Web.Middleware
 				while (enumerator.MoveNext())
 				{
 					var property = enumerator.Current;
-					parameters.Add(new Parameter(property.Name, property.Value.GetValue() ?? DBNull.Value));
+					request.Parameters.Add(property.Name, property.Value.GetValue());
 				}
 			}
 
-			var request = new StoredProcedureRequest
-			{
-				Procedure = procedure,
-				Parameters = parameters.ToArray()
-			};
 			await this.HandleRequest<StoredProcedureRequest, RowSet[]>(request, httpContext);
 		}
 	}

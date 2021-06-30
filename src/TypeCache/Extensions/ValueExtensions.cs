@@ -41,7 +41,13 @@ namespace TypeCache.Extensions
 			=> new Range(@this.Start.Normalize(count), @this.End.Normalize(count));
 
 		public static IEnumerable<int> Range(this int @this, int count, int increment = 0)
-			=> count != 0 ? @this.To(@this + (count - 1) * (increment == 0 ? (count > 0 ? 1 : -1) : increment), increment) : CustomEnumerable<int>.Empty;
+		{
+			while (--count >= 0)
+			{
+				yield return @this;
+				@this += increment;
+			}
+		}
 
 		/// <summary>
 		/// <c>(@this, value) = (value, @this)</c>
@@ -52,23 +58,36 @@ namespace TypeCache.Extensions
 
 		public static IEnumerable<int> To(this int @this, int end, int increment = 0)
 		{
-			increment = increment switch
+			if (@this < end)
 			{
-				0 when @this < end => 1,
-				0 when @this > end => -1,
-				< 0 when @this < end => 0,
-				> 0 when @this > end => 0,
-				_ => increment
-			};
+				if (increment < 0)
+					yield break;
 
-			if (increment == 0)
-				yield break;
+				if (increment is 0)
+					increment = 1;
 
-			while (@this != end)
-			{
-				yield return @this;
-				@this += increment;
+				while (@this <= end)
+				{
+					yield return @this;
+					@this += increment;
+				}
 			}
+			else if (@this > end)
+			{
+				if (increment > 0)
+					yield break;
+
+				if (increment is 0)
+					increment = -1;
+
+				while (@this >= end)
+				{
+					yield return @this;
+					@this += increment;
+				}
+			}
+			else
+				yield return @this;
 		}
 
 		public static IEnumerable<int> Values(this Range @this)

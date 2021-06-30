@@ -8,7 +8,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Converters
 {
-	public class ExpressionJsonConverter : JsonConverter<ComparisonExpression>
+	public class ComparisonExpressionJsonConverter : JsonConverter<ComparisonExpression>
 	{
 		public override ComparisonExpression Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
@@ -34,7 +34,12 @@ namespace TypeCache.Converters
 				}
 			}
 
-			return new ComparisonExpression(field, comparisonOperator, value);
+			return new ComparisonExpression
+			{
+				Field = field,
+				Operator = comparisonOperator,
+				Value = value
+			};
 		}
 
 		public override void Write(Utf8JsonWriter writer, ComparisonExpression expression, JsonSerializerOptions options)

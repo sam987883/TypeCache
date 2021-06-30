@@ -7,11 +7,6 @@ namespace TypeCache.Business
 {
 	public interface IRule<in T, R>
 	{
-		ValueTask<R> ApplyAsync(T request, CancellationToken cancellationToken);
-	}
-
-	public interface IRule<in M, in T, R>
-	{
-		ValueTask<R> ApplyAsync(M metadata, T request, CancellationToken cancellationToken);
+		ValueTask<R> ApplyAsync(T request, CancellationToken cancellationToken = default);
 	}
 }

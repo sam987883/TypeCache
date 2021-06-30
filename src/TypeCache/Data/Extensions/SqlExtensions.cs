@@ -28,11 +28,11 @@ namespace TypeCache.Data.Extensions
 		public static string EscapeValue([NotNull] this string @this)
 			=> @this.Replace("'", "''");
 
-		public static string ToSql([NotNull] this BatchRequest @this)
+		public static string ToSQL([NotNull] this BatchRequest @this)
 		{
-			var batchDataCsv = @this.Input.Rows.To(row => $"({row.ToCsv(value => value.ToSql())})").Join(SQL_DELIMETER);
+			var batchDataCsv = @this.Input.Rows.To(row => $"({row.ToCsv(value => value.ToSQL())})").Join(SQL_DELIMETER);
 			var sourceColumnCsv = @this.Input.Columns.To(column => column.EscapeIdentifier()).Join(", ");
-			var onSql = @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}").Join($" {LogicalOperator.And.ToSql()} ");
+			var onSql = @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}").Join($" {LogicalOperator.And.ToSQL()} ");
 			var updateCsv = @this.Update.To(column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
 			var insertColumnCsv = @this.Insert.To(column => column.EscapeIdentifier()).Join(SQL_DELIMETER);
 			var insertValueCsv = @this.Insert.To(column => $"s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
@@ -46,7 +46,7 @@ namespace TypeCache.Data.Extensions
 					.Append('\t').Append(')');
 
 				if (@this.Output.Any())
-					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
 
 				sqlBuilder.AppendLine().Append("VALUES ").Append(batchDataCsv);
 			}
@@ -83,18 +83,18 @@ namespace TypeCache.Data.Extensions
 						.Append('\t').Append(')');
 
 				if (@this.Output.Any())
-					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
 			}
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
-		public static string ToSql([NotNull] this DeleteRequest @this)
+		public static string ToSQL([NotNull] this DeleteRequest @this)
 		{
 			var sqlBuilder = new StringBuilder("DELETE FROM ").Append(@this.From);
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
 
 			if (!@this.Where.IsBlank())
 				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
@@ -102,26 +102,26 @@ namespace TypeCache.Data.Extensions
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
-		public static string ToSql([NotNull] this InsertRequest @this)
+		public static string ToSQL([NotNull] this InsertRequest @this)
 		{
 			var sqlBuilder = new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
 				.Append('(').AppendJoin(", ", @this.Insert.To(column => column.EscapeIdentifier())).Append(')');
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSQL()));
 
-			return sqlBuilder.AppendLine().Append(((SelectRequest)@this).ToSql()).ToString();
+			return sqlBuilder.AppendLine().Append(((SelectRequest)@this).ToSQL()).ToString();
 		}
 
-		public static string ToSql([NotNull] this UpdateRequest @this)
+		public static string ToSQL([NotNull] this UpdateRequest @this)
 		{
-			var updateCsv = @this.Set.To(item => $"{item.Column.EscapeIdentifier()} = {item.Expression}").Join(SQL_DELIMETER);
+			var updateCsv = @this.Set.To(_ => $"{_.Key.EscapeIdentifier()} = {_.Value.ToSQL()}").Join(SQL_DELIMETER);
 
 			var sqlBuilder = new StringBuilder("UPDATE ").AppendLine(@this.Table)
 				.Append("SET ").Append(updateCsv);
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSql()));
+				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
 
 			if (!@this.Where.IsBlank())
 				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
@@ -129,7 +129,7 @@ namespace TypeCache.Data.Extensions
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
-		public static string ToSql(this object? @this) => @this switch
+		public static string ToSQL(this object? @this) => @this switch
 		{
 			null or DBNull => "NULL",
 			bool boolean => boolean ? "1" : "0",
@@ -159,18 +159,16 @@ namespace TypeCache.Data.Extensions
 			Range range => $"'{range}'",
 			Uri uri => $"'{uri.ToString().EscapeValue()}'",
 			byte[] binary => Encoding.Default.GetString(binary),
-			ColumnSort columnSort => $"{columnSort.Expression} {columnSort.Sort.ToSql()}",
-			OutputExpression output => !output.As.IsBlank() ? $"{output.Expression} AS {output.As.EscapeIdentifier()}" : output.Expression,
-			IEnumerable enumerable => $"({enumerable.As<object>().To(_ => _.ToSql()).Join(", ")})",
+			IEnumerable enumerable => $"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})",
 			_ => @this.ToString() ?? "NULL"
 		};
 
-		public static string ToSql([NotNull] this SelectRequest @this)
+		public static string ToSQL([NotNull] this SelectRequest @this)
 		{
 			var sqlBuilder = new StringBuilder("SELECT ");
 
 			if (@this.Select.Any())
-				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => _.ToSql())).AppendLine();
+				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => $"{_.Value} AS [{_.Key}]")).AppendLine();
 			else
 				sqlBuilder.AppendLine("*");
 
@@ -183,7 +181,7 @@ namespace TypeCache.Data.Extensions
 				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
 
 			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.To(_ => _.ToSql()).Join(SQL_DELIMETER));
+				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.To(_ => _.ToSQL()).Join(SQL_DELIMETER));
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}

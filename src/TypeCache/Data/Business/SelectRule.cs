@@ -7,15 +7,15 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class SelectRule : IRule<ISqlApi, SelectRequest, RowSet>, IRule<SelectRequest, string>
+	internal class SelectRule : IRule<(ISqlApi SqlApi, SelectRequest Select), RowSet>, IRule<SelectRequest, string>
 	{
-		async ValueTask<RowSet> IRule<ISqlApi, SelectRequest, RowSet>.ApplyAsync(ISqlApi sqlApi, SelectRequest request, CancellationToken cancellationToken)
+		async ValueTask<RowSet> IRule<(ISqlApi SqlApi, SelectRequest Select), RowSet>.ApplyAsync((ISqlApi SqlApi, SelectRequest Select) request, CancellationToken cancellationToken)
 		{
-			request.From = sqlApi.GetObjectSchema(request.From).Name;
-			return await sqlApi.SelectAsync(request, cancellationToken);
+			request.Select.From = request.SqlApi.GetObjectSchema(request.Select.From).Name;
+			return await request.SqlApi.SelectAsync(request.Select, cancellationToken);
 		}
 
 		async ValueTask<string> IRule<SelectRequest, string>.ApplyAsync(SelectRequest request, CancellationToken cancellationToken)
-			=> await ValueTask.FromResult(request.ToSql());
+			=> await ValueTask.FromResult(request.ToSQL());
 	}
 }

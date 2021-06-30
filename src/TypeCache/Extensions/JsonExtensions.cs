@@ -88,6 +88,14 @@ namespace TypeCache.Extensions
 				_ => null
 			};
 
+		public static bool ReadUntil(this ref Utf8JsonReader @this, JsonTokenType tokenType)
+		{
+			while (@this.Read())
+				if (@this.TokenType == tokenType)
+					return true;
+			return false;
+		}
+
 		public static void WriteValue(this Utf8JsonWriter @this, SystemType systemType, object? value, JsonSerializerOptions options)
 		{
 			if (value is not null)

@@ -7,16 +7,16 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class InsertRule : IRule<ISqlApi, InsertRequest, RowSet>, IRule<InsertRequest, string>
+	internal class InsertRule : IRule<(ISqlApi SqlApi, InsertRequest Insert), RowSet>, IRule<InsertRequest, string>
 	{
-		async ValueTask<RowSet> IRule<ISqlApi, InsertRequest, RowSet>.ApplyAsync(ISqlApi sqlApi, InsertRequest request, CancellationToken cancellationToken)
+		async ValueTask<RowSet> IRule<(ISqlApi SqlApi, InsertRequest Insert), RowSet>.ApplyAsync((ISqlApi SqlApi, InsertRequest Insert) request, CancellationToken cancellationToken)
 		{
-			request.From = sqlApi.GetObjectSchema(request.From).Name;
-			request.Into = sqlApi.GetObjectSchema(request.Into).Name;
-			return await sqlApi.InsertAsync(request, cancellationToken);
+			request.Insert.From = request.SqlApi.GetObjectSchema(request.Insert.From).Name;
+			request.Insert.Into = request.SqlApi.GetObjectSchema(request.Insert.Into).Name;
+			return await request.SqlApi.InsertAsync(request.Insert, cancellationToken);
 		}
 
 		async ValueTask<string> IRule<InsertRequest, string>.ApplyAsync(InsertRequest request, CancellationToken cancellationToken)
-			=> await ValueTask.FromResult(request.ToSql());
+			=> await ValueTask.FromResult(request.ToSQL());
 	}
 }

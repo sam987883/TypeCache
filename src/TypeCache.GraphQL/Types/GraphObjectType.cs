@@ -1,10 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection.Extensions;
 
@@ -15,8 +13,8 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectType()
 		{
-			var name = TypeOf<T>.Attributes.First<GraphNameAttribute>()?.Name;
-			var description = TypeOf<T>.Attributes.First<GraphDescriptionAttribute>()?.Description;
+			var name = TypeOf<T>.Attributes.GraphName();
+			var description = TypeOf<T>.Attributes.GraphDescription();
 
 			if (TypeOf<T>.Is(typeof(Connection<>)))
 			{
@@ -38,13 +36,11 @@ namespace TypeCache.GraphQL.Types
 
 			this.Name = name;
 			this.Description = description;
-			this.DeprecationReason = TypeOf<T>.Attributes.First<ObsoleteAttribute>()?.Message;
+			this.DeprecationReason = TypeOf<T>.Attributes.ObsoleteMessage();
 
 			TypeOf<T>.Properties.Values
-				.If(property => property!.Getter is not null
-					&& !property.Attributes.Any<GraphIgnoreAttribute>()
-					&& !property.Attributes.Any<GraphCursorAttribute>())
-				.Do(property => this.AddField(property!.ToFieldType(false)));
+				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore() && !property.Attributes.GraphCursor())
+				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}
 }

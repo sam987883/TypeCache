@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using TypeCache.Collections;
 
 namespace TypeCache.GraphQL.Extensions
 {
@@ -14,7 +12,7 @@ namespace TypeCache.GraphQL.Extensions
 		public bool Cursor { get; set; }
 		public bool StartCursor { get; set; }
 		public bool EndCursor { get; set; }
-		public string[] EdgeNodeFields { get; set; } = Array.Empty<string>();
-		public string[] ItemFields { get; set; } = Array.Empty<string>();
+		public string[] EdgeNodeFields { get; set; } = Array<string>.Empty;
+		public string[] ItemFields { get; set; } = Array<string>.Empty;
 	}
 }

@@ -5,48 +5,33 @@ using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class UpdateValidationRule : IValidationRule<ISqlApi, UpdateRequest>
+	internal class UpdateValidationRule : IValidationRule<(ISqlApi SqlApi, UpdateRequest Update)>
 	{
-		public async ValueTask<ValidationResponse> ApplyAsync(ISqlApi sqlApi, UpdateRequest request, CancellationToken cancellationToken)
+		public async ValueTask ValidateAsync((ISqlApi SqlApi, UpdateRequest Update) request, CancellationToken cancellationToken)
 		{
-			return await Task.Run(() =>
-			{
-				try
-				{
-					var schema = sqlApi.GetObjectSchema(request.Table);
-					schema.Type.Assert($"{nameof(UpdateRequest)}.{nameof(request.Table)}", ObjectType.Table);
+			var update = request.Update;
 
-					if (request.Output.Any())
-					{
-						var aliases = request.Output.To(_ => _.As).IfNotBlank();
-						var uniqueAliases = aliases.ToHashSet(StringComparer.OrdinalIgnoreCase);
-						if (aliases.Count() != uniqueAliases.Count)
-							throw new ArgumentException($"Duplicate aliases found.", $"{nameof(UpdateRequest)}.{nameof(request.Output)}");
-					}
+			var schema = request.SqlApi.GetObjectSchema(update.Table);
+			schema.Type.Assert($"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Table)}", ObjectType.Table);
 
-					if (!request.Set.Any())
-						throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(request.Set)}");
+			if (!update.Set.Any())
+				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-					var invalidColumnCsv = request.Set.To(set => set.Column).Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
-					if (!invalidColumnCsv.IsBlank())
-						throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(request.Set)}");
+			var invalidColumnCsv = update.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
+			if (!invalidColumnCsv.IsBlank())
+				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-					var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-					invalidColumnCsv = request.Set.To(set => set.Column).Without(writableColumns).ToCsv(column => $"[{column}]");
-					if (!invalidColumnCsv.IsBlank())
-						throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(request.Set)}");
+			var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
+			invalidColumnCsv = update.Set.Keys.Without(writableColumns).ToCsv(column => $"[{column}]");
+			if (!invalidColumnCsv.IsBlank())
+				throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-					return ValidationResponse.Success;
-				}
-				catch (Exception exception)
-				{
-					return new ValidationResponse(exception);
-				}
-			});
+			await ValueTask.CompletedTask;
 		}
 	}
 }

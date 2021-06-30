@@ -1,7 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Converters;
+using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
 {
@@ -15,8 +18,8 @@ namespace TypeCache.Data
 		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
 		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputExpressionArrayJsonConverter))]
-		public OutputExpression[]? Output { get; set; }
+		[JsonConverter(typeof(OutputJsonConverter))]
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
@@ -27,8 +30,8 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterArrayJsonConverter))]
-		public Parameter[]? Parameters { get; set; }
+		[JsonConverter(typeof(ParameterJsonConverter))]
+		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// JSON: <code>"Table1"</code>
@@ -40,8 +43,8 @@ namespace TypeCache.Data
 		/// JSON: <code>[ { "Column1": "Value1" }, { "Column2": NULL }, { "Column3": false } ]</code>
 		/// SQL: <code>SET [Column1] = N'Value1', [Column2] = NULL, [Column3] = 0</code>
 		/// </summary>
-		[JsonConverter(typeof(ColumnSetArrayJsonConverter))]
-		public ColumnSet[] Set { get; set; } = new ColumnSet[0];
+		[JsonConverter(typeof(SetJsonConverter))]
+		public IDictionary<string, object?> Set { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// JSON: <code>
