@@ -53,12 +53,20 @@ namespace TypeCache.Reflection
 			this.Public = fieldInfo.IsPublic;
 		}
 
+		protected Member(FieldInfo fieldInfo, Func<int> getHashCode)
+			: this(fieldInfo, fieldInfo.GetTypeMember())
+		{
+			this._GetHashCode = getHashCode;
+			this.Internal = fieldInfo.IsAssembly;
+			this.Public = fieldInfo.IsPublic;
+		}
+
 		protected Member(EventInfo eventInfo)
 			: this(eventInfo, eventInfo.GetTypeMember())
 		{
-			this._GetHashCode = eventInfo.RaiseMethod!.MethodHandle.GetHashCode;
-			this.Internal = eventInfo.RaiseMethod!.IsAssembly;
-			this.Public = eventInfo.RaiseMethod!.IsPublic;
+			this._GetHashCode = eventInfo.AddMethod!.MethodHandle.GetHashCode;
+			this.Internal = eventInfo.AddMethod!.IsAssembly;
+			this.Public = eventInfo.AddMethod!.IsPublic;
 		}
 
 		private readonly Func<int> _GetHashCode;

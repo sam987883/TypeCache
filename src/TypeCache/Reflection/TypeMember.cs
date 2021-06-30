@@ -34,7 +34,7 @@ namespace TypeCache.Reflection
 			this._BaseType = new Lazy<TypeMember>(() => this.Kind switch
 			{
 				Kind.Enum => typeof(Enum).GetTypeMember(),
-				Kind.Struct => typeof(ValueType).GetTypeMember(),
+				Kind.Struct or Kind.Pointer => typeof(ValueType).GetTypeMember(),
 				_ when type.BaseType is not null => type.BaseType.GetTypeMember(),
 				_ when type == typeof(object) => this,
 				_ => typeof(object).GetTypeMember()
@@ -52,7 +52,11 @@ namespace TypeCache.Reflection
 
 			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(this.CreateConstructorMembers, false);
 			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(this.CreateEventMembers, false);
-			this._Fields = new Lazy<IImmutableDictionary<string, FieldMember>>(this.CreateFieldMembers, false);
+			this._Fields = this.Kind switch
+			{
+				Kind.Delegate => new Lazy<IImmutableDictionary<string, FieldMember>>(() => ImmutableDictionary<string, FieldMember>.Empty, false),
+				_ => new Lazy<IImmutableDictionary<string, FieldMember>>(this.CreateFieldMembers, false)
+			};
 			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(this.CreateMethodMembers, false);
 			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(this.CreatePropertyMembers, false);
 		}

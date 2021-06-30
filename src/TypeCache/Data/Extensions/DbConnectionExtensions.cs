@@ -78,7 +78,7 @@ namespace TypeCache.Data.Extensions
 				}).ToArray();
 			}
 
-			return new ObjectSchema(tableRowSet, columns, parameters);
+			return new ObjectSchema(@this.DataSource, tableRowSet, columns, parameters);
 		}
 
 		/// <summary>

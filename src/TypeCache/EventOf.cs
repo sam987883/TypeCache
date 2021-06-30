@@ -12,13 +12,11 @@ namespace TypeCache
 	public static class EventOf<T>
 		where T : class
 	{
-		private static readonly TypeMember TypeMember = typeof(T).GetTypeMember();
-
 		private sealed record HandlerReference(WeakReference<T> Instance, EventMember EventMember, Delegate EventHandler);
 
 		private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
 
-		public static IImmutableDictionary<string, EventMember> Events => TypeMember.Events;
+		public static IImmutableDictionary<string, EventMember> Events => TypeOf<T>.Member.Events;
 
 		public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 		{

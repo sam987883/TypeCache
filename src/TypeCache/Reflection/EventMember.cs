@@ -16,7 +16,7 @@ namespace TypeCache.Reflection
 		{
 			this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
 			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
-			this.RaiseEvent = eventInfo.RaiseMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
+			this.RaiseEvent = eventInfo.RaiseMethod?.MethodHandle.GetMethodMember(this.Type.Handle);
 			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 		}
 
@@ -24,7 +24,7 @@ namespace TypeCache.Reflection
 
 		public MethodMember AddEventHandler { get; }
 
-		public MethodMember RaiseEvent { get; }
+		public MethodMember? RaiseEvent { get; }
 
 		public MethodMember RemoveEventHandler { get; }
 
@@ -38,7 +38,7 @@ namespace TypeCache.Reflection
 		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Raise(object? instance)
-			=> this.RaiseEvent.Invoke(instance);
+			=> this.RaiseEvent?.Invoke(instance);
 
 		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,6 +47,6 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(EventMember? other)
-			=> this.RaiseEvent.Handle == other?.RaiseEvent.Handle;
+			=> this.AddEventHandler.Handle == other?.AddEventHandler.Handle;
 	}
 }

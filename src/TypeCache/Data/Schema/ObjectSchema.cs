@@ -77,21 +77,27 @@ WHERE o.[object_id] = @ObjectId;
 			return sql.AppendLine(";").ToString();
 		}
 
-		public ObjectSchema(RowSet rowSet, ColumnSchema[] columns, ParameterSchema[] parameters)
+		public ObjectSchema(string dataSource, RowSet rowSet, ColumnSchema[] columns, ParameterSchema[] parameters)
 		{
 			this.Id = (int)rowSet[0, nameof(ObjectSchema.Id)]!;
 			this.Type = (ObjectType)rowSet[0, nameof(ObjectSchema.Type)]!;
+			this.DataSource = dataSource;
 			this.DatabaseName = rowSet[0, nameof(ObjectSchema.DatabaseName)]!.ToString()!;
 			this.SchemaName = rowSet[0, nameof(ObjectSchema.SchemaName)]!.ToString()!;
 			this.ObjectName = rowSet[0, nameof(ObjectSchema.ObjectName)]!.ToString()!;
 			this.Name = $"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]";
+			this._Id = $"{this.DataSource}:{this.Name}";
 			this.Columns = columns.ToImmutableArray();
 			this.Parameters = parameters.ToImmutableArray();
 		}
 
+		private readonly string _Id;
+
 		public int Id { get; init; }
 
 		public ObjectType Type { get; init; }
+
+		public string DataSource { get; init; }
 
 		public string DatabaseName { get; init; }
 
@@ -114,11 +120,12 @@ WHERE o.[object_id] = @ObjectId;
 		public bool HasParameter(string parameter) =>
 			this.Parameters.To(_ => _.Name).Has(parameter);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(ObjectSchema? other)
-			=> this.Id == other?.Id && this.Name.Is(other.Name);
+			=> this._Id.Is(other?._Id);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
-			=> HashCode.Combine(this.Id, this.Name);
+			=> this._Id.GetHashCode();
 	}
 }

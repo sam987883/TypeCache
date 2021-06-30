@@ -16,9 +16,7 @@ namespace TypeCache
 
 		public static RuntimeTypeHandle Handle => Member.Handle;
 
-		public static bool IsInternal => Member.Internal;
-
-		public static bool IsPublic => Member.Public;
+		public static bool Internal => Member.Internal;
 
 		public static Delegate Method => Member.Method!;
 
@@ -27,6 +25,8 @@ namespace TypeCache
 		public static string Name => Member.Name;
 
 		public static IImmutableList<MethodParameter> Parameters => Member.Parameters;
+
+		public static bool Public => Member.Public;
 
 		public static ReturnParameter Return => Member.Return;
 

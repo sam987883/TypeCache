@@ -23,7 +23,7 @@ namespace TypeCache
 			: Member, IEquatable<Token>
 		{
 			internal Token(FieldInfo fieldInfo)
-				: base(fieldInfo)
+				: base(fieldInfo, Comparer.GetHashCode)
 			{
 				this.Value = (T)Enum.Parse<T>(fieldInfo.Name);
 				this.Hex = this.Value.ToString("X");
@@ -83,9 +83,9 @@ namespace TypeCache
 			Attributes = type.GetCustomAttributes<Attribute>().ToImmutableArray();
 			Comparer = new CustomComparer<T>(compare, equals, getHashCode);
 			Handle = type.TypeHandle;
-			IsFlags = Attributes.Any<FlagsAttribute>();
-			IsInternal = !type.IsVisible;
-			IsPublic = type.IsPublic;
+			Flags = Attributes.Any<FlagsAttribute>();
+			Internal = !type.IsVisible;
+			Public = type.IsPublic;
 			Name = type.GetName();
 			UnderlyingType = type.GetSystemType();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
@@ -97,19 +97,19 @@ namespace TypeCache
 
 		public static CustomComparer<T> Comparer { get; }
 
+		public static bool Flags { get; }
+
 		public static RuntimeTypeHandle Handle { get; }
 
-		public static bool IsFlags { get; }
-
-		public static bool IsInternal { get; }
-
-		public static bool IsPublic { get; }
+		public static bool Internal { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsValid(T token)
 			=> Tokens.Keys.Has(token, Comparer);
 
 		public static string Name { get; }
+
+		public static bool Public { get; }
 
 		public static IImmutableDictionary<T, Token> Tokens { get; }
 

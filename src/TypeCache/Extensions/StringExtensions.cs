@@ -42,7 +42,7 @@ namespace TypeCache.Extensions
 		/// <c><see cref="StringComparer.Equals(string?, string?)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is([NotNullWhen(true)] this string? @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Is([NotNullWhen(true)] this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> comparison.ToStringComparer().Equals(@this, value);
 
 		/// <summary>

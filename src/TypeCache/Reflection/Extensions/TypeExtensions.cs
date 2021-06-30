@@ -146,9 +146,9 @@ namespace TypeCache.Reflection.Extensions
 				_ when @this.IsPointer => Kind.Pointer,
 				_ when typeof(Delegate).IsAssignableFrom(@this.BaseType) => Kind.Delegate,
 				_ when @this.IsEnum => Kind.Enum,
+				_ when @this != typeof(string) && @this.IsEnumerable() => Kind.Collection,
 				_ when @this.IsInterface => Kind.Interface,
 				_ when @this.IsValueType => Kind.Struct,
-				_ when @this != typeof(string) && @this.IsEnumerable() => Kind.Collection,
 				_ => Kind.Class,
 			};
 
