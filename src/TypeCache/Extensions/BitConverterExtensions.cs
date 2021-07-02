@@ -16,6 +16,13 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToBoolean(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToBoolean(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool ToBoolean(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToBoolean(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.GetBytes(bool)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,12 +105,27 @@ namespace TypeCache.Extensions
 		public static char ToChar(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToChar(@this, startIndex);
 
+
+		/// <summary>
+		/// <c><see cref="BitConverter.ToChar(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static char ToChar(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToChar(@this);
+
 		/// <summary>
 		/// <c><see cref="BitConverter.ToInt16(byte[], int)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static short ToInt16(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToInt16(@this, startIndex);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.ToInt16(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static short ToInt16(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToInt16(@this);
 
 		/// <summary>
 		/// <c><see cref="BitConverter.SingleToInt32Bits(float)"/></c>
@@ -120,6 +142,13 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToInt32(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToInt32(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ToInt32(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToInt32(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.DoubleToInt64Bits(double)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,11 +163,25 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToInt64(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToInt64(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ToInt64(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToInt64(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.ToUInt16(byte[], int)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ushort ToUInt16(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToUInt16(@this, startIndex);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.ToUInt16(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ushort ToUInt16(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToUInt16(@this);
 
 		/// <summary>
 		/// <c><see cref="BitConverter.ToUInt32(byte[], int)"/></c>
@@ -148,11 +191,25 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToUInt32(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToUInt32(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static uint ToUInt32(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToUInt32(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.ToUInt64(byte[], int)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ulong ToUInt64(this byte[] @this, int startIndex = 0)
 			=> BitConverter.ToUInt64(@this, startIndex);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.ToUInt64(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ulong ToUInt64(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToUInt64(@this);
 
 		/// <summary>
 		/// <c><see cref="BitConverter.Int32BitsToSingle(int)"/></c>
@@ -169,6 +226,13 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToSingle(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToSingle(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float ToSingle(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToSingle(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.Int64BitsToDouble(long)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,6 +247,13 @@ namespace TypeCache.Extensions
 			=> BitConverter.ToDouble(@this, startIndex);
 
 		/// <summary>
+		/// <c><see cref="BitConverter.ToDouble(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static double ToDouble(this ReadOnlySpan<byte> @this)
+			=> BitConverter.ToDouble(@this);
+
+		/// <summary>
 		/// <c><see cref="BitConverter.ToString(byte[], int)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -195,5 +266,75 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToText(this byte[] @this, int startIndex, int length)
 			=> BitConverter.ToString(@this, startIndex, length);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, bool)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, bool value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, char)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, char value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, short)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, short value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, int)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, int value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, long)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, long value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, ushort)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, ushort value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, uint)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, uint value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, ulong)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, ulong value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, float)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, float value)
+			=> BitConverter.TryWriteBytes(@this, value);
+
+		/// <summary>
+		/// <c><see cref="BitConverter.TryWriteBytes(Span{byte}, double)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryWriteBytes(this Span<byte> @this, double value)
+			=> BitConverter.TryWriteBytes(@this, value);
 	}
 }

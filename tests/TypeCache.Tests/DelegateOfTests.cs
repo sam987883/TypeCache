@@ -2,6 +2,7 @@
 
 using System;
 using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests

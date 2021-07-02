@@ -11,24 +11,10 @@ namespace TypeCache.Extensions
 {
 	public static class StringExtensions
 	{
-		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase, [CallerMemberName] string? caller = null)
-		{
-			name.AssertNotNull(nameof(name), caller);
-
-			if (!comparison.ToStringComparer().Equals(@this, value))
-				throw new ArgumentException($"{nameof(Assert)}: [{(@this is not null ? $"\"{@this}\"" : "null")}] <> {(value is not null ? $"\"{value}\"" : "null")}.", name);
-		}
-
-		public static void AssertNotBlank([AllowNull] this string @this, string name, [CallerMemberName] string? caller = null)
-		{
-			if (@this is null)
-				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
-		}
-
 		public static string FromBase64(this string @this, Encoding encoding)
 		{
 			Span<byte> span = stackalloc byte[@this.Length];
-			return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
+			return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.TrimEnd((byte)0)) : @this;
 		}
 
 		/// <summary>
@@ -83,7 +69,7 @@ namespace TypeCache.Extensions
 		public static string Mask(this string @this, char mask = '*')
 		{
 			if (@this.IsBlank())
-				return @this;
+				return string.Empty;
 
 			var span = @this.ToSpan();
 			var i = -1;
@@ -193,6 +179,27 @@ namespace TypeCache.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
 			=> encoding.GetBytes(@this, bytes);
+
+		/// <summary>
+		/// <c><see cref="Encoding.GetString(ReadOnlySpan{byte})"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToText(this ReadOnlySpan<byte> @this, Encoding encoding)
+			=> encoding.GetString(@this);
+
+		/// <summary>
+		/// <c><see cref="Encoding.GetString(byte[])"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToText(this byte[] @this, Encoding encoding)
+			=> encoding.GetString(@this);
+
+		/// <summary>
+		/// <c><see cref="Encoding.GetString(byte[], int, int)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToText(this byte[] @this, Encoding encoding, int index, int count)
+			=> encoding.GetString(@this, index, count);
 
 		/// <summary>
 		/// <c><see cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/></c>

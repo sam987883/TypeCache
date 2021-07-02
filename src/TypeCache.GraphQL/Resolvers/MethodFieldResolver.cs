@@ -8,8 +8,8 @@ using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.SQL;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -52,7 +52,7 @@ namespace TypeCache.GraphQL.Resolvers
 					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
 					var model = parameter.Type.Create();
 					if (argument is not null)
-						model.MapProperties(argument);
+						model.ReadProperties(argument);
 					yield return model;
 				}
 				else

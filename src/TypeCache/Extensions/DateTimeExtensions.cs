@@ -39,9 +39,9 @@ namespace TypeCache.Extensions
 		/// <code>
 		/// <list type="table">
 		/// <item><term>kind == @this.Kind</term> <description>@this</description></item>
+		/// <item><term><see cref="DateTimeKind.Local"/></term> <description><see cref="TimeZoneInfo.ConvertTimeFromUtc"/>(<see cref="DateTime"/>, <see cref="TimeZoneInfo"/>.Local)</description></item>
 		/// <item><term><see cref="DateTimeKind.Unspecified"/></term> <description>@this.As(kind)</description></item>
-		/// <item><term><see cref="DateTimeKind.Local"/></term> <description><see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/></description></item>
-		/// <item><term><see cref="DateTimeKind.Utc"/></term> <description><see cref="TimeZoneInfo.ConvertTimeFromUtc"/>(<see cref="DateTime"/>, <see cref="TimeZoneInfo"/>.Local)</description></item>
+		/// <item><term><see cref="DateTimeKind.Utc"/></term> <description><see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/></description></item>
 		/// </list>
 		/// </code>
 		/// </summary>
@@ -49,9 +49,9 @@ namespace TypeCache.Extensions
 			=> kind switch
 			{
 				_ when kind == @this.Kind => @this,
+				DateTimeKind.Local => TimeZoneInfo.ConvertTimeFromUtc(@this, TimeZoneInfo.Local),
 				DateTimeKind.Unspecified => @this.As(kind),
-				DateTimeKind.Local => TimeZoneInfo.ConvertTimeToUtc(@this),
-				DateTimeKind.Utc => TimeZoneInfo.ConvertTimeFromUtc(@this, TimeZoneInfo.Local),
+				DateTimeKind.Utc => TimeZoneInfo.ConvertTimeToUtc(@this),
 				_ => throw new ArgumentOutOfRangeException($"{nameof(To)}: {nameof(DateTimeKind)} value of {kind} is not supported.")
 			};
 

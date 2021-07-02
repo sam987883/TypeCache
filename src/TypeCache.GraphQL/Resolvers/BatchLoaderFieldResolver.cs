@@ -11,6 +11,7 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -86,7 +87,7 @@ namespace TypeCache.GraphQL.Resolvers
 					if (argument is not null)
 					{
 						var model = parameter.Type.Create();
-						model.MapProperties(argument);
+						model.ReadProperties(argument);
 						yield return model;
 					}
 					yield return null;

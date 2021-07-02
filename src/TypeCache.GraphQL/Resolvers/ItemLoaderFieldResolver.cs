@@ -80,7 +80,7 @@ namespace TypeCache.GraphQL.Resolvers
 					if (argument is not null)
 					{
 						var model = parameter.Type.Create();
-						model.MapProperties(argument);
+						model.ReadProperties(argument);
 						yield return model;
 					}
 					yield return null;

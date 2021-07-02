@@ -7,6 +7,7 @@ using TypeCache.Data;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests

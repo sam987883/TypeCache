@@ -174,7 +174,7 @@ namespace TypeCache.Extensions
 		/// <see cref="char.GetUnicodeCategory(char)"/>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UnicodeCategory UnicodeCategory(this char @this)
+		public static UnicodeCategory ToUnicodeCategory(this char @this)
 			=> char.GetUnicodeCategory(@this);
 	}
 }
