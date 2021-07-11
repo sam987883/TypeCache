@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Data.Extensions
 {
@@ -24,16 +25,16 @@ namespace TypeCache.Data.Extensions
 			{
 				var column = pair.Key.EscapeIdentifier();
 				if (pair.Value.Is("INSERTED"))
-					return $"INSERTED.{column} AS {column}";
+					return Invariant($"INSERTED.{column} AS {column}");
 				else if (pair.Value.Is("DELETED"))
-					return $"DELETED.{column} AS {column}";
-				return $"{pair.Value} AS {column}";
+					return Invariant($"DELETED.{column} AS {column}");
+				return Invariant($"{pair.Value} AS {column}");
 			}));
 
 		public static string EscapeIdentifier([NotNull] this string @this)
 			=> @this.StartsWith('[') && @this.EndsWith(']')
-				? $"[{@this.Substring(1, @this.Length - 2).Replace("]", "]]")}]"
-				: $"[{@this.Replace("]", "]]")}]";
+				? Invariant($"[{@this.Substring(1, @this.Length - 2).Replace("]", "]]")}]")
+				: Invariant($"[{@this.Replace("]", "]]")}]");
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string EscapeLikeValue([NotNull] this string @this)
@@ -50,26 +51,26 @@ namespace TypeCache.Data.Extensions
 			var sqlBuilder = new StringBuilder();
 			if (!@this.Delete && !@this.Update.Any())
 			{
-				sqlBuilder.Append($"INSERT INTO {@this.Table} ").AppendColumnsSQL(@this.Insert!);
+				sqlBuilder.Append(Invariant($"INSERT INTO {@this.Table} ")).AppendColumnsSQL(@this.Insert!);
 				if (@this.Output.Any())
 					sqlBuilder.AppendOutputSQL(@this.Output);
 
-				sqlBuilder.Append(@$"
-VALUES {batchDataCsv}");
+				sqlBuilder.Append(Invariant(@$"
+VALUES {batchDataCsv}"));
 			}
 			else
 			{
-				sqlBuilder.Append(@$"MERGE {@this.Table} AS t WITH(UPDLOCK)
+				sqlBuilder.Append(Invariant(@$"MERGE {@this.Table} AS t WITH(UPDLOCK)
 USING
 (
 	VALUES {batchDataCsv}
-) AS s ").AppendColumnsSQL(@this.Input.Columns).Append(@"
-ON ").AppendJoin($" {LogicalOperator.And.ToSQL()} ", @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}"));
+) AS s ")).AppendColumnsSQL(@this.Input.Columns).Append(@"
+ON ").AppendJoin(Invariant($" {LogicalOperator.And.ToSQL()} "), @this.On.To(column => Invariant($"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}")));
 
 				if (@this.Update.Any())
 					sqlBuilder.Append(@"
 WHEN MATCHED THEN
-	UPDATE SET ").AppendJoin(SQL_DELIMETER, @this.Update.To(column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}"));
+	UPDATE SET ").AppendJoin(SQL_DELIMETER, @this.Update.To(column => Invariant($"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}")));
 
 				if (@this.Delete)
 					sqlBuilder.Append(@"
@@ -77,12 +78,12 @@ WHEN NOT MATCHED BY SOURCE THEN
 	DELETE");
 
 				if (@this.Insert.Any())
-					sqlBuilder.Append($@"
+					sqlBuilder.Append(Invariant($@"
 WHEN NOT MATCHED BY TARGET THEN
-	INSERT ").AppendColumnsSQL(@this.Insert).Append(@"
+	INSERT ")).AppendColumnsSQL(@this.Insert).Append(@"
 	VALUES
 	(
-	").AppendJoin(SQL_DELIMETER, @this.Insert.To(column => $"s.{column.EscapeIdentifier()}")).Append(@"
+	").AppendJoin(SQL_DELIMETER, @this.Insert.To(column => Invariant($"s.{column.EscapeIdentifier()}"))).Append(@"
 	)");
 
 				if (@this.Output.Any())
@@ -120,7 +121,7 @@ WHEN NOT MATCHED BY TARGET THEN
 			var sqlBuilder = new StringBuilder("SELECT ");
 
 			if (@this.Select.Any())
-				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => _.Key.Is(_.Value) ? $"[{_.Key}]" : $"{_.Value} AS [{_.Key}]")).AppendLine();
+				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => _.Key.Is(_.Value) ? Invariant($"[{_.Key}]") : Invariant($"{_.Value} AS [{_.Key}]"))).AppendLine();
 			else
 				sqlBuilder.AppendLine("*");
 
@@ -133,14 +134,14 @@ WHEN NOT MATCHED BY TARGET THEN
 				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
 
 			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => $"[{_.Key}] {_.Value.ToSQL()}"));
+				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"[{_.Key}] {_.Value.ToSQL()}")));
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSQL([NotNull] this UpdateRequest @this)
 		{
-			var updateCsv = @this.Set.To(_ => $"{_.Key.EscapeIdentifier()} = {_.Value.ToSQL()}").Join(SQL_DELIMETER);
+			var updateCsv = @this.Set.To(_ => Invariant($"{_.Key.EscapeIdentifier()} = {_.Value.ToSQL()}")).Join(SQL_DELIMETER);
 
 			var sqlBuilder = new StringBuilder("UPDATE ").Append(@this.Table).AppendLine(" WITH(UPDLOCK)")
 				.Append("SET ").Append(updateCsv);
@@ -158,33 +159,33 @@ WHEN NOT MATCHED BY TARGET THEN
 		{
 			null or DBNull => "NULL",
 			bool boolean => boolean ? "1" : "0",
-			char text => text.Equals('\'') ? "N''''" : $"N'{text}'",
-			string text => $"N'{text.EscapeValue()}'",
-			DateTime dateTime => $"'{dateTime:o}'",
-			DateTimeOffset dateTimeOffset => $"'{dateTimeOffset:o}'",
-			TimeSpan time => $"'{time:c}'",
-			Guid guid => $"'{guid:D}'",
+			char text => text.Equals('\'') ? "N''''" : Invariant($"N'{text}'"),
+			string text => Invariant($"N'{text.EscapeValue()}'"),
+			DateTime dateTime => Invariant($"'{dateTime:o}'"),
+			DateTimeOffset dateTimeOffset => Invariant($"'{dateTimeOffset:o}'"),
+			TimeSpan time => Invariant($"'{time:c}'"),
+			Guid guid => Invariant($"'{guid:D}'"),
 			LogicalOperator.And => "AND",
 			LogicalOperator.Or => "OR",
-			LogicalOperator _ => throw new NotImplementedException($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL."),
+			LogicalOperator _ => throw new NotImplementedException(Invariant($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL.")),
 			Sort.Ascending => "ASC",
 			Sort.Descending => "DESC",
 			Sort _ => string.Empty,
 			Enum token => token.ToString("D"),
-			Index index => $"'{index}'",
+			Index index => Invariant($"'{index}'"),
 			JsonElement json => json.ValueKind switch
 			{
-				JsonValueKind.String => $"N'{json.GetString()!.EscapeValue()}'",
+				JsonValueKind.String => Invariant($"N'{json.GetString()!.EscapeValue()}'"),
 				JsonValueKind.Number => json.ToString()!,
 				JsonValueKind.True => "1",
 				JsonValueKind.False => "0",
 				JsonValueKind.Null => "NULL",
-				_ => $"N'{json.ToString()!.EscapeValue()}'"
+				_ => Invariant($"N'{json.ToString()!.EscapeValue()}'")
 			},
-			Range range => $"'{range}'",
-			Uri uri => $"'{uri.ToString().EscapeValue()}'",
+			Range range => Invariant($"'{range}'"),
+			Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
 			byte[] binary => Encoding.Default.GetString(binary),
-			IEnumerable enumerable => $"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})",
+			IEnumerable enumerable => Invariant($"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})"),
 			_ => @this.ToString() ?? "NULL"
 		};
 	}
