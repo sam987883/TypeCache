@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using Xunit;
@@ -8,6 +10,11 @@ namespace TypeCache.Tests.Data.Extensions
 {
 	public class SqlExtensions
 	{
+		public SqlExtensions()
+		{
+			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+		}
+
 		[Fact]
 		public void EscapeIdentifier()
 		{
