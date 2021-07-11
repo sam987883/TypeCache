@@ -47,74 +47,52 @@ namespace TypeCache.Collections.Extensions
 		public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 			=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
 
-		/// <summary>
-		/// <c><see cref="Array.Copy(Array, Array, long)"/></c>
-		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
-		public static void CopyTo<T>(this T[] @this, T[] target, long length = 0)
-		{
-			target.AssertNotNull(nameof(target));
-
-			Array.Copy(@this, target, length < 1 ? @this.Length : length);
-		}
-
-		/// <summary>
-		/// <c><see cref="Array.Copy(Array, long, Array, long, long)"/></c>
-		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
-		public static void CopyTo<T>(this T[] @this, long sourceIndex, T[] target, long targetIndex, long length = 0)
-		{
-			target.AssertNotNull(nameof(target));
-
-			Array.Copy(@this, sourceIndex, target, targetIndex, length < 1 ? @this.Length : length);
-		}
-
-		public static void Deconstruct<T>(this T[]? @this, out T? first, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
-			rest = @this?.Length > 1 ? @this[1..] : Array<T>.Empty;
+			rest = @this?.Length > 1 ? @this[1..] : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
-			rest = @this?.Length > 2 ? @this[2..] : Array<T>.Empty;
+			rest = @this?.Length > 2 ? @this[2..] : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T? third, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
 			third = @this?.Length > 2 ? @this[2] : null;
-			rest = @this?.Length > 3 ? @this[3..] : Array<T>.Empty;
+			rest = @this?.Length > 3 ? @this[3..] : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this T[]? @this, out T? first, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
-			rest = @this?.Length > 1 ? @this[1..] : Array<T>.Empty;
+			rest = @this?.Length > 1 ? @this[1..] : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
-			rest = @this?.Length > 2 ? @this[2..] : Array<T>.Empty;
+			rest = @this?.Length > 2 ? @this[2..] : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this T[] @this, out T? first, out T? second, out T? third, out T[] rest)
+		public static void Deconstruct<T>(this T[]? @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this?.Length > 0 ? @this[0] : null;
 			second = @this?.Length > 1 ? @this[1] : null;
 			third = @this?.Length > 2 ? @this[2] : null;
-			rest = @this?.Length > 3 ? @this[3..] : Array<T>.Empty;
+			rest = @this?.Length > 3 ? @this[3..] : Enumerable<T>.Empty;
 		}
 
 		public static void Do<T>(this T[]? @this, Action<T> action)
@@ -198,12 +176,48 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <summary>
-		/// <c><see cref="Array.Resize{T}(ref T[], int)"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Resize<T>(this T[] @this, int size)
-			=> Array.Resize(ref @this, size);
+		/// <remarks>Throws <see cref="IndexOutOfRangeException"/>.</remarks>
+		public static IEnumerable<T> Get<T>(this T[] @this, Range range)
+		{
+			if (range.Start.IsFromEnd || range.End.IsFromEnd)
+				range = range.Normalize(@this.Length);
+
+			return range.Values().To(i => @this[i]);
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<T> If<T>(this T[]? @this, Predicate<T> filter)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			if (@this is null)
+				yield break;
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+			{
+				var item = @this[i];
+				if (filter(item))
+					yield return item;
+			}
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			if (@this is not null)
+			{
+				var count = @this.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					var item = @this[i];
+					if (await filter(item))
+						yield return item;
+				}
+			}
+		}
 
 		/// <summary>
 		/// <c><see cref="Array.Reverse{T}(T[])"/></c>
@@ -253,9 +267,22 @@ namespace TypeCache.Collections.Extensions
 			if (sourceIndex + length > @this.Length)
 				throw new IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");
 
-			var array = new T[length > 0 ? length : @this.Length];
+			var array = new T[length > 0 ? length : (@this.Length - sourceIndex)];
 			Array.Copy(@this, sourceIndex, array, 0, array.Length);
 			return array;
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, V> map)
+		{
+			map.AssertNotNull(nameof(map));
+
+			if (@this is null)
+				yield break;
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return map(@this[i]);
 		}
 
 		public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)
@@ -268,36 +295,18 @@ namespace TypeCache.Collections.Extensions
 			return array;
 		}
 
-		/// <summary>
-		/// <c><see cref="ImmutableArray.Create{T}(T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableArray<T> ToImmutableArray<T>(this T[]? @this)
-			where T : notnull
-			=> ImmutableArray.Create(@this);
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		internal static async IAsyncEnumerable<V> ToAsync<T, V>(T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
+		{
+			map.AssertNotNull(nameof(map));
 
-		/// <summary>
-		/// <c><see cref="ImmutableHashSet.Create{T}(IEqualityComparer{T}?, T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableHashSet<string> ToImmutableHashSet(this string[]? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> ImmutableHashSet.Create(comparison.ToStringComparer(), @this ?? Array<string>.Empty);
+			if (@this is null)
+				yield break;
 
-		/// <summary>
-		/// <c><see cref="ImmutableHashSet.Create{T}(IEqualityComparer{T}?, T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableHashSet<T> ToImmutableHashSet<T>(this T[]? @this, IEqualityComparer<T>? comparer)
-			where T : notnull
-			=> ImmutableHashSet.Create(comparer, @this ?? Array<T>.Empty);
-
-		/// <summary>
-		/// <c><see cref="ImmutableList.Create{T}(T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableList<T> ToImmutableList<T>(this T[]? @this)
-			where T : notnull
-			=> ImmutableList.Create(@this ?? Array<T>.Empty);
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return await map(@this[i]);
+		}
 
 		/// <summary>
 		/// <c><see cref="ImmutableQueue.Create{T}(T[])"/></c>
@@ -308,27 +317,20 @@ namespace TypeCache.Collections.Extensions
 			=> ImmutableQueue.Create(@this ?? Array<T>.Empty);
 
 		/// <summary>
-		/// <c><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?, T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableSortedSet<string> ToImmutableSortedSet(this string[]? @this, StringComparison comparison = StringComparison.Ordinal)
-			=> ImmutableSortedSet.Create(comparison.ToStringComparer(), @this ?? Array<string>.Empty);
-
-		/// <summary>
-		/// <c><see cref="ImmutableSortedSet.Create{T}(IComparer{T}?, T[])"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableSortedSet<T> ToImmutableSortedSet<T>(this T[]? @this, IComparer<T>? comparer)
-			where T : notnull
-			=> ImmutableSortedSet.Create(comparer, @this ?? Array<T>.Empty);
-
-		/// <summary>
 		/// <c><see cref="ImmutableStack.Create{T}(T[])"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
 			where T : notnull
 			=> ImmutableStack.Create(@this ?? Array<T>.Empty);
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<int> ToIndex<T>(this T[]? @this, Predicate<T> filter)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			return @this is not null ? 0.Range(@this.Length).If(i => filter(@this[i])) : Enumerable<int>.Empty;
+		}
 
 		/// <summary>
 		/// <c><see cref="Task.WaitAll(Task[], CancellationToken)"/></c>

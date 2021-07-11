@@ -12,14 +12,14 @@ namespace TypeCache.Collections.Extensions
 		/// <c><see cref="IComparer.Compare(object?, object?)"/> == 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Same(this IComparer @this, object value1, object value2)
+		public static bool EqualTo(this IComparer @this, object value1, object value2)
 			=> @this.Compare(value1, value2) == 0;
 
 		/// <summary>
 		/// <c><see cref="IComparer{T}.Compare(T, T)"/> == 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Same<T>(this IComparer<T> @this, T value1, T value2)
+		public static bool EqualTo<T>(this IComparer<T> @this, T value1, T value2)
 			=> @this.Compare(value1, value2) == 0;
 
 		/// <summary>
@@ -40,14 +40,14 @@ namespace TypeCache.Collections.Extensions
 		/// <c><see cref="IComparer.Compare(object?, object?)"/> &lt;= 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool LessThanOrEqual(this IComparer @this, object value1, object value2)
+		public static bool LessThanOrEqualTo(this IComparer @this, object value1, object value2)
 			=> @this.Compare(value1, value2) <= 0;
 
 		/// <summary>
 		/// <c><see cref="IComparer{T}.Compare(T, T)"/> &lt;= 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool LessThanOrEqual<T>(this IComparer<T> @this, T value1, T value2)
+		public static bool LessThanOrEqualTo<T>(this IComparer<T> @this, T value1, T value2)
 			=> @this.Compare(value1, value2) <= 0;
 
 		/// <summary>
@@ -68,14 +68,14 @@ namespace TypeCache.Collections.Extensions
 		/// <c><see cref="IComparer.Compare(object?, object?)"/> &gt;= 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool MoreThanOrEqual(this IComparer @this, object value1, object value2)
+		public static bool MoreThanOrEqualTo(this IComparer @this, object value1, object value2)
 			=> @this.Compare(value1, value2) >= 0;
 
 		/// <summary>
 		/// <c><see cref="IComparer{T}.Compare(T, T)"/> &gt;= 0</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool MoreThanOrEqual<T>(this IComparer<T> @this, T value1, T value2)
+		public static bool MoreThanOrEqualTo<T>(this IComparer<T> @this, T value1, T value2)
 			=> @this.Compare(value1, value2) >= 0;
 
 		/// <summary>

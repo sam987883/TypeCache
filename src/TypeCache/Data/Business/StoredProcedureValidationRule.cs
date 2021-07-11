@@ -17,7 +17,7 @@ namespace TypeCache.Data.Business
 			var schema = request.SqlApi.GetObjectSchema(request.Procedure.Procedure);
 			schema.Type.Assert(nameof(StoredProcedureRequest), ObjectType.StoredProcedure);
 
-			var invalidParameterCsv = request.Procedure.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCsv();
+			var invalidParameterCsv = request.Procedure.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
 			if (!invalidParameterCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
 

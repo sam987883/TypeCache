@@ -6,17 +6,21 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests
+namespace TypeCache.Tests.Reflection.Extensions
 {
-	public class ReflectionExtensionTests
+	public class ObjectExtensions
 	{
 		[Fact]
-		public void ObjectExtensionTests()
+		public void GetTypeMember()
 		{
 			Assert.Equal(TypeOf<string>.Member, "AAA".GetTypeMember());
 			Assert.Equal(TypeOf<string>.Member, typeof(string).GetTypeMember());
 			Assert.Equal(TypeOf<string>.Member, typeof(string).GetMethods().First().GetTypeMember());
+		}
 
+		[Fact]
+		public void MapFields()
+		{
 			var testModel = new TestModel
 			{
 				TestProperty1 = 1,
@@ -32,17 +36,20 @@ namespace TypeCache.Tests
 			Assert.Equal(1, testModelFields.TestProperty1);
 			Assert.Equal('2', testModelFields.TestProperty2);
 			Assert.Equal("333", testModelFields.TestProperty3);
+		}
 
-			testModelFields = new TestModel();
-			testModelFields.ReadFields(new Dictionary<string, object>(StringComparer.Ordinal)
+		[Fact]
+		public void MapProperties()
+		{
+			var testModel = new TestModel
 			{
-				{ "_TestField1", 101 },
-				{ "_TestField2", 'X' },
-				{ "_TestField3", "ABCdef" },
-			});
-			Assert.Equal(101, testModelFields.TestProperty1);
-			Assert.Equal('X', testModelFields.TestProperty2);
-			Assert.Equal("ABCdef", testModelFields.TestProperty3);
+				TestProperty1 = 1,
+				TestProperty2 = '2',
+				TestProperty3 = "333",
+				TestProperty4 = 4,
+				TestProperty5 = '5',
+				TestProperty6 = "666666"
+			};
 
 			var testModelProperties = new TestModel();
 			testModelProperties.MapProperties(testModel);
@@ -52,8 +59,27 @@ namespace TypeCache.Tests
 			Assert.Equal(4, testModelProperties.TestProperty4);
 			Assert.Equal('5', testModelProperties.TestProperty5);
 			Assert.Equal("666666", testModelProperties.TestProperty6);
+		}
 
-			testModelFields = new TestModel();
+		[Fact]
+		public void ReadFields()
+		{
+			var testModelFields = new TestModel();
+			testModelFields.ReadFields(new Dictionary<string, object>(StringComparer.Ordinal)
+			{
+				{ "_TestField1", 101 },
+				{ "_TestField2", 'X' },
+				{ "_TestField3", "ABCdef" },
+			});
+			Assert.Equal(101, testModelFields.TestProperty1);
+			Assert.Equal('X', testModelFields.TestProperty2);
+			Assert.Equal("ABCdef", testModelFields.TestProperty3);
+		}
+
+		[Fact]
+		public void ReadProperties()
+		{
+			var testModelFields = new TestModel();
 			testModelFields.ReadProperties(new Dictionary<string, object>(StringComparer.Ordinal)
 			{
 				{ nameof(TestModel.TestProperty4), 101 },

@@ -81,7 +81,7 @@ namespace TypeCache.Collections.Extensions
 		/// : string.Empty
 		/// </code>
 		/// </summary>
-		public static string ToCsv(this IEnumerable<string>? @this)
+		public static string ToCSV(this IEnumerable<string>? @this)
 			=> @this.Any()
 				? string.Join(',', @this.To(text => !text.IsBlank() ? text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"") : string.Empty))
 				: string.Empty;
@@ -91,13 +91,6 @@ namespace TypeCache.Collections.Extensions
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dictionary<string, V> ToDictionary<V>(this IEnumerable<KeyValuePair<string, V>>? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> @this.ToDictionary(comparison.ToStringComparer());
-
-		/// <summary>
-		/// <c>@this.ToDictionary(comparison.ToStringComparer())</c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Dictionary<string, V> ToDictionary<V>(this IEnumerable<Tuple<string, V>>? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 			=> @this.ToDictionary(comparison.ToStringComparer());
 
 		/// <summary>
@@ -129,46 +122,49 @@ namespace TypeCache.Collections.Extensions
 			=> @this.ToHashSet(comparison.ToStringComparer());
 
 		/// <summary>
-		/// <c>@this?.ToImmutableDictionary(keyComparison.ToStringComparer(), valueComparer) ?? <see cref="ImmutableDictionary{K, V}.Empty"/></c>
+		/// <c>@this?.ToImmutableDictionary(<paramref name="keyComparison"/>.ToStringComparer())
+		/// ?? ImmutableDictionary.Create&lt;<see cref="string"/>, <typeparamref name="V"/>&gt;(<paramref name="keyComparison"/>)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableDictionary<string, V> ToImmutableDictionary<V>(this IEnumerable<KeyValuePair<string, V>>? @this, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
-			=> @this?.ToImmutableDictionary(keyComparison.ToStringComparer(), valueComparer) ?? ImmutableDictionary<string, V>.Empty;
-
-		/// <summary>
-		/// <c>@this?.ToImmutableDictionary(keyFactory, keyComparison.ToStringComparer()) ?? <see cref="ImmutableDictionary{K, V}.Empty"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableDictionary<string, V> ToImmutableDictionary<V>(this IEnumerable<V>? @this, Func<V, string> keyFactory, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
-			=> @this?.ToImmutableDictionary(keyFactory, keyComparison.ToStringComparer()) ?? ImmutableDictionary<string, V>.Empty;
+		public static ImmutableDictionary<string, V> ToImmutableDictionary<V>(
+			this IEnumerable<KeyValuePair<string, V>>? @this
+			, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase)
+			=> @this != null ? ImmutableDictionary.CreateRange(keyComparison.ToStringComparer(), @this) : ImmutableDictionary.Create<string, V>(keyComparison.ToStringComparer());
 
 		/// <summary>
 		/// <c>@this?.ToImmutableDictionary(keyFactory, valueFactory, keyComparison.ToStringComparer()) ?? <see cref="ImmutableDictionary{K, V}.Empty"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableDictionary<string, V> ToImmutableDictionary<T, V>(this IEnumerable<T>? @this, Func<T, string> keyFactory, Func<T, V> valueFactory, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase, IEqualityComparer<V>? valueComparer = null)
-			=> @this?.ToImmutableDictionary(keyFactory, valueFactory, keyComparison.ToStringComparer()) ?? ImmutableDictionary<string, V>.Empty;
+		public static ImmutableDictionary<string, V> ToImmutableDictionary<T, V>(
+			this IEnumerable<T>? @this
+			, Func<T, string> keyFactory
+			, Func<T, V> valueFactory
+			, StringComparison keyComparison = StringComparison.OrdinalIgnoreCase)
+			=> @this?.ToImmutableDictionary(keyFactory, valueFactory, keyComparison.ToStringComparer()) ?? ImmutableDictionary.Create<string, V>(keyComparison.ToStringComparer());
 
 		/// <summary>
 		/// <c>@this.ToImmutableHashSet(comparison.ToStringComparer())</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableHashSet<string> ToImmutableHashSet(this IEnumerable<string>? @this, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> @this.ToImmutableHashSet(comparison.ToStringComparer());
+			=> @this?.ToImmutableHashSet(comparison.ToStringComparer()) ?? ImmutableHashSet.Create<string>(comparison.ToStringComparer());
 
 		/// <summary>
 		/// <c>@this.ToImmutableSortedDictionary(keyComparison.ToStringComparer(), valueComparer)</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ImmutableSortedDictionary<string, V> ToImmutableSortedDictionary<V>(this IEnumerable<KeyValuePair<string, V>>? @this, StringComparison keyComparison = StringComparison.Ordinal, IEqualityComparer<V>? valueComparer = null)
-			=> @this.ToImmutableSortedDictionary(keyComparison.ToStringComparer(), valueComparer);
+		public static ImmutableSortedDictionary<string, V> ToImmutableSortedDictionary<V>(
+			this IEnumerable<KeyValuePair<string, V>>? @this
+			, StringComparison keyComparison = StringComparison.Ordinal
+			, IEqualityComparer<V>? valueComparer = null)
+			=> @this?.ToImmutableSortedDictionary(keyComparison.ToStringComparer(), valueComparer) ?? ImmutableSortedDictionary.Create<string, V>(keyComparison.ToStringComparer(), valueComparer);
 
 		/// <summary>
 		/// <c>@this.ToImmutableSortedSet(comparison.ToStringComparer())</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ImmutableSortedSet<string> ToImmutableSortedSet(this IEnumerable<string>? @this, StringComparison comparison = StringComparison.Ordinal)
-			=> @this.ToImmutableSortedSet(comparison.ToStringComparer());
+			=> @this?.ToImmutableSortedSet(comparison.ToStringComparer()) ?? ImmutableSortedSet.Create<string>(comparison.ToStringComparer());
 
 		/// <summary>
 		/// <c>@this.ToIndex(value, comparison.ToStringComparer())</c>

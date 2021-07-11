@@ -17,13 +17,61 @@ namespace TypeCache.Collections.Extensions
 			return count;
 		}
 
-		public static T? Get<T>(this IEnumerator<T> @this, Index index)
-			where T : class
-			=> @this.Skip(index.Value) ? @this.Current : null;
-
-		public static T? GetValue<T>(this IEnumerator<T> @this, Index index)
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out IEnumerable<T> rest)
 			where T : struct
-			=> @this.Skip(index.Value) ? @this.Current : null;
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
+			where T : struct
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			second = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
+			where T : struct
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			second = @this.MoveNext() ? @this.Current : null;
+			third = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out IEnumerable<T> rest)
+			where T : class
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
+			where T : class
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			second = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
+			where T : class
+		{
+			first = @this.MoveNext() ? @this.Current : null;
+			second = @this.MoveNext() ? @this.Current : null;
+			third = @this.MoveNext() ? @this.Current : null;
+			rest = @this.Rest();
+		}
+
+		public static T? Get<T>(this IEnumerator<T> @this, int index)
+			where T : class
+			=> @this.Skip(index + 1) ? @this.Current : null;
+
+		public static T? GetValue<T>(this IEnumerator<T> @this, int index)
+			where T : struct
+			=> @this.Skip(index + 1) ? @this.Current : null;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? Next<T>(this IEnumerator<T?> @this)

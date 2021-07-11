@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,6 +15,20 @@ namespace TypeCache.Data.Extensions
 	public static class SqlExtensions
 	{
 		private const string SQL_DELIMETER = "\r\n\t, ";
+
+		private static StringBuilder AppendColumnsSQL(this StringBuilder @this, string[] columns)
+			=> @this.Append('(').AppendJoin(", ", columns.To(column => column.EscapeIdentifier())).Append(')');
+
+		private static StringBuilder AppendOutputSQL(this StringBuilder @this, IDictionary<string, string> output)
+			=> @this.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, output.To(pair =>
+			{
+				var column = pair.Key.EscapeIdentifier();
+				if (pair.Value.Is("INSERTED"))
+					return $"INSERTED.{column} AS {column}";
+				else if (pair.Value.Is("DELETED"))
+					return $"DELETED.{column} AS {column}";
+				return $"{pair.Value} AS {column}";
+			}));
 
 		public static string EscapeIdentifier([NotNull] this string @this)
 			=> @this.StartsWith('[') && @this.EndsWith(']')
@@ -30,60 +45,48 @@ namespace TypeCache.Data.Extensions
 
 		public static string ToSQL([NotNull] this BatchRequest @this)
 		{
-			var batchDataCsv = @this.Input.Rows.To(row => $"({row.ToCsv(value => value.ToSQL())})").Join(SQL_DELIMETER);
-			var sourceColumnCsv = @this.Input.Columns.To(column => column.EscapeIdentifier()).Join(", ");
-			var onSql = @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}").Join($" {LogicalOperator.And.ToSQL()} ");
-			var updateCsv = @this.Update.To(column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
-			var insertColumnCsv = @this.Insert.To(column => column.EscapeIdentifier()).Join(SQL_DELIMETER);
-			var insertValueCsv = @this.Insert.To(column => $"s.{column.EscapeIdentifier()}").Join(SQL_DELIMETER);
+			var batchDataCsv = @this.Input.Rows.To(row => $"({row.To(value => value.ToSQL()).Join(", ")})").Join(SQL_DELIMETER);
 
 			var sqlBuilder = new StringBuilder();
-			if (!@this.Delete && updateCsv.IsBlank())
+			if (!@this.Delete && !@this.Update.Any())
 			{
-				sqlBuilder.Append("INSERT INTO ").AppendLine(@this.Table)
-					.Append('\t').Append('(').AppendLine()
-					.Append('\t').AppendLine(insertColumnCsv)
-					.Append('\t').Append(')');
-
+				sqlBuilder.Append($"INSERT INTO {@this.Table} ").AppendColumnsSQL(@this.Insert!);
 				if (@this.Output.Any())
-					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
+					sqlBuilder.AppendOutputSQL(@this.Output);
 
-				sqlBuilder.AppendLine().Append("VALUES ").Append(batchDataCsv);
+				sqlBuilder.Append(@$"
+VALUES {batchDataCsv}");
 			}
 			else
 			{
-				sqlBuilder.Append("MERGE ").Append(@this.Table).AppendLine(" AS t")
-					.Append('\t').AppendLine("USING")
-					.Append('\t').Append('(').AppendLine()
-					.Append('\t').Append("VALUES ").AppendLine(batchDataCsv)
-					.Append('\t').Append(')').Append(" AS s ").Append('(').Append(sourceColumnCsv).Append(')').AppendLine()
-					.Append('\t').Append("ON ").Append(onSql);
+				sqlBuilder.Append(@$"MERGE {@this.Table} AS t WITH(UPDLOCK)
+USING
+(
+	VALUES {batchDataCsv}
+) AS s ").AppendColumnsSQL(@this.Input.Columns).Append(@"
+ON ").AppendJoin($" {LogicalOperator.And.ToSQL()} ", @this.On.To(column => $"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}"));
 
-				if (!updateCsv.IsBlank())
-				{
-					sqlBuilder.AppendLine().AppendLine("WHEN MATCHED THEN")
-						.Append('\t').Append("UPDATE SET ").Append(updateCsv);
-					if (@this.Delete)
-						sqlBuilder.AppendLine().AppendLine("WHEN NOT MATCHED BY SOURCE THEN")
-							.Append('\t').Append("DELETE");
-				}
-				else if (@this.Delete)
-					sqlBuilder.AppendLine().AppendLine("WHEN MATCHED THEN")
-						.Append('\t').Append("DELETE");
+				if (@this.Update.Any())
+					sqlBuilder.Append(@"
+WHEN MATCHED THEN
+	UPDATE SET ").AppendJoin(SQL_DELIMETER, @this.Update.To(column => $"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}"));
 
-				if (!insertColumnCsv.IsBlank())
-					sqlBuilder.AppendLine().AppendLine("WHEN NOT MATCHED BY TARGET THEN")
-						.Append('\t').AppendLine("INSERT")
-						.Append('\t').Append('(').AppendLine()
-						.Append('\t').AppendLine(insertColumnCsv)
-						.Append('\t').Append(')').AppendLine()
-						.Append('\t').AppendLine("VALUES")
-						.Append('\t').Append('(').AppendLine()
-						.Append('\t').AppendLine(insertValueCsv)
-						.Append('\t').Append(')');
+				if (@this.Delete)
+					sqlBuilder.Append(@"
+WHEN NOT MATCHED BY SOURCE THEN
+	DELETE");
+
+				if (@this.Insert.Any())
+					sqlBuilder.Append($@"
+WHEN NOT MATCHED BY TARGET THEN
+	INSERT ").AppendColumnsSQL(@this.Insert).Append(@"
+	VALUES
+	(
+	").AppendJoin(SQL_DELIMETER, @this.Insert.To(column => $"s.{column.EscapeIdentifier()}")).Append(@"
+	)");
 
 				if (@this.Output.Any())
-					sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
+					sqlBuilder.AppendOutputSQL(@this.Output);
 			}
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
@@ -94,7 +97,7 @@ namespace TypeCache.Data.Extensions
 			var sqlBuilder = new StringBuilder("DELETE FROM ").Append(@this.From);
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
+				sqlBuilder.AppendOutputSQL(@this.Output);
 
 			if (!@this.Where.IsBlank())
 				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
@@ -104,24 +107,46 @@ namespace TypeCache.Data.Extensions
 
 		public static string ToSQL([NotNull] this InsertRequest @this)
 		{
-			var sqlBuilder = new StringBuilder("INSERT INTO ").AppendLine(@this.Into)
-				.Append('(').AppendJoin(", ", @this.Insert.To(column => column.EscapeIdentifier())).Append(')');
+			var sqlBuilder = new StringBuilder("INSERT INTO ").Append(@this.Into).Append(' ').AppendColumnsSQL(@this.Insert);
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => _.ToSQL()));
+				sqlBuilder.AppendOutputSQL(@this.Output);
 
 			return sqlBuilder.AppendLine().Append(((SelectRequest)@this).ToSQL()).ToString();
+		}
+
+		public static string ToSQL([NotNull] this SelectRequest @this)
+		{
+			var sqlBuilder = new StringBuilder("SELECT ");
+
+			if (@this.Select.Any())
+				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => _.Key.Is(_.Value) ? $"[{_.Key}]" : $"{_.Value} AS [{_.Key}]")).AppendLine();
+			else
+				sqlBuilder.AppendLine("*");
+
+			sqlBuilder.Append("FROM ").Append(@this.From).Append(" WITH(NOLOCK)");
+
+			if (!@this.Where.IsBlank())
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+
+			if (!@this.Having.IsBlank())
+				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
+
+			if (@this.OrderBy.Any())
+				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => $"[{_.Key}] {_.Value.ToSQL()}"));
+
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSQL([NotNull] this UpdateRequest @this)
 		{
 			var updateCsv = @this.Set.To(_ => $"{_.Key.EscapeIdentifier()} = {_.Value.ToSQL()}").Join(SQL_DELIMETER);
 
-			var sqlBuilder = new StringBuilder("UPDATE ").AppendLine(@this.Table)
+			var sqlBuilder = new StringBuilder("UPDATE ").Append(@this.Table).AppendLine(" WITH(UPDLOCK)")
 				.Append("SET ").Append(updateCsv);
 
 			if (@this.Output.Any())
-				sqlBuilder.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, @this.Output.To(_ => $"{_.Value} AS [{_.Key}]"));
+				sqlBuilder.AppendOutputSQL(@this.Output);
 
 			if (!@this.Where.IsBlank())
 				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
@@ -162,28 +187,5 @@ namespace TypeCache.Data.Extensions
 			IEnumerable enumerable => $"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})",
 			_ => @this.ToString() ?? "NULL"
 		};
-
-		public static string ToSQL([NotNull] this SelectRequest @this)
-		{
-			var sqlBuilder = new StringBuilder("SELECT ");
-
-			if (@this.Select.Any())
-				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => $"{_.Value} AS [{_.Key}]")).AppendLine();
-			else
-				sqlBuilder.AppendLine("*");
-
-			sqlBuilder.Append("FROM ").Append(@this.From);
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			if (!@this.Having.IsBlank())
-				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
-
-			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").Append(@this.OrderBy.To(_ => _.ToSQL()).Join(SQL_DELIMETER));
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
 	}
 }

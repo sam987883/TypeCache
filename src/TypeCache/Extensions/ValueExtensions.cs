@@ -82,7 +82,15 @@ namespace TypeCache.Extensions
 				yield return @this;
 		}
 
+		/// <remarks>Throws <see cref="ArgumentOutOfRangeException"/>.</remarks>
 		public static IEnumerable<int> Values(this Range @this)
-			=> @this.Start.Value.To(@this.End.Value + (@this.IsReverse() ? 1 : -1), @this.IsReverse() ? -1 : 1);
+		{
+			@this.Start.IsFromEnd.Assert("Range.Start.IsFromEnd", false);
+			@this.End.IsFromEnd.Assert("Range.End.IsFromEnd", false);
+
+			return !@this.IsReverse()
+				? @this.Start.Value.To(@this.End.Value - 1, 1)
+				: @this.Start.Value.To(@this.End.Value + 1, -1);
+		}
 	}
 }

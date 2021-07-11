@@ -10,16 +10,13 @@ namespace TypeCache.Collections
 {
 	public sealed class CustomEnumerable<T> : IEnumerable<T>
 	{
-		public static IEnumerable<T> Empty
-		{
-			get { yield break; }
-		}
-
 		private readonly Func<IEnumerator<T>> _GetEnumerator;
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		public CustomEnumerable(Func<IEnumerator<T>> getEnumerator)
 		{
 			getEnumerator.AssertNotNull(nameof(getEnumerator));
+
 			this._GetEnumerator = getEnumerator;
 		}
 

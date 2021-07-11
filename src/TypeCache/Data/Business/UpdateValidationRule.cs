@@ -22,12 +22,12 @@ namespace TypeCache.Data.Business
 			if (!update.Set.Any())
 				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-			var invalidColumnCsv = update.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
+			var invalidColumnCsv = update.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
 			var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-			invalidColumnCsv = update.Set.Keys.Without(writableColumns).ToCsv(column => $"[{column}]");
+			invalidColumnCsv = update.Set.Keys.Without(writableColumns).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 

@@ -1,60 +1,63 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using TypeCache.Extensions;
 
 namespace TypeCache.Collections.Extensions
 {
 	public static class ImmutableArrayExtensions
 	{
-
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this.Length > 0 ? @this[0] : null;
-			rest = @this.Length > 1 ? @this.RemoveAt(0) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 1 ? @this.Skip(1) : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this.Length > 0 ? @this[0] : null;
 			second = @this.Length > 1 ? @this[1] : null;
-			rest = @this.Length > 2 ? @this.RemoveRange(0, 2) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 2 ? @this.Skip(2) : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
 			where T : struct
 		{
 			first = @this.Length > 0 ? @this[0] : null;
 			second = @this.Length > 1 ? @this[1] : null;
 			third = @this.Length > 2 ? @this[2] : null;
-			rest = @this.Length > 3 ? @this.RemoveRange(0, 3) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 3 ? @this.Skip(3) : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this.Length > 0 ? @this[0] : null;
-			rest = @this.Length > 1 ? @this.RemoveAt(0) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 1 ? @this.Skip(1) : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this.Length > 0 ? @this[0] : null;
 			second = @this.Length > 1 ? @this[1] : null;
-			rest = @this.Length > 2 ? @this.RemoveRange(0, 2) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 2 ? @this.Skip(2) : Enumerable<T>.Empty;
 		}
 
-		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out ImmutableArray<T> rest)
+		public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
 			where T : class
 		{
 			first = @this.Length > 0 ? @this[0] : null;
 			second = @this.Length > 1 ? @this[1] : null;
 			third = @this.Length > 2 ? @this[2] : null;
-			rest = @this.Length > 3 ? @this.RemoveRange(0, 3) : ImmutableArray<T>.Empty;
+			rest = @this.Length > 3 ? @this.Skip(3) : Enumerable<T>.Empty;
 		}
 
 		public static void Do<T>(this ImmutableArray<T> @this, Action<T> action)
@@ -108,6 +111,71 @@ namespace TypeCache.Collections.Extensions
 					action(@this[i], i);
 				}
 			}
+		}
+
+		/// <remarks>Throws <see cref="IndexOutOfRangeException"/>.</remarks>
+		public static IEnumerable<T> Get<T>(this ImmutableArray<T> @this, Range range)
+		{
+			if (range.Start.IsFromEnd || range.End.IsFromEnd)
+				range = range.Normalize(@this.Length);
+
+			return range.Values().To(i => @this[i]);
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<T> If<T>(this ImmutableArray<T> @this, Predicate<T> filter)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+			{
+				var item = @this[i];
+				if (filter(item))
+					yield return item;
+			}
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static async IAsyncEnumerable<T> IfAsync<T>(this ImmutableArray<T> @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+			{
+				var item = @this[i];
+				if (await filter(item))
+					yield return item;
+			}
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<V> To<T, V>(this ImmutableArray<T> @this, Func<T, V> map)
+		{
+			map.AssertNotNull(nameof(map));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return map(@this[i]);
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		internal static async IAsyncEnumerable<V> ToAsync<T, V>(ImmutableArray<T> @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
+		{
+			map.AssertNotNull(nameof(map));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return await map(@this[i]);
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<int> ToIndex<T>(this ImmutableArray<T> @this, Predicate<T> filter)
+		{
+			filter.AssertNotNull(nameof(filter));
+
+			return 0.Range(@this.Length).If(i => filter(@this[i]));
 		}
 	}
 }

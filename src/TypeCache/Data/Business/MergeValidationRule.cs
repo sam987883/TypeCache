@@ -38,35 +38,35 @@ namespace TypeCache.Data.Business
 
 			if (batch.Insert.Any())
 			{
-				var invalidColumnCsv = batch.Insert.Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
+				var invalidColumnCsv = batch.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
 
 				if (!batch.Input.Columns.Any())
 					throw new ArgumentException("Input columns are required for batch INSERT.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}");
 
-				invalidColumnCsv = batch.Insert.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCsv(_ => _.EscapeIdentifier());
+				invalidColumnCsv = batch.Insert.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
 
 				var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-				invalidColumnCsv = batch.Insert.Without(writableColumns).ToCsv(column => $"[{column}]");
+				invalidColumnCsv = batch.Insert.Without(writableColumns).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
 			}
 
 			if (batch.Update.Any())
 			{
-				var invalidColumnCsv = batch.Update.Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
+				var invalidColumnCsv = batch.Update.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
 
-				invalidColumnCsv = batch.Update.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCsv(_ => _.EscapeIdentifier());
+				invalidColumnCsv = batch.Update.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
 
 				var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-				invalidColumnCsv = batch.Update.Without(writableColumns).ToCsv(column => $"[{column}]");
+				invalidColumnCsv = batch.Update.Without(writableColumns).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
 					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
 			}

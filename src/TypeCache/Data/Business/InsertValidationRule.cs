@@ -22,7 +22,7 @@ namespace TypeCache.Data.Business
 			if (!insert.Insert.Any())
 				throw new ArgumentException($"Columns are required for Insert.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
-			var invalidColumnCsv = insert.Insert.Without(schema.Columns.To(column => column.Name)).ToCsv(column => $"[{column}]");
+			var invalidColumnCsv = insert.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"Columns were not found on table [{nameof(InsertRequest.Into)}]: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 

@@ -46,7 +46,7 @@ namespace TypeCache.GraphQL.SQL
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = $"DELETED.[{selection}]");
+				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
@@ -76,7 +76,7 @@ namespace TypeCache.GraphQL.SQL
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = $"DELETED.[{selection}]");
+				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
@@ -106,7 +106,7 @@ namespace TypeCache.GraphQL.SQL
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = $"INSERTED.[{selection}]");
+				.Do(selection => request.Output[selection] = "INSERTED");
 
 			var sqlResponse = new SqlResponse<T>();
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
@@ -172,7 +172,7 @@ namespace TypeCache.GraphQL.SQL
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = $"INSERTED.[{selection}]");
+				.Do(selection => request.Output[selection] = "INSERTED");
 			columns.Do(column =>
 			{
 				var property = TypeOf<T>.Properties.Values.First(property =>
@@ -208,7 +208,7 @@ namespace TypeCache.GraphQL.SQL
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = $"INSERTED.[{selection}]");
+				.Do(selection => request.Output[selection] = "INSERTED");
 
 			var sqlResponse = new SqlResponse<T>();
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
