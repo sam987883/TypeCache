@@ -15,21 +15,40 @@ namespace TypeCache.Data.Extensions
 {
 	public static class SqlExtensions
 	{
-		private const string SQL_DELIMETER = "\r\n\t, ";
-
 		private static StringBuilder AppendColumnsSQL(this StringBuilder @this, string[] columns)
 			=> @this.Append('(').AppendJoin(", ", columns.To(column => column.EscapeIdentifier())).Append(')');
 
 		private static StringBuilder AppendOutputSQL(this StringBuilder @this, IDictionary<string, string> output)
-			=> @this.AppendLine().Append("OUTPUT ").AppendJoin(SQL_DELIMETER, output.To(pair =>
+		{
+			@this.AppendLine().Append("OUTPUT ");
+			output.Do(pair =>
 			{
 				var column = pair.Key.EscapeIdentifier();
 				if (pair.Value.Is("INSERTED"))
-					return Invariant($"INSERTED.{column} AS {column}");
+					@this.Append(Invariant($"INSERTED.{column} AS {column}"));
 				else if (pair.Value.Is("DELETED"))
-					return Invariant($"DELETED.{column} AS {column}");
-				return Invariant($"{pair.Value} AS {column}");
-			}));
+					@this.Append(Invariant($"DELETED.{column} AS {column}"));
+				else
+					@this.Append(Invariant($"{pair.Value} AS {column}"));
+			}, () => @this.AppendLine().Append('\t').Append(',').Append(' '));
+			return @this;
+		}
+
+		private static StringBuilder AppendSetSQL(this StringBuilder @this, IDictionary<string, object?> update)
+		{
+			@this.Append("SET").Append(' ');
+			update.Do(pair => @this.Append(pair.Key.EscapeIdentifier()).Append(' ').Append('=').Append(' ').Append(pair.Value.ToSQL()),
+				() => @this.AppendLine().Append('\t').Append(',').Append(' '));
+			return @this;
+		}
+
+		private static StringBuilder AppendValuesSQL(this StringBuilder @this, object?[][] rows)
+		{
+			@this.Append("VALUES").Append(' ');
+			rows.Do(row => @this.Append('(').Append(row.To(value => value.ToSQL()).Join(", ")).Append(')'),
+				() => @this.AppendLine().Append('\t').Append(',').Append(' '));
+			return @this;
+		}
 
 		public static string EscapeIdentifier([NotNull] this string @this)
 			=> @this.StartsWith('[') && @this.EndsWith(']')
@@ -46,31 +65,30 @@ namespace TypeCache.Data.Extensions
 
 		public static string ToSQL([NotNull] this BatchRequest @this)
 		{
-			var batchDataCsv = @this.Input.Rows.To(row => $"({row.To(value => value.ToSQL()).Join(", ")})").Join(SQL_DELIMETER);
-
 			var sqlBuilder = new StringBuilder();
 			if (!@this.Delete && !@this.Update.Any())
 			{
 				sqlBuilder.Append(Invariant($"INSERT INTO {@this.Table} ")).AppendColumnsSQL(@this.Insert!);
 				if (@this.Output.Any())
 					sqlBuilder.AppendOutputSQL(@this.Output);
-
-				sqlBuilder.Append(Invariant(@$"
-VALUES {batchDataCsv}"));
+				sqlBuilder.AppendLine().AppendValuesSQL(@this.Input.Rows);
 			}
 			else
 			{
 				sqlBuilder.Append(Invariant(@$"MERGE {@this.Table} AS t WITH(UPDLOCK)
 USING
 (
-	VALUES {batchDataCsv}
-) AS s ")).AppendColumnsSQL(@this.Input.Columns).Append(@"
+	")).AppendValuesSQL(@this.Input.Rows).Append(@"
+) AS s ").AppendColumnsSQL(@this.Input.Columns).Append(@"
 ON ").AppendJoin(Invariant($" {LogicalOperator.And.ToSQL()} "), @this.On.To(column => Invariant($"s.{column.EscapeIdentifier()} = t.{column.EscapeIdentifier()}")));
 
 				if (@this.Update.Any())
 					sqlBuilder.Append(@"
 WHEN MATCHED THEN
-	UPDATE SET ").AppendJoin(SQL_DELIMETER, @this.Update.To(column => Invariant($"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}")));
+	UPDATE SET ");
+
+				@this.Update.Do(column => sqlBuilder.Append(Invariant($"{column.EscapeIdentifier()} = s.{column.EscapeIdentifier()}")),
+					() => sqlBuilder.AppendLine().Append('\t').Append(',').Append(' '));
 
 				if (@this.Delete)
 					sqlBuilder.Append(@"
@@ -81,10 +99,7 @@ WHEN NOT MATCHED BY SOURCE THEN
 					sqlBuilder.Append(Invariant($@"
 WHEN NOT MATCHED BY TARGET THEN
 	INSERT ")).AppendColumnsSQL(@this.Insert).Append(@"
-	VALUES
-	(
-	").AppendJoin(SQL_DELIMETER, @this.Insert.To(column => Invariant($"s.{column.EscapeIdentifier()}"))).Append(@"
-	)");
+	VALUES (").AppendJoin(", ", @this.Insert.To(column => Invariant($"s.{column.EscapeIdentifier()}"))).Append(')');
 
 				if (@this.Output.Any())
 					sqlBuilder.AppendOutputSQL(@this.Output);
@@ -108,7 +123,7 @@ WHEN NOT MATCHED BY TARGET THEN
 
 		public static string ToSQL([NotNull] this InsertRequest @this)
 		{
-			var sqlBuilder = new StringBuilder("INSERT INTO ").Append(@this.Into).Append(' ').AppendColumnsSQL(@this.Insert);
+			var sqlBuilder = new StringBuilder(Invariant($"INSERT INTO {@this.Into} ")).AppendColumnsSQL(@this.Insert);
 
 			if (@this.Output.Any())
 				sqlBuilder.AppendOutputSQL(@this.Output);
@@ -121,11 +136,17 @@ WHEN NOT MATCHED BY TARGET THEN
 			var sqlBuilder = new StringBuilder("SELECT ");
 
 			if (@this.Select.Any())
-				sqlBuilder.AppendJoin(SQL_DELIMETER, @this.Select.To(_ => _.Key.Is(_.Value) ? Invariant($"[{_.Key}]") : Invariant($"{_.Value} AS [{_.Key}]"))).AppendLine();
+				@this.Select.Do(_ =>
+				{
+					if (_.Key.Is(_.Value))
+						sqlBuilder.Append(Invariant($"[{_.Key}]"));
+					else
+						sqlBuilder.Append(Invariant($"{_.Value} AS [{_.Key}]"));
+				}, () => sqlBuilder.AppendLine().Append('\t').Append(',').Append(' '));
 			else
-				sqlBuilder.AppendLine("*");
+				sqlBuilder.Append('*');
 
-			sqlBuilder.Append("FROM ").Append(@this.From).Append(" WITH(NOLOCK)");
+			sqlBuilder.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
 
 			if (!@this.Where.IsBlank())
 				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
@@ -141,10 +162,8 @@ WHEN NOT MATCHED BY TARGET THEN
 
 		public static string ToSQL([NotNull] this UpdateRequest @this)
 		{
-			var updateCsv = @this.Set.To(_ => Invariant($"{_.Key.EscapeIdentifier()} = {_.Value.ToSQL()}")).Join(SQL_DELIMETER);
-
-			var sqlBuilder = new StringBuilder("UPDATE ").Append(@this.Table).AppendLine(" WITH(UPDLOCK)")
-				.Append("SET ").Append(updateCsv);
+			var sqlBuilder = new StringBuilder(Invariant($"UPDATE {@this.Table} WITH(UPDLOCK)"))
+				.AppendLine().AppendSetSQL(@this.Set);
 
 			if (@this.Output.Any())
 				sqlBuilder.AppendOutputSQL(@this.Output);

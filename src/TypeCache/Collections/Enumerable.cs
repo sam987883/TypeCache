@@ -46,8 +46,8 @@ namespace TypeCache.Collections
 
 			while (itemEnumerator.MoveNext())
 			{
-				action(itemEnumerator.Current);
 				between();
+				action(itemEnumerator.Current);
 			}
 		}
 
@@ -63,8 +63,8 @@ namespace TypeCache.Collections
 			var i = 1;
 			while (itemEnumerator.MoveNext())
 			{
-				action(itemEnumerator.Current, i);
 				between();
+				action(itemEnumerator.Current, i);
 				++i;
 			}
 		}

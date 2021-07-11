@@ -92,11 +92,7 @@ WHEN NOT MATCHED BY SOURCE THEN
 	DELETE
 WHEN NOT MATCHED BY TARGET THEN
 	INSERT ([Col 2], [Column3]]])
-	VALUES
-	(
-	s.[Col 2]
-	, s.[Column3]]]
-	)
+	VALUES (s.[Col 2], s.[Column3]]])
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]];
@@ -119,11 +115,7 @@ WHEN MATCHED THEN
 	UPDATE SET [Col 2] = s.[Col 2]
 WHEN NOT MATCHED BY TARGET THEN
 	INSERT ([Col 2], [Column3]]])
-	VALUES
-	(
-	s.[Col 2]
-	, s.[Column3]]]
-	)
+	VALUES (s.[Col 2], s.[Column3]]])
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]];
