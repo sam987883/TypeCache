@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using Xunit;
+using static System.FormattableString;
 
 namespace TypeCache.Tests.Data.Extensions
 {
 	public class SqlExtensions
 	{
-		public SqlExtensions()
-		{
-			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-		}
-
 		[Fact]
 		public void EscapeIdentifier()
 		{
@@ -63,30 +57,30 @@ namespace TypeCache.Tests.Data.Extensions
 
 			request.Update = null;
 
-			var expected = @$"INSERT INTO Customers ([Col 2], [Column3]]])
+			var expected = Invariant(@$"INSERT INTO Customers ([Col 2], [Column3]]])
 VALUES (1, N'aaa', {date.ToSQL()})
 	, (2, N'bbb', {date.ToSQL()})
 	, (3, N'ccc', {date.ToSQL()});
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 
 			request.Output = new Dictionary<string, string> { { "ID", "INSERTED.[ID]" }, { "Col 2", "INSERTED" }, { "Column3]", "INSERTED" } };
 
-			expected = @$"INSERT INTO Customers ([Col 2], [Column3]]])
+			expected = Invariant(@$"INSERT INTO Customers ([Col 2], [Column3]]])
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]]
 VALUES (1, N'aaa', {date.ToSQL()})
 	, (2, N'bbb', {date.ToSQL()})
 	, (3, N'ccc', {date.ToSQL()});
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 
 			request.Delete = true;
 
-			expected = @$"MERGE Customers AS t WITH(UPDLOCK)
+			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
 USING
 (
 	VALUES (1, N'aaa', {date.ToSQL()})
@@ -106,14 +100,14 @@ WHEN NOT MATCHED BY TARGET THEN
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]];
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 
 			request.Delete = false;
 			request.Update = new[] { "Col 2" };
 
-			expected = @$"MERGE Customers AS t WITH(UPDLOCK)
+			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
 USING
 (
 	VALUES (1, N'aaa', {date.ToSQL()})
@@ -133,14 +127,14 @@ WHEN NOT MATCHED BY TARGET THEN
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]];
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 
 			request.Insert = null;
 			request.Update = new[] { "Col 2", "Column3]" };
 
-			expected = @$"MERGE Customers AS t WITH(UPDLOCK)
+			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
 USING
 (
 	VALUES (1, N'aaa', {date.ToSQL()})
@@ -154,7 +148,7 @@ WHEN MATCHED THEN
 OUTPUT INSERTED.[ID] AS [ID]
 	, INSERTED.[Col 2] AS [Col 2]
 	, INSERTED.[Column3]]] AS [Column3]]];
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 		}
@@ -172,12 +166,12 @@ OUTPUT INSERTED.[ID] AS [ID]
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
-			var expected = $@"DELETE FROM Customers
+			var expected = Invariant($@"DELETE FROM Customers
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 		}
@@ -197,7 +191,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } }
 			};
 
-			var expected = $@"INSERT INTO Customers ([ID], [First Name], [Last_Name], [Age], [Amount])
+			var expected = Invariant($@"INSERT INTO Customers ([ID], [First Name], [Last_Name], [Age], [Amount])
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
@@ -210,7 +204,7 @@ FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
 ORDER BY [First Name] DESC, [Last_Name] ASC;
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 		}
@@ -227,7 +221,7 @@ ORDER BY [First Name] DESC, [Last_Name] ASC;
 				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } }
 			};
 
-			var expected = $@"SELECT [ID]
+			var expected = Invariant($@"SELECT [ID]
 	, TRIM([First Name]) AS [First Name]
 	, UPPER([LastName]) AS [LastName]
 	, 40 AS [Age]
@@ -236,7 +230,7 @@ FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
 ORDER BY [First Name] DESC, [Last_Name] ASC;
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 		}
@@ -254,7 +248,7 @@ ORDER BY [First Name] DESC, [Last_Name] ASC;
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
-			var expected = $@"UPDATE Customers WITH(UPDLOCK)
+			var expected = Invariant($@"UPDATE Customers WITH(UPDLOCK)
 SET [ID] = 123456
 	, [First Name] = N'Sarah'
 	, [Last_Name] = N'Marshal'
@@ -263,7 +257,7 @@ OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
-";
+");
 
 			Assert.Equal(expected, request.ToSQL());
 		}
