@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
@@ -93,12 +94,9 @@ namespace TypeCache.Collections
 				yield return map(item);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static T[] ToArray(IEnumerable<T> enumerable)
-		{
-			var array = new T[enumerable.Count()];
-			enumerable.Do((item, index) => array[index] = item);
-			return array;
-		}
+			=> new Queue<T>(enumerable).ToArray();
 
 		internal static IEnumerable<int> ToIndex(IEnumerable<T> enumerable, Predicate<T> filter)
 		{

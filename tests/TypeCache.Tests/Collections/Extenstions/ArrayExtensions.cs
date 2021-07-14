@@ -41,6 +41,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Clear()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			intArray.Clear(2, 2);
 			Assert.Equal(new[] { 1, 2, 0, 0, 5, 6 }, intArray);
 			intArray.Clear();
@@ -92,14 +93,17 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Do()
 		{
 			var stringArray = new[] { "123", "abc", "def" };
+
 			stringArray.Do(value => Assert.Contains(value, stringArray));
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string>));
+
 			stringArray.Do((value, i) =>
 			{
 				Assert.Contains(value, stringArray);
 				Assert.Contains(i, new[] { 0, 1, 2 });
 			});
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string, int>));
+
 			stringArray.Do(new ActionRef<string>((ref string value) =>
 			{
 				value = value.ToUpperInvariant();
@@ -107,6 +111,7 @@ namespace TypeCache.Tests.Collections.Extensions
 			Assert.Equal("ABC", stringArray[1]);
 			Assert.Equal("DEF", stringArray[2]);
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as ActionRef<string>));
+
 			stringArray.Do(new ActionRef<string, int>((ref string value, ref int i) =>
 			{
 				value = i.ToString();
@@ -117,12 +122,14 @@ namespace TypeCache.Tests.Collections.Extensions
 			Assert.Equal("ABC", stringArray[1]);
 			Assert.Equal("2", stringArray[2]);
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as ActionRef<string, int>));
+
 			stringArray = new[] { "123", "abc", "def" };
 			var i = 0;
 			stringArray.Do(value => Assert.Contains(value, stringArray), () => ++i);
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string>, () => ++i));
 			Assert.Throws<ArgumentNullException>(() => stringArray.Do(value => Assert.Contains(value, stringArray), null));
 			Assert.Equal(2, i);
+
 			stringArray.Do((value, i) =>
 			{
 				Assert.Contains(value, stringArray);
@@ -143,27 +150,42 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Get()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			Assert.Equal(new[] { 3, 4 }, intArray.Get(2..4));
 			Assert.Equal(new[] { 4, 3 }, intArray.Get(3..1));
-			Assert.Equal(Array<int>.Empty, intArray.Get(2..2));
+			Assert.Empty(intArray.Get(2..2));
 			Assert.Equal(new[] { 3, 4, 5 }, intArray.Get(2..^1));
 			Assert.Throws<IndexOutOfRangeException>(() => intArray.Get(^0..0).ToArray());
 			Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray.Get(0..^0));
 		}
 
 		[Fact]
-		public void IsSequence()
+		public void If()
 		{
-			var stringArray = new[] { "123", "abc", "def" };
-			Assert.True(stringArray.IsSequence(new[] { "123", "ABC", "DEF" }));
-			Assert.False(stringArray.IsSequence(new[] { "123", "ABC", "DEF" }, StringComparison.Ordinal));
-			Assert.False(stringArray.IsSequence(new[] { "123", "def", "abc" }, StringComparison.OrdinalIgnoreCase));
+			var array = new[] { 1, 2, 3, 4, 5, 6 };
+
+			Assert.Equal(new[] { 1, 3, 5 }, array.If(i => i % 2 == 1));
+			Assert.Empty(array.If(i => i > 6));
+			Assert.Throws<ArgumentNullException>(() => array.If(null).ToArray());
+		}
+
+		[Fact]
+		public async Task IfAsync()
+		{
+			var array = new[] { 1, 2, 3, 4, 5, 6 };
+
+			Assert.Equal(new[] { 1, 3, 5 }, await array.IfAsync(async i => await Task.FromResult(i % 2 == 1)).ToListAsync());
+			Assert.Empty(await array.IfAsync(async i => await Task.FromResult(i > 6)).ToListAsync());
+			await Assert.ThrowsAsync<ArgumentNullException>(async () => await array.IfAsync(null).ToListAsync());
+
+			await Task.CompletedTask;
 		}
 
 		[Fact]
 		public void Reverse()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			intArray.Reverse();
 			Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, intArray);
 		}
@@ -172,6 +194,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Search()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			Assert.Equal(2, intArray.Search(3));
 			Assert.Equal(-1, intArray.Search(-3, Comparer<int>.Default));
 			Assert.Equal(2, intArray.Search(3, 1, 4, Comparer<int>.Default));
@@ -182,6 +205,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Sort()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			intArray.Sort();
 			Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray);
 			intArray.Sort(new Comparison<int>((a, b) => a < b ? 1 : (a > b ? -1 : 0)));
@@ -194,14 +218,35 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void Subarray()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			Assert.Equal(new[] { 4, 5, 6 }, intArray.Subarray(3));
 			Assert.Equal(new[] { 4, 5 }, intArray.Subarray(3, 2));
+		}
+
+		[Fact]
+		public void To()
+		{
+			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
+
+			Assert.Empty((null as int[]).To(i => i.ToString()));
+			Assert.Equal(stringArray, array.To(i => i.ToString()));
+		}
+
+		[Fact]
+		public async Task ToAsync()
+		{
+			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
+
+			Assert.Equal(await stringArray.ToAsync().ToListAsync(), await array.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 		}
 
 		[Fact]
 		public void ToArray()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.ToArray(i => i.ToString()));
 			Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.ToArray(i => char.Parse(i.ToString())));
 			Assert.Equal(Array<char>.Empty, Array<int>.Empty.ToArray(i => char.Parse(i.ToString())));
@@ -213,6 +258,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 			var stringArray = new[] { "123", "abc", "def" };
+
 			Assert.False(intArray.ToImmutableQueue().IsEmpty);
 			Assert.False(stringArray.ToImmutableQueue().IsEmpty);
 			Assert.Equal(ImmutableQueue<int>.Empty, Array<int>.Empty.ToImmutableQueue());
@@ -223,6 +269,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 			var stringArray = new[] { "123", "abc", "def" };
+
 			Assert.Equal(intArray[^1], intArray.ToImmutableStack().FirstValue());
 			Assert.Equal(stringArray[^1], stringArray.ToImmutableStack().First());
 			Assert.Equal(ImmutableStack<int>.Empty, Array<int>.Empty.ToImmutableStack());
@@ -232,6 +279,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		public void ToIndex()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
 			Assert.Equal(new[] { 1, 3, 5 }, intArray.ToIndex(i => i % 2 == 0));
 			Assert.Equal(new[] { 0, 2, 4 }, intArray.ToIndex(i => i % 2 == 1));
 			Assert.Empty(Array<int>.Empty.ToIndex(i => i % 2 == 1));

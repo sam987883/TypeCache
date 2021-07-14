@@ -379,6 +379,7 @@ namespace TypeCache.Tests.Collections.Extensions
 
 			Assert.True(array.IsSet(new[] { 6, 5, 4, 3, 2, 1 }));
 			Assert.False(array.IsSet(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
+			Assert.False(array.IsSet(Array<int>.Empty));
 			Assert.False(array.IsSet(null));
 			Assert.False((null as IEnumerable<int>).IsSet(new[] { 1, 2, 3, 4, 5, 6 }));
 		}
@@ -425,13 +426,13 @@ namespace TypeCache.Tests.Collections.Extensions
 		}
 
 		[Fact]
-		public void Neither()
+		public void NotMatch()
 		{
 			var array = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(Array<int>.Empty, array.Neither(array));
-			Assert.True(new[] { 0, 1, 3, 5, 8 }.IsSet(array.Neither(new[] { 0, 2, 4, 6, 8 })));
-			Assert.Equal(array, array.Neither(null));
+			Assert.Equal(Array<int>.Empty, array.NotMatch(array));
+			Assert.True(new[] { 0, 1, 3, 5, 8 }.IsSet(array.NotMatch(new[] { 0, 2, 4, 6, 8 })));
+			Assert.Equal(array, array.NotMatch(null));
 		}
 
 		[Fact]
@@ -494,6 +495,7 @@ namespace TypeCache.Tests.Collections.Extensions
 		{
 			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
+			Assert.NotEmpty(await stringArray.ToAsync().ToListAsync());
 			Assert.True(stringArray.IsSet(await this.GetItems().ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync()));
 			Assert.Empty(await Enumerable<string>.Empty.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 			await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().ToAsync<int, string>(null).ToListAsync());
@@ -519,6 +521,9 @@ namespace TypeCache.Tests.Collections.Extensions
 
 			Assert.Equal(array.Length, array.To(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
 			Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
+
+			Assert.Equal(array.Length, array.To(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
+			Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
 			Assert.Equal(array.Length, array.To(i => (i, i.ToString())).ToDictionary().Count);
 			Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
