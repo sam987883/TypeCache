@@ -167,6 +167,10 @@ namespace TypeCache.Reflection
 			=> this.Handle.Equals(other.Handle);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? value)
+			=> value is TypeMember typeMember ? this.Handle.Equals(typeMember.Handle) : false;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 

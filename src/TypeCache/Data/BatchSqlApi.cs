@@ -62,15 +62,15 @@ namespace TypeCache.Data
 			=> await this._DbConnection.RunAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet?> DeleteAsync(DeleteRequest delete)
+		public async ValueTask<RowSet> DeleteAsync(DeleteRequest delete)
 			=> await this._DbConnection.DeleteAsync(delete, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet?> InsertAsync(InsertRequest insert)
+		public async ValueTask<RowSet> InsertAsync(InsertRequest insert)
 			=> await this._DbConnection.InsertAsync(insert, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet?> MergeAsync(BatchRequest batch)
+		public async ValueTask<RowSet> MergeAsync(BatchRequest batch)
 			=> await this._DbConnection.MergeAsync(batch, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,7 +82,7 @@ namespace TypeCache.Data
 			=> await this._DbConnection.TruncateTableAsync(table, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet?> UpdateAsync(UpdateRequest update)
+		public async ValueTask<RowSet> UpdateAsync(UpdateRequest update)
 			=> await this._DbConnection.UpdateAsync(update, this._CancellationToken);
 	}
 }

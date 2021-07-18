@@ -17,6 +17,8 @@ namespace TypeCache.Data
 	/// </summary>
 	public class RowSet
 	{
+		public static RowSet Empty { get; } = new RowSet();
+
 		public string[] Columns { get; set; } = Array<string>.Empty;
 
 		[JsonConverter(typeof(RowsJsonConverter))]
