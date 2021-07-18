@@ -22,7 +22,7 @@ namespace TypeCache.Reflection.Converters
 					if (reader.Read())
 					{
 						var property = TypeOf<T>.Properties[name!];
-						if (property.Setter is not null && !property.Setter.Static)
+						if (property.Setter is not null && !property.Setter.Value.Static)
 							property.SetValue(output, reader.TokenType switch
 							{
 								JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
@@ -42,7 +42,7 @@ namespace TypeCache.Reflection.Converters
 			if (input is not null)
 			{
 				writer.WriteStartObject();
-				TypeOf<T>.Properties.Values.If(property => property!.Getter is not null && !property.Getter.Static).Do(property =>
+				TypeOf<T>.Properties.Values.If(property => property!.Getter is not null && !property.Getter.Value.Static).Do(property =>
 				{
 					writer.WritePropertyName(property!.Name);
 					var value = property.GetValue(input);

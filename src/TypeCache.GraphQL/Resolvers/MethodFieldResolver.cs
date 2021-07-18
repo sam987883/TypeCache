@@ -20,7 +20,6 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public MethodFieldResolver(MethodMember method, object? handler)
 		{
-			method.AssertNotNull(nameof(method));
 			if (!method.Static)
 				handler.AssertNotNull(nameof(handler));
 

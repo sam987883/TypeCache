@@ -9,7 +9,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class ReturnParameter : IEquatable<ReturnParameter>
+	public readonly struct ReturnParameter : IEquatable<ReturnParameter>
 	{
 		internal ReturnParameter(MethodInfo methodInfo)
 		{
@@ -30,8 +30,9 @@ namespace TypeCache.Reflection
 
 		public TypeMember Type { get; }
 
-		public bool Equals(ReturnParameter? other)
-			=> this._MethodHandle == other?._MethodHandle;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(ReturnParameter other)
+			=> this._MethodHandle == other._MethodHandle;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

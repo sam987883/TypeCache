@@ -12,10 +12,8 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class TypeMember : Member, IEquatable<TypeMember>
+	public readonly struct TypeMember : IMember, IEquatable<TypeMember>
 	{
-		private const BindingFlags BINDINGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-
 		static TypeMember()
 		{
 			Cache = new LazyDictionary<RuntimeTypeHandle, TypeMember>(typeHandle => new TypeMember(typeHandle.ToType()));
@@ -24,22 +22,27 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<RuntimeTypeHandle, TypeMember> Cache { get; }
 
 		internal TypeMember(Type type)
-			: base(type)
 		{
-			this.Handle = type.TypeHandle;
-			this.Kind = type.GetKind();
-			this.SystemType = type.GetSystemType();
-			this.Ref = type.IsByRef || type.IsByRefLike;
+			var kind = type.GetKind();
+			var systemType = type.GetSystemType();
 
-			this._BaseType = new Lazy<TypeMember>(() => this.Kind switch
+			this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
+			this.Handle = type.TypeHandle;
+			this.Kind = kind;
+			this.SystemType = systemType;
+			this.Ref = type.IsByRef || type.IsByRefLike;
+			this.Internal = !type.IsVisible;
+			this.Public = type.IsPublic;
+
+			this._BaseType = new Lazy<TypeMember>(() => kind switch
 			{
 				Kind.Enum => typeof(Enum).GetTypeMember(),
 				Kind.Struct or Kind.Pointer => typeof(ValueType).GetTypeMember(),
 				_ when type.BaseType is not null => type.BaseType.GetTypeMember(),
-				_ when type == typeof(object) => this,
 				_ => typeof(object).GetTypeMember()
 			}, false);
-			this._EnclosedType = new Lazy<TypeMember?>(() => this.SystemType switch
+			this._EnclosedType = new Lazy<TypeMember?>(() => systemType switch
 			{
 				_ when type.HasElementType => type.GetElementType()?.GetTypeMember(),
 				SystemType.Dictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary or SystemType.SortedDictionary
@@ -50,15 +53,16 @@ namespace TypeCache.Reflection
 			this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() => type.GenericTypeArguments.To(_ => _.GetTypeMember()).ToImmutableArray(), false);
 			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() => type.GetInterfaces().To(_ => _.GetTypeMember()).ToImmutableArray(), false);
 
-			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(this.CreateConstructorMembers, false);
-			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(this.CreateEventMembers, false);
+			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() => type.TypeHandle.CreateConstructorMembers().ToImmutableArray(), false);
+			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() => type.TypeHandle.CreateEventMembers().ToImmutableDictionary(), false);
 			this._Fields = this.Kind switch
 			{
 				Kind.Delegate => new Lazy<IImmutableDictionary<string, FieldMember>>(() => ImmutableDictionary<string, FieldMember>.Empty, false),
-				_ => new Lazy<IImmutableDictionary<string, FieldMember>>(this.CreateFieldMembers, false)
+				_ => new Lazy<IImmutableDictionary<string, FieldMember>>(() => type.TypeHandle.CreateFieldMembers().ToImmutableDictionary(), false)
 			};
-			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(this.CreateMethodMembers, false);
-			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(this.CreatePropertyMembers, false);
+			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() =>
+				type.TypeHandle.CreateMethodMembers().ToDictionary(pair => pair.Key, pair => (IImmutableList<MethodMember>)pair.Value.ToImmutableArray()).ToImmutableDictionary(), false);
+			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() => type.TypeHandle.CreatePropertyMembers().ToImmutableDictionary(), false);
 		}
 
 		private readonly Lazy<TypeMember> _BaseType;
@@ -78,6 +82,10 @@ namespace TypeCache.Reflection
 		private readonly Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>> _Methods;
 
 		private readonly Lazy<IImmutableDictionary<string, PropertyMember>> _Properties;
+
+		public IImmutableList<Attribute> Attributes { get; }
+
+		public string Name { get; }
 
 		public IImmutableList<ConstructorMember> Constructors => this._Constructors.Value;
 
@@ -105,41 +113,15 @@ namespace TypeCache.Reflection
 
 		public SystemType SystemType { get; }
 
-		private IImmutableList<ConstructorMember> CreateConstructorMembers()
-			=> this.Handle.ToType().GetConstructors(BINDINGS)
-				.If(constructorInfo => !constructorInfo.IsStatic && constructorInfo.IsInvokable())
-				.To(constructorInfo => constructorInfo.MethodHandle.GetConstructorMember(this.Handle))
-				.ToImmutableArray();
+		public bool Internal { get; }
 
-		private IImmutableDictionary<string, EventMember> CreateEventMembers()
-			=> this.Handle.ToType().GetEvents(BINDINGS)
-				.To(eventInfo => KeyValuePair.Create(eventInfo.Name, new EventMember(eventInfo)))
-				.ToImmutableDictionary(StringComparison.Ordinal);
-
-		private IImmutableDictionary<string, FieldMember> CreateFieldMembers()
-			=> this.Handle.ToType().GetFields(BINDINGS)
-				.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
-				.To(fieldInfo => KeyValuePair.Create(fieldInfo.Name, fieldInfo.FieldHandle.GetFieldMember(this.Handle)))
-				.ToImmutableDictionary(StringComparison.Ordinal);
-
-		private IImmutableDictionary<string, IImmutableList<MethodMember>> CreateMethodMembers()
-			=> this.Handle.ToType().GetMethods(BINDINGS)
-				.If(methodInfo => !methodInfo.ContainsGenericParameters && !methodInfo.IsSpecialName && methodInfo.IsInvokable())
-				.To(methodInfo => methodInfo.MethodHandle.GetMethodMember(this.Handle))
-				.Group(method => method.Name, StringComparer.Ordinal)
-				.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)_.Value.ToImmutableArray(), StringComparison.Ordinal);
-
-		private IImmutableDictionary<string, PropertyMember> CreatePropertyMembers()
-			=> this.Handle.ToType().GetProperties(BINDINGS)
-				.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
-				.To(propertyInfo => KeyValuePair.Create(propertyInfo.Name, new PropertyMember(propertyInfo)))
-				.ToImmutableDictionary(StringComparison.Ordinal);
+		public bool Public { get; }
 
 		public object Create(params object?[]? parameters)
 		{
-			var constructor = this.Constructors.First(constructor => constructor!.Parameters.IsCallableWith(parameters));
-			if (constructor != null)
-				return constructor.Create(parameters);
+			var constructor = this.Constructors.FirstValue(constructor => constructor!.Parameters.IsCallableWith(parameters));
+			if (constructor.HasValue)
+				return constructor.Value.Create(parameters);
 			throw new ArgumentException($"{this.Name}.{nameof(Create)}(...): no constructor found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
 		}
 
@@ -162,9 +144,9 @@ namespace TypeCache.Reflection
 
 		public object? Invoke(string name, params object?[]? parameters)
 		{
-			var method = this.Methods.Get(name).First(method => method!.Parameters.IsCallableWith(parameters));
-			if (method != null)
-				return method.Invoke(parameters);
+			var method = this.Methods.Get(name).FirstValue(method => method!.Parameters.IsCallableWith(parameters));
+			if (method.HasValue)
+				return method.Value.Invoke(parameters);
 			throw new ArgumentException($"{this.Name}.{nameof(Invoke)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
 		}
 
@@ -181,7 +163,19 @@ namespace TypeCache.Reflection
 			=> member.Handle.ToType();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(TypeMember? other)
-			=> this.Handle == other?.Handle;
+		public bool Equals(TypeMember other)
+			=> this.Handle.Equals(other.Handle);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.Handle.GetHashCode();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(TypeMember typeMember1, TypeMember typeMember2)
+			=> typeMember1.Equals(typeMember2);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(TypeMember typeMember1, TypeMember typeMember2)
+			=> !typeMember1.Equals(typeMember2);
 	}
 }

@@ -175,9 +175,9 @@ namespace TypeCache.GraphQL.SQL
 				.Do(selection => request.Output[selection] = "INSERTED");
 			columns.Do(column =>
 			{
-				var property = TypeOf<T>.Properties.Values.First(property =>
-					property.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true) ?? TypeOf<T>.Properties.Get(column)!;
-				request.Set[property.Name] = property.GetValue(set);
+				var property = TypeOf<T>.Properties.Values.FirstValue(property =>
+					property.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true) ?? TypeOf<T>.Properties.GetValue(column)!;
+				request.Set[property.Value.Name] = property.Value.GetValue(set);
 			});
 
 			var sqlResponse = new SqlResponse<T>();

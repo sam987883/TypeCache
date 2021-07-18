@@ -18,13 +18,13 @@ namespace TypeCache.GraphQL.Types
 
 			if (TypeOf<T>.Is(typeof(Connection<>)))
 			{
-				name ??= $"{TypeOf<T>.EnclosedType!.Name}Connection";
-				description ??= $"A connection from an object to a list of objects of type `{TypeOf<T>.EnclosedType!.Name}`.";
+				name ??= $"{TypeOf<T>.EnclosedType!.Value.Name}Connection";
+				description ??= $"A connection from an object to a list of objects of type `{TypeOf<T>.EnclosedType!.Value.Name}`.";
 			}
 			else if (TypeOf<T>.Is(typeof(Edge<>)))
 			{
-				name ??= $"{TypeOf<T>.EnclosedType!.Name}Edge";
-				description ??= $"An edge in a connection from an object to another object of type `{TypeOf<T>.EnclosedType!.Name}`.";
+				name ??= $"{TypeOf<T>.EnclosedType!.Value.Name}Edge";
+				description ??= $"An edge in a connection from an object to another object of type `{TypeOf<T>.EnclosedType!.Value.Name}`.";
 			}
 			else
 			{

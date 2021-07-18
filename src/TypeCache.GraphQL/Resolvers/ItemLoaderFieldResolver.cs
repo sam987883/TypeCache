@@ -23,7 +23,6 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public ItemLoaderFieldResolver(MethodMember method, object handler, IDataLoaderContextAccessor dataLoader)
 		{
-			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
 			dataLoader.AssertNotNull(nameof(dataLoader));
 

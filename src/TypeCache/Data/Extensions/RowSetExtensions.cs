@@ -15,9 +15,9 @@ namespace TypeCache.Data.Extensions
 		/// </summary>
 		public static T[] MapRecords<T>(this RowSet @this)
 		{
-			var constructor = TypeOf<T>.Constructors.First(_ => _!.Parameters.To(parameter => parameter.Name).IsSet(@this.Columns));
+			var constructor = TypeOf<T>.Constructors.FirstValue(_ => _!.Parameters.To(parameter => parameter.Name).IsSet(@this.Columns));
 			constructor.AssertNotNull(nameof(constructor));
-			var columnIndexes = constructor!.Parameters.To(parameter => @this.Columns.ToIndex(parameter.Name)).Gather().ToArray();
+			var columnIndexes = constructor!.Value.Parameters.To(parameter => @this.Columns.ToIndex(parameter.Name)).Gather().ToArray();
 
 			var items = new T[@this.Rows.Length];
 			@this.Rows.Do((row, rowIndex) =>
@@ -36,14 +36,14 @@ namespace TypeCache.Data.Extensions
 			where T : new()
 		{
 			var properties = TypeOf<T>.Properties.GetValues(@this.Columns)
-				.If(property => property!.Setter is not null)
+				.If(property => property.Setter is not null)
 				.ToArray();
 
 			var items = new T[@this.Rows.Length];
 			@this.Rows.Do((row, rowIndex) =>
 			{
 				var item = TypeOf<T>.Create();
-				properties.Do((property, columnIndex) => property?.SetValue(item, row[columnIndex]));
+				properties.Do((property, columnIndex) => property.SetValue(item, row[columnIndex]));
 				items[rowIndex] = item;
 			});
 			return items;

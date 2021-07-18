@@ -97,16 +97,16 @@ namespace TypeCache.GraphQL.Types
 				var key = attribute.Key;
 				var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
 
-				var parentKeyProperty = parentType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
+				var parentKeyProperty = parentType.Properties.Values.FirstValue(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
 				if (parentKeyProperty is null)
 					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
 
-				var childType = method.Return.Type.EnclosedType!;
-				var childKeyProperty = childType.Properties.Values.First(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
+				var childType = method.Return.Type.EnclosedType!.Value;
+				var childKeyProperty = childType.Properties.Values.FirstValue(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
 				if (childKeyProperty is null)
 					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
 
-				return (parentKeyProperty, childKeyProperty);
+				return (parentKeyProperty.Value, childKeyProperty.Value);
 			}
 		}
 

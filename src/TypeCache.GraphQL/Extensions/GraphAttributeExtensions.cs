@@ -121,7 +121,7 @@ namespace TypeCache.GraphQL.Extensions
 			{
 				Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 				Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
-				Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.ToGraphType(isInputType)),
+				Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.Value.ToGraphType(isInputType)),
 				Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
 				_ => @this.SystemType switch
 				{
@@ -143,7 +143,7 @@ namespace TypeCache.GraphQL.Extensions
 					SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
 					SystemType.Guid => typeof(GuidGraphType),
 					SystemType.Range => typeof(StringGraphType),
-					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.ToGraphType(isInputType),
+					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.Value.ToGraphType(isInputType),
 					_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphObjectSortEnumType<>).MakeGenericType(@this),
 					_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
 					_ => typeof(GraphObjectType<>).MakeGenericType(@this)

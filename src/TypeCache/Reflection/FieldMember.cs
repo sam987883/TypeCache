@@ -2,16 +2,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class FieldMember
-		: Member, IEquatable<FieldMember>
+	public readonly struct FieldMember : IMember, IEquatable<FieldMember>
 	{
 		static FieldMember()
 		{
@@ -24,24 +25,33 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember> Cache { get; }
 
 		internal FieldMember(FieldInfo fieldInfo)
-			: base(fieldInfo)
 		{
+			this.Attributes = fieldInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? fieldInfo.Name;
 			this.FieldType = fieldInfo.FieldType.GetTypeMember();
+			this.Internal = fieldInfo.IsAssembly;
 			this.Handle = fieldInfo.FieldHandle;
+			this.Public = fieldInfo.IsPublic;
 			this.Static = fieldInfo.IsStatic;
+			this.Type = fieldInfo.GetTypeMember();
+
 			this.Getter = fieldInfo.ToGetter();
 			this._GetValue = fieldInfo.ToGetValue();
 
-			if (!fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)
-			{
-				this.Setter = fieldInfo.ToSetter();
-				this._SetValue = fieldInfo.ToSetValue();
-			}
+			var canSet = !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral;
+			this.Setter = canSet ? fieldInfo.ToSetter() : null;
+			this._SetValue = canSet ? fieldInfo.ToSetValue() : null;
 		}
 
 		private readonly GetValue? _GetValue;
 
 		private readonly SetValue? _SetValue;
+
+		public TypeMember Type { get; }
+
+		public IImmutableList<Attribute> Attributes { get; }
+
+		public string Name { get; }
 
 		public TypeMember FieldType { get; }
 
@@ -51,13 +61,15 @@ namespace TypeCache.Reflection
 
 		public Delegate? Setter { get; }
 
-		public bool Static { get; }
+		public bool Internal { get; }
 
-		public new TypeMember Type => base.Type!;
+		public bool Public { get; }
+
+		public bool Static { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator FieldInfo(FieldMember member)
-			=> member.Type!.Handle.ToFieldInfo(member.Handle);
+			=> member.Type.Handle.ToFieldInfo(member.Handle);
 
 		/// <param name="instance">Pass null if the field is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,7 +83,11 @@ namespace TypeCache.Reflection
 			=> this._SetValue?.Invoke(instance, value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(FieldMember? other)
-			=> this.Handle == other?.Handle;
+		public bool Equals(FieldMember other)
+			=> this.Handle == other.Handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.Handle.GetHashCode();
 	}
 }

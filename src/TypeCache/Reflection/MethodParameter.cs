@@ -10,7 +10,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class MethodParameter : IEquatable<MethodParameter>
+	public readonly struct MethodParameter : IEquatable<MethodParameter>
 	{
 		internal MethodParameter(RuntimeMethodHandle methodHandle, ParameterInfo parameterInfo)
 		{
@@ -40,10 +40,8 @@ namespace TypeCache.Reflection
 
 		public TypeMember Type { get; }
 
-		public bool Equals(MethodParameter? other)
-			=> other is not null
-				&& this._MethodHandle == other._MethodHandle
-				&& this.Name.Is(other.Name);
+		public bool Equals(MethodParameter other)
+			=> this._MethodHandle == other._MethodHandle && this.Name.Is(other.Name);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()

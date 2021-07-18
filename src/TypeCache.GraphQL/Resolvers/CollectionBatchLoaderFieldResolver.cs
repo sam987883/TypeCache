@@ -25,7 +25,6 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public CollectionBatchLoaderFieldResolver(MethodMember method, object handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		{
-			method.AssertNotNull(nameof(method));
 			handler.AssertNotNull(nameof(handler));
 			getParentKey.AssertNotNull(nameof(getParentKey));
 			getChildKey.AssertNotNull(nameof(getChildKey));

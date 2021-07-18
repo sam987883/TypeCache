@@ -91,7 +91,7 @@ namespace TypeCache.Data
 			return results;
 		}
 
-		public async ValueTask<RowSet> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default)
+		public async ValueTask<RowSet?> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default)
 		{
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			await dbConnection.OpenAsync(cancellationToken);
@@ -100,7 +100,7 @@ namespace TypeCache.Data
 			return result;
 		}
 
-		public async ValueTask<RowSet> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default)
+		public async ValueTask<RowSet?> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default)
 		{
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			await dbConnection.OpenAsync(cancellationToken);
@@ -109,7 +109,7 @@ namespace TypeCache.Data
 			return result;
 		}
 
-		public async ValueTask<RowSet> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default)
+		public async ValueTask<RowSet?> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default)
 		{
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			await dbConnection.OpenAsync(cancellationToken);
@@ -136,7 +136,7 @@ namespace TypeCache.Data
 			return result;
 		}
 
-		public async ValueTask<RowSet> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default)
+		public async ValueTask<RowSet?> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default)
 		{
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
 			await dbConnection.OpenAsync(cancellationToken);

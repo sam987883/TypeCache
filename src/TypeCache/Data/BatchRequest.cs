@@ -31,7 +31,7 @@ namespace TypeCache.Data
 		/// <summary>
 		/// Batch input rows of data.
 		/// </summary>
-		public RowSet? Input { get; set; }
+		public RowSet Input { get; set; } = new RowSet();
 
 		/// <summary>
 		/// JSON: <code>"Insert": [ "Column1", "Column2", "Column3" ]</code>

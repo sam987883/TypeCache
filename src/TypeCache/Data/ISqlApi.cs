@@ -41,13 +41,13 @@ namespace TypeCache.Data
 		/// <code>DELETE FROM ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>
-		ValueTask<RowSet> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default);
+		ValueTask<RowSet?> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
-		ValueTask<RowSet> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default);
+		ValueTask<RowSet?> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>
@@ -59,7 +59,7 @@ namespace TypeCache.Data
 		/// </code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED|INSERTED</code></returns>
-		ValueTask<RowSet> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default);
+		ValueTask<RowSet?> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
@@ -75,6 +75,6 @@ namespace TypeCache.Data
 		/// UPDATE ... SET ... WHERE ...
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED|INSERTED</code></returns>
-		ValueTask<RowSet> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default);
+		ValueTask<RowSet?> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default);
 	}
 }

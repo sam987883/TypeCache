@@ -1,24 +1,35 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
+using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class EventMember
-		: Member, IEquatable<EventMember>
+	public readonly struct EventMember
+		: IMember, IEquatable<EventMember>
 	{
 		public EventMember(EventInfo eventInfo)
-			: base(eventInfo)
 		{
+			this.Type = eventInfo.GetTypeMember();
+			this.Attributes = eventInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? eventInfo.Name;
+			this.Internal = eventInfo.AddMethod!.IsAssembly;
+			this.Public = eventInfo.AddMethod!.IsPublic;
 			this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
 			this.AddEventHandler = eventInfo.AddMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 			this.RaiseEvent = eventInfo.RaiseMethod?.MethodHandle.GetMethodMember(this.Type.Handle);
 			this.RemoveEventHandler = eventInfo.RemoveMethod!.MethodHandle.GetMethodMember(this.Type.Handle);
 		}
+
+		public TypeMember Type { get; }
+
+		public IImmutableList<Attribute> Attributes { get; }
+
+		public string Name { get; }
 
 		public TypeMember EventHandlerType { get; }
 
@@ -28,7 +39,9 @@ namespace TypeCache.Reflection
 
 		public MethodMember RemoveEventHandler { get; }
 
-		public new TypeMember Type => base.Type!;
+		public bool Internal { get; }
+
+		public bool Public { get; }
 
 		/// <param name="instance">Pass null if the event is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +59,11 @@ namespace TypeCache.Reflection
 			=> this.RemoveEventHandler.Invoke(instance, handler);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(EventMember? other)
-			=> this.AddEventHandler.Handle == other?.AddEventHandler.Handle;
+		public bool Equals(EventMember other)
+			=> this.AddEventHandler.Handle == other.AddEventHandler.Handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.AddEventHandler.Handle.GetHashCode();
 	}
 }

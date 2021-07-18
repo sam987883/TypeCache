@@ -12,8 +12,8 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection
 {
-	public sealed class ConstructorMember
-		: Member, IEquatable<MethodMember>
+	public readonly struct ConstructorMember
+		: IMember, IEquatable<ConstructorMember>
 	{
 		static ConstructorMember()
 		{
@@ -26,16 +26,26 @@ namespace TypeCache.Reflection
 		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), ConstructorMember> Cache { get; }
 
 		internal ConstructorMember(ConstructorInfo constructorInfo)
-			: base(constructorInfo)
 		{
+			this.Type = constructorInfo.GetTypeMember();
+			this.Attributes = constructorInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? constructorInfo.Name;
 			this.Handle = constructorInfo.MethodHandle;
 			this.Method = constructorInfo.ToDelegate();
 			this.Parameters = constructorInfo.GetParameters().To(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
+			this.Internal = constructorInfo.IsAssembly;
+			this.Public = constructorInfo.IsPublic;
 
 			this._Create = constructorInfo.ToCreateType();
 		}
 
 		private readonly CreateType _Create;
+
+		public TypeMember Type { get; }
+
+		public IImmutableList<Attribute> Attributes { get; }
+
+		public string Name { get; }
 
 		public RuntimeMethodHandle Handle { get; }
 
@@ -43,7 +53,9 @@ namespace TypeCache.Reflection
 
 		public IImmutableList<MethodParameter> Parameters { get; }
 
-		public new TypeMember Type => base.Type!;
+		public bool Internal { get; }
+
+		public bool Public { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ConstructorInfo(ConstructorMember member)
@@ -54,7 +66,11 @@ namespace TypeCache.Reflection
 			=> this._Create(arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(MethodMember? other)
-			=> this.Handle == other?.Handle;
+		public bool Equals(ConstructorMember other)
+			=> this.Handle == other.Handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+			=> this.Handle.GetHashCode();
 	}
 }
