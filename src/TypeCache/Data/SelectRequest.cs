@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using TypeCache.Converters;
 using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
@@ -49,7 +50,7 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterJsonConverter))]
+		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>

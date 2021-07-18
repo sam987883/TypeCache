@@ -58,7 +58,11 @@ namespace TypeCache.Data.Extensions
 			var properties = TypeOf<T>.Properties;
 			var getters = properties.Values.If(property => property!.Getter is not null).To(property => property!.Name);
 
-			var rowSet = new RowSet(columns.Any() ? columns.Match(getters, StringComparer.OrdinalIgnoreCase).ToArray() : getters.ToArray(), new object?[@this.Length][]);
+			var rowSet = new RowSet
+			{
+				Columns = columns.Any() ? columns.Match(getters, StringComparer.OrdinalIgnoreCase).ToArray() : getters.ToArray(),
+				Rows = new object?[@this.Length][]
+			};
 			@this.Do((item, rowIndex) =>
 			{
 				var row = new object?[rowSet.Columns.Length];

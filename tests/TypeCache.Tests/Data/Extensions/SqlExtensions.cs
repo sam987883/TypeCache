@@ -44,12 +44,16 @@ namespace TypeCache.Tests.Data.Extensions
 			var request = new BatchRequest
 			{
 				Delete = false,
-				Input = new RowSet(new[] { "ID", "Col 2", "Column3]" }, new[]
+				Input = new RowSet
 				{
-					new object[] {1, "aaa", date },
-					new object[] {2, "bbb", date },
-					new object[] {3, "ccc", date },
-				}),
+					Columns = new[] { "ID", "Col 2", "Column3]" },
+					Rows = new[]
+					{
+						new object[] {1, "aaa", date },
+						new object[] {2, "bbb", date },
+						new object[] {3, "ccc", date },
+					}
+				},
 				Insert = new[] { "Col 2", "Column3]" },
 				On = new[] { "ID" },
 				Table = "Customers",

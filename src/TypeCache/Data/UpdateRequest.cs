@@ -30,7 +30,7 @@ namespace TypeCache.Data
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
-		[JsonConverter(typeof(ParameterJsonConverter))]
+		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
@@ -43,7 +43,7 @@ namespace TypeCache.Data
 		/// JSON: <code>[ { "Column1": "Value1" }, { "Column2": NULL }, { "Column3": false } ]</code>
 		/// SQL: <code>SET [Column1] = N'Value1', [Column2] = NULL, [Column3] = 0</code>
 		/// </summary>
-		[JsonConverter(typeof(SetJsonConverter))]
+		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Set { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>

@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Text.Json.Serialization;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Converters;
 
 namespace TypeCache.Data
 {
@@ -13,9 +15,12 @@ namespace TypeCache.Data
 	/// }
 	/// </code>
 	/// </summary>
-	public sealed record RowSet(string[] Columns, object?[][] Rows)
+	public class RowSet
 	{
-		public static RowSet Empty { get; } = new RowSet(Array<string>.Empty, Array<object[]>.Empty);
+		public string[] Columns { get; set; } = Array<string>.Empty;
+
+		[JsonConverter(typeof(RowsJsonConverter))]
+		public object?[][] Rows { get; set; } = Array<object[]>.Empty;
 
 		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column).FirstValue()!.Value];
 	}

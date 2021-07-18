@@ -47,7 +47,7 @@ namespace TypeCache.Converters
 				{
 					writer.WritePropertyName(field!.Name);
 					var value = field.GetValue(input);
-					writer.WriteValue(field.Type.SystemType, value, options);
+					writer.WriteValue(value, options);
 				});
 				writer.WriteEndObject();
 			}

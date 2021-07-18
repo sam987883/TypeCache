@@ -46,7 +46,7 @@ namespace TypeCache.Reflection.Converters
 				{
 					writer.WritePropertyName(property!.Name);
 					var value = property.GetValue(input);
-					writer.WriteValue(property.PropertyType.SystemType, value, options);
+					writer.WriteValue(value, options);
 				});
 				writer.WriteEndObject();
 			}

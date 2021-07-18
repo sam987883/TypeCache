@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Extensions
 {
@@ -88,6 +89,11 @@ namespace TypeCache.Extensions
 				_ => null
 			};
 
+		public static void ReadToEnd(this ref Utf8JsonReader @this)
+		{
+			while (@this.Read()) { }
+		}
+
 		public static bool ReadUntil(this ref Utf8JsonReader @this, JsonTokenType tokenType)
 		{
 			while (@this.Read())
@@ -96,11 +102,11 @@ namespace TypeCache.Extensions
 			return false;
 		}
 
-		public static void WriteValue(this Utf8JsonWriter @this, SystemType systemType, object? value, JsonSerializerOptions options)
+		public static void WriteValue(this Utf8JsonWriter @this, object? value, JsonSerializerOptions options)
 		{
 			if (value is not null)
 			{
-				switch (systemType)
+				switch (value.GetTypeMember().SystemType)
 				{
 					case SystemType.DBNull:
 						@this.WriteNullValue();

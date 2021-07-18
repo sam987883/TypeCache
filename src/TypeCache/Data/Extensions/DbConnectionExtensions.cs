@@ -109,7 +109,7 @@ namespace TypeCache.Data.Extensions
 		/// DELETE FROM ... WHERE ...
 		/// </summary>
 		/// <returns>OUTPUT DELETED</returns>
-		public static async ValueTask<RowSet> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
+		public static async ValueTask<RowSet?> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
@@ -122,14 +122,14 @@ namespace TypeCache.Data.Extensions
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
+				return null;
 			}
 		}
 
 		/// <summary>
 		/// SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...
 		/// </summary>
-		public static async ValueTask<RowSet> InsertAsync(this DbConnection @this, InsertRequest request, CancellationToken cancellationToken = default)
+		public static async ValueTask<RowSet?> InsertAsync(this DbConnection @this, InsertRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
@@ -142,7 +142,7 @@ namespace TypeCache.Data.Extensions
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
+				return null;
 			}
 		}
 
@@ -158,7 +158,7 @@ namespace TypeCache.Data.Extensions
 		/// </code>
 		/// </summary>
 		/// <returns>OUTPUT DELETED, INSERTED</returns>
-		public static async ValueTask<RowSet> MergeAsync(this DbConnection @this, BatchRequest request, CancellationToken cancellationToken = default)
+		public static async ValueTask<RowSet?> MergeAsync(this DbConnection @this, BatchRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 
@@ -170,7 +170,7 @@ namespace TypeCache.Data.Extensions
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
+				return null;
 			}
 		}
 
@@ -200,7 +200,7 @@ namespace TypeCache.Data.Extensions
 		/// UPDATE ... SET ... WHERE ...
 		/// </summary>
 		/// <returns>OUTPUT DELETED, INSERTED</returns>
-		public static async ValueTask<RowSet> UpdateAsync(this DbConnection @this, UpdateRequest request, CancellationToken cancellationToken = default)
+		public static async ValueTask<RowSet?> UpdateAsync(this DbConnection @this, UpdateRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
@@ -213,7 +213,7 @@ namespace TypeCache.Data.Extensions
 			else
 			{
 				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
+				return null;
 			}
 		}
 	}

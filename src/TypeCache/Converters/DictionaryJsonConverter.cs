@@ -7,13 +7,13 @@ using System.Text.Json.Serialization;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
-namespace TypeCache.Data.Converters
+namespace TypeCache.Converters
 {
-	public class SetJsonConverter : JsonConverter<IDictionary<string, object?>>
+	public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?>>
 	{
 		public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			var update = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+			var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
@@ -21,19 +21,23 @@ namespace TypeCache.Data.Converters
 				{
 					var name = reader.GetString()!;
 					if (reader.Read())
-						update.Add(name, reader.GetValue());
+						dictionary.Add(name, reader.GetValue());
 				}
 			}
 
-			return update;
+			return dictionary;
 		}
 
-		public override void Write(Utf8JsonWriter writer, IDictionary<string, object?> update, JsonSerializerOptions options)
+		public override void Write(Utf8JsonWriter writer, IDictionary<string, object?> dictionary, JsonSerializerOptions options)
 		{
-			if (update.Any())
+			if (dictionary.Any())
 			{
 				writer.WriteStartObject();
-				update.Do(_ => writer.WriteString(_.Key, _.Value?.ToString()));
+				dictionary.Do(_ =>
+				{
+					writer.WritePropertyName(_.Key);
+					writer.WriteValue(_.Value, options);
+				});
 				writer.WriteEndObject();
 			}
 			else
