@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using TypeCache.Collections;
 using TypeCache.Converters;
 using TypeCache.Data.Converters;
 
@@ -39,7 +40,7 @@ namespace TypeCache.Data
 		/// SQL: <code>ORDER BY [Column1] ASC, [Column2] DESC ...</code>
 		/// </summary>
 		[JsonConverter(typeof(SortJsonConverter))]
-		public IDictionary<string, Sort> OrderBy { get; set; } = new Dictionary<string, Sort>(StringComparer.OrdinalIgnoreCase);
+		public (string, Sort)[] OrderBy { get; set; } = Array<(string, Sort)>.Empty;
 
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>

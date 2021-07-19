@@ -155,7 +155,7 @@ WHEN NOT MATCHED BY TARGET THEN
 				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
 
 			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"[{_.Key}] {_.Value.ToSQL()}")));
+				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"{(int.TryParse(_.Item1, out var _) ? _.Item1 : _.Item1.EscapeIdentifier())} {_.Item2.ToSQL()}")));
 
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}

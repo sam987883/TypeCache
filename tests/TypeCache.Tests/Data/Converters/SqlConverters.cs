@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using TypeCache.Data;
-using TypeCache.Data.Extensions;
 using Xunit;
 using static System.FormattableString;
 
@@ -106,7 +105,7 @@ namespace TypeCache.Tests.Data.Converters
 				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
-				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } },
+				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
 				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
@@ -150,7 +149,7 @@ namespace TypeCache.Tests.Data.Converters
 			{
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
-				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } },
+				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
 				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"

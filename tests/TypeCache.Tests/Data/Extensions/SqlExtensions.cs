@@ -184,7 +184,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
 				Having = "MAX([Age]) > 40",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } }
+				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending), ("1", Sort.Descending) }
 			};
 
 			var expected = Invariant($@"INSERT INTO Customers ([ID], [First Name], [Last_Name], [Age], [Amount])
@@ -199,7 +199,7 @@ SELECT [ID]
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
-ORDER BY [First Name] DESC, [Last_Name] ASC;
+ORDER BY [First Name] DESC, [Last_Name] ASC, 1 DESC;
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -214,7 +214,7 @@ ORDER BY [First Name] DESC, [Last_Name] ASC;
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				OrderBy = new Dictionary<string, Sort> { { "First Name", Sort.Descending }, { "Last_Name", Sort.Ascending } }
+				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) }
 			};
 
 			var expected = Invariant($@"SELECT [ID]

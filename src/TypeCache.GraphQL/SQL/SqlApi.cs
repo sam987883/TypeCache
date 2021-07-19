@@ -142,7 +142,7 @@ namespace TypeCache.GraphQL.SQL
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
 				.Do(selection => request.Select[selection] = selection);
-			orderBy.Do(_ => request.OrderBy[_.Expression] = _.Sort);
+			request.OrderBy = orderBy.To(_ => (_.Expression, _.Sort)).ToArray();
 
 			var sqlResponse = new SqlResponse<T>();
 			if (selections.Has(nameof(SqlResponse<T>.Table)))

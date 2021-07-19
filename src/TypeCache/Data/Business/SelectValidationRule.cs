@@ -13,7 +13,7 @@ namespace TypeCache.Data.Business
 		public async ValueTask ValidateAsync((ISqlApi SqlApi, SelectRequest Select) request, CancellationToken cancellationToken)
 		{
 			var schema = request.SqlApi.GetObjectSchema(request.Select.From);
-			if (request.Select.OrderBy.Any() && !request.Select.Select.Keys.Has(request.Select.OrderBy.Keys))
+			if (request.Select.OrderBy.Any() && !request.Select.Select.Keys.Has(request.Select.OrderBy.To(_ => _.Item1)))
 				throw new ArgumentException($"All {nameof(SelectRequest.OrderBy)} Keys must also be in {nameof(SelectRequest.Select)} Keys.", nameof(SelectRequest));
 
 			await ValueTask.CompletedTask;

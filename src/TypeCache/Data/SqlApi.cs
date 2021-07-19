@@ -30,18 +30,6 @@ namespace TypeCache.Data
 			this._ConnectionString = connectionString;
 		}
 
-		public async ValueTask ExecuteTransactionAsync(Func<IBatchSqlApi, ValueTask> transaction
-			, TransactionScopeOption option = TransactionScopeOption.Required
-			, CancellationToken cancellationToken = default)
-		{
-			using var transactionScope = new TransactionScope(option, TransactionScopeAsyncFlowOption.Enabled);
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
-			await dbConnection.OpenAsync(cancellationToken);
-			await transaction(new BatchSqlApi(dbConnection, cancellationToken));
-			transactionScope.Complete();
-			await dbConnection.CloseAsync();
-		}
-
 		private async ValueTask<ObjectSchema> _GetObjectSchema(string name)
 		{
 			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
@@ -71,6 +59,18 @@ namespace TypeCache.Data
 			};
 			var tableSchemaCache = ObjectSchema.Cache[server];
 			return tableSchemaCache.GetOrAdd(fullName, name => _GetObjectSchema(name).Result);
+		}
+
+		public async ValueTask ExecuteTransactionAsync(Func<IBatchSqlApi, ValueTask> transaction
+			, TransactionScopeOption option = TransactionScopeOption.Required
+			, CancellationToken cancellationToken = default)
+		{
+			using var transactionScope = new TransactionScope(option, TransactionScopeAsyncFlowOption.Enabled);
+			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await dbConnection.OpenAsync(cancellationToken);
+			await transaction(new BatchSqlApi(dbConnection, cancellationToken));
+			transactionScope.Complete();
+			await dbConnection.CloseAsync();
 		}
 
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)
