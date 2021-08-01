@@ -10,8 +10,11 @@ namespace TypeCache.Data
 	/// <summary>
 	/// Use Parameters to take in user input to avoid SQL Injection.
 	/// </summary>
-	public class SqlRequest
+	public class SqlRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		public SqlRequest()
 		{
 		}

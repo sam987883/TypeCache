@@ -11,8 +11,11 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "Procedure": "[Database1]..[Procedure1]", "Parameters": { "Parameter1": "Value1", "Parameter2": null, "Parameter3": true } }</code>
 	/// SQL: <code>EXECUTE [Database1]..[Procedure1] (@Parameter1 = N'Value1', @Parameter2 = NULL, @Parameter3 = 1);</code>
 	/// </summary>
-	public class StoredProcedureRequest
+	public class StoredProcedureRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		public StoredProcedureRequest()
 		{
 		}

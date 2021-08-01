@@ -19,10 +19,11 @@ namespace TypeCache.Web.Middleware
 
 		public async Task Invoke(HttpContext httpContext)
 		{
+			var dataSource = httpContext.Request.Query["dataSource"].First();
 			var name = httpContext.Request.Query["object"].First();
-			if (!name.IsBlank())
+			if (!dataSource.IsBlank() && !name.IsBlank())
 			{
-				var schema = this.SqlApi.GetObjectSchema(name);
+				var schema = this.SqlApi.GetObjectSchema(dataSource, name);
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
 			}
 		}

@@ -38,6 +38,12 @@ DECLARE @ObjectId AS INTEGER =
 	WHERE o.[name] = @{OBJECT_NAME}
 		AND s.[name] = ISNULL(@{SCHEMA_NAME}, SCHEMA_NAME())
 		AND o.[type] IN ('U', 'V', 'TF', 'P')
+	UNION ALL
+	SELECT tt.[type_table_object_id]
+	FROM [sys].[table_types] AS tt
+	INNER JOIN [sys].[schemas] AS s ON s.[schema_id] = tt.[schema_id]
+	WHERE tt.[name] = @{OBJECT_NAME}
+		AND s.[name] = ISNULL(@{SCHEMA_NAME}, SCHEMA_NAME())
 );
 DECLARE @SqlDbTypes AS TABLE
 (
@@ -59,7 +65,16 @@ SELECT o.[object_id] AS [Id]
 , s.[name] AS [SchemaName]
 FROM [sys].[objects] AS o
 INNER JOIN [sys].[schemas] AS s ON s.[schema_id] = o.[schema_id]
-WHERE o.[object_id] = @ObjectId;
+WHERE o.[object_id] = @ObjectId AND o.[type] IN ('U', 'V', 'TF', 'P')
+UNION ALL
+SELECT tt.[type_table_object_id] AS [Id]
+, DB_NAME() AS [DatabaseName]
+, tt.[name] AS [ObjectName]
+, {ObjectType.TableType.Number()} AS [Type]
+, s.[name] AS [SchemaName]
+FROM [sys].[table_types] AS tt
+INNER JOIN [sys].[schemas] AS s ON s.[schema_id] = tt.[schema_id]
+WHERE tt.[type_table_object_id] = @ObjectId;
 
 {ColumnSchema.SQL}
 

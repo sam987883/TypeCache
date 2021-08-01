@@ -13,21 +13,23 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data
 {
-	internal sealed class BatchSqlApi : IBatchSqlApi
+	internal sealed class SqlApiSession : ISqlApiSession
 	{
 		private static string HandleFunctionName(string name)
 			=> name.Contains(')') ? name.Left(name.LastIndexOf('(')) : name;
 
 		private readonly CancellationToken _CancellationToken;
+		private readonly string _DataSource;
 		private readonly DbConnection _DbConnection;
 
-		public BatchSqlApi(DbConnection dbConnection, CancellationToken cancellationToken = default)
+		public SqlApiSession(string dataSource, DbConnection dbConnection, CancellationToken cancellationToken = default)
 		{
 			this._CancellationToken = cancellationToken;
+			this._DataSource = dataSource;
 			this._DbConnection = dbConnection;
 		}
 
-		public async ValueTask ExecuteTransactionAsync(Func<IBatchSqlApi, ValueTask> transaction, TransactionScopeOption option = TransactionScopeOption.Required)
+		public async ValueTask ExecuteTransactionAsync(Func<ISqlApiSession, ValueTask> transaction, TransactionScopeOption option = TransactionScopeOption.Required)
 		{
 			using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 			await transaction(this);
@@ -36,21 +38,20 @@ namespace TypeCache.Data
 
 		public ObjectSchema GetObjectSchema(string name)
 		{
-			var server = this._DbConnection.DataSource;
 			var database = this._DbConnection.Database;
 
 			var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries).ToArray(part => part.TrimStart('[').TrimEnd(']'));
 			var fullName = parts.Length switch
 			{
 				1 when !database.IsBlank() => $"[{database}]..[{HandleFunctionName(parts[0])}]",
-				1 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [Database] or [Initial Catalog] specified for database object.", name),
+				1 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [{SqlApi.DATABASE}] or [{SqlApi.INITIAL_CATALOG}] specified for database object.", name),
 				2 when name.Contains("..") => $"[{parts[0]}]..[{HandleFunctionName(parts[1])}]",
 				2 when !database.IsBlank() => $"[{database}].[{parts[0]}].[{HandleFunctionName(parts[1])}]",
-				2 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [Database] or [Initial Catalog] specified for database object.", name),
+				2 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [{SqlApi.DATABASE}] or [{SqlApi.INITIAL_CATALOG}] specified for database object.", name),
 				3 => $"[{parts[0]}].[{parts[1]}].[{HandleFunctionName(parts[2])}]",
 				_ => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Invalid table source name.", name)
 			};
-			return ObjectSchema.Cache[server].GetOrAdd(fullName, name => this._DbConnection.GetObjectSchema(name).Result);
+			return ObjectSchema.Cache[this._DataSource].GetOrAdd(fullName, name => this._DbConnection.GetObjectSchema(name).Result);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

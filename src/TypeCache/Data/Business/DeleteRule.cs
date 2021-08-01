@@ -7,12 +7,19 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class DeleteRule : IRule<(ISqlApi SqlApi, DeleteRequest Delete), RowSet>, IRule<DeleteRequest, string>
+	internal class DeleteRule : IRule<DeleteRequest, RowSet>, IRule<DeleteRequest, string>
 	{
-		async ValueTask<RowSet> IRule<(ISqlApi SqlApi, DeleteRequest Delete), RowSet>.ApplyAsync((ISqlApi SqlApi, DeleteRequest Delete) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public DeleteRule(ISqlApi sqlApi)
 		{
-			request.Delete.From = request.SqlApi.GetObjectSchema(request.Delete.From).Name;
-			return await request.SqlApi.DeleteAsync(request.Delete, cancellationToken);
+			this._SqlApi = sqlApi;
+		}
+
+		async ValueTask<RowSet> IRule<DeleteRequest, RowSet>.ApplyAsync(DeleteRequest request, CancellationToken cancellationToken)
+		{
+			request.From = this._SqlApi.GetObjectSchema(request.DataSource, request.From).Name;
+			return await this._SqlApi.DeleteAsync(request, cancellationToken);
 		}
 
 		async ValueTask<string> IRule<DeleteRequest, string>.ApplyAsync(DeleteRequest request, CancellationToken cancellationToken)

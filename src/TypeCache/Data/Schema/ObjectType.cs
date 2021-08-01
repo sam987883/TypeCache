@@ -10,6 +10,7 @@ namespace TypeCache.Data.Schema
 		Table,
 		View,
 		Function,
-		StoredProcedure
+		StoredProcedure,
+		TableType
 	}
 }

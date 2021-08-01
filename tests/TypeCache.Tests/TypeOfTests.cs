@@ -67,15 +67,15 @@ namespace TypeCache.Tests
 			Assert.Equal(1, member.Constructors.Count);
 			Assert.Null(member.EnclosedType);
 			Assert.Empty(member.Events);
-			Assert.Equal(7, member.Fields.Count);
+			Assert.Equal(8, member.Fields.Count);
 			Assert.Empty(member.GenericTypes);
 			Assert.Equal(type.TypeHandle, member.Handle);
-			Assert.Empty(member.InterfaceTypes);
+			Assert.Equal(1, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Class, member.Kind);
 			Assert.Equal(6, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
-			Assert.Equal(7, member.Properties.Count);
+			Assert.Equal(8, member.Properties.Count);
 			Assert.True(member.Public);
 			Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 			Assert.Equal(SystemType.Unknown, member.SystemType);

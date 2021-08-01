@@ -10,26 +10,31 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class InsertValidationRule : IValidationRule<(ISqlApi SqlApi, InsertRequest Insert)>
+	internal class InsertValidationRule : IValidationRule<InsertRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, InsertRequest Insert) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public InsertValidationRule(ISqlApi sqlApi)
 		{
-			var insert = request.Insert;
+			this._SqlApi = sqlApi;
+		}
 
-			var schema = request.SqlApi.GetObjectSchema(insert.Into);
-			schema.Type.Assert($"{nameof(InsertRequest)}.{nameof(insert.Into)}", ObjectType.Table);
+		public async ValueTask ValidateAsync(InsertRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Into);
+			schema.Type.Assert($"{nameof(InsertRequest)}.{nameof(request.Into)}", ObjectType.Table);
 
-			if (!insert.Insert.Any())
+			if (!request.Insert.Any())
 				throw new ArgumentException($"Columns are required for Insert.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
-			var invalidColumnCsv = insert.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+			var invalidColumnCsv = request.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"Columns were not found on table [{nameof(InsertRequest.Into)}]: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
-			if (!insert.Select.Any())
+			if (!request.Select.Any())
 				throw new ArgumentException($"Columns are required for Select.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Select)}");
 
-			if (insert.Insert.Count() != insert.Select.Count())
+			if (request.Insert.Count() != request.Select.Count())
 				throw new ArgumentException($"Must have same number of columns.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}, {nameof(InsertRequest)}.{nameof(InsertRequest.Select)}");
 
 			await ValueTask.CompletedTask;

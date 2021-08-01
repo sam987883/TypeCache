@@ -19,17 +19,17 @@ namespace TypeCache.GraphQL.SQL
 	public class SqlApi<T>
 		where T : class, new()
 	{
+		private readonly string _DataSource;
 		private readonly IMediator _Mediator;
-		private readonly ISqlApi _SqlApi;
 
 		public string Table { get; }
 
-		public SqlApi(IMediator mediator, ISqlApi sqlApi, string tableName)
+		public SqlApi(IMediator mediator, string dataSource, string table)
 		{
+			this._DataSource = dataSource;
 			this._Mediator = mediator;
-			this._SqlApi = sqlApi;
 
-			this.Table = tableName;
+			this.Table = table;
 		}
 
 		[GraphName("Delete{0}")]
@@ -39,6 +39,7 @@ namespace TypeCache.GraphQL.SQL
 			var selections = context.GetQuerySelections().ToArray();
 			var request = new DeleteRequest
 			{
+				DataSource = this._DataSource,
 				From = this.Table,
 				Where = where
 			};
@@ -49,13 +50,16 @@ namespace TypeCache.GraphQL.SQL
 				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<DeleteRequest, string>(request);
+
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, DeleteRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<DeleteRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
@@ -69,6 +73,7 @@ namespace TypeCache.GraphQL.SQL
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(batch)).Keys.ToArray();
 			var request = new BatchRequest
 			{
+				DataSource = this._DataSource,
 				Delete = true,
 				Table = this.Table,
 				Input = batch.MapRowSet(columns)
@@ -79,13 +84,16 @@ namespace TypeCache.GraphQL.SQL
 				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, BatchRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
@@ -99,6 +107,7 @@ namespace TypeCache.GraphQL.SQL
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
 			var request = new BatchRequest
 			{
+				DataSource = this._DataSource,
 				Table = this.Table,
 				Input = batch.MapRowSet(columns),
 				Insert = columns
@@ -109,13 +118,16 @@ namespace TypeCache.GraphQL.SQL
 				.Do(selection => request.Output[selection] = "INSERTED");
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, BatchRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
@@ -133,6 +145,7 @@ namespace TypeCache.GraphQL.SQL
 			var selections = context.GetQuerySelections().ToArray();
 			var request = new SelectRequest
 			{
+				DataSource = this._DataSource,
 				From = this.Table,
 				Having = having,
 				Where = where
@@ -145,13 +158,16 @@ namespace TypeCache.GraphQL.SQL
 			request.OrderBy = orderBy.To(_ => (_.Expression, _.Sort)).ToArray();
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
+
 			if (request.Select.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, SelectRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<SelectRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
@@ -165,6 +181,7 @@ namespace TypeCache.GraphQL.SQL
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set)).Keys.ToArray();
 			var request = new UpdateRequest
 			{
+				DataSource = this._DataSource,
 				Table = this.Table,
 				Where = where
 			};
@@ -181,13 +198,16 @@ namespace TypeCache.GraphQL.SQL
 			});
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateRequest, string>(request);
+
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, UpdateRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
@@ -201,6 +221,7 @@ namespace TypeCache.GraphQL.SQL
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
 			var request = new BatchRequest
 			{
+				DataSource = this._DataSource,
 				Input = batch.MapRowSet(columns),
 				Table = this.Table,
 				Update = columns
@@ -211,13 +232,16 @@ namespace TypeCache.GraphQL.SQL
 				.Do(selection => request.Output[selection] = "INSERTED");
 
 			var sqlResponse = new SqlResponse<T>();
+
 			if (selections.Has(nameof(SqlResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
-			if (selections.Any(selection => selection.Left(nameof(SqlResponse<T>.SQL))))
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<(ISqlApi, BatchRequest), RowSet>((this._SqlApi, request));
+				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
 				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;

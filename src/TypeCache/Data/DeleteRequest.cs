@@ -12,8 +12,11 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "From": "Table1", "Where": { ... }, "Output": [ ... ] }</code>
 	/// SQL: <code>DELETE FROM ... OUTPUT ... WHERE ...;</code>
 	/// </summary>
-	public class DeleteRequest
+	public class DeleteRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		/// <summary>
 		/// JSON: <code>"From": "Table1"</code>
 		/// SQL: <code>DELETE FROM [Database1]..[Table1]</code>

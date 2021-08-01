@@ -17,6 +17,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expectedRequest = new BatchRequest
 			{
+				DataSource = "LocalInstance",
 				Delete = true,
 				Input = new RowSet
 				{
@@ -37,6 +38,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expected = Invariant(@$"
 {{
+	""DataSource"":""LocalInstance"",
 	""Delete"":true,
 	""Input"":{{""Columns"":[""ID"",""Col 2"",""Column3]""],""Rows"":[[1,""aaa"",""{date:O}"",""{guid:D}""],[2,""bbb"",""{date:O}"",""{guid:D}""],[3,""ccc"",""{date:O}"",""{guid:D}""]]}},
 	""Insert"":[""Col 2"",""Column3]""],
@@ -68,6 +70,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expectedRequest = new DeleteRequest
 			{
+				DataSource = "LocalInstance",
 				From = "Customers",
 				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
@@ -76,6 +79,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expected = Invariant(@$"
 {{
+	""DataSource"":""LocalInstance"",
 	""From"":""Customers"",
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
 	""Parameters"":{{""Param1"":false,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
@@ -100,6 +104,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expectedRequest = new InsertRequest
 			{
+				DataSource = "LocalInstance",
 				Into = "Customers",
 				Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "[Age]", "[Amount]" },
 				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
@@ -116,6 +121,7 @@ namespace TypeCache.Tests.Data.Converters
 	""Into"":""Customers"",
 	""Insert"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
 	""Having"":""MAX([Age]) \u003E 40"",
 	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
@@ -147,6 +153,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expectedRequest = new SelectRequest
 			{
+				DataSource = "LocalInstance",
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
 				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
@@ -157,6 +164,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expected = Invariant(@$"
 {{
+	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
 	""Having"":""MAX([Age]) \u003E 40"",
 	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
@@ -185,6 +193,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expectedRequest = new UpdateRequest
 			{
+				DataSource = "LocalInstance",
 				Table = "[dbo].[NonCustomers]",
 				Set = new Dictionary<string, object> { { "ID", 123456 }, { "First Name", "Sarah" }, { "Last_Name", "Marshal" }, { "Account", guid } },
 				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
@@ -194,6 +203,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expected = Invariant(@$"
 {{
+	""DataSource"":""LocalInstance"",
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
 	""Parameters"":{{""Param1"":44,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
 	""Table"":""[dbo].[NonCustomers]"",

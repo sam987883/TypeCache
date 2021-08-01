@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace TypeCache.Collections
 {
-	public sealed class CustomEqualityComparer<T> : IEqualityComparer<T>
+	public readonly struct CustomEqualityComparer<T> : IEqualityComparer<T>
 	{
 		private readonly Func<T?, T?, bool> _Equals;
 		private readonly Func<T?, int> _GetHashCode;

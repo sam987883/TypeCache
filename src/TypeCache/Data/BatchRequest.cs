@@ -19,8 +19,11 @@ namespace TypeCache.Data
 	/// </list>
 	/// </code>
 	/// </summary>
-	public sealed class BatchRequest
+	public sealed class BatchRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		/// <summary>
 		/// JSON: <code>true|false</code>
 		/// SQL: For UPDATE/DELETE: <code>WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE</code>

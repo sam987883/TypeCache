@@ -10,24 +10,29 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class UpdateValidationRule : IValidationRule<(ISqlApi SqlApi, UpdateRequest Update)>
+	internal class UpdateValidationRule : IValidationRule<UpdateRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, UpdateRequest Update) request, CancellationToken cancellationToken)
-		{
-			var update = request.Update;
+		private readonly ISqlApi _SqlApi;
 
-			var schema = request.SqlApi.GetObjectSchema(update.Table);
+		public UpdateValidationRule(ISqlApi sqlApi)
+		{
+			this._SqlApi = sqlApi;
+		}
+
+		public async ValueTask ValidateAsync(UpdateRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
 			schema.Type.Assert($"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Table)}", ObjectType.Table);
 
-			if (!update.Set.Any())
+			if (!request.Set.Any())
 				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-			var invalidColumnCsv = update.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+			var invalidColumnCsv = request.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
 			var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-			invalidColumnCsv = update.Set.Keys.Without(writableColumns).ToCSV(column => $"[{column}]");
+			invalidColumnCsv = request.Set.Keys.Without(writableColumns).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 

@@ -7,12 +7,19 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class UpdateRule : IRule<(ISqlApi SqlApi, UpdateRequest Update), RowSet>, IRule<UpdateRequest, string>
+	internal class UpdateRule : IRule<UpdateRequest, RowSet>, IRule<UpdateRequest, string>
 	{
-		async ValueTask<RowSet> IRule<(ISqlApi SqlApi, UpdateRequest Update), RowSet>.ApplyAsync((ISqlApi SqlApi, UpdateRequest Update) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public UpdateRule(ISqlApi sqlApi)
 		{
-			request.Update.Table = request.SqlApi.GetObjectSchema(request.Update.Table).Name;
-			return await request.SqlApi.UpdateAsync(request.Update, cancellationToken);
+			this._SqlApi = sqlApi;
+		}
+
+		async ValueTask<RowSet> IRule<UpdateRequest, RowSet>.ApplyAsync(UpdateRequest request, CancellationToken cancellationToken)
+		{
+			request.Table = this._SqlApi.GetObjectSchema(request.DataSource, request.Table).Name;
+			return await this._SqlApi.UpdateAsync(request, cancellationToken);
 		}
 
 		async ValueTask<string> IRule<UpdateRequest, string>.ApplyAsync(UpdateRequest request, CancellationToken cancellationToken)

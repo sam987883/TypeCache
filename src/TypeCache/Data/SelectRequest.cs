@@ -13,8 +13,11 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "From": ..., "Output": [ ... ], "Parameters": [ ... ], "Where": "...", "OrderBy": [ ... ] }</code>
 	/// SQL: <code>SELECT ... FROM ... WHERE ... ORDER BY ...;</code>
 	/// </summary>
-	public class SelectRequest
+	public class SelectRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		/// <summary>
 		/// JSON: <code>"Table1" or "dbo.Table1" or "[Database1].dbo.[Table1]"</code>
 		/// SQL: <code>[Database1]..[Table1] or [Database1].[dbo].[Table1]</code>

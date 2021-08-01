@@ -6,9 +6,16 @@ using TypeCache.Business;
 
 namespace TypeCache.Data.Business
 {
-	internal class ExecuteSqlRule : IRule<(ISqlApi SqlApi, SqlRequest SQL), RowSet[]>
+	internal class ExecuteSqlRule : IRule<SqlRequest, RowSet[]>
 	{
-		public async ValueTask<RowSet[]> ApplyAsync((ISqlApi SqlApi, SqlRequest SQL) request, CancellationToken cancellationToken)
-			=> await request.SqlApi.RunAsync(request.SQL, cancellationToken);
+		private readonly ISqlApi _SqlApi;
+
+		public ExecuteSqlRule(ISqlApi sqlApi)
+		{
+			this._SqlApi = sqlApi;
+		}
+
+		public async ValueTask<RowSet[]> ApplyAsync(SqlRequest request, CancellationToken cancellationToken)
+			=> await this._SqlApi.RunAsync(request, cancellationToken);
 	}
 }

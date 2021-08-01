@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache.GraphQL", "src\Ty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache.Web", "src\TypeCache.Web\TypeCache.Web.csproj", "{F6F4B192-C9AA-4062-AB6F-4C2616E8836B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeCache.Tests", "tests\TypeCache.Tests\TypeCache.Tests.csproj", "{FFD196D4-F0D2-4841-9FC9-92E80B564B8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache.Tests", "tests\TypeCache.Tests\TypeCache.Tests.csproj", "{FFD196D4-F0D2-4841-9FC9-92E80B564B8A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

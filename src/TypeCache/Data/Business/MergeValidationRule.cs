@@ -11,72 +11,77 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class MergeValidationRule : IValidationRule<(ISqlApi SqlApi, BatchRequest Batch)>
+	internal class MergeValidationRule : IValidationRule<BatchRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, BatchRequest Batch) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public MergeValidationRule(ISqlApi sqlApi)
 		{
-			var batch = request.Batch;
+			this._SqlApi = sqlApi;
+		}
 
-			var schema = request.SqlApi.GetObjectSchema(batch.Table);
-			schema.Type.Assert($"{nameof(BatchRequest)}.{nameof(batch.Table)}", ObjectType.Table);
+		public async ValueTask ValidateAsync(BatchRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
+			schema.Type.Assert($"{nameof(BatchRequest)}.{nameof(request.Table)}", ObjectType.Table);
 
-			if (!batch.Delete && !batch.Update.Any() && !batch.Insert.Any())
-				throw new ArgumentException($"[{nameof(BatchRequest)}] must have either {nameof(batch.Delete)} selected, {nameof(batch.Insert)} columns or {nameof(batch.Update)} columns.", nameof(batch));
+			if (!request.Delete && !request.Update.Any() && !request.Insert.Any())
+				throw new ArgumentException($"[{nameof(BatchRequest)}] must have either {nameof(request.Delete)} selected, {nameof(request.Insert)} columns or {nameof(request.Update)} columns.", nameof(request));
 
-			if (batch.Delete || batch.Update.Any())
+			if (request.Delete || request.Update.Any())
 			{
-				if (!batch.Input.Columns.Any())
-					throw new ArgumentException("Batch DELETE/UPDATE requires input columns.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}");
+				if (!request.Input.Columns.Any())
+					throw new ArgumentException("Batch DELETE/UPDATE requires input columns.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Columns)}");
 
 				var primaryKeys = schema.Columns.If(column => column!.PrimaryKey).To(column => column!.Name).ToList();
 				if (!primaryKeys.Any())
-					throw new ArgumentException($"Table {schema.Name} must have primary key(s) defined to use batch DELETE/UPDATE.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}");
+					throw new ArgumentException($"Table {schema.Name} must have primary key(s) defined to use batch DELETE/UPDATE.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Columns)}");
 
-				if (!batch.Input.Columns.Has(primaryKeys, StringComparer.OrdinalIgnoreCase))
-					throw new ArgumentException("Input columns must contain all primary keys to use batch DELETE/UPDATE.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}");
+				if (!request.Input.Columns.Has(primaryKeys, StringComparer.OrdinalIgnoreCase))
+					throw new ArgumentException("Input columns must contain all primary keys to use batch DELETE/UPDATE.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Columns)}");
 			}
 
-			if (batch.Insert.Any())
+			if (request.Insert.Any())
 			{
-				var invalidColumnCsv = batch.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+				var invalidColumnCsv = request.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
+					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Insert)}");
 
-				if (!batch.Input.Columns.Any())
-					throw new ArgumentException("Input columns are required for batch INSERT.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Columns)}");
+				if (!request.Input.Columns.Any())
+					throw new ArgumentException("Input columns are required for batch INSERT.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Columns)}");
 
-				invalidColumnCsv = batch.Insert.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
+				invalidColumnCsv = request.Insert.Without(request.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
+					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Insert)}");
 
 				var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-				invalidColumnCsv = batch.Insert.Without(writableColumns).ToCSV(column => $"[{column}]");
+				invalidColumnCsv = request.Insert.Without(writableColumns).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Insert)}");
+					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Insert)}");
 			}
 
-			if (batch.Update.Any())
+			if (request.Update.Any())
 			{
-				var invalidColumnCsv = batch.Update.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+				var invalidColumnCsv = request.Update.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
+					throw new ArgumentException($"Columns do not exist: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Update)}");
 
-				invalidColumnCsv = batch.Update.Without(batch.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
+				invalidColumnCsv = request.Update.Without(request.Input.Columns, StringComparer.OrdinalIgnoreCase).ToCSV(_ => _.EscapeIdentifier());
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
+					throw new ArgumentException($"Column selections are not available from the input: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Update)}");
 
 				var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-				invalidColumnCsv = batch.Update.Without(writableColumns).ToCSV(column => $"[{column}]");
+				invalidColumnCsv = request.Update.Without(writableColumns).ToCSV(column => $"[{column}]");
 				if (!invalidColumnCsv.IsBlank())
-					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(batch.Update)}");
+					throw new ArgumentException($"Column selections for table {schema.Name} contain non-writable columns: {invalidColumnCsv}", $"{nameof(BatchRequest)}.{nameof(request.Update)}");
 			}
 
-			if (!batch.Input.Rows.Any())
-				throw new ArgumentException("Input rows are required.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Rows)}");
+			if (!request.Input.Rows.Any())
+				throw new ArgumentException("Input rows are required.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Rows)}");
 
-			var invalidRowCount = batch.Input.Rows.If(row => row!.Length != batch.Input.Columns.Length).Count();
+			var invalidRowCount = request.Input.Rows.If(row => row!.Length != request.Input.Columns.Length).Count();
 			if (invalidRowCount > 0)
-				throw new ArgumentException($"{invalidRowCount} input rows have a different number of values than the {batch.Input.Columns.Length} columns.", $"{nameof(BatchRequest)}.{nameof(batch.Input)}.{nameof(batch.Input.Rows)}");
+				throw new ArgumentException($"{invalidRowCount} input rows have a different number of values than the {request.Input.Columns.Length} columns.", $"{nameof(BatchRequest)}.{nameof(request.Input)}.{nameof(request.Input.Rows)}");
 
 			await ValueTask.CompletedTask;
 		}

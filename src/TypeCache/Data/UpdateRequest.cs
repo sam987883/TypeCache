@@ -12,8 +12,11 @@ namespace TypeCache.Data
 	/// JSON: <code>{ "Table": "Table1", "Set": [ ... ], "OutputDeleted": [ ... ], "OutputInserted": [ ... ], "Where": { ... } }</code>
 	/// SQL: <code>UPDATE ... SET ... OUTPUT ... WHERE ...;</code>
 	/// </summary>
-	public class UpdateRequest
+	public class UpdateRequest : IDataRequest
 	{
+		/// <inheritdoc/>
+		public string DataSource { get; set; } = "Default";
+
 		/// <summary>
 		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
 		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>

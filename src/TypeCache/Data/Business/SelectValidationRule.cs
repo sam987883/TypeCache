@@ -8,12 +8,19 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class SelectValidationRule : IValidationRule<(ISqlApi SqlApi, SelectRequest Select)>
+	internal class SelectValidationRule : IValidationRule<SelectRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, SelectRequest Select) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public SelectValidationRule(ISqlApi sqlApi)
 		{
-			var schema = request.SqlApi.GetObjectSchema(request.Select.From);
-			if (request.Select.OrderBy.Any() && !request.Select.Select.Keys.Has(request.Select.OrderBy.To(_ => _.Item1)))
+			this._SqlApi = sqlApi;
+		}
+
+		public async ValueTask ValidateAsync(SelectRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
+			if (request.OrderBy.Any() && !request.Select.Keys.Has(request.OrderBy.To(_ => _.Item1)))
 				throw new ArgumentException($"All {nameof(SelectRequest.OrderBy)} Keys must also be in {nameof(SelectRequest.Select)} Keys.", nameof(SelectRequest));
 
 			await ValueTask.CompletedTask;

@@ -17,13 +17,14 @@ namespace TypeCache.Data
 		/// Gets a cached schema object that describes a table, view, table based function, or stored procedure.
 		/// </summary>
 		/// <param name="name">The database object name ie. Customers, dbo.Accounts, [Db]..s_Customers</param>
-		ObjectSchema GetObjectSchema(string name);
+		ObjectSchema GetObjectSchema(string dataSource, string name);
 
 		/// <summary>
 		/// All calls to ISqlApi within parameter transaction will be wrapped in a scoped async-enabled transaction.
 		/// </summary>
 		ValueTask ExecuteTransactionAsync(
-			Func<IBatchSqlApi, ValueTask> transaction
+			string dataSource
+			, Func<ISqlApiSession, ValueTask> transaction
 			, TransactionScopeOption option = TransactionScopeOption.Required
 			, CancellationToken cancellationToken = default);
 
@@ -69,7 +70,7 @@ namespace TypeCache.Data
 		/// <summary>
 		/// <code>TRUNCATE TABLE ...</code>
 		/// </summary>
-		ValueTask<int> TruncateTableAsync(string table, CancellationToken cancellationToken = default);
+		ValueTask<int> TruncateTableAsync(string dataSource, string table, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// UPDATE ... SET ... WHERE ...

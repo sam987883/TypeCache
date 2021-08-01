@@ -8,7 +8,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Collections
 {
-	public sealed class CustomEnumerable<T> : IEnumerable<T>
+	public readonly struct CustomEnumerable<T> : IEnumerable<T>
 	{
 		private readonly Func<IEnumerator<T>> _GetEnumerator;
 

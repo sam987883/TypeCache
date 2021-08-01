@@ -61,12 +61,11 @@ namespace TypeCache.Collections
 			if (itemEnumerator.MoveNext())
 				action(itemEnumerator.Current, 0);
 
-			var i = 1;
+			var i = 0;
 			while (itemEnumerator.MoveNext())
 			{
 				between();
-				action(itemEnumerator.Current, i);
-				++i;
+				action(itemEnumerator.Current, ++i);
 			}
 		}
 

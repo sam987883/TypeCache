@@ -10,14 +10,21 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class StoredProcedureValidationRule : IValidationRule<(ISqlApi SqlApi, StoredProcedureRequest Procedure)>
+	internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, StoredProcedureRequest Procedure) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public StoredProcedureValidationRule(ISqlApi sqlApi)
 		{
-			var schema = request.SqlApi.GetObjectSchema(request.Procedure.Procedure);
+			this._SqlApi = sqlApi;
+		}
+
+		public async ValueTask ValidateAsync(StoredProcedureRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure);
 			schema.Type.Assert(nameof(StoredProcedureRequest), ObjectType.StoredProcedure);
 
-			var invalidParameterCsv = request.Procedure.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
+			var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
 			if (!invalidParameterCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
 

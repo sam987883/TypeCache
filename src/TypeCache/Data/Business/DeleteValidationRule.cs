@@ -8,9 +8,16 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class DeleteValidationRule : IValidationRule<(ISqlApi SqlApi, DeleteRequest Delete)>
+	internal class DeleteValidationRule : IValidationRule<DeleteRequest>
 	{
-		public async ValueTask ValidateAsync((ISqlApi SqlApi, DeleteRequest Delete) request, CancellationToken cancellationToken)
-			=> await Task.Run(() => request.SqlApi.GetObjectSchema(request.Delete.From).Type.Assert($"{nameof(DeleteRequest)}.{nameof(DeleteRequest.From)}", ObjectType.Table));
+		private readonly ISqlApi _SqlApi;
+
+		public DeleteValidationRule(ISqlApi sqlApi)
+		{
+			this._SqlApi = sqlApi;
+		}
+
+		public async ValueTask ValidateAsync(DeleteRequest request, CancellationToken cancellationToken)
+			=> await Task.Run(() => this._SqlApi.GetObjectSchema(request.DataSource, request.From).Type.Assert($"{nameof(DeleteRequest)}.{nameof(DeleteRequest.From)}", ObjectType.Table));
 	}
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,35 +15,37 @@ namespace TypeCache.Data
 {
 	internal sealed class SqlApi : ISqlApi
 	{
-		public const string DATA_SOURCE = "Data Source";
 		public const string DATABASE = "Database";
+
 		public const string INITIAL_CATALOG = "Initial Catalog";
 
 		private static string HandleFunctionName(string name)
 			=> name.Contains(')') ? name.Left(name.LastIndexOf('(')) : name;
 
-		private readonly DbProviderFactory _DbProviderFactory;
-		private readonly string _ConnectionString;
+		private readonly IReadOnlyDictionary<string, DatabaseProvider> _DatabaseProviders;
 
-		public SqlApi(string databaseProvider, string connectionString)
+		public SqlApi(params DataSource[] dataSources)
 		{
-			this._DbProviderFactory = DbProviderFactories.GetFactory(databaseProvider);
-			this._ConnectionString = connectionString;
+			var databaseProviders = new Dictionary<string, DatabaseProvider>(dataSources.Length, StringComparer.OrdinalIgnoreCase);
+			dataSources.Do(dataSource => databaseProviders.Add(dataSource.Name, new DatabaseProvider(dataSource)));
+			this._DatabaseProviders = databaseProviders.ToReadOnly();
 		}
 
-		private async ValueTask<ObjectSchema> _GetObjectSchema(string name)
+		private DbConnection CreateConnection(IDataRequest request)
+			=> this._DatabaseProviders[request.DataSource].CreateConnection();
+
+		private async ValueTask<ObjectSchema> _GetObjectSchema(string dataSource, string name)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
 			await dbConnection.OpenAsync();
 			var objectSchema = await dbConnection.GetObjectSchema(name);
 			await dbConnection.CloseAsync();
 			return objectSchema;
 		}
 
-		public ObjectSchema GetObjectSchema(string name)
+		public ObjectSchema GetObjectSchema(string dataSource, string name)
 		{
-			var connectionStringBuilder = this._DbProviderFactory.CreateConnectionStringBuilder(this._ConnectionString);
-			var server = connectionStringBuilder[DATA_SOURCE].ToString()!;
+			var connectionStringBuilder = this._DatabaseProviders[dataSource].CreateConnectionStringBuilder();
 			var database = connectionStringBuilder.TryGetValue(DATABASE, out var value)
 				|| connectionStringBuilder.TryGetValue(INITIAL_CATALOG, out value) ? value.ToString() : null;
 
@@ -57,25 +60,26 @@ namespace TypeCache.Data
 				3 => $"[{parts[0]}].[{parts[1]}].[{HandleFunctionName(parts[2])}]",
 				_ => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Invalid table source name.", name)
 			};
-			var tableSchemaCache = ObjectSchema.Cache[server];
-			return tableSchemaCache.GetOrAdd(fullName, name => _GetObjectSchema(name).Result);
+			return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetObjectSchema(dataSource, name).Result);
 		}
 
-		public async ValueTask ExecuteTransactionAsync(Func<IBatchSqlApi, ValueTask> transaction
+		public async ValueTask ExecuteTransactionAsync(
+			string dataSource
+			, Func<ISqlApiSession, ValueTask> transaction
 			, TransactionScopeOption option = TransactionScopeOption.Required
 			, CancellationToken cancellationToken = default)
 		{
 			using var transactionScope = new TransactionScope(option, TransactionScopeAsyncFlowOption.Enabled);
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
 			await dbConnection.OpenAsync(cancellationToken);
-			await transaction(new BatchSqlApi(dbConnection, cancellationToken));
+			await transaction(new SqlApiSession(dataSource, dbConnection, cancellationToken));
 			transactionScope.Complete();
 			await dbConnection.CloseAsync();
 		}
 
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(procedure);
 			await dbConnection.OpenAsync(cancellationToken);
 			var results = await dbConnection.CallAsync(procedure, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -84,7 +88,7 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet[]> RunAsync(SqlRequest request, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(request);
 			await dbConnection.OpenAsync(cancellationToken);
 			var results = await dbConnection.RunAsync(request, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -93,7 +97,7 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(delete);
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.DeleteAsync(delete, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -102,7 +106,7 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(insert);
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.InsertAsync(insert, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -111,7 +115,7 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(batch);
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.MergeAsync(batch, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -120,16 +124,16 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet> SelectAsync(SelectRequest select, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(select);
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.SelectAsync(select, cancellationToken);
 			await dbConnection.CloseAsync();
 			return result;
 		}
 
-		public async ValueTask<int> TruncateTableAsync(string table, CancellationToken cancellationToken = default)
+		public async ValueTask<int> TruncateTableAsync(string dataSource, string table, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.TruncateTableAsync(table, cancellationToken);
 			await dbConnection.CloseAsync();
@@ -138,7 +142,7 @@ namespace TypeCache.Data
 
 		public async ValueTask<RowSet> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default)
 		{
-			await using var dbConnection = this._DbProviderFactory.CreateConnection(this._ConnectionString);
+			await using var dbConnection = this.CreateConnection(update);
 			await dbConnection.OpenAsync(cancellationToken);
 			var result = await dbConnection.UpdateAsync(update, cancellationToken);
 			await dbConnection.CloseAsync();

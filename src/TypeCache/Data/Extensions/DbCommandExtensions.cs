@@ -2,6 +2,7 @@
 
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,9 +24,18 @@ namespace TypeCache.Data.Extensions
 		public static int AddOutputParameter(this IDbCommand @this, string name, object? value, DbType dbType)
 		{
 			var parameter = @this.CreateParameter();
-			parameter.Direction = value is not null ? ParameterDirection.Output : ParameterDirection.InputOutput;
+			parameter.Direction = ParameterDirection.InputOutput;
 			parameter.ParameterName = name;
 			parameter.Value = value;
+			parameter.DbType = dbType;
+			return @this.Parameters.Add(parameter);
+		}
+
+		public static int AddOutputParameter(this IDbCommand @this, string name, DbType dbType)
+		{
+			var parameter = @this.CreateParameter();
+			parameter.Direction = ParameterDirection.Output;
+			parameter.ParameterName = name;
 			parameter.DbType = dbType;
 			return @this.Parameters.Add(parameter);
 		}
@@ -39,12 +49,15 @@ namespace TypeCache.Data.Extensions
 			return transaction;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<DbDataReader> ReadSequentialAccessAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<DbDataReader> ReadSingleRowAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleRow, cancellationToken);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<DbDataReader> ReadSingleResultAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
 	}

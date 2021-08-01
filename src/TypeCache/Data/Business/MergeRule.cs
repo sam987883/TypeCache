@@ -8,15 +8,22 @@ using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business
 {
-	internal class MergeRule : IRule<(ISqlApi SqlApi, BatchRequest Batch), RowSet>, IRule<BatchRequest, string>
+	internal class MergeRule : IRule<BatchRequest, RowSet>, IRule<BatchRequest, string>
 	{
-		async ValueTask<RowSet> IRule<(ISqlApi SqlApi, BatchRequest Batch), RowSet>.ApplyAsync((ISqlApi SqlApi, BatchRequest Batch) request, CancellationToken cancellationToken)
+		private readonly ISqlApi _SqlApi;
+
+		public MergeRule(ISqlApi sqlApi)
 		{
-			var schema = request.SqlApi.GetObjectSchema(request.Batch.Table);
-			request.Batch.Table = schema.Name;
-			if (!request.Batch.On.Any())
-				request.Batch.On = schema.Columns.If(column => column!.PrimaryKey).To(column => column!.Name).ToArray();
-			return await request.SqlApi.MergeAsync(request.Batch, cancellationToken);
+			this._SqlApi = sqlApi;
+		}
+
+		async ValueTask<RowSet> IRule<BatchRequest, RowSet>.ApplyAsync(BatchRequest request, CancellationToken cancellationToken)
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
+			request.Table = schema.Name;
+			if (!request.On.Any())
+				request.On = schema.Columns.If(column => column!.PrimaryKey).To(column => column!.Name).ToArray();
+			return await this._SqlApi.MergeAsync(request, cancellationToken);
 		}
 
 		async ValueTask<string> IRule<BatchRequest, string>.ApplyAsync(BatchRequest request, CancellationToken cancellationToken)

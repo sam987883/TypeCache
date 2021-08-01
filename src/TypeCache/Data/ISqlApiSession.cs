@@ -10,7 +10,7 @@ namespace TypeCache.Data
 	/// <summary>
 	/// Mockable database access interface.
 	/// </summary>
-	public interface IBatchSqlApi
+	public interface ISqlApiSession
 	{
 		/// <summary>
 		/// Gets a cached schema object that describes a table, view, table based function, or stored procedure.
@@ -21,7 +21,7 @@ namespace TypeCache.Data
 		/// <summary>
 		/// All calls to ISqlApi within parameter transaction will be wrapped in a scoped async-enabled transaction.
 		/// </summary>
-		ValueTask ExecuteTransactionAsync(Func<IBatchSqlApi, ValueTask> transaction, TransactionScopeOption option = TransactionScopeOption.Required);
+		ValueTask ExecuteTransactionAsync(Func<ISqlApiSession, ValueTask> transaction, TransactionScopeOption option = TransactionScopeOption.Required);
 
 		/// <summary>
 		/// <code>EXECUTE ...</code>

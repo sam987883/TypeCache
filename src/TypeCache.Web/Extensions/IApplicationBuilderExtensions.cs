@@ -2,6 +2,9 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Middleware;
@@ -175,10 +178,10 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/schema</term> <description><see cref="SchemaMiddleware"/></description></item>
+		/// <item><term>route or /sql-api/schema?dataSource={dataSource}&amp;object={object}</term> <description><see cref="SchemaMiddleware"/></description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, IConfigurationSection)"/> or <see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, DataSource[])"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
 		{
@@ -193,7 +196,7 @@ namespace TypeCache.Web.Extensions
 		/// <item><term>route or /sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi"/></code>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, IConfigurationSection)"/> or <see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, DataSource[])"/></code>
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiSchemaSQL(this IApplicationBuilder @this, string? route = null)
 		{
