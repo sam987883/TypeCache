@@ -63,13 +63,28 @@ namespace TypeCache.Data
 			return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetObjectSchema(dataSource, name).Result);
 		}
 
+		public async ValueTask ExecuteSessionAsync(string dataSource, Func<ISqlApiSession, ValueTask> session, CancellationToken cancellationToken = default)
+		{
+			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
+			await dbConnection.OpenAsync(cancellationToken);
+			await session(new SqlApiSession(dataSource, dbConnection, cancellationToken));
+			await dbConnection.CloseAsync();
+		}
+
 		public async ValueTask ExecuteTransactionAsync(
 			string dataSource
 			, Func<ISqlApiSession, ValueTask> transaction
 			, TransactionScopeOption option = TransactionScopeOption.Required
+			, IsolationLevel isolationLevel = IsolationLevel.Unspecified
+			, TimeSpan? commandTimeout = null
 			, CancellationToken cancellationToken = default)
 		{
-			using var transactionScope = new TransactionScope(option, TransactionScopeAsyncFlowOption.Enabled);
+			var transactionOptions = new TransactionOptions
+			{
+				IsolationLevel = isolationLevel == IsolationLevel.Unspecified ? IsolationLevel.ReadCommitted : isolationLevel,
+				Timeout = commandTimeout ?? TransactionManager.DefaultTimeout
+			};
+			using var transactionScope = new TransactionScope(option, transactionOptions, TransactionScopeAsyncFlowOption.Enabled);
 			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
 			await dbConnection.OpenAsync(cancellationToken);
 			await transaction(new SqlApiSession(dataSource, dbConnection, cancellationToken));

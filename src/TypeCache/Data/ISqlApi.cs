@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -16,16 +17,23 @@ namespace TypeCache.Data
 		/// <summary>
 		/// Gets a cached schema object that describes a table, view, table based function, or stored procedure.
 		/// </summary>
-		/// <param name="name">The database object name ie. Customers, dbo.Accounts, [Db]..s_Customers</param>
+		/// <param name="name">The database object name ie. Customers, dbo.Accounts, [CoreDb]..s_Customers</param>
 		ObjectSchema GetObjectSchema(string dataSource, string name);
 
 		/// <summary>
-		/// All calls to ISqlApi within parameter transaction will be wrapped in a scoped async-enabled transaction.
+		/// All calls to <see cref="ISqlApiSession"/> within <paramref name="session"/> are perormed on the same <see cref="DbConnection"/>.
+		/// </summary>
+		ValueTask ExecuteSessionAsync(string dataSource, Func<ISqlApiSession, ValueTask> session, CancellationToken cancellationToken = default);
+
+		/// <summary>
+		/// All calls to <see cref="ISqlApiSession"/> within <paramref name="transaction"/> will be wrapped in a scoped async-enabled transaction.
 		/// </summary>
 		ValueTask ExecuteTransactionAsync(
 			string dataSource
 			, Func<ISqlApiSession, ValueTask> transaction
 			, TransactionScopeOption option = TransactionScopeOption.Required
+			, IsolationLevel isolationLevel = IsolationLevel.Unspecified
+			, TimeSpan? commandTimeout = null
 			, CancellationToken cancellationToken = default);
 
 		/// <summary>
