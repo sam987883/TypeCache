@@ -194,7 +194,7 @@ namespace TypeCache.Tests
 			Assert.Empty(member.InterfaceTypes);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Interface, member.Kind);
-			Assert.Equal(10, member.Methods.Count);
+			Assert.Equal(11, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
 			Assert.Empty(member.Properties);
 			Assert.True(member.Public);
