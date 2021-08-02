@@ -1,5 +1,6 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
+using System;
 using System.Data.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ namespace TypeCache.Data.Extensions
 			{
 				Name = section.Key,
 				ConnectionString = section.GetSection("connectionString").Value,
-				DatabaseProvider = section.GetSection("databaseProvider").Value
+				DatabaseProvider = section.GetSection("databaseProvider")?.Value ?? "Microsoft.Data.SqlClient"
 			}).ToArray()));
 
 		/// <summary>
