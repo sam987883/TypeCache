@@ -7,7 +7,7 @@ using TypeCache.Collections;
 using TypeCache.Converters;
 using TypeCache.Data.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	/// <summary>
 	/// JSON: <code>{ "From": ..., "Output": [ ... ], "Parameters": [ ... ], "Where": "...", "OrderBy": [ ... ] }</code>

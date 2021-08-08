@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
@@ -29,9 +30,19 @@ namespace TypeCache.Data
 			this._DbConnection = dbConnection;
 		}
 
-		public async ValueTask ExecuteTransactionAsync(Func<ISqlApiSession, ValueTask> transaction, TransactionScopeOption option = TransactionScopeOption.Required)
+		public async ValueTask ExecuteTransactionAsync(
+			string dataSource
+			, Func<ISqlApiSession, ValueTask> transaction
+			, TransactionScopeOption option = TransactionScopeOption.Required
+			, IsolationLevel isolationLevel = IsolationLevel.Unspecified
+			, TimeSpan? commandTimeout = null)
 		{
-			using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+			var transactionOptions = new TransactionOptions
+			{
+				IsolationLevel = isolationLevel == IsolationLevel.Unspecified ? IsolationLevel.ReadCommitted : isolationLevel,
+				Timeout = commandTimeout ?? TransactionManager.DefaultTimeout
+			};
+			using var transactionScope = new TransactionScope(option, transactionOptions, TransactionScopeAsyncFlowOption.Enabled);
 			await transaction(this);
 			transactionScope.Complete();
 		}
@@ -55,35 +66,42 @@ namespace TypeCache.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure)
-			=> await this._DbConnection.CallAsync(procedure, this._CancellationToken);
+		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest request)
+			=> await this._DbConnection.CallAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<RowSet[]> RunAsync(SqlRequest request)
 			=> await this._DbConnection.RunAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet> DeleteAsync(DeleteRequest delete)
-			=> await this._DbConnection.DeleteAsync(delete, this._CancellationToken);
+		public async ValueTask<RowSet> DeleteAsync(DeleteRequest request)
+			=> await this._DbConnection.DeleteAsync(request, this._CancellationToken);
+
+		public async ValueTask<RowSet> DeleteDataAsync(DeleteDataRequest request)
+			=> await this._DbConnection.DeleteDataAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet> InsertAsync(InsertRequest insert)
-			=> await this._DbConnection.InsertAsync(insert, this._CancellationToken);
+		public async ValueTask<RowSet> InsertAsync(InsertRequest request)
+			=> await this._DbConnection.InsertAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet> MergeAsync(BatchRequest batch)
-			=> await this._DbConnection.MergeAsync(batch, this._CancellationToken);
+		public async ValueTask<RowSet> InsertDataAsync(InsertDataRequest request)
+			=> await this._DbConnection.InsertDataAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet> SelectAsync(SelectRequest select)
-			=> await this._DbConnection.SelectAsync(select, this._CancellationToken);
+		public async ValueTask<RowSet> SelectAsync(SelectRequest request)
+			=> await this._DbConnection.SelectAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<int> TruncateTableAsync(string table)
 			=> await this._DbConnection.TruncateTableAsync(table, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async ValueTask<RowSet> UpdateAsync(UpdateRequest update)
-			=> await this._DbConnection.UpdateAsync(update, this._CancellationToken);
+		public async ValueTask<RowSet> UpdateAsync(UpdateRequest request)
+			=> await this._DbConnection.UpdateAsync(request, this._CancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> UpdateDataAsync(UpdateDataRequest request)
+			=> await this._DbConnection.UpdateDataAsync(request, this._CancellationToken);
 	}
 }

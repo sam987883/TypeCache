@@ -7,14 +7,14 @@ using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
-	public class UpdateSqlMiddleware : DataMiddleware
+	public class DeleteDataSqlMiddleware : DataMiddleware
 	{
-		public UpdateSqlMiddleware(RequestDelegate _, IMediator mediator)
+		public DeleteDataSqlMiddleware(RequestDelegate _, IMediator mediator)
 			: base(mediator)
 		{
 		}
 
 		public async Task Invoke(HttpContext httpContext)
-			=> await this.HandleSqlRequest<UpdateRequest>(httpContext);
+			=> await this.HandleSqlRequest<DeleteDataRequest>(httpContext);
 	}
 }

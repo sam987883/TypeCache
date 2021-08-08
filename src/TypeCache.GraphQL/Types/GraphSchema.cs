@@ -341,10 +341,10 @@ namespace TypeCache.GraphQL.Types
 			if (objectSchema.Type == ObjectType.Table)
 			{
 				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Delete"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["DeleteBatch"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["InsertBatch"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["DeleteData"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["InsertData"][0].ToFieldType(sqlApi));
 				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Update"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["UpdateBatch"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["UpdateData"][0].ToFieldType(sqlApi));
 			}
 
 			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["Select"][0].ToFieldType(sqlApi));
@@ -368,7 +368,7 @@ namespace TypeCache.GraphQL.Types
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Delete"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			TypeOf<SqlApi<T>>.Methods["DeleteBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["DeleteData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -387,7 +387,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
-			TypeOf<SqlApi<T>>.Methods["InsertBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -427,7 +427,7 @@ namespace TypeCache.GraphQL.Types
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Update"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			TypeOf<SqlApi<T>>.Methods["UpdateBatch"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["UpdateData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 	}
 }

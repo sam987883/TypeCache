@@ -9,6 +9,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
@@ -33,7 +34,7 @@ namespace TypeCache.GraphQL.SQL
 		}
 
 		[GraphName("Delete{0}")]
-		[GraphDescription("DELETE FROM {0} WHERE ...")]
+		[GraphDescription("DELETE ... OUTPUT ... FROM {0} WHERE ...")]
 		public async Task<SqlResponse<T>> Delete(string where, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
@@ -59,24 +60,23 @@ namespace TypeCache.GraphQL.SQL
 
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<DeleteRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<DeleteRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}
 
-		[GraphName("DeleteBatch{0}")]
-		[GraphDescription("DELETE FROM {0} ...")]
-		public async Task<SqlResponse<T>> DeleteBatch([NotNull] T[] batch, IResolveFieldContext context)
+		[GraphName("DeleteData{0}")]
+		[GraphDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES")]
+		public async Task<SqlResponse<T>> DeleteData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
-			var columns = context.GetArgument<IDictionary<string, object>>(nameof(batch)).Keys.ToArray();
-			var request = new BatchRequest
+			var columns = context.GetArgument<IDictionary<string, object>>(nameof(data)).Keys.ToArray();
+			var request = new DeleteDataRequest
 			{
 				DataSource = this._DataSource,
-				Delete = true,
-				Table = this.Table,
-				Input = batch.MapRowSet(columns)
+				From = this.Table,
+				Input = data.MapRowSet(columns)
 			};
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
@@ -89,28 +89,27 @@ namespace TypeCache.GraphQL.SQL
 				sqlResponse.Table = this.Table;
 
 			if (selections.Has(nameof(SqlResponse<T>.SQL)))
-				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, string>(request);
 
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}
 
-		[GraphName("InsertBatch{0}")]
-		[GraphDescription("INSERT INTO {0} ...")]
+		[GraphName("InsertData{0}")]
+		[GraphDescription("INSERT INTO {0} ... VALUES")]
 		public async Task<SqlResponse<T>> InsertBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
-			var request = new BatchRequest
+			var request = new InsertDataRequest
 			{
 				DataSource = this._DataSource,
-				Table = this.Table,
-				Input = batch.MapRowSet(columns),
-				Insert = columns
+				Into = this.Table,
+				Input = batch.MapRowSet(columns)
 			};
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
@@ -123,18 +122,18 @@ namespace TypeCache.GraphQL.SQL
 				sqlResponse.Table = this.Table;
 
 			if (selections.Has(nameof(SqlResponse<T>.SQL)))
-				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<InsertDataRequest, string>(request);
 
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<InsertDataRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}
 
 		[GraphName("Select{0}")]
-		[GraphDescription("SELLECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
+		[GraphDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
 		public async Task<SqlResponse<T>> Select(
 			[AllowNull] string where,
 			[AllowNull] string having,
@@ -167,14 +166,14 @@ namespace TypeCache.GraphQL.SQL
 
 			if (request.Select.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<SelectRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<SelectRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}
 
 		[GraphName("Update{0}")]
-		[GraphDescription("UPDATE {0} SET ... WHERE ...")]
+		[GraphDescription("UPDATE {0} SET ... OUTPUT ... WHERE ...")]
 		public async Task<SqlResponse<T>> Update([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
@@ -207,24 +206,23 @@ namespace TypeCache.GraphQL.SQL
 
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}
 
-		[GraphName("UpdateBatch{0}")]
-		[GraphDescription("UPDATE {0} SET ...")]
-		public async Task<SqlResponse<T>> UpdateBatch([NotNull] T[] batch, IResolveFieldContext context)
+		[GraphName("UpdateData{0}")]
+		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES")]
+		public async Task<SqlResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
-			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
-			var request = new BatchRequest
+			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(data)).First()?.Keys.ToArray() ?? Array<string>.Empty;
+			var request = new UpdateDataRequest
 			{
 				DataSource = this._DataSource,
-				Input = batch.MapRowSet(columns),
+				Input = data.MapRowSet(columns),
 				Table = this.Table,
-				Update = columns
 			};
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
@@ -237,12 +235,12 @@ namespace TypeCache.GraphQL.SQL
 				sqlResponse.Table = this.Table;
 
 			if (selections.Has(nameof(SqlResponse<T>.SQL)))
-				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<BatchRequest, string>(request);
+				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, string>(request);
 
 			if (request.Output.Any())
 			{
-				var data = await this._Mediator.ApplyRulesAsync<BatchRequest, RowSet>(request);
-				sqlResponse.Data = data?.Rows is not null ? data.MapModels<T>() : Array<T>.Empty;
+				var output = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, RowSet>(request);
+				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
 			}
 			return sqlResponse;
 		}

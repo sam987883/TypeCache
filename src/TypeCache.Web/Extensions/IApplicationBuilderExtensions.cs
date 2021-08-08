@@ -18,42 +18,50 @@ namespace TypeCache.Web.Extensions
 		/// <list type="number">
 		/// <item><term>/sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
 		/// <item><term>/sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
+		/// <item><term>/sql-api/deletedata</term> <description><see cref="DeleteDataMiddleware"/></description></item>
 		/// <item><term>/sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
-		/// <item><term>/sql-api/merge</term> <description><see cref="MergeMiddleware"/></description></item>
+		/// <item><term>/sql-api/insertdata</term> <description><see cref="InsertDataMiddleware"/></description></item>
 		/// <item><term>/sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
 		/// <item><term>/sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
+		/// <item><term>/sql-api/updatedata</term> <description><see cref="UpdateDataMiddleware"/></description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString)
-			=> @this.UseSqlApiCall(databaseProvider, connectionString, null)
-				.UseSqlApiDelete(databaseProvider, connectionString, null)
-				.UseSqlApiInsert(databaseProvider, connectionString, null)
-				.UseSqlApiMerge(databaseProvider, connectionString, null)
-				.UseSqlApiSelect(databaseProvider, connectionString, null)
-				.UseSqlApiUpdate(databaseProvider, connectionString, null);
+		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this)
+			=> @this.UseSqlApiCall()
+				.UseSqlApiDelete()
+				.UseSqlApiDeleteData()
+				.UseSqlApiInsert()
+				.UseSqlApiInsertData()
+				.UseSqlApiSelect()
+				.UseSqlApiUpdate()
+				.UseSqlApiUpdateData();
 
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="number">
 		/// <item><term>/sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/delete/sql</term> <description><see cref="DeleteSqlMiddleware"/></description></item>
+		/// <item><term>/sql-api/deletedata/sql</term> <description><see cref="DeleteDataSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/insert/sql</term> <description><see cref="InsertSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/merge/sql</term> <description><see cref="MergeSqlMiddleware"/></description></item>
+		/// <item><term>/sql-api/insertdata/sql</term> <description><see cref="InsertDataSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/select/sql</term> <description><see cref="SelectSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/update/sql</term> <description><see cref="UpdateSqlMiddleware"/></description></item>
+		/// <item><term>/sql-api/updatedata/sql</term> <description><see cref="UpdateDataSqlMiddleware"/></description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString)
-			=> @this.UseSqlApiSchemaSQL(null)
-				.UseSqlApiDeleteSQL(databaseProvider, connectionString, null)
-				.UseSqlApiInsertSQL(databaseProvider, connectionString, null)
-				.UseSqlApiMergeSQL(databaseProvider, connectionString, null)
-				.UseSqlApiSelectSQL(databaseProvider, connectionString, null)
-				.UseSqlApiUpdateSQL(databaseProvider, connectionString, null);
+		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this)
+			=> @this.UseSqlApiSchemaSQL()
+				.UseSqlApiDeleteSQL()
+				.UseSqlApiDeleteDataSQL()
+				.UseSqlApiInsertSQL()
+				.UseSqlApiInsertDataSQL()
+				.UseSqlApiSelectSQL()
+				.UseSqlApiUpdateSQL()
+				.UseSqlApiUpdateDataSQL();
 
 		/// <summary>
 		/// Maps Routes to Middlewares:
@@ -63,11 +71,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<ExecuteSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<ExecuteSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -78,11 +86,41 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiCall(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiCall(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/call");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<StoredProcedureMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<StoredProcedureMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/deletedata</term> <description><see cref="DeleteDataMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiDeleteData(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/deletedata");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<DeleteDataMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/deletedata/sql</term> <description><see cref="DeleteDataSqlMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiDeleteDataSQL(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/deletedata/sql");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<DeleteDataSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -93,11 +131,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiDelete(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiDelete(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/delete");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<DeleteMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<DeleteMiddleware>());
 		}
 
 		/// <summary>
@@ -108,11 +146,41 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiDeleteSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiDeleteSQL(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/delete/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<DeleteSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<DeleteSqlMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/insertdata</term> <description><see cref="InsertDataMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiInsertData(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insertdata");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<InsertDataMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/insertdata/sql</term> <description><see cref="InsertDataSqlMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiInsertDataSQL(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insertdata/sql");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<InsertDataSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -123,11 +191,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiInsert(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiInsert(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insert");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<InsertMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<InsertMiddleware>());
 		}
 
 		/// <summary>
@@ -138,41 +206,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiInsertSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiInsertSQL(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/insert/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<InsertSqlMiddleware>(databaseProvider, connectionString));
-		}
-
-		/// <summary>
-		/// Maps Routes to Middlewares:
-		/// <list type="table">
-		/// <item><term>route or /sql-api/merge</term> <description><see cref="MergeMiddleware"/></description></item>
-		/// </list>
-		/// <i>Requires call to:</i>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMergeRules"/></code>
-		/// </summary>
-		public static IApplicationBuilder UseSqlApiMerge(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
-		{
-			var path = new PathString(!route.IsBlank() ? route : "/sql-api/merge");
-			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<MergeMiddleware>(databaseProvider, connectionString));
-		}
-
-		/// <summary>
-		/// Maps Routes to Middlewares:
-		/// <list type="table">
-		/// <item><term>route or /sql-api/merge/sql</term> <description><see cref="MergeSqlMiddleware"/></description></item>
-		/// </list>
-		/// <i>Requires calls to:</i>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiMergeRules"/></code>
-		/// </summary>
-		public static IApplicationBuilder UseSqlApiMergeSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
-		{
-			var path = new PathString(!route.IsBlank() ? route : "/sql-api/merge/sql");
-			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<MergeSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<InsertSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -183,11 +221,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, IConfigurationSection)"/> or <see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, DataSource[])"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiSchema(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/schema");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<SchemaMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<SchemaMiddleware>());
 		}
 
 		/// <summary>
@@ -213,11 +251,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiSelect(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiSelect(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/select");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<SelectMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<SelectMiddleware>());
 		}
 
 		/// <summary>
@@ -228,11 +266,41 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiSelectSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiSelectSQL(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/select/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<SelectSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<SelectSqlMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/updatedata</term> <description><see cref="UpdateDataMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiUpdateData(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/updatedata");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<UpdateDataMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/updatedata/sql</term> <description><see cref="UpdateDataSqlMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiUpdateDataSQL(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/updatedata/sql");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<UpdateDataSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -243,11 +311,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiUpdate(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiUpdate(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/update");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<UpdateMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<UpdateMiddleware>());
 		}
 
 		/// <summary>
@@ -258,11 +326,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiUpdateSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiUpdateSQL(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/update/sql");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<UpdateSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<UpdateSqlMiddleware>());
 		}
 
 		/// <summary>
@@ -273,11 +341,11 @@ namespace TypeCache.Web.Extensions
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiExecuteSqlRules"/></code>
 		/// </summary>
-		public static IApplicationBuilder UseSqlApiExecuteSQL(this IApplicationBuilder @this, string databaseProvider, string connectionString, string? route = null)
+		public static IApplicationBuilder UseSqlApiExecuteSQL(this IApplicationBuilder @this, string? route = null)
 		{
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/execute");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<ExecuteSqlMiddleware>(databaseProvider, connectionString));
+				_ => _.UseMiddleware<ExecuteSqlMiddleware>());
 		}
 	}
 }

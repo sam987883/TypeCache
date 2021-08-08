@@ -1,6 +1,6 @@
 ﻿// Copyright(c) 2020 Samuel Abraham
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	public interface IDataRequest
 	{

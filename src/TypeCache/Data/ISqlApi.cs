@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 
 namespace TypeCache.Data
@@ -39,7 +40,7 @@ namespace TypeCache.Data
 		/// <summary>
 		/// <code>EXECUTE ...</code>
 		/// </summary>
-		ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default);
+		ValueTask<RowSet[]> CallAsync(StoredProcedureRequest request, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>EXECUTE ...</code>
@@ -50,30 +51,30 @@ namespace TypeCache.Data
 		/// <code>DELETE FROM ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>
-		ValueTask<RowSet> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default);
+		ValueTask<RowSet> DeleteAsync(DeleteRequest request, CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
+		/// <code>DELETE FROM ... VALUES ...</code>
+		/// </summary>
+		/// <returns><code>OUTPUT DELETED</code></returns>
+		ValueTask<RowSet> DeleteDataAsync(DeleteDataRequest request, CancellationToken cancellationToken = default);
+
+		/// <summary>
+		/// <code>INSERT INTO ... SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
-		ValueTask<RowSet> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default);
+		ValueTask<RowSet> InsertAsync(InsertRequest request, CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// <code>
-		/// MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;<br />
-		/// MERGE ... USING ... ON ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;<br />
-		/// MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;<br />
-		/// MERGE ... USING ... ON ... WHEN MATCHED THEN DELETE ... OUTPUT ...;<br />
-		/// INSERT INTO ... (...) OUTPUT ... VALUES ...;<br />
-		/// </code>
+		/// <code>INSERT INTO ... VALUES ...</code>
 		/// </summary>
-		/// <returns><code>OUTPUT DELETED|INSERTED</code></returns>
-		ValueTask<RowSet> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default);
+		/// <returns><code>OUTPUT INSERTED</code></returns>
+		ValueTask<RowSet> InsertDataAsync(InsertDataRequest request, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
-		ValueTask<RowSet> SelectAsync(SelectRequest select, CancellationToken cancellationToken = default);
+		ValueTask<RowSet> SelectAsync(SelectRequest request, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// <code>TRUNCATE TABLE ...</code>
@@ -81,9 +82,15 @@ namespace TypeCache.Data
 		ValueTask<int> TruncateTableAsync(string dataSource, string table, CancellationToken cancellationToken = default);
 
 		/// <summary>
-		/// UPDATE ... SET ... WHERE ...
+		/// <code>UPDATE ... SET ... OUTPUT ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED|INSERTED</code></returns>
-		ValueTask<RowSet> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default);
+		ValueTask<RowSet> UpdateAsync(UpdateRequest request, CancellationToken cancellationToken = default);
+
+		/// <summary>
+		/// <code>UPDATE ... SET ... OUTPUT ... VALUES ...</code>
+		/// </summary>
+		/// <returns><code>OUTPUT DELETED|INSERTED</code></returns>
+		ValueTask<RowSet> UpdateDataAsync(UpdateDataRequest request, CancellationToken cancellationToken = default);
 	}
 }

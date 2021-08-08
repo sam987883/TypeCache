@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Data;
+using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
 	public class DeleteMiddleware : DataMiddleware
 	{
-		public DeleteMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+		public DeleteMiddleware(RequestDelegate _, IMediator mediator)
+			: base(mediator)
 		{
 		}
 

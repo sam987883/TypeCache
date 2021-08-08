@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	/// <summary>
 	/// JSON: <code>{ "Procedure": "[Database1]..[Procedure1]", "Parameters": { "Parameter1": "Value1", "Parameter2": null, "Parameter3": true } }</code>

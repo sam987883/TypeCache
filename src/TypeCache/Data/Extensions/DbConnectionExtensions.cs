@@ -7,8 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Data.Extensions
 {
@@ -82,7 +84,7 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// EXECUTE ...
+		/// <code>EXECUTE ...</code>
 		/// </summary>
 		public static async ValueTask<RowSet[]> CallAsync(this DbConnection @this, StoredProcedureRequest request, CancellationToken cancellationToken = default)
 		{
@@ -94,7 +96,7 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// EXECUTE ...
+		/// <code>...</code>
 		/// </summary>
 		public static async ValueTask<RowSet[]> RunAsync(this DbConnection @this, SqlRequest request, CancellationToken cancellationToken = default)
 		{
@@ -106,9 +108,9 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// DELETE FROM ... WHERE ...
+		/// <code>DELETE ... OUTPUT ... FROM ... WHERE ...</code>
 		/// </summary>
-		/// <returns>OUTPUT DELETED</returns>
+		/// <returns><code>OUTPUT DELETED</code></returns>
 		public static async ValueTask<RowSet> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
@@ -127,8 +129,29 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...
+		/// <code>DELETE x ... OUTPUT ... FROM ... INNER JOIN (VALUES ...) AS i ...</code>
 		/// </summary>
+		/// <returns><code>OUTPUT DELETED</code></returns>
+		public static async ValueTask<RowSet> DeleteDataAsync(this DbConnection @this, DeleteDataRequest request, CancellationToken cancellationToken = default)
+		{
+			await using var command = @this.CreateSqlCommand(request.ToSQL());
+
+			if (request.Output.Any())
+			{
+				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
+				return await reader.ReadRowSetAsync(cancellationToken);
+			}
+			else
+			{
+				await command.ExecuteNonQueryAsync(cancellationToken);
+				return RowSet.Empty;
+			}
+		}
+
+		/// <summary>
+		/// <code>INSERT INTO ... SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
+		/// </summary>
+		/// <returns><code>OUTPUT INSERTED</code></returns>
 		public static async ValueTask<RowSet> InsertAsync(this DbConnection @this, InsertRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
@@ -147,18 +170,10 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// <code>
-		/// <list>
-		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
-		/// <item>MERGE ... USING ... ON ... WHEN NOT MATCHED BY TARGET THEN INSERT ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
-		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED BY SOURCE THEN DELETE ... OUTPUT ...;</item>
-		/// <item>MERGE ... USING ... ON ... WHEN MATCHED THEN DELETE ... OUTPUT ...;</item>
-		/// <item>INSERT INTO ... (...) OUTPUT ... VALUES ...;</item>
-		/// </list>
-		/// </code>
+		/// <code>INSERT INTO ... VALUES ...</code>
 		/// </summary>
-		/// <returns>OUTPUT DELETED, INSERTED</returns>
-		public static async ValueTask<RowSet> MergeAsync(this DbConnection @this, BatchRequest request, CancellationToken cancellationToken = default)
+		/// <returns><code>OUTPUT INSERTED</code></returns>
+		public static async ValueTask<RowSet> InsertDataAsync(this DbConnection @this, InsertDataRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 
@@ -175,7 +190,7 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...
+		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
 		public static async ValueTask<RowSet> SelectAsync(this DbConnection @this, SelectRequest request, CancellationToken cancellationToken = default)
 		{
@@ -188,22 +203,42 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// TRUNCATE TABLE ...
+		/// <code>TRUNCATE TABLE ...</code>
 		/// </summary>
 		public static async ValueTask<int> TruncateTableAsync(this DbConnection @this, string table, CancellationToken cancellationToken = default)
 		{
-			await using var command = @this.CreateSqlCommand($"TRUNCATE TABLE {table.EscapeIdentifier()};");
+			await using var command = @this.CreateSqlCommand(Invariant($"TRUNCATE TABLE {table.EscapeIdentifier()};"));
 			return await command.ExecuteNonQueryAsync(cancellationToken);
 		}
 
 		/// <summary>
-		/// UPDATE ... SET ... WHERE ...
+		/// <code>UPDATE ... SET ... OUTPUT ... WHERE ...</code>
 		/// </summary>
-		/// <returns>OUTPUT DELETED, INSERTED</returns>
+		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
 		public static async ValueTask<RowSet> UpdateAsync(this DbConnection @this, UpdateRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
+
+			if (request.Output.Any())
+			{
+				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
+				return await reader.ReadRowSetAsync(cancellationToken);
+			}
+			else
+			{
+				await command.ExecuteNonQueryAsync(cancellationToken);
+				return RowSet.Empty;
+			}
+		}
+
+		/// <summary>
+		/// <code>UPDATE ... SET ... OUTPUT ... VALUES ...</code>
+		/// </summary>
+		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
+		public static async ValueTask<RowSet> UpdateDataAsync(this DbConnection @this, UpdateDataRequest request, CancellationToken cancellationToken = default)
+		{
+			await using var command = @this.CreateSqlCommand(request.ToSQL());
 
 			if (request.Output.Any())
 			{

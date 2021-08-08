@@ -3,14 +3,14 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
-using TypeCache.Data;
+using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
 	public class SelectSqlMiddleware : DataMiddleware
 	{
-		public SelectSqlMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+		public SelectSqlMiddleware(RequestDelegate _, IMediator mediator)
+			: base(mediator)
 		{
 		}
 

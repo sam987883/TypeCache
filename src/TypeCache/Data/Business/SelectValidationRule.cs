@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business
 {

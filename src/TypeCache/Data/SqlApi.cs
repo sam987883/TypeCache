@@ -3,11 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
@@ -31,16 +33,13 @@ namespace TypeCache.Data
 			this._DatabaseProviders = databaseProviders.ToReadOnly();
 		}
 
-		private DbConnection CreateConnection(IDataRequest request)
-			=> this._DatabaseProviders[request.DataSource].CreateConnection();
-
-		private async ValueTask<ObjectSchema> _GetObjectSchema(string dataSource, string name)
+		private async ValueTask<T> _GetResultAsync<T>(string dataSource, Func<DbConnection, ValueTask<T>> session, CancellationToken cancellationToken = default)
 		{
 			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
-			await dbConnection.OpenAsync();
-			var objectSchema = await dbConnection.GetObjectSchema(name);
+			await dbConnection.OpenAsync(cancellationToken);
+			var result = await session(dbConnection);
 			await dbConnection.CloseAsync();
-			return objectSchema;
+			return result;
 		}
 
 		public ObjectSchema GetObjectSchema(string dataSource, string name)
@@ -60,7 +59,7 @@ namespace TypeCache.Data
 				3 => $"[{parts[0]}].[{parts[1]}].[{HandleFunctionName(parts[2])}]",
 				_ => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Invalid table source name.", name)
 			};
-			return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetObjectSchema(dataSource, name).Result);
+			return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetResultAsync(dataSource, _ => _.GetObjectSchema(name)).Result);
 		}
 
 		public async ValueTask ExecuteSessionAsync(string dataSource, Func<ISqlApiSession, ValueTask> session, CancellationToken cancellationToken = default)
@@ -92,76 +91,44 @@ namespace TypeCache.Data
 			await dbConnection.CloseAsync();
 		}
 
-		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest procedure, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(procedure);
-			await dbConnection.OpenAsync(cancellationToken);
-			var results = await dbConnection.CallAsync(procedure, cancellationToken);
-			await dbConnection.CloseAsync();
-			return results;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.CallAsync(request), cancellationToken);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<RowSet[]> RunAsync(SqlRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(request);
-			await dbConnection.OpenAsync(cancellationToken);
-			var results = await dbConnection.RunAsync(request, cancellationToken);
-			await dbConnection.CloseAsync();
-			return results;
-		}
+			=> await _GetResultAsync(request.DataSource, async _ => await _.RunAsync(request), cancellationToken);
 
-		public async ValueTask<RowSet> DeleteAsync(DeleteRequest delete, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(delete);
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.DeleteAsync(delete, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> DeleteAsync(DeleteRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.DeleteAsync(request), cancellationToken);
 
-		public async ValueTask<RowSet> InsertAsync(InsertRequest insert, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(insert);
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.InsertAsync(insert, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> DeleteDataAsync(DeleteDataRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.DeleteDataAsync(request), cancellationToken);
 
-		public async ValueTask<RowSet> MergeAsync(BatchRequest batch, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(batch);
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.MergeAsync(batch, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> InsertAsync(InsertRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.InsertAsync(request), cancellationToken);
 
-		public async ValueTask<RowSet> SelectAsync(SelectRequest select, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(select);
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.SelectAsync(select, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> InsertDataAsync(InsertDataRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.InsertDataAsync(request), cancellationToken);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> SelectAsync(SelectRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.SelectAsync(request), cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<int> TruncateTableAsync(string dataSource, string table, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this._DatabaseProviders[dataSource].CreateConnection();
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.TruncateTableAsync(table, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+			=> await _GetResultAsync(dataSource, async _ => await _.TruncateTableAsync(table), cancellationToken);
 
-		public async ValueTask<RowSet> UpdateAsync(UpdateRequest update, CancellationToken cancellationToken = default)
-		{
-			await using var dbConnection = this.CreateConnection(update);
-			await dbConnection.OpenAsync(cancellationToken);
-			var result = await dbConnection.UpdateAsync(update, cancellationToken);
-			await dbConnection.CloseAsync();
-			return result;
-		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> UpdateAsync(UpdateRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.UpdateAsync(request), cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<RowSet> UpdateDataAsync(UpdateDataRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.UpdateDataAsync(request), cancellationToken);
 	}
 }

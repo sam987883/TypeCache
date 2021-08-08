@@ -1,11 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Collections;
 using TypeCache.Data.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	/// <summary>
 	/// JSON: <code>{ "Into": ..., "Insert": [...]. "Output": [ ... ], ... }</code>
@@ -30,6 +31,6 @@ namespace TypeCache.Data
 		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
 		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string>? Output { get; set; }
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 	}
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
@@ -27,7 +28,8 @@ namespace TypeCache.Data.Business
 			if (!request.Set.Any())
 				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-			var invalidColumnCsv = request.Set.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+			var columns = schema.Columns.To(column => column.Name).ToArray();
+			var invalidColumnCsv = request.Set.Keys.Without(columns).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
@@ -35,6 +37,10 @@ namespace TypeCache.Data.Business
 			invalidColumnCsv = request.Set.Keys.Without(writableColumns).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
+
+			invalidColumnCsv = request.Output.Keys.Without(columns).ToCSV(column => $"[{column}]");
+			if (!invalidColumnCsv.IsBlank())
+				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Output)}");
 
 			await ValueTask.CompletedTask;
 		}

@@ -5,15 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data;
+using TypeCache.Data.Requests;
+using TypeCache.Data.Responses;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Middleware
 {
 	public class StoredProcedureMiddleware : DataMiddleware
 	{
-		public StoredProcedureMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+		public StoredProcedureMiddleware(RequestDelegate _, IMediator mediator)
+			: base(mediator)
 		{
 		}
 
@@ -36,7 +37,7 @@ namespace TypeCache.Web.Middleware
 				}
 			}
 
-			await this.HandleRequest<StoredProcedureRequest, RowSet[]>(request, httpContext);
+			await this.HandleRequest<StoredProcedureRequest, StoredProcedureResponse>(request, httpContext);
 		}
 	}
 }

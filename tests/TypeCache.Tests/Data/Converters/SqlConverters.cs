@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using TypeCache.Data;
+using TypeCache.Data.Requests;
 using Xunit;
 using static System.FormattableString;
 
@@ -10,56 +11,39 @@ namespace TypeCache.Tests.Data.Converters
 	public class SqlConverters
 	{
 		[Fact]
-		public void ToJSON_BatchRequest()
+		public void ToJSON_DeleteDataRequest()
 		{
 			var date = new DateTime(637621814434623833L);
 			var guid = Guid.NewGuid();
 
-			var expectedRequest = new BatchRequest
+			var expectedRequest = new DeleteDataRequest
 			{
-				DataSource = "LocalInstance",
-				Delete = true,
-				Input = new RowSet
+				From = "Customers",
+				Input = new()
 				{
-					 Columns = new[] { "ID", "Col 2", "Column3]" },
-					 Rows = new[]
-					{
-						new object[] {1, "aaa", date, guid },
-						new object[] {2, "bbb", date, guid },
-						new object[] {3, "ccc", date, guid },
-					}
+					Columns = new[] { "ID1", "ID2" },
+					Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
 				},
-				Insert = new[] { "Col 2", "Column3]" },
-				On = new[] { "ID" },
-				Output = new Dictionary<string, string> { { "ID", "INSERTED.[ID]" }, { "Col 2", "INSERTED" }, { "Column3]", "INSERTED" } },
-				Table = "Customers",
-				Update = new[] { "Col 2", "Column3]" }
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
 			};
 
 			var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""Delete"":true,
-	""Input"":{{""Columns"":[""ID"",""Col 2"",""Column3]""],""Rows"":[[1,""aaa"",""{date:O}"",""{guid:D}""],[2,""bbb"",""{date:O}"",""{guid:D}""],[3,""ccc"",""{date:O}"",""{guid:D}""]]}},
-	""Insert"":[""Col 2"",""Column3]""],
-	""On"":[""ID""],
-	""Output"":{{""ID"":""INSERTED.[ID]"",""Col 2"":""INSERTED"",""Column3]"":""INSERTED""}},
-	""Table"":""Customers"",
-	""Update"":[""Col 2"",""Column3]""]
+	""DataSource"":""Default"",
+	""From"":""Customers"",
+	""Input"":{{""Columns"":[""ID1"",""ID2""],""Rows"":[[1,2],[1,3],[2,1]]}},
+	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-			var request = JsonSerializer.Deserialize<BatchRequest>(expected);
+			var request = JsonSerializer.Deserialize<DeleteDataRequest>(expected);
 
-			Assert.Equal(expectedRequest.Delete, request.Delete);
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
+			Assert.Equal(expectedRequest.From, request.From);
 			Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
 			Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
-			Assert.Equal(expectedRequest.Insert, request.Insert);
-			Assert.Equal(expectedRequest.On, request.On);
 			Assert.Equal(expectedRequest.Output, request.Output);
-			Assert.Equal(expectedRequest.Table, request.Table);
-			Assert.Equal(expectedRequest.Update, request.Update);
 		}
 
 		[Fact]
@@ -94,6 +78,47 @@ namespace TypeCache.Tests.Data.Converters
 			Assert.Equal(expectedRequest.Output, request.Output);
 			Assert.Equal(expectedRequest.Where, request.Where);
 			Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		}
+
+		[Fact]
+		public void ToJSON_InsertDataRequest()
+		{
+			var date = new DateTime(637621814434623833L);
+			var guid = Guid.NewGuid();
+
+			var expectedRequest = new InsertDataRequest
+			{
+				Input = new()
+				{
+					Columns = new[] { "First Name", "Last_Name", "ID" },
+					Rows = new object[][]
+					{
+						new object[] { "FirstName1", "LastName1", 1 },
+						new object[] { "FirstName2", "LastName2", 2 },
+						new object[] { "FirstName3", "LastName3", 3 }
+					}
+				},
+				Into = "Customers",
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+			};
+
+			var expected = Invariant(@$"
+{{
+	""DataSource"":""Default"",
+	""Input"":{{""Columns"":[""First Name"",""Last_Name"",""ID""],""Rows"":[[""FirstName1"",""LastName1"",1],[""FirstName2"",""LastName2"",2],[""FirstName3"",""LastName3"",3]]}},
+	""Into"":""Customers"",
+	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
+}}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
+
+			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
+
+			var request = JsonSerializer.Deserialize<InsertDataRequest>(expected);
+
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
+			Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
+			Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
+			Assert.Equal(expectedRequest.Into, request.Into);
+			Assert.Equal(expectedRequest.Output, request.Output);
 		}
 
 		[Fact]
@@ -183,6 +208,48 @@ namespace TypeCache.Tests.Data.Converters
 			Assert.Equal(expectedRequest.Parameters, request.Parameters);
 			Assert.Equal(expectedRequest.Select, request.Select);
 			Assert.Equal(expectedRequest.Where, request.Where);
+		}
+
+		[Fact]
+		public void ToJSON_UpdateDataRequest()
+		{
+			var date = new DateTime(637621814434623833L);
+			var guid = Guid.NewGuid();
+
+			var expectedRequest = new UpdateDataRequest
+			{
+				DataSource = "LOCAL",
+				Input = new()
+				{
+					Columns = new[] { "ID1", "ID2", "First Name", "Last_Name", "ID" },
+					Rows = new object[][]
+					{
+						new object[] { 1, 2, "FirstName1", "LastName1", 1 },
+						new object[] { 1, 3, "FirstName2", "LastName2", 2 },
+						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
+					}
+				},
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Table = "Customers",
+			};
+
+			var expected = Invariant(@$"
+{{
+	""DataSource"":""LOCAL"",
+	""Input"":{{""Columns"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],""Rows"":[[1,2,""FirstName1"",""LastName1"",1],[1,3,""FirstName2"",""LastName2"",2],[2,1,""FirstName3"",""LastName3"",3]]}},
+	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""Table"":""Customers""
+}}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
+
+			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
+
+			var request = JsonSerializer.Deserialize<UpdateDataRequest>(expected);
+
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
+			Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
+			Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
+			Assert.Equal(expectedRequest.Output, request.Output);
+			Assert.Equal(expectedRequest.Table, request.Table);
 		}
 
 		[Fact]

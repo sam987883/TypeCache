@@ -4,17 +4,18 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Data;
+using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
-	public class MergeMiddleware : DataMiddleware
+	public class InsertDataMiddleware : DataMiddleware
 	{
-		public MergeMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+		public InsertDataMiddleware(RequestDelegate _, IMediator mediator)
+			: base(mediator)
 		{
 		}
 
 		public async Task Invoke(HttpContext httpContext)
-			=> await this.HandleRequest<BatchRequest, RowSet>(httpContext);
+			=> await this.HandleRequest<InsertDataRequest, RowSet>(httpContext);
 	}
 }

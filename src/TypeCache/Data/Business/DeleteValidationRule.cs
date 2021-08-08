@@ -1,8 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
@@ -18,6 +21,15 @@ namespace TypeCache.Data.Business
 		}
 
 		public async ValueTask ValidateAsync(DeleteRequest request, CancellationToken cancellationToken)
-			=> await Task.Run(() => this._SqlApi.GetObjectSchema(request.DataSource, request.From).Type.Assert($"{nameof(DeleteRequest)}.{nameof(DeleteRequest.From)}", ObjectType.Table));
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
+			schema.Type.Assert($"{nameof(DeleteRequest)}.{nameof(DeleteRequest.From)}", ObjectType.Table);
+
+			var invalidColumnCsv = request.Output.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+			if (!invalidColumnCsv.IsBlank())
+				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(DeleteRequest)}.{nameof(DeleteRequest.Output)}");
+
+			await ValueTask.CompletedTask;
+		}
 	}
 }

@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Requests;
+using TypeCache.Data.Schema;
 using Xunit;
 using static System.FormattableString;
 
@@ -37,113 +41,34 @@ namespace TypeCache.Tests.Data.Extensions
 		}
 
 		[Fact]
-		public void ToSQL_BatchRequest()
+		public void ToSQL_DeleteDataRequest()
 		{
 			var date = DateTime.UtcNow;
+			var id = Guid.NewGuid();
 
-			var request = new BatchRequest
+			var request = new DeleteDataRequest
 			{
-				Delete = false,
-				Input = new RowSet
+				From = "Customers",
+				Input = new()
 				{
-					Columns = new[] { "ID", "Col 2", "Column3]" },
-					Rows = new[]
-					{
-						new object[] {1, "aaa", date },
-						new object[] {2, "bbb", date },
-						new object[] {3, "ccc", date },
-					}
+					Columns = new[] { "ID1", "ID2" },
+					Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
 				},
-				Insert = new[] { "Col 2", "Column3]" },
-				On = new[] { "ID" },
-				Table = "Customers",
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
 			};
 
-			request.Update = null;
-
-			var expected = Invariant(@$"INSERT INTO Customers ([Col 2], [Column3]]])
-VALUES (1, N'aaa', {date.ToSQL()})
-	, (2, N'bbb', {date.ToSQL()})
-	, (3, N'ccc', {date.ToSQL()});
-");
-
-			Assert.Equal(expected, request.ToSQL());
-
-			request.Output = new Dictionary<string, string> { { "ID", "INSERTED.[ID]" }, { "Col 2", "INSERTED" }, { "Column3]", "INSERTED" } };
-
-			expected = Invariant(@$"INSERT INTO Customers ([Col 2], [Column3]]])
-OUTPUT INSERTED.[ID] AS [ID]
-	, INSERTED.[Col 2] AS [Col 2]
-	, INSERTED.[Column3]]] AS [Column3]]]
-VALUES (1, N'aaa', {date.ToSQL()})
-	, (2, N'bbb', {date.ToSQL()})
-	, (3, N'ccc', {date.ToSQL()});
-");
-
-			Assert.Equal(expected, request.ToSQL());
-
-			request.Delete = true;
-
-			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
-USING
+			var expected = Invariant($@"DELETE x
+OUTPUT INSERTED.[First Name] AS [First Name]
+	, DELETED.[Last_Name] AS [Last_Name]
+	, INSERTED.[ID] AS [ID]
+FROM Customers AS x
+INNER JOIN
 (
-	VALUES (1, N'aaa', {date.ToSQL()})
-	, (2, N'bbb', {date.ToSQL()})
-	, (3, N'ccc', {date.ToSQL()})
-) AS s ([ID], [Col 2], [Column3]]])
-ON s.[ID] = t.[ID]
-WHEN NOT MATCHED BY SOURCE THEN
-	DELETE
-WHEN NOT MATCHED BY TARGET THEN
-	INSERT ([Col 2], [Column3]]])
-	VALUES (s.[Col 2], s.[Column3]]])
-OUTPUT INSERTED.[ID] AS [ID]
-	, INSERTED.[Col 2] AS [Col 2]
-	, INSERTED.[Column3]]] AS [Column3]]];
-");
-
-			Assert.Equal(expected, request.ToSQL());
-
-			request.Delete = false;
-			request.Update = new[] { "Col 2" };
-
-			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
-USING
-(
-	VALUES (1, N'aaa', {date.ToSQL()})
-	, (2, N'bbb', {date.ToSQL()})
-	, (3, N'ccc', {date.ToSQL()})
-) AS s ([ID], [Col 2], [Column3]]])
-ON s.[ID] = t.[ID]
-WHEN MATCHED THEN
-	UPDATE SET [Col 2] = s.[Col 2]
-WHEN NOT MATCHED BY TARGET THEN
-	INSERT ([Col 2], [Column3]]])
-	VALUES (s.[Col 2], s.[Column3]]])
-OUTPUT INSERTED.[ID] AS [ID]
-	, INSERTED.[Col 2] AS [Col 2]
-	, INSERTED.[Column3]]] AS [Column3]]];
-");
-
-			Assert.Equal(expected, request.ToSQL());
-
-			request.Insert = null;
-			request.Update = new[] { "Col 2", "Column3]" };
-
-			expected = Invariant(@$"MERGE Customers AS t WITH(UPDLOCK)
-USING
-(
-	VALUES (1, N'aaa', {date.ToSQL()})
-	, (2, N'bbb', {date.ToSQL()})
-	, (3, N'ccc', {date.ToSQL()})
-) AS s ([ID], [Col 2], [Column3]]])
-ON s.[ID] = t.[ID]
-WHEN MATCHED THEN
-	UPDATE SET [Col 2] = s.[Col 2]
-	, [Column3]]] = s.[Column3]]]
-OUTPUT INSERTED.[ID] AS [ID]
-	, INSERTED.[Col 2] AS [Col 2]
-	, INSERTED.[Column3]]] AS [Column3]]];
+VALUES (1, 2)
+	, (1, 3)
+	, (2, 1)
+) AS i ([ID1], [ID2])
+ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -167,6 +92,40 @@ OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
+");
+
+			Assert.Equal(expected, request.ToSQL());
+		}
+
+		[Fact]
+		public void ToSQL_InsertDataRequest()
+		{
+			var date = DateTime.UtcNow;
+			var id = Guid.NewGuid();
+
+			var request = new InsertDataRequest
+			{
+				Into = "Customers",
+				Input = new()
+				{
+					Columns = new[] { "First Name", "Last_Name", "ID" },
+					Rows = new object[][]
+					{
+						new object[] { "FirstName1", "LastName1", 1 },
+						new object[] { "FirstName2", "LastName2", 2 },
+						new object[] { "FirstName3", "LastName3", 3 }
+					}
+				},
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+			};
+
+			var expected = Invariant($@"INSERT INTO Customers ([First Name], [Last_Name], [ID])
+OUTPUT INSERTED.[First Name] AS [First Name]
+	, DELETED.[Last_Name] AS [Last_Name]
+	, INSERTED.[ID] AS [ID]
+VALUES (N'FirstName1', N'LastName1', 1)
+	, (N'FirstName2', N'LastName2', 2)
+	, (N'FirstName3', N'LastName3', 3);
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -229,6 +188,61 @@ ORDER BY [First Name] DESC, [Last_Name] ASC;
 ");
 
 			Assert.Equal(expected, request.ToSQL());
+		}
+
+		[Fact]
+		public void ToSQL_UpdateDataRequest()
+		{
+			var date = DateTime.UtcNow;
+			var id = Guid.NewGuid();
+
+			var schemaRowSet = new RowSet
+			{
+				Columns = new[] { nameof(ObjectSchema.Id), nameof(ObjectSchema.Type), nameof(ObjectSchema.DatabaseName), nameof(ObjectSchema.SchemaName), nameof(ObjectSchema.ObjectName) },
+				Rows = new object[][] { new object[] { 1, ObjectType.Table, "LocalDb", "dbo", "Customers" } }
+			};
+			var schema = new ObjectSchema("Default", schemaRowSet, new ColumnSchema[]
+			{
+				new() { Name = "ID1", PrimaryKey = true },
+				new() { Name = "ID2", PrimaryKey = true },
+				new() { Name = "First Name" },
+				new() { Name = "Last_Name" },
+				new() { Name = "ID" },
+			}, Array<ParameterSchema>.Empty);
+			var request = new UpdateDataRequest
+			{
+				Table = "Customers",
+				Input = new()
+				{
+					Columns = new[] { "ID1", "ID2", "First Name", "Last_Name", "ID" },
+					Rows = new object[][]
+					{
+						new object[] { 1, 2, "FirstName1", "LastName1", 1 },
+						new object[] { 1, 3, "FirstName2", "LastName2", 2 },
+						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
+					}
+				},
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+			};
+
+			var expected = Invariant($@"UPDATE x WITH(UPDLOCK)
+SET [First Name] = i.[First Name]
+	, [Last_Name] = i.[Last_Name]
+	, [ID] = i.[ID]
+OUTPUT INSERTED.[First Name] AS [First Name]
+	, DELETED.[Last_Name] AS [Last_Name]
+	, INSERTED.[ID] AS [ID]
+FROM Customers AS x
+INNER JOIN
+(
+VALUES (1, 2, N'FirstName1', N'LastName1', 1)
+	, (1, 3, N'FirstName2', N'LastName2', 2)
+	, (2, 1, N'FirstName3', N'LastName3', 3)
+) AS i ([ID1], [ID2], [First Name], [Last_Name], [ID])
+ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
+");
+
+			Assert.Equal(expected, request.ToSQL(schema));
 		}
 
 		[Fact]

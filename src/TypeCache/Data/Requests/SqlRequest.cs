@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	/// <summary>
 	/// Use Parameters to take in user input to avoid SQL Injection.
@@ -36,6 +36,9 @@ namespace TypeCache.Data
 		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
+		/// <summary>
+		/// Raw SQL.
+		/// </summary>
 		public string SQL { get; set; } = string.Empty;
 	}
 }

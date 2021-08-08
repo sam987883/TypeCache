@@ -3,18 +3,19 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
+using TypeCache.Data;
 using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
-	public class UpdateSqlMiddleware : DataMiddleware
+	public class UpdateDataMiddleware : DataMiddleware
 	{
-		public UpdateSqlMiddleware(RequestDelegate _, IMediator mediator)
+		public UpdateDataMiddleware(RequestDelegate _, IMediator mediator)
 			: base(mediator)
 		{
 		}
 
 		public async Task Invoke(HttpContext httpContext)
-			=> await this.HandleSqlRequest<UpdateRequest>(httpContext);
+			=> await this.HandleRequest<UpdateDataRequest, RowSet>(httpContext);
 	}
 }

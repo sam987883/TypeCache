@@ -7,18 +7,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Converters;
-using TypeCache.Data;
 
 namespace TypeCache.Web.Middleware
 {
 	public abstract class DataMiddleware
 	{
 		protected IMediator Mediator { get; }
-		protected ISqlApi SqlApi { get; }
 
-		public DataMiddleware(ISqlApi sqlApi, IMediator mediator)
+		public DataMiddleware(IMediator mediator)
 		{
-			this.SqlApi = sqlApi;
 			this.Mediator = mediator;
 		}
 
@@ -39,7 +36,7 @@ namespace TypeCache.Web.Middleware
 		{
 			try
 			{
-				var response = await this.Mediator.ApplyRulesAsync<(ISqlApi, T), R>((this.SqlApi, request));
+				var response = await this.Mediator.ApplyRulesAsync<T, R>(request);
 				httpContext.Response.ContentType = "application/json";
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, response);
 			}

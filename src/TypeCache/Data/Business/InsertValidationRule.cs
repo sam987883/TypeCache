@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
@@ -27,7 +28,8 @@ namespace TypeCache.Data.Business
 			if (!request.Insert.Any())
 				throw new ArgumentException($"Columns are required for Insert.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
-			var invalidColumnCsv = request.Insert.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
+			var columns = schema.Columns.To(column => column.Name).ToArray();
+			var invalidColumnCsv = request.Insert.Without(columns).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"Columns were not found on table [{nameof(InsertRequest.Into)}]: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
@@ -36,6 +38,10 @@ namespace TypeCache.Data.Business
 
 			if (request.Insert.Count() != request.Select.Count())
 				throw new ArgumentException($"Must have same number of columns.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}, {nameof(InsertRequest)}.{nameof(InsertRequest.Select)}");
+
+			invalidColumnCsv = request.Output.Keys.Without(columns).ToCSV(column => $"[{column}]");
+			if (!invalidColumnCsv.IsBlank())
+				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Output)}");
 
 			await ValueTask.CompletedTask;
 		}

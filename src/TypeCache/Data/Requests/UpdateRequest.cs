@@ -6,22 +6,16 @@ using System.Text.Json.Serialization;
 using TypeCache.Converters;
 using TypeCache.Data.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Requests
 {
 	/// <summary>
-	/// JSON: <code>{ "From": "Table1", "Where": { ... }, "Output": [ ... ] }</code>
-	/// SQL: <code>DELETE FROM ... OUTPUT ... WHERE ...;</code>
+	/// JSON: <code>{ "Table": "Table1", "Set": [ ... ], "OutputDeleted": [ ... ], "OutputInserted": [ ... ], "Where": { ... } }</code>
+	/// SQL: <code>UPDATE ... SET ... OUTPUT ... WHERE ...;</code>
 	/// </summary>
-	public class DeleteRequest : IDataRequest
+	public class UpdateRequest : IDataRequest
 	{
 		/// <inheritdoc/>
 		public string DataSource { get; set; } = "Default";
-
-		/// <summary>
-		/// JSON: <code>"From": "Table1"</code>
-		/// SQL: <code>DELETE FROM [Database1]..[Table1]</code>
-		/// </summary>
-		public string From { get; set; } = string.Empty;
 
 		/// <summary>
 		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
@@ -34,13 +28,26 @@ namespace TypeCache.Data
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
 		/// SQL:
 		/// <code>
-		/// SET @ParameterName1 = N'ParameterValue1';<br />
-		/// SET @ParameterName2 = NULL;<br />
+		/// SET @ParameterName1 = N'ParameterValue1';
+		/// SET @ParameterName2 = NULL;
 		/// SET @ParameterName3 = 123;
 		/// </code>
 		/// </summary>
 		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// JSON: <code>"Table1"</code>
+		/// SQL: <code>UPDATE [Database1]..[Table1]</code>
+		/// </summary>
+		public string Table { get; set; } = string.Empty;
+
+		/// <summary>
+		/// JSON: <code>[ { "Column1": "Value1" }, { "Column2": NULL }, { "Column3": false } ]</code>
+		/// SQL: <code>SET [Column1] = N'Value1', [Column2] = NULL, [Column3] = 0</code>
+		/// </summary>
+		[JsonConverter(typeof(DictionaryJsonConverter))]
+		public IDictionary<string, object?> Set { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// JSON: <code>

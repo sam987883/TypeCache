@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Data.Requests;
 
 namespace TypeCache.Web.Middleware
 {
 	public class ExecuteSqlMiddleware : DataMiddleware
 	{
-		public ExecuteSqlMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+		public ExecuteSqlMiddleware(RequestDelegate _, IMediator mediator)
+			: base(mediator)
 		{
 		}
 

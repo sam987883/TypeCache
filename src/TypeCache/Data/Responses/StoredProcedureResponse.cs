@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data.Responses
 {
 	public class StoredProcedureResponse
 	{

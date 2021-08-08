@@ -12,9 +12,12 @@ namespace TypeCache.Web.Middleware
 {
 	public class SchemaMiddleware : DataMiddleware
 	{
+		private readonly ISqlApi _SqlApi;
+
 		public SchemaMiddleware(RequestDelegate _, ISqlApi sqlApi, IMediator mediator)
-			: base(sqlApi, mediator)
+			: base(mediator)
 		{
+			this._SqlApi = sqlApi;
 		}
 
 		public async Task Invoke(HttpContext httpContext)
@@ -23,7 +26,7 @@ namespace TypeCache.Web.Middleware
 			var name = httpContext.Request.Query["object"].First();
 			if (!dataSource.IsBlank() && !name.IsBlank())
 			{
-				var schema = this.SqlApi.GetObjectSchema(dataSource, name);
+				var schema = this._SqlApi.GetObjectSchema(dataSource, name);
 				await JsonSerializer.SerializeAsync(httpContext.Response.Body, schema);
 			}
 		}
