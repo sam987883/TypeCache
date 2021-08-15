@@ -38,7 +38,7 @@ namespace TypeCache.GraphQL.Types
 			this.DeprecationReason = TypeOf<T>.Attributes.ObsoleteMessage();
 
 			TypeOf<T>.Properties.Values
-				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore() && !property.Attributes.GraphCursor())
+				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore())
 				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}

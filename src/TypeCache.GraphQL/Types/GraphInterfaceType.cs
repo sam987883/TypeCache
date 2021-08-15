@@ -18,7 +18,7 @@ namespace TypeCache.GraphQL.Types
 			this.Name = TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name;
 
 			TypeOf<T>.Properties.Values
-				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore() && !property.Attributes.GraphCursor())
+				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore())
 				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}

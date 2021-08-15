@@ -19,10 +19,6 @@ namespace TypeCache.GraphQL.Extensions
 	public static class GraphAttributeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GraphCursor(this IEnumerable<Attribute> @this)
-			=> @this.Any<GraphCursorAttribute>();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string? GraphDescription(this IEnumerable<Attribute> @this)
 			=> @this.First<GraphDescriptionAttribute>()?.Description;
 
