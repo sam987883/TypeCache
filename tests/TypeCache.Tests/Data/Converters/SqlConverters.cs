@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using TypeCache.Data;
@@ -10,6 +12,38 @@ namespace TypeCache.Tests.Data.Converters
 {
 	public class SqlConverters
 	{
+		[Fact]
+		public void ToJSON_CountRequest()
+		{
+			var date = new DateTime(637621814434623833L);
+			var guid = Guid.NewGuid();
+
+			var expectedRequest = new CountRequest
+			{
+				DataSource = "LocalInstance",
+				From = "[dbo].[NonCustomers]",
+				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
+			};
+
+			var expected = Invariant(@$"
+{{
+	""DataSource"":""LocalInstance"",
+	""From"":""[dbo].[NonCustomers]"",
+	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+}}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
+
+			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
+
+			var request = JsonSerializer.Deserialize<CountRequest>(expected);
+
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
+			Assert.Equal(expectedRequest.From, request.From);
+			Assert.Equal(expectedRequest.Parameters, request.Parameters);
+			Assert.Equal(expectedRequest.Where, request.Where);
+		}
+
 		[Fact]
 		public void ToJSON_DeleteDataRequest()
 		{
@@ -31,7 +65,7 @@ namespace TypeCache.Tests.Data.Converters
 {{
 	""DataSource"":""Default"",
 	""From"":""Customers"",
-	""Input"":{{""Columns"":[""ID1"",""ID2""],""Rows"":[[1,2],[1,3],[2,1]]}},
+	""Input"":{{""Columns"":[""ID1"",""ID2""],""Count"":0,""Rows"":[[1,2],[1,3],[2,1]]}},
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
@@ -74,6 +108,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var request = JsonSerializer.Deserialize<DeleteRequest>(expected);
 
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
 			Assert.Equal(expectedRequest.From, request.From);
 			Assert.Equal(expectedRequest.Output, request.Output);
 			Assert.Equal(expectedRequest.Where, request.Where);
@@ -105,7 +140,7 @@ namespace TypeCache.Tests.Data.Converters
 			var expected = Invariant(@$"
 {{
 	""DataSource"":""Default"",
-	""Input"":{{""Columns"":[""First Name"",""Last_Name"",""ID""],""Rows"":[[""FirstName1"",""LastName1"",1],[""FirstName2"",""LastName2"",2],[""FirstName3"",""LastName3"",3]]}},
+	""Input"":{{""Columns"":[""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[""FirstName1"",""LastName1"",1],[""FirstName2"",""LastName2"",2],[""FirstName3"",""LastName3"",3]]}},
 	""Into"":""Customers"",
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
@@ -143,13 +178,13 @@ namespace TypeCache.Tests.Data.Converters
 
 			var expected = Invariant(@$"
 {{
-	""Into"":""Customers"",
-	""Insert"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
 	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
 	""Having"":""MAX([Age]) \u003E 40"",
+	""Insert"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
+	""Into"":""Customers"",
 	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
+	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
 	""Select"":{{""ID"":""ID"",""First Name"":""TRIM([First Name])"",""LastName"":""UPPER([LastName])"",""Age"":""40"",""Amount"":""Amount""}},
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
@@ -159,6 +194,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var request = JsonSerializer.Deserialize<InsertRequest>(expected);
 
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
 			Assert.Equal(expectedRequest.From, request.From);
 			Assert.Equal(expectedRequest.Having, request.Having);
 			Assert.Equal(expectedRequest.Into, request.Into);
@@ -183,6 +219,7 @@ namespace TypeCache.Tests.Data.Converters
 				Having = "MAX([Age]) > 40",
 				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
 				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+				Pager = new() { After = 0, First = 100 },
 				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
@@ -193,7 +230,9 @@ namespace TypeCache.Tests.Data.Converters
 	""From"":""[dbo].[NonCustomers]"",
 	""Having"":""MAX([Age]) \u003E 40"",
 	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
+	""Pager"":{{""First"":100,""After"":0}},
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""Schema"":null,
 	""Select"":{{""ID"":""ID"",""First Name"":""TRIM([First Name])"",""LastName"":""UPPER([LastName])"",""Age"":""40"",""Amount"":""Amount""}},
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
@@ -202,6 +241,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var request = JsonSerializer.Deserialize<SelectRequest>(expected);
 
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
 			Assert.Equal(expectedRequest.From, request.From);
 			Assert.Equal(expectedRequest.Having, request.Having);
 			Assert.Equal(expectedRequest.OrderBy, request.OrderBy);
@@ -236,8 +276,9 @@ namespace TypeCache.Tests.Data.Converters
 			var expected = Invariant(@$"
 {{
 	""DataSource"":""LOCAL"",
-	""Input"":{{""Columns"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],""Rows"":[[1,2,""FirstName1"",""LastName1"",1],[1,3,""FirstName2"",""LastName2"",2],[2,1,""FirstName3"",""LastName3"",3]]}},
+	""Input"":{{""Columns"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[1,2,""FirstName1"",""LastName1"",1],[1,3,""FirstName2"",""LastName2"",2],[2,1,""FirstName3"",""LastName3"",3]]}},
 	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""Schema"":null,
 	""Table"":""Customers""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
@@ -282,6 +323,7 @@ namespace TypeCache.Tests.Data.Converters
 
 			var request = JsonSerializer.Deserialize<UpdateRequest>(expected);
 
+			Assert.Equal(expectedRequest.DataSource, request.DataSource);
 			Assert.Equal(expectedRequest.Table, request.Table);
 			Assert.Equal(expectedRequest.Set, request.Set);
 			Assert.Equal(expectedRequest.Output, request.Output);

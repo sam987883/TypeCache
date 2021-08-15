@@ -20,10 +20,15 @@ namespace TypeCache.Web.Middleware
 
 		public async Task Invoke(HttpContext httpContext)
 		{
+			string dataSource = httpContext.Request.Query[nameof(dataSource)].First()!;
 			string procedure = httpContext.Request.Query[nameof(procedure)].First()!;
-			var request = new StoredProcedureRequest(procedure);
+			var request = new StoredProcedureRequest
+			{
+				DataSource = dataSource,
+				Procedure = procedure
+			};
 			httpContext.Request.Query
-				.If(query => !query.Key.Is(nameof(procedure)))
+				.If(query => !query.Key.Is(nameof(dataSource)) && !query.Key.Is(nameof(procedure)))
 				.Do(query => request.Parameters.Add(query.Key, query.Value.First()));
 
 			var json = await JsonSerializer.DeserializeAsync<JsonElement>(httpContext.Request.Body);

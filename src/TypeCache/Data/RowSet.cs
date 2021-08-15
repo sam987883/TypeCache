@@ -21,6 +21,8 @@ namespace TypeCache.Data
 
 		public string[] Columns { get; set; } = Array<string>.Empty;
 
+		public long Count { get; set; }
+
 		[JsonConverter(typeof(RowsJsonConverter))]
 		public object?[][] Rows { get; set; } = Array<object[]>.Empty;
 

@@ -773,6 +773,17 @@ namespace TypeCache.Collections.Extensions
 				_ => Enumerable<T>.To(@this, map)
 			};
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
+			=> @this switch
+			{
+				null => Enumerable<V>.Empty,
+				T[] array => array.To(map),
+				ImmutableArray<T> immutableArray => immutableArray.To(map),
+				List<T> list => list.To(map),
+				_ => Enumerable<T>.To(@this, map)
+			};
+
 		public static T[] ToArray<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{

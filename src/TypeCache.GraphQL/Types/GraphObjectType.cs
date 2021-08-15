@@ -9,7 +9,6 @@ using TypeCache.Reflection.Extensions;
 namespace TypeCache.GraphQL.Types
 {
 	public sealed class GraphObjectType<T> : ObjectGraphType<T>
-		where T : class
 	{
 		public GraphObjectType()
 		{

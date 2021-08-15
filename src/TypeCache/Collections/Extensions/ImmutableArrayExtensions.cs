@@ -161,6 +161,16 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<V> To<T, V>(this ImmutableArray<T> @this, Func<T, int, V> map)
+		{
+			map.AssertNotNull(nameof(map));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return map(@this[i], i);
+		}
+
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
 		internal static async IAsyncEnumerable<V> ToAsync<T, V>(ImmutableArray<T> @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			map.AssertNotNull(nameof(map));

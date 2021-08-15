@@ -1,8 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
@@ -40,9 +42,9 @@ namespace TypeCache.Data.Extensions
 
 		public static async ValueTask<ObjectSchema> GetObjectSchema(this DbConnection @this, string name)
 		{
-			var objectName = name.Split('.').Get(^1)!.TrimStart('[').TrimEnd(']');
-			var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!.TrimStart('[').TrimEnd(']');
-			var request = new SqlRequest(ObjectSchema.SQL);
+			var objectName = name.Split('.').Get(^1)!;
+			var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!;
+			var request = new SqlRequest { SQL = ObjectSchema.SQL };
 			request.Parameters.Add(ObjectSchema.OBJECT_NAME, objectName);
 			request.Parameters.Add(ObjectSchema.SCHEMA_NAME, schemaName);
 			var (tableRowSet, columnRowSet, parameterRowSet, _) = await @this.RunAsync(request);
@@ -83,6 +85,23 @@ namespace TypeCache.Data.Extensions
 			return new ObjectSchema(@this.DataSource, tableRowSet, columns, parameters);
 		}
 
+		private static async ValueTask<RowSet> _GetData(this DbConnection @this, string sql, IDictionary<string, object?>? parameters, bool output, CancellationToken cancellationToken)
+		{
+			await using var command = @this.CreateSqlCommand(sql);
+			parameters?.Do(_ => command.AddInputParameter(_.Key, _.Value));
+
+			if (output)
+			{
+				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
+				return await reader.ReadRowSetAsync(cancellationToken);
+			}
+			else
+			{
+				await command.ExecuteNonQueryAsync(cancellationToken);
+				return RowSet.Empty;
+			}
+		}
+
 		/// <summary>
 		/// <code>EXECUTE ...</code>
 		/// </summary>
@@ -108,98 +127,63 @@ namespace TypeCache.Data.Extensions
 		}
 
 		/// <summary>
-		/// <code>DELETE ... OUTPUT ... FROM ... WHERE ...</code>
+		/// <code>SELECT COUNT(1) FROM ... WHERE ...</code>
 		/// </summary>
-		/// <returns><code>OUTPUT DELETED</code></returns>
-		public static async ValueTask<RowSet> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
+		public static async ValueTask<long> CountAsync(this DbConnection @this, CountRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
 
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
+			return (long)(await command.ExecuteScalarAsync(cancellationToken) ?? 0L);
 		}
+
+		/// <summary>
+		/// <code>DELETE ... OUTPUT ... FROM ... WHERE ...</code>
+		/// </summary>
+		/// <returns><code>OUTPUT DELETED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async ValueTask<RowSet> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
+			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
 		/// <summary>
 		/// <code>DELETE x ... OUTPUT ... FROM ... INNER JOIN (VALUES ...) AS i ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<RowSet> DeleteDataAsync(this DbConnection @this, DeleteDataRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var command = @this.CreateSqlCommand(request.ToSQL());
-
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
-		}
+			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 
 		/// <summary>
 		/// <code>INSERT INTO ... SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<RowSet> InsertAsync(this DbConnection @this, InsertRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var command = @this.CreateSqlCommand(request.ToSQL());
-			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
-
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
-		}
+			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
 		/// <summary>
 		/// <code>INSERT INTO ... VALUES ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<RowSet> InsertDataAsync(this DbConnection @this, InsertDataRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var command = @this.CreateSqlCommand(request.ToSQL());
-
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
-		}
+			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 
 		/// <summary>
-		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
+		/// <code>SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ... OFFSET ... FETCH</code>
 		/// </summary>
 		public static async ValueTask<RowSet> SelectAsync(this DbConnection @this, SelectRequest request, CancellationToken cancellationToken = default)
 		{
 			await using var command = @this.CreateSqlCommand(request.ToSQL());
 			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
+			if (request.Pager.HasValue)
+				command.AddOutputParameter("Count", DbType.Int64);
 
-			await using var transaction = await command.BeginTransactionAsync(IsolationLevel.ReadUncommitted, cancellationToken);
 			await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-			return await reader.ReadRowSetAsync(cancellationToken);
+			var rowSet = await reader.ReadRowSetAsync(cancellationToken);
+			if (request.Pager.HasValue)
+				rowSet.Count = (long)command.Parameters["Count"].Value!;
+			return rowSet;
 		}
 
 		/// <summary>
@@ -215,41 +199,16 @@ namespace TypeCache.Data.Extensions
 		/// <code>UPDATE ... SET ... OUTPUT ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<RowSet> UpdateAsync(this DbConnection @this, UpdateRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var command = @this.CreateSqlCommand(request.ToSQL());
-			request.Parameters.Do(_ => command.AddInputParameter(_.Key, _.Value));
-
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
-		}
+			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
 		/// <summary>
 		/// <code>UPDATE ... SET ... OUTPUT ... VALUES ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async ValueTask<RowSet> UpdateDataAsync(this DbConnection @this, UpdateDataRequest request, CancellationToken cancellationToken = default)
-		{
-			await using var command = @this.CreateSqlCommand(request.ToSQL());
-
-			if (request.Output.Any())
-			{
-				await using var reader = await command.ReadSingleResultAsync(cancellationToken);
-				return await reader.ReadRowSetAsync(cancellationToken);
-			}
-			else
-			{
-				await command.ExecuteNonQueryAsync(cancellationToken);
-				return RowSet.Empty;
-			}
-		}
+			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 	}
 }

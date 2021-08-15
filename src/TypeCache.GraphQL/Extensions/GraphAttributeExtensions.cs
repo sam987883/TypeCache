@@ -144,7 +144,7 @@ namespace TypeCache.GraphQL.Extensions
 					SystemType.Guid => typeof(GuidGraphType),
 					SystemType.Range => typeof(StringGraphType),
 					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.Value.ToGraphType(isInputType),
-					_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphObjectSortEnumType<>).MakeGenericType(@this),
+					_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphOrderByType<>).MakeGenericType(@this),
 					_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
 					_ => typeof(GraphObjectType<>).MakeGenericType(@this)
 				}

@@ -11,9 +11,11 @@ namespace TypeCache.Data.Requests
 	/// JSON: <code>{ "Into": ..., "Insert": [...]. "Output": [ ... ], ... }</code>
 	/// SQL: <code>INSERT INTO ... (...) OUPUT ... SELECT ...;</code>
 	/// </summary>
-	public class InsertDataRequest : IDataRequest
+	public class InsertDataRequest
 	{
-		/// <inheritdoc/>
+		/// <summary>
+		/// The data source name that contains the connection string and database provider to use.
+		/// </summary>
 		public string DataSource { get; set; } = "Default";
 
 		/// <summary>

@@ -100,6 +100,10 @@ namespace TypeCache.Data
 			=> await _GetResultAsync(request.DataSource, async _ => await _.RunAsync(request), cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<long> CountAsync(CountRequest request, CancellationToken cancellationToken = default)
+			=> await _GetResultAsync(request.DataSource, async _ => await _.CountAsync(request), cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<RowSet> DeleteAsync(DeleteRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.DeleteAsync(request), cancellationToken);
 

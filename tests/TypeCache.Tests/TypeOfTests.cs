@@ -64,14 +64,14 @@ namespace TypeCache.Tests
 			type = typeof(InsertRequest);
 
 			Assert.Equal(2, member.Attributes.Count);
-			Assert.Equal(typeof(SelectRequest), member.BaseType);
+			Assert.Equal(typeof(object), member.BaseType);
 			Assert.Equal(1, member.Constructors.Count);
 			Assert.Null(member.EnclosedType);
 			Assert.Empty(member.Events);
-			Assert.Equal(3, member.Fields.Count);
+			Assert.Equal(10, member.Fields.Count);
 			Assert.Empty(member.GenericTypes);
 			Assert.Equal(type.TypeHandle, member.Handle);
-			Assert.Equal(1, member.InterfaceTypes.Count);
+			Assert.Equal(0, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Class, member.Kind);
 			Assert.Equal(6, member.Methods.Count);
@@ -195,7 +195,7 @@ namespace TypeCache.Tests
 			Assert.Empty(member.InterfaceTypes);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Interface, member.Kind);
-			Assert.Equal(13, member.Methods.Count);
+			Assert.Equal(14, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
 			Assert.Empty(member.Properties);
 			Assert.True(member.Public);

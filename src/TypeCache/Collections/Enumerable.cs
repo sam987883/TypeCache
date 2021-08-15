@@ -93,6 +93,15 @@ namespace TypeCache.Collections
 				yield return map(item);
 		}
 
+		internal static IEnumerable<V> To<V>(IEnumerable<T> enumerable, Func<T, int, V> map)
+		{
+			map.AssertNotNull(nameof(map));
+
+			var i = -1;
+			foreach (var item in enumerable)
+				yield return map(item, ++i);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static T[] ToArray(IEnumerable<T> enumerable)
 			=> new Queue<T>(enumerable).ToArray();

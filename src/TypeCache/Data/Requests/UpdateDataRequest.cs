@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Data.Converters;
+using TypeCache.Data.Schema;
 
 namespace TypeCache.Data.Requests
 {
@@ -11,9 +12,11 @@ namespace TypeCache.Data.Requests
 	/// JSON: <code>{ "Table": "Table1", "Input": { ... }, "OutputDeleted": [ ... ], "OutputInserted": [ ... ] }</code>
 	/// SQL: <code>UPDATE ... OUTPUT ... VALUES ...;</code>
 	/// </summary>
-	public class UpdateDataRequest : IDataRequest
+	public class UpdateDataRequest
 	{
-		/// <inheritdoc/>
+		/// <summary>
+		/// The data source name that contains the connection string and database provider to use.
+		/// </summary>
 		public string DataSource { get; set; } = "Default";
 
 		/// <summary>
@@ -27,6 +30,11 @@ namespace TypeCache.Data.Requests
 		/// </summary>
 		[JsonConverter(typeof(OutputJsonConverter))]
 		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// Set internally- used to build SQL.
+		/// </summary>
+		public ObjectSchema? Schema { get; set; }
 
 		/// <summary>
 		/// JSON: <code>"Table1"</code>

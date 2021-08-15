@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using GraphQL;
@@ -27,12 +26,16 @@ namespace TypeCache.GraphQL.Resolvers
 			dataLoader.AssertNotNull(nameof(dataLoader));
 
 			if (!method.Return.Type.Is<T>())
-				throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
+				throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
 
 			this._Method = method;
 			this._Handler = handler;
 			this._DataLoader = dataLoader;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		object IFieldResolver.Resolve(IResolveFieldContext context)
+			=> this.Resolve(context);
 
 		public IDataLoaderResult<T> Resolve(IResolveFieldContext context)
 		{
@@ -42,51 +45,19 @@ namespace TypeCache.GraphQL.Resolvers
 			var parent = context.Source.GetTypeMember().Attributes.GraphName();
 			var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
 				$"{parent}.{child}",
-				() =>
+				async () =>
 				{
-					var arguments = this.GetArguments(context).ToArray();
+					var arguments = context.GetArguments<T>(this._Method).ToArray();
 					var result = this._Method.Invoke(this._Handler, arguments);
 					return result switch
 					{
-						ValueTask<T> valueTask => valueTask.AsTask(),
-						Task<T> task => task,
-						_ => Task.FromResult((T)result!)!
+						ValueTask<T> valueTask => await valueTask,
+						Task<T> task => await task,
+						_ => await Task.FromResult((T)result!)
 					};
 				});
 
 			return dataLoader.LoadAsync();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		object IFieldResolver.Resolve(IResolveFieldContext context)
-			=> this.Resolve(context);
-
-		private IEnumerable<object?> GetArguments(IResolveFieldContext context)
-		{
-			foreach (var parameter in this._Method.Parameters)
-			{
-				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
-				if (parameter.Attributes.GraphIgnore())
-					continue;
-
-				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is(typeof(IResolveFieldContext<>).MakeGenericType(context.Source.GetType())))
-					yield return context;
-				else if (parameter.Type.Is<T>())
-					yield return context.Source;
-				else if (parameter.Type.SystemType == SystemType.Unknown)
-				{
-					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					if (argument is not null)
-					{
-						var model = parameter.Type.Create();
-						model.ReadProperties(argument);
-						yield return model;
-					}
-					yield return null;
-				}
-				else
-					yield return context.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
-			}
 		}
 	}
 }

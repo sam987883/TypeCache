@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using TypeCache.Collections;
 using TypeCache.Converters;
 using TypeCache.Data.Converters;
+using TypeCache.Data.Schema;
 
 namespace TypeCache.Data.Requests
 {
@@ -13,9 +14,11 @@ namespace TypeCache.Data.Requests
 	/// JSON: <code>{ "From": ..., "Output": [ ... ], "Parameters": [ ... ], "Where": "...", "OrderBy": [ ... ] }</code>
 	/// SQL: <code>SELECT ... FROM ... WHERE ... ORDER BY ...;</code>
 	/// </summary>
-	public class SelectRequest : IDataRequest
+	public class SelectRequest
 	{
-		/// <inheritdoc/>
+		/// <summary>
+		/// The data source name that contains the connection string and database provider to use.
+		/// </summary>
 		public string DataSource { get; set; } = "Default";
 
 		/// <summary>
@@ -46,6 +49,12 @@ namespace TypeCache.Data.Requests
 		public (string, Sort)[] OrderBy { get; set; } = Array<(string, Sort)>.Empty;
 
 		/// <summary>
+		/// JSON: <code>{ "First": 100, "After": 0 }</code>
+		/// SQL: <code>OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY</code>
+		/// </summary>
+		public Pager? Pager { get; set; }
+
+		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
 		/// SQL:
 		/// <code>
@@ -56,6 +65,11 @@ namespace TypeCache.Data.Requests
 		/// </summary>
 		[JsonConverter(typeof(DictionaryJsonConverter))]
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
+		/// <summary>
+		/// Set internally- used to build SQL.
+		/// </summary>
+		public ObjectSchema? Schema { get; set; }
 
 		/// <summary>
 		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>

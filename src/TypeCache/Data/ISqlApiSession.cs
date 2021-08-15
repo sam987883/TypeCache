@@ -40,6 +40,11 @@ namespace TypeCache.Data
 		ValueTask<RowSet[]> RunAsync(SqlRequest request);
 
 		/// <summary>
+		/// <code>SELECT COUNT(1) FROM ... WHERE ...</code>
+		/// </summary>
+		ValueTask<long> CountAsync(CountRequest request);
+
+		/// <summary>
 		/// <code>DELETE FROM ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>

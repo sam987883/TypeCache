@@ -11,7 +11,6 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -39,61 +38,31 @@ namespace TypeCache.GraphQL.Resolvers
 			this._GetChildKey = getChildKey;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		object IFieldResolver.Resolve(IResolveFieldContext context)
+			=> this.Resolve(context);
+
 		public IDataLoaderResult<CHILD> Resolve(IResolveFieldContext context)
 		{
 			context.Source.AssertNotNull($"{nameof(context)}.{nameof(context.Source)}");
 
 			var name = this._Method.Attributes.GraphName() ?? this._Method.Name.TrimStart("Get")!.TrimEnd("Async");
 			var dataLoader = this._DataLoader!.Context.GetOrAddBatchLoader<KEY, CHILD>(
-				$"{TypeOf<PARENT>.Name}.{name}",
-				keys =>
+				$"{TypeOf<PARENT>.Attributes.GraphName() ?? TypeOf<PARENT>.Name}.{name}",
+				async keys =>
 				{
-					var arguments = this.GetArguments(context, keys).ToArray();
+					var arguments = context.GetArguments<PARENT>(this._Method, keys).ToArray();
 					var result = this._Method.Invoke(this._Handler, arguments);
 					return result switch
 					{
-						ValueTask<IEnumerable<CHILD>> valueTask => valueTask.AsTask(),
-						Task<IEnumerable<CHILD>> task => task,
-						_ => Task.FromResult((IEnumerable<CHILD>)result!)!
+						ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
+						Task<IEnumerable<CHILD>> task => await task,
+						_ => await Task.FromResult((IEnumerable<CHILD>)result!)
 					};
 				},
 				this._GetChildKey);
 
 			return dataLoader.LoadAsync(this._GetParentKey((PARENT)context.Source));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		object IFieldResolver.Resolve(IResolveFieldContext context)
-			=> this.Resolve(context);
-
-		private IEnumerable<object?> GetArguments(IResolveFieldContext context, IEnumerable<KEY> keys)
-		{
-			foreach (var parameter in this._Method.Parameters)
-			{
-				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
-				if (parameter.Attributes.GraphIgnore())
-					continue;
-
-				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is<IResolveFieldContext<PARENT>>())
-					yield return context;
-				else if (parameter.Type.Is<IEnumerable<KEY>>())
-					yield return keys;
-				else if (parameter.Type.Is<PARENT>())
-					yield return context.Source;
-				else if (parameter.Type.SystemType == SystemType.Unknown)
-				{
-					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					if (argument is not null)
-					{
-						var model = parameter.Type.Create();
-						model.ReadProperties(argument);
-						yield return model;
-					}
-					yield return null;
-				}
-				else
-					yield return context.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
-			}
 		}
 	}
 }

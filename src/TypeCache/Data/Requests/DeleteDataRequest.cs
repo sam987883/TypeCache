@@ -12,9 +12,11 @@ namespace TypeCache.Data.Requests
 	/// JSON: <code>{ "From": "Table1", "Input": { ... }, "Output": [ ... ] }</code>
 	/// SQL: <code>DELETE FROM ... VALUES ... OUTPUT ...;</code>
 	/// </summary>
-	public class DeleteDataRequest : IDataRequest
+	public class DeleteDataRequest
 	{
-		/// <inheritdoc/>
+		/// <summary>
+		/// The data source name that contains the connection string and database provider to use.
+		/// </summary>
 		public string DataSource { get; set; } = "Default";
 
 		/// <summary>

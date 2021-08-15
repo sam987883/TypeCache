@@ -33,6 +33,37 @@ namespace TypeCache.GraphQL.SQL
 			this.Table = table;
 		}
 
+		[GraphName("Count{0}")]
+		[GraphDescription("SELECT COUNT(1) FROM {0} WHERE ...")]
+		public async Task<SqlCountResponse> Count(
+			[AllowNull] string where,
+			[AllowNull] Parameter[] parameters,
+			IResolveFieldContext context)
+		{
+			var selections = context.GetQuerySelections().ToArray();
+			var request = new CountRequest
+			{
+				DataSource = this._DataSource,
+				From = this.Table,
+				Where = where
+			};
+
+			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
+
+			var sqlResponse = new SqlCountResponse
+			{
+				Count = await this._Mediator.ApplyRulesAsync<CountRequest, long>(request)
+			};
+
+			if (selections.Has(nameof(SqlResponse<T>.Table)))
+				sqlResponse.Table = this.Table;
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
+				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<CountRequest, string>(request);
+
+			return sqlResponse;
+		}
+
 		[GraphName("Delete{0}")]
 		[GraphDescription("DELETE ... OUTPUT ... FROM {0} WHERE ...")]
 		public async Task<SqlResponse<T>> Delete(string where, [AllowNull] Parameter[] parameters, IResolveFieldContext context)
@@ -67,7 +98,7 @@ namespace TypeCache.GraphQL.SQL
 		}
 
 		[GraphName("DeleteData{0}")]
-		[GraphDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES")]
+		[GraphDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES ...")]
 		public async Task<SqlResponse<T>> DeleteData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
@@ -100,7 +131,7 @@ namespace TypeCache.GraphQL.SQL
 		}
 
 		[GraphName("InsertData{0}")]
-		[GraphDescription("INSERT INTO {0} ... VALUES")]
+		[GraphDescription("INSERT INTO {0} ... VALUES ...")]
 		public async Task<SqlResponse<T>> InsertBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
@@ -132,6 +163,55 @@ namespace TypeCache.GraphQL.SQL
 			return sqlResponse;
 		}
 
+		[GraphName("Page{0}")]
+		[GraphDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ... OFFSET ... FETCH ...")]
+		public async Task<SqlPagedResponse<T>> Page(
+			uint first,
+			uint after,
+			[AllowNull] string where,
+			[AllowNull] string having,
+			[AllowNull] OrderBy<T>[] orderBy,
+			[AllowNull] Parameter[] parameters,
+			IResolveFieldContext context)
+		{
+			var selections = context.GetQuerySelections().ToArray();
+			var request = new SelectRequest
+			{
+				DataSource = this._DataSource,
+				From = this.Table,
+				Having = having,
+				Pager = new()
+				{
+					After = after,
+					First = first
+				},
+				Where = where
+			};
+
+			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
+			selections
+				.If(selection => selection.Left(nameof(SqlPagedResponse<T>.Data)))
+				.To(selection => selection.TrimStart($"{nameof(SqlPagedResponse<T>.Data)}.")!)
+				.Do(selection => request.Select[selection] = selection);
+			request.OrderBy = orderBy.To(_ => (_.Expression, _.Sort)).ToArray();
+
+			var sqlResponse = new SqlPagedResponse<T>();
+
+			if (selections.Has(nameof(SqlResponse<T>.Table)))
+				sqlResponse.Table = this.Table;
+
+			if (selections.Has(nameof(SqlResponse<T>.SQL)))
+				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
+
+			if (request.Select.Any())
+			{
+				var output = await this._Mediator.ApplyRulesAsync<SelectRequest, RowSet>(request);
+				var data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
+				sqlResponse.Data = data.ToConnection((int)output!.Count, request.Pager!.Value);
+			}
+			return sqlResponse;
+		}
+
 		[GraphName("Select{0}")]
 		[GraphDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
 		public async Task<SqlResponse<T>> Select(
@@ -149,6 +229,7 @@ namespace TypeCache.GraphQL.SQL
 				Having = having,
 				Where = where
 			};
+
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
@@ -213,7 +294,7 @@ namespace TypeCache.GraphQL.SQL
 		}
 
 		[GraphName("UpdateData{0}")]
-		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES")]
+		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES ...")]
 		public async Task<SqlResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();

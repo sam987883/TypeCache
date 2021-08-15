@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
@@ -9,7 +8,6 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -32,31 +30,8 @@ namespace TypeCache.GraphQL.Resolvers
 
 		public object? Resolve(IResolveFieldContext context)
 		{
-			var arguments = this.GetArguments(context).ToArray();
+			var arguments = context.GetArguments<object>(this._Method).ToArray();
 			return this._Method.Invoke(this._Handler, arguments);
-		}
-
-		private IEnumerable<object> GetArguments(IResolveFieldContext context)
-		{
-			foreach (var parameter in this._Method.Parameters)
-			{
-				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
-				if (parameter.Attributes.GraphIgnore())
-					continue;
-
-				if (parameter.Type.Is<IResolveFieldContext>() || parameter.Type.Is(typeof(IResolveFieldContext<>)))
-					yield return context;
-				else if (parameter.Type.SystemType == SystemType.Unknown)
-				{
-					var argument = context.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					var model = parameter.Type.Create();
-					if (argument is not null)
-						model.ReadProperties(argument);
-					yield return model;
-				}
-				else
-					yield return context.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
-			}
 		}
 	}
 }

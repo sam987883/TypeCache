@@ -25,6 +25,9 @@ namespace TypeCache.Data.Business
 		}
 
 		async ValueTask<string> IRule<InsertRequest, string>.ApplyAsync(InsertRequest request, CancellationToken cancellationToken)
-			=> await ValueTask.FromResult(request.ToSQL());
+		{
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
+			return await ValueTask.FromResult(request.ToSQL());
+		}
 	}
 }

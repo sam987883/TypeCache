@@ -11,8 +11,9 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphInputType()
 		{
+			var enclosedTypeName = TypeOf<T>.EnclosedType?.Attributes.GraphName() ?? TypeOf<T>.EnclosedType?.Name;
 			this.Name = TypeOf<T>.Member.Attributes.GraphName()
-				?? (TypeOf<T>.EnclosedType != null ? $"{TypeOf<T>.Name}Of{TypeOf<T>.EnclosedType.Value.Name}Input" : $"{TypeOf<T>.Name}Input");
+				?? (enclosedTypeName is not null ? $"{TypeOf<T>.Name}Of{enclosedTypeName}Input" : $"{TypeOf<T>.Name}Input");
 			this.Description = TypeOf<T>.Member.Attributes.GraphDescription() ?? $"An input object of type `{TypeOf<T>.Name}`.";
 
 			TypeOf<T>.Properties.Values

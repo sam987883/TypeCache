@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.Json;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Requests;
-using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
@@ -85,6 +84,17 @@ namespace TypeCache.Data.Extensions
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
+		public static string ToSQL([NotNull] this CountRequest @this)
+		{
+			var sqlBuilder = new StringBuilder("SELECT COUNT_BIG(1)")
+				.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
+
+			if (!@this.Where.IsBlank())
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+
+			return sqlBuilder.Append(';').AppendLine().ToString();
+		}
+
 		public static string ToSQL([NotNull] this DeleteRequest @this)
 		{
 			var sqlBuilder = new StringBuilder("DELETE FROM ").Append(@this.From);
@@ -115,7 +125,32 @@ namespace TypeCache.Data.Extensions
 			if (@this.Output.Any())
 				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
 
-			return sqlBuilder.AppendLine().Append(((SelectRequest)@this).ToSQL()).ToString();
+			if (@this.Select.Any())
+			{
+				sqlBuilder.AppendLine().Append("SELECT ");
+				@this.Select.Do(_ =>
+				{
+					if (_.Key.Is(_.Value))
+						sqlBuilder.Append(_.Key.EscapeIdentifier());
+					else
+						sqlBuilder.Append(Invariant($"{_.Value} AS {_.Key.EscapeIdentifier()}"));
+				}, () => sqlBuilder.AppendLine().Append("\t, "));
+			}
+			else
+				sqlBuilder.AppendLine().Append("SELECT *");
+
+			sqlBuilder.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
+
+			if (!@this.Where.IsBlank())
+				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+
+			if (!@this.Having.IsBlank())
+				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
+
+			if (@this.OrderBy.Any())
+				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"{(int.TryParse(_.Item1, out var _) ? _.Item1 : _.Item1.EscapeIdentifier())} {_.Item2.ToSQL()}")));
+
+			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
 		public static string ToSQL([NotNull] this SelectRequest @this)
@@ -144,6 +179,21 @@ namespace TypeCache.Data.Extensions
 			if (@this.OrderBy.Any())
 				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"{(int.TryParse(_.Item1, out var _) ? _.Item1 : _.Item1.EscapeIdentifier())} {_.Item2.ToSQL()}")));
 
+			if (@this.Pager.HasValue)
+			{
+				sqlBuilder.AppendLine().Append(Invariant($"OFFSET {@this.Pager.Value.After} ROWS"));
+
+				if (@this.Pager.Value.First > 0)
+					sqlBuilder.AppendLine().Append(Invariant($"FETCH NEXT {@this.Pager.Value.First} ROWS ONLY;"));
+
+				sqlBuilder.AppendLine()
+					.AppendLine().AppendLine("SELECT @Count = COUNT_BIG(1)")
+					.Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
+
+				if (!@this.Where.IsBlank())
+					sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+			}
+
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
@@ -161,11 +211,11 @@ namespace TypeCache.Data.Extensions
 			return sqlBuilder.Append(';').AppendLine().ToString();
 		}
 
-		public static string ToSQL([NotNull] this UpdateDataRequest @this, ObjectSchema schema)
+		public static string ToSQL([NotNull] this UpdateDataRequest @this)
 		{
 			var sqlBuilder = new StringBuilder("UPDATE x WITH(UPDLOCK)");
 
-			var primaryKeys = schema.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToArray();
+			var primaryKeys = @this.Schema!.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToArray();
 
 			sqlBuilder.AppendLine().Append("SET ");
 			@this.Input.Columns.Without(primaryKeys)

@@ -8,6 +8,7 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SQL;
@@ -18,6 +19,79 @@ namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphExtensions
 	{
+		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this)
+		{
+			foreach (var pair in @this.Arguments)
+			{
+				if (pair.Value.Value is IDictionary<string, object> dictionary)
+				{
+					foreach (var key in GetKeys(pair.Key, dictionary))
+						yield return key;
+				}
+				else
+					yield return pair.Key;
+			}
+		}
+
+		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this, string path)
+		{
+			var inputs = path.Split('.', StringSplitOptions.RemoveEmptyEntries).ToQueue();
+			if (inputs.TryDequeue(out var input) && @this.Arguments.TryGetValue(input, out var value))
+			{
+				var dictionary = value.Value as IDictionary<string, object>;
+				if (inputs.Any())
+				{
+					if (dictionary is not null)
+					{
+						foreach (var key in GetKeys(inputs, dictionary))
+							yield return key;
+					}
+				}
+				else if (dictionary is not null)
+				{
+					foreach (var key in dictionary.Keys)
+						yield return key;
+				}
+				else
+					yield return input;
+			}
+		}
+
+		public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, params object[] overrides)
+		{
+			foreach (var parameter in method.Parameters)
+			{
+				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
+				if (parameter.Attributes.GraphIgnore())
+					continue;
+
+				var overrideTypeMap = overrides?.ToDictionary(_ => _.GetTypeMember(), _ => _);
+
+				if (parameter.Type.Is<IResolveFieldContext>() && parameter.Type.Is<TSource>())
+					yield return @this;
+				else if (parameter.Type.Is<IDictionary<string, object?>>())
+					yield return @this.GetArgument<IDictionary<string, object?>>(parameter.Name);
+				else if (parameter.Type.Is<TSource>() && !typeof(TSource).Is<object>())
+					yield return @this.Source;
+				else if (overrideTypeMap is not null && overrideTypeMap.TryGetValue(parameter.Type, out var value))
+					yield return value;
+				else if (parameter.Type.SystemType == SystemType.Unknown)
+				{
+					var argument = @this.GetArgument<IDictionary<string, object?>>(parameter.Name);
+					if (argument is not null)
+					{
+						var model = parameter.Type.Create();
+						model.ReadProperties(argument);
+						yield return model;
+					}
+					else
+						yield return null;
+				}
+				else
+					yield return @this.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
+			}
+		}
+
 		/// <summary>
 		/// Gets the query selections for the Connection GraphQL Relay type including nested selections and fragments.
 		/// </summary>
@@ -73,27 +147,27 @@ namespace TypeCache.GraphQL.Extensions
 		/// <typeparam name="T">.</typeparam>
 		/// <param name="data">The data<see cref="IEnumerable{T}"/>.</param>
 		/// <param name="totalCount">The total record count of the record set being paged.</param>
-		/// <param name="hasNextPage">Whether the paged set of records are not at the end of the complete record set.</param>
-		/// <param name="hasPreviousPage">Whether the paged set of records are not at the start of the complete record set.</param>
+		/// <param name="pager">The Pager used to retrieve the record set.</param>
 		/// <returns>The <see cref="Connection{T}"/>.</returns>
-		public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, bool hasNextPage, bool hasPreviousPage)
+		public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, Pager pager)
 			where T : class
 		{
-			var cursorProperty = TypeOf<T>.Properties.FirstValue(property => property.Value.Attributes.GraphCursor())?.Value;
 			var items = data.ToArray();
+			var start = pager.After + 1;
+			var end = start + items.Length;
 			var connection = new Connection<T>
 			{
-				Edges = items.To(item => new Edge<T>
+				Edges = items.To((item, i) => new Edge<T>
 				{
-					Cursor = cursorProperty?.GetValue(item)?.ToString(),
+					Cursor = (start + i).ToString(),
 					Node = item
 				}).ToList(),
-				PageInfo = new PageInfo
+				PageInfo = new()
 				{
-					StartCursor = items.Length > 0 ? cursorProperty?.GetValue(items[0])?.ToString() : null,
-					EndCursor = items.Length > 0 ? cursorProperty?.GetValue(items[^1])?.ToString() : null,
-					HasNextPage = hasNextPage,
-					HasPreviousPage = hasPreviousPage
+					StartCursor = start.ToString(),
+					EndCursor = end.ToString(),
+					HasNextPage = end < totalCount,
+					HasPreviousPage = pager.After > 0
 				},
 				TotalCount = totalCount
 			};
@@ -133,6 +207,44 @@ namespace TypeCache.GraphQL.Extensions
 				Resolver = new MethodFieldResolver(@this, sqlApi),
 				Type = @this.Return.GetGraphType()
 			};
+
+		private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
+		{
+			if (inputs.TryDequeue(out var input) && dictionary.TryGetValue(input, out var value))
+			{
+				var subDictionary = value as IDictionary<string, object>;
+				if (inputs.Any())
+				{
+					if (subDictionary is not null)
+					{
+						foreach (var key in GetKeys(inputs, subDictionary))
+							yield return key;
+					}
+				}
+				else if (subDictionary is not null)
+				{
+					foreach (var key in subDictionary.Keys)
+						yield return key;
+				}
+				else
+					yield return input;
+			}
+		}
+
+		private static IEnumerable<string> GetKeys(string path, IDictionary<string, object> dictionary)
+		{
+			foreach (var pair in dictionary)
+			{
+				var current = $"{path}.{pair.Key}";
+				if (pair.Value is IDictionary<string, object> subDictionary)
+				{
+					foreach (var key in GetKeys(current, subDictionary))
+						yield return key;
+				}
+				else
+					yield return current;
+			}
+		}
 
 		private static IEnumerable<string> GetSelections(this IHaveSelectionSet @this, Fragments fragments, string prefix)
 		{

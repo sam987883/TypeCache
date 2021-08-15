@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using TypeCache.Collections;
@@ -38,6 +40,23 @@ namespace TypeCache.Tests.Data.Extensions
 			Assert.Equal("aaa", "aaa".EscapeValue());
 			Assert.Equal("''a%a%a''", "'a%a%a'".EscapeValue());
 			Assert.Equal("''''''", "'''".EscapeValue());
+		}
+
+		[Fact]
+		public void ToSQL_CountRequest()
+		{
+			var request = new CountRequest
+			{
+				From = "[dbo].[NonCustomers]",
+				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
+			};
+
+			var expected = Invariant($@"SELECT COUNT_BIG(1)
+FROM [dbo].[NonCustomers] WITH(NOLOCK)
+WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
+");
+
+			Assert.Equal(expected, request.ToSQL());
 		}
 
 		[Fact]
@@ -173,7 +192,8 @@ ORDER BY [First Name] DESC, [Last_Name] ASC, 1 DESC;
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) }
+				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
+				Pager = new() { After = 0, First = 100 }
 			};
 
 			var expected = Invariant($@"SELECT [ID]
@@ -184,7 +204,13 @@ ORDER BY [First Name] DESC, [Last_Name] ASC, 1 DESC;
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
-ORDER BY [First Name] DESC, [Last_Name] ASC;
+ORDER BY [First Name] DESC, [Last_Name] ASC
+OFFSET 0 ROWS
+FETCH NEXT 100 ROWS ONLY;
+
+SELECT @Count = COUNT_BIG(1)
+FROM [dbo].[NonCustomers] WITH(NOLOCK)
+WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -222,7 +248,8 @@ ORDER BY [First Name] DESC, [Last_Name] ASC;
 						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
 					}
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Schema = schema
 			};
 
 			var expected = Invariant($@"UPDATE x WITH(UPDLOCK)
@@ -242,7 +269,7 @@ VALUES (1, 2, N'FirstName1', N'LastName1', 1)
 ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
 ");
 
-			Assert.Equal(expected, request.ToSQL(schema));
+			Assert.Equal(expected, request.ToSQL());
 		}
 
 		[Fact]

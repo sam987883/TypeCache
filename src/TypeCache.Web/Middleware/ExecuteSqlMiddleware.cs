@@ -19,9 +19,11 @@ namespace TypeCache.Web.Middleware
 
 		public async Task Invoke(HttpContext httpContext)
 		{
+			string dataSource = httpContext.Request.Query[nameof(dataSource)].First()!;
 			using var reader = new StreamReader(httpContext.Request.Body);
 			var request = new SqlRequest
 			{
+				DataSource = dataSource,
 				SQL = reader.ReadToEnd()
 			};
 			httpContext.Request.Query.Do(query => request.Parameters[query.Key] = query.Value.First());

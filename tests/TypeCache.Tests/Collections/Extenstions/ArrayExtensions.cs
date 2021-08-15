@@ -162,21 +162,21 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void If()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(new[] { 1, 3, 5 }, array.If(i => i % 2 == 1));
-			Assert.Empty(array.If(i => i > 6));
-			Assert.Throws<ArgumentNullException>(() => array.If(null).ToArray());
+			Assert.Equal(new[] { 1, 3, 5 }, intArray.If(i => i % 2 == 1));
+			Assert.Empty(intArray.If(i => i > 6));
+			Assert.Throws<ArgumentNullException>(() => intArray.If(null).ToArray());
 		}
 
 		[Fact]
 		public async Task IfAsync()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(new[] { 1, 3, 5 }, await array.IfAsync(async i => await Task.FromResult(i % 2 == 1)).ToListAsync());
-			Assert.Empty(await array.IfAsync(async i => await Task.FromResult(i > 6)).ToListAsync());
-			await Assert.ThrowsAsync<ArgumentNullException>(async () => await array.IfAsync(null).ToListAsync());
+			Assert.Equal(new[] { 1, 3, 5 }, await intArray.IfAsync(async i => await Task.FromResult(i % 2 == 1)).ToListAsync());
+			Assert.Empty(await intArray.IfAsync(async i => await Task.FromResult(i > 6)).ToListAsync());
+			await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null).ToListAsync());
 
 			await Task.CompletedTask;
 		}
@@ -226,20 +226,21 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void To()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
 			Assert.Empty((null as int[]).To(i => i.ToString()));
-			Assert.Equal(stringArray, array.To(i => i.ToString()));
+			Assert.Equal(stringArray, intArray.To(i => i.ToString()));
+			Assert.Equal(stringArray, intArray.To((x, i) => (i + 1).ToString()));
 		}
 
 		[Fact]
 		public async Task ToAsync()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
-			Assert.Equal(await stringArray.ToAsync().ToListAsync(), await array.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+			Assert.Equal(await stringArray.ToAsync().ToListAsync(), await intArray.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 		}
 
 		[Fact]

@@ -17,6 +17,7 @@ namespace TypeCache.Web.Extensions
 		/// Maps Routes to Middlewares:
 		/// <list type="number">
 		/// <item><term>/sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
+		/// <item><term>/sql-api/count</term> <description><see cref="CountMiddleware"/></description></item>
 		/// <item><term>/sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
 		/// <item><term>/sql-api/deletedata</term> <description><see cref="DeleteDataMiddleware"/></description></item>
 		/// <item><term>/sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
@@ -30,6 +31,7 @@ namespace TypeCache.Web.Extensions
 		/// </summary>
 		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this)
 			=> @this.UseSqlApiCall()
+				.UseSqlApiCount()
 				.UseSqlApiDelete()
 				.UseSqlApiDeleteData()
 				.UseSqlApiInsert()
@@ -42,6 +44,7 @@ namespace TypeCache.Web.Extensions
 		/// Maps Routes to Middlewares:
 		/// <list type="number">
 		/// <item><term>/sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
+		/// <item><term>/sql-api/count/sql</term> <description><see cref="CountSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/delete/sql</term> <description><see cref="DeleteSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/deletedata/sql</term> <description><see cref="DeleteDataSqlMiddleware"/></description></item>
 		/// <item><term>/sql-api/insert/sql</term> <description><see cref="InsertSqlMiddleware"/></description></item>
@@ -55,6 +58,7 @@ namespace TypeCache.Web.Extensions
 		/// </summary>
 		public static IApplicationBuilder UseSqlApiTestSQL(this IApplicationBuilder @this)
 			=> @this.UseSqlApiSchemaSQL()
+				.UseSqlApiCountSQL()
 				.UseSqlApiDeleteSQL()
 				.UseSqlApiDeleteDataSQL()
 				.UseSqlApiInsertSQL()
@@ -62,21 +66,6 @@ namespace TypeCache.Web.Extensions
 				.UseSqlApiSelectSQL()
 				.UseSqlApiUpdateSQL()
 				.UseSqlApiUpdateDataSQL();
-
-		/// <summary>
-		/// Maps Routes to Middlewares:
-		/// <list type="table">
-		/// <item><term>route or /sql-api/sql</term> <description><see cref="ExecuteSqlMiddleware"/></description></item>
-		/// </list>
-		/// <i>Requires call to:</i>
-		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
-		/// </summary>
-		public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this, string? route = null)
-		{
-			var path = new PathString(!route.IsBlank() ? route : "/sql-api/sql");
-			return @this.MapWhen(context => context.Request.Path.Equals(path),
-				_ => _.UseMiddleware<ExecuteSqlMiddleware>());
-		}
 
 		/// <summary>
 		/// Maps Routes to Middlewares:
@@ -91,6 +80,36 @@ namespace TypeCache.Web.Extensions
 			var path = new PathString(!route.IsBlank() ? route : "/sql-api/call");
 			return @this.MapWhen(context => context.Request.Path.Equals(path),
 				_ => _.UseMiddleware<StoredProcedureMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/count</term> <description><see cref="CountMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiCount(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/count");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<CountMiddleware>());
+		}
+
+		/// <summary>
+		/// Maps Routes to Middlewares:
+		/// <list type="table">
+		/// <item><term>route or /sql-api/count/sql</term> <description><see cref="CountSqlMiddleware"/></description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
+		/// </summary>
+		public static IApplicationBuilder UseSqlApiCountSQL(this IApplicationBuilder @this, string? route = null)
+		{
+			var path = new PathString(!route.IsBlank() ? route : "/sql-api/count/sql");
+			return @this.MapWhen(context => context.Request.Path.Equals(path),
+				_ => _.UseMiddleware<CountSqlMiddleware>());
 		}
 
 		/// <summary>

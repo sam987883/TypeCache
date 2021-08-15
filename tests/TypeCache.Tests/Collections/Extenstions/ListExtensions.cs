@@ -134,6 +134,7 @@ namespace TypeCache.Tests.Collections.Extensions
 
 			Assert.Empty((null as int[]).To(i => i.ToString()));
 			Assert.Equal(stringList, intList.To(i => i.ToString()));
+			Assert.Equal(stringList, intList.To((x, i) => (i + 1).ToString()));
 		}
 
 		[Fact]

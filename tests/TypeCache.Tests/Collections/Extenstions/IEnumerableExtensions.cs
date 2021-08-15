@@ -60,31 +60,31 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void And()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, new[] { 1, 2, 3 }.And(4, 5, 6));
-			Assert.Equal(array, new[] { 1, 2, 3 }.And((IEnumerable<int>)new[] { 4, 5, 6 }));
-			Assert.Equal(array, new[] { 1, 2 }.And((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
+			Assert.Equal(intArray, new[] { 1, 2, 3 }.And(4, 5, 6));
+			Assert.Equal(intArray, new[] { 1, 2, 3 }.And((IEnumerable<int>)new[] { 4, 5, 6 }));
+			Assert.Equal(intArray, new[] { 1, 2 }.And((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
 		}
 
 		[Fact]
 		public void Any()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			Assert.False((null as IEnumerable).Any<int>());
 			Assert.False(((IEnumerable)Array<int>.Empty).Any<int>());
 			Assert.True(((IEnumerable)new[] { 1, 2, 3 }).Any<int>());
 			Assert.True(this.GetItems().Any<int>());
 
-			Assert.True(array.Any());
-			Assert.True(new List<int>(array).Any());
+			Assert.True(intArray.Any());
+			Assert.True(new List<int>(intArray).Any());
 			Assert.True(this.GetItems().Any());
 			Assert.False(Array<string>.Empty.Any());
 			Assert.False(new List<string>(1).Any());
 			Assert.False(Enumerable<string>.Empty.Any());
-			Assert.True(array.Any(i => i % 2 == 0));
-			Assert.False(array.Any(i => i > 6 || i < 1));
+			Assert.True(intArray.Any(i => i % 2 == 0));
+			Assert.False(intArray.Any(i => i > 6 || i < 1));
 		}
 
 		[Fact]
@@ -108,10 +108,10 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Count()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array.Length, array.Count());
-			Assert.Equal(array.Length, new List<int>(array).Count());
+			Assert.Equal(intArray.Length, intArray.Count());
+			Assert.Equal(intArray.Length, new List<int>(intArray).Count());
 			Assert.Equal(6, this.GetItems().Count());
 			Assert.Equal(0, Array<string>.Empty.Count());
 			Assert.Equal(0, new List<string>(1).Count());
@@ -205,10 +205,10 @@ namespace TypeCache.Tests.Collections.Extensions
 			await Assert.ThrowsAsync<ArgumentNullException>(async () => await listOfTasks.DoAsync(null));
 
 			var listOfIntTasks = new List<Task<int>> { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			await new List<Task<int>>(0).DoAsync(async task => await task);
-			await listOfIntTasks.DoAsync(async task => Assert.Contains(await task, array));
+			await listOfIntTasks.DoAsync(async task => Assert.Contains(await task, intArray));
 			await Assert.ThrowsAsync<ArgumentNullException>(async () => await listOfIntTasks.DoAsync(null));
 
 			await Task.CompletedTask;
@@ -239,15 +239,15 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Gather()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			Assert.Equal(Enumerable<int>.Empty, new[] { Array<int>.Empty }.Gather());
 			Assert.Equal(Enumerable<int>.Empty, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { ImmutableArray<int>.Empty }).Gather());
 			Assert.Equal(Enumerable<int>.Empty, new List<IEnumerable<int>> { new List<int>(0) }.Gather());
 
-			Assert.Equal(array, new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } }.Gather());
-			Assert.Equal(array, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { new[] { 1, 2 }.ToImmutableArray(), new[] { 3, 4 }.ToImmutableArray(), new[] { 5, 6 }.ToImmutableArray() }).Gather());
-			Assert.Equal(array, new List<IEnumerable<int>> { new List<int>() { 1, 2 }, new List<int>() { 3, 4 }, new List<int>() { 5, 6 } }.Gather());
+			Assert.Equal(intArray, new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } }.Gather());
+			Assert.Equal(intArray, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { new[] { 1, 2 }.ToImmutableArray(), new[] { 3, 4 }.ToImmutableArray(), new[] { 5, 6 }.ToImmutableArray() }).Gather());
+			Assert.Equal(intArray, new List<IEnumerable<int>> { new List<int>() { 1, 2 }, new List<int>() { 3, 4 }, new List<int>() { 5, 6 } }.Gather());
 		}
 
 		[Fact]
@@ -299,38 +299,38 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Group()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			var group = array.Group(i => i - 1);
+			var group = intArray.Group(i => i - 1);
 			Assert.Contains(0, group.Keys);
 			Assert.Contains(1, group.Keys);
 			Assert.Contains(2, group.Keys);
-			Assert.Throws<ArgumentNullException>(() => array.Group(null));
+			Assert.Throws<ArgumentNullException>(() => intArray.Group(null));
 		}
 
 		[Fact]
 		public void Has()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.Has(Index.FromStart(2)));
-			Assert.True(array.Has(Index.FromEnd(2)));
-			Assert.False(array.Has(Index.FromStart(999)));
-			Assert.False(array.Has(Index.FromEnd(999)));
+			Assert.True(intArray.Has(Index.FromStart(2)));
+			Assert.True(intArray.Has(Index.FromEnd(2)));
+			Assert.False(intArray.Has(Index.FromStart(999)));
+			Assert.False(intArray.Has(Index.FromEnd(999)));
 
-			Assert.True(array.Has(1));
-			Assert.True(array.Has(6));
-			Assert.False(array.Has(0));
-			Assert.False(array.Has(7));
+			Assert.True(intArray.Has(1));
+			Assert.True(intArray.Has(6));
+			Assert.False(intArray.Has(0));
+			Assert.False(intArray.Has(7));
 
-			Assert.True(array.Has(new[] { 1, 2, 3, 4, 5, 6 }));
-			Assert.False(array.Has(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
+			Assert.True(intArray.Has(new[] { 1, 2, 3, 4, 5, 6 }));
+			Assert.False(intArray.Has(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
 		}
 
 		[Fact]
 		public void If()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			Assert.Empty((null as IEnumerable).If<int>());
 			Assert.Empty((null as IEnumerable).If<string>());
@@ -343,12 +343,12 @@ namespace TypeCache.Tests.Collections.Extensions
 			Assert.Empty(((IEnumerable)Enumerable<object>.Empty).If<int>());
 			Assert.Equal(new[] { 1, 3, 5 }, new object[] { 1, "2", 3, "4", 5, "6" }.If<int>());
 			Assert.Equal(new[] { "2", "4", "6" }, new object[] { 1, "2", 3, "4", 5, "6" }.If<string>());
-			Assert.Equal(new[] { 1, 3, 5 }, ((IEnumerable<int>)array).If(i => i % 2 == 1));
-			Assert.Equal(new[] { 1, 3, 5 }, new List<int>(array).If(i => i % 2 == 1));
-			Assert.Equal(new[] { 1, 3, 5 }, array.ToImmutableArray().If(i => i % 2 == 1));
+			Assert.Equal(new[] { 1, 3, 5 }, ((IEnumerable<int>)intArray).If(i => i % 2 == 1));
+			Assert.Equal(new[] { 1, 3, 5 }, new List<int>(intArray).If(i => i % 2 == 1));
+			Assert.Equal(new[] { 1, 3, 5 }, intArray.ToImmutableArray().If(i => i % 2 == 1));
 			Assert.Equal(new[] { 1, 3, 5 }, this.GetItems().If(i => i % 2 == 1));
-			Assert.Empty(((IEnumerable<int>)array).If(i => i > 6));
-			Assert.Throws<ArgumentNullException>(() => ((IEnumerable<int>)array).If(null).ToArray());
+			Assert.Empty(((IEnumerable<int>)intArray).If(i => i > 6));
+			Assert.Throws<ArgumentNullException>(() => ((IEnumerable<int>)intArray).If(null).ToArray());
 		}
 
 		[Fact]
@@ -364,33 +364,33 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void IsSequence()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.IsSequence(new[] { 1, 2, 3, 4, 5, 6 }));
-			Assert.False(array.IsSequence(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
-			Assert.False(array.IsSequence(null));
+			Assert.True(intArray.IsSequence(new[] { 1, 2, 3, 4, 5, 6 }));
+			Assert.False(intArray.IsSequence(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
+			Assert.False(intArray.IsSequence(null));
 			Assert.False((null as IEnumerable<int>).IsSequence(new[] { 1, 2, 3, 4, 5, 6 }));
 		}
 
 		[Fact]
 		public void IsSet()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.IsSet(new[] { 6, 5, 4, 3, 2, 1 }));
-			Assert.False(array.IsSet(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
-			Assert.False(array.IsSet(Array<int>.Empty));
-			Assert.False(array.IsSet(null));
+			Assert.True(intArray.IsSet(new[] { 6, 5, 4, 3, 2, 1 }));
+			Assert.False(intArray.IsSet(new[] { 1, 2, 3, 4, 5, 6, 0, 7 }));
+			Assert.False(intArray.IsSet(Array<int>.Empty));
+			Assert.False(intArray.IsSet(null));
 			Assert.False((null as IEnumerable<int>).IsSet(new[] { 1, 2, 3, 4, 5, 6 }));
 		}
 
 		[Fact]
 		public void Join()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal("1,2,3,4,5,6", array.Join(','));
-			Assert.Equal("1.2.3.4.5.6", array.Join("."));
+			Assert.Equal("1,2,3,4,5,6", intArray.Join(','));
+			Assert.Equal("1.2.3.4.5.6", intArray.Join("."));
 			Assert.Equal(string.Empty, (null as IEnumerable<int>).Join('!'));
 			Assert.Equal(string.Empty, Enumerable<int>.Empty.Join("aaa"));
 		}
@@ -398,19 +398,19 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Match()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, array.Match(array));
-			Assert.True(new[] { 2, 4, 6 }.IsSet(array.Match(new[] { 0, 2, 4, 6, 8 })));
-			Assert.Equal(Enumerable<int>.Empty, array.Match(null));
+			Assert.Equal(intArray, intArray.Match(intArray));
+			Assert.True(new[] { 2, 4, 6 }.IsSet(intArray.Match(new[] { 0, 2, 4, 6, 8 })));
+			Assert.Equal(Enumerable<int>.Empty, intArray.Match(null));
 		}
 
 		[Fact]
 		public void Maximum()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(6, array.Maximum());
+			Assert.Equal(6, intArray.Maximum());
 			Assert.Equal(0, Enumerable<int>.Empty.Maximum());
 			Assert.Equal(0, (null as IEnumerable<int>).Maximum());
 		}
@@ -418,9 +418,9 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Minimum()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(1, array.Minimum());
+			Assert.Equal(1, intArray.Minimum());
 			Assert.Equal(0, Enumerable<int>.Empty.Minimum());
 			Assert.Equal(0, (null as IEnumerable<int>).Minimum());
 		}
@@ -428,53 +428,54 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void NotMatch()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(Array<int>.Empty, array.NotMatch(array));
-			Assert.True(new[] { 0, 1, 3, 5, 8 }.IsSet(array.NotMatch(new[] { 0, 2, 4, 6, 8 })));
-			Assert.Equal(array, array.NotMatch(null));
+			Assert.Equal(Array<int>.Empty, intArray.NotMatch(intArray));
+			Assert.True(new[] { 0, 1, 3, 5, 8 }.IsSet(intArray.NotMatch(new[] { 0, 2, 4, 6, 8 })));
+			Assert.Equal(intArray, intArray.NotMatch(null));
 		}
 
 		[Fact]
 		public void Skip()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(new[] { 3, 4, 5, 6 }, array.Skip(2));
-			Assert.Equal(Array<int>.Empty, array.Skip(6));
+			Assert.Equal(new[] { 3, 4, 5, 6 }, intArray.Skip(2));
+			Assert.Equal(Array<int>.Empty, intArray.Skip(6));
 			Assert.Throws<IndexOutOfRangeException>(() => Enumerable<int>.Empty.Skip(3).ToArray());
 		}
 
 		[Fact]
 		public void Sort()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, this.GetItems().Sort());
+			Assert.Equal(intArray, this.GetItems().Sort());
 			Assert.Equal(Enumerable<int>.Empty, Enumerable<int>.Empty.Sort());
 		}
 
 		[Fact]
 		public void Take()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(new[] { 1, 2 }, array.Take(2));
-			Assert.Equal(array, array.Take(6));
+			Assert.Equal(new[] { 1, 2 }, intArray.Take(2));
+			Assert.Equal(intArray, intArray.Take(6));
 			Assert.Throws<IndexOutOfRangeException>(() => Enumerable<int>.Empty.Take(3).ToArray());
 		}
 
 		[Fact]
 		public void To()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 			var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
 			Assert.Empty((null as IEnumerable<int>).To(i => i.ToString()));
-			Assert.Equal(stringArray, array.To(i => i.ToString()));
-			Assert.Equal(stringArray, array.ToImmutableArray().To(i => i.ToString()));
-			Assert.Equal(stringArray, new List<int>(array).To(i => i.ToString()));
+			Assert.Equal(stringArray, intArray.To(i => i.ToString()));
+			Assert.Equal(stringArray, intArray.ToImmutableArray().To(i => i.ToString()));
+			Assert.Equal(stringArray, new List<int>(intArray).To(i => i.ToString()));
 			Assert.Equal(stringArray, this.GetItems().To(i => i.ToString()));
+			Assert.Equal(stringArray, this.GetItems().To((x, i) => (i + 1).ToString()));
 		}
 
 		[Fact]
@@ -506,33 +507,33 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToCSV()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal("1,2,3,4,5,6", array.ToCSV());
-			Assert.Equal("1,2,3,4,5,6", array.ToCSV(i => i.ToString()));
-			Assert.Throws<ArgumentNullException>(() => array.ToCSV(null));
+			Assert.Equal("1,2,3,4,5,6", intArray.ToCSV());
+			Assert.Equal("1,2,3,4,5,6", intArray.ToCSV(i => i.ToString()));
+			Assert.Throws<ArgumentNullException>(() => intArray.ToCSV(null));
 			Assert.Equal(@"""""""abc"""",""""def"""""",ghi", new[] { @"""abc"",""def""", "ghi" }.ToCSV());
 		}
 
 		[Fact]
 		public void ToDictionary()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array.Length, array.To(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
+			Assert.Equal(intArray.Length, intArray.To(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
 			Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
 
-			Assert.Equal(array.Length, array.To(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
+			Assert.Equal(intArray.Length, intArray.To(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
 			Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
-			Assert.Equal(array.Length, array.To(i => (i, i.ToString())).ToDictionary().Count);
+			Assert.Equal(intArray.Length, intArray.To(i => (i, i.ToString())).ToDictionary().Count);
 			Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
-			Assert.Equal(array.Length, this.GetItems().ToDictionary(i => i.ToString()).Count);
+			Assert.Equal(intArray.Length, this.GetItems().ToDictionary(i => i.ToString()).Count);
 			Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary(i => i.ToString()));
 			Assert.Throws<ArgumentNullException>(() => this.GetItems().ToDictionary<int, string>(null));
 
-			Assert.Equal(array.Length, this.GetItems().ToDictionary(i => i, i => i.ToString()).Count);
+			Assert.Equal(intArray.Length, this.GetItems().ToDictionary(i => i, i => i.ToString()).Count);
 			Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary(i => i, i => i.ToString()));
 			Assert.Throws<ArgumentNullException>(() => this.GetItems().ToDictionary<int, string>(null, i => i.ToString()));
 			Assert.Throws<ArgumentNullException>(() => this.GetItems().ToDictionary(i => i, null as Func<int, string>));
@@ -548,9 +549,9 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToHashSet()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, this.GetItems().ToHashSet(EqualityComparer<int>.Default));
+			Assert.Equal(intArray, this.GetItems().ToHashSet(EqualityComparer<int>.Default));
 			Assert.Empty(Enumerable<int>.Empty.ToHashSet());
 			Assert.Empty((null as IEnumerable<int>).ToHashSet());
 		}
@@ -558,10 +559,10 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToImmutableQueue()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.IsSequence(this.GetItems().ToImmutableQueue()));
-			Assert.True(array.IsSequence(((IEnumerable<int>)array).ToImmutableQueue()));
+			Assert.True(intArray.IsSequence(this.GetItems().ToImmutableQueue()));
+			Assert.True(intArray.IsSequence(((IEnumerable<int>)intArray).ToImmutableQueue()));
 			Assert.Empty(Enumerable<int>.Empty.ToImmutableQueue());
 			Assert.Empty((null as IEnumerable<int>).ToImmutableQueue());
 		}
@@ -569,10 +570,10 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToImmutableStack()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.ToStack().IsSequence(this.GetItems().ToImmutableStack()));
-			Assert.True(array.ToStack().IsSequence(((IEnumerable<int>)array).ToImmutableStack()));
+			Assert.True(intArray.ToStack().IsSequence(this.GetItems().ToImmutableStack()));
+			Assert.True(intArray.ToStack().IsSequence(((IEnumerable<int>)intArray).ToImmutableStack()));
 			Assert.Empty(Enumerable<int>.Empty.ToImmutableStack());
 			Assert.Empty((null as IEnumerable<int>).ToImmutableStack());
 		}
@@ -594,10 +595,10 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToList()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, this.GetItems().ToList());
-			Assert.True(array.IsSequence(this.GetItems().ToList()));
+			Assert.Equal(intArray, this.GetItems().ToList());
+			Assert.True(intArray.IsSequence(this.GetItems().ToList()));
 			Assert.Empty(Enumerable<int>.Empty.ToList());
 			Assert.Empty((null as IEnumerable<int>).ToList());
 		}
@@ -605,9 +606,9 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToMany()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, new[] { 1, 4 }.ToMany(i => new[] { i, i + 1, i + 2 }));
+			Assert.Equal(intArray, new[] { 1, 4 }.ToMany(i => new[] { i, i + 1, i + 2 }));
 			Assert.Throws<ArgumentNullException>(() => new[] { 1, 4 }.ToMany(null as Func<int, IEnumerable<string>>).ToArray());
 			Assert.Empty(Array<int>.Empty.ToMany(i => new[] { i, i + 1, i + 2 }));
 			Assert.Empty((null as IEnumerable<int>).ToMany(i => new[] { i, i + 1, i + 2 }));
@@ -616,10 +617,10 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToQueue()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.Equal(array, this.GetItems().ToQueue());
-			Assert.True(array.IsSequence(this.GetItems().ToQueue()));
+			Assert.Equal(intArray, this.GetItems().ToQueue());
+			Assert.True(intArray.IsSequence(this.GetItems().ToQueue()));
 			Assert.Empty(Enumerable<int>.Empty.ToQueue());
 			Assert.Empty((null as IEnumerable<int>).ToQueue());
 		}
@@ -627,34 +628,34 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void ToReadOnlySpan()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			Assert.True((null as IEnumerable<int>).ToReadOnlySpan().IsEmpty);
-			Assert.Equal(array.Length, array.ToImmutableArray().ToReadOnlySpan().Length);
-			Assert.Equal(array.Length, array.ToReadOnlySpan().Length);
-			Assert.Equal(array.Length, array.ToList().ToReadOnlySpan().Length);
-			Assert.Equal(array.Length, this.GetItems().ToReadOnlySpan().Length);
+			Assert.Equal(intArray.Length, intArray.ToImmutableArray().ToReadOnlySpan().Length);
+			Assert.Equal(intArray.Length, intArray.ToReadOnlySpan().Length);
+			Assert.Equal(intArray.Length, intArray.ToList().ToReadOnlySpan().Length);
+			Assert.Equal(intArray.Length, this.GetItems().ToReadOnlySpan().Length);
 		}
 
 		[Fact]
 		public void ToSpan()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 			Assert.True((null as IEnumerable<int>).ToSpan().IsEmpty);
-			Assert.Equal(array.Length, array.ToSpan().Length);
-			Assert.Equal(array.Length, array.ToList().ToSpan().Length);
-			Assert.Equal(array.Length, this.GetItems().ToSpan().Length);
+			Assert.Equal(intArray.Length, intArray.ToSpan().Length);
+			Assert.Equal(intArray.Length, intArray.ToList().ToSpan().Length);
+			Assert.Equal(intArray.Length, this.GetItems().ToSpan().Length);
 		}
 
 		[Fact]
 		public void ToStack()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			array.Reverse();
-			Assert.Equal(array, this.GetItems().ToStack());
-			Assert.True(array.IsSequence(this.GetItems().ToStack()));
+			intArray.Reverse();
+			Assert.Equal(intArray, this.GetItems().ToStack());
+			Assert.True(intArray.IsSequence(this.GetItems().ToStack()));
 			Assert.Empty(Enumerable<int>.Empty.ToStack());
 			Assert.Empty((null as IEnumerable<int>).ToStack());
 		}
@@ -662,11 +663,11 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Union()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.IsSet(new[] { 1, 2 }.Union(new[] { 3, 4 }).Union(new[] { 5, 6 })));
-			Assert.True(array.IsSet(array.Union(Array<int>.Empty)));
-			Assert.True(array.IsSet(array.Union(null)));
+			Assert.True(intArray.IsSet(new[] { 1, 2 }.Union(new[] { 3, 4 }).Union(new[] { 5, 6 })));
+			Assert.True(intArray.IsSet(intArray.Union(Array<int>.Empty)));
+			Assert.True(intArray.IsSet(intArray.Union(null)));
 			Assert.Empty(Enumerable<string>.Empty.Union(Enumerable<string>.Empty));
 			Assert.Empty((null as IEnumerable<string>).Union(Enumerable<string>.Empty));
 		}
@@ -674,12 +675,12 @@ namespace TypeCache.Tests.Collections.Extensions
 		[Fact]
 		public void Without()
 		{
-			var array = new[] { 1, 2, 3, 4, 5, 6 };
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-			Assert.True(array.IsSet(array.Without(new[] { 7, 8, 9, 0 })));
-			Assert.True(array.IsSet(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }.Without(new[] { 7, 8, 9, 0 })));
-			Assert.True(array.IsSet(array.Without(Array<int>.Empty)));
-			Assert.True(array.IsSet(array.Without(null)));
+			Assert.True(intArray.IsSet(intArray.Without(new[] { 7, 8, 9, 0 })));
+			Assert.True(intArray.IsSet(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }.Without(new[] { 7, 8, 9, 0 })));
+			Assert.True(intArray.IsSet(intArray.Without(Array<int>.Empty)));
+			Assert.True(intArray.IsSet(intArray.Without(null)));
 			Assert.Empty(Enumerable<string>.Empty.Without(Enumerable<string>.Empty));
 			Assert.Empty((null as IEnumerable<string>).Without(Enumerable<string>.Empty));
 		}

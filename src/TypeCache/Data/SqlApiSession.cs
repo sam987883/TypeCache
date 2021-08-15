@@ -74,6 +74,10 @@ namespace TypeCache.Data
 			=> await this._DbConnection.RunAsync(request, this._CancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async ValueTask<long> CountAsync(CountRequest request)
+			=> await this._DbConnection.CountAsync(request, this._CancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async ValueTask<RowSet> DeleteAsync(DeleteRequest request)
 			=> await this._DbConnection.DeleteAsync(request, this._CancellationToken);
 

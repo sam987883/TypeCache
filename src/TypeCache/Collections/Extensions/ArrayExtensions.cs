@@ -285,6 +285,19 @@ namespace TypeCache.Collections.Extensions
 				yield return map(@this[i]);
 		}
 
+		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, int, V> map)
+		{
+			map.AssertNotNull(nameof(map));
+
+			if (@this is null)
+				yield break;
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return map(@this[i], i);
+		}
+
 		public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)
 		{
 			if (!@this.Any())

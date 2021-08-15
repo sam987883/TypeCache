@@ -337,17 +337,39 @@ namespace TypeCache.GraphQL.Types
 
 			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
 			if (objectSchema.Type == ObjectType.Table)
 			{
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Delete"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["DeleteData"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["InsertData"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["Update"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(TypeOf<SqlApi<T>>.Methods["UpdateData"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(sqlApiMethods["Delete"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(sqlApiMethods["DeleteData"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(sqlApiMethods["InsertData"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(sqlApiMethods["Update"][0].ToFieldType(sqlApi));
+				this.Mutation.AddField(sqlApiMethods["UpdateData"][0].ToFieldType(sqlApi));
 			}
 
-			this.Query.AddField(TypeOf<SqlApi<T>>.Methods["Select"][0].ToFieldType(sqlApi));
+			this.Query.AddField(sqlApiMethods["Count"][0].ToFieldType(sqlApi));
+			this.Query.AddField(sqlApiMethods["Page"][0].ToFieldType(sqlApi));
+			this.Query.AddField(sqlApiMethods["Select"][0].ToFieldType(sqlApi));
+		}
+
+		/// <summary>
+		/// Creates the following GraphQL endpoints:
+		/// <list type="table">
+		/// <item><term>Query: Count-{Item}</term> <description>Counts records based on a <c>WHERE</c> clause.</description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// </summary>
+		public void AddCountEndpoint<T>(string dataSource, string table)
+			where T : class, new()
+		{
+			table.AssertNotBlank(nameof(table));
+
+			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+
+			TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -366,9 +388,10 @@ namespace TypeCache.GraphQL.Types
 
 			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			TypeOf<SqlApi<T>>.Methods["Delete"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			TypeOf<SqlApi<T>>.Methods["DeleteData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Delete"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["DeleteData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -388,6 +411,25 @@ namespace TypeCache.GraphQL.Types
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+		}
+
+		/// <summary>
+		/// Creates the following GraphQL endpoints:
+		/// <list type="table">
+		/// <item><term>Query: Page-{Item}</term> <description>Pages records based on a <c>WHERE</c> clause.</description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// </summary>
+		public void AddPageEndpoint<T>(string dataSource, string table)
+			where T : class, new()
+		{
+			table.AssertNotBlank(nameof(table));
+
+			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+
+			TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -425,9 +467,10 @@ namespace TypeCache.GraphQL.Types
 
 			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			TypeOf<SqlApi<T>>.Methods["Update"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			TypeOf<SqlApi<T>>.Methods["UpdateData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Update"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["UpdateData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
 		}
 	}
 }
