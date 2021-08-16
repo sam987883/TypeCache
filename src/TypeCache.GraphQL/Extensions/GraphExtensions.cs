@@ -19,6 +19,9 @@ namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphExtensions
 	{
+		/// <summary>
+		/// Gets the input arguments and fields that have had a value set.
+		/// </summary>
 		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this)
 		{
 			foreach (var pair in @this.Arguments)
@@ -33,6 +36,9 @@ namespace TypeCache.GraphQL.Extensions
 			}
 		}
 
+		/// <summary>
+		/// Gets the input fields that have had a value set for a particular input object.
+		/// </summary>
 		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this, string path)
 		{
 			var inputs = path.Split('.', StringSplitOptions.RemoveEmptyEntries).ToQueue();
@@ -61,7 +67,6 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			foreach (var parameter in method.Parameters)
 			{
-				var graphAttribute = parameter.Attributes.GraphName() ?? parameter.Name;
 				if (parameter.Attributes.GraphIgnore())
 					continue;
 

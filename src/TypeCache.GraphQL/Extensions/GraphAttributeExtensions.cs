@@ -98,21 +98,7 @@ namespace TypeCache.GraphQL.Extensions
 				_ => typeof(StringGraphType)
 			};
 
-		private static Type GetGraphType(TypeMember type, IEnumerable<Attribute> attributes, bool isInputType)
-		{
-			var graphType = attributes.GraphType();
-			if (graphType is not null)
-				return graphType;
-
-			graphType = type.ToGraphType(isInputType);
-
-			if (attributes.Any<NotNullAttribute>() || !type.IsNullable())
-				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
-
-			return graphType;
-		}
-
-		private static Type ToGraphType(this TypeMember @this, bool isInputType)
+		public static Type ToGraphType(this TypeMember @this, bool isInputType)
 			=> @this.Kind switch
 			{
 				Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
@@ -145,5 +131,19 @@ namespace TypeCache.GraphQL.Extensions
 					_ => typeof(GraphObjectType<>).MakeGenericType(@this)
 				}
 			};
+
+		private static Type GetGraphType(TypeMember type, IEnumerable<Attribute> attributes, bool isInputType)
+		{
+			var graphType = attributes.GraphType();
+			if (graphType is not null)
+				return graphType;
+
+			graphType = type.ToGraphType(isInputType);
+
+			if (attributes.Any<NotNullAttribute>() || !type.IsNullable())
+				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
+
+			return graphType;
+		}
 	}
 }

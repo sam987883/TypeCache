@@ -12,6 +12,9 @@ using TypeCache.Business;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Data.Extensions;
+using TypeCache.Data.Requests;
+using TypeCache.Data.Responses;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -28,7 +31,7 @@ namespace TypeCache.GraphQL.Types
 		private readonly IDataLoaderContextAccessor _DataLoader;
 		private readonly IMediator _Mediator;
 		private readonly IServiceProvider _ServiceProvider;
-		private readonly ISqlApi _SqlApi;
+		private readonly ISqlApi? _SqlApi;
 
 		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, IDataLoaderContextAccessor dataLoader, Action<GraphSchema> addEndpoints) : base(provider)
 		{
@@ -38,7 +41,7 @@ namespace TypeCache.GraphQL.Types
 			this._DataLoader = dataLoader;
 			this._Mediator = mediator;
 			this._ServiceProvider = provider;
-			this._SqlApi = sqlApi!;
+			this._SqlApi = sqlApi;
 
 			addEndpoints(this);
 		}
@@ -320,12 +323,12 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Delete-{Item}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Delete-Batch-{Item}</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
-		/// <item><term>Mutation: Insert-Batch-{Item}</term> <description>Inserts a batch of records.</description></item>
-		/// <item><term>Query: Select-{Item}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update-{Item}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update-Batch-{Item}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Delete-{Table}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Delete-Batch-{Table}</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Insert-Batch-{Table}</term> <description>Inserts a batch of records.</description></item>
+		/// <item><term>Query: Select-{Table}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Update-{Table}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Update-Batch-{Table}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
@@ -334,8 +337,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
@@ -356,7 +360,37 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Count-{Item}</term> <description>Counts records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Call{Procedure}</term> <description>Calls the stored procedure and returns its results.</description></item>
+		/// </list>
+		/// <i>Requires call to:</i>
+		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// </summary>
+		public void AddCallProcedureEndpoint<T>(string dataSource, string procedure)
+			where T : class, new()
+		{
+			procedure.AssertNotBlank(nameof(procedure));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
+
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, procedure);
+			var arguments = schema.Parameters.ToDictionary(parameter => parameter.Name, parameter =>
+			{
+				var type = parameter.Type.ToType();
+				return type.IsValueType ? typeof(Nullable<>).MakeGenericType(type).TypeHandle : type.TypeHandle;
+			}, StringComparer.OrdinalIgnoreCase);
+			this.Query.AddField(new()
+			{
+				Arguments = new QueryArguments(arguments.To(_ => new QueryArgument(_.Value.GetTypeMember().ToGraphType(true)) { Name = _.Key })),
+				Name = $"Call{schema.ObjectName}",
+				Description = $"Calls stored procedure: {schema.Name}.",
+				Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),
+				Type = TypeOf<StoredProcedureResponse>.Member.ToGraphType(false)
+			});
+		}
+
+		/// <summary>
+		/// Creates the following GraphQL endpoints:
+		/// <list type="table">
+		/// <item><term>Query: Count{Table}</term> <description>Counts records based on a <c>WHERE</c> clause.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -365,8 +399,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
@@ -375,8 +410,8 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Delete-{Item}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Delete-Batch-{Item}</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Delete{Table}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Delete{Table}Data</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
@@ -385,8 +420,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
@@ -397,7 +433,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Insert-Batch-{Item}</term> <description>Inserts a batch of records.</description></item>
+		/// <item><term>Mutation: Insert{Table}Data</term> <description>Inserts a batch of records.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
@@ -406,8 +442,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
@@ -416,7 +453,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Page-{Item}</term> <description>Pages records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Query: Page{Table}</term> <description>Pages records based on a <c>WHERE</c> clause.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -425,8 +462,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
@@ -435,7 +473,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Select-{Item}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Query: Select{Table}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -444,8 +482,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
@@ -454,8 +493,8 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Update-{Item}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update-Batch-{Item}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Update{Table}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Mutation: Update{Table}Data</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
@@ -464,8 +503,9 @@ namespace TypeCache.GraphQL.Types
 			where T : class, new()
 		{
 			table.AssertNotBlank(nameof(table));
+			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi.GetObjectSchema(dataSource, table);
+			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 

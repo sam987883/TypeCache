@@ -4,8 +4,9 @@ using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.SQL;
 
-namespace TypeCache.GraphQL.SQL
+namespace TypeCache.GraphQL.Types
 {
 	public class GraphOrderByType<T> : EnumerationGraphType
 		where T : class

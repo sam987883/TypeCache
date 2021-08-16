@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.SQL
 {

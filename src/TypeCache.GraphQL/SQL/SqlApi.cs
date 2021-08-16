@@ -97,7 +97,7 @@ namespace TypeCache.GraphQL.SQL
 			return sqlResponse;
 		}
 
-		[GraphName("DeleteData{0}")]
+		[GraphName("Delete{0}Data")]
 		[GraphDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES ...")]
 		public async Task<SqlResponse<T>> DeleteData([NotNull] T[] data, IResolveFieldContext context)
 		{
@@ -130,7 +130,7 @@ namespace TypeCache.GraphQL.SQL
 			return sqlResponse;
 		}
 
-		[GraphName("InsertData{0}")]
+		[GraphName("Insert{0}Data")]
 		[GraphDescription("INSERT INTO {0} ... VALUES ...")]
 		public async Task<SqlResponse<T>> InsertBatch([NotNull] T[] batch, IResolveFieldContext context)
 		{
@@ -293,7 +293,7 @@ namespace TypeCache.GraphQL.SQL
 			return sqlResponse;
 		}
 
-		[GraphName("UpdateData{0}")]
+		[GraphName("Update{0}Data")]
 		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES ...")]
 		public async Task<SqlResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 		{

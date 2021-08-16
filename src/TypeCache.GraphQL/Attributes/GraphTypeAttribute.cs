@@ -5,7 +5,6 @@ using GraphQL;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Attributes
 {
