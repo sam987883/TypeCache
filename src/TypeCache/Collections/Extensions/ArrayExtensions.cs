@@ -129,7 +129,7 @@ namespace TypeCache.Collections.Extensions
 		/// Can modify the contents of the array and the looping index.<br/>
 		/// index = 0 restarts the loop, --index repeats the current item and ++index skips the next item.
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this T[]? @this, ActionRef<T, int> action)
 		{
 			action.AssertNotNull(nameof(action));
@@ -139,7 +139,7 @@ namespace TypeCache.Collections.Extensions
 				action(ref @this![index], ref index);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this T[]? @this, Action<T> action, Action between)
 		{
 			action.AssertNotNull(nameof(action));
@@ -157,7 +157,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this T[]? @this, Action<T, int> action, Action between)
 		{
 			action.AssertNotNull(nameof(action));
@@ -176,7 +176,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="IndexOutOfRangeException"/>.</remarks>
+		/// <exception cref="IndexOutOfRangeException" />
 		public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 		{
 			if (range.Start.IsFromEnd || range.End.IsFromEnd)
@@ -185,7 +185,7 @@ namespace TypeCache.Collections.Extensions
 			return range.Values().To(i => @this[i]);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<T> If<T>(this T[]? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -202,7 +202,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -261,7 +261,7 @@ namespace TypeCache.Collections.Extensions
 		public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null)
 			=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 
-		/// <remarks>Throws <see cref="IndexOutOfRangeException"/>.</remarks>
+		/// <exception cref="IndexOutOfRangeException" />
 		public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
 		{
 			if (sourceIndex + length > @this.Length)
@@ -272,7 +272,7 @@ namespace TypeCache.Collections.Extensions
 			return array;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, V> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -285,7 +285,7 @@ namespace TypeCache.Collections.Extensions
 				yield return map(@this[i]);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, int, V> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -308,7 +308,7 @@ namespace TypeCache.Collections.Extensions
 			return array;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		internal static async IAsyncEnumerable<V> ToAsync<T, V>(T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			map.AssertNotNull(nameof(map));
@@ -337,7 +337,7 @@ namespace TypeCache.Collections.Extensions
 			where T : notnull
 			=> ImmutableStack.Create(@this ?? Array<T>.Empty);
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<int> ToIndex<T>(this T[]? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));

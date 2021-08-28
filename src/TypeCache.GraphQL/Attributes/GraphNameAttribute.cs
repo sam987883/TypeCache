@@ -12,6 +12,7 @@ namespace TypeCache.GraphQL.Attributes
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue | AttributeTargets.Struct)]
 	public class GraphNameAttribute : Attribute
 	{
+		/// <exception cref="ArgumentNullException"/>
 		public GraphNameAttribute(string name)
 		{
 			name.AssertNotBlank(nameof(name));

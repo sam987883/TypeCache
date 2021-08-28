@@ -208,10 +208,10 @@ namespace TypeCache.Extensions
 			where T : struct, Enum
 			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
 
-		public static string? TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> !text.IsBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : @this;
+		public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> !text.IsBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
-		public static string? TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-			=> !text.IsBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : @this;
+		public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+			=> !text.IsBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 	}
 }

@@ -14,13 +14,13 @@ namespace TypeCache.GraphQL.Types
 
 		public GraphEnumType()
 		{
-			this.Name = EnumOf<T>.Attributes.GraphName() ?? EnumOf<T>.Name;
+			this.Name = TypeOf<T>.Member.GraphName();
 
-			EnumOf<T>.Tokens.Values.If(token => !token.Attributes.GraphIgnore()).Do(token =>
+			EnumOf<T>.Tokens.Values.If(token => !token.GraphIgnore()).Do(token =>
 			{
-				var name = token.Attributes.GraphName() ?? token.Name;
-				var description = token.Attributes.GraphDescription();
-				var deprecationReason = token.Attributes.ObsoleteMessage();
+				var name = token.GraphName();
+				var description = token.GraphDescription();
+				var deprecationReason = token.ObsoleteMessage();
 
 				this.AddValue(name, description, token.Value, deprecationReason);
 			});

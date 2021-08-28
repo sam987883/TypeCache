@@ -13,7 +13,7 @@ namespace TypeCache.GraphQL.Types
 		public GraphObjectType()
 		{
 			var name = TypeOf<T>.Attributes.GraphName();
-			var description = TypeOf<T>.Attributes.GraphDescription();
+			var description = TypeOf<T>.Member.GraphDescription();
 
 			if (TypeOf<T>.Is(typeof(Connection<>)))
 			{
@@ -28,17 +28,16 @@ namespace TypeCache.GraphQL.Types
 			else
 			{
 				name ??= TypeOf<T>.Name;
-				description ??= $"An object of type `{TypeOf<T>.Name}`.";
 
 				TypeOf<T>.InterfaceTypes.Do(type => this.Interface(type));
 			}
 
 			this.Name = name;
 			this.Description = description;
-			this.DeprecationReason = TypeOf<T>.Attributes.ObsoleteMessage();
+			this.DeprecationReason = TypeOf<T>.Member.ObsoleteMessage();
 
 			TypeOf<T>.Properties.Values
-				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore())
+				.If(property => property.Getter is not null && !property.GraphIgnore())
 				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}

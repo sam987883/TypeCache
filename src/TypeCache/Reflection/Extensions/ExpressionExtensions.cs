@@ -57,7 +57,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Assign(this Expression @this, ArithmeticOp operation, Expression operand)
 			=> operation switch
 			{
@@ -84,7 +84,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Assign(this Expression @this, BitwiseOp operation, Expression operand)
 			=> operation switch
 			{
@@ -435,7 +435,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static UnaryExpression Operation(this Expression @this, UnaryOp operation)
 			=> operation switch
 			{
@@ -468,7 +468,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Operation(this Expression @this, ArithmeticOp operation, Expression operand)
 			=> operation switch
 			{
@@ -495,7 +495,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Operation(this Expression @this, BitwiseOp operation, Expression operand)
 			=> operation switch
 			{
@@ -521,7 +521,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Operation(this Expression @this, EqualityOp operation, Expression operand)
 			=> operation switch
 			{
@@ -544,7 +544,7 @@ namespace TypeCache.Reflection.Extensions
 		/// </list>
 		/// </code>
 		/// </summary>
-		/// <remarks>Throws <see cref="NotSupportedException"/>.</remarks>
+		/// <exception cref="NotSupportedException" />
 		public static BinaryExpression Operation(this Expression @this, LogicalOp operation, Expression operand)
 			=> operation switch
 			{

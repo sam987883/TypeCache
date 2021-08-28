@@ -15,8 +15,12 @@ namespace TypeCache.Reflection
 	public readonly struct MethodMember
 		: IMember, IEquatable<MethodMember>
 	{
+		private static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer;
+
 		static MethodMember()
 		{
+			RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
+
 			Cache = new LazyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember>(CreateMethodMember);
 
 			static MethodMember CreateMethodMember((RuntimeMethodHandle MethodHandle, RuntimeTypeHandle TypeHandle) handle)
@@ -25,33 +29,45 @@ namespace TypeCache.Reflection
 
 		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
 
+		private readonly IReadOnlyDictionary<RuntimeTypeHandle[], InvokeType>? _Cache;
+
+		private readonly InvokeType? _Invoke;
+
 		internal MethodMember(MethodInfo methodInfo)
 		{
 			this.Type = methodInfo.GetTypeMember();
 			this.Attributes = methodInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? methodInfo.Name;
+			this.GenericTypes = methodInfo.GetGenericArguments().Length;
 			this.Handle = methodInfo.MethodHandle;
-			this.Method = methodInfo.ToDelegate();
+			this.Method = !methodInfo.ContainsGenericParameters ? methodInfo.ToDelegate() : null;
 			this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 			this.Static = methodInfo.IsStatic;
 			this.Return = new ReturnParameter(methodInfo);
 			this.Internal = methodInfo.IsAssembly;
 			this.Public = methodInfo.IsPublic;
 
-			this._Invoke = methodInfo.ToInvokeType();
-		}
+			this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, RuntimeTypeHandleArrayComparer) : null;
+			this._Invoke = !methodInfo.ContainsGenericParameters ? methodInfo.ToInvokeType() : null;
 
-		private readonly InvokeType _Invoke;
+			InvokeType CreateGenericInvoke(params RuntimeTypeHandle[] handles)
+			{
+				var types = handles.To(handle => handle.ToType()).ToArray();
+				return methodInfo.MakeGenericMethod(types).ToInvokeType();
+			}
+		}
 
 		public TypeMember Type { get; }
 
 		public IImmutableList<Attribute> Attributes { get; }
 
+		public int GenericTypes { get; }
+
 		public string Name { get; }
 
 		public RuntimeMethodHandle Handle { get; }
 
-		public Delegate Method { get; }
+		public Delegate? Method { get; }
 
 		public IImmutableList<MethodParameter> Parameters { get; }
 
@@ -70,7 +86,12 @@ namespace TypeCache.Reflection
 		/// <param name="instance">Pass null if the method is static.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public object? Invoke(object? instance, params object?[]? arguments)
-			=> this._Invoke(instance, arguments);
+			=> this._Invoke?.Invoke(instance, arguments);
+
+		/// <param name="instance">Pass null if the method is static.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public object? InvokeGeneric(object? instance, Type[] genericTypes, params object?[]? arguments)
+			=> this._Cache?[genericTypes.To(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(MethodMember other)

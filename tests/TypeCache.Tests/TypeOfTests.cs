@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
@@ -13,8 +14,36 @@ using Xunit;
 
 namespace TypeCache.Tests
 {
+	public class Tester1
+	{
+		public A GenericMethod<A, B, C>(B param1, C param2)
+		{
+			Console.WriteLine($"{param1?.ToString() ?? "null"} and {param2?.ToString() ?? "null"}");
+			return default(A);
+		}
+	}
+
 	public class TypeOfTests
     {
+		[Fact]
+		public void InvokeGenericMethod()
+		{
+			var tester = new Tester1();
+
+			var method = TypeOf<Tester1>.Methods[nameof(Tester1.GenericMethod)].FirstValue();
+			Assert.NotNull(method);
+
+			var value = method.Value.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
+			Assert.Equal(0, value);
+
+			// Test pulling it out of cache
+			method = TypeOf<Tester1>.Methods[nameof(Tester1.GenericMethod)].FirstValue();
+			Assert.NotNull(method);
+
+			value = method.Value.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
+			Assert.Equal(0, value);
+		}
+
 		[Fact]
 		public void TypeOfClass()
 		{
@@ -53,7 +82,7 @@ namespace TypeCache.Tests
 			Assert.Equal(7, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Class, member.Kind);
-			Assert.Equal(92, member.Methods.Count);
+			Assert.Equal(93, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
 			Assert.Equal(2, member.Properties.Count);
 			Assert.True(member.Public);
@@ -99,7 +128,7 @@ namespace TypeCache.Tests
 			Assert.Equal(13, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Collection, member.Kind);
-			Assert.Equal(57, member.Methods.Count);
+			Assert.Equal(61, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
 			Assert.Equal(18, member.Properties.Count);
 			Assert.True(member.Public);

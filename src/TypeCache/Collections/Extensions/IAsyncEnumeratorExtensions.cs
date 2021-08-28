@@ -22,7 +22,7 @@ namespace TypeCache.Collections.Extensions
 				yield return @this.Current;
 		}
 
-		/// <remarks>Throws <c><see cref="IndexOutOfRangeException"/></c>.</remarks>
+		/// <exception cref="IndexOutOfRangeException" />
 		public async static ValueTask<T> SkipAsync<T>(this IAsyncEnumerator<T> @this, int count)
 		{
 			while (count > 0 && await @this.MoveNextAsync())

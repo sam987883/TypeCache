@@ -19,38 +19,66 @@ namespace TypeCache.GraphQL.Extensions
 	public static class GraphAttributeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string? GraphDescription(this IEnumerable<Attribute> @this)
-			=> @this.First<GraphDescriptionAttribute>()?.Description;
+		public static string? GraphDescription(this IMember @this)
+			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string? GraphDescription(this MethodParameter @this)
+			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GraphIgnore(this IMember @this)
+			=> @this.Attributes.Any<GraphIgnoreAttribute>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GraphIgnore(this MethodParameter @this)
+			=> @this.Attributes.Any<GraphIgnoreAttribute>() || @this.Type.Handle.Is<IResolveFieldContext>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string? GraphKey(this IMember @this)
+			=> @this.Attributes.First<GraphKeyAttribute>()?.Name;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GraphInputName(this TypeMember @this)
+			=> @this.Attributes.First<GraphInputNameAttribute>()?.Name ?? $"{@this.Name}Input";
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GraphName(this IMember @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string? GraphName(this IEnumerable<Attribute> @this)
 			=> @this.First<GraphNameAttribute>()?.Name;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool GraphIgnore(this IEnumerable<Attribute> @this)
-			=> @this.Any<GraphIgnoreAttribute>();
+		public static string GraphName(this MethodMember @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GraphName(this MethodParameter @this)
+			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool GraphNonNull(this TypeMember @this)
+			=> @this.Attributes.Any<NotNullAttribute>() || !@this.IsNullable();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type? GraphType(this IEnumerable<Attribute> @this)
 			=> @this.First<GraphTypeAttribute>()?.GraphType;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type GetGraphType(this MethodParameter @this)
-			=> GetGraphType(@this.Type, @this.Attributes, true);
+		public static Type GraphType(this MethodParameter @this)
+			=> @this.Attributes.GraphType() ?? @this.Type.GraphType(true);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type GetGraphType(this PropertyMember @this, bool isInputType)
-			=> GetGraphType(@this.PropertyType, @this.Attributes, isInputType);
+		public static Type GraphType(this PropertyMember @this, bool isInputType)
+			=> @this.Attributes.GraphType() ?? @this.PropertyType.GraphType(isInputType);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type GetGraphType(this ReturnParameter @this)
-			=> GetGraphType(@this.Type, @this.Attributes, false);
+		public static Type GraphType(this ReturnParameter @this)
+			=> @this.Attributes.GraphType() ?? @this.Type.GraphType(false);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string? ObsoleteMessage(this IEnumerable<Attribute> @this)
-			=> @this.First<ObsoleteAttribute>()?.Message;
-
-		public static Type ToGraphType(this ScalarType @this)
+		public static Type GraphType(this ScalarType @this)
 			=> @this switch
 			{
 				ScalarType.ID => typeof(IdGraphType),
@@ -98,12 +126,17 @@ namespace TypeCache.GraphQL.Extensions
 				_ => typeof(StringGraphType)
 			};
 
-		public static Type ToGraphType(this TypeMember @this, bool isInputType)
-			=> @this.Kind switch
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string? ObsoleteMessage(this IMember @this)
+			=> @this.Attributes.First<ObsoleteAttribute>()?.Message;
+
+		internal static Type GraphType(this TypeMember @this, bool isInputType)
+		{
+			var graphType = @this.Kind switch
 			{
 				Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 				Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
-				Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.Value.ToGraphType(isInputType)),
+				Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.Value.GraphType(isInputType)),
 				Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
 				_ => @this.SystemType switch
 				{
@@ -125,25 +158,14 @@ namespace TypeCache.GraphQL.Extensions
 					SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
 					SystemType.Guid => typeof(GuidGraphType),
 					SystemType.Range => typeof(StringGraphType),
-					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.Value.ToGraphType(isInputType),
+					SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.Value.GraphType(isInputType),
 					_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphOrderByType<>).MakeGenericType(@this),
 					_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
 					_ => typeof(GraphObjectType<>).MakeGenericType(@this)
 				}
 			};
 
-		private static Type GetGraphType(TypeMember type, IEnumerable<Attribute> attributes, bool isInputType)
-		{
-			var graphType = attributes.GraphType();
-			if (graphType is not null)
-				return graphType;
-
-			graphType = type.ToGraphType(isInputType);
-
-			if (attributes.Any<NotNullAttribute>() || !type.IsNullable())
-				graphType = typeof(NonNullGraphType<>).MakeGenericType(graphType);
-
-			return graphType;
+			return @this.GraphNonNull() ? typeof(NonNullGraphType<>).MakeGenericType(graphType) : graphType;
 		}
 	}
 }

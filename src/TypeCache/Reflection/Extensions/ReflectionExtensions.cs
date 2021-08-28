@@ -95,9 +95,13 @@ namespace TypeCache.Reflection.Extensions
 
 			var callParameters = parameterInfos.To(parameterInfo => arguments.Array()[parameterInfo!.Position].SystemConvert(parameterInfo.ParameterType));
 			var instanceCast = instance.Cast(@this.DeclaringType!);
-			var body = !@this.IsStatic
-				? callParameters.Any() ? instanceCast.Call(@this, callParameters) : instanceCast.Call(@this)
-				: callParameters.Any() ? @this.CallStatic(callParameters) : @this.CallStatic();
+			var body = @this switch
+			{
+				_ when !@this.IsStatic && callParameters.Any() => instanceCast.Call(@this, callParameters),
+				_ when !@this.IsStatic => instanceCast.Call(@this),
+				_ when callParameters.Any() => @this.CallStatic(callParameters),
+				_ => @this.CallStatic()
+			};
 
 			return @this.ReturnType == typeof(void)
 				? body.Block(Expression.Constant(null)).Lambda<InvokeType>(instance, arguments).Compile()

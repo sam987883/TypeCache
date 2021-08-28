@@ -82,7 +82,7 @@ namespace TypeCache.Extensions
 				yield return @this;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentOutOfRangeException"/>.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public static IEnumerable<int> Values(this Range @this)
 		{
 			@this.Start.IsFromEnd.Assert("Range.Start.IsFromEnd", false);

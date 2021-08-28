@@ -13,15 +13,14 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphOrderByType()
 		{
-			var typeName = TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name;
-			this.Name = $"{typeName}_OrderBy";
-			this.Description = $"Order by `{typeName}`.";
+			this.Name = TypeOf<T>.Attributes.GraphName() ?? $"{TypeOf<T>.Name}_OrderBy";
+			this.Description = $"Order by `{TypeOf<T>.Name}`.";
 
-			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.Attributes.GraphIgnore()))
+			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphIgnore()))
 			{
-				var propertyName = property.Attributes.GraphName() ?? property.Name;
-				var description = property.Attributes.GraphDescription();
-				var deprecationReason = property.Attributes.ObsoleteMessage();
+				var propertyName = property.GraphName();
+				var description = property.GraphDescription();
+				var deprecationReason = property.ObsoleteMessage();
 
 				this.AddValue($"{propertyName}_ASC", description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending }, deprecationReason);
 				this.AddValue($"{propertyName}_DESC", description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Descending }, deprecationReason);

@@ -31,7 +31,7 @@ namespace TypeCache.Reflection.Extensions
 
 		public static IDictionary<string, MethodMember[]> CreateMethodMembers(this RuntimeTypeHandle @this)
 			=> @this.ToType().GetMethods(BINDINGS)
-				.If(methodInfo => !methodInfo.ContainsGenericParameters && !methodInfo.IsSpecialName && methodInfo.IsInvokable())
+				.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
 				.To(methodInfo => methodInfo.MethodHandle.GetMethodMember(@this))
 				.Group(method => method.Name, StringComparer.Ordinal)
 				.ToDictionary(_ => _.Key, _ => _.Value.ToArray(), StringComparison.Ordinal);

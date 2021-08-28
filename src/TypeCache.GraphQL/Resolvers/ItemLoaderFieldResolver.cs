@@ -17,34 +17,41 @@ namespace TypeCache.GraphQL.Resolvers
 	public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 	{
 		private readonly MethodMember _Method;
-		private readonly object _Handler;
+		private readonly object? _Handler;
 		private readonly IDataLoaderContextAccessor _DataLoader;
 
-		public ItemLoaderFieldResolver(MethodMember method, object handler, IDataLoaderContextAccessor dataLoader)
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
+		public ItemLoaderFieldResolver(MethodMember method, object? handler, IDataLoaderContextAccessor dataLoader)
 		{
-			handler.AssertNotNull(nameof(handler));
 			dataLoader.AssertNotNull(nameof(dataLoader));
 
-			if (!method.Return.Type.Is<T>())
-				throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name}] instead of [{method.Return.Type.Name}].");
+			if (!method.Static)
+				handler.AssertNotNull(nameof(handler));
+
+			dataLoader.AssertNotNull(nameof(dataLoader));
+
+			if (!method.Return.Type.Is<T>()
+				&& ((method.Return.IsTask || method.Return.IsValueTask) && method.Return.Type.EnclosedType?.Is<T>() is false))
+				throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Member.GraphName()}] instead of [{method.Return.Type.Name}].");
 
 			this._Method = method;
 			this._Handler = handler;
 			this._DataLoader = dataLoader;
 		}
 
+		/// <exception cref="ArgumentNullException"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		object IFieldResolver.Resolve(IResolveFieldContext context)
 			=> this.Resolve(context);
 
+		/// <exception cref="ArgumentNullException"/>
 		public IDataLoaderResult<T> Resolve(IResolveFieldContext context)
 		{
 			context.Source.AssertNotNull($"{nameof(context)}.{nameof(context.Source)}");
 
-			var child = this._Method.Attributes.GraphName() ?? this._Method.Name.TrimStart("Get")!.TrimEnd("Async");
-			var parent = context.Source.GetTypeMember().Attributes.GraphName();
 			var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
-				$"{parent}.{child}",
+				$"{context.Source!.GetTypeMember().GraphName()}.{this._Method.GraphName()}",
 				async () =>
 				{
 					var arguments = context.GetArguments<T>(this._Method).ToArray();

@@ -2,6 +2,7 @@
 
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
+using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.Types
@@ -10,15 +11,15 @@ namespace TypeCache.GraphQL.Types
 	{
 		public GraphObjectEnumType()
 		{
-			var graphName = TypeOf<T>.Attributes.GraphName();
-			this.Name = graphName ?? $"{TypeOf<T>.Name}_Fields";
+			var graphName = TypeOf<T>.Attributes.First<GraphNameAttribute>()?.Name;
+			this.Name = graphName ?? $"{TypeOf<T>.Name}Fields";
 			this.Description = $"Fields of type `{graphName ?? TypeOf<T>.Name}`.";
 
-			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.Attributes.GraphIgnore()))
+			foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphIgnore()))
 			{
-				var name = property.Attributes.GraphName() ?? property.Name;
-				var description = property.Attributes.GraphDescription();
-				var deprecationReason = property.Attributes.ObsoleteMessage();
+				var name = property.GraphName() ?? property.Name;
+				var description = property.GraphDescription();
+				var deprecationReason = property.ObsoleteMessage();
 
 				this.AddValue(name, description, name, deprecationReason);
 			}

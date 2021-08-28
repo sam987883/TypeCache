@@ -111,7 +111,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentOutOfRangeException"/>.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public static IEnumerable<T> Get<T>(this List<T> @this, Range range)
 		{
 			if (range.Start.IsFromEnd || range.End.IsFromEnd)
@@ -120,7 +120,7 @@ namespace TypeCache.Collections.Extensions
 			return range.Values().To(i => @this[i]);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<T> If<T>(this List<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -137,7 +137,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async IAsyncEnumerable<T> IfAsync<T>(this List<T>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -154,7 +154,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this List<T>? @this, Func<T, V> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -167,7 +167,7 @@ namespace TypeCache.Collections.Extensions
 				yield return map(@this[i]);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this List<T>? @this, Func<T, int, V> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -180,7 +180,7 @@ namespace TypeCache.Collections.Extensions
 				yield return map(@this[i], i);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		internal static async IAsyncEnumerable<V> ToAsync<T, V>(T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			map.AssertNotNull(nameof(map));
@@ -193,7 +193,7 @@ namespace TypeCache.Collections.Extensions
 				yield return await map(@this[i]);
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<int> ToIndex<T>(this List<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));

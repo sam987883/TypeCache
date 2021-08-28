@@ -3,17 +3,17 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
-using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 using TypeCache.Data.Responses;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
@@ -32,18 +32,37 @@ namespace TypeCache.GraphQL.Types
 		private readonly IMediator _Mediator;
 		private readonly IServiceProvider _ServiceProvider;
 		private readonly ISqlApi? _SqlApi;
+		private string _Version = "0";
 
 		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, IDataLoaderContextAccessor dataLoader, Action<GraphSchema> addEndpoints) : base(provider)
 		{
-			this.Query = new ObjectGraphType { Name = nameof(Query) };
-			this.Mutation = new ObjectGraphType { Name = nameof(Mutation) };
+			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
+			this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
 
 			this._DataLoader = dataLoader;
 			this._Mediator = mediator;
 			this._ServiceProvider = provider;
 			this._SqlApi = sqlApi;
 
+			this.Query.AddField(new()
+			{
+				Name = nameof(this.Version),
+				DefaultValue = "0",
+				Description = $"The version number of this {nameof(GraphSchema)}.",
+				Type = typeof(NonNullGraphType<StringGraphType>)
+			});
+
 			addEndpoints(this);
+		}
+
+		public string Version
+		{
+			get => this._Version;
+			set
+			{
+				this._Version = value;
+				this.Description = $"{nameof(GraphSchema)} v{value}";
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,38 +98,16 @@ namespace TypeCache.GraphQL.Types
 			}));
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).To(method =>
 			{
-				var (parentProperty, childProperty) = getParentChildProperties(method);
-				return this.AddSubqueryBatch(method, parentProperty, childProperty);
+				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
+				return this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
 			}));
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).To(method =>
 			{
-				var (parentProperty, childProperty) = getParentChildProperties(method);
-				return this.AddSubqueryCollection(method, parentProperty, childProperty);
+				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
+				return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 			}));
 
 			return fieldTypes.ToArray();
-
-			(PropertyMember, PropertyMember) getParentChildProperties(MethodMember method)
-			{
-				if (method.Return.Type.Kind is not Kind.Collection)
-					throw new ArgumentException($"{nameof(AddEndpoints)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
-
-				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
-				var parentType = attribute.ParentType.GetTypeMember();
-				var key = attribute.Key;
-				var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
-
-				var parentKeyProperty = parentType.Properties.Values.FirstValue(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
-				if (parentKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The parent model [{parentType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
-
-				var childType = method.Return.Type.EnclosedType!.Value;
-				var childKeyProperty = childType.Properties.Values.FirstValue(property => property.Attributes.First<GraphKeyAttribute>()?.Name.Is(key) is true);
-				if (childKeyProperty is null)
-					throw new ArgumentException($"AddEndpoints<{TypeOf<T>.Name}>: The child model [{childType.Name}] requires a [{nameof(GraphKeyAttribute)}] with a {nameof(key)} of \"{key}\".");
-
-				return (parentKeyProperty.Value, childKeyProperty.Value);
-			}
 		}
 
 		/// <summary>
@@ -122,21 +119,9 @@ namespace TypeCache.GraphQL.Types
 		/// <typeparam name="T">The class that holds the instance or static method to create a mutation endpoint from.</typeparam>
 		/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
 		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		/// <exception cref="ArgumentException"/>
 		public FieldType[] AddMutation<T>(string method)
-			where T : class
-		{
-			var methods = TypeOf<T>.Methods[method];
-			if (methods.Any())
-			{
-				var handler = methods.Any(method => !method.Static) ? this._ServiceProvider.GetRequiredService<T>() : null;
-				return methods.To(method =>
-				{
-					var resolver = new MethodFieldResolver(method, handler);
-					return this.Mutation.AddField(method.ToFieldType(resolver));
-				}).ToArray();
-			}
-			return Array<FieldType>.Empty;
-		}
+			=> TypeOf<T>.Methods[method].To(this.AddMutation).ToArray();
 
 		/// <summary>
 		/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -145,13 +130,16 @@ namespace TypeCache.GraphQL.Types
 		/// </list>
 		/// </summary>
 		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-		/// <param name="method">Graph endpoint implementation</param>
+		/// <param name="method">Graph endpoint implementation.</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
 		public FieldType AddMutation(MethodMember method)
 		{
+			if (method.Return.IsVoid)
+				throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
+
 			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
-			var resolver = new MethodFieldResolver(method, handler);
-			return this.Mutation.AddField(method.ToFieldType(resolver));
+			return this.Mutation!.AddField(method.ToFieldType(handler));
 		}
 
 		/// <summary>
@@ -163,21 +151,9 @@ namespace TypeCache.GraphQL.Types
 		/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
 		/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
 		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		/// <exception cref="ArgumentException"/>
 		public FieldType[] AddQuery<T>(string method)
-			where T : class
-		{
-			var methods = TypeOf<T>.Methods[method];
-			if (methods.Any())
-			{
-				var handler = methods.Any(method => !method.Static) ? this._ServiceProvider.GetRequiredService<T>() : null;
-				return methods.To(instanceMethod =>
-				{
-					var resolver = new MethodFieldResolver(instanceMethod, handler);
-					return this.Query.AddField(instanceMethod.ToFieldType(resolver));
-				}).ToArray();
-			}
-			return Array<FieldType>.Empty;
-		}
+			=> TypeOf<T>.Methods[method].To(this.AddQuery).ToArray();
 
 		/// <summary>
 		/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -185,14 +161,17 @@ namespace TypeCache.GraphQL.Types
 		/// <item><see cref="IResolveFieldContext"/></item>
 		/// </list>
 		/// </summary>
-		/// <param name="method">Graph endpoint implementation</param>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
 		public FieldType AddQuery(MethodMember method)
 		{
+			if (method.Return.IsVoid)
+				throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
+
 			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
-			var resolver = new MethodFieldResolver(method, handler);
-			return this.Query.AddField(method.ToFieldType(resolver));
+			return this.Query.AddField(method.ToFieldType(handler));
 		}
 
 		/// <summary>
@@ -200,123 +179,149 @@ namespace TypeCache.GraphQL.Types
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item>T</item>
+		/// <item><typeparamref name="T"/></item>
 		/// </list>
 		/// </summary>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
-		/// <param name="method">Graph endpoint implementation</param>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <param name="method">Graph endpoint implementation.</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
 		public FieldType AddSubquery<T>(MethodMember method)
-			where T : class
 		{
-			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
 			var resolver = new ItemLoaderFieldResolver<T>(method, handler, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.<br />
+		/// Adds a subquery to an existing parent type that returns a single child item mapped by key properties.<br />
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item>PARENT</item>
-		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// <item><typeparamref name="PARENT"/></item>
+		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
 		/// </list>
 		/// </summary>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
-		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
-		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
-		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
-		/// <param name="method">Graph endpoint implementation</param>
-		/// <param name="getParentKey">Gets the key value from the parent instance</param>
-		/// <param name="getChildKey">Gets the key value from the child instance</param>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <param name="parentType">Gets the parent instance type.</param>
+		/// <param name="key">The <see cref="GraphKeyAttribute"/> used to match parent and child type properties.</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
+		public FieldType AddSubqueryBatch(MethodMember method, Type parentType, string key)
+		{
+			if (method.Return.Type.Kind is not Kind.Collection)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+
+			var parentKeyProperty = parentType.GetTypeMember().Properties.Values.FirstValue(property => property.GraphKey()?.Is(key) is true);
+			if (parentKeyProperty?.Getter is null)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+
+			var childType = method.Return.Type.EnclosedType!.Value;
+			var childKeyProperty = childType.Properties.Values.FirstValue(property => property.GraphKey()?.Is(key) is true);
+			if (childKeyProperty?.Getter is null)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+
+			var getParentKey = parentKeyProperty.Value.Getter.Value.Method;
+			var getChildKey = childKeyProperty.Value.Getter.Value.Method;
+
+			var addSubQueryBatchMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryBatch)].If(method => method.GenericTypes == 3).FirstValue()!.Value;
+			return (FieldType)addSubQueryBatchMethod.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.Value.PropertyType }, method, getParentKey, getChildKey)!;
+		}
+
+		/// <summary>
+		/// Adds a subquery to an existing parent type that returns a single child item mapped by key properties.<br />
+		/// Method parameters with the following types are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// <item><typeparamref name="PARENT"/></item>
+		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
+		/// </list>
+		/// </summary>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
+		/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
+		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <param name="getParentKey">Gets the key value from the parent instance.</param>
+		/// <param name="getChildKey">Gets the key value from the child instance.</param>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
 		public FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
-			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
 			var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a single item mapped to the parent type by a key property.<br />
+		/// Adds a subquery to an existing parent type that returns a collection of child items mapped by key properties.<br/>
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item>PARENT</item>
-		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// <item><typeparamref name="PARENT"/></item>
+		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
 		/// </list>
 		/// </summary>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
-		/// <param name="method">Graph endpoint implementation</param>
-		/// <param name="parentPropertyKey">Parent property containing the key value</param>
-		/// <param name="childPropertyKey">Child property containing the key value</param>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
+		/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
+		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <param name="parentType">Gets the parent instance type.</param>
+		/// <param name="key">The <see cref="GraphKeyAttribute"/> used to match parent and child type properties.</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
-		public FieldType AddSubqueryBatch(MethodMember method, PropertyMember parentPropertyKey, PropertyMember childPropertyKey)
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
+		public FieldType AddSubqueryCollection(MethodMember method, Type parentType, string key)
 		{
-			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+			if (method.Return.Type.Kind is not Kind.Collection)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
-			if (parentPropertyKey.PropertyType != childPropertyKey.PropertyType)
-				throw new ArgumentException($"{nameof(AddSubquery)}: Expected properties [{parentPropertyKey.Name}] and [{childPropertyKey.Name}] to have the same type; instead of [{parentPropertyKey.PropertyType.Name}] and [{childPropertyKey.PropertyType.Name}].");
+			var parentKeyProperty = parentType.GetTypeMember().Properties.Values.FirstValue(property => property.GraphKey()?.Is(key) is true);
+			if (parentKeyProperty?.Getter is null)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-			var resolverType = typeof(BatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
+			var childType = method.Return.Type.EnclosedType!.Value;
+			var childKeyProperty = childType.Properties.Values.FirstValue(property => property.GraphKey()?.Is(key) is true);
+			if (childKeyProperty?.Getter is null)
+				throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-			var resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
-			return this.Query.AddField(method.ToFieldType(resolver));
+			var getParentKey = parentKeyProperty.Value.Getter.Value.Method;
+			var getChildKey = childKeyProperty.Value.Getter.Value.Method;
+
+			var addSubqueryCollectionMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryCollection)].If(method => method.GenericTypes == 3).FirstValue()!.Value;
+			return (FieldType)addSubqueryCollectionMethod.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.Value.PropertyType }, method, getParentKey, getChildKey)!;
 		}
 
 		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
+		/// Adds a subquery to an existing parent type that returns a collection of child items mapped by key properties.<br/>
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item>PARENT</item>
-		/// <item>IEnumerable&lt;KEY&gt;</item>
+		/// <item><typeparamref name="PARENT"/></item>
+		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
 		/// </list>
 		/// </summary>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
-		/// <typeparam name="PARENT">The parent type to add the endpount to</typeparam>
-		/// <typeparam name="CHILD">The mapped child type to be returned</typeparam>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
+		/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
 		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
-		/// <param name="method">Graph endpoint implementation</param>
-		/// <param name="getParentKey">Gets the key value from the parent instance</param>
-		/// <param name="getChildKey">Gets the key value from the child instance</param>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <param name="getParentKey">Gets the key value from the parent instance.</param>
+		/// <param name="getChildKey">Gets the key value from the child instance.</param>
 		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="ArgumentNullException"/>
 		public FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
-			if (!method.Return.Type.Implements<IEnumerable<CHILD>>())
-				throw new ArgumentException($"{nameof(AddSubquery)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
-
-			var handler = this._ServiceProvider.GetRequiredService(method.Type);
+			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
 			var resolver = new CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
-			return this.Query.AddField(method.ToFieldType(resolver));
-		}
-
-		/// <summary>
-		/// Adds a subquery to an existing parent type that returns a collection of items mapped to the parent type by a key property.
-		/// Method parameters with the following types are ignored in the schema and will have their value injected:
-		/// <list type="bullet">
-		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item>PARENT</item>
-		/// <item>IEnumerable&lt;KEY&gt;</item>
-		/// </list>
-		/// </summary>
-		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
-		/// <param name="method">Graph endpoint implementation</param>
-		/// <param name="parentPropertyKey">Parent property containing the key value</param>
-		/// <param name="childPropertyKey">Child property containing the key value</param>
-		/// <returns>The added <see cref="FieldType"/>.</returns>
-		public FieldType AddSubqueryCollection(MethodMember method, PropertyMember parentPropertyKey, PropertyMember childPropertyKey)
-		{
-			var handler = this._ServiceProvider.GetRequiredService(method.Type);
-
-			if (parentPropertyKey.PropertyType != childPropertyKey.PropertyType)
-				throw new ArgumentException($"{nameof(AddSubquery)}: Expected properties [{parentPropertyKey.Name}] and [{childPropertyKey.Name}] to have the same type; instead of [{parentPropertyKey.PropertyType.Name}] and [{childPropertyKey.PropertyType.Name}].");
-
-			var resolverType = typeof(CollectionBatchLoaderFieldResolver<,,>).MakeGenericType(parentPropertyKey.Type, childPropertyKey.Type, childPropertyKey.PropertyType);
-			var resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, handler, this._DataLoader, parentPropertyKey, childPropertyKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
@@ -333,6 +338,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddSqlApiEndpoints<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -345,7 +352,7 @@ namespace TypeCache.GraphQL.Types
 
 			if (objectSchema.Type == ObjectType.Table)
 			{
-				this.Mutation.AddField(sqlApiMethods["Delete"][0].ToFieldType(sqlApi));
+				this.Mutation!.AddField(sqlApiMethods["Delete"][0].ToFieldType(sqlApi));
 				this.Mutation.AddField(sqlApiMethods["DeleteData"][0].ToFieldType(sqlApi));
 				this.Mutation.AddField(sqlApiMethods["InsertData"][0].ToFieldType(sqlApi));
 				this.Mutation.AddField(sqlApiMethods["Update"][0].ToFieldType(sqlApi));
@@ -365,6 +372,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddCallProcedureEndpoint<T>(string dataSource, string procedure)
 			where T : class, new()
 		{
@@ -379,11 +388,11 @@ namespace TypeCache.GraphQL.Types
 			}, StringComparer.OrdinalIgnoreCase);
 			this.Query.AddField(new()
 			{
-				Arguments = new QueryArguments(arguments.To(_ => new QueryArgument(_.Value.GetTypeMember().ToGraphType(true)) { Name = _.Key })),
+				Arguments = new QueryArguments(arguments.To(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true)) { Name = _.Key })),
 				Name = $"Call{schema.ObjectName}",
 				Description = $"Calls stored procedure: {schema.Name}.",
 				Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),
-				Type = TypeOf<StoredProcedureResponse>.Member.ToGraphType(false)
+				Type = TypeOf<StoredProcedureResponse>.Member.GraphType(false)
 			});
 		}
 
@@ -395,6 +404,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddCountEndpoint<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -416,6 +427,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddDeleteEndpoints<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -426,8 +439,8 @@ namespace TypeCache.GraphQL.Types
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			sqlApiMethods["Delete"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			sqlApiMethods["DeleteData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["DeleteData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -438,6 +451,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddInsertEndpoint<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -447,7 +462,7 @@ namespace TypeCache.GraphQL.Types
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 
-			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
 		}
 
 		/// <summary>
@@ -458,6 +473,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddPageEndpoint<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -478,6 +495,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddSelectEndpoint<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -499,6 +518,8 @@ namespace TypeCache.GraphQL.Types
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
 		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public void AddUpdateEndpoints<T>(string dataSource, string table)
 			where T : class, new()
 		{
@@ -509,8 +530,8 @@ namespace TypeCache.GraphQL.Types
 			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			sqlApiMethods["Update"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
-			sqlApiMethods["UpdateData"].Do(method => this.Mutation.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["UpdateData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
 		}
 	}
 }

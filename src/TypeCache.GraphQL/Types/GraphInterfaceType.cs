@@ -15,10 +15,10 @@ namespace TypeCache.GraphQL.Types
 		{
 			TypeOf<T>.Kind.Assert(TypeOf<T>.Name, Kind.Interface);
 
-			this.Name = TypeOf<T>.Attributes.GraphName() ?? TypeOf<T>.Name;
+			this.Name = TypeOf<T>.Member.GraphName();
 
 			TypeOf<T>.Properties.Values
-				.If(property => property.Getter is not null && !property.Attributes.GraphIgnore())
+				.If(property => property.Getter is not null && !property.GraphIgnore())
 				.Do(property => this.AddField(property.ToFieldType(false)));
 		}
 	}

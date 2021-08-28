@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Runtime.CompilerServices;
 using GraphQL.Language.AST;
 using GraphQL.Types;
@@ -21,6 +22,7 @@ namespace TypeCache.GraphQL.Types
 	{
 		private readonly IHashMaker _HashMaker;
 
+		/// <exception cref="ArgumentNullException"/>
 		public GraphHashIdType(IHashMaker hashMaker)
 		{
 			hashMaker.AssertNotNull(nameof(hashMaker));

@@ -14,7 +14,7 @@ namespace TypeCache.Collections.Extensions
 {
 	public static class IEnumerableExtensions
 	{
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static T Aggregate<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, T> aggregator)
 			where T : unmanaged
 		{
@@ -25,7 +25,7 @@ namespace TypeCache.Collections.Extensions
 			return result;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async ValueTask<T> AggregateAsync<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, ValueTask<T>> aggregator)
 			where T : unmanaged
 		{
@@ -39,7 +39,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>!@<paramref name="this"/>.If(item =&gt; !<paramref name="filter"/>(item)).Any()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static bool All<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -287,7 +287,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action)
 		{
 			switch (@this)
@@ -309,7 +309,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action)
 		{
 			switch (@this)
@@ -331,7 +331,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T> action, Action between)
 		{
 			switch (@this)
@@ -353,7 +353,7 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this IEnumerable<T>? @this, Action<T, int> action, Action between)
 		{
 			switch (@this)
@@ -378,7 +378,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.To(<paramref name="action"/>).AllAsync&lt;<typeparamref name="T"/>&gt;()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async ValueTask DoAsync<T>(this IEnumerable<T>? @this, Func<T, Task> action)
 		{
 			action.AssertNotNull(nameof(action));
@@ -392,7 +392,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.To(item => <paramref name="action"/>(item, <paramref name="cancellationToken"/>)).AllAsync&lt;<typeparamref name="T"/>&gt;()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async ValueTask DoAsync<T>(this IEnumerable<T>? @this, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken = default)
 		{
 			action.AssertNotNull(nameof(action));
@@ -422,7 +422,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).First()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? First<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : class
@@ -455,7 +455,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).FirstValue()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
@@ -521,7 +521,8 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.GetEnumerator().GetValue(index.IsFromEnd ? index.GetOffset(@this.Count()) : index.Value)
 			};
 
-		/// <remarks>Throws <see cref="ArgumentOutOfRangeException"/>, <see cref="IndexOutOfRangeException"/>.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		/// <exception cref="IndexOutOfRangeException" />
 		public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Range range)
 			=> @this switch
 			{
@@ -531,7 +532,7 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.ToArray().Get(range)
 			};
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IDictionary<K, IEnumerable<V>> Group<K, V>(this IEnumerable<V>? @this, Func<V, K> keyFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -568,7 +569,7 @@ namespace TypeCache.Collections.Extensions
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
 			=> values.All(value => @this.Has(value, comparer));
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<T> If<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -583,7 +584,7 @@ namespace TypeCache.Collections.Extensions
 			};
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async IAsyncEnumerable<T> IfAsync<T>(this IEnumerable<T>? @this, PredicateAsync<T> filter, [EnumeratorCancellation] CancellationToken _ = default)
 		{
 			filter.AssertNotNull(nameof(filter));
@@ -666,7 +667,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).First()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? Last<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : class
@@ -683,7 +684,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).FirstValue()</c>
 		/// </summary>
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? LastValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
@@ -762,7 +763,7 @@ namespace TypeCache.Collections.Extensions
 		public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(0, count));
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
 			=> @this switch
 			{
@@ -773,7 +774,7 @@ namespace TypeCache.Collections.Extensions
 				_ => Enumerable<T>.To(@this, map)
 			};
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
 			=> @this switch
 			{
@@ -805,7 +806,7 @@ namespace TypeCache.Collections.Extensions
 			await Task.CompletedTask;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static async IAsyncEnumerable<V> ToAsync<T, V>(this IEnumerable<T>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
 		{
 			map.AssertNotNull(nameof(map));
@@ -870,7 +871,7 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -881,7 +882,7 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static Dictionary<K, V> ToDictionary<T, K, V>(this IEnumerable<T>? @this, Func<T, K> keyFactory, Func<T, V> valueFactory, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 		{
@@ -943,7 +944,7 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableStack.CreateRange<T>(@this)
 			};
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			=> @this switch
 			{

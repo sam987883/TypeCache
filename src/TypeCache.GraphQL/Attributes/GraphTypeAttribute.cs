@@ -30,12 +30,12 @@ namespace TypeCache.GraphQL.Attributes
 
 		public GraphTypeAttribute(ScalarType scalar)
 		{
-			this.GraphType = scalar.ToGraphType();
+			this.GraphType = scalar.GraphType();
 		}
 
 		public GraphTypeAttribute(ListType list, ScalarType scalar)
 		{
-			var scalarType = scalar.ToGraphType();
+			var scalarType = scalar.GraphType();
 			this.GraphType = list switch
 			{
 				ListType.List => typeof(ListGraphType<>).MakeGenericType(scalarType),

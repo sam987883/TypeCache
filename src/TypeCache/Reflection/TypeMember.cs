@@ -135,7 +135,6 @@ namespace TypeCache.Reflection
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Implements<T>()
-			where T : class
 			=> ((Type)this).Implements<T>();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

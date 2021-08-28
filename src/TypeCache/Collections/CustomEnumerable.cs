@@ -12,7 +12,7 @@ namespace TypeCache.Collections
 	{
 		private readonly Func<IEnumerator<T>> _GetEnumerator;
 
-		/// <remarks>Throws <see cref="ArgumentNullException"/>.</remarks>
+		/// <exception cref="ArgumentNullException"/>
 		public CustomEnumerable(Func<IEnumerator<T>> getEnumerator)
 		{
 			getEnumerator.AssertNotNull(nameof(getEnumerator));

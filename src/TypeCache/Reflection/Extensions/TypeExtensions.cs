@@ -167,7 +167,6 @@ namespace TypeCache.Reflection.Extensions
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Implements<T>(this Type @this)
-			where T : class
 			=> @this.Implements(typeof(T));
 
 		/// <summary>

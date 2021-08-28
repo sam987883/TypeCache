@@ -102,7 +102,7 @@ namespace TypeCache.GraphQL.SQL
 		public async Task<SqlResponse<T>> DeleteData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
-			var columns = context.GetArgument<IDictionary<string, object>>(nameof(data)).Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>>(nameof(data))!.Keys.ToArray();
 			var request = new DeleteDataRequest
 			{
 				DataSource = this._DataSource,
@@ -258,7 +258,7 @@ namespace TypeCache.GraphQL.SQL
 		public async Task<SqlResponse<T>> Update([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
-			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set)).Keys.ToArray();
+			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set))!.Keys.ToArray();
 			var request = new UpdateRequest
 			{
 				DataSource = this._DataSource,

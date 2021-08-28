@@ -35,7 +35,7 @@ namespace TypeCache.GraphQL.Resolvers
 				DataSource = this._DataSource,
 				Procedure = this._Procedure
 			};
-			this._Arguments.Do(_ => request.Parameters.Add(_.Key, context.GetArgument(_.Value.ToType(), _.Key)));
+			this._Arguments.Do(argument => request.Parameters.Add(argument.Key, context.GetArgument(argument.Value.ToType(), argument.Key)));
 			return this._Mediator.ApplyRulesAsync<StoredProcedureRequest, StoredProcedureResponse>(request);
 		}
 	}

@@ -24,7 +24,7 @@ namespace TypeCache.GraphQL.Extensions
 		/// </summary>
 		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this)
 		{
-			foreach (var pair in @this.Arguments)
+			foreach (var pair in @this.Arguments!)
 			{
 				if (pair.Value.Value is IDictionary<string, object> dictionary)
 				{
@@ -42,7 +42,7 @@ namespace TypeCache.GraphQL.Extensions
 		public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this, string path)
 		{
 			var inputs = path.Split('.', StringSplitOptions.RemoveEmptyEntries).ToQueue();
-			if (inputs.TryDequeue(out var input) && @this.Arguments.TryGetValue(input, out var value))
+			if (inputs.TryDequeue(out var input) && @this.Arguments!.TryGetValue(input, out var value))
 			{
 				var dictionary = value.Value as IDictionary<string, object>;
 				if (inputs.Any())
@@ -67,7 +67,7 @@ namespace TypeCache.GraphQL.Extensions
 		{
 			foreach (var parameter in method.Parameters)
 			{
-				if (parameter.Attributes.GraphIgnore())
+				if (parameter.GraphIgnore())
 					continue;
 
 				var overrideTypeMap = overrides?.ToDictionary(_ => _.GetTypeMember(), _ => _);
@@ -103,11 +103,11 @@ namespace TypeCache.GraphQL.Extensions
 		public static ConnectionSelections GetQueryConnectionSelections(this IResolveFieldContext @this)
 		{
 			var selections = new ConnectionSelections();
-			selections.TotalCount = @this.SubFields.ContainsKey("totalCount");
+			selections.TotalCount = @this.SubFields!.ContainsKey("totalCount");
 
 			if (@this.SubFields.TryGetValue("pageInfo", out var pageInfo))
 			{
-				var fields = pageInfo.SelectionSet.Selections.If<Field>().ToArray();
+				var fields = pageInfo.SelectionSet!.Selections.If<Field>().ToArray();
 				selections.HasNextPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasNextPage)));
 				selections.HasPreviousPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasPreviousPage)));
 				selections.StartCursor = fields.Any(field => field.Name.Is(nameof(PageInfo.StartCursor)));
@@ -116,14 +116,14 @@ namespace TypeCache.GraphQL.Extensions
 
 			if (@this.SubFields.TryGetValue("edges", out var edges))
 			{
-				selections.Cursor = edges.SelectionSet.Selections.If<Field>().Any(field => field.Name.Is("cursor"));
+				selections.Cursor = edges.SelectionSet!.Selections.If<Field>().Any(field => field.Name.Is("cursor"));
 				var node = edges.SelectionSet.Selections.First(selection => selection is IHaveName name && name.NameNode.Name.Is("node"));
 
 				if (node is IHaveSelectionSet selectionSet)
 					selections.EdgeNodeFields = selectionSet.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
 			}
 
-			if (@this.SubFields.TryGetValue("items", out var items) && items.SelectionSet.Selections.Any())
+			if (@this.SubFields.TryGetValue("items", out var items) && items.SelectionSet!.Selections.Any())
 				selections.ItemFields = items.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
 
 			return selections;
@@ -134,9 +134,9 @@ namespace TypeCache.GraphQL.Extensions
 		/// </summary>
 		public static IEnumerable<string> GetQuerySelections(this IResolveFieldContext @this)
 		{
-			foreach (var subField in @this.SubFields)
+			foreach (var subField in @this.SubFields!)
 			{
-				if (subField.Value.SelectionSet.Selections.Any())
+				if (subField.Value.SelectionSet!.Selections.Any())
 				{
 					foreach (var selection in subField.Value.GetSelections(@this.Document.Fragments, subField.Key))
 						yield return selection;
@@ -176,41 +176,41 @@ namespace TypeCache.GraphQL.Extensions
 				},
 				TotalCount = totalCount
 			};
-			connection.Items.AddRange(items);
+			connection.Items!.AddRange(items);
 			return connection;
 		}
 
-		internal static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
-			=> new FieldType
+		internal static FieldType ToFieldType(this MethodMember @this, object? handler)
+			=> new()
 			{
 				Arguments = @this.Parameters.ToQueryArguments(),
-				Name = @this.Attributes.GraphName() ?? @this.Name.TrimStart("Get")!.TrimEnd("Async")!,
-				Description = @this.Attributes.GraphDescription(),
-				DeprecationReason = @this.Attributes.ObsoleteMessage(),
-				Resolver = resolver,
-				Type = @this.Return.GetGraphType()
-			};
-
-		internal static FieldType ToFieldType(this PropertyMember @this, bool isInputType)
-			=> new FieldType
-			{
-				Type = @this.GetGraphType(isInputType),
-				Name = @this.Attributes.GraphName() ?? @this.Name,
-				Description = @this.Attributes.GraphDescription(),
-				DeprecationReason = @this.Attributes.ObsoleteMessage(),
-				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
+				Name = @this.GraphName(),
+				Description = @this.GraphDescription(),
+				DeprecationReason = @this.ObsoleteMessage(),
+				Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
+				Type = @this.Return.GraphType()
 			};
 
 		internal static FieldType ToFieldType<T>(this MethodMember @this, SqlApi<T> sqlApi)
 			where T : class, new()
-			=> new FieldType
+			=> new()
 			{
 				Arguments = @this.Parameters.ToQueryArguments(),
-				Name = string.Format(@this.Attributes.GraphName()!, sqlApi.Table),
-				Description = string.Format(@this.Attributes.GraphDescription()!, sqlApi.Table),
-				DeprecationReason = @this.Attributes.ObsoleteMessage(),
-				Resolver = new MethodFieldResolver(@this, sqlApi),
-				Type = @this.Return.GetGraphType()
+				Name = string.Format(@this.GraphName()!, sqlApi.Table),
+				Description = string.Format(@this.GraphDescription()!, sqlApi.Table),
+				DeprecationReason = @this.ObsoleteMessage(),
+				Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<object>(@this).ToArray())),
+				Type = @this.Return.GraphType()
+			};
+
+		internal static FieldType ToFieldType(this PropertyMember @this, bool isInputType)
+			=> new()
+			{
+				Type = @this.GraphType(isInputType),
+				Name = @this.GraphName(),
+				Description = @this.GraphDescription(),
+				DeprecationReason = @this.ObsoleteMessage(),
+				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
 			};
 
 		private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
@@ -253,7 +253,7 @@ namespace TypeCache.GraphQL.Extensions
 
 		private static IEnumerable<string> GetSelections(this IHaveSelectionSet @this, Fragments fragments, string prefix)
 		{
-			foreach (var selection in @this.SelectionSet.Selections)
+			foreach (var selection in @this.SelectionSet!.Selections)
 			{
 				var current = @this switch
 				{
@@ -271,7 +271,7 @@ namespace TypeCache.GraphQL.Extensions
 							yield return fragmentSelection;
 					}
 				}
-				else if (selection is IHaveSelectionSet selectionSet && selectionSet.SelectionSet.Selections.Any())
+				else if (selection is IHaveSelectionSet selectionSet && selectionSet.SelectionSet!.Selections.Any())
 				{
 					foreach (var subSelection in selectionSet.GetSelections(fragments, current))
 						yield return subSelection;
@@ -281,16 +281,13 @@ namespace TypeCache.GraphQL.Extensions
 			}
 		}
 
-		private static QueryArgument ToQueryArgument(this MethodParameter @this)
-			=> new QueryArgument(@this.GetGraphType())
-			{
-				Name = @this.Attributes.GraphName() ?? @this.Name,
-				Description = @this.Attributes.GraphDescription(),
-			};
-
 		private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 			=> new QueryArguments(@this
-				.If(parameter => !parameter.Attributes.GraphIgnore() && !parameter.Type.Handle.Is<IResolveFieldContext>())
-				.To(parameter => parameter.ToQueryArgument()));
+				.If(parameter => !parameter.GraphIgnore())
+				.To(parameter => new QueryArgument(parameter.GraphType())
+				{
+					Name = parameter.GraphName(),
+					Description = parameter.GraphDescription(),
+				}));
 	}
 }
