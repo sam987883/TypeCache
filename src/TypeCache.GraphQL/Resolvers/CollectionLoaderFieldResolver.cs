@@ -15,7 +15,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers
 {
-	public class CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IDataLoaderResult<IEnumerable<CHILD>>>
+	public class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IDataLoaderResult<IEnumerable<CHILD>>>
 	{
 		private readonly MethodMember _Method;
 		private readonly object? _Handler;
@@ -25,7 +25,7 @@ namespace TypeCache.GraphQL.Resolvers
 
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="ArgumentNullException"/>
-		public CollectionBatchLoaderFieldResolver(MethodMember method, object? handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+		public CollectionLoaderFieldResolver(MethodMember method, object? handler, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		{
 			dataLoader.AssertNotNull(nameof(dataLoader));
 
@@ -37,7 +37,7 @@ namespace TypeCache.GraphQL.Resolvers
 
 			if (!method.Return.Type.Implements<IEnumerable<CHILD>>()
 				&& ((method.Return.IsTask || method.Return.IsValueTask) && method.Return.Type.EnclosedType?.Implements<IEnumerable<CHILD>>() is false))
-				throw new ArgumentException($"{nameof(CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
+				throw new ArgumentException($"{nameof(CollectionLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
 			this._Method = method;
 			this._Handler = handler;

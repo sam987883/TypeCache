@@ -23,8 +23,6 @@ namespace TypeCache.GraphQL.SQL
 		private readonly string _DataSource;
 		private readonly IMediator _Mediator;
 
-		public string Table { get; }
-
 		public SqlApi(IMediator mediator, string dataSource, string table)
 		{
 			this._DataSource = dataSource;
@@ -32,6 +30,8 @@ namespace TypeCache.GraphQL.SQL
 
 			this.Table = table;
 		}
+
+		public string Table { get; }
 
 		[GraphName("Count{0}")]
 		[GraphDescription("SELECT COUNT(1) FROM {0} WHERE ...")]

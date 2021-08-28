@@ -49,6 +49,7 @@ namespace TypeCache.GraphQL.Types
 				Name = nameof(this.Version),
 				DefaultValue = "0",
 				Description = $"The version number of this {nameof(GraphSchema)}.",
+				Resolver = new FuncFieldResolver<string>(context => ((GraphSchema)context.Schema).Version),
 				Type = typeof(NonNullGraphType<StringGraphType>)
 			});
 
@@ -64,11 +65,6 @@ namespace TypeCache.GraphQL.Types
 				this.Description = $"{nameof(GraphSchema)} v{value}";
 			}
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private SqlApi<T> CreateSqlApi<T>(string dataSource, string table)
-			where T : class, new()
-			=> new SqlApi<T>(this._Mediator, dataSource, table);
 
 		/// <summary>
 		/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
@@ -199,8 +195,8 @@ namespace TypeCache.GraphQL.Types
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item><typeparamref name="PARENT"/></item>
-		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
+		/// <item><paramref name="parentType"/></item>
+		/// <item>IEnumerable&lt;keyType&gt;</item>
 		/// </list>
 		/// </summary>
 		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
@@ -263,14 +259,11 @@ namespace TypeCache.GraphQL.Types
 		/// Method parameters with the following types are ignored in the schema and will have their value injected:
 		/// <list type="bullet">
 		/// <item><see cref="IResolveFieldContext"/></item>
-		/// <item><typeparamref name="PARENT"/></item>
-		/// <item>IEnumerable&lt;<typeparamref name="KEY"/>&gt;</item>
+		/// <item><paramref name="parentType"/></item>
+		/// <item>IEnumerable&lt;keyType&gt;</item>
 		/// </list>
 		/// </summary>
 		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-		/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
-		/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
-		/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
 		/// <param name="method">Graph endpoint implementation.</param>
 		/// <param name="parentType">Gets the parent instance type.</param>
 		/// <param name="key">The <see cref="GraphKeyAttribute"/> used to match parent and child type properties.</param>
@@ -321,7 +314,7 @@ namespace TypeCache.GraphQL.Types
 			where PARENT : class
 		{
 			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
-			var resolver = new CollectionBatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+			var resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
 
@@ -347,7 +340,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
 			if (objectSchema.Type == ObjectType.Table)
@@ -413,7 +406,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
@@ -436,7 +429,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
 			sqlApiMethods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
@@ -460,7 +453,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
 		}
@@ -482,7 +475,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
@@ -504,7 +497,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
 		}
@@ -527,7 +520,7 @@ namespace TypeCache.GraphQL.Types
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
 			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = this.CreateSqlApi<T>(dataSource, objectSchema.Name);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
 			sqlApiMethods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
