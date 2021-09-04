@@ -31,6 +31,8 @@ namespace TypeCache
 
 		public static string Name => Member.Name;
 
+		public static bool Nullable => Member.Nullable;
+
 		public static bool Public => Member.Public;
 
 		public static SystemType SystemType => Member.SystemType;

@@ -30,8 +30,9 @@ namespace TypeCache.Reflection
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
 			this.Handle = type.TypeHandle;
 			this.Kind = kind;
-			this.SystemType = systemType;
+			this.Nullable = kind is not Kind.Struct || systemType is SystemType.Nullable;
 			this.Ref = type.IsByRef || type.IsByRefLike;
+			this.SystemType = systemType;
 			this.Internal = !type.IsVisible;
 			this.Public = type.IsPublic;
 
@@ -108,6 +109,8 @@ namespace TypeCache.Reflection
 		public IImmutableList<TypeMember> InterfaceTypes => this._InterfaceTypes.Value;
 
 		public Kind Kind { get; }
+
+		public bool Nullable { get; }
 
 		public bool Ref { get; }
 

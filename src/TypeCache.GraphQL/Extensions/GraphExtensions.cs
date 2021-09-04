@@ -10,8 +10,8 @@ using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SQL;
+using TypeCache.Mappers.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 
@@ -86,7 +86,7 @@ namespace TypeCache.GraphQL.Extensions
 					if (argument is not null)
 					{
 						var model = parameter.Type.Create();
-						model.ReadProperties(argument);
+						(argument, model).MapProperties();
 						yield return model;
 					}
 					else

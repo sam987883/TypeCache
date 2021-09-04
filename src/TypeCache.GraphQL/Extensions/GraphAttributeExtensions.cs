@@ -60,7 +60,7 @@ namespace TypeCache.GraphQL.Extensions
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool GraphNonNull(this TypeMember @this)
-			=> @this.Attributes.Any<NotNullAttribute>() || !@this.IsNullable();
+			=> @this.Attributes.Any<NotNullAttribute>() || !@this.Nullable;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type? GraphType(this IEnumerable<Attribute> @this)

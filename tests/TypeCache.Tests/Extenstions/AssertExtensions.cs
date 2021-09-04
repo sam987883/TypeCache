@@ -27,7 +27,7 @@ namespace TypeCache.Tests.Extensions
 		[Fact]
 		public void AssertNotNull()
 		{
-			const string NAME = "TestName";
+			const string NAME = nameof(AssertNotNull);
 
 			((int?)123456).AssertNotNull(NAME);
 			"AAA".AssertNotNull(NAME);
@@ -38,12 +38,22 @@ namespace TypeCache.Tests.Extensions
 		[Fact]
 		public void AssertNotBlank()
 		{
-			const string NAME = "TestName";
+			const string NAME = nameof(AssertNotBlank);
 
 			"AAA".AssertNotBlank(NAME);
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertNotBlank(NAME));
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotBlank(NAME));
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "      ".AssertNotBlank(NAME));
+		}
+
+		[Fact]
+		public void AssertNotSame()
+		{
+			var a = new object();
+			var b = new object();
+
+			(a, b).AssertNotSame((nameof(a), nameof(b)));
+			Xunit.Assert.Throws<ArgumentException>(() => (a, a).AssertNotSame((nameof(a), nameof(a))));
 		}
 	}
 }

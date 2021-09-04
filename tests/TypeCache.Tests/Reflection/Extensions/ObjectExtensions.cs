@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using TypeCache.Collections.Extensions;
+using TypeCache.Mappers.Extensions;
 using TypeCache.Reflection.Extensions;
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace TypeCache.Tests.Reflection.Extensions
 		[Fact]
 		public void MapFields()
 		{
-			var testModel = new TestModel
+			var testModel1 = new TestModel1
 			{
 				TestProperty1 = 1,
 				TestProperty2 = '2',
@@ -31,17 +32,17 @@ namespace TypeCache.Tests.Reflection.Extensions
 				TestProperty6 = "666666"
 			};
 
-			var testModelFields = new TestModel();
-			testModelFields.MapFields(testModel);
-			Assert.Equal(1, testModelFields.TestProperty1);
-			Assert.Equal('2', testModelFields.TestProperty2);
-			Assert.Equal("333", testModelFields.TestProperty3);
+			var testModel2 = new TestModel2();
+			(testModel1, testModel2).MapFields();
+			Assert.Equal(1, testModel2.TestProperty1);
+			Assert.Equal('2', testModel2.TestProperty2);
+			Assert.Equal("333", testModel2.TestProperty3);
 		}
 
 		[Fact]
 		public void MapProperties()
 		{
-			var testModel = new TestModel
+			var testModel1 = new TestModel1
 			{
 				TestProperty1 = 1,
 				TestProperty2 = '2',
@@ -51,47 +52,63 @@ namespace TypeCache.Tests.Reflection.Extensions
 				TestProperty6 = "666666"
 			};
 
-			var testModelProperties = new TestModel();
-			testModelProperties.MapProperties(testModel);
-			Assert.Equal(1, testModelProperties.TestProperty1);
-			Assert.Equal('2', testModelProperties.TestProperty2);
-			Assert.Equal("333", testModelProperties.TestProperty3);
-			Assert.Equal(4, testModelProperties.TestProperty4);
-			Assert.Equal('5', testModelProperties.TestProperty5);
-			Assert.Equal("666666", testModelProperties.TestProperty6);
+			var testModel2 = new TestModel2();
+			(testModel1, testModel2).MapProperties();
+			Assert.Equal(1, testModel2.TestProperty1);
+			Assert.Equal('2', testModel2.TestProperty2);
+			Assert.Equal("333", testModel2.TestProperty3);
+			Assert.Equal(4, testModel2.TestProperty4);
+			Assert.Equal('5', testModel2.TestProperty5);
+			Assert.Equal("666666", testModel2.TestProperty6);
 		}
 
 		[Fact]
 		public void ReadFields()
 		{
-			var testModelFields = new TestModel();
-			testModelFields.ReadFields(new Dictionary<string, object>(StringComparer.Ordinal)
+			var testModel1 = new TestModel1();
+			var dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
 			{
 				{ "_TestField1", 101 },
 				{ "_TestField2", 'X' },
 				{ "_TestField3", "ABCdef" },
-			});
-			Assert.Equal(101, testModelFields.TestProperty1);
-			Assert.Equal('X', testModelFields.TestProperty2);
-			Assert.Equal("ABCdef", testModelFields.TestProperty3);
+			};
+			(dictionary, testModel1).MapFields();
+			Assert.Equal(101, testModel1.TestProperty1);
+			Assert.Equal('X', testModel1.TestProperty2);
+			Assert.Equal("ABCdef", testModel1.TestProperty3);
 		}
 
 		[Fact]
 		public void ReadProperties()
 		{
-			var testModelFields = new TestModel();
-			testModelFields.ReadProperties(new Dictionary<string, object>(StringComparer.Ordinal)
+			var testModel2 = new TestModel2();
+			var dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
 			{
-				{ nameof(TestModel.TestProperty4), 101 },
-				{ nameof(TestModel.TestProperty5), 'X' },
-				{ nameof(TestModel.TestProperty6), "ABCdef" },
-			});
-			Assert.Equal(101, testModelFields.TestProperty4);
-			Assert.Equal('X', testModelFields.TestProperty5);
-			Assert.Equal("ABCdef", testModelFields.TestProperty6);
+				{ nameof(TestModel1.TestProperty4), 101 },
+				{ nameof(TestModel1.TestProperty5), 'X' },
+				{ nameof(TestModel1.TestProperty6), "ABCdef" },
+			};
+			(dictionary, testModel2).MapProperties();
+			Assert.Equal(101, testModel2.TestProperty4);
+			Assert.Equal('X', testModel2.TestProperty5);
+			Assert.Equal("ABCdef", testModel2.TestProperty6);
 		}
 
-		private class TestModel
+		private class TestModel1
+		{
+			private int _TestField1;
+			private char _TestField2;
+			private string _TestField3;
+
+			public int TestProperty1 { get => this._TestField1; set => this._TestField1 = value; }
+			public char TestProperty2 { get => this._TestField2; set => this._TestField2 = value; }
+			public string TestProperty3 { get => this._TestField3; set => this._TestField3 = value; }
+			public int TestProperty4 { get; set; }
+			public char TestProperty5 { get; set; }
+			public string TestProperty6 { get; set; }
+		}
+
+		private class TestModel2
 		{
 			private int _TestField1;
 			private char _TestField2;

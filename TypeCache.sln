@@ -5,8 +5,10 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2BAE05AE-EA32-46C0-B8FD-58E253C62DF5}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
+		TypeCash.png = TypeCash.png
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache", "src\TypeCache\TypeCache.csproj", "{6C2625D8-941D-4DD2-BC99-719878C8CB9C}"

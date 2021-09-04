@@ -821,7 +821,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.To(<paramref name="map"/>).ToCsv()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		/// <exception cref="ArgumentNullException"/>
 		public static string ToCSV<T>(this IEnumerable<T>? @this, Func<T, string> map)
 		{
 			map.AssertNotNull(nameof(map));
@@ -849,27 +849,23 @@ namespace TypeCache.Collections.Extensions
 
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 			where K : notnull
-		{
-			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
-			@this?.Do(_ => dictionary.Add(_.Key, _.Value));
-			return dictionary;
-		}
+			=> @this switch
+			{
+				null when comparer is not null => new Dictionary<K, V>(comparer),
+				null => new Dictionary<K, V>(),
+				_ when comparer is not null => new Dictionary<K, V>(@this, comparer),
+				_ => new Dictionary<K, V>(@this)
+			};
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<Tuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 			where K : notnull
-		{
-			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
-			@this?.Do(tuple => dictionary.Add(tuple.Item1, tuple.Item2));
-			return dictionary;
-		}
+			=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<ValueTuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 			where K : notnull
-		{
-			var dictionary = comparer is not null ? new Dictionary<K, V>(@this.Count(), comparer) : new Dictionary<K, V>(@this.Count());
-			@this?.Do(tuple => dictionary.Add(tuple.Item1, tuple.Item2));
-			return dictionary;
-		}
+			=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
 		/// <exception cref="ArgumentNullException"/>
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<K>? @this, Func<K, V> valueFactory, IEqualityComparer<K>? comparer = null)

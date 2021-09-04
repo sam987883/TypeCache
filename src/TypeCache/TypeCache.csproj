@@ -6,11 +6,18 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>1.0.62</Version>
+    <Version>1.0.63</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
-    <Description>A faster alternative to System.Reflection and System.Linq with built-in null checking.</Description>
+    <Description>A library containing various useful utilities such as:
+TypeCache.Business - Simplified Mediator Pattern.
+TypeCache.Collections - System.Linq alternative.
+TypeCache.Data - Simplified database access (SQL Server).
+TypeCache.Extensions - A bunch of extensions you didn't know you needed.
+TypeCache.Mappers - Simplified object mapping that can utilize .NET's IoC.
+TypeCache.Reflection - High performance System.Reflection alternative.
+</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
     <Product>TypeCache</Product>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

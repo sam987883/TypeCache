@@ -48,6 +48,10 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		public static IDictionary<K, (V1, V2)> Match<K, V1, V2>(this (IDictionary<K, V1>, IDictionary<K, V2>) @this, IEqualityComparer<K>? comparer)
+			where K : notnull
+			=> @this.Item1.Keys.Match(@this.Item2.Keys, comparer).To(key => KeyValuePair.Create(key, (@this.Item1[key], @this.Item2[key]))).ToDictionary(comparer);
+
 		/// <summary>
 		/// <c>new <see cref="ReadOnlyDictionary{K, V}"/>(@<paramref name="this"/>)</c>
 		/// </summary>
