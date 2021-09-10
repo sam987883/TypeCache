@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Collections
@@ -67,6 +66,23 @@ namespace TypeCache.Collections
 				between();
 				action(itemEnumerator.Current, ++i);
 			}
+		}
+
+		internal static IEnumerable<T> Each(IEnumerable<T> enumerable, Func<T, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			foreach (var item in enumerable)
+				yield return edit(item);
+		}
+
+		internal static IEnumerable<T> Each(IEnumerable<T> enumerable, Func<T, int, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			var i = -1;
+			foreach (var item in enumerable)
+				yield return edit(item, ++i);
 		}
 
 		internal static IEnumerable<T> If(IEnumerable enumerable)

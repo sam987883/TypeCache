@@ -21,7 +21,7 @@ namespace TypeCache.Data.Schema
 		static ObjectSchema()
 		{
 			Cache = new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(server =>
-				new(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
+				new(Default.STRING_COMPARISON.ToStringComparer()), Default.STRING_COMPARISON.ToStringComparer());
 		}
 
 		internal static IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> Cache { get; }

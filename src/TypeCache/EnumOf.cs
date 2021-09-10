@@ -17,8 +17,6 @@ namespace TypeCache
 	public static class EnumOf<T>
 		where T : struct, Enum
 	{
-		private const BindingFlags STATIC_BINDINGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-
 		public readonly struct Token
 			: IMember, IEquatable<Token>
 		{
@@ -48,7 +46,7 @@ namespace TypeCache
 			public bool Public { get; }
 
 			public bool Equals(Token other)
-				=> Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
+				=> Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, Default.NAME_STRING_COMPARISON);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public override int GetHashCode()
@@ -105,7 +103,7 @@ namespace TypeCache
 			UnderlyingType = type.GetSystemType();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
-			Tokens = type.GetFields(STATIC_BINDINGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
+			Tokens = type.GetFields(Default.STATIC_BINDING_FLAGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
 		public static IImmutableList<Attribute> Attributes { get; }

@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Converters;
+using TypeCache.Extensions;
 
 namespace TypeCache.Data.Requests
 {
@@ -15,7 +15,7 @@ namespace TypeCache.Data.Requests
 		/// <summary>
 		/// The data source name that contains the connection string and database provider to use.
 		/// </summary>
-		public string DataSource { get; set; } = "Default";
+		public string DataSource { get; set; } = Default.DATASOURCE;
 
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
@@ -27,7 +27,7 @@ namespace TypeCache.Data.Requests
 		/// </code>
 		/// </summary>
 		[JsonConverter(typeof(DictionaryJsonConverter))]
-		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(Default.STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
 		/// Raw SQL.

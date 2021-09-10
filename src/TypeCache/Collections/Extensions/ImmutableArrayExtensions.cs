@@ -113,6 +113,26 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<T> Each<T>(this ImmutableArray<T> @this, Func<T, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return edit(@this[i]);
+		}
+
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<T> Each<T>(this ImmutableArray<T> @this, Func<T, int, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			var count = @this.Length;
+			for (var i = 0; i < count; ++i)
+				yield return edit(@this[i], i);
+		}
+
 		/// <exception cref="IndexOutOfRangeException" />
 		public static IEnumerable<T> Get<T>(this ImmutableArray<T> @this, Range range)
 		{

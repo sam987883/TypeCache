@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -60,7 +59,7 @@ namespace TypeCache.Data.Extensions
 
 			var rowSet = new RowSet
 			{
-				Columns = columns.Any() ? columns.Match(getters, StringComparer.OrdinalIgnoreCase).ToArray() : getters.ToArray(),
+				Columns = columns.Any() ? columns.Match(getters, Default.STRING_COMPARISON.ToStringComparer()).ToArray() : getters.ToArray(),
 				Rows = new object?[@this.Length][]
 			};
 			@this.Do((item, rowIndex) =>

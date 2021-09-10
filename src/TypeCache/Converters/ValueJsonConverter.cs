@@ -21,7 +21,7 @@ namespace TypeCache.Converters
 
 		private static IDictionary<string, object> GetObject(ref Utf8JsonReader reader, JsonSerializerOptions options)
 		{
-			var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+			var dictionary = new Dictionary<string, object>(Default.STRING_COMPARISON.ToStringComparer());
 			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();

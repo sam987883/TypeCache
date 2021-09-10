@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 
@@ -11,6 +12,75 @@ namespace TypeCache.Extensions
 {
 	public static class StringExtensions
 	{
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsDigit(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyDigit(this string @this)
+			=> @this.Any(c => c.IsDigit());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsLetter(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyLetter(this string @this)
+			=> @this.Any(c => c.IsLetter());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsLetterOrDigit(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyLetterOrDigit(this string @this)
+			=> @this.Any(c => c.IsLetterOrDigit());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsLower(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyLowercase(this string @this)
+			=> @this.Any(c => c.IsLowercase());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsNumber(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyNumber(this string @this)
+			=> @this.Any(c => c.IsNumber());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsPunctuation(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyPunctuation(this string @this)
+			=> @this.Any(c => c.IsPunctuation());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsSymbol(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnySymbol(this string @this)
+			=> @this.Any(c => c.IsSymbol());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsUpper(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyUppercase(this string @this)
+			=> @this.Any(c => c.IsUppercase());
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(<see cref="char.IsWhiteSpace(char)"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyWhiteSpace(this string @this)
+			=> @this.Any(c => c.IsWhiteSpace());
+
+		/// <summary>
+		/// <code>
+		/// <see cref="Convert.TryFromBase64String(string, Span{byte}, out int)"/><br/>
+		/// <see cref="Encoding.GetString(ReadOnlySpan{byte})"/>
+		/// </code>
+		/// </summary>
 		public static string FromBase64(this string @this, Encoding encoding)
 		{
 			Span<byte> span = stackalloc byte[@this.Length];
@@ -21,14 +91,14 @@ namespace TypeCache.Extensions
 		/// <c><see cref="string.Contains(string, StringComparison)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has(this string @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Has(this string @this, string value, StringComparison comparison = Default.STRING_COMPARISON)
 			=> @this.Contains(value, comparison);
 
 		/// <summary>
 		/// <c><see cref="StringComparer.Equals(string?, string?)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Is([NotNullWhen(true)] this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Is([NotNullWhen(true)] this string? @this, string? value, StringComparison comparison = Default.STRING_COMPARISON)
 			=> comparison.ToStringComparer().Equals(@this, value);
 
 		/// <summary>
@@ -46,13 +116,6 @@ namespace TypeCache.Extensions
 			=> string.Join(@this, values);
 
 		/// <summary>
-		/// <c><see cref="string.Substring(int, int)"/></c>
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string Left(this string @this, int length)
-			=> @this.Substring(0, length);
-
-		/// <summary>
 		/// <c><see cref="string.StartsWith(char)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,10 +123,17 @@ namespace TypeCache.Extensions
 			=> @this.StartsWith(text);
 
 		/// <summary>
+		/// <c><see cref="string.Substring(int, int)"/></c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string Left(this string @this, int length)
+			=> @this.Substring(0, length);
+
+		/// <summary>
 		/// <c><see cref="string.StartsWith(string, StringComparison)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Left(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Left(this string @this, string text, StringComparison comparison = Default.STRING_COMPARISON)
 			=> @this.StartsWith(text, comparison);
 
 		public static string Mask(this string @this, char mask = '*')
@@ -82,7 +152,7 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
-		public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] hideTerms)
+		public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = Default.STRING_COMPARISON, params string[] hideTerms)
 		{
 			if (@this.IsBlank() || !hideTerms.Any())
 				return @this;
@@ -109,7 +179,7 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
-		public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] showTerms)
+		public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = Default.STRING_COMPARISON, params string[] showTerms)
 		{
 			if (@this.IsBlank())
 				return @this;
@@ -136,6 +206,112 @@ namespace TypeCache.Extensions
 			return new string(span);
 		}
 
+		/// <summary>
+		/// <c><see cref="Regex"/>.Escape(@<paramref name="this"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexEscape(this string @this)
+			=> Regex.Escape(@this);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.IsMatch(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RegexIsMatch(this string @this, string pattern, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.IsMatch(@this, pattern, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.IsMatch(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RegexIsMatch(this string @this, string pattern, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.IsMatch(@this, pattern, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Match(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Match RegexMatch(this string @this, string pattern, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Match(@this, pattern, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Match(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Match RegexMatch(this string @this, string pattern, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Match(@this, pattern, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Matches(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MatchCollection RegexMatches(this string @this, string pattern, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Matches(@this, pattern, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Matches(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MatchCollection RegexMatches(this string @this, string pattern, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Matches(@this, pattern, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="evaluator"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexReplace(this string @this, string pattern, MatchEvaluator evaluator, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Replace(@this, pattern, evaluator, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="evaluator"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexReplace(this string @this, string pattern, MatchEvaluator evaluator, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Replace(@this, pattern, evaluator, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="replacement"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexReplace(this string @this, string pattern, string replacement, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Replace(@this, pattern, replacement, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="replacement"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexReplace(this string @this, string pattern, string replacement, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Replace(@this, pattern, replacement, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Split(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string[] RegexSplit(this string @this, string pattern, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Split(@this, pattern, options);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Split(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string[] RegexSplit(this string @this, string pattern, TimeSpan timeout, RegexOptions options = Default.REGEX_OPTIONS)
+			=> Regex.Split(@this, pattern, options, timeout);
+
+		/// <summary>
+		/// <c><see cref="Regex"/>.Unescape(@<paramref name="this"/>)</c>
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string RegexUnescape(this string @this)
+			=> Regex.Unescape(@this);
+
+		/// <summary>
+		/// <code>
+		/// Span&lt;<see cref="char"/>&gt; span = stackalloc <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
+		/// @<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
+		/// span.Reverse();<br/>
+		/// return new <see cref="string"/>(span);
+		/// </code>
+		/// </summary>
 		public static string Reverse(this string @this)
 		{
 			Span<char> span = stackalloc char[@this.Length];
@@ -155,9 +331,15 @@ namespace TypeCache.Extensions
 		/// <c><see cref="string.EndsWith(string, StringComparison)"/></c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		public static bool Right(this string @this, string text, StringComparison comparison = Default.STRING_COMPARISON)
 			=> @this.EndsWith(text, comparison);
 
+		/// <summary>
+		/// <code>
+		/// <see cref="Encoding.GetBytes(ReadOnlySpan{char}, Span{byte})"/><br/>
+		/// <see cref="Convert.TryToBase64Chars(ReadOnlySpan{byte}, Span{char}, out int)"/>
+		/// </code>
+		/// </summary>
 		public static string ToBase64(this string @this, Encoding encoding)
 		{
 			Span<byte> bytes = stackalloc byte[@this.Length * sizeof(int)];
@@ -181,11 +363,11 @@ namespace TypeCache.Extensions
 			=> encoding.GetBytes(@this, bytes);
 
 		/// <summary>
-		/// <c><see cref="Encoding.GetString(ReadOnlySpan{byte})"/></c>
+		/// <c><see cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToText(this ReadOnlySpan<byte> @this, Encoding encoding)
-			=> encoding.GetString(@this);
+		public static T? ToEnum<T>(this string? @this)
+			where T : struct, Enum
+			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
 
 		/// <summary>
 		/// <c><see cref="Encoding.GetString(byte[])"/></c>
@@ -202,16 +384,30 @@ namespace TypeCache.Extensions
 			=> encoding.GetString(@this, index, count);
 
 		/// <summary>
-		/// <c><see cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/></c>
+		/// <c><see cref="Encoding.GetString(ReadOnlySpan{byte})"/></c>
 		/// </summary>
-		public static T? ToEnum<T>(this string? @this)
-			where T : struct, Enum
-			=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToText(this ReadOnlySpan<byte> @this, Encoding encoding)
+			=> encoding.GetString(@this);
 
-		public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		/// <summary>
+		/// <code>
+		/// !<paramref name="text"/>.IsBlank() &amp;&amp; @<paramref name="this"/>?.Right(<paramref name="text"/>, <paramref name="comparison"/>) is <see langword="true"/><br/>
+		/// ? @<paramref name="this"/>.Sunstring(0, @<paramref name="this"/>.Length - <paramref name="text"/>.Length)<br/>
+		/// : (@<paramref name="this"/> ?? <see cref="string.Empty"/>)
+		/// </code>
+		/// </summary>
+		public static string TrimEnd(this string @this, string text, StringComparison comparison = Default.STRING_COMPARISON)
 			=> !text.IsBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
-		public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+		/// <summary>
+		/// <code>
+		/// !<paramref name="text"/>.IsBlank() &amp;&amp; @<paramref name="this"/>?.Left(<paramref name="text"/>, <paramref name="comparison"/>) is <see langword="true"/><br/>
+		/// ? @<paramref name="this"/>.Sunstring(<paramref name="text"/>.Length)<br/>
+		/// : (@<paramref name="this"/> ?? <see cref="string.Empty"/>)
+		/// </code>
+		/// </summary>
+		public static string TrimStart(this string @this, string text, StringComparison comparison = Default.STRING_COMPARISON)
 			=> !text.IsBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 	}
 }

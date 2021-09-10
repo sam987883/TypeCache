@@ -15,7 +15,6 @@ namespace TypeCache.Reflection
 	public readonly struct DelegateMember
 		: IMember, IEquatable<DelegateMember>
 	{
-		private const BindingFlags INSTANCE_BINDINGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 		private const string METHOD_NAME = "Invoke";
 
 		static DelegateMember()
@@ -33,7 +32,7 @@ namespace TypeCache.Reflection
 			this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
 
-			var methodInfo = type.GetMethod(METHOD_NAME, INSTANCE_BINDINGS)!;
+			var methodInfo = type.GetMethod(METHOD_NAME, Default.INSTANCE_BINDING_FLAGS)!;
 			this._Invoke = methodInfo.ToInvokeType();
 			this.Method = methodInfo.ToDelegate();
 			this.MethodHandle = methodInfo.MethodHandle;

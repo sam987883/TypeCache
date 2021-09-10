@@ -176,6 +176,26 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<T> Each<T>(this T[]? @this, Func<T, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			var count = @this?.Length ?? 0;
+			for (var i = 0; i < count; ++i)
+				yield return edit(@this![i]);
+		}
+
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<T> Each<T>(this T[]? @this, Func<T, int, T> edit)
+		{
+			edit.AssertNotNull(nameof(edit));
+
+			var count = @this?.Length ?? 0;
+			for (var i = 0; i < count; ++i)
+				yield return edit(@this![i], i);
+		}
+
 		/// <exception cref="IndexOutOfRangeException" />
 		public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 		{
@@ -277,12 +297,9 @@ namespace TypeCache.Collections.Extensions
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (@this is null)
-				yield break;
-
-			var count = @this.Length;
+			var count = @this?.Length ?? 0;
 			for (var i = 0; i < count; ++i)
-				yield return map(@this[i]);
+				yield return map(@this![i]);
 		}
 
 		/// <exception cref="ArgumentNullException"/>
@@ -290,12 +307,9 @@ namespace TypeCache.Collections.Extensions
 		{
 			map.AssertNotNull(nameof(map));
 
-			if (@this is null)
-				yield break;
-
-			var count = @this.Length;
+			var count = @this?.Length ?? 0;
 			for (var i = 0; i < count; ++i)
-				yield return map(@this[i], i);
+				yield return map(@this![i], i);
 		}
 
 		public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)

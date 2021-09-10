@@ -13,7 +13,7 @@ namespace TypeCache.Converters
 	{
 		public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+			var dictionary = new Dictionary<string, object?>(Default.STRING_COMPARISON.ToStringComparer());
 
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{
@@ -33,10 +33,10 @@ namespace TypeCache.Converters
 			if (dictionary.Any())
 			{
 				writer.WriteStartObject();
-				dictionary.Do(_ =>
+				dictionary.Do(pair =>
 				{
-					writer.WritePropertyName(_.Key);
-					writer.WriteValue(_.Value, options);
+					writer.WritePropertyName(pair.Key);
+					writer.WriteValue(pair.Value, options);
 				});
 				writer.WriteEndObject();
 			}

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Data.Converters;
 using TypeCache.Data.Schema;
+using TypeCache.Extensions;
 
 namespace TypeCache.Data.Requests
 {
@@ -17,7 +17,7 @@ namespace TypeCache.Data.Requests
 		/// <summary>
 		/// The data source name that contains the connection string and database provider to use.
 		/// </summary>
-		public string DataSource { get; set; } = "Default";
+		public string DataSource { get; set; } = Default.DATASOURCE;
 
 		/// <summary>
 		/// Batch of records to update based on Primary Key(s).
@@ -29,7 +29,7 @@ namespace TypeCache.Data.Requests
 		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
 		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(Default.STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
 		/// Set internally- used to build SQL.

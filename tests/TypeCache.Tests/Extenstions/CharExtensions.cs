@@ -47,8 +47,8 @@ namespace TypeCache.Tests.Extensions
 		[Fact]
 		public void IsLower()
 		{
-			Assert.True('f'.IsLower());
-			Assert.False('F'.IsLower());
+			Assert.True('f'.IsLowercase());
+			Assert.False('F'.IsLowercase());
 		}
 
 		[Fact]
@@ -94,8 +94,8 @@ namespace TypeCache.Tests.Extensions
 		[Fact]
 		public void IsUpper()
 		{
-			Assert.False('f'.IsUpper());
-			Assert.True('F'.IsUpper());
+			Assert.False('f'.IsUppercase());
+			Assert.True('F'.IsUppercase());
 		}
 
 		[Fact]

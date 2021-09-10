@@ -48,7 +48,7 @@ namespace TypeCache.Extensions
 		/// <see cref="char.IsLower(char)"/>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsLower(this char @this)
+		public static bool IsLowercase(this char @this)
 			=> char.IsLower(@this);
 
 		/// <summary>
@@ -97,7 +97,7 @@ namespace TypeCache.Extensions
 		/// <see cref="char.IsUpper(char)"/>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsUpper(this char @this)
+		public static bool IsUppercase(this char @this)
 			=> char.IsUpper(@this);
 
 		/// <summary>

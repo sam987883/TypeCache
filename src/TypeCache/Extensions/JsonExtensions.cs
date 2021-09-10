@@ -11,13 +11,6 @@ namespace TypeCache.Extensions
 {
 	public static class JsonExtensions
 	{
-		private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)
-		{
-			using var enumerator = @this.EnumerateArray();
-			while (enumerator.MoveNext())
-				yield return enumerator.Current;
-		}
-
 		public static JsonElement[] GetArrayElements(this JsonElement @this)
 		{
 			@this.ValueKind.Assert(nameof(GetArrayValues), JsonValueKind.Array);
@@ -36,7 +29,7 @@ namespace TypeCache.Extensions
 		{
 			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
 
-			var properties = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+			var properties = new Dictionary<string, JsonElement>(Default.NAME_STRING_COMPARISON.ToStringComparer());
 			using var enumerator = @this.EnumerateObject();
 			while (enumerator.MoveNext())
 			{
@@ -49,7 +42,7 @@ namespace TypeCache.Extensions
 		{
 			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
 
-			var properties = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+			var properties = new Dictionary<string, object?>(Default.NAME_STRING_COMPARISON.ToStringComparer());
 			using var enumerator = @this.EnumerateObject();
 			while (enumerator.MoveNext())
 			{
@@ -177,6 +170,13 @@ namespace TypeCache.Extensions
 			}
 			else
 				@this.WriteNullValue();
+		}
+
+		private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)
+		{
+			using var enumerator = @this.EnumerateArray();
+			while (enumerator.MoveNext())
+				yield return enumerator.Current;
 		}
 	}
 }
