@@ -1,4 +1,4 @@
-﻿// Copyright(c) 2020 Samuel Abraham
+﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data.Common;
 using Microsoft.Extensions.Configuration;

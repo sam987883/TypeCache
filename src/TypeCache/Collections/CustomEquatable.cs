@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections
 {
 	public abstract class CustomEquatable<T> : IEquatable<CustomEquatable<T>>
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(CustomEquatable<T>? other)
 			=> other is not null && this.EqualityFactors.ToHashSet().SetEquals(other.EqualityFactors);
 
@@ -18,7 +19,7 @@ namespace TypeCache.Collections
 		/// </summary>
 		protected abstract IEnumerable<object> EqualityFactors { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override bool Equals(object? other)
 			=> other is T item && this.Equals(item);
 

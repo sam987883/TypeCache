@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Converters
 {
@@ -13,7 +14,7 @@ namespace TypeCache.Converters
 	{
 		public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			var dictionary = new Dictionary<string, object?>(Default.STRING_COMPARISON.ToStringComparer());
+			var dictionary = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 			if (reader.TokenType == JsonTokenType.StartObject)
 			{

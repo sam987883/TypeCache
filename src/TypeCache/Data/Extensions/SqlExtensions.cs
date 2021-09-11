@@ -11,6 +11,7 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data.Requests;
 using TypeCache.Extensions;
 using static System.FormattableString;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions
 {
@@ -56,11 +57,11 @@ namespace TypeCache.Data.Extensions
 				? Invariant($"[{@this.Substring(1, @this.Length - 2).Replace("]", "]]")}]")
 				: Invariant($"[{@this.Replace("]", "]]")}]");
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeLikeValue([NotNull] this string @this)
 			=> @this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeValue([NotNull] this string @this)
 			=> @this.Replace("'", "''");
 
@@ -267,7 +268,7 @@ namespace TypeCache.Data.Extensions
 			},
 			Range range => Invariant($"'{range}'"),
 			Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
-			byte[] binary => Encoding.Default.GetString(binary),
+			byte[] binary => Invariant($"0x{binary.ToHex()}"),
 			IEnumerable enumerable => Invariant($"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})"),
 			_ => @this.ToString() ?? "NULL"
 		};

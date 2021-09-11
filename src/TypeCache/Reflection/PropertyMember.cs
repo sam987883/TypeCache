@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -51,7 +52,7 @@ namespace TypeCache.Reflection
 
 		/// <param name="instance">Pass null if the property getter is static.</param>
 		/// <param name="indexers">Ignore if property is not an indexer.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object? GetValue(object? instance, params object?[]? indexers)
 			=> this.Getter?.Invoke(instance, indexers);
 
@@ -66,11 +67,11 @@ namespace TypeCache.Reflection
 				this.Setter?.Invoke(instance, value);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(PropertyMember other)
 			=> this._Handle == other._Handle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this._Handle.GetHashCode();
 	}

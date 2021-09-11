@@ -11,15 +11,19 @@ namespace TypeCache.GraphQL.Attributes
 	/// <summary>
 	/// <b>GraphQL</b>
 	/// <list type="number">
-	/// <item><term>graphType</term> <description>Overrides the Graph Type of the object property or endpoint parameter.</description></item>
-	/// <item><term>scalarType, nullable</term> <description>Overrides only the Scalar Graph Type used by the generated Graph Type of the object property or endpoint parameter.</description></item>
+	/// <item><term>graphType</term> Overrides the Graph Type of the object property or endpoint parameter.</item>
+	/// <item><term>scalarType</term> Overrides the Graph Type of the object property or endpoint parameter using a scalar type.</item>
+	/// <item><term>listType, scalarType</term> Overrides the Graph Type of the object property or endpoint parameter using a list of scalar type.</item>
 	/// </list>
-	/// If the parameter a type of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext&lt;Object&gt;"/>, then it will not show up in the endpoint-<br />
-	/// Instead it will be injected with the instance of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext&lt;Object&gt;"/>.
+	/// If the parameter a type of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext{TSource}"/>, then it will not show up in the endpoint-<br />
+	/// Instead it will be injected with the instance of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext{TSource}"/>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
 	public class GraphTypeAttribute : Attribute
 	{
+		/// <summary>
+		/// Overrides the Graph Type of the object property or endpoint parameter.
+		/// </summary>
 		public GraphTypeAttribute(Type graphType)
 		{
 			graphType.AssertNotNull(nameof(graphType));
@@ -28,21 +32,22 @@ namespace TypeCache.GraphQL.Attributes
 			this.GraphType = graphType;
 		}
 
-		public GraphTypeAttribute(ScalarType scalar)
-		{
-			this.GraphType = scalar.GraphType();
-		}
+		/// <summary>
+		/// Overrides the Graph Type of the object property or endpoint parameter using a scalar type.
+		/// </summary>
+		public GraphTypeAttribute(ScalarType scalarType)
+			=> this.GraphType = scalarType.GraphType();
 
-		public GraphTypeAttribute(ListType list, ScalarType scalar)
-		{
-			var scalarType = scalar.GraphType();
-			this.GraphType = list switch
+		/// <summary>
+		/// Overrides the Graph Type of the object property or endpoint parameter using a list of scalar type.
+		/// </summary>
+		public GraphTypeAttribute(ListType listType, ScalarType scalarType)
+			=> this.GraphType = listType switch
 			{
-				ListType.List => typeof(ListGraphType<>).MakeGenericType(scalarType),
-				ListType.NonNullList => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>)).MakeGenericType(scalarType),
-				_ => scalarType
+				ListType.List => typeof(ListGraphType<>).MakeGenericType(scalarType.GraphType()),
+				ListType.NonNullList => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>)).MakeGenericType(scalarType.GraphType()),
+				_ => scalarType.GraphType()
 			};
-		}
 
 		/// <summary>
 		/// The Graph Type for override.

@@ -2,6 +2,7 @@
 
 using System.Data.Common;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions
 {
@@ -21,7 +22,7 @@ namespace TypeCache.Data.Extensions
 			return dbConnectionStringBuilder;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static void Register(this DbProviderFactory @this, string databaseProvider)
 			=> DbProviderFactories.RegisterFactory(databaseProvider, @this);
 	}

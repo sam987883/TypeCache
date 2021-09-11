@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -10,7 +11,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="IReadOnlyDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static V? Get<K, V>(this IReadOnlyDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : class
@@ -19,13 +20,13 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="IReadOnlyDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static V? GetValue<K, V>(this IReadOnlyDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : struct
 			=> @this.TryGetValue(key, out var value) ? (V?)value : null;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<V> GetValues<K, V>(this IReadOnlyDictionary<K, V> @this, params K[] keys)
 			where K : notnull
 		{

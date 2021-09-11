@@ -13,68 +13,69 @@ using TypeCache.GraphQL.SQL;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphAttributeExtensions
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string? GraphDescription(this IMember @this)
 			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string? GraphDescription(this MethodParameter @this)
 			=> @this.Attributes.First<GraphDescriptionAttribute>()?.Description;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool GraphIgnore(this IMember @this)
 			=> @this.Attributes.Any<GraphIgnoreAttribute>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool GraphIgnore(this MethodParameter @this)
 			=> @this.Attributes.Any<GraphIgnoreAttribute>() || @this.Type.Handle.Is<IResolveFieldContext>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string? GraphKey(this IMember @this)
 			=> @this.Attributes.First<GraphKeyAttribute>()?.Name;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string GraphInputName(this TypeMember @this)
 			=> @this.Attributes.First<GraphInputNameAttribute>()?.Name ?? $"{@this.Name}Input";
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string GraphName(this IMember @this)
 			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string? GraphName(this IEnumerable<Attribute> @this)
 			=> @this.First<GraphNameAttribute>()?.Name;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string GraphName(this MethodMember @this)
 			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string GraphName(this MethodParameter @this)
 			=> @this.Attributes.First<GraphNameAttribute>()?.Name ?? @this.Name;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool GraphNonNull(this TypeMember @this)
 			=> @this.Attributes.Any<NotNullAttribute>() || !@this.Nullable;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Type? GraphType(this IEnumerable<Attribute> @this)
 			=> @this.First<GraphTypeAttribute>()?.GraphType;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Type GraphType(this MethodParameter @this)
 			=> @this.Attributes.GraphType() ?? @this.Type.GraphType(true);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Type GraphType(this PropertyMember @this, bool isInputType)
 			=> @this.Attributes.GraphType() ?? @this.PropertyType.GraphType(isInputType);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Type GraphType(this ReturnParameter @this)
 			=> @this.Attributes.GraphType() ?? @this.Type.GraphType(false);
 
@@ -126,7 +127,7 @@ namespace TypeCache.GraphQL.Extensions
 				_ => typeof(StringGraphType)
 			};
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string? ObsoleteMessage(this IMember @this)
 			=> @this.Attributes.First<ObsoleteAttribute>()?.Message;
 

@@ -9,6 +9,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -57,19 +58,19 @@ namespace TypeCache.Reflection
 
 		public bool Public { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static implicit operator ConstructorInfo(ConstructorMember member)
 			=> (ConstructorInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object Create(params object?[]? arguments)
 			=> this._Create(arguments);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(ConstructorMember other)
 			=> this.Handle == other.Handle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 	}

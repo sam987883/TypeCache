@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using TypeCache.Mappers.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Mappers
 {
@@ -9,7 +10,7 @@ namespace TypeCache.Mappers
 		where FROM : notnull
 		where TO : notnull
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void Map(FROM from, TO to)
 			=> (from, to).MapProperties();
 	}

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -16,7 +17,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="Task.Yield"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		private static async IAsyncEnumerable<T> Empty<T>()
 		{
 			await Task.Yield();
@@ -81,7 +82,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>await @<paramref name="this"/>.IfAsync(<paramref name="filter"/>).AnyAsync(<paramref name="token"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async Task<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, Predicate<T> filter, CancellationToken token = default)
 			=> await @this.IfAsync(filter).AnyAsync(token);
 
@@ -163,14 +164,14 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>await @<paramref name="this"/>.IfAsync(<paramref name="filter"/>).FirstAsync()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, Predicate<T> filter)
 			=> await @this.IfAsync(filter).FirstAsync();
 
 		/// <summary>
 		/// <c>Empty&lt;<typeparamref name="T"/>&gt;().AndAsync(@<paramref name="this"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IAsyncEnumerable<T> GatherAsync<T>(this IAsyncEnumerable<IAsyncEnumerable<T>?>? @this)
 			=> Empty<T>().AndAsync(@this);
 
@@ -242,7 +243,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>await @<paramref name="this"/>.IfAsync(_ =&gt; _ is not null &amp;&amp; _.Equals(<paramref name="value"/>)).AnyAsync()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value)
 			=> await @this.IfAsync(_ => _ is not null && _.Equals(value)).AnyAsync();
 
@@ -338,7 +339,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>await @<paramref name="this"/>.AggregateAsync(default(T), (x, y) =&gt; x.MoreThan(y) ? x : y)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<T?> MaximumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 			=> await @this.AggregateAsync(default(T), (x, y) => x!.MoreThan(y) ? x : y);
 
@@ -356,7 +357,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>await @<paramref name="this"/>.AggregateAsync(default, (x, y) =&gt; x.LessThan(y) ? x : y)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<T?> MinimumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 			=> await @this.AggregateAsync(default, (x, y) => x!.LessThan(y) ? x : y);
 
@@ -386,7 +387,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>Empty&lt;<typeparamref name="V"/>&gt;().AndAsync(@<paramref name="this"/>.ToAsync&lt;<typeparamref name="T"/>, IAsyncEnumerable&lt;<typeparamref name="V"/>&gt;&gt;(<paramref name="map"/>))</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IAsyncEnumerable<V> ToAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, IAsyncEnumerable<V>> map)
 			=> Empty<V>().AndAsync(@this.ToAsync<T, IAsyncEnumerable<V>>(map));
 

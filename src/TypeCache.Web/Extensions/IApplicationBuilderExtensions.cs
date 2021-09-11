@@ -16,15 +16,15 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="number">
-		/// <item><term>/sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
-		/// <item><term>/sql-api/count</term> <description><see cref="CountMiddleware"/></description></item>
-		/// <item><term>/sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
-		/// <item><term>/sql-api/deletedata</term> <description><see cref="DeleteDataMiddleware"/></description></item>
-		/// <item><term>/sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
-		/// <item><term>/sql-api/insertdata</term> <description><see cref="InsertDataMiddleware"/></description></item>
-		/// <item><term>/sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
-		/// <item><term>/sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
-		/// <item><term>/sql-api/updatedata</term> <description><see cref="UpdateDataMiddleware"/></description></item>
+		/// <item><term>/sql-api/call</term> <see cref="StoredProcedureMiddleware"/></item>
+		/// <item><term>/sql-api/count</term> <see cref="CountMiddleware"/></item>
+		/// <item><term>/sql-api/delete</term> <see cref="DeleteMiddleware"/></item>
+		/// <item><term>/sql-api/deletedata</term> <see cref="DeleteDataMiddleware"/></item>
+		/// <item><term>/sql-api/insert</term> <see cref="InsertMiddleware"/></item>
+		/// <item><term>/sql-api/insertdata</term> <see cref="InsertDataMiddleware"/></item>
+		/// <item><term>/sql-api/select</term> <see cref="SelectMiddleware"/></item>
+		/// <item><term>/sql-api/update</term> <see cref="UpdateMiddleware"/></item>
+		/// <item><term>/sql-api/updatedata</term> <see cref="UpdateDataMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
@@ -43,15 +43,15 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="number">
-		/// <item><term>/sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/count/sql</term> <description><see cref="CountSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/delete/sql</term> <description><see cref="DeleteSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/deletedata/sql</term> <description><see cref="DeleteDataSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/insert/sql</term> <description><see cref="InsertSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/insertdata/sql</term> <description><see cref="InsertDataSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/select/sql</term> <description><see cref="SelectSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/update/sql</term> <description><see cref="UpdateSqlMiddleware"/></description></item>
-		/// <item><term>/sql-api/updatedata/sql</term> <description><see cref="UpdateDataSqlMiddleware"/></description></item>
+		/// <item><term>/sql-api/schema/sql</term> <see cref="SchemaSqlMiddleware"/></item>
+		/// <item><term>/sql-api/count/sql</term> <see cref="CountSqlMiddleware"/></item>
+		/// <item><term>/sql-api/delete/sql</term> <see cref="DeleteSqlMiddleware"/></item>
+		/// <item><term>/sql-api/deletedata/sql</term> <see cref="DeleteDataSqlMiddleware"/></item>
+		/// <item><term>/sql-api/insert/sql</term> <see cref="InsertSqlMiddleware"/></item>
+		/// <item><term>/sql-api/insertdata/sql</term> <see cref="InsertDataSqlMiddleware"/></item>
+		/// <item><term>/sql-api/select/sql</term> <see cref="SelectSqlMiddleware"/></item>
+		/// <item><term>/sql-api/update/sql</term> <see cref="UpdateSqlMiddleware"/></item>
+		/// <item><term>/sql-api/updatedata/sql</term> <see cref="UpdateDataSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
@@ -70,7 +70,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/call</term> <description><see cref="StoredProcedureMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/call</term> <see cref="StoredProcedureMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiCallRules"/></code>
@@ -85,7 +85,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/count</term> <description><see cref="CountMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/count</term> <see cref="CountMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
@@ -100,7 +100,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/count/sql</term> <description><see cref="CountSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/count/sql</term> <see cref="CountSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
@@ -115,7 +115,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/deletedata</term> <description><see cref="DeleteDataMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/deletedata</term> <see cref="DeleteDataMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
@@ -130,7 +130,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/deletedata/sql</term> <description><see cref="DeleteDataSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/deletedata/sql</term> <see cref="DeleteDataSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteDataRules"/></code>
@@ -145,7 +145,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/delete</term> <description><see cref="DeleteMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/delete</term> <see cref="DeleteMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
@@ -160,7 +160,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/delete/sql</term> <description><see cref="DeleteSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/delete/sql</term> <see cref="DeleteSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
@@ -175,7 +175,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/insertdata</term> <description><see cref="InsertDataMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/insertdata</term> <see cref="InsertDataMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertDataRules"/></code>
@@ -190,7 +190,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/insertdata/sql</term> <description><see cref="InsertDataSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/insertdata/sql</term> <see cref="InsertDataSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertDataRules"/></code>
@@ -205,7 +205,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/insert</term> <description><see cref="InsertMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/insert</term> <see cref="InsertMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
@@ -220,7 +220,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/insert/sql</term> <description><see cref="InsertSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/insert/sql</term> <see cref="InsertSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
@@ -235,7 +235,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/schema?dataSource={dataSource}&amp;object={object}</term> <description><see cref="SchemaMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/schema?dataSource={dataSource}&amp;object={object}</term> <see cref="SchemaMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, IConfigurationSection)"/> or <see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, DataSource[])"/></code>
@@ -250,7 +250,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/schema/sql</term> <description><see cref="SchemaSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/schema/sql</term> <see cref="SchemaSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, IConfigurationSection)"/> or <see cref="IServiceCollectionExtensions.RegisterSqlApi(IServiceCollection, DataSource[])"/></code>
@@ -265,7 +265,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/select</term> <description><see cref="SelectMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/select</term> <see cref="SelectMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -280,7 +280,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/select/sql</term> <description><see cref="SelectSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/select/sql</term> <see cref="SelectSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -295,7 +295,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/updatedata</term> <description><see cref="UpdateDataMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/updatedata</term> <see cref="UpdateDataMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateDataRules"/></code>
@@ -310,7 +310,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/updatedata/sql</term> <description><see cref="UpdateDataSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/updatedata/sql</term> <see cref="UpdateDataSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateDataRules"/></code>
@@ -325,7 +325,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/update</term> <description><see cref="UpdateMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/update</term> <see cref="UpdateMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
@@ -340,7 +340,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/update/sql</term> <description><see cref="UpdateSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/update/sql</term> <see cref="UpdateSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
@@ -355,7 +355,7 @@ namespace TypeCache.Web.Extensions
 		/// <summary>
 		/// Maps Routes to Middlewares:
 		/// <list type="table">
-		/// <item><term>route or /sql-api/execute</term> <description><see cref="ExecuteSqlMiddleware"/></description></item>
+		/// <item><term><paramref name="route"/> or /sql-api/execute</term> <see cref="ExecuteSqlMiddleware"/></item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="IServiceCollectionExtensions.RegisterSqlApiExecuteSqlRules"/></code>

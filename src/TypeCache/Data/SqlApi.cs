@@ -12,37 +12,38 @@ using TypeCache.Data.Extensions;
 using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data
 {
 	internal sealed class SqlApi : ISqlApi
 	{
-		public const string DATABASE = "Database";
+		private const string DATABASE = "Database";
 
-		public const string INITIAL_CATALOG = "Initial Catalog";
+		private const string INITIAL_CATALOG = "Initial Catalog";
 
 		private readonly IReadOnlyDictionary<string, DatabaseProvider> _DatabaseProviders;
 
 		public SqlApi(params DataSource[] dataSources)
 		{
-			var databaseProviders = new Dictionary<string, DatabaseProvider>(dataSources.Length, Default.STRING_COMPARISON.ToStringComparer());
+			var databaseProviders = new Dictionary<string, DatabaseProvider>(dataSources.Length, STRING_COMPARISON.ToStringComparer());
 			dataSources.Do(dataSource => databaseProviders.Add(dataSource.Name, new DatabaseProvider(dataSource)));
 			this._DatabaseProviders = databaseProviders.ToReadOnly();
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet[]> CallAsync(StoredProcedureRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.CallAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<long> CountAsync(CountRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.CountAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> DeleteAsync(DeleteRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.DeleteAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> DeleteDataAsync(DeleteDataRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.DeleteDataAsync(request), cancellationToken);
 
@@ -95,31 +96,31 @@ namespace TypeCache.Data
 			return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetResultAsync(dataSource, _ => _.GetObjectSchema(name)).Result);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> InsertAsync(InsertRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.InsertAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> InsertDataAsync(InsertDataRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.InsertDataAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet[]> RunAsync(SqlRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.RunAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> SelectAsync(SelectRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.SelectAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<int> TruncateTableAsync(string dataSource, string table, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(dataSource, async _ => await _.TruncateTableAsync(table), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> UpdateAsync(UpdateRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.UpdateAsync(request), cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public async ValueTask<RowSet> UpdateDataAsync(UpdateDataRequest request, CancellationToken cancellationToken = default)
 			=> await _GetResultAsync(request.DataSource, async _ => await _.UpdateDataAsync(request), cancellationToken);
 

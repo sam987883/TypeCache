@@ -11,6 +11,7 @@ using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Expressions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache
 {
@@ -46,9 +47,9 @@ namespace TypeCache
 			public bool Public { get; }
 
 			public bool Equals(Token other)
-				=> Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, Default.NAME_STRING_COMPARISON);
+				=> Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, NAME_STRING_COMPARISON);
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			[MethodImpl(METHOD_IMPL_OPTIONS)]
 			public override int GetHashCode()
 				=> Comparer.GetHashCode(this.Value);
 		}
@@ -103,7 +104,7 @@ namespace TypeCache
 			UnderlyingType = type.GetSystemType();
 			UnderlyingTypeHandle = underlyingType.TypeHandle;
 
-			Tokens = type.GetFields(Default.STATIC_BINDING_FLAGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
+			Tokens = type.GetFields(STATIC_BINDING_FLAGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
 		}
 
 		public static IImmutableList<Attribute> Attributes { get; }
@@ -116,7 +117,7 @@ namespace TypeCache
 
 		public static bool Internal { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool IsValid(T token)
 			=> Tokens.Keys.Has(token, Comparer);
 

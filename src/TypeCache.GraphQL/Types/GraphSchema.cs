@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
@@ -321,12 +319,12 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Delete-{Table}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Delete-Batch-{Table}</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
-		/// <item><term>Mutation: Insert-Batch-{Table}</term> <description>Inserts a batch of records.</description></item>
-		/// <item><term>Query: Select-{Table}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update-{Table}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update-Batch-{Table}</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Delete-{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
+		/// <item><term>Mutation: Delete-Batch-{Table}</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
+		/// <item><term>Mutation: Insert-Batch-{Table}</term> Inserts a batch of records.</item>
+		/// <item><term>Query: Select-{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
+		/// <item><term>Mutation: Update-{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
+		/// <item><term>Mutation: Update-Batch-{Table}</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
@@ -360,7 +358,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Call{Procedure}</term> <description>Calls the stored procedure and returns its results.</description></item>
+		/// <item><term>Mutation: Call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -392,7 +390,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Count{Table}</term> <description>Counts records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -414,8 +412,8 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Delete{Table}</term> <description>Deletes records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Delete{Table}Data</term> <description>Deletes a batch of records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
+		/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
@@ -439,7 +437,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Insert{Table}Data</term> <description>Inserts a batch of records.</description></item>
+		/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
@@ -461,7 +459,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Page{Table}</term> <description>Pages records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Query: Page{Table}</term> Pages records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -483,7 +481,7 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Query: Select{Table}</term> <description>Selects records based on a <c>WHERE</c> clause.</description></item>
+		/// <item><term>Query: Select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
@@ -505,8 +503,8 @@ namespace TypeCache.GraphQL.Types
 		/// <summary>
 		/// Creates the following GraphQL endpoints:
 		/// <list type="table">
-		/// <item><term>Mutation: Update{Table}</term> <description>Updates records based on a <c>WHERE</c> clause.</description></item>
-		/// <item><term>Mutation: Update{Table}Data</term> <description>Updates a batch records based on a table's <c>Primary Key</c>.</description></item>
+		/// <item><term>Mutation: Update{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
+		/// <item><term>Mutation: Update{Table}Data</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
 		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>

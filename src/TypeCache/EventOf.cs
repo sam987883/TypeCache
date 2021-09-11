@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache
 {

@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -11,7 +12,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="IDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static V? Get<K, V>(this IDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : class
@@ -20,7 +21,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="IDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static V? GetValue<K, V>(this IDictionary<K, V> @this, K key)
 			where K : notnull
 			where V : struct
@@ -55,7 +56,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>new <see cref="ReadOnlyDictionary{K, V}"/>(@<paramref name="this"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IReadOnlyDictionary<K, V> ToReadOnly<K, V>(this IDictionary<K, V> @this)
 			where K : notnull
 			=> new ReadOnlyDictionary<K, V>(@this);

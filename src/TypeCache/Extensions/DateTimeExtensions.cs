@@ -2,48 +2,47 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Extensions
 {
 	public static class DateTimeExtensions
 	{
 		/// <summary>
-		/// <see cref="DateTime.SpecifyKind(DateTime, DateTimeKind)"/>
+		/// <c><see cref="DateTime.SpecifyKind(DateTime, DateTimeKind)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTime As(this DateTime @this, DateTimeKind kind)
 			=> DateTime.SpecifyKind(@this, kind);
 
 		/// <summary>
-		/// <see cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo, TimeZoneInfo)"/>
+		/// <c><see cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo, TimeZoneInfo)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTime ConvertTime(this DateTime @this, TimeZoneInfo sourceTimeZone, TimeZoneInfo targetTimeZone)
 			=> TimeZoneInfo.ConvertTime(@this, sourceTimeZone, targetTimeZone);
 
 		/// <summary>
-		/// <see cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime, string, string)"/>
+		/// <c><see cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime, string, string)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTime ConvertTime(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
 
 		/// <summary>
-		/// <see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime, TimeZoneInfo)"/>
+		/// <c><see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime, TimeZoneInfo)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTime ConvertTimeToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
 			=> TimeZoneInfo.ConvertTimeToUtc(@this, sourceTimeZone);
 
 		/// <summary>
-		/// <code>
 		/// <list type="table">
-		/// <item><term>kind == @this.Kind</term> <description>@this</description></item>
-		/// <item><term><see cref="DateTimeKind.Local"/></term> <description><see cref="TimeZoneInfo.ConvertTimeFromUtc"/>(<see cref="DateTime"/>, <see cref="TimeZoneInfo"/>.Local)</description></item>
-		/// <item><term><see cref="DateTimeKind.Unspecified"/></term> <description>@this.As(kind)</description></item>
-		/// <item><term><see cref="DateTimeKind.Utc"/></term> <description><see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/></description></item>
+		/// <item><c><term><paramref name="kind"/> == @<paramref name="this"/>.Kind</term> @<paramref name="this"/></c></item>
+		/// <item><c><term><see cref="DateTimeKind.Local"/></term> <see cref="TimeZoneInfo.ConvertTimeFromUtc"/>(<see cref="DateTime"/>, <see cref="TimeZoneInfo"/>.Local)</c></item>
+		/// <item><c><term><see cref="DateTimeKind.Unspecified"/></term> @<paramref name="this"/>.As(kind)</c></item>
+		/// <item><c><term><see cref="DateTimeKind.Utc"/></term> <see cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/></c></item>
 		/// </list>
-		/// </code>
 		/// </summary>
 		public static DateTime To(this DateTime @this, DateTimeKind kind)
 			=> kind switch
@@ -56,12 +55,10 @@ namespace TypeCache.Extensions
 			};
 
 		/// <summary>
-		/// <code>
 		/// <list type="table">
-		/// <item><term><see cref="DateTimeKind.Local"/></term> <description><see cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo)"/></description></item>
-		/// <item><term><see cref="DateTimeKind.Utc"/></term> <description><see cref="TimeZoneInfo.ConvertTimeFromUtc(DateTime, TimeZoneInfo)"/></description></item>
+		/// <item><c><term><see cref="DateTimeKind.Local"/></term> <see cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo)"/></c></item>
+		/// <item><c><term><see cref="DateTimeKind.Utc"/></term> <see cref="TimeZoneInfo.ConvertTimeFromUtc(DateTime, TimeZoneInfo)"/></c></item>
 		/// </list>
-		/// </code>
 		/// </summary>
 		public static DateTime To(this DateTime @this, TimeZoneInfo targetTimeZone)
 			=> @this.Kind switch
@@ -72,16 +69,16 @@ namespace TypeCache.Extensions
 			};
 
 		/// <summary>
-		/// <see cref="TimeZoneInfo.ConvertTime(DateTimeOffset, TimeZoneInfo)"/>
+		/// <c><see cref="TimeZoneInfo.ConvertTime(DateTimeOffset, TimeZoneInfo)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTimeOffset To(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
 			=> TimeZoneInfo.ConvertTime(@this, targetTimeZone);
 
 		/// <summary>
-		/// <see cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset, string)"/>
+		/// <c><see cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset, string)"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DateTimeOffset To(this DateTimeOffset @this, string targetSystemTimeZoneId)
 			=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
 	}

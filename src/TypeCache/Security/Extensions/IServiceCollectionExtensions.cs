@@ -1,4 +1,4 @@
-﻿// Copyright(c) 2020 Samuel Abraham
+﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +9,7 @@ namespace TypeCache.Security.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="IHashMaker"/></term> <description>Utility class that encrypts a long to a simple string hashed ID and back.</description></item>
+		/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
 		/// </list>
 		/// </summary>
 		/// <param name="rgbKey">Any random 16 bytes</param>
@@ -20,7 +20,7 @@ namespace TypeCache.Security.Extensions
 		/// <summary>
 		/// Registers Singletons:
 		/// <list type="bullet">
-		/// <item><term><see cref="IHashMaker"/></term> <description>Utility class that encrypts a long to a simple string hashed ID and back.</description></item>
+		/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
 		/// </list>
 		/// </summary>
 		/// <param name="rgbKey">Any random decimal value (gets converted to a 16 byte array)</param>

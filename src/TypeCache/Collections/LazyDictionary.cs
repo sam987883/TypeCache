@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections
 {
@@ -47,15 +48,15 @@ namespace TypeCache.Collections
 
 		public int Count => this._Dictionary.Count;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool ContainsKey(K key)
 			=> this._Dictionary.ContainsKey(key);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
 			=> this._Dictionary.GetEnumerator();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		IEnumerator IEnumerable.GetEnumerator()
 			=> this._Dictionary.GetEnumerator();
 

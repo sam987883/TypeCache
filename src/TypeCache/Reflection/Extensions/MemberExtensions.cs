@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions
 {
@@ -84,7 +85,7 @@ namespace TypeCache.Reflection.Extensions
 		/// ((<see cref="Type"/>)@<paramref name="this"/>).IsSubclassOf((<see cref="Type"/>)<paramref name="typeMember"/>)
 		/// </code>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool IsSubclassOf(this TypeMember @this, TypeMember typeMember)
 			=> ((Type)@this).IsSubclassOf((Type)typeMember);
 
@@ -93,7 +94,7 @@ namespace TypeCache.Reflection.Extensions
 		/// @<paramref name="this"/>.Supports(<paramref name="type"/>.GetTypeMember()
 		/// </code>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Supports(this TypeMember @this, Type type)
 			=> @this.Supports(type.GetTypeMember());
 

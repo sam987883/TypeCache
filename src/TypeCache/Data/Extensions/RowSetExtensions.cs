@@ -3,6 +3,7 @@
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions
 {
@@ -59,7 +60,7 @@ namespace TypeCache.Data.Extensions
 
 			var rowSet = new RowSet
 			{
-				Columns = columns.Any() ? columns.Match(getters, Default.STRING_COMPARISON.ToStringComparer()).ToArray() : getters.ToArray(),
+				Columns = columns.Any() ? columns.Match(getters, STRING_COMPARISON.ToStringComparer()).ToArray() : getters.ToArray(),
 				Rows = new object?[@this.Length][]
 			};
 			@this.Do((item, rowIndex) =>

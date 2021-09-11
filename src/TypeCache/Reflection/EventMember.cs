@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -44,25 +45,25 @@ namespace TypeCache.Reflection
 		public bool Public { get; }
 
 		/// <param name="instance">Pass null if the event is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void Add(object? instance, Delegate handler)
 			=> this.AddEventHandler.Invoke(instance, handler);
 
 		/// <param name="instance">Pass null if the event is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void Raise(object? instance)
 			=> this.RaiseEvent?.Invoke(instance);
 
 		/// <param name="instance">Pass null if the event is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void Remove(object? instance, Delegate handler)
 			=> this.RemoveEventHandler.Invoke(instance, handler);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(EventMember other)
 			=> this.AddEventHandler.Handle == other.AddEventHandler.Handle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.AddEventHandler.Handle.GetHashCode();
 	}

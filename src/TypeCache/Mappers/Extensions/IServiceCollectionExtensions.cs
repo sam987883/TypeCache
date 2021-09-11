@@ -1,8 +1,6 @@
-﻿// Copyright(c) 2020 Samuel Abraham
+﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Reflection;
-using TypeCache.Mappers;
 
 namespace TypeCache.Mappers.Extensions
 {
@@ -11,7 +9,7 @@ namespace TypeCache.Mappers.Extensions
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><term><c><see cref="IFieldMapper{FROM, TO}"/></c></term> <description>Default field mapper implementation matching by field names only.</description></item>
+		/// <item><term><c><see cref="IFieldMapper{FROM, TO}"/></c></term> Default field mapper implementation matching by field names only.</item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterDefaultFieldMapper(this IServiceCollection @this)
@@ -20,7 +18,7 @@ namespace TypeCache.Mappers.Extensions
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
-		/// <item><term><c><see cref="IPropertyMapper{FROM, TO}"/></c></term> <description>Default property mapper implementation matching by property names only.</description></item>
+		/// <item><term><c><see cref="IPropertyMapper{FROM, TO}"/></c></term> Default property mapper implementation matching by property names only.</item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterDefaultPropertyMapper(this IServiceCollection @this)

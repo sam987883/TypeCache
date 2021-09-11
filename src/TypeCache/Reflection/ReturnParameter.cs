@@ -4,8 +4,8 @@ using System;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -30,11 +30,11 @@ namespace TypeCache.Reflection
 
 		public TypeMember Type { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(ReturnParameter other)
 			=> this._MethodHandle == other._MethodHandle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this._MethodHandle.GetHashCode();
 	}

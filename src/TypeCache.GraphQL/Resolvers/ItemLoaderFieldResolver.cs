@@ -11,6 +11,7 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Resolvers
 {
@@ -41,7 +42,7 @@ namespace TypeCache.GraphQL.Resolvers
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		object IFieldResolver.Resolve(IResolveFieldContext context)
 			=> this.Resolve(context);
 

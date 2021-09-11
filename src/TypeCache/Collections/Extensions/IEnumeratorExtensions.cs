@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -73,12 +74,12 @@ namespace TypeCache.Collections.Extensions
 			where T : struct
 			=> @this.Skip(index + 1) ? @this.Current : null;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? Next<T>(this IEnumerator<T?> @this)
 			where T : class
 			=> @this.MoveNext() ? @this.Current : null;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? NextValue<T>(this IEnumerator<T> @this)
 			where T : struct
 			=> @this.MoveNext() ? @this.Current : null;

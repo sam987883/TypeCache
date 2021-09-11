@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -43,7 +44,7 @@ namespace TypeCache.Reflection
 		public bool Equals(MethodParameter other)
 			=> this._MethodHandle == other._MethodHandle && this.Name.Is(other.Name);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> HashCode.Combine(this._MethodHandle, this.Name);
 	}

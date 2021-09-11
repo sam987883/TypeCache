@@ -7,8 +7,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -67,26 +67,26 @@ namespace TypeCache.Reflection
 
 		public bool Static { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static implicit operator FieldInfo(FieldMember member)
 			=> member.Type.Handle.ToFieldInfo(member.Handle);
 
 		/// <param name="instance">Pass null if the field is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object? GetValue(object? instance)
 			=> this._GetValue?.Invoke(instance);
 
 		/// <param name="instance">Pass null if the field is static.</param>
 		/// <param name="value">The value to set the property to.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void SetValue(object? instance, object? value)
 			=> this._SetValue?.Invoke(instance, value);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(FieldMember other)
 			=> this.Handle == other.Handle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 	}

@@ -6,6 +6,7 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Mappers.Extensions
 {
@@ -33,7 +34,7 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static string[] MapFields(this (IDictionary<string, object?> From, object To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static string[] MapFields(this (IDictionary<string, object?> From, object To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
@@ -58,7 +59,7 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static void MapFields(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static void MapFields(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
@@ -66,8 +67,9 @@ namespace TypeCache.Mappers.Extensions
 			@this.From.GetTypeMember().Fields.Values.Do(field => @this.To[field.Name] = field.GetValue(@this.From));
 		}
 
+		/// <exception cref="ArgumentException"/>
 		/// <exception cref="ArgumentNullException"/>
-		public static string[] MapFields(this (object From, object To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static string[] MapFields(this (object From, object To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
@@ -93,7 +95,7 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static string[] MapProperties(this (IDictionary<string, object?> From, object To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static string[] MapProperties(this (IDictionary<string, object?> From, object To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
@@ -118,7 +120,7 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static void MapProperties(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static void MapProperties(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
@@ -126,8 +128,9 @@ namespace TypeCache.Mappers.Extensions
 			@this.From.GetTypeMember().Properties.Values.Do(property => @this.To[property.Name] = property.GetValue(@this.From));
 		}
 
+		/// <exception cref="ArgumentException"/>
 		/// <exception cref="ArgumentNullException"/>
-		public static string[] MapProperties(this (object From, object To) @this, StringComparison nameComparison = Default.NAME_STRING_COMPARISON)
+		public static string[] MapProperties(this (object From, object To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));

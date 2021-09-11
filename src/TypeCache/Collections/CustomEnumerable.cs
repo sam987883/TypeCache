@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections
 {
@@ -20,11 +21,11 @@ namespace TypeCache.Collections
 			this._GetEnumerator = getEnumerator;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public IEnumerator<T> GetEnumerator()
 			=> this._GetEnumerator();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		IEnumerator IEnumerable.GetEnumerator()
 			=> this._GetEnumerator();
 	}

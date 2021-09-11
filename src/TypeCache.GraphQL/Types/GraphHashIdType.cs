@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.Security;
 using TypeCache.Security.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Types
 {
@@ -32,7 +33,7 @@ namespace TypeCache.GraphQL.Types
 			this.Description = "A hashed ID.";
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override object? ParseLiteral(IValue value)
 			=> this.ParseValue(value.Value);
 

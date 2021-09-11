@@ -1,8 +1,9 @@
-﻿// Copyright(c) 2020 Samuel Abraham
+﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using TypeCache.Data.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data
 {
@@ -18,11 +19,11 @@ namespace TypeCache.Data
 
 		public DbProviderFactory Factory { get; init; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public DbConnection CreateConnection()
 			=> this.Factory.CreateConnection(this._ConnectionString);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public DbConnectionStringBuilder CreateConnectionStringBuilder()
 			=> this.Factory.CreateConnectionStringBuilder(this._ConnectionString);
 	}

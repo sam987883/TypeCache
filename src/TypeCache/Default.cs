@@ -2,6 +2,7 @@
 
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace TypeCache
@@ -13,6 +14,8 @@ namespace TypeCache
 		public const string DATASOURCE = "Default";
 
 		public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
+		public const MethodImplOptions METHOD_IMPL_OPTIONS = MethodImplOptions.AggressiveInlining;
 
 		public const StringComparison NAME_STRING_COMPARISON = StringComparison.Ordinal;
 

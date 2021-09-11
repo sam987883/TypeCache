@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections
 {
@@ -118,7 +119,7 @@ namespace TypeCache.Collections
 				yield return map(item, ++i);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		internal static T[] ToArray(IEnumerable<T> enumerable)
 			=> new Queue<T>(enumerable).ToArray();
 

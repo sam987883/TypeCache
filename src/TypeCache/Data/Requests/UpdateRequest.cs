@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using TypeCache.Converters;
 using TypeCache.Data.Converters;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Requests
 {
@@ -17,14 +18,14 @@ namespace TypeCache.Data.Requests
 		/// <summary>
 		/// The data source name that contains the connection string and database provider to use.
 		/// </summary>
-		public string DataSource { get; set; } = Default.DATASOURCE;
+		public string DataSource { get; set; } = DATASOURCE;
 
 		/// <summary>
 		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
 		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
 		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(Default.STRING_COMPARISON.ToStringComparer());
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>
@@ -36,7 +37,7 @@ namespace TypeCache.Data.Requests
 		/// </code>
 		/// </summary>
 		[JsonConverter(typeof(DictionaryJsonConverter))]
-		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(Default.STRING_COMPARISON.ToStringComparer());
+		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
 		/// JSON: <code>"Table1"</code>
@@ -49,7 +50,7 @@ namespace TypeCache.Data.Requests
 		/// SQL: <code>SET [Column1] = N'Value1', [Column2] = NULL, [Column3] = 0</code>
 		/// </summary>
 		[JsonConverter(typeof(DictionaryJsonConverter))]
-		public IDictionary<string, object?> Set { get; set; } = new Dictionary<string, object?>(Default.STRING_COMPARISON.ToStringComparer());
+		public IDictionary<string, object?> Set { get; set; } = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
 		/// JSON: <code>

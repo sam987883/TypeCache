@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions
 {
@@ -49,15 +50,15 @@ namespace TypeCache.Data.Extensions
 			return transaction;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<DbDataReader> ReadSequentialAccessAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<DbDataReader> ReadSingleRowAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleRow, cancellationToken);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<DbDataReader> ReadSingleResultAsync(this DbCommand @this, CancellationToken cancellationToken = default)
 			=> await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
 	}

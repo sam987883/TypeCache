@@ -9,6 +9,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -32,7 +33,7 @@ namespace TypeCache.Reflection
 			this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
 
-			var methodInfo = type.GetMethod(METHOD_NAME, Default.INSTANCE_BINDING_FLAGS)!;
+			var methodInfo = type.GetMethod(METHOD_NAME, INSTANCE_BINDING_FLAGS)!;
 			this._Invoke = methodInfo.ToInvokeType();
 			this.Method = methodInfo.ToDelegate();
 			this.MethodHandle = methodInfo.MethodHandle;
@@ -62,15 +63,15 @@ namespace TypeCache.Reflection
 
 		public bool Public { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object? Invoke(object instance, params object?[]? arguments)
 			=> this._Invoke(instance, arguments);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(DelegateMember other)
 			=> this.Handle.Equals(other.Handle);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 	}

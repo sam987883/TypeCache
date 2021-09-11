@@ -9,6 +9,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -136,11 +137,11 @@ namespace TypeCache.Reflection
 			where D : Delegate
 			=> this.Methods.Get(name).If(method => method.Static == isStatic).To(method => method!.Method).First<D>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Implements<T>()
 			=> ((Type)this).Implements<T>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Implements(Type type)
 			=> ((Type)this).Implements(type);
 
@@ -152,35 +153,35 @@ namespace TypeCache.Reflection
 			throw new ArgumentException($"{this.Name}.{nameof(Invoke)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Is<V>()
 			=> this.Handle.Is<V>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Is(Type type)
 			=> this.Handle.Is(type);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static implicit operator Type(TypeMember member)
 			=> member.Handle.ToType();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(TypeMember other)
 			=> this.Handle.Equals(other.Handle);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override bool Equals(object? value)
 			=> value is TypeMember typeMember ? this.Handle.Equals(typeMember.Handle) : false;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool operator ==(TypeMember typeMember1, TypeMember typeMember2)
 			=> typeMember1.Equals(typeMember2);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool operator !=(TypeMember typeMember1, TypeMember typeMember2)
 			=> !typeMember1.Equals(typeMember2);
 	}

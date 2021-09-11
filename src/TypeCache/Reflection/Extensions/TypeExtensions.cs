@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TypeCache.Collections.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions
 {
@@ -136,7 +137,7 @@ namespace TypeCache.Reflection.Extensions
 		/// <summary>
 		/// <c><paramref name="types"/>.Any(@<paramref name="this"/>.Is)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Any(this Type? @this, params Type[] types)
 			=> types.Any(@this.Is!);
 
@@ -165,7 +166,7 @@ namespace TypeCache.Reflection.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.Implements(typeof(<typeparamref name="T"/>))</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Implements<T>(this Type @this)
 			=> @this.Implements(typeof(T));
 
@@ -181,7 +182,7 @@ namespace TypeCache.Reflection.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/> == typeof(<typeparamref name="T"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Is<T>(this Type? @this)
 			=> @this == typeof(T);
 

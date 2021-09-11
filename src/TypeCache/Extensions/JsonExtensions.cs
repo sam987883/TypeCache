@@ -6,6 +6,7 @@ using System.Text.Json;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Extensions
 {
@@ -29,7 +30,7 @@ namespace TypeCache.Extensions
 		{
 			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
 
-			var properties = new Dictionary<string, JsonElement>(Default.NAME_STRING_COMPARISON.ToStringComparer());
+			var properties = new Dictionary<string, JsonElement>(NAME_STRING_COMPARISON.ToStringComparer());
 			using var enumerator = @this.EnumerateObject();
 			while (enumerator.MoveNext())
 			{
@@ -42,7 +43,7 @@ namespace TypeCache.Extensions
 		{
 			@this.ValueKind.Assert(nameof(GetObjectValues), JsonValueKind.Object);
 
-			var properties = new Dictionary<string, object?>(Default.NAME_STRING_COMPARISON.ToStringComparer());
+			var properties = new Dictionary<string, object?>(NAME_STRING_COMPARISON.ToStringComparer());
 			using var enumerator = @this.EnumerateObject();
 			while (enumerator.MoveNext())
 			{

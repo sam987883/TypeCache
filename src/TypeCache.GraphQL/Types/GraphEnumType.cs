@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.GraphQL.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Types
 {
@@ -26,11 +27,11 @@ namespace TypeCache.GraphQL.Types
 			});
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		protected override string ChangeEnumCase(string value)
 			=> this._ChangeEnumCase(value);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		private static string DefaultChangeEnumCase(string value)
 			=> value;
 	}

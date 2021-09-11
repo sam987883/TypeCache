@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Data.Converters;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Requests
 {
@@ -16,7 +17,7 @@ namespace TypeCache.Data.Requests
 		/// <summary>
 		/// The data source name that contains the connection string and database provider to use.
 		/// </summary>
-		public string DataSource { get; set; } = Default.DATASOURCE;
+		public string DataSource { get; set; } = DATASOURCE;
 
 		/// <summary>
 		/// Batch of records to insert.
@@ -34,6 +35,6 @@ namespace TypeCache.Data.Requests
 		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
 		/// </summary>
 		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(Default.STRING_COMPARISON.ToStringComparer());
+		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
 	}
 }

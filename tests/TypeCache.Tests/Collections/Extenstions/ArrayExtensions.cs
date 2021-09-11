@@ -235,6 +235,17 @@ namespace TypeCache.Tests.Collections.Extensions
 		}
 
 		[Fact]
+		public void ToArray()
+		{
+			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
+			Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.ToArray(i => i.ToString()));
+			Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.ToArray(i => char.Parse(i.ToString())));
+			Assert.Equal(Array<char>.Empty, Array<int>.Empty.ToArray(i => char.Parse(i.ToString())));
+			Assert.Equal(Array<char>.Empty, (null as int[]).ToArray(i => char.Parse(i.ToString())));
+		}
+
+		[Fact]
 		public async Task ToAsync()
 		{
 			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
@@ -244,14 +255,24 @@ namespace TypeCache.Tests.Collections.Extensions
 		}
 
 		[Fact]
-		public void ToArray()
+		public void ToBoolean()
 		{
-			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+			Assert.True(true.ToBytes().ToBoolean());
+			Assert.False(false.ToBytes().ToBoolean());
+		}
 
-			Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.ToArray(i => i.ToString()));
-			Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.ToArray(i => char.Parse(i.ToString())));
-			Assert.Equal(Array<char>.Empty, Array<int>.Empty.ToArray(i => char.Parse(i.ToString())));
-			Assert.Equal(Array<char>.Empty, (null as int[]).ToArray(i => char.Parse(i.ToString())));
+		[Fact]
+		public void ToChar()
+		{
+			Assert.Equal(char.MinValue, char.MinValue.ToBytes().ToChar());
+			Assert.Equal(char.MaxValue, char.MaxValue.ToBytes().ToChar());
+		}
+
+		[Fact]
+		public void ToDouble()
+		{
+			Assert.Equal(double.MinValue, double.MinValue.ToBytes().ToDouble());
+			Assert.Equal(double.MaxValue, double.MaxValue.ToBytes().ToDouble());
 		}
 
 		[Fact]
@@ -290,6 +311,55 @@ namespace TypeCache.Tests.Collections.Extensions
 			Assert.Empty(intArray.ToIndex(7));
 			Assert.Empty(Array<int>.Empty.ToIndex(1));
 			Assert.Empty((null as int[]).ToIndex(1));
+		}
+
+		[Fact]
+		public void ToInt16()
+		{
+			Assert.Equal(short.MinValue, short.MinValue.ToBytes().ToInt16());
+			Assert.Equal(short.MaxValue, short.MaxValue.ToBytes().ToInt16());
+		}
+
+		[Fact]
+		public void ToInt32()
+		{
+			Assert.Equal(int.MinValue, int.MinValue.ToBytes().ToInt32());
+			Assert.Equal(int.MaxValue, int.MaxValue.ToBytes().ToInt32());
+		}
+
+		[Fact]
+		public void ToInt64()
+		{
+			Assert.Equal(long.MinValue, long.MinValue.ToBytes().ToInt64());
+			Assert.Equal(long.MaxValue, long.MaxValue.ToBytes().ToInt64());
+		}
+
+		[Fact]
+		public void ToSingle()
+		{
+			Assert.Equal(float.MinValue, float.MinValue.ToBytes().ToSingle());
+			Assert.Equal(float.MaxValue, float.MaxValue.ToBytes().ToSingle());
+		}
+
+		[Fact]
+		public void ToUInt16()
+		{
+			Assert.Equal(ushort.MinValue, ushort.MinValue.ToBytes().ToUInt16());
+			Assert.Equal(ushort.MaxValue, ushort.MaxValue.ToBytes().ToUInt16());
+		}
+
+		[Fact]
+		public void ToUInt32()
+		{
+			Assert.Equal(uint.MinValue, uint.MinValue.ToBytes().ToUInt32());
+			Assert.Equal(uint.MaxValue, uint.MaxValue.ToBytes().ToUInt32());
+		}
+
+		[Fact]
+		public void ToUInt64()
+		{
+			Assert.Equal(ulong.MinValue, ulong.MinValue.ToBytes().ToUInt64());
+			Assert.Equal(ulong.MaxValue, ulong.MaxValue.ToBytes().ToUInt64());
 		}
 
 		[Fact]

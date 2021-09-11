@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -11,14 +12,14 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>!@<paramref name="this"/>.If(item => item != <paramref name="value"/>).Any()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool All(this IEnumerable<bool>? @this, bool value)
 			=> !@this.If(item => item != value).Any();
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(item => item == <paramref name="value"/>).Any()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Any([NotNullWhen(true)] this IEnumerable<bool>? @this, bool value)
 			=> @this.If(item => item == value).Any();
 	}

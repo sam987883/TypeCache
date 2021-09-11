@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -21,7 +22,7 @@ namespace TypeCache.Reflection
 			public static Convert To { get; }
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static ref TO Convert<FROM, TO>(ref FROM value) =>
 			ref Converter<FROM, TO>.To(ref value);
 	}

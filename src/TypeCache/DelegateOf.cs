@@ -4,6 +4,7 @@ using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
+using static TypeCache.Default;
 
 namespace TypeCache
 {
@@ -30,7 +31,7 @@ namespace TypeCache
 
 		public static ReturnParameter Return => Member.Return;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static object? Invoke(object instance, params object?[]? arguments)
 			=> Member.Invoke(instance, arguments);
 	}

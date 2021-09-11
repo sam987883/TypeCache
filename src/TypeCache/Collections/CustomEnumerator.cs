@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections
 {
@@ -22,11 +23,11 @@ namespace TypeCache.Collections
 			GC.SuppressFinalize(this);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool MoveNext()
 			=> this.MoveNextFunc();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public void Reset()
 			=> throw new NotImplementedException();
 	}

@@ -13,6 +13,7 @@ using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using static System.FormattableString;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions
 {
@@ -141,7 +142,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>DELETE ... OUTPUT ... FROM ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> DeleteAsync(this DbConnection @this, DeleteRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
@@ -149,7 +150,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>DELETE x ... OUTPUT ... FROM ... INNER JOIN (VALUES ...) AS i ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> DeleteDataAsync(this DbConnection @this, DeleteDataRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 
@@ -157,7 +158,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>INSERT INTO ... SELECT ... FROM ... WHERE ... HAVING ... ORDER BY ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> InsertAsync(this DbConnection @this, InsertRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
@@ -165,7 +166,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>INSERT INTO ... VALUES ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT INSERTED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> InsertDataAsync(this DbConnection @this, InsertDataRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 
@@ -199,7 +200,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>UPDATE ... SET ... OUTPUT ... WHERE ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> UpdateAsync(this DbConnection @this, UpdateRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), request.Parameters, request.Output.Any(), cancellationToken);
 
@@ -207,7 +208,7 @@ namespace TypeCache.Data.Extensions
 		/// <code>UPDATE ... SET ... OUTPUT ... VALUES ...</code>
 		/// </summary>
 		/// <returns><code>OUTPUT DELETED, INSERTED</code></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<RowSet> UpdateDataAsync(this DbConnection @this, UpdateDataRequest request, CancellationToken cancellationToken = default)
 			=> await @this._GetData(request.ToSQL(), null, request.Output.Any(), cancellationToken);
 	}

@@ -11,14 +11,6 @@ namespace TypeCache.Tests.Extensions
 	public class ValueExtensions
 	{
 		[Fact]
-		public void Repeat()
-		{
-			Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
-			Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
-			Assert.Equal(Array<int>.Empty, 123.Repeat(-18).ToArray());
-		}
-
-		[Fact]
 		public void IsReverse()
 		{
 			Assert.True(new Range(Index.FromStart(20), Index.FromStart(3)).IsReverse());
@@ -46,12 +38,44 @@ namespace TypeCache.Tests.Extensions
 		}
 
 		[Fact]
+		public void Repeat()
+		{
+			Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
+			Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
+			Assert.Equal(Array<int>.Empty, 123.Repeat(-18).ToArray());
+		}
+
+		[Fact]
 		public void Swap()
 		{
 			var a = 123;
 			var b = -456;
 			b.Swap(ref a);
 			Assert.Equal(123, b);
+		}
+
+		[Fact]
+		public void ToBytes()
+		{
+			Assert.Equal(16, (-999999.9999M).ToBytes().Length);
+			Assert.Equal(16, 999999.9999M.ToBytes().Length);
+
+			Assert.NotEmpty(decimal.MinValue.ToBytes());
+			Assert.NotEmpty(decimal.MaxValue.ToBytes());
+		}
+
+		[Fact]
+		public void ToDouble()
+		{
+			Assert.Equal(double.MinValue, double.MinValue.ToInt64().ToDouble());
+			Assert.Equal(double.MaxValue, double.MaxValue.ToInt64().ToDouble());
+		}
+
+		[Fact]
+		public void ToSingle()
+		{
+			Assert.Equal(float.MinValue, float.MinValue.ToInt32().ToSingle());
+			Assert.Equal(float.MaxValue, float.MaxValue.ToInt32().ToSingle());
 		}
 
 		[Fact]

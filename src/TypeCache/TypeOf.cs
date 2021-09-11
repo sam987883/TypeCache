@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache
 {
@@ -45,37 +45,37 @@ namespace TypeCache
 
 		public static IImmutableDictionary<string, PropertyMember> Properties => Member.Properties;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T Create(params object?[]? parameters)
 			=> (T)Member.Create(parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Implements<V>()
 			where V : class
 			=> Member.Implements<V>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Implements(Type type)
 			=> Member.Implements(type);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static object? Invoke(string name, params object?[]? parameters)
 			=> Member.Invoke(name, parameters);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Is<V>()
 			=> Member.Is<V>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Is(Type type)
 			=> Member.Is(type);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static D? GetConstructor<D>()
 			where D : Delegate
 			=> Member.GetConstructor<D>();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static D? GetMethod<D>(string name, bool isStatic = false)
 			where D : Delegate
 			=> Member.GetMethod<D>(name, isStatic);

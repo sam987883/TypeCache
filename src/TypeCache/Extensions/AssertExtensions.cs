@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static TypeCache.Default;
 
 namespace TypeCache.Extensions
 {
@@ -31,7 +32,7 @@ namespace TypeCache.Extensions
 
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
-		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = Default.STRING_COMPARISON, [CallerMemberName] string? caller = null)
+		public static void Assert(this string? @this, string name, string? value, StringComparison comparison = STRING_COMPARISON, [CallerMemberName] string? caller = null)
 		{
 			name.AssertNotNull(nameof(name), caller);
 

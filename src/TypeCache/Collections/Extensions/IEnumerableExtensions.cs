@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
@@ -50,21 +51,21 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><see cref="Task.WhenAll{TResult}(IEnumerable{Task{TResult}})"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
 			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
 
 		/// <summary>
 		/// <c><see cref="Task.WhenAll(IEnumerable{Task})"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask AllAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAll(@this);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.And(<paramref name="sets"/>.Gather())</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
 			=> @this.And(sets.Gather());
 
@@ -87,14 +88,14 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.And(<paramref name="items"/> as <see cref="IEnumerable{T}"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T?[]? items)
 			=> @this.And(items as IEnumerable<T>);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().Any()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable? @this)
 			=> @this.If<T>().Any();
 
@@ -112,21 +113,21 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).Any()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter)
 			=> @this.If(filter).Any();
 
 		/// <summary>
 		/// <c><see cref="Task.WhenAny{TResult}(IEnumerable{Task{TResult}})"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask<Task<T>> AnyAsync<T>(this IEnumerable<Task<T>> @this)
 			=> await Task.WhenAny(@this);
 
 		/// <summary>
 		/// <c><see cref="Task.WhenAny(IEnumerable{Task})"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask AnyAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAny(@this);
 
@@ -464,7 +465,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().First()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? First<T>(this IEnumerable? @this)
 			where T : class
 			=> @this.If<T>().First();
@@ -472,7 +473,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>?.GetEnumerator().Next()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? First<T>(this IEnumerable<T>? @this)
 			where T : class
 			=> @this.Get(0);
@@ -481,7 +482,7 @@ namespace TypeCache.Collections.Extensions
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).First()</c>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? First<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : class
 			=> @this.If(filter).Get(0);
@@ -489,7 +490,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().FirstValue()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? FirstValue<T>(this IEnumerable? @this)
 			where T : struct
 			=> @this.If<T>().FirstValue();
@@ -497,7 +498,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>?.GetEnumerator().NextValue()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this)
 			where T : struct
 			=> @this.GetValue(0);
@@ -506,12 +507,12 @@ namespace TypeCache.Collections.Extensions
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).FirstValue()</c>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? FirstValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
 			=> @this.If(filter).GetValue(0);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> Gather<T>(this IEnumerable<IEnumerable<T>?>? @this)
 		{
 			if (!@this.Any())
@@ -596,7 +597,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value, <paramref name="comparer"/>))</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
 			=> values.All(value => @this.Has(value, comparer));
 
@@ -615,7 +616,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.ToIndex(value, <paramref name="comparer"/>).Any()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
 			=> @this.ToIndex(value, comparer).Any();
 
@@ -658,7 +659,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(_ =&gt; _ is not null)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : class
 			=> @this.If(_ => _ is not null)!;
@@ -666,7 +667,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.If(_ =&gt; _.HasValue).To(_ => _.Value)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> IfNotNull<T>(this IEnumerable<T?>? @this)
 			where T : struct
 			=> @this.If(_ => _.HasValue).To(_ => _!.Value);
@@ -696,28 +697,28 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.ToHashSet(<paramref name="comparer"/>).SetEquals(<paramref name="items"/> ?? <see cref="Enumerable{T}.Empty"/>)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool IsSet<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
 			=> @this.ToHashSet(comparer).SetEquals(items ?? Enumerable<T>.Empty);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>) : <see cref="string.Empty"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter)
 			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>)) : <see cref="string.Empty"/></c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)
 			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>?.GetEnumerator().Next()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? Last<T>(this IEnumerable<T>? @this)
 			where T : class
 			=> @this.Get(^0);
@@ -726,7 +727,7 @@ namespace TypeCache.Collections.Extensions
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).First()</c>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? Last<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : class
 			=> @this.If(filter).Get(^0);
@@ -734,7 +735,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>?.GetEnumerator().NextValue()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? LastValue<T>(this IEnumerable<T>? @this)
 			where T : struct
 			=> @this.GetValue(^0);
@@ -743,7 +744,7 @@ namespace TypeCache.Collections.Extensions
 		/// <c>@<paramref name="this"/>.If(<paramref name="filter"/>).FirstValue()</c>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static T? LastValue<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			where T : struct
 			=> @this.If(filter).GetValue(^0);
@@ -795,7 +796,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.Get(new Range(count, ^1))</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(count, ^0));
 
@@ -817,7 +818,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/>.Get(new Range(0, <paramref name="count"/>))</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
 			=> @this.Get(new Range(0, count));
 
@@ -938,12 +939,12 @@ namespace TypeCache.Collections.Extensions
 			return dictionary;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<Tuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 			=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<ValueTuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 			where K : notnull
 			=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
@@ -1021,21 +1022,21 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? new <see cref="List{T}"/>(@<paramref name="this"/>) : new <see cref="List{T}"/>(0)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this)
 			=> @this is not null ? new List<T>(@this) : new List<T>(0);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.To(<paramref name="map"/>).Gather()</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
 			=> @this.To(map).Gather();
 
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? new <see cref="Queue{T}"/>(@<paramref name="this"/>) : new <see cref="Queue{T}"/>(0)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
 			=> @this.Any() ? new Queue<T>(@this) : new Queue<T>(0);
 
@@ -1061,7 +1062,7 @@ namespace TypeCache.Collections.Extensions
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? new <see cref="Stack{T}"/>(@<paramref name="this"/>) : new <see cref="Stack{T}"/>(0)</c>
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
 			=> @this is not null ? new Stack<T>(@this) : new Stack<T>(0);
 

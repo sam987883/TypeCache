@@ -9,6 +9,7 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
@@ -79,25 +80,25 @@ namespace TypeCache.Reflection
 
 		public bool Public { get; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static implicit operator MethodInfo(MethodMember member)
 			=> (MethodInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
 
 		/// <param name="instance">Pass null if the method is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object? Invoke(object? instance, params object?[]? arguments)
 			=> this._Invoke?.Invoke(instance, arguments);
 
 		/// <param name="instance">Pass null if the method is static.</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public object? InvokeGeneric(object? instance, Type[] genericTypes, params object?[]? arguments)
 			=> this._Cache?[genericTypes.To(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(MethodMember other)
 			=> this.Handle == other.Handle;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
 	}

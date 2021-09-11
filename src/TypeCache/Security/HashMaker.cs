@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Security
 {
@@ -30,26 +31,26 @@ namespace TypeCache.Security
 		public long Decrypt(string hashId)
 			=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public long[]? Decrypt(string[] hashIds)
 			=> hashIds?.ToArray(this.Decrypt);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public long[]? Decrypt(IEnumerable<string> hashIds)
 			=> hashIds?.To(this.Decrypt).ToArray();
 
 		public string Encrypt(long id)
 			=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public string? Encrypt(long? id)
 			=> id.HasValue ? this.Encrypt(id.Value) : null;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public string[]? Encrypt(long[] ids)
 			=> ids?.ToArray(this.Encrypt);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public string[]? Encrypt(IEnumerable<long> ids)
 			=> ids?.To(this.Encrypt).ToArray();
 

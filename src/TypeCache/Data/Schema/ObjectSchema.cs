@@ -10,6 +10,7 @@ using System.Text;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Data.Schema
 {
@@ -21,7 +22,7 @@ namespace TypeCache.Data.Schema
 		static ObjectSchema()
 		{
 			Cache = new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(server =>
-				new(Default.STRING_COMPARISON.ToStringComparer()), Default.STRING_COMPARISON.ToStringComparer());
+				new(STRING_COMPARISON.ToStringComparer()), STRING_COMPARISON.ToStringComparer());
 		}
 
 		internal static IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> Cache { get; }
@@ -135,11 +136,11 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 		public bool HasParameter(string parameter) =>
 			this.Parameters.To(_ => _.Name).Has(parameter);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(ObjectSchema? other)
 			=> this._Id.Is(other?._Id);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this._Id.GetHashCode();
 	}
