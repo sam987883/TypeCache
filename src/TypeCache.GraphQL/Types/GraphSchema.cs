@@ -318,7 +318,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-Batch-{Table}</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -328,22 +328,22 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			if (objectSchema.Type == ObjectType.Table)
+			if (schema.Type == ObjectType.Table)
 			{
-				this.Mutation!.AddField(sqlApiMethods["Delete"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(sqlApiMethods["DeleteData"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(sqlApiMethods["InsertData"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(sqlApiMethods["Update"][0].ToFieldType(sqlApi));
-				this.Mutation.AddField(sqlApiMethods["UpdateData"][0].ToFieldType(sqlApi));
+				this.Mutation!.AddField(sqlApiMethods["Delete"][0].ToFieldType(schema.ObjectName, sqlApi));
+				this.Mutation.AddField(sqlApiMethods["DeleteData"][0].ToFieldType(schema.ObjectName, sqlApi));
+				this.Mutation.AddField(sqlApiMethods["InsertData"][0].ToFieldType(schema.ObjectName, sqlApi));
+				this.Mutation.AddField(sqlApiMethods["Update"][0].ToFieldType(schema.ObjectName, sqlApi));
+				this.Mutation.AddField(sqlApiMethods["UpdateData"][0].ToFieldType(schema.ObjectName, sqlApi));
 			}
 
-			this.Query.AddField(sqlApiMethods["Count"][0].ToFieldType(sqlApi));
-			this.Query.AddField(sqlApiMethods["Page"][0].ToFieldType(sqlApi));
-			this.Query.AddField(sqlApiMethods["Select"][0].ToFieldType(sqlApi));
+			this.Query.AddField(sqlApiMethods["Count"][0].ToFieldType(schema.ObjectName, sqlApi));
+			this.Query.AddField(sqlApiMethods["Page"][0].ToFieldType(schema.ObjectName, sqlApi));
+			this.Query.AddField(sqlApiMethods["Select"][0].ToFieldType(schema.ObjectName, sqlApi));
 		}
 
 		/// <summary>
@@ -352,7 +352,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -384,7 +384,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -394,10 +394,10 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 
-			TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 		}
 
 		/// <summary>
@@ -407,7 +407,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiDeleteRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -417,12 +417,12 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			sqlApiMethods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
-			sqlApiMethods["DeleteData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+			sqlApiMethods["DeleteData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 		}
 
 		/// <summary>
@@ -431,7 +431,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiInsertRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -441,8 +441,8 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 
 			TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
 		}
@@ -453,7 +453,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Page{Table}</term> Pages records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -463,10 +463,10 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 
-			TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 		}
 
 		/// <summary>
@@ -475,7 +475,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiSelectRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -485,10 +485,10 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 
-			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(sqlApi)));
+			TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 		}
 
 		/// <summary>
@@ -498,7 +498,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update{Table}Data</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="Data.Extensions.IServiceCollectionExtensions.RegisterSqlApiUpdateRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -508,12 +508,12 @@ namespace TypeCache.GraphQL.Types
 			table.AssertNotBlank(nameof(table));
 			this._SqlApi.AssertNotNull(nameof(this._SqlApi));
 
-			var objectSchema = this._SqlApi!.GetObjectSchema(dataSource, table);
-			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, objectSchema.Name);
+			var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
+			var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
 			var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
 
-			sqlApiMethods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
-			sqlApiMethods["UpdateData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
+			sqlApiMethods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+			sqlApiMethods["UpdateData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 		}
 	}
 }

@@ -9,7 +9,7 @@ namespace TypeCache.Reflection.Extensions
 	public record ArrayExpressionBuilder(Expression Expression)
 	{
 		/// <summary>
-		/// <c><see cref="Expression.ArrayAccess(Expression, Expression)"/></c>
+		/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
 		/// </summary>
 		public IndexExpression this[int index]
 			=> Expression.ArrayAccess(this.Expression, Expression.Constant(index));

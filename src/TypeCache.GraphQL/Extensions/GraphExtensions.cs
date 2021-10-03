@@ -191,13 +191,13 @@ namespace TypeCache.GraphQL.Extensions
 				Type = @this.Return.GraphType()
 			};
 
-		internal static FieldType ToFieldType<T>(this MethodMember @this, SqlApi<T> sqlApi)
+		internal static FieldType ToFieldType<T>(this MethodMember @this, string table, SqlApi<T> sqlApi)
 			where T : class, new()
 			=> new()
 			{
 				Arguments = @this.Parameters.ToQueryArguments(),
-				Name = string.Format(@this.GraphName()!, sqlApi.Table),
-				Description = string.Format(@this.GraphDescription()!, sqlApi.Table),
+				Name = string.Format(@this.GraphName()!, table),
+				Description = string.Format(@this.GraphDescription()!, table),
 				DeprecationReason = @this.ObsoleteMessage(),
 				Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<object>(@this).ToArray())),
 				Type = @this.Return.GraphType()
