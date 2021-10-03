@@ -59,6 +59,38 @@ namespace TypeCache.Reflection.Extensions
 		/// <summary>
 		/// <c>a &gt;&gt; 6</c>
 		/// </summary>
-		RightShift
+		RightShift,
+		/// <summary>
+		/// <c>a == b</c>
+		/// </summary>
+		EqualTo,
+		/// <summary>
+		/// <c>a === b</c>
+		/// </summary>
+		ReferenceEqualTo,
+		/// <summary>
+		/// <c>a != b</c>
+		/// </summary>
+		NotEqualTo,
+		/// <summary>
+		/// <c>a !== b</c>
+		/// </summary>
+		ReferenceNotEqualTo,
+		/// <summary>
+		/// <c>a &gt; b</c>
+		/// </summary>
+		MoreThan,
+		/// <summary>
+		/// <c>a &gt;= b</c>
+		/// </summary>
+		MoreThanOrEqualTo,
+		/// <summary>
+		/// <c>a &lt; b</c>
+		/// </summary>
+		LessThan,
+		/// <summary>
+		/// <c>a &lt;= b</c>
+		/// </summary>
+		LessThanOrEqualTo,
 	}
 }

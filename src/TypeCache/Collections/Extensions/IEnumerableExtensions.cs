@@ -99,14 +99,20 @@ namespace TypeCache.Collections.Extensions
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable? @this)
 			=> @this.If<T>().Any();
 
+		/// <summary>
+		/// <list type="table">
+		/// <item><c><term><see langword="null"/></term> <see langword="false"/></c></item>
+		/// <item><c><term><see cref="ICollection{T}"/> collection</term> collection.Count &gt; 0</c></item>
+		/// <item><c><term><see cref="IReadOnlyCollection{T}"/> collection</term> collection.Count &gt; 0</c></item>
+		/// <item><c>@<paramref name="this"/>.GetEnumerator().MoveNext()</c></item>
+		/// </list>
+		/// </summary>
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this)
 			=> @this switch
 			{
 				null => false,
-				T[] array => array.Length > 0,
 				ICollection<T> collection => collection.Count > 0,
-				IReadOnlyCollection<T> readOnlyCollection => readOnlyCollection.Count > 0,
-				ICollection collection => collection.Count > 0,
+				IReadOnlyCollection<T> collection => collection.Count > 0,
 				_ => @this.GetEnumerator().MoveNext()
 			};
 
@@ -131,6 +137,13 @@ namespace TypeCache.Collections.Extensions
 		public static async ValueTask AnyAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAny(@this);
 
+		/// <summary>
+		/// <list type="table">
+		/// <item><c><term><see langword="null"/></term> <see cref="Enumerable{T}"/>.Empty</c></item>
+		/// <item><c><term><see cref="IEnumerable{T}"/> enumerable</term> enumerable</c></item>
+		/// <item><c><see cref="Enumerable{T}"/>.As(@<paramref name="this"/>)</c></item>
+		/// </list>
+		/// </summary>
 		public static IEnumerable<T?> As<T>(this IEnumerable? @this)
 			=> @this switch
 			{
@@ -139,14 +152,20 @@ namespace TypeCache.Collections.Extensions
 				_ => Enumerable<T>.As(@this)
 			};
 
+		/// <summary>
+		/// <list type="table">
+		/// <item><c><term><see langword="null"/></term> 0</c></item>
+		/// <item><c><term><see cref="ICollection{T}"/> collection</term> collection.Count</c></item>
+		/// <item><c><term><see cref="IReadOnlyCollection{T}"/> collection</term> collection.Count</c></item>
+		/// <item><c>@<paramref name="this"/>.GetEnumerator().Count()</c></item>
+		/// </list>
+		/// </summary>
 		public static int Count<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
 				null => 0,
-				T[] array => array.Length,
 				ICollection<T> collection => collection.Count,
 				IReadOnlyCollection<T> collection => collection.Count,
-				ICollection collection => collection.Count,
 				_ => @this.GetEnumerator().Count()
 			};
 
@@ -552,11 +571,9 @@ namespace TypeCache.Collections.Extensions
 			where T : class
 			=> @this switch
 			{
-				null => null,
-				T[] array when array.Has(index) => array[index],
 				IList<T> list when list.Has(index) => list[index],
 				IReadOnlyList<T> list when list.Has(index) => list[index],
-				T[] or IList<T> or IReadOnlyList<T> _ => null,
+				null or IList<T> or IReadOnlyList<T> => null,
 				_ => @this.GetEnumerator().Get(index.IsFromEnd ? index.GetOffset(@this.Count()) : index.Value)
 			};
 
@@ -575,11 +592,9 @@ namespace TypeCache.Collections.Extensions
 			where T : struct
 			=> @this switch
 			{
-				null => null,
-				T[] array when array.Has(index) => array[index],
 				IList<T> list when list.Has(index) => list[index],
 				IReadOnlyList<T> list when list.Has(index) => list[index],
-				T[] or IList<T> or IReadOnlyList<T> _ => null,
+				null or IList<T> or IReadOnlyList<T> _ => null,
 				_ => @this.GetEnumerator().GetValue(index.IsFromEnd ? index.GetOffset(@this.Count()) : index.Value)
 			};
 
@@ -605,11 +620,8 @@ namespace TypeCache.Collections.Extensions
 			=> @this switch
 			{
 				null => false,
-				T[] array => index.Value < array.Length,
-				IImmutableList<T> list => index.Value < list.Count,
 				ICollection<T> collection => index.Value < collection.Count,
 				IReadOnlyCollection<T> collection => index.Value < collection.Count,
-				ICollection collection => index.Value < collection.Count,
 				_ => @this.GetEnumerator().Skip(index.Value + 1),
 			};
 

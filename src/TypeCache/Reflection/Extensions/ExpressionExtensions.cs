@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Expressions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions
@@ -15,11 +14,66 @@ namespace TypeCache.Reflection.Extensions
 	public static class ExpressionExtensions
 	{
 		/// <summary>
+		/// <c><see cref="Expression.AndAlso(Expression, Expression)"/></c>
+		/// </summary>
+		/// <remarks><c>a &amp;&amp; b</c></remarks>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression And(this Expression @this, Expression operand)
+			=> Expression.AndAlso(@this, operand);
+
+		/// <summary>
 		/// <c>new <see cref="ArrayExpressionBuilder"/>(@<paramref name="this"/>)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static ArrayExpressionBuilder Array(this Expression @this)
 			=> new ArrayExpressionBuilder(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression Array(this Expression @this, int index)
+			=> Expression.ArrayIndex(@this, Expression.Constant(index));
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression[])"/></c>
+		/// </summary>
+		public static MethodCallExpression Array(this Expression @this, params int[] indexes)
+			=> Expression.ArrayIndex(@this, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression Array(this Expression @this, long index)
+			=> Expression.ArrayIndex(@this, Expression.Constant(index));
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression[])"/></c>
+		/// </summary>
+		public static MethodCallExpression Array(this Expression @this, params long[] indexes)
+			=> Expression.ArrayIndex(@this, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression Array(this Expression @this, Expression index)
+			=> Expression.ArrayIndex(@this, index);
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, IEnumerable{Expression})"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MethodCallExpression Array(this Expression @this, IEnumerable<Expression> indexes)
+			=> Expression.ArrayIndex(@this, indexes);
+
+		/// <summary>
+		/// <c><see cref="Expression.ArrayIndex(Expression, Expression[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MethodCallExpression Array(this Expression @this, params Expression[] indexes)
+			=> Expression.ArrayIndex(@this, indexes);
 
 		/// <summary>
 		/// <c><see cref="Expression.TypeAs(Expression, Type)"/></c>
@@ -35,13 +89,6 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Expression As(this Expression @this, Type type)
 			=> Expression.TypeAs(@this, type);
-
-		/// <summary>
-		/// <c><see cref="Expression.Assign(Expression, Expression)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static BinaryExpression Assign(this Expression @this, Expression expression)
-			=> Expression.Assign(@this, expression);
 
 		/// <summary>
 		/// <list type="table">
@@ -80,8 +127,15 @@ namespace TypeCache.Reflection.Extensions
 				BinaryOperator.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
 				BinaryOperator.LeftShift => Expression.LeftShiftAssign(@this, operand),
 				BinaryOperator.RightShift => Expression.RightShiftAssign(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(BinaryOperator)} [{operation}] is not supported.")
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
 			};
+
+		/// <summary>
+		/// <c><see cref="Expression.Assign(Expression, Expression)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression Assign(this Expression @this, Expression expression)
+			=> Expression.Assign(@this, expression);
 
 		/// <summary>
 		/// <c><see cref="Expression.Block(Expression, Expression)"/></c>
@@ -91,18 +145,32 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Block(@this, expression);
 
 		/// <summary>
-		/// <c><see cref="Expression.Call(Expression, string, Type[], Expression[])"/></c>
+		/// <c><see cref="Expression.Break(LabelTarget)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MethodCallExpression Call(this Expression @this, string method, params Expression[] arguments)
-			=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
+		public static GotoExpression Break(this LabelTarget @this)
+			=> Expression.Break(@this);
 
 		/// <summary>
-		/// <c><see cref="Expression.Call(Expression, string, Type[], Expression[])"/></c>
+		/// <c><see cref="Expression.Break(LabelTarget, Expression?)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MethodCallExpression Call(this Expression @this, string method, Type[] genericTypes, params Expression[] arguments)
-			=> Expression.Call(@this, method, genericTypes, arguments);
+		public static GotoExpression Break(this LabelTarget @this, Expression? value)
+			=> Expression.Break(@this, value);
+
+		/// <summary>
+		/// <c><see cref="Expression.Break(LabelTarget, Expression?, Type)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static GotoExpression Break(this LabelTarget @this, Expression? value, Type type)
+			=> Expression.Break(@this, value, type);
+
+		/// <summary>
+		/// <c><see cref="Expression.Break(LabelTarget, Type)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static GotoExpression Break(this LabelTarget @this, Type type)
+			=> Expression.Break(@this, type);
 
 		/// <summary>
 		/// <c><see cref="Expression.Call(Expression?, MethodInfo)"/></c>
@@ -124,6 +192,20 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, params Expression[] arguments)
 			=> Expression.Call(@this, methodInfo, arguments);
+
+		/// <summary>
+		/// <c><see cref="Expression.Call(Expression, string, Type[], Expression[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MethodCallExpression Call(this Expression @this, string method, params Expression[] arguments)
+			=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
+
+		/// <summary>
+		/// <c><see cref="Expression.Call(Expression, string, Type[], Expression[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MethodCallExpression Call(this Expression @this, string method, Type[] genericTypes, params Expression[] arguments)
+			=> Expression.Call(@this, method, genericTypes, arguments);
 
 		/// <summary>
 		/// <c><see cref="Expression.Call(MethodInfo, Expression[])"/></c>
@@ -198,11 +280,32 @@ namespace TypeCache.Reflection.Extensions
 			=> @this is not null ? Expression.Constant(@this, @this.GetType()) : Expression.Constant(@this);
 
 		/// <summary>
+		/// <c><see cref="Expression.Continue(LabelTarget)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static GotoExpression Continue(this LabelTarget @this)
+			=> Expression.Continue(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.Continue(LabelTarget, Type)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static GotoExpression Continue(this LabelTarget @this, Type type)
+			=> Expression.Continue(@this, type);
+
+		/// <summary>
 		/// <c><see cref="Expression.Default(Type)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static DefaultExpression Default(this Type @this)
 			=> Expression.Default(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.Field(Expression?, FieldInfo)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MemberExpression Field(this Expression @this, FieldInfo fieldInfo)
+			=> Expression.Field(@this, fieldInfo);
 
 		/// <summary>
 		/// <c><see cref="Expression.Field(Expression, string)"/></c>
@@ -212,11 +315,11 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Field(@this, name);
 
 		/// <summary>
-		/// <c><see cref="Expression.Field(Expression?, FieldInfo)"/></c>
+		/// <c><see cref="Expression.Goto(LabelTarget)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MemberExpression Field(this Expression @this, FieldInfo fieldInfo)
-			=> Expression.Field(@this, fieldInfo);
+		public static GotoExpression Goto(this LabelTarget @this)
+			=> Expression.Goto(@this);
 
 		/// <summary>
 		/// <c><see cref="Expression.IfThen(Expression, Expression)"/></c>
@@ -268,31 +371,59 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.TypeIs(@this, type);
 
 		/// <summary>
-		/// <c><see cref="Expression"/>.ReferenceNotEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(null))</c>
+		/// <c><see cref="Expression"/>.ReferenceNotEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(<see langword="null"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static BinaryExpression IsNotNull(this Expression @this)
 			=> Expression.ReferenceNotEqual(@this, Expression.Constant(null));
 
 		/// <summary>
-		/// <c><see cref="Expression"/>.ReferenceEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(null))</c>
+		/// <c><see cref="Expression"/>.ReferenceEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(<see langword="null"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static BinaryExpression IsNull(this Expression @this)
 			=> Expression.ReferenceEqual(@this, Expression.Constant(null));
 
 		/// <summary>
+		/// <c><see cref="Expression.Label(LabelTarget)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LabelExpression Label(this LabelTarget @this)
+			=> Expression.Label(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.Label(LabelTarget, Expression?)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LabelExpression Label(this LabelTarget @this, Expression? defaultValue)
+			=> Expression.Label(@this, defaultValue);
+
+		/// <summary>
+		/// <c><see cref="Expression.Label(string?)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LabelTarget Label(this string? @this)
+			=> Expression.Label(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.Label(Type)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LabelTarget Label(this Type @this)
+			=> Expression.Label(@this);
+
+		/// <summary>
+		/// <c><see cref="Expression.Label(Type, string?)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LabelTarget Label(this Type @this, string? name)
+			=> Expression.Label(@this, name);
+
+		/// <summary>
 		/// <c><see cref="Expression.Lambda(Expression, IEnumerable{ParameterExpression}?)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static LambdaExpression Lambda(this Expression @this, IEnumerable<ParameterExpression> parameters)
-			=> Expression.Lambda(@this, parameters);
-
-		/// <summary>
-		/// <c><see cref="Expression.Lambda(Expression, ParameterExpression[])"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LambdaExpression Lambda(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda(@this, parameters);
 
 		/// <summary>
@@ -303,11 +434,21 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Lambda<T>(@this, parameters);
 
 		/// <summary>
+		/// <c><see cref="Expression.Lambda(Expression, ParameterExpression[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static LambdaExpression Lambda(this Expression @this, params ParameterExpression[] parameters)
+			=> Expression.Lambda(@this, parameters);
+
+		/// <summary>
 		/// <c><see cref="Expression.Lambda{TDelegate}(Expression, ParameterExpression[])"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Expression<T> Lambda<T>(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda<T>(@this, parameters);
+
+		public static LambdaExpression Lambda(this Func<ParameterExpression, Expression> @this, ParameterExpression parameter1)
+			=> @this(parameter1).Lambda(parameter1);
 
 		/// <summary>
 		/// <c><see cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression}?)"/></c>
@@ -324,18 +465,6 @@ namespace TypeCache.Reflection.Extensions
 		/// <summary>
 		/// <c><see cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression}?)"/></c>
 		/// </summary>
-		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
-
-		/// <summary>
-		/// <c><see cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/></c>
-		/// </summary>
-		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
-			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
-
-		/// <summary>
-		/// <c><see cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression}?)"/></c>
-		/// </summary>
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
 
@@ -344,6 +473,18 @@ namespace TypeCache.Reflection.Extensions
 		/// </summary>
 		public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[] parameters)
 			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(typeof(T)).ToArray()), @this, parameters);
+
+		/// <summary>
+		/// <c><see cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression}?)"/></c>
+		/// </summary>
+		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
+
+		/// <summary>
+		/// <c><see cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/></c>
+		/// </summary>
+		public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[] parameters)
+			=> Expression.Lambda(Expression.GetFuncType(parameters.To(parameter => parameter.Type).And(returnType).ToArray()), @this, parameters);
 
 		/// <summary>
 		/// <c><see cref="Expression.PropertyOrField(Expression, string)"/></c>
@@ -367,25 +508,11 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.MemberInit(@this, bindings);
 
 		/// <summary>
-		/// <c><see cref="Expression.New(ConstructorInfo, Expression[])"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static NewExpression New(this ConstructorInfo @this, params Expression[]? parameters)
-			=> Expression.New(@this, parameters);
-
-		/// <summary>
 		/// <c><see cref="Expression.New(ConstructorInfo, IEnumerable{Expression}?)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters)
 			=> Expression.New(@this, parameters);
-
-		/// <summary>
-		/// <c><see cref="Expression.New(ConstructorInfo, IEnumerable{Expression}?, MemberInfo[])"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, MemberInfo[] memberInfos)
-			=> Expression.New(@this, parameters, memberInfos);
 
 		/// <summary>
 		/// <c><see cref="Expression.New(ConstructorInfo, IEnumerable{Expression}?, IEnumerable{MemberInfo}?)"/></c>
@@ -395,11 +522,81 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.New(@this, parameters, memberInfos);
 
 		/// <summary>
+		/// <c><see cref="Expression.New(ConstructorInfo, IEnumerable{Expression}?, MemberInfo[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, MemberInfo[] memberInfos)
+			=> Expression.New(@this, parameters, memberInfos);
+
+		/// <summary>
+		/// <c><see cref="Expression.New(ConstructorInfo, Expression[])"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static NewExpression New(this ConstructorInfo @this, params Expression[]? parameters)
+			=> Expression.New(@this, parameters);
+
+		/// <summary>
 		/// <c><see cref="Expression.New(Type)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static NewExpression New(this Type @this)
 			=> Expression.New(@this);
+
+		/// <summary>
+		/// <list type="table">
+		/// <listheader><c><see cref="BinaryOperator"/></c> to <c><see cref="Expression"/></c> Mapping:</listheader>
+		/// <item><c><term><see cref="BinaryOperator.Add"/></term> <see cref="Expression.Add(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.AddChecked"/></term> <see cref="Expression.AddChecked(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Divide"/></term> <see cref="Expression.Divide(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Modulus"/></term> <see cref="Expression.Modulo(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Multiply"/></term> <see cref="Expression.Multiply(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.MultiplyChecked"/></term> <see cref="Expression.MultiplyChecked(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Power"/></term> <see cref="Expression.Power(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Subtract"/></term> <see cref="Expression.Subtract(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.SubtractChecked"/></term> <see cref="Expression.SubtractChecked(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.And"/></term> <see cref="Expression.And(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.Or"/></term> <see cref="Expression.Or(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.ExclusiveOr"/></term> <see cref="Expression.ExclusiveOr(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.LeftShift"/></term> <see cref="Expression.LeftShift(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.RightShift"/></term> <see cref="Expression.RightShift(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.EqualTo"/></term> <see cref="Expression.Equal(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.ReferenceEqualTo"/></term> <see cref="Expression.ReferenceEqual(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.NotEqualTo"/></term> <see cref="Expression.NotEqual(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.ReferenceNotEqualTo"/></term> <see cref="Expression.ReferenceNotEqual(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.MoreThan"/></term> <see cref="Expression.GreaterThan(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.MoreThanOrEqualTo"/></term> <see cref="Expression.GreaterThanOrEqual(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.LessThan"/></term> <see cref="Expression.LessThan(Expression, Expression)"/></c></item>
+		/// <item><c><term><see cref="BinaryOperator.LessThanOrEqualTo"/></term> <see cref="Expression.LessThanOrEqual(Expression, Expression)"/></c></item>
+		/// </list>
+		/// </summary>
+		/// <exception cref="NotSupportedException" />
+		public static BinaryExpression Operation(this Expression @this, BinaryOperator operation, Expression operand)
+			=> operation switch
+			{
+				BinaryOperator.Add => Expression.Add(@this, operand),
+				BinaryOperator.AddChecked => Expression.AddChecked(@this, operand),
+				BinaryOperator.Divide => Expression.Divide(@this, operand),
+				BinaryOperator.Modulus => Expression.Modulo(@this, operand),
+				BinaryOperator.Multiply => Expression.Multiply(@this, operand),
+				BinaryOperator.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
+				BinaryOperator.Power => Expression.Power(@this, operand),
+				BinaryOperator.Subtract => Expression.Subtract(@this, operand),
+				BinaryOperator.SubtractChecked => Expression.SubtractChecked(@this, operand),
+				BinaryOperator.And => Expression.And(@this, operand),
+				BinaryOperator.Or => Expression.Or(@this, operand),
+				BinaryOperator.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
+				BinaryOperator.LeftShift => Expression.LeftShift(@this, operand),
+				BinaryOperator.RightShift => Expression.RightShift(@this, operand),
+				BinaryOperator.EqualTo => Expression.Equal(@this, operand),
+				BinaryOperator.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
+				BinaryOperator.NotEqualTo => Expression.NotEqual(@this, operand),
+				BinaryOperator.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
+				BinaryOperator.MoreThan => Expression.GreaterThan(@this, operand),
+				BinaryOperator.MoreThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
+				BinaryOperator.LessThan => Expression.LessThan(@this, operand),
+				BinaryOperator.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
+				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
+			};
 
 		/// <summary>
 		/// <list type="table">
@@ -432,94 +629,16 @@ namespace TypeCache.Reflection.Extensions
 				UnaryOperator.Negate => Expression.Negate(@this),
 				UnaryOperator.NegateChecked => Expression.NegateChecked(@this),
 				UnaryOperator.Complement => Expression.OnesComplement(@this),
-				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(UnaryOperator)} [{operation}] is not supported.")
+				_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(UnaryOperator)} [{operation:G}] is not supported.")
 			};
 
 		/// <summary>
-		/// <list type="table">
-		/// <listheader><c><see cref="BinaryOperator"/></c> to <c><see cref="Expression"/></c> Mapping:</listheader>
-		/// <item><c><term><see cref="BinaryOperator.Add"/></term> <see cref="Expression.Add(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.AddChecked"/></term> <see cref="Expression.AddChecked(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Divide"/></term> <see cref="Expression.Divide(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Modulus"/></term> <see cref="Expression.Modulo(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Multiply"/></term> <see cref="Expression.Multiply(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.MultiplyChecked"/></term> <see cref="Expression.MultiplyChecked(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Power"/></term> <see cref="Expression.Power(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Subtract"/></term> <see cref="Expression.Subtract(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.SubtractChecked"/></term> <see cref="Expression.SubtractChecked(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.And"/></term> <see cref="Expression.And(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.Or"/></term> <see cref="Expression.Or(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.ExclusiveOr"/></term> <see cref="Expression.ExclusiveOr(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.LeftShift"/></term> <see cref="Expression.LeftShift(Expression, Expression)"/></c></item>
-		/// <item><c><term><see cref="BinaryOperator.RightShift"/></term> <see cref="Expression.RightShift(Expression, Expression)"/></c></item>
-		/// </list>
+		/// <c><see cref="Expression.OrElse(Expression, Expression)"/></c>
 		/// </summary>
-		/// <exception cref="NotSupportedException" />
-		public static BinaryExpression Operation(this Expression @this, BinaryOperator operation, Expression operand)
-			=> operation switch
-			{
-				BinaryOperator.Add => Expression.Add(@this, operand),
-				BinaryOperator.AddChecked => Expression.AddChecked(@this, operand),
-				BinaryOperator.Divide => Expression.Divide(@this, operand),
-				BinaryOperator.Modulus => Expression.Modulo(@this, operand),
-				BinaryOperator.Multiply => Expression.Multiply(@this, operand),
-				BinaryOperator.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
-				BinaryOperator.Power => Expression.Power(@this, operand),
-				BinaryOperator.Subtract => Expression.Subtract(@this, operand),
-				BinaryOperator.SubtractChecked => Expression.SubtractChecked(@this, operand),
-				BinaryOperator.And => Expression.And(@this, operand),
-				BinaryOperator.Or => Expression.Or(@this, operand),
-				BinaryOperator.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
-				BinaryOperator.LeftShift => Expression.LeftShift(@this, operand),
-				BinaryOperator.RightShift => Expression.RightShift(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(ArithmeticOp)} [{operation}] is not supported.")
-			};
-
-		/// <summary>
-		/// <code>
-		/// <list type="table">
-		/// <item><see cref="Expression.Equal(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.ReferenceEqual(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.NotEqual(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.ReferenceNotEqual(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.GreaterThan(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.GreaterThanOrEqual(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.LessThan(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.LessThanOrEqual(Expression, Expression)"/></item>
-		/// </list>
-		/// </code>
-		/// </summary>
-		/// <exception cref="NotSupportedException" />
-		public static BinaryExpression Operation(this Expression @this, EqualityOp operation, Expression operand)
-			=> operation switch
-			{
-				EqualityOp.EqualTo => Expression.Equal(@this, operand),
-				EqualityOp.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
-				EqualityOp.NotEqualTo => Expression.NotEqual(@this, operand),
-				EqualityOp.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
-				EqualityOp.MoreThan => Expression.GreaterThan(@this, operand),
-				EqualityOp.MoreThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
-				EqualityOp.LessThan => Expression.LessThan(@this, operand),
-				EqualityOp.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(EqualityOp)} [{operation}] is not supported.")
-			};
-
-		/// <summary>
-		/// <code>
-		/// <list type="table">
-		/// <item><see cref="Expression.AndAlso(Expression, Expression)"/></item>
-		/// <item><see cref="Expression.OrElse(Expression, Expression)"/></item>
-		/// </list>
-		/// </code>
-		/// </summary>
-		/// <exception cref="NotSupportedException" />
-		public static BinaryExpression Operation(this Expression @this, LogicalOp operation, Expression operand)
-			=> operation switch
-			{
-				LogicalOp.And => Expression.AndAlso(@this, operand),
-				LogicalOp.Or => Expression.OrElse(@this, operand),
-				_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(EqualityOp)} [{operation}] is not supported.")
-			};
+		/// <remarks><c>a || b</c></remarks>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static BinaryExpression Or(this Expression @this, Expression operand)
+			=> Expression.OrElse(@this, operand);
 
 		/// <summary>
 		/// <c><see cref="Expression.Parameter(Type, string?)"/></c>
@@ -532,36 +651,22 @@ namespace TypeCache.Reflection.Extensions
 		/// <c><see cref="Expression.Parameter(Type, string?)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ParameterExpression Parameter(this string @this, Type type)
-			=> Expression.Parameter(type, @this);
+		public static ParameterExpression Parameter<T>(this string @this)
+			=> Expression.Parameter(typeof(T), @this);
 
 		/// <summary>
 		/// <c><see cref="Expression.Parameter(Type, string?)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ParameterExpression Parameter<T>(this string @this)
-			=> Expression.Parameter(typeof(T), @this);
+		public static ParameterExpression Parameter(this string @this, Type type)
+			=> Expression.Parameter(type, @this);
 
 		/// <summary>
-		/// <c><see cref="Expression.Property(Expression, string)"/></c>
+		/// <c><see cref="Expression.Property(Expression?, MethodInfo)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MemberExpression Property(this Expression @this, string name)
-			=> Expression.Property(@this, name);
-
-		/// <summary>
-		/// <c><see cref="Expression.Property(Expression?, Type, string)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MemberExpression Property(this Expression @this, Type type, string name)
-			=> Expression.Property(@this, type, name);
-
-		/// <summary>
-		/// <c><see cref="Expression.Property(Expression?, Type, string)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MemberExpression Property<T>(this Expression @this, string name)
-			=> Expression.Property(@this, typeof(T), name);
+		public static MemberExpression Property(this Expression @this, MethodInfo getMethodInfo)
+			=> Expression.Property(@this, getMethodInfo);
 
 		/// <summary>
 		/// <c><see cref="Expression.Property(Expression?, PropertyInfo)"/></c>
@@ -578,11 +683,25 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Property(@this, propertyInfo, index);
 
 		/// <summary>
-		/// <c><see cref="Expression.Property(Expression?, MethodInfo)"/></c>
+		/// <c><see cref="Expression.Property(Expression, string)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static MemberExpression Property(this Expression @this, MethodInfo getMethodInfo)
-			=> Expression.Property(@this, getMethodInfo);
+		public static MemberExpression Property(this Expression @this, string name)
+			=> Expression.Property(@this, name);
+
+		/// <summary>
+		/// <c><see cref="Expression.Property(Expression?, Type, string)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MemberExpression Property<T>(this Expression @this, string name)
+			=> Expression.Property(@this, typeof(T), name);
+
+		/// <summary>
+		/// <c><see cref="Expression.Property(Expression?, Type, string)"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MemberExpression Property(this Expression @this, Type type, string name)
+			=> Expression.Property(@this, type, name);
 
 		/// <summary>
 		/// <c><see cref="Expression.Field(Expression?, FieldInfo)"/></c>
@@ -693,93 +812,5 @@ namespace TypeCache.Reflection.Extensions
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static BlockExpression Void(this MethodCallExpression @this)
 			=> Expression.Block(@this, Expression.Empty());
-
-		#region LabelTarget
-
-		/// <summary>
-		/// <c><see cref="Expression.Break(LabelTarget)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Break(this LabelTarget @this)
-			=> Expression.Break(@this);
-
-		/// <summary>
-		/// <c><see cref="Expression.Break(LabelTarget, Expression?)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Break(this LabelTarget @this, Expression? value)
-			=> Expression.Break(@this, value);
-
-		/// <summary>
-		/// <c><see cref="Expression.Break(LabelTarget, Type)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Break(this LabelTarget @this, Type type)
-			=> Expression.Break(@this, type);
-
-		/// <summary>
-		/// <c><see cref="Expression.Break(LabelTarget, Expression?, Type)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Break(this LabelTarget @this, Expression? value, Type type)
-			=> Expression.Break(@this, value, type);
-
-		/// <summary>
-		/// <c><see cref="Expression.Continue(LabelTarget)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Continue(this LabelTarget @this)
-			=> Expression.Continue(@this);
-
-		/// <summary>
-		/// <c><see cref="Expression.Continue(LabelTarget, Type)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Continue(this LabelTarget @this, Type type)
-			=> Expression.Continue(@this, type);
-
-		/// <summary>
-		/// <c><see cref="Expression.Goto(LabelTarget)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static GotoExpression Goto(this LabelTarget @this)
-			=> Expression.Goto(@this);
-
-		/// <summary>
-		/// <c><see cref="Expression.Label(Type)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LabelTarget Label(this Type @this)
-			=> Expression.Label(@this);
-
-		/// <summary>
-		/// <c><see cref="Expression.Label(Type, string?)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LabelTarget Label(this Type @this, string? name)
-			=> Expression.Label(@this, name);
-
-		/// <summary>
-		/// <c><see cref="Expression.Label(LabelTarget)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LabelExpression Label(this LabelTarget @this)
-			=> Expression.Label(@this);
-
-		/// <summary>
-		/// <c><see cref="Expression.Label(LabelTarget, Expression?)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LabelExpression Label(this LabelTarget @this, Expression? defaultValue)
-			=> Expression.Label(@this, defaultValue);
-
-		/// <summary>
-		/// <c><see cref="Expression.Label(string?)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static LabelTarget Label(this string? @this)
-			=> Expression.Label(@this);
-
-		#endregion
 	}
 }

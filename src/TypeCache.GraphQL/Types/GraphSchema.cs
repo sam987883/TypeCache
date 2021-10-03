@@ -28,19 +28,18 @@ namespace TypeCache.GraphQL.Types
 	{
 		private readonly IDataLoaderContextAccessor _DataLoader;
 		private readonly IMediator _Mediator;
-		private readonly IServiceProvider _ServiceProvider;
 		private readonly ISqlApi? _SqlApi;
-		private string _Version = "0";
 
-		public GraphSchema(IServiceProvider provider, IMediator mediator, ISqlApi? sqlApi, IDataLoaderContextAccessor dataLoader, Action<GraphSchema> addEndpoints) : base(provider)
+		public GraphSchema(IServiceProvider provider, Action<GraphSchema> addEndpoints, string version) : base(provider)
 		{
-			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
 			this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
+			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
+			this.Version = version;
+			this.Description = $"{nameof(GraphSchema)} v{version}";
 
-			this._DataLoader = dataLoader;
-			this._Mediator = mediator;
-			this._ServiceProvider = provider;
-			this._SqlApi = sqlApi;
+			this._DataLoader = this.GetRequiredService<IDataLoaderContextAccessor>();
+			this._Mediator = this.GetRequiredService<IMediator>();
+			this._SqlApi = this.GetService<ISqlApi>();
 
 			this.Query.AddField(new()
 			{
@@ -54,15 +53,7 @@ namespace TypeCache.GraphQL.Types
 			addEndpoints(this);
 		}
 
-		public string Version
-		{
-			get => this._Version;
-			set
-			{
-				this._Version = value;
-				this.Description = $"{nameof(GraphSchema)} v{value}";
-			}
-		}
+		public string Version { get; }
 
 		/// <summary>
 		/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
@@ -86,7 +77,7 @@ namespace TypeCache.GraphQL.Types
 			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).To(method =>
 			{
 				var parentType = method.Attributes.First<GraphSubqueryAttribute>()!.ParentType;
-				var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+				var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 				var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
 				return this.Query.AddField(method.ToFieldType(resolver));
 			}));
@@ -132,7 +123,7 @@ namespace TypeCache.GraphQL.Types
 			if (method.Return.IsVoid)
 				throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			return this.Mutation!.AddField(method.ToFieldType(handler));
 		}
 
@@ -164,7 +155,7 @@ namespace TypeCache.GraphQL.Types
 			if (method.Return.IsVoid)
 				throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			return this.Query.AddField(method.ToFieldType(handler));
 		}
 
@@ -183,7 +174,7 @@ namespace TypeCache.GraphQL.Types
 		/// <exception cref="ArgumentNullException"/>
 		public FieldType AddSubquery<T>(MethodMember method)
 		{
-			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = new ItemLoaderFieldResolver<T>(method, handler, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
@@ -247,7 +238,7 @@ namespace TypeCache.GraphQL.Types
 		public FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
-			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}
@@ -311,7 +302,7 @@ namespace TypeCache.GraphQL.Types
 		public FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 			where PARENT : class
 		{
-			var handler = !method.Static ? this._ServiceProvider.GetRequiredService(method.Type) : null;
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}

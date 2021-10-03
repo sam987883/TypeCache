@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace TypeCache.GraphQL.SQL
 		where T : class, new()
 	{
 		private readonly string _DataSource;
+
 		private readonly IMediator _Mediator;
 
 		public SqlApi(IMediator mediator, string dataSource, string table)
@@ -255,7 +257,7 @@ namespace TypeCache.GraphQL.SQL
 
 		[GraphName("Update{0}")]
 		[GraphDescription("UPDATE {0} SET ... OUTPUT ... WHERE ...")]
-		public async Task<SqlResponse<T>> Update([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
+		public async Task<SqlUpdateResponse<T>> Update([AllowNull] Parameter[] parameters, T set, string where, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set))!.Keys.ToArray();
@@ -267,9 +269,13 @@ namespace TypeCache.GraphQL.SQL
 			};
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
 			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = "INSERTED");
+				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Deleted)))
+				.To(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Deleted)}.")!)
+				.Do(selection => request.Output[$"DELETED.{selection}"] = $"DELETED.{selection}");
+			selections
+				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Inserted)))
+				.To(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Inserted)}.")!)
+				.Do(selection => request.Output[$"INSERTED.{selection}"] = $"INSERTED.{selection}");
 			columns.Do(column =>
 			{
 				var property = TypeOf<T>.Properties.Values.FirstValue(property =>
@@ -277,25 +283,39 @@ namespace TypeCache.GraphQL.SQL
 				request.Set[property.Value.Name] = property.Value.GetValue(set);
 			});
 
-			var sqlResponse = new SqlResponse<T>();
+			var sqlResponse = new SqlUpdateResponse<T>();
 
-			if (selections.Has(nameof(SqlResponse<T>.Table)))
+			if (selections.Has(nameof(SqlUpdateResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
 
-			if (selections.Has(nameof(SqlResponse<T>.SQL)))
+			if (selections.Has(nameof(SqlUpdateResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateRequest, string>(request);
 
 			if (request.Output.Any())
 			{
 				var output = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
-				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
+				if (output?.Rows is not null)
+				{
+					var outputColumns = output.Columns;
+
+					output.Columns = outputColumns.Each(column => column.TrimStart("DELETED.")).ToArray();
+					sqlResponse.Deleted = output.MapModels<T>();
+
+					output.Columns = outputColumns.Each(column => column.TrimStart("INSERTED.")).ToArray();
+					sqlResponse.Deleted = output.MapModels<T>();
+				}
+				else
+				{
+					sqlResponse.Deleted = Array<T>.Empty;
+					sqlResponse.Inserted = Array<T>.Empty;
+				}
 			}
 			return sqlResponse;
 		}
 
 		[GraphName("Update{0}Data")]
 		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES ...")]
-		public async Task<SqlResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
+		public async Task<SqlUpdateResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 		{
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(data)).First()?.Keys.ToArray() ?? Array<string>.Empty;
@@ -306,22 +326,40 @@ namespace TypeCache.GraphQL.SQL
 				Table = this.Table,
 			};
 			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = "INSERTED");
+				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Deleted)))
+				.To(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Deleted)}.")!)
+				.Do(selection => request.Output[$"DELETED.{selection}"] = $"DELETED.{selection}");
+			selections
+				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Inserted)))
+				.To(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Inserted)}.")!)
+				.Do(selection => request.Output[$"INSERTED.{selection}"] = $"INSERTED.{selection}");
 
-			var sqlResponse = new SqlResponse<T>();
+			var sqlResponse = new SqlUpdateResponse<T>();
 
-			if (selections.Has(nameof(SqlResponse<T>.Table)))
+			if (selections.Has(nameof(SqlUpdateResponse<T>.Table)))
 				sqlResponse.Table = this.Table;
 
-			if (selections.Has(nameof(SqlResponse<T>.SQL)))
+			if (selections.Has(nameof(SqlUpdateResponse<T>.SQL)))
 				sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, string>(request);
 
 			if (request.Output.Any())
 			{
 				var output = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, RowSet>(request);
-				sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
+				if (output?.Rows is not null)
+				{
+					var outputColumns = output.Columns;
+
+					output.Columns = outputColumns.Each(column => column.TrimStart("DELETED.")).ToArray();
+					sqlResponse.Deleted = output.MapModels<T>();
+
+					output.Columns = outputColumns.Each(column => column.TrimStart("INSERTED.")).ToArray();
+					sqlResponse.Deleted = output.MapModels<T>();
+				}
+				else
+				{
+					sqlResponse.Deleted = Array<T>.Empty;
+					sqlResponse.Inserted = Array<T>.Empty;
+				}
 			}
 			return sqlResponse;
 		}

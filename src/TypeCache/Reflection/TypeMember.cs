@@ -13,7 +13,8 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
-	public readonly struct TypeMember : IMember, IEquatable<TypeMember>
+	public readonly struct TypeMember
+		: IMember, IEquatable<TypeMember>
 	{
 		static TypeMember()
 		{

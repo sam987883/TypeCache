@@ -1,9 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using TypeCache.Collections;
+using TypeCache.Collections.Extensions;
 
 namespace TypeCache
 {
@@ -26,5 +29,9 @@ namespace TypeCache
 		public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
 		public const StringComparison STRING_COMPARISON = StringComparison.OrdinalIgnoreCase;
+
+		public static readonly IComparer<ParameterInfo> ParameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
+
+		public static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
 	}
 }

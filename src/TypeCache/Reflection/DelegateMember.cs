@@ -18,12 +18,14 @@ namespace TypeCache.Reflection
 	{
 		private const string METHOD_NAME = "Invoke";
 
+		internal static IReadOnlyDictionary<RuntimeTypeHandle, DelegateMember> Cache { get; }
+
 		static DelegateMember()
 		{
 			Cache = new LazyDictionary<RuntimeTypeHandle, DelegateMember>(handle => new DelegateMember(handle.ToType()));
 		}
 
-		internal static IReadOnlyDictionary<RuntimeTypeHandle, DelegateMember> Cache { get; }
+		private readonly InvokeType _Invoke;
 
 		internal DelegateMember(Type type)
 		{
@@ -34,8 +36,8 @@ namespace TypeCache.Reflection
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
 
 			var methodInfo = type.GetMethod(METHOD_NAME, INSTANCE_BINDING_FLAGS)!;
-			this._Invoke = methodInfo.ToInvokeType();
-			this.Method = methodInfo.ToDelegate();
+			this._Invoke = DelegateExpressionFactory.Create(methodInfo).Compile();
+			this.Method = LambdaExpressionFactory.Create(methodInfo).Compile();
 			this.MethodHandle = methodInfo.MethodHandle;
 			this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 			this.Return = new ReturnParameter(methodInfo);
@@ -43,29 +45,23 @@ namespace TypeCache.Reflection
 			this.Public = type.IsPublic;
 		}
 
-		private readonly InvokeType _Invoke;
-
 		public IImmutableList<Attribute> Attributes { get; }
 
-		public string Name { get; }
-
 		public RuntimeTypeHandle Handle { get; }
+
+		public bool Internal { get; }
 
 		public Delegate Method { get; }
 
 		public RuntimeMethodHandle MethodHandle { get; }
 
+		public string Name { get; }
+
 		public IImmutableList<MethodParameter> Parameters { get; }
-
-		public ReturnParameter Return { get; }
-
-		public bool Internal { get; }
 
 		public bool Public { get; }
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public object? Invoke(object instance, params object?[]? arguments)
-			=> this._Invoke(instance, arguments);
+		public ReturnParameter Return { get; }
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public bool Equals(DelegateMember other)
@@ -74,5 +70,9 @@ namespace TypeCache.Reflection
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override int GetHashCode()
 			=> this.Handle.GetHashCode();
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public object? Invoke(object instance, params object?[]? arguments)
+			=> this._Invoke(instance, arguments);
 	}
 }

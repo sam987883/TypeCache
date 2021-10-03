@@ -12,7 +12,8 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection
 {
-	public readonly struct FieldMember : IMember, IEquatable<FieldMember>
+	public readonly struct FieldMember
+		: IMember, IEquatable<FieldMember>
 	{
 		static FieldMember()
 		{
@@ -35,12 +36,12 @@ namespace TypeCache.Reflection
 			this.Static = fieldInfo.IsStatic;
 			this.Type = fieldInfo.GetTypeMember();
 
-			this.Getter = fieldInfo.ToGetter();
-			this._GetValue = fieldInfo.ToGetValue();
+			this.Getter = LambdaExpressionFactory.CreateGetter(fieldInfo).Compile();
+			this._GetValue = DelegateExpressionFactory.CreateGetter(fieldInfo).Compile();
 
 			var canSet = !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral;
-			this.Setter = canSet ? fieldInfo.ToSetter() : null;
-			this._SetValue = canSet ? fieldInfo.ToSetValue() : null;
+			this.Setter = canSet ? LambdaExpressionFactory.CreateSetter(fieldInfo).Compile() : null;
+			this._SetValue = canSet ? DelegateExpressionFactory.CreateSetter(fieldInfo).Compile() : null;
 		}
 
 		private readonly GetValue? _GetValue;

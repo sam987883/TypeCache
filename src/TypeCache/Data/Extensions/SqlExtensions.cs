@@ -52,10 +52,9 @@ namespace TypeCache.Data.Extensions
 			return @this;
 		}
 
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeIdentifier([NotNull] this string @this)
-			=> @this.StartsWith('[') && @this.EndsWith(']')
-				? Invariant($"[{@this.Substring(1, @this.Length - 2).Replace("]", "]]")}]")
-				: Invariant($"[{@this.Replace("]", "]]")}]");
+			=> Invariant($"[{@this.Replace("]", "]]")}]");
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeLikeValue([NotNull] this string @this)

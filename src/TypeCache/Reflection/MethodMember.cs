@@ -16,19 +16,13 @@ namespace TypeCache.Reflection
 	public readonly struct MethodMember
 		: IMember, IEquatable<MethodMember>
 	{
-		private static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer;
-
 		static MethodMember()
 		{
-			RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
-
 			Cache = new LazyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember>(CreateMethodMember);
 
 			static MethodMember CreateMethodMember((RuntimeMethodHandle MethodHandle, RuntimeTypeHandle TypeHandle) handle)
 				=> new MethodMember((MethodInfo)handle.TypeHandle.ToMethodBase(handle.MethodHandle)!);
 		}
-
-		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
 
 		private readonly IReadOnlyDictionary<RuntimeTypeHandle[], InvokeType>? _Cache;
 
@@ -41,48 +35,54 @@ namespace TypeCache.Reflection
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? methodInfo.Name;
 			this.GenericTypes = methodInfo.GetGenericArguments().Length;
 			this.Handle = methodInfo.MethodHandle;
-			this.Method = !methodInfo.ContainsGenericParameters ? methodInfo.ToDelegate() : null;
+			this.Method = !methodInfo.ContainsGenericParameters ? LambdaExpressionFactory.Create(methodInfo).Compile() : null;
 			this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 			this.Static = methodInfo.IsStatic;
 			this.Return = new ReturnParameter(methodInfo);
 			this.Internal = methodInfo.IsAssembly;
 			this.Public = methodInfo.IsPublic;
 
-			this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, RuntimeTypeHandleArrayComparer) : null;
-			this._Invoke = !methodInfo.ContainsGenericParameters ? methodInfo.ToInvokeType() : null;
+			this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, Default.RuntimeTypeHandleArrayComparer) : null;
+			this._Invoke = !methodInfo.ContainsGenericParameters ? DelegateExpressionFactory.Create(methodInfo).Compile() : null;
 
 			InvokeType CreateGenericInvoke(params RuntimeTypeHandle[] handles)
 			{
 				var types = handles.To(handle => handle.ToType()).ToArray();
-				return methodInfo.MakeGenericMethod(types).ToInvokeType();
+				return DelegateExpressionFactory.Create(methodInfo.MakeGenericMethod(types)).Compile();
 			}
 		}
-
-		public TypeMember Type { get; }
 
 		public IImmutableList<Attribute> Attributes { get; }
 
 		public int GenericTypes { get; }
 
-		public string Name { get; }
-
 		public RuntimeMethodHandle Handle { get; }
+
+		public bool Internal { get; }
 
 		public Delegate? Method { get; }
 
+		public string Name { get; }
+
 		public IImmutableList<MethodParameter> Parameters { get; }
+
+		public bool Public { get; }
 
 		public ReturnParameter Return { get; }
 
 		public bool Static { get; }
 
-		public bool Internal { get; }
+		public TypeMember Type { get; }
 
-		public bool Public { get; }
+		internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static implicit operator MethodInfo(MethodMember member)
-			=> (MethodInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
+		public bool Equals(MethodMember other)
+			=> this.Handle == other.Handle;
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public override int GetHashCode()
+			=> this.Handle.GetHashCode();
 
 		/// <param name="instance">Pass null if the method is static.</param>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -95,11 +95,7 @@ namespace TypeCache.Reflection
 			=> this._Cache?[genericTypes.To(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public bool Equals(MethodMember other)
-			=> this.Handle == other.Handle;
-
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public override int GetHashCode()
-			=> this.Handle.GetHashCode();
+		public static implicit operator MethodInfo(MethodMember member)
+			=> (MethodInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
 	}
 }

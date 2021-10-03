@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -20,7 +20,7 @@ namespace TypeCache.Reflection.Extensions
 				_ => @this.GetType().TypeHandle.GetTypeMember()
 			};
 
-		internal static bool IsCallableWith(this IImmutableList<MethodParameter> @this, params object?[]? arguments)
+		internal static bool IsCallableWith(this IEnumerable<MethodParameter> @this, params object?[]? arguments)
 		{
 			if (arguments.Any())
 			{
@@ -42,7 +42,7 @@ namespace TypeCache.Reflection.Extensions
 				}
 				return !argumentEnumerator.MoveNext();
 			}
-			return @this.Count == 0 || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
+			return !@this.Any() || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 		}
 
 		/// <summary>

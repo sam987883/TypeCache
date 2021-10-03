@@ -10,7 +10,7 @@ using static TypeCache.Default;
 namespace TypeCache.Data.Requests
 {
 	/// <summary>
-	/// JSON: <code>{ "Table": "Table1", "Set": [ ... ], "OutputDeleted": [ ... ], "OutputInserted": [ ... ], "Where": { ... } }</code>
+	/// JSON: <code>{ "Table": "Table1", "Set": [ ... ], "Output": [ ... ], "Where": { ... } }</code>
 	/// SQL: <code>UPDATE ... SET ... OUTPUT ... WHERE ...;</code>
 	/// </summary>
 	public class UpdateRequest

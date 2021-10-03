@@ -13,6 +13,8 @@ namespace TypeCache.Reflection
 {
 	public readonly struct MethodParameter : IEquatable<MethodParameter>
 	{
+		private readonly RuntimeMethodHandle _MethodHandle;
+
 		internal MethodParameter(RuntimeMethodHandle methodHandle, ParameterInfo parameterInfo)
 		{
 			this._MethodHandle = methodHandle;
@@ -24,8 +26,6 @@ namespace TypeCache.Reflection
 			this.Name = this.Attributes.First<NameAttribute>()?.Name ?? parameterInfo.Name!;
 			this.Type = parameterInfo.ParameterType.GetTypeMember();
 		}
-
-		private readonly RuntimeMethodHandle _MethodHandle;
 
 		public IImmutableList<Attribute> Attributes { get; }
 

@@ -2,6 +2,7 @@
 
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -35,15 +36,16 @@ namespace TypeCache.Data.Extensions
 		public static T[] MapModels<T>(this RowSet @this)
 			where T : new()
 		{
-			var properties = TypeOf<T>.Properties.GetValues(@this.Columns)
+			(PropertyMember Property, int ColumnIndex)[] properties = TypeOf<T>.Properties.GetValues(@this.Columns)
 				.If(property => property.Setter is not null)
+				.To(property => (property, @this.Columns.ToIndex(property.Name).FirstValue()!.Value))
 				.ToArray();
 
 			var items = new T[@this.Rows.Length];
 			@this.Rows.Do((row, rowIndex) =>
 			{
 				var item = TypeOf<T>.Create();
-				properties.Do((property, columnIndex) => property.SetValue(item, row[columnIndex]));
+				properties.Do(_ => _.Property.SetValue(item, row[_.ColumnIndex]));
 				items[rowIndex] = item;
 			});
 			return items;
