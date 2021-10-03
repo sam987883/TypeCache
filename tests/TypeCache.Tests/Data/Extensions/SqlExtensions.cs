@@ -19,7 +19,7 @@ namespace TypeCache.Tests.Data.Extensions
 		public void EscapeIdentifier()
 		{
 			Assert.Equal("[First Name]", "First Name".EscapeIdentifier());
-			Assert.Equal("[First Name]]]]]", "[First Name]]]".EscapeIdentifier());
+			Assert.Equal("[[First Name]]]]]]]", "[First Name]]]".EscapeIdentifier());
 			Assert.Equal("[Last[Name]", "Last[Name".EscapeIdentifier());
 			Assert.Equal("[Last]]Name]", "Last]Name".EscapeIdentifier());
 		}
@@ -156,7 +156,7 @@ VALUES (N'FirstName1', N'LastName1', 1)
 			var request = new InsertRequest
 			{
 				Into = "Customers",
-				Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "[Age]", "[Amount]" },
+				Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "Age", "Amount" },
 				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
 				From = "[dbo].[NonCustomers]",
 				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
@@ -165,7 +165,7 @@ VALUES (N'FirstName1', N'LastName1', 1)
 				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending), ("1", Sort.Descending) }
 			};
 
-			var expected = Invariant($@"INSERT INTO Customers ([ID], [First Name], [Last_Name], [Age], [Amount])
+			var expected = Invariant($@"INSERT INTO Customers ([[ID]]], [[First Name]]], [[Last_Name]]], [Age], [Amount])
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
