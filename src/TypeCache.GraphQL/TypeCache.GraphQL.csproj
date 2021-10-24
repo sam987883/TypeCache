@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
     <PackageId>TypeCache.GraphQL</PackageId>
-    <Version>1.0.41</Version>
+    <Version>1.0.42</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache GraphQL</Title>
@@ -31,8 +31,8 @@ Automatic generation of SQL related endpoints.
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GraphQL" Version="4.6.0" />
-    <PackageReference Include="GraphQL.DataLoader" Version="4.6.0" />
+    <PackageReference Include="GraphQL" Version="4.6.1" />
+    <PackageReference Include="GraphQL.DataLoader" Version="4.6.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
 
@@ -11,11 +12,22 @@ namespace TypeCache.Extensions
 	public static class ValueExtensions
 	{
 		/// <summary>
-		/// <c>@<paramref name="this"/>.End &lt; @<paramref name="this"/>.Start</c>
+		/// <c>
+		/// <list type="table">
+		/// <item>@<paramref name="this"/>.Start.IsFromEnd &amp;&amp; @<paramref name="this"/>.End.IsFromEnd =&gt; @<paramref name="this"/>.Start &lt; @<paramref name="this"/>.End</item>
+		/// <item>!@<paramref name="this"/>.Start.IsFromEnd &amp;&amp; !@<paramref name="this"/>.End.IsFromEnd =&gt; @<paramref name="this"/>.Start &gt; @<paramref name="this"/>.End</item>
+		/// <item>_ =&gt; null</item>
+		/// </list>
+		/// </c>
 		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static bool IsReverse(this Range @this)
-			=> @this.End.Value < @this.Start.Value;
+		/// <remarks>Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.</remarks>
+		public static bool? IsReverse(this Range @this)
+			=> @this switch
+			{
+				_ when @this.Start.IsFromEnd && @this.End.IsFromEnd => @this.Start.Value < @this.End.Value,
+				_ when !@this.Start.IsFromEnd && !@this.End.IsFromEnd => @this.Start.Value > @this.End.Value,
+				_ => null
+			};
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.IsFromEnd ? new <see cref="Index"/>(@<paramref name="this"/>.GetOffset(<paramref name="count"/>)) : @<paramref name="this"/></c>
@@ -26,12 +38,13 @@ namespace TypeCache.Extensions
 		/// <summary>
 		/// <c>new <see cref="System.Range"/>(@<paramref name="this"/>.Start.Normalize(<paramref name="count"/>), @<paramref name="this"/>.End.Normalize(<paramref name="count"/>))</c>
 		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"/>
 		public static Range Normalize(this Range @this, int count)
 			=> new Range(@this.Start.Normalize(count), @this.End.Normalize(count));
 
 		public static IEnumerable<int> Range(this int @this, int count, int increment = 1)
 		{
-			while (--count >= 0)
+			while (--count > -1)
 			{
 				yield return @this;
 				@this += increment;
@@ -41,10 +54,9 @@ namespace TypeCache.Extensions
 		public static IEnumerable<T> Repeat<T>(this T @this, int count)
 			where T : unmanaged
 		{
-			while (count > 0)
+			while (--count > -1)
 			{
 				yield return @this;
-				--count;
 			}
 		}
 
@@ -187,15 +199,21 @@ namespace TypeCache.Extensions
 		public static float ToSingle(this int @this)
 			=> BitConverter.Int32BitsToSingle(@this);
 
-		/// <exception cref="ArgumentOutOfRangeException"/>
+		/// <summary>
+		/// <c>
+		/// <list type="table">
+		/// <item>@<paramref name="this"/>.IsReverse() <see langword="is true"/> =&gt; @<paramref name="this"/>.Start.Value.To(@<paramref name="this"/>.End.Value + 1, -1)</item>
+		/// <item>@<paramref name="this"/>.IsReverse() <see langword="is false"/> =&gt; @<paramref name="this"/>.Start.Value.To(@<paramref name="this"/>.End.Value - 1, 1)</item>
+		/// <item>_ =&gt; Array&lt;<see cref="int"/>&gt;.Empty</item>
+		/// </list>
+		/// </c>
+		/// </summary>
 		public static IEnumerable<int> Values(this Range @this)
-		{
-			@this.Start.IsFromEnd.Assert($"{nameof(Range)}.{nameof(@this.Start)}.{nameof(@this.Start.IsFromEnd)}", false);
-			@this.End.IsFromEnd.Assert($"{nameof(Range)}.{nameof(@this.End)}.{nameof(@this.Start.IsFromEnd)}", false);
-
-			return !@this.IsReverse()
-				? @this.Start.Value.To(@this.End.Value - 1, 1)
-				: @this.Start.Value.To(@this.End.Value + 1, -1);
-		}
+			=> @this.IsReverse() switch
+			{
+				true => @this.Start.Value.To(@this.End.Value + 1, -1),
+				false => @this.Start.Value.To(@this.End.Value - 1, 1),
+				_ => Array<int>.Empty
+			};
 	}
 }

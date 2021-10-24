@@ -59,8 +59,68 @@ namespace TypeCache
 			=> Member.Implements(type);
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static object? Invoke(string name, params object?[]? parameters)
-			=> Member.Invoke(name, parameters);
+		public static object? InvokeMethod(string name, params object?[]? parameters)
+			=> Member.InvokeMethod(name, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeMethod(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeMethod(name, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4, T5>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4, T5, T6>(string name, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6) }, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod(string name, Type[] genericTypes, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, genericTypes, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4, T5>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod<T1, T2, T3, T4, T5, T6>(string name, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6) }, instance, parameters);
+
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static object? InvokeGenericMethod(string name, Type[] genericTypes, object instance, params object?[]? parameters)
+			=> Member.InvokeGenericMethod(name, genericTypes, instance, parameters);
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Is<V>()

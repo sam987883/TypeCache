@@ -36,8 +36,8 @@ namespace TypeCache.Reflection
 			ParameterExpression instance = nameof(instance).Parameter<object>();
 			ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
 			MethodCallExpression call;
-			var parameterInfos = methodInfo.GetParameters();
 
+			var parameterInfos = methodInfo.GetParameters();
 			if (parameterInfos.Any())
 			{
 				parameterInfos.Sort(Default.ParameterPositionComparer);
@@ -55,7 +55,7 @@ namespace TypeCache.Reflection
 			}
 
 			var delegateExpression = methodInfo.ReturnType == typeof(void)
-				? call.Block(Expression.Constant(null)).Lambda<InvokeType>(instance, arguments)
+				? call.Block(NullExpression).Lambda<InvokeType>(instance, arguments)
 				: call.As<object>().Lambda<InvokeType>(instance, arguments);
 			return delegateExpression;
 		}

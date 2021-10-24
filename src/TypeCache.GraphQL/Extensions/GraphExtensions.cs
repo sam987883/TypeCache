@@ -11,7 +11,6 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.SQL;
-using TypeCache.Mappers.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 
@@ -19,6 +18,31 @@ namespace TypeCache.GraphQL.Extensions
 {
 	public static class GraphExtensions
 	{
+		public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, object? overrideValue = null)
+		{
+			foreach (var parameter in method.Parameters)
+			{
+				if (parameter.GraphIgnore())
+					continue;
+
+				var name = parameter.GraphName();
+				if (parameter.Type.Is<IResolveFieldContext>())
+					yield return @this;
+				else if (parameter.Type.Is<TSource>() && !typeof(TSource).Is<object>())
+					yield return @this.Source;
+				else if (overrideValue is not null && parameter.Type.Is(overrideValue.GetType()))
+					yield return overrideValue;
+				else if (@this.HasArgument(name))
+				{
+					var argument = @this.GetArgument<object>(name);
+					if (argument is IDictionary<string, object?> dictionary && !parameter.Type.Is<IDictionary<string, object?>>())
+						yield return dictionary.MapModel(parameter.Type);
+					else
+						yield return argument;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Gets the input arguments and fields that have had a value set.
 		/// </summary>
@@ -60,40 +84,6 @@ namespace TypeCache.GraphQL.Extensions
 				}
 				else
 					yield return input;
-			}
-		}
-
-		public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, params object[] overrides)
-		{
-			foreach (var parameter in method.Parameters)
-			{
-				if (parameter.GraphIgnore())
-					continue;
-
-				var overrideTypeMap = overrides?.ToDictionary(_ => _.GetTypeMember(), _ => _);
-
-				if (parameter.Type.Is<IResolveFieldContext>() && parameter.Type.Is<TSource>())
-					yield return @this;
-				else if (parameter.Type.Is<IDictionary<string, object?>>())
-					yield return @this.GetArgument<IDictionary<string, object?>>(parameter.Name);
-				else if (parameter.Type.Is<TSource>() && !typeof(TSource).Is<object>())
-					yield return @this.Source;
-				else if (overrideTypeMap is not null && overrideTypeMap.TryGetValue(parameter.Type, out var value))
-					yield return value;
-				else if (parameter.Type.SystemType == SystemType.Unknown)
-				{
-					var argument = @this.GetArgument<IDictionary<string, object?>>(parameter.Name);
-					if (argument is not null)
-					{
-						var model = parameter.Type.Create();
-						(argument, model).MapProperties();
-						yield return model;
-					}
-					else
-						yield return null;
-				}
-				else
-					yield return @this.GetArgument(parameter.Type, parameter.Name); // TODO: Support a default value?
 			}
 		}
 
@@ -180,6 +170,18 @@ namespace TypeCache.GraphQL.Extensions
 			return connection;
 		}
 
+		internal static EventStreamFieldType ToEventStreamFieldType(this MethodMember @this, object? handler)
+			=> new()
+			{
+				Arguments = @this.Parameters.ToQueryArguments(),
+				Name = @this.GraphName(),
+				Description = @this.GraphDescription(),
+				DeprecationReason = @this.ObsoleteMessage(),
+				Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
+				Subscriber = (IEventStreamResolver)typeof(GraphExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type }, @this, handler)!,
+				Type = @this.Return.GraphType()
+			};
+
 		internal static FieldType ToFieldType(this MethodMember @this, object? handler)
 			=> new()
 			{
@@ -212,6 +214,9 @@ namespace TypeCache.GraphQL.Extensions
 				DeprecationReason = @this.ObsoleteMessage(),
 				Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
 			};
+
+		private static IEventStreamResolver CreateEventStreamResolver<T>(MethodMember method, object? handler)
+			=> new EventStreamResolver<T>(context => (IObservable<T>)method.Invoke(handler, context.GetArguments<object>(method).ToArray())!);
 
 		private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
 		{
@@ -279,6 +284,22 @@ namespace TypeCache.GraphQL.Extensions
 				else if (selection is Field field)
 					yield return current;
 			}
+		}
+
+		private static object MapModel(this IDictionary<string, object?> @this, TypeMember modelType)
+		{
+			var model = modelType.Create();
+
+			var properties = modelType.Properties.Values.ToDictionary(property => property.GraphName(), property => property, StringComparison.Ordinal);
+			foreach (var match in (@this, properties).Match(StringComparison.Ordinal))
+			{
+				var value = match.Value.Item1;
+				if (value is IDictionary<string, object?> argument && !match.Value.Item2.PropertyType.Implements<IDictionary<string, object?>>())
+					value = argument.MapModel(match.Value.Item2.PropertyType);
+				match.Value.Item2.SetValue(model, value);
+			}
+
+			return model;
 		}
 
 		private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)

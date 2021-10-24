@@ -133,27 +133,19 @@ namespace TypeCache.Collections.Extensions
 
 		/// <exception cref="ArgumentOutOfRangeException"/>
 		public static IEnumerable<T> Get<T>(this List<T> @this, Range range)
-		{
-			if (range.Start.IsFromEnd || range.End.IsFromEnd)
-				range = range.Normalize(@this.Count);
-
-			return range.Values().To(i => @this[i]);
-		}
+			=> range.Normalize(@this.Count).Values().To(i => @this[i]);
 
 		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<T> If<T>(this List<T>? @this, Predicate<T> filter)
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (@this is not null)
+			var count = @this?.Count ?? 0;
+			for (var i = 0; i < count; ++i)
 			{
-				var count = @this.Count;
-				for (var i = 0; i < count; ++i)
-				{
-					var item = @this[i];
-					if (filter(item))
-						yield return item;
-				}
+				var item = @this![i];
+				if (filter(item))
+					yield return item;
 			}
 		}
 
@@ -162,15 +154,12 @@ namespace TypeCache.Collections.Extensions
 		{
 			filter.AssertNotNull(nameof(filter));
 
-			if (@this is not null)
+			var count = @this?.Count ?? 0;
+			for (var i = 0; i < count; ++i)
 			{
-				var count = @this.Count;
-				for (var i = 0; i < count; ++i)
-				{
-					var item = @this[i];
-					if (await filter(item))
-						yield return item;
-				}
+				var item = @this![i];
+				if (await filter(item))
+					yield return item;
 			}
 		}
 

@@ -204,7 +204,7 @@ namespace TypeCache.Collections.Extensions
 				range = new Range(range.Start.Value >= 0 ? range.Start : Index.Start, range.End.Value >= 0 ? range.End : Index.Start);
 
 			await using var enumerator = @this.GetAsyncEnumerator(token);
-			if (!range.IsReverse())
+			if (range.IsReverse() is false)
 			{
 				if (range.Start.Value > 0)
 					yield return await enumerator.SkipAsync(range.Start.Value);

@@ -82,7 +82,7 @@ namespace TypeCache.GraphQL.SQL
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
 			selections
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.To(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
+				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
 				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
@@ -201,7 +201,7 @@ namespace TypeCache.GraphQL.SQL
 				.If(selection => selection.Left(nameof(SqlPagedResponse<T>.Data)))
 				.Each(selection => selection.TrimStart($"{nameof(SqlPagedResponse<T>.Data)}.")!)
 				.Do(selection => request.Select[selection] = selection);
-			request.OrderBy = orderBy.To(_ => (_.Expression, _.Sort)).ToArray();
+			request.OrderBy = orderBy.ToArray(_ => (_.Expression, _.Sort));
 
 			var sqlResponse = new SqlPagedResponse<T>();
 
@@ -243,7 +243,7 @@ namespace TypeCache.GraphQL.SQL
 				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
 				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
 				.Do(selection => request.Select[selection] = selection);
-			request.OrderBy = orderBy.To(_ => (_.Expression, _.Sort)).ToArray();
+			request.OrderBy = orderBy.ToArray(_ => (_.Expression, _.Sort));
 
 			var sqlResponse = new SqlResponse<T>();
 

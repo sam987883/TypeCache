@@ -135,12 +135,7 @@ namespace TypeCache.Collections.Extensions
 
 		/// <exception cref="IndexOutOfRangeException" />
 		public static IEnumerable<T> Get<T>(this ImmutableArray<T> @this, Range range)
-		{
-			if (range.Start.IsFromEnd || range.End.IsFromEnd)
-				range = range.Normalize(@this.Length);
-
-			return range.Values().To(i => @this[i]);
-		}
+			=> range.Normalize(@this.Length).Values().To(i => @this[i]);
 
 		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<T> If<T>(this ImmutableArray<T> @this, Predicate<T> filter)

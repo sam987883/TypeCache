@@ -34,6 +34,7 @@ namespace TypeCache.GraphQL.Types
 		{
 			this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
 			this.Query = new ObjectGraphType { Name = nameof(this.Query) };
+			this.Subscription = new ObjectGraphType { Name = nameof(this.Subscription) };
 			this.Version = version;
 			this.Description = $"{nameof(GraphSchema)} v{version}";
 
@@ -91,6 +92,7 @@ namespace TypeCache.GraphQL.Types
 				var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
 				return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 			}));
+			fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubscriptionAttribute>()).To(this.AddSubscription));
 
 			return fieldTypes.ToArray();
 		}
@@ -157,6 +159,38 @@ namespace TypeCache.GraphQL.Types
 
 			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			return this.Query.AddField(method.ToFieldType(handler));
+		}
+
+		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
+		/// </summary>
+		/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
+		/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+		/// <returns>The added <see cref="FieldType"/>(s).</returns>
+		/// <exception cref="ArgumentException"/>
+		public FieldType[] AddSubscription<T>(string method)
+			=> TypeOf<T>.Methods[method].To(this.AddSubscription).ToArray();
+
+		/// <summary>
+		/// Method parameters with the following type are ignored in the schema and will have their value injected:
+		/// <list type="bullet">
+		/// <item><see cref="IResolveFieldContext"/></item>
+		/// </list>
+		/// </summary>
+		/// <param name="method">Graph endpoint implementation.</param>
+		/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+		/// <returns>The added <see cref="FieldType"/>.</returns>
+		/// <exception cref="ArgumentException"/>
+		public FieldType AddSubscription(MethodMember method)
+		{
+			if (!method.Return.Type.Is(typeof(IObservable<>)))
+				throw new ArgumentException($"{nameof(AddSubscription)}: GraphQL subscription endpoints must have a return type of IObservable<...>.");
+
+			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
+			return this.Subscription!.AddField(method.ToEventStreamFieldType(handler));
 		}
 
 		/// <summary>

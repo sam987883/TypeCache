@@ -375,14 +375,14 @@ namespace TypeCache.Reflection.Extensions
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static BinaryExpression IsNotNull(this Expression @this)
-			=> Expression.ReferenceNotEqual(@this, Expression.Constant(null));
+			=> Expression.ReferenceNotEqual(@this, NullExpression);
 
 		/// <summary>
 		/// <c><see cref="Expression"/>.ReferenceEqual(<see cref="Expression"/>, <see cref="Expression"/>.Constant(<see langword="null"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static BinaryExpression IsNull(this Expression @this)
-			=> Expression.ReferenceEqual(@this, Expression.Constant(null));
+			=> Expression.ReferenceEqual(@this, NullExpression);
 
 		/// <summary>
 		/// <c><see cref="Expression.Label(LabelTarget)"/></c>
@@ -739,7 +739,7 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Property(null, @this, name);
 
 		/// <summary>
-		/// <code>
+		/// <c>
 		/// <list type="table">
 		/// <item><see cref="Expression.Unbox(Expression, Type)"/>, <see cref="Expression.Convert(Expression, Type)"/></item>
 		/// <item><see cref="Convert.ToBoolean(object?)"/></item>
@@ -752,7 +752,7 @@ namespace TypeCache.Reflection.Extensions
 		/// <item><see cref="Convert.ToChar(object?)"/></item>
 		/// <item><see cref="Convert.ToString(object?)"/></item>
 		/// </list>
-		/// </code>
+		/// </c>
 		/// </summary>
 		public static Expression SystemConvert(this Expression @this, Type type)
 			=> type.GetSystemType() switch

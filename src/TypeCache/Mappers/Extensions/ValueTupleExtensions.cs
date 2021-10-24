@@ -59,12 +59,14 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static void MapFields(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
+		public static string[] MapFields(this (object From, IDictionary<string, object?> To) @this)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
 
-			@this.From.GetTypeMember().Fields.Values.Do(field => @this.To[field.Name] = field.GetValue(@this.From));
+			var fields = @this.From.GetTypeMember().Fields;
+			fields.Values.Do(field => @this.To[field.Name] = field.GetValue(@this.From));
+			return fields.Keys.ToArray();
 		}
 
 		/// <exception cref="ArgumentException"/>
@@ -75,7 +77,12 @@ namespace TypeCache.Mappers.Extensions
 			@this.To.AssertNotNull(nameof(@this.To));
 			@this.AssertNotSame((nameof(@this.From), nameof(@this.To)));
 
-			return mapFields(@this.From, @this.To, nameComparison.ToStringComparer()).ToArray();
+			return @this switch
+			{
+				(IDictionary<string, object?> from, object to) => (from, to).MapFields(nameComparison),
+				(object from, IDictionary<string, object?> to) => (from, to).MapFields(nameComparison),
+				_ => mapFields(@this.From, @this.To, nameComparison.ToStringComparer()).ToArray()
+			};
 
 			static IEnumerable<string> mapFields(object from, object to, StringComparer comparer)
 			{
@@ -104,9 +111,9 @@ namespace TypeCache.Mappers.Extensions
 
 			static IEnumerable<string> mapProperties(IDictionary<string, object?> from, object to, StringComparer comparer)
 			{
-				var toFields = (IDictionary<string, PropertyMember>)to.GetTypeMember().Properties;
+				var toProperties = (IDictionary<string, PropertyMember>)to.GetTypeMember().Properties;
 
-				foreach (var match in (from, toFields).Match(comparer))
+				foreach (var match in (from, toProperties).Match(comparer))
 				{
 					if (match.Value.Item2.Setter is not null
 						&& ((match.Value.Item1 is null && match.Value.Item2.PropertyType.Nullable)
@@ -120,12 +127,14 @@ namespace TypeCache.Mappers.Extensions
 		}
 
 		/// <exception cref="ArgumentNullException"/>
-		public static void MapProperties(this (object From, IDictionary<string, object?> To) @this, StringComparison nameComparison = NAME_STRING_COMPARISON)
+		public static string[] MapProperties(this (object From, IDictionary<string, object?> To) @this)
 		{
 			@this.From.AssertNotNull(nameof(@this.From));
 			@this.To.AssertNotNull(nameof(@this.To));
 
-			@this.From.GetTypeMember().Properties.Values.Do(property => @this.To[property.Name] = property.GetValue(@this.From));
+			var properties = @this.From.GetTypeMember().Properties;
+			properties.Values.Do(property => @this.To[property.Name] = property.GetValue(@this.From));
+			return properties.Keys.ToArray();
 		}
 
 		/// <exception cref="ArgumentException"/>
@@ -136,7 +145,12 @@ namespace TypeCache.Mappers.Extensions
 			@this.To.AssertNotNull(nameof(@this.To));
 			@this.AssertNotSame((nameof(@this.From), nameof(@this.To)));
 
-			return mapProperties(@this.From, @this.To, nameComparison.ToStringComparer()).ToArray();
+			return @this switch
+			{
+				(IDictionary<string, object?> from, object to) => (from, to).MapProperties(nameComparison),
+				(object from, IDictionary<string, object?> to) => (from, to).MapProperties(),
+				_ => mapProperties(@this.From, @this.To, nameComparison.ToStringComparer()).ToArray()
+			};
 
 			static IEnumerable<string> mapProperties(object from, object to, StringComparer comparer)
 			{

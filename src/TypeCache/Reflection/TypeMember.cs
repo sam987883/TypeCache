@@ -146,12 +146,36 @@ namespace TypeCache.Reflection
 		public bool Implements(Type type)
 			=> ((Type)this).Implements(type);
 
-		public object? Invoke(string name, params object?[]? parameters)
+		public object? InvokeMethod(string name, params object?[]? parameters)
 		{
-			var method = this.Methods.Get(name).FirstValue(method => method!.Parameters.IsCallableWith(parameters));
+			var method = this.Methods.Get(name).FirstValue(method => method.Static && method!.Parameters.IsCallableWith(parameters));
 			if (method.HasValue)
-				return method.Value.Invoke(parameters);
-			throw new ArgumentException($"{this.Name}.{nameof(Invoke)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
+				return method.Value.Invoke(null, parameters);
+			throw new ArgumentException($"{this.Name}.{nameof(InvokeMethod)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
+		}
+
+		public object? InvokeMethod(string name, object instance, params object?[]? parameters)
+		{
+			var method = this.Methods.Get(name).FirstValue(method => !method.Static && method!.Parameters.IsCallableWith(parameters));
+			if (method.HasValue)
+				return method.Value.Invoke(instance, parameters);
+			throw new ArgumentException($"{this.Name}.{nameof(InvokeMethod)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
+		}
+
+		public object? InvokeGenericMethod(string name, Type[] genericTypes, params object?[]? parameters)
+		{
+			var method = this.Methods.Get(name).FirstValue(method => method.Static && method!.Parameters.IsCallableWith(parameters));
+			if (method.HasValue)
+				return method.Value.InvokeGeneric(null, genericTypes, parameters);
+			throw new ArgumentException($"{this.Name}.{nameof(InvokeGenericMethod)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
+		}
+
+		public object? InvokeGenericMethod(string name, Type[] genericTypes, object instance, params object?[]? parameters)
+		{
+			var method = this.Methods.Get(name).FirstValue(method => !method.Static && method!.Parameters.IsCallableWith(parameters));
+			if (method.HasValue)
+				return method.Value.InvokeGeneric(instance, genericTypes, parameters);
+			throw new ArgumentException($"{this.Name}.{nameof(InvokeGenericMethod)}(...): no method found that takes the {parameters?.Length ?? 0} provided {nameof(parameters)}.");
 		}
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]

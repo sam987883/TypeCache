@@ -11,7 +11,7 @@ namespace TypeCache.Mappers
 		where TO : notnull
 	{
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public void Map(FROM from, TO to)
+		public string[] Map(FROM from, TO to)
 			=> (from, to).MapFields();
 	}
 }

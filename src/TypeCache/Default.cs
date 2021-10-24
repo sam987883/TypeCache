@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -29,6 +30,8 @@ namespace TypeCache
 		public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
 		public const StringComparison STRING_COMPARISON = StringComparison.OrdinalIgnoreCase;
+
+		public static readonly ConstantExpression NullExpression = Expression.Constant(null);
 
 		public static readonly IComparer<ParameterInfo> ParameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
 
