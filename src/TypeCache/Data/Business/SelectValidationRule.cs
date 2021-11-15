@@ -4,8 +4,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data.Requests;
+using TypeCache.Data.Schema;
+using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business
 {
@@ -20,9 +21,11 @@ namespace TypeCache.Data.Business
 
 		public async ValueTask ValidateAsync(SelectRequest request, CancellationToken cancellationToken)
 		{
-			request.Schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
-			if (request.OrderBy.Any() && !request.Select.Keys.Has(request.OrderBy.To(_ => _.Item1)))
-				throw new ArgumentException($"All {nameof(SelectRequest.OrderBy)} Keys must also be in {nameof(SelectRequest.Select)} Keys.", nameof(SelectRequest));
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
+			if (schema.Type != ObjectType.Table && schema.Type != ObjectType.View && schema.Type != ObjectType.Function)
+				throw new ArgumentOutOfRangeException(nameof(SelectRequest.From), $"Cannot SELECT from a {schema.Type.Name()}.");
+
+			request.From = schema.Name;
 
 			await ValueTask.CompletedTask;
 		}

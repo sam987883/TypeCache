@@ -10,6 +10,7 @@ using System.Text;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static System.FormattableString;
 using static TypeCache.Default;
 
 namespace TypeCache.Data.Schema
@@ -27,7 +28,7 @@ namespace TypeCache.Data.Schema
 
 		internal static IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> Cache { get; }
 
-		public static string SQL { get; } = @$"
+		public static string SQL { get; } = Invariant(@$"
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 SET NOCOUNT ON;
 
@@ -80,7 +81,7 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 {ColumnSchema.SQL}
 
 {ParameterSchema.SQL}
-";
+");
 
 		private static string InsertSqlDbTypes()
 		{

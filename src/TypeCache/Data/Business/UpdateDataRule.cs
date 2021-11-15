@@ -19,7 +19,6 @@ namespace TypeCache.Data.Business
 
 		async ValueTask<RowSet> IRule<UpdateDataRequest, RowSet>.ApplyAsync(UpdateDataRequest request, CancellationToken cancellationToken)
 		{
-			request.Table = request.Schema!.Name;
 			return await this._SqlApi.UpdateDataAsync(request, cancellationToken);
 		}
 

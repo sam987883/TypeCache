@@ -2,8 +2,8 @@
 
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using TypeCache.Collections;
 using TypeCache.Converters;
-using TypeCache.Data.Converters;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -27,11 +27,10 @@ namespace TypeCache.Data.Requests
 		public string From { get; set; } = string.Empty;
 
 		/// <summary>
-		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
-		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
+		/// JSON: <code>"Output": [ "NULLIF([Column1], 22) AS [Alias 1]", "INSERTED.ColumnName [Alias 2]", "DELETED.ColumnName" }</code>
+		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] [Alias 2], DELETED.[ColumnName]</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
+		public string[] Output { get; set; } = Array<string>.Empty;
 
 		/// <summary>
 		/// JSON: <code>{ "ParameterName1": "ParameterValue1", "ParameterName2": null, "ParameterName3": 123 }</code>

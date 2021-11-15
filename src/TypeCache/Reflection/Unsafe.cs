@@ -23,7 +23,7 @@ namespace TypeCache.Reflection
 		}
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ref TO Convert<FROM, TO>(ref FROM value) =>
-			ref Converter<FROM, TO>.To(ref value);
+		public static ref TO Convert<FROM, TO>(ref FROM value)
+			=> ref Converter<FROM, TO>.To(ref value);
 	}
 }

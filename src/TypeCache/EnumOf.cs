@@ -57,10 +57,6 @@ namespace TypeCache
 
 		public static RuntimeTypeHandle UnderlyingTypeHandle { get; }
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static bool IsValid(T token)
-			=> Tokens.Keys.Has(token, Comparer);
-
 		private static Comparison<T> CreateCompare(Type underlyingType)
 			=> DelegateExpressionFactory.CreateComparison<T>((value1, value2) => value1.Cast(underlyingType).Call(nameof(IComparable<T>.CompareTo), value2.Cast(underlyingType))).Compile();
 

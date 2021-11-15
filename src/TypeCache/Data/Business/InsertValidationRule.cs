@@ -39,10 +39,6 @@ namespace TypeCache.Data.Business
 			if (request.Insert.Count() != request.Select.Count())
 				throw new ArgumentException($"Must have same number of columns.", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}, {nameof(InsertRequest)}.{nameof(InsertRequest.Select)}");
 
-			invalidColumnCsv = request.Output.Keys.Without(columns).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Output)}");
-
 			await ValueTask.CompletedTask;
 		}
 	}

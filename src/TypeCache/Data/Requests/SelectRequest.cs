@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TypeCache.Collections;
 using TypeCache.Converters;
-using TypeCache.Data.Converters;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using static TypeCache.Default;
@@ -29,6 +28,12 @@ namespace TypeCache.Data.Requests
 		public string From { get; set; } = string.Empty;
 
 		/// <summary>
+		/// JSON: <code>"GroupBy": [ "[Column1]", "TRIM([Column 2])", "Column3" }</code>
+		/// SQL: <code>GROUP BY [Column1], TRIM([Column 2]), Column3</code>
+		/// </summary>
+		public string[]? GroupBy { get; set; }
+
+		/// <summary>
 		/// JSON: <code>
 		/// "(([Column1] &lt;&gt; N'Value2' OR [Column2] IS NOT NULL OR [Column3] IN (1, 2, 3))
 		/// AND ([Column1] = N'Value1' AND [Column2] IS NULL)
@@ -43,11 +48,10 @@ namespace TypeCache.Data.Requests
 		public string? Having { get; set; }
 
 		/// <summary>
-		/// JSON: <code>[ { "Ascending": "Column1" }, { "Descending": "Column2" }, ... ]</code>
-		/// SQL: <code>ORDER BY [Column1] ASC, [Column2] DESC ...</code>
+		/// JSON: <code>"OrderBy": [ "[Column1] ASC", "TRIM([Column 2]) DESC", "Column3" }</code>
+		/// SQL: <code>ORDER BY [Column1] ASC, TRIM([Column 2]) DESC, Column3</code>
 		/// </summary>
-		[JsonConverter(typeof(SortJsonConverter))]
-		public (string, Sort)[] OrderBy { get; set; } = Array<(string, Sort)>.Empty;
+		public string[]? OrderBy { get; set; }
 
 		/// <summary>
 		/// JSON: <code>{ "First": 100, "After": 0 }</code>
@@ -68,16 +72,16 @@ namespace TypeCache.Data.Requests
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
-		/// Set internally- used to build SQL.
+		/// JSON: <code>"Select": [ "NULLIF([Column1], 22) AS [Alias 1]", "TRIM([Column 2]) [Alias 2]", "Column3" }</code>
+		/// SQL: <code>SELECT NULLIF([Column1], 22) AS [Alias 1], TRIM([Column 2]) [Alias 2], Column3</code>
 		/// </summary>
-		public ObjectSchema? Schema { get; set; }
+		public string[] Select { get; set; } = Array<string>.Empty;
 
 		/// <summary>
-		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
-		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
+		/// JSON: <code>"WITH(NOLOCK)"</code>
+		/// SQL: <code>FROM [Database1]..[Table1] WITH(NOLOCK)</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Select { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
+		public string? TableHints { get; set; }
 
 		/// <summary>
 		/// JSON: <code>

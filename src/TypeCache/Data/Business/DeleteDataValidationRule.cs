@@ -28,10 +28,6 @@ namespace TypeCache.Data.Business
 			if (!request.Input.Columns.Has(schema.Columns.If(column => column.PrimaryKey).To(column => column.Name)))
 				throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} must contain all Primary Key column(s).", $"{nameof(DeleteDataRequest)}.{nameof(DeleteDataRequest.Input)}");
 
-			var invalidColumnCsv = request.Output.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(DeleteDataRequest)}.{nameof(DeleteDataRequest.Output)}");
-
 			await ValueTask.CompletedTask;
 		}
 	}

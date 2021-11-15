@@ -18,7 +18,7 @@ namespace TypeCache.Converters
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
-			=> JsonSerializer.Serialize(writer, value, null);
+			=> JsonSerializer.Serialize(writer, value, options);
 
 		private static IDictionary<string, object> GetObject(ref Utf8JsonReader reader, JsonSerializerOptions options)
 		{

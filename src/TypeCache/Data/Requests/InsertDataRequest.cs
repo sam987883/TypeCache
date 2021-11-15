@@ -1,9 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using TypeCache.Data.Converters;
-using TypeCache.Extensions;
+using TypeCache.Collections;
 using static TypeCache.Default;
 
 namespace TypeCache.Data.Requests
@@ -31,10 +28,9 @@ namespace TypeCache.Data.Requests
 		public string Into { get; set; } = string.Empty;
 
 		/// <summary>
-		/// JSON: <code>"Output": { "Alias 1": "SQL Expression", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
-		/// SQL: <code>OUTPUT SQL Expression AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
+		/// JSON: <code>"Output": [ "NULLIF([Column1], 22) AS [Alias 1]", "INSERTED.ColumnName [Alias 2]", "DELETED.ColumnName" }</code>
+		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] [Alias 2], DELETED.[ColumnName]</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
+		public string[] Output { get; set; } = Array<string>.Empty;
 	}
 }

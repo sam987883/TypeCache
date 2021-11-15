@@ -38,6 +38,12 @@ namespace TypeCache.Data.Requests
 		public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 		/// <summary>
+		/// JSON: <code>"WITH(NOLOCK)"</code>
+		/// SQL: <code>FROM [Database1]..[Table1] WITH(NOLOCK)</code>
+		/// </summary>
+		public string? TableHints { get; set; }
+
+		/// <summary>
 		/// JSON: <code>
 		/// "(([Column1] &lt;&gt; N'Value2' OR [Column2] IS NOT NULL OR [Column3] IN (1, 2, 3))
 		/// AND ([Column1] = N'Value1' AND [Column2] IS NULL)

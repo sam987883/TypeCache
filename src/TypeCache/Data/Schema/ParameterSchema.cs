@@ -2,12 +2,13 @@
 
 using System.Data;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Data.Schema
 {
 	public readonly struct ParameterSchema
 	{
-		public static string SQL { get; } = $@"
+		public static string SQL { get; } = Invariant($@"
 SELECT p.[parameter_id] AS [Id]
 , p.[name] AS [Name]
 , ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
@@ -17,7 +18,7 @@ FROM [sys].[parameters] AS p
 INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
 WHERE p.[object_id] = @ObjectId
 ORDER BY [Id] ASC;
-";
+");
 
 		public int Id { get; init; }
 

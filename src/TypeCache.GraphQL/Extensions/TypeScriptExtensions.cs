@@ -1,11 +1,9 @@
-﻿using System;
+﻿// Copyright (c) 2021 Samuel Abraham
+
 using System.Text;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.Types;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Extensions
 {

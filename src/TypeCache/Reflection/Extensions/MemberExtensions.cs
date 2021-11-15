@@ -20,6 +20,10 @@ namespace TypeCache.Reflection.Extensions
 				_ => @this.GetType().TypeHandle.GetTypeMember()
 			};
 
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static MethodMember GetMethodMember(this MethodInfo @this)
+			=> MethodMember.Cache[(@this.MethodHandle, @this.DeclaringType!.TypeHandle)];
+
 		internal static bool IsCallableWith(this IEnumerable<MethodParameter> @this, params object?[]? arguments)
 		{
 			if (arguments.Any())

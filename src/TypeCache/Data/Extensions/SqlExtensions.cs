@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,226 +16,113 @@ namespace TypeCache.Data.Extensions
 {
 	public static class SqlExtensions
 	{
-		private static StringBuilder AppendColumnsSQL(this StringBuilder @this, string[] columns)
-			=> @this.Append('(').AppendJoin(", ", columns.To(column => column.EscapeIdentifier())).Append(')');
-
-		private static StringBuilder AppendOutputSQL(this StringBuilder @this, IDictionary<string, string> output)
-		{
-			@this.Append("OUTPUT ");
-			output.Do(pair =>
-			{
-				var column = pair.Key.EscapeIdentifier();
-				if (pair.Value.Is("INSERTED"))
-					@this.Append(Invariant($"INSERTED.{column} AS {column}"));
-				else if (pair.Value.Is("DELETED"))
-					@this.Append(Invariant($"DELETED.{column} AS {column}"));
-				else
-					@this.Append(Invariant($"{pair.Value} AS {column}"));
-			}, () => @this.AppendLine().Append('\t').Append(',').Append(' '));
-			return @this;
-		}
-
-		private static StringBuilder AppendSetSQL(this StringBuilder @this, IDictionary<string, object?> update)
-		{
-			@this.Append("SET").Append(' ');
-			update.Do(pair => @this.Append(pair.Key.EscapeIdentifier()).Append(' ').Append('=').Append(' ').Append(pair.Value.ToSQL()),
-				() => @this.AppendLine().Append('\t').Append(',').Append(' '));
-			return @this;
-		}
-
-		private static StringBuilder AppendValuesSQL(this StringBuilder @this, object?[][] rows)
-		{
-			@this.Append("VALUES").Append(' ');
-			rows.Do(row => @this.Append('(').AppendJoin(", ", row.To(value => value.ToSQL())).Append(')'),
-				() => @this.AppendLine().Append("\t, "));
-			return @this;
-		}
-
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeIdentifier([NotNull] this string @this)
-			=> Invariant($"[{@this.Replace("]", "]]")}]");
+			=> Invariant($"[{@this.EscapeValue().Replace("]", "]]")}]");
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeLikeValue([NotNull] this string @this)
-			=> @this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+			=> @this.EscapeValue().Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string EscapeValue([NotNull] this string @this)
 			=> @this.Replace("'", "''");
 
-		public static string ToSQL([NotNull] this DeleteDataRequest @this)
-		{
-			var sqlBuilder = new StringBuilder("DELETE x");
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			sqlBuilder.AppendLine().Append("FROM ").Append(@this.From).AppendLine(" AS x")
-				.AppendLine("INNER JOIN")
-				.AppendLine("(")
-				.AppendValuesSQL(@this.Input.Rows)
-				.AppendLine().Append($") AS i (").AppendJoin(", ", @this.Input.Columns.To(column => column.EscapeIdentifier())).AppendLine(")")
-				.Append("ON ");
-
-			@this.Input.Columns.Do(column => sqlBuilder.Append($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}"),
-				() => sqlBuilder.Append(" AND "));
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
-
 		public static string ToSQL([NotNull] this CountRequest @this)
-		{
-			var sqlBuilder = new StringBuilder("SELECT COUNT_BIG(1)")
-				.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
+			=> new StringBuilder()
+				.AppendSQL("SELECT", "COUNT_BIG(1)")
+				.AppendSQL("FROM", @this.From, @this.TableHints ?? "WITH(NOLOCK)")
+				.AppendSQL("WHERE", @this.Where)
+				.AppendStatementEndSQL()
+				.ToString();
 
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
+		public static string ToSQL([NotNull] this DeleteDataRequest @this)
+			=> new StringBuilder()
+				.AppendSQL("DELETE", "FROM", "x")
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendSQL("FROM", @this.From, "x")
+				.AppendLine("INNER JOIN")
+				.Append('(').AppendLine()
+				.AppendValuesSQL(@this.Input.Rows)
+				.Append(')').Append(" AS i ").AppendColumnsSQL(@this.Input.Columns)
+				.AppendSQL("ON", @this.Input.Columns.Each(column => Invariant($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}")).Join(" AND "))
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL([NotNull] this DeleteRequest @this)
-		{
-			var sqlBuilder = new StringBuilder("DELETE FROM ").Append(@this.From);
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
+			=> new StringBuilder()
+				.AppendSQL("DELETE", @this.From)
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendSQL("WHERE", @this.Where)
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL([NotNull] this InsertDataRequest @this)
-		{
-			var sqlBuilder = new StringBuilder(Invariant($"INSERT INTO {@this.Into} ")).AppendColumnsSQL(@this.Input.Columns);
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			return sqlBuilder.AppendLine().AppendValuesSQL(@this.Input.Rows).Append(';').AppendLine().ToString();
-		}
+			=> new StringBuilder()
+				.AppendInsertSQL(@this.Into, @this.Input.Columns)
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendValuesSQL(@this.Input.Rows)
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL([NotNull] this InsertRequest @this)
-		{
-			var sqlBuilder = new StringBuilder(Invariant($"INSERT INTO {@this.Into} ")).AppendColumnsSQL(@this.Insert);
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			if (@this.Select.Any())
-			{
-				sqlBuilder.AppendLine().Append("SELECT ");
-				@this.Select.Do(_ =>
-				{
-					if (_.Key.Is(_.Value))
-						sqlBuilder.Append(_.Key.EscapeIdentifier());
-					else
-						sqlBuilder.Append(Invariant($"{_.Value} AS {_.Key.EscapeIdentifier()}"));
-				}, () => sqlBuilder.AppendLine().Append("\t, "));
-			}
-			else
-				sqlBuilder.AppendLine().Append("SELECT *");
-
-			sqlBuilder.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			if (!@this.Having.IsBlank())
-				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
-
-			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"{(int.TryParse(_.Item1, out var _) ? _.Item1 : _.Item1.EscapeIdentifier())} {_.Item2.ToSQL()}")));
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
+			=> new StringBuilder()
+				.AppendInsertSQL(@this.Into, @this.Insert)
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendSQL("SELECT", @this.Select.Any() ? @this.Select : new[] { "*" })
+				.AppendSQL("FROM", @this.From, @this.TableHints ?? "WITH(NOLOCK)")
+				.AppendSQL("WHERE", @this.Where)
+				.AppendSQL("GROUP BY", @this.GroupBy)
+				.AppendSQL("HAVING", @this.Having)
+				.AppendSQL("ORDER BY", @this.OrderBy)
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL([NotNull] this SelectRequest @this)
 		{
-			var sqlBuilder = new StringBuilder("SELECT ");
-
-			if (@this.Select.Any())
-				@this.Select.Do(_ =>
-				{
-					if (_.Key.Is(_.Value))
-						sqlBuilder.Append(_.Key.EscapeIdentifier());
-					else
-						sqlBuilder.Append(Invariant($"{_.Value} AS {_.Key.EscapeIdentifier()}"));
-				}, () => sqlBuilder.AppendLine().Append("\t, "));
-			else
-				sqlBuilder.Append('*');
-
-			sqlBuilder.AppendLine().Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			if (!@this.Having.IsBlank())
-				sqlBuilder.AppendLine().Append("HAVING ").Append(@this.Having);
-
-			if (@this.OrderBy.Any())
-				sqlBuilder.AppendLine().Append("ORDER BY ").AppendJoin(", ", @this.OrderBy.To(_ => Invariant($"{(int.TryParse(_.Item1, out var _) ? _.Item1 : _.Item1.EscapeIdentifier())} {_.Item2.ToSQL()}")));
+			var sqlBuilder = new StringBuilder()
+				.AppendSQL("SELECT", @this.Select.Any() ? @this.Select : new[] { "*" })
+				.AppendSQL("FROM", @this.From, @this.TableHints ?? "WITH(NOLOCK)")
+				.AppendSQL("WHERE", @this.Where)
+				.AppendSQL("GROUP BY", @this.GroupBy)
+				.AppendSQL("HAVING", @this.Having)
+				.AppendSQL("ORDER BY", @this.OrderBy)
+				.AppendPagerSQL(@this.Pager)
+				.AppendStatementEndSQL();
 
 			if (@this.Pager.HasValue)
 			{
-				sqlBuilder.AppendLine().Append(Invariant($"OFFSET {@this.Pager.Value.After} ROWS"));
-
-				if (@this.Pager.Value.First > 0)
-					sqlBuilder.AppendLine().Append(Invariant($"FETCH NEXT {@this.Pager.Value.First} ROWS ONLY;"));
-
 				sqlBuilder.AppendLine()
-					.AppendLine().AppendLine("SELECT @Count = COUNT_BIG(1)")
-					.Append(Invariant($"FROM {@this.From} WITH(NOLOCK)"));
-
-				if (!@this.Where.IsBlank())
-					sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
+					.AppendSQL("SELECT", "@Count = COUNT_BIG(1)")
+					.AppendSQL("FROM", @this.From, "WITH(NOLOCK)")
+					.AppendSQL("WHERE", @this.Where);
 			}
 
-			return sqlBuilder.Append(';').AppendLine().ToString();
+			return sqlBuilder.AppendStatementEndSQL().ToString();
 		}
 
 		public static string ToSQL([NotNull] this UpdateRequest @this)
-		{
-			var sqlBuilder = new StringBuilder(Invariant($"UPDATE {@this.Table} WITH(UPDLOCK)"))
-				.AppendLine().AppendSetSQL(@this.Set);
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			if (!@this.Where.IsBlank())
-				sqlBuilder.AppendLine().Append("WHERE ").Append(@this.Where);
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
+			=> new StringBuilder()
+				.AppendSQL("UPDATE", @this.Table, @this.TableHints ?? "WITH(UPDLOCK)")
+				.AppendSQL("SET", @this.Set)
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendSQL("WHERE", @this.Where)
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL([NotNull] this UpdateDataRequest @this)
-		{
-			var sqlBuilder = new StringBuilder("UPDATE x WITH(UPDLOCK)");
-
-			var primaryKeys = @this.Schema!.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToArray();
-
-			sqlBuilder.AppendLine().Append("SET ");
-			@this.Input.Columns.Without(primaryKeys)
-				.Do(column => sqlBuilder.Append(Invariant($"{column.EscapeIdentifier()} = i.{column.EscapeIdentifier()}")),
-					() => sqlBuilder.AppendLine().Append("\t, "));
-
-			if (@this.Output.Any())
-				sqlBuilder.AppendLine().AppendOutputSQL(@this.Output);
-
-			sqlBuilder.AppendLine().AppendLine(Invariant($"FROM {@this.Table} AS x"))
+			=> new StringBuilder()
+				.AppendSQL("UPDATE", "x", @this.TableHints ?? "WITH(UPDLOCK)")
+				.AppendSQL("SET", @this.Input.Columns.Without(@this.On).Each(column => Invariant($"{column.EscapeIdentifier()} = i.{column.EscapeIdentifier()}")))
+				.AppendSQL("OUTPUT", @this.Output)
+				.AppendSQL("FROM", @this.Table, "x")
 				.AppendLine("INNER JOIN")
-				.AppendLine("(")
-				.AppendValuesSQL(@this.Input.Rows).AppendLine()
-				.Append($") AS i (").AppendJoin(", ", @this.Input.Columns.To(column => column.EscapeIdentifier())).AppendLine(")")
-				.Append("ON ");
-
-			primaryKeys.Do(primaryKey => sqlBuilder.Append($"i.{primaryKey.EscapeIdentifier()} = x.{primaryKey.EscapeIdentifier()}"),
-				() => sqlBuilder.Append(" AND "));
-
-			return sqlBuilder.Append(';').AppendLine().ToString();
-		}
+				.Append('(').AppendLine()
+				.AppendValuesSQL(@this.Input.Rows)
+				.Append(") AS i (").AppendJoin(", ", @this.Input.Columns.To(column => column.EscapeIdentifier())).Append(')').AppendLine()
+				.AppendSQL("ON", @this.On.Each(column => Invariant($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}")).Join(" AND "))
+				.AppendStatementEndSQL()
+				.ToString();
 
 		public static string ToSQL(this object? @this) => @this switch
 		{

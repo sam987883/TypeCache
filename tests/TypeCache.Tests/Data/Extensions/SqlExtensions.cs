@@ -73,14 +73,14 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 					Columns = new[] { "ID1", "ID2" },
 					Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" }
 			};
 
-			var expected = Invariant($@"DELETE x
+			var expected = Invariant($@"DELETE FROM x
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
-FROM Customers AS x
+FROM Customers x
 INNER JOIN
 (
 VALUES (1, 2)
@@ -102,11 +102,11 @@ ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
 			var request = new DeleteRequest
 			{
 				From = "Customers",
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
-			var expected = Invariant($@"DELETE FROM Customers
+			var expected = Invariant($@"DELETE Customers
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
@@ -135,10 +135,11 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 						new object[] { "FirstName3", "LastName3", 3 }
 					}
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" }
 			};
 
-			var expected = Invariant($@"INSERT INTO Customers ([First Name], [Last_Name], [ID])
+			var expected = Invariant($@"INSERT INTO Customers
+([First Name], [Last_Name], [ID])
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
@@ -155,29 +156,31 @@ VALUES (N'FirstName1', N'LastName1', 1)
 		{
 			var request = new InsertRequest
 			{
+				From = "[dbo].[NonCustomers]",
 				Into = "Customers",
 				Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "Age", "Amount" },
-				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
-				From = "[dbo].[NonCustomers]",
-				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
 				Having = "MAX([Age]) > 40",
+				OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
+				Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending), ("1", Sort.Descending) }
 			};
 
-			var expected = Invariant($@"INSERT INTO Customers ([[ID]]], [[First Name]]], [[Last_Name]]], [Age], [Amount])
+			var expected = Invariant($@"INSERT INTO Customers
+([[ID]]], [[First Name]]], [[Last_Name]]], [Age], [Amount])
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
-SELECT [ID]
+SELECT ID
 	, TRIM([First Name]) AS [First Name]
-	, UPPER([LastName]) AS [LastName]
-	, 40 AS [Age]
-	, [Amount]
+	, UPPER([LastName]) AS LastName
+	, 40 Age
+	, Amount AS Amount
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
-ORDER BY [First Name] DESC, [Last_Name] ASC, 1 DESC;
+ORDER BY [First Name] ASC
+	, Last_Name DESC;
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -188,23 +191,24 @@ ORDER BY [First Name] DESC, [Last_Name] ASC, 1 DESC;
 		{
 			var request = new SelectRequest
 			{
-				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
+				Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
+				OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
 				Pager = new() { After = 0, First = 100 }
 			};
 
-			var expected = Invariant($@"SELECT [ID]
+			var expected = Invariant($@"SELECT ID
 	, TRIM([First Name]) AS [First Name]
-	, UPPER([LastName]) AS [LastName]
-	, 40 AS [Age]
-	, [Amount]
+	, UPPER([LastName]) AS LastName
+	, 40 Age
+	, Amount AS Amount
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
-ORDER BY [First Name] DESC, [Last_Name] ASC
+ORDER BY [First Name] ASC
+	, Last_Name DESC
 OFFSET 0 ROWS
 FETCH NEXT 100 ROWS ONLY;
 
@@ -222,25 +226,12 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 			var date = DateTime.UtcNow;
 			var id = Guid.NewGuid();
 
-			var schemaRowSet = new RowSet
-			{
-				Columns = new[] { nameof(ObjectSchema.Id), nameof(ObjectSchema.Type), nameof(ObjectSchema.DatabaseName), nameof(ObjectSchema.SchemaName), nameof(ObjectSchema.ObjectName) },
-				Rows = new object[][] { new object[] { 1, ObjectType.Table, "LocalDb", "dbo", "Customers" } }
-			};
-			var schema = new ObjectSchema("Default", schemaRowSet, new ColumnSchema[]
-			{
-				new() { Name = "ID1", PrimaryKey = true },
-				new() { Name = "ID2", PrimaryKey = true },
-				new() { Name = "First Name" },
-				new() { Name = "Last_Name" },
-				new() { Name = "ID" },
-			}, Array<ParameterSchema>.Empty);
 			var request = new UpdateDataRequest
 			{
 				Table = "Customers",
 				Input = new()
 				{
-					Columns = new[] { "ID1", "ID2", "First Name", "Last_Name", "ID" },
+					Columns = new[] { "ID1", "[ID2]", "First Name", "Last_Name", "ID" },
 					Rows = new object[][]
 					{
 						new object[] { 1, 2, "FirstName1", "LastName1", 1 },
@@ -248,8 +239,9 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
 					}
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
-				Schema = schema
+				On = new[] { "ID1", "[ID2]" },
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
+				TableHints = "WITH(UPDLOCK)"
 			};
 
 			var expected = Invariant($@"UPDATE x WITH(UPDLOCK)
@@ -259,14 +251,14 @@ SET [First Name] = i.[First Name]
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
-FROM Customers AS x
+FROM Customers x
 INNER JOIN
 (
 VALUES (1, 2, N'FirstName1', N'LastName1', 1)
 	, (1, 3, N'FirstName2', N'LastName2', 2)
 	, (2, 1, N'FirstName3', N'LastName3', 3)
-) AS i ([ID1], [ID2], [First Name], [Last_Name], [ID])
-ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
+) AS i ([ID1], [[ID2]]], [First Name], [Last_Name], [ID])
+ON i.[ID1] = x.[ID1] AND i.[[ID2]]] = x.[[ID2]]];
 ");
 
 			Assert.Equal(expected, request.ToSQL());
@@ -280,16 +272,16 @@ ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
 			var request = new UpdateRequest
 			{
 				Table = "Customers",
-				Set = new Dictionary<string, object> { { "ID", 123456 }, { "First Name", "Sarah" }, { "Last_Name", "Marshal" }, { "Account", id } },
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+				Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
 			var expected = Invariant($@"UPDATE Customers WITH(UPDLOCK)
-SET [ID] = 123456
+SET ID = 123456
 	, [First Name] = N'Sarah'
-	, [Last_Name] = N'Marshal'
-	, [Account] = '{id:D}'
+	, Last_Name = N'Marshal'
+	, Account = @Param1
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]

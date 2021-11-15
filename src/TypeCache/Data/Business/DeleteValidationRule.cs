@@ -25,10 +25,6 @@ namespace TypeCache.Data.Business
 			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
 			schema.Type.Assert($"{nameof(DeleteRequest)}.{nameof(DeleteRequest.From)}", ObjectType.Table);
 
-			var invalidColumnCsv = request.Output.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(DeleteRequest)}.{nameof(DeleteRequest.Output)}");
-
 			await ValueTask.CompletedTask;
 		}
 	}

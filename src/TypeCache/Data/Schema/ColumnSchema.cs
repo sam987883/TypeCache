@@ -4,12 +4,13 @@ using System;
 using System.Data;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Data.Schema
 {
 	public readonly struct ColumnSchema
 	{
-		public static string SQL { get; } = @$"
+		public static string SQL { get; } = Invariant(@$"
 SELECT c.[column_id] AS [Id]
 , c.[name] AS [Name]
 , ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
@@ -28,7 +29,7 @@ LEFT JOIN
 ) ON ic.[object_id] = c.[object_id] AND ic.[column_id] = c.[column_id]
 WHERE c.[object_id] = @ObjectId
 ORDER BY c.[column_id] ASC;
-";
+");
 
 		public int Id { get; init; }
 

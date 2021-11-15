@@ -1,10 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using TypeCache.Data.Converters;
+using TypeCache.Collections;
 using TypeCache.Data.Schema;
-using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Data.Requests
@@ -26,21 +23,27 @@ namespace TypeCache.Data.Requests
 		public RowSet Input { get; set; } = new RowSet();
 
 		/// <summary>
-		/// JSON: <code>"Output": { "Alias 1": "NULLIF([Column1], 22)", "Alias 2": "INSERTED.ColumnName", "Alias 3": "DELETED.ColumnName" }</code>
-		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] AS [Alias 2], DELETED.[ColumnName] AS [Alias 3]</code>
+		/// JSON: <code>On: [ "ID1", "[ID2]" ]</code>
+		/// SQL: <code>ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2]</code>
 		/// </summary>
-		[JsonConverter(typeof(OutputJsonConverter))]
-		public IDictionary<string, string> Output { get; set; } = new Dictionary<string, string>(STRING_COMPARISON.ToStringComparer());
+		public string[] On { get; set; } = Array<string>.Empty;
 
 		/// <summary>
-		/// Set internally- used to build SQL.
+		/// JSON: <code>"Output": [ "NULLIF([Column1], 22) AS [Alias 1]", "INSERTED.ColumnName [Alias 2]", "DELETED.ColumnName" }</code>
+		/// SQL: <code>OUTPUT NULLIF([Column1], 22) AS [Alias 1], INSERTED.[ColumnName] [Alias 2], DELETED.[ColumnName]</code>
 		/// </summary>
-		public ObjectSchema? Schema { get; set; }
+		public string[] Output { get; set; } = Array<string>.Empty;
 
 		/// <summary>
 		/// JSON: <code>"Table1"</code>
 		/// SQL: <code>UPDATE [Database1]..[Table1]</code>
 		/// </summary>
 		public string Table { get; set; } = string.Empty;
+
+		/// <summary>
+		/// JSON: <code>"WITH(UPDLOCK)"</code>
+		/// SQL: <code>UPDATE [Database1]..[Table1] WITH(UPDLOCK)</code>
+		/// </summary>
+		public string TableHints { get; set; } = string.Empty;
 	}
 }

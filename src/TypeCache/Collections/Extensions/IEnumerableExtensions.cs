@@ -169,6 +169,15 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.GetEnumerator().Count()
 			};
 
+		/// <exception cref="ArgumentNullException"/>
+		public static int CountOf<T>(this IEnumerable<T>? @this, T item)
+			where T : IEquatable<T>
+		{
+			item.AssertNotNull(nameof(item));
+
+			return @this.If(item.Equals).Count();
+		}
+
 		public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
 			where T : struct
 		{
@@ -610,10 +619,18 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
+		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
+			where T : IEquatable<T>
+			=> values.All(@this.Has);
+
+		/// <summary>
 		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value, <paramref name="comparer"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
 			=> values.All(value => @this.Has(value, comparer));
 
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index)
@@ -626,10 +643,18 @@ namespace TypeCache.Collections.Extensions
 			};
 
 		/// <summary>
+		/// <c>@<paramref name="this"/>.ToIndex(value).Any()</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
+			where T : IEquatable<T>
+			=> @this.ToIndex(value).Any();
+
+		/// <summary>
 		/// <c>@<paramref name="this"/>.ToIndex(value, <paramref name="comparer"/>).Any()</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
+		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
 			=> @this.ToIndex(value, comparer).Any();
 
 		public static IEnumerable<T> If<T>(this IEnumerable? @this)
@@ -1022,14 +1047,18 @@ namespace TypeCache.Collections.Extensions
 				_ => Enumerable<T>.ToIndex(@this, filter)
 			};
 
-		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T value, IEqualityComparer<T>? comparer = null)
-			=> value switch
-			{
-				_ when !@this.Any() => Enumerable<int>.Empty,
-				_ when comparer is not null => @this.ToIndex(item => comparer.Equals(item, value)),
-				IEquatable<T> equatable => @this.ToIndex(equatable.Equals),
-				_ => @this.ToIndex(item => Equals(item, value))
-			};
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T item)
+			where T : IEquatable<T>
+			=> item is not null ? @this.ToIndex(item.Equals) : @this.ToIndex(value => value is null);
+
+		/// <exception cref="ArgumentNullException"/>
+		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T item, IEqualityComparer<T> comparer)
+		{
+			comparer.AssertNotNull(nameof(comparer));
+
+			return @this.ToIndex(value => comparer.Equals(value, item));
+		}
 
 		/// <summary>
 		/// <c>@<paramref name="this"/> is not null ? new <see cref="List{T}"/>(@<paramref name="this"/>) : new <see cref="List{T}"/>(0)</c>

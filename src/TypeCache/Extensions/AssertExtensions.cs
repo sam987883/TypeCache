@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions
@@ -45,6 +46,26 @@ namespace TypeCache.Extensions
 		{
 			if (@this.IsBlank())
 				throw new ArgumentOutOfRangeException($"{caller} -> {nameof(AssertNotBlank)}: [{name}] is blank.");
+		}
+
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public static void AssertNotEmpty<T>(this IEnumerable<T>? @this, string name, [CallerMemberName] string? caller = null)
+		{
+			if (@this is null)
+				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotEmpty)}: [{name}] is null.");
+			if (!@this.Any())
+				throw new ArgumentOutOfRangeException($"{caller} -> {nameof(AssertNotEmpty)}: [{name}] is empty.");
+		}
+
+		/// <exception cref="ArgumentNullException"/>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public static void AssertNotEmpty<T>(this T[]? @this, string name, [CallerMemberName] string? caller = null)
+		{
+			if (@this is null)
+				throw new ArgumentNullException($"{caller} -> {nameof(AssertNotEmpty)}: [{name}] is null.");
+			if (!@this.Any())
+				throw new ArgumentOutOfRangeException($"{caller} -> {nameof(AssertNotEmpty)}: [{name}] is empty.");
 		}
 
 		/// <exception cref="ArgumentNullException"/>

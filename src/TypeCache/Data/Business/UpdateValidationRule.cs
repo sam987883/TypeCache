@@ -28,20 +28,6 @@ namespace TypeCache.Data.Business
 			if (!request.Set.Any())
 				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-			var columns = schema.Columns.To(column => column.Name).ToArray();
-			var invalidColumnCsv = request.Set.Keys.Without(columns).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
-
-			var writableColumns = schema.Columns.If(column => !column!.ReadOnly).To(column => column!.Name);
-			invalidColumnCsv = request.Set.Keys.Without(writableColumns).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} columns are read-only: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
-
-			invalidColumnCsv = request.Output.Keys.Without(columns).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Output)}");
-
 			await ValueTask.CompletedTask;
 		}
 	}

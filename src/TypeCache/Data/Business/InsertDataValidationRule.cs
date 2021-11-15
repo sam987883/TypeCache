@@ -29,10 +29,6 @@ namespace TypeCache.Data.Business
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} contains non-writable columns: {invalidColumnCsv}.", $"{nameof(InsertDataRequest)}.{nameof(InsertDataRequest.Input)}");
 
-			invalidColumnCsv = request.Output.Keys.Without(schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not contain columns: {invalidColumnCsv}.", $"{nameof(InsertDataRequest)}.{nameof(InsertDataRequest.Output)}");
-
 			await ValueTask.CompletedTask;
 		}
 	}

@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
@@ -15,6 +14,7 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SQL
 {
@@ -72,18 +72,16 @@ namespace TypeCache.GraphQL.SQL
 			string where,
 			IResolveFieldContext context)
 		{
+			var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var request = new DeleteRequest
 			{
 				DataSource = this._DataSource,
 				From = this._Table,
+				Output = selections.IfLeft(dataPrefix).EachReplace(dataPrefix, "DELETED.").ToArray(),
 				Where = where
 			};
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
-			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
 
@@ -107,18 +105,16 @@ namespace TypeCache.GraphQL.SQL
 			[NotNull] T[] data,
 			IResolveFieldContext context)
 		{
+			var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>>(nameof(data))!.Keys.ToArray();
 			var request = new DeleteDataRequest
 			{
 				DataSource = this._DataSource,
 				From = this._Table,
-				Input = data.MapRowSet(columns)
+				Input = data.MapRowSet(columns),
+				Output = selections.IfLeft(dataPrefix).EachReplace(dataPrefix, "DELETED.").ToArray()
 			};
-			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = "DELETED");
 
 			var sqlResponse = new SqlResponse<T>();
 
@@ -142,18 +138,16 @@ namespace TypeCache.GraphQL.SQL
 			[NotNull] T[] batch,
 			IResolveFieldContext context)
 		{
+			var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
 			var request = new InsertDataRequest
 			{
 				DataSource = this._DataSource,
 				Into = this._Table,
-				Input = batch.MapRowSet(columns)
+				Input = batch.MapRowSet(columns),
+				Output = selections.IfLeft(dataPrefix).EachReplace(dataPrefix, "INSERTED.").ToArray()
 			};
-			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Output[selection] = "INSERTED");
 
 			var sqlResponse = new SqlResponse<T>();
 
@@ -178,30 +172,26 @@ namespace TypeCache.GraphQL.SQL
 			uint after,
 			[AllowNull] Parameter[] parameters,
 			[AllowNull] string where,
+			[AllowNull] string[] groupBy,
 			[AllowNull] string having,
 			[AllowNull] OrderBy<T>[] orderBy,
 			IResolveFieldContext context)
 		{
+			var dataPrefix = Invariant($"{nameof(SqlPagedResponse<T>.Data)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var request = new SelectRequest
 			{
 				DataSource = this._DataSource,
 				From = this._Table,
+				GroupBy = groupBy,
 				Having = having,
-				Pager = new()
-				{
-					After = after,
-					First = first
-				},
+				OrderBy = orderBy.ToArray(_ => Invariant($"{_.Expression} {_.Sort.ToSQL()}")),
+				Pager = new(first, after),
+				Select = selections.IfLeft(dataPrefix).EachTrimStart(dataPrefix).ToArray(),
 				Where = where
 			};
 
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
-			selections
-				.If(selection => selection.Left(nameof(SqlPagedResponse<T>.Data)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlPagedResponse<T>.Data)}.")!)
-				.Do(selection => request.Select[selection] = selection);
-			request.OrderBy = orderBy.ToArray(_ => (_.Expression, _.Sort));
 
 			var sqlResponse = new SqlPagedResponse<T>();
 
@@ -225,25 +215,25 @@ namespace TypeCache.GraphQL.SQL
 		public async Task<SqlResponse<T>> Select(
 			[AllowNull] Parameter[] parameters,
 			[AllowNull] string where,
+			[AllowNull] string[] groupBy,
 			[AllowNull] string having,
 			[AllowNull] OrderBy<T>[] orderBy,
 			IResolveFieldContext context)
 		{
+			var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var request = new SelectRequest
 			{
 				DataSource = this._DataSource,
 				From = this._Table,
+				GroupBy = groupBy,
 				Having = having,
+				OrderBy = orderBy.ToArray(_ => $"{_.Expression} {_.Sort.ToSQL()}"),
+				Select = selections.IfLeft(dataPrefix).EachTrimStart(dataPrefix).ToArray(),
 				Where = where
 			};
 
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
-			selections
-				.If(selection => selection.Left(nameof(SqlResponse<T>.Data)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlResponse<T>.Data)}.")!)
-				.Do(selection => request.Select[selection] = selection);
-			request.OrderBy = orderBy.ToArray(_ => (_.Expression, _.Sort));
 
 			var sqlResponse = new SqlResponse<T>();
 
@@ -269,29 +259,24 @@ namespace TypeCache.GraphQL.SQL
 			[AllowNull] string where,
 			IResolveFieldContext context)
 		{
+			var deletedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Deleted)}.");
+			var insertedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Inserted)}.");
 			var selections = context.GetQuerySelections().ToArray();
-			var columns = context.GetArgument<IDictionary<string, object>>(nameof(set))!.Keys.ToArray();
 			var request = new UpdateRequest
 			{
 				DataSource = this._DataSource,
+				Output = selections
+					.If(selection => selection.Left(insertedPrefix) || selection.Left(deletedPrefix))
+					.Each(selection => selection.Replace(insertedPrefix, "INSERTED.").Replace(deletedPrefix, "DELETED."))
+					.ToArray(),
+				Set = context.GetArgument<IDictionary<string, object>>(nameof(set))
+					.To(pair => Invariant($"{pair.Key.EscapeIdentifier()} = {pair.Value.ToSQL()}"))
+					.ToArray(),
 				Table = this._Table,
 				Where = where
 			};
+
 			parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
-			selections
-				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Deleted)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Deleted)}.")!)
-				.Do(selection => request.Output[$"DELETED.{selection}"] = $"DELETED.{selection}");
-			selections
-				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Inserted)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Inserted)}.")!)
-				.Do(selection => request.Output[$"INSERTED.{selection}"] = $"INSERTED.{selection}");
-			columns.Do(column =>
-			{
-				var property = TypeOf<T>.Properties.Values.FirstValue(property =>
-					property.Attributes.First<GraphNameAttribute>()?.Name.Is(column) is true) ?? TypeOf<T>.Properties.GetValue(column)!;
-				request.Set[property.Value.Name] = property.Value.GetValue(set);
-			});
 
 			var sqlResponse = new SqlUpdateResponse<T>();
 
@@ -308,11 +293,11 @@ namespace TypeCache.GraphQL.SQL
 				{
 					var outputColumns = output.Columns;
 
-					output.Columns = outputColumns.Each(column => column.TrimStart("DELETED.")).ToArray();
+					output.Columns = outputColumns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
 					sqlResponse.Deleted = output.MapModels<T>();
 
-					output.Columns = outputColumns.Each(column => column.TrimStart("INSERTED.")).ToArray();
-					sqlResponse.Deleted = output.MapModels<T>();
+					output.Columns = outputColumns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
+					sqlResponse.Inserted = output.MapModels<T>();
 				}
 				else
 				{
@@ -324,25 +309,23 @@ namespace TypeCache.GraphQL.SQL
 		}
 
 		[GraphName("Update{0}Data")]
-		[GraphDescription("UPDATE {0} SET ... OUTPUT ... VALUES ...")]
+		[GraphDescription("UPDATE {0} SET ... OUTPUT ...")]
 		public async Task<SqlUpdateResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 		{
+			var deletedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Deleted)}.");
+			var insertedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Inserted)}.");
 			var selections = context.GetQuerySelections().ToArray();
 			var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(data)).First()?.Keys.ToArray() ?? Array<string>.Empty;
 			var request = new UpdateDataRequest
 			{
 				DataSource = this._DataSource,
 				Input = data.MapRowSet(columns),
+				Output = selections
+					.If(selection => selection.Left(insertedPrefix) || selection.Left(deletedPrefix))
+					.Each(selection => selection.Replace(insertedPrefix, "INSERTED.").Replace(deletedPrefix, "DELETED."))
+					.ToArray(),
 				Table = this._Table,
 			};
-			selections
-				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Deleted)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Deleted)}.")!)
-				.Do(selection => request.Output[$"DELETED.{selection}"] = $"DELETED.{selection}");
-			selections
-				.If(selection => selection.Left(nameof(SqlUpdateResponse<T>.Inserted)))
-				.Each(selection => selection.TrimStart($"{nameof(SqlUpdateResponse<T>.Inserted)}.")!)
-				.Do(selection => request.Output[$"INSERTED.{selection}"] = $"INSERTED.{selection}");
 
 			var sqlResponse = new SqlUpdateResponse<T>();
 
@@ -359,11 +342,11 @@ namespace TypeCache.GraphQL.SQL
 				{
 					var outputColumns = output.Columns;
 
-					output.Columns = outputColumns.Each(column => column.TrimStart("DELETED.")).ToArray();
+					output.Columns = outputColumns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
 					sqlResponse.Deleted = output.MapModels<T>();
 
-					output.Columns = outputColumns.Each(column => column.TrimStart("INSERTED.")).ToArray();
-					sqlResponse.Deleted = output.MapModels<T>();
+					output.Columns = outputColumns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
+					sqlResponse.Inserted = output.MapModels<T>();
 				}
 				else
 				{

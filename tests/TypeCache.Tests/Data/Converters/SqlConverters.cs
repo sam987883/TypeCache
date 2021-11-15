@@ -31,6 +31,7 @@ namespace TypeCache.Tests.Data.Converters
 	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""TableHints"":null,
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
@@ -58,7 +59,7 @@ namespace TypeCache.Tests.Data.Converters
 					Columns = new[] { "ID1", "ID2" },
 					Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" }
 			};
 
 			var expected = Invariant(@$"
@@ -66,7 +67,7 @@ namespace TypeCache.Tests.Data.Converters
 	""DataSource"":""Default"",
 	""From"":""Customers"",
 	""Input"":{{""Columns"":[""ID1"",""ID2""],""Count"":0,""Rows"":[[1,2],[1,3],[2,1]]}},
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""]
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
@@ -90,7 +91,7 @@ namespace TypeCache.Tests.Data.Converters
 			{
 				DataSource = "LocalInstance",
 				From = "Customers",
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
 				Parameters = new Dictionary<string, object> { { "Param1", false }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
 			};
@@ -99,7 +100,7 @@ namespace TypeCache.Tests.Data.Converters
 {{
 	""DataSource"":""LocalInstance"",
 	""From"":""Customers"",
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
 	""Parameters"":{{""Param1"":false,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
@@ -134,7 +135,7 @@ namespace TypeCache.Tests.Data.Converters
 					}
 				},
 				Into = "Customers",
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } }
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" }
 			};
 
 			var expected = Invariant(@$"
@@ -142,7 +143,7 @@ namespace TypeCache.Tests.Data.Converters
 	""DataSource"":""Default"",
 	""Input"":{{""Columns"":[""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[""FirstName1"",""LastName1"",1],[""FirstName2"",""LastName2"",2],[""FirstName3"",""LastName3"",3]]}},
 	""Into"":""Customers"",
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}}
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""]
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
@@ -167,26 +168,30 @@ namespace TypeCache.Tests.Data.Converters
 				DataSource = "LocalInstance",
 				Into = "Customers",
 				Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "[Age]", "[Amount]" },
-				Output = new Dictionary<string, string>(3) { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
-				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
+				OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
 				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
-				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
+				Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
+				TableHints = "WITH(NOLOCK)",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
 			var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""From"":""[dbo].[NonCustomers]"",
-	""Having"":""MAX([Age]) \u003E 40"",
 	""Insert"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
 	""Into"":""Customers"",
-	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""DataSource"":""LocalInstance"",
+	""From"":""[dbo].[NonCustomers]"",
+	""GroupBy"":null,
+	""Having"":""MAX([Age]) \u003E 40"",
+	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
+	""Pager"":null,
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Select"":{{""ID"":""ID"",""First Name"":""TRIM([First Name])"",""LastName"":""UPPER([LastName])"",""Age"":""40"",""Amount"":""Amount""}},
+	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
+	""TableHints"":""WITH(NOLOCK)"",
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
@@ -217,10 +222,11 @@ namespace TypeCache.Tests.Data.Converters
 				DataSource = "LocalInstance",
 				From = "[dbo].[NonCustomers]",
 				Having = "MAX([Age]) > 40",
-				OrderBy = new[] { ("First Name", Sort.Descending), ("Last_Name", Sort.Ascending) },
+				OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
 				Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 				Pager = new() { After = 0, First = 100 },
-				Select = new Dictionary<string, string>(5) { { "ID", "ID" }, { "First Name", "TRIM([First Name])" }, { "LastName", "UPPER([LastName])" }, { "Age", "40" }, { "Amount", "Amount" } },
+				Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
+				TableHints = "WITH(NOLOCK)",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 			};
 
@@ -228,12 +234,13 @@ namespace TypeCache.Tests.Data.Converters
 {{
 	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
+	""GroupBy"":null,
 	""Having"":""MAX([Age]) \u003E 40"",
-	""OrderBy"":[{{""Descending"":""First Name""}},{{""Ascending"":""Last_Name""}}],
+	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
 	""Pager"":{{""First"":100,""After"":0}},
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Schema"":null,
-	""Select"":{{""ID"":""ID"",""First Name"":""TRIM([First Name])"",""LastName"":""UPPER([LastName])"",""Age"":""40"",""Amount"":""Amount""}},
+	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
+	""TableHints"":""WITH(NOLOCK)"",
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
@@ -269,17 +276,20 @@ namespace TypeCache.Tests.Data.Converters
 						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
 					}
 				},
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				On = new[] { "ID" },
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 				Table = "Customers",
+				TableHints = "WITH(UPDLOCK)"
 			};
 
 			var expected = Invariant(@$"
 {{
 	""DataSource"":""LOCAL"",
 	""Input"":{{""Columns"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[1,2,""FirstName1"",""LastName1"",1],[1,3,""FirstName2"",""LastName2"",2],[2,1,""FirstName3"",""LastName3"",3]]}},
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
-	""Schema"":null,
-	""Table"":""Customers""
+	""On"":[""ID""],
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""Table"":""Customers"",
+	""TableHints"":""WITH(UPDLOCK)""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 			Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
@@ -303,19 +313,21 @@ namespace TypeCache.Tests.Data.Converters
 			{
 				DataSource = "LocalInstance",
 				Table = "[dbo].[NonCustomers]",
-				Set = new Dictionary<string, object> { { "ID", 123456 }, { "First Name", "Sarah" }, { "Last_Name", "Marshal" }, { "Account", guid } },
-				Output = new Dictionary<string, string> { { "First Name", "INSERTED" }, { "Last_Name", "DELETED" }, { "ID", "INSERTED" } },
+				Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+				Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
+				TableHints = "WITH(UPDLOCK)",
 				Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-				Parameters = new Dictionary<string, object> { { "Param1", 44 }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+				Parameters = new Dictionary<string, object> { { "Param1", 44 }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
 			};
 
 			var expected = Invariant(@$"
 {{
 	""DataSource"":""LocalInstance"",
-	""Output"":{{""First Name"":""INSERTED"",""Last_Name"":""DELETED"",""ID"":""INSERTED""}},
+	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
 	""Parameters"":{{""Param1"":44,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""Set"":[""ID = 123456"",""[First Name] = N\u0027Sarah\u0027"",""Last_Name = N\u0027Marshal\u0027"",""Account = @Param1""],
 	""Table"":""[dbo].[NonCustomers]"",
-	""Set"":{{""ID"":123456,""First Name"":""Sarah"",""Last_Name"":""Marshal"",""Account"":""{guid:D}""}},
+	""TableHints"":""WITH(UPDLOCK)"",
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 

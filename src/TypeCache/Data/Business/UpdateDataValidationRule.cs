@@ -22,16 +22,16 @@ namespace TypeCache.Data.Business
 
 		public async ValueTask ValidateAsync(UpdateDataRequest request, CancellationToken cancellationToken)
 		{
-			request.Schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
-			request.Schema.Type.Assert($"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Table)}", ObjectType.Table);
+			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
+			schema.Type.Assert($"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Table)}", ObjectType.Table);
+			request.Table = schema.Name;
 
-			var invalidColumnCsv = request.Input.Columns.Without(request.Schema.Columns.If(column => !column.Identity && !column.ReadOnly).To(column => column.Name)).ToCSV(column => $"[{column}]");
+			var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).To(column => column.Name)).ToCSV(column => $"[{column}]");
 			if (!invalidColumnCsv.IsBlank())
 				throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} contains non-writable columns: {invalidColumnCsv}.", $"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Input)}");
 
-			invalidColumnCsv = request.Output.Keys.Without(request.Schema.Columns.To(column => column.Name)).ToCSV(column => $"[{column}]");
-			if (!invalidColumnCsv.IsBlank())
-				throw new ArgumentException($"{request.Schema.Name} does not contain columns: {invalidColumnCsv}", $"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Output)}");
+			if (!request.On.Any())
+				request.On = schema.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToArray();
 
 			await ValueTask.CompletedTask;
 		}

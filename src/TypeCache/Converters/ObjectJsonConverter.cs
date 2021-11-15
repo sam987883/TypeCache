@@ -17,6 +17,6 @@ namespace TypeCache.Converters
 
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
-			=> JsonSerializer.Serialize(writer, value, null);
+			=> JsonSerializer.Serialize(writer, value, options);
 	}
 }

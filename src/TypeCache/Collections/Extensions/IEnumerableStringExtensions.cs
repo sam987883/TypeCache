@@ -13,6 +13,84 @@ namespace TypeCache.Collections.Extensions
 {
 	public static class IEnumerableStringExtensions
 	{
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Contains(<paramref name="character"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyContains(this IEnumerable<string>? @this, char character, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => value.Contains(character, comparison));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Contains(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyContains(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => value.Contains(text, comparison));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Left(<paramref name="character"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyLeft(this IEnumerable<string>? @this, char character)
+			=> @this.Any(value => value.Left(character));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Left(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyLeft(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => value.Left(text, comparison));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(text =&gt; !text.IsBlank())</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyNotBlank(this IEnumerable<string?>? @this)
+			=> @this.Any(value => !value.IsBlank())!;
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; !value.Contains(<paramref name="character"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyNotContains(this IEnumerable<string>? @this, char character, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => !value.Contains(character, comparison));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; !value.Contains(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyNotContains(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => !value.Contains(text, comparison));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.RegexIsMatch(<paramref name="pattern"/>, <paramref name="options"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyRegexMatch(this IEnumerable<string>? @this, string pattern, RegexOptions options = REGEX_OPTIONS)
+			=> @this.Any(value => value.RegexIsMatch(pattern, options));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.RegexIsMatch(<paramref name="pattern"/>, <paramref name="timeout"/>, <paramref name="options"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyRegexMatch(this IEnumerable<string>? @this, string pattern, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
+			=> @this.Any(value => value.RegexIsMatch(pattern, timeout, options));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Right(<paramref name="character"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyRight(this IEnumerable<string>? @this, char character)
+			=> @this.Any(value => value.Right(character));
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Any(value =&gt; value.Right(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static bool AnyRight(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)
+			=> @this.Any(value => value.Right(text, comparison));
+
 		/// <summary>
 		/// <c>@<paramref name="this"/>.Each(value =&gt; value.Left(<paramref name="length"/>))</c>
 		/// </summary>
@@ -154,14 +232,14 @@ namespace TypeCache.Collections.Extensions
 			=> @this.If(value => value.Contains(text, comparison));
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.IfLeft(value =&gt; value.Left(<paramref name="character"/>))</c>
+		/// <c>@<paramref name="this"/>.If(value =&gt; value.Left(<paramref name="character"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<string> IfLeft(this IEnumerable<string>? @this, char character)
 			=> @this.If(value => value.Left(character));
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.IfLeft(value =&gt; value.Left(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// <c>@<paramref name="this"/>.If(value =&gt; value.Left(<paramref name="text"/>, <paramref name="comparison"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<string> IfLeft(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)
@@ -203,14 +281,14 @@ namespace TypeCache.Collections.Extensions
 			=> @this.If(value => value.RegexIsMatch(pattern, timeout, options));
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.IfRight(value =&gt; value.Right(<paramref name="character"/>))</c>
+		/// <c>@<paramref name="this"/>.If(value =&gt; value.Right(<paramref name="character"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<string> IfRight(this IEnumerable<string>? @this, char character)
 			=> @this.If(value => value.Right(character));
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.IfRight(value =&gt; value.Right(<paramref name="text"/>, <paramref name="comparison"/>))</c>
+		/// <c>@<paramref name="this"/>.If(value =&gt; value.Right(<paramref name="text"/>, <paramref name="comparison"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<string> IfRight(this IEnumerable<string>? @this, string text, StringComparison comparison = STRING_COMPARISON)

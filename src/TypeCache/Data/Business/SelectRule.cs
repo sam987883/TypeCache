@@ -19,7 +19,6 @@ namespace TypeCache.Data.Business
 
 		async ValueTask<RowSet> IRule<SelectRequest, RowSet>.ApplyAsync(SelectRequest request, CancellationToken cancellationToken)
 		{
-			request.From = request.Schema!.Name;
 			return await this._SqlApi.SelectAsync(request, cancellationToken);
 		}
 
