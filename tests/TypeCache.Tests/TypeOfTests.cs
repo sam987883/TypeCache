@@ -82,7 +82,7 @@ namespace TypeCache.Tests
 			Assert.Equal(7, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Class, member.Kind);
-			Assert.Equal(93, member.Methods.Count);
+			Assert.Equal(94, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
 			Assert.Equal(2, member.Properties.Count);
 			Assert.True(member.Public);
@@ -117,7 +117,7 @@ namespace TypeCache.Tests
 			var member = TypeOf<ImmutableArray<string>>.Member;
 			var type = typeof(ImmutableArray<string>);
 
-			Assert.Equal(5, member.Attributes.Count);
+			Assert.Equal(6, member.Attributes.Count);
 			Assert.Equal(typeof(ValueType), member.BaseType);
 			Assert.Equal(1, member.Constructors.Count);
 			Assert.Equal(TypeOf<string>.Member, member.EnclosedType);
@@ -313,12 +313,11 @@ namespace TypeCache.Tests
 			Assert.Equal(1, member.Fields.Count);
 			Assert.Empty(member.GenericTypes);
 			Assert.Equal(type.TypeHandle, member.Handle);
-			Assert.Equal(6, member.InterfaceTypes.Count);
+			Assert.Equal(28, member.InterfaceTypes.Count);
 			Assert.False(member.Internal);
 			Assert.Equal(Kind.Struct, member.Kind);
-			Assert.Equal(24, member.Methods.Count);
+			Assert.Equal(64, member.Methods.Count);
 			Assert.Equal(type.Name, member.Name);
-			Assert.Empty(member.Properties);
 			Assert.True(member.Public);
 			Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 			Assert.Equal(SystemType.Int32, member.SystemType);
