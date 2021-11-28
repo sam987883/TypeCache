@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IComparerExtensions
+	public class ComparerExtensions
 	{
 		[Fact]
 		public void EqualTo()

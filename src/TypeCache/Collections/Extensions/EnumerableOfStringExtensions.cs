@@ -11,7 +11,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IEnumerableStringExtensions
+	public static class EnumerableOfStringExtensions
 	{
 
 		/// <summary>

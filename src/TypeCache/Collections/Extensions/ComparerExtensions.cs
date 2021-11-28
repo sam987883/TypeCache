@@ -7,7 +7,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IComparerExtensions
+	public static class ComparerExtensions
 	{
 		/// <summary>
 		/// <c><see cref="IComparer.Compare(object?, object?)"/> == 0</c>

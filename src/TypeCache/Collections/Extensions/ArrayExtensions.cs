@@ -133,6 +133,20 @@ namespace TypeCache.Collections.Extensions
 				action(@this![i]);
 		}
 
+		public static void Do<T>(this T[]? @this, Func<T, Task> action)
+		{
+			action.AssertNotNull(nameof(action));
+			if (@this?.Length > 0)
+				Task.WaitAll((0..@this.Length).Values().To(i => action(@this[i])).ToArray());
+		}
+
+		public static void Do<T>(this T[]? @this, Func<T, ValueTask> action)
+		{
+			action.AssertNotNull(nameof(action));
+			if (@this?.Length > 0)
+				Task.WaitAll((0..@this.Length).Values().To(i => action(@this[i]).AsTask()).ToArray());
+		}
+
 		/// <exception cref="ArgumentNullException"/>
 		public static void Do<T>(this T[]? @this, Action<T> action, Action between)
 		{

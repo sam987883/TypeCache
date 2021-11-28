@@ -17,10 +17,10 @@ namespace TypeCache.Mappers
 		string[] Map(FROM from, TO to);
 
 		/// <summary>
-		/// <see cref="IFieldMapper{FROM, TO}"/>.Map((<typeparamref name="FROM"/>)<paramref name="from"/>, (<typeparamref name="TO"/>)<paramref name="to"/>)
+		/// <c><see langword="this"/>.Map((<typeparamref name="FROM"/>)<paramref name="from"/>, (<typeparamref name="TO"/>)<paramref name="to"/>)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		string[] IFieldMapper.Map(object from, object to)
-			=> Map((FROM)from, (TO)to);
+			=> this.Map((FROM)from, (TO)to);
 	}
 }

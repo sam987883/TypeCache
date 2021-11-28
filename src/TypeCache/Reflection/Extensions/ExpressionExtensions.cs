@@ -739,41 +739,22 @@ namespace TypeCache.Reflection.Extensions
 			=> Expression.Property(null, @this, name);
 
 		/// <summary>
-		/// <c>
-		/// <list type="table">
-		/// <item><see cref="Expression.Unbox(Expression, Type)"/>, <see cref="Expression.Convert(Expression, Type)"/></item>
-		/// <item><see cref="Convert.ToBoolean(object?)"/></item>
-		/// <item><see cref="Convert.ToSByte(object?)"/>, <see cref="Convert.ToByte(object?)"/></item>
-		/// <item><see cref="Convert.ToInt16(object?)"/>, <see cref="Convert.ToUInt16(object?)"/></item>
-		/// <item><see cref="Convert.ToInt32(object?)"/>, <see cref="Convert.ToUInt32(object?)"/></item>
-		/// <item><see cref="Convert.ToInt64(object?)"/>, <see cref="Convert.ToUInt64(object?)"/></item>
-		/// <item><see cref="Convert.ToSingle(object?)"/>, <see cref="Convert.ToDouble(object?)"/>, <see cref="Convert.ToDecimal(object?)"/></item>
-		/// <item><see cref="Convert.ToDateTime(object?)"/></item>
-		/// <item><see cref="Convert.ToChar(object?)"/></item>
-		/// <item><see cref="Convert.ToString(object?)"/></item>
-		/// </list>
-		/// </c>
+		/// <code>
+		/// <paramref name="type"/> <see langword="switch"/><br/>
+		/// {<br/>
+		///		_ <see langword="when"/> <paramref name="type"/> == @<paramref name="this"/>.Type =&gt; @<paramref name="this"/>,<br/>
+		///		_ <see langword="when"/> <paramref name="type"/>.IsEnum =&gt; @<paramref name="this"/>.Cast(<paramref name="type"/>),<br/>
+		///		_ <see langword="when"/> <paramref name="type"/>.Implements&lt;<see cref="IConvertible"/>&gt;() =&gt; <see langword="typeof"/>(<see cref="Convert"/>).CallStatic(<see langword="nameof"/>(<see cref="Convert"/>.ChangeType), <see cref="Type.EmptyTypes"/>, @<paramref name="this"/>, <paramref name="type"/>.Constant&lt;<see cref="Type"/>&gt;()).Cast(<paramref name="type"/>),<br/>
+		///		_ =&gt; @<paramref name="this"/>.Cast(<paramref name="type"/>)<br/>
+		/// }<br/>
+		/// </code>
 		/// </summary>
 		public static Expression SystemConvert(this Expression @this, Type type)
-			=> type.GetSystemType() switch
+			=> type switch
 			{
 				_ when type == @this.Type => @this,
 				_ when type.IsEnum => @this.Cast(type),
-				SystemType.Boolean => typeof(Convert).CallStatic(nameof(Convert.ToBoolean), Type.EmptyTypes, @this),
-				SystemType.Char => typeof(Convert).CallStatic(nameof(Convert.ToChar), Type.EmptyTypes, @this),
-				SystemType.SByte => typeof(Convert).CallStatic(nameof(Convert.ToSByte), Type.EmptyTypes, @this),
-				SystemType.Byte => typeof(Convert).CallStatic(nameof(Convert.ToByte), Type.EmptyTypes, @this),
-				SystemType.Int16 => typeof(Convert).CallStatic(nameof(Convert.ToInt16), Type.EmptyTypes, @this),
-				SystemType.UInt16 => typeof(Convert).CallStatic(nameof(Convert.ToUInt16), Type.EmptyTypes, @this),
-				SystemType.Int32 => typeof(Convert).CallStatic(nameof(Convert.ToInt32), Type.EmptyTypes, @this),
-				SystemType.UInt32 => typeof(Convert).CallStatic(nameof(Convert.ToUInt32), Type.EmptyTypes, @this),
-				SystemType.Int64 or SystemType.NInt => typeof(Convert).CallStatic(nameof(Convert.ToInt64), Type.EmptyTypes, @this),
-				SystemType.UInt64 or SystemType.NUInt => typeof(Convert).CallStatic(nameof(Convert.ToUInt64), Type.EmptyTypes, @this),
-				SystemType.Single => typeof(Convert).CallStatic(nameof(Convert.ToSingle), Type.EmptyTypes, @this),
-				SystemType.Double => typeof(Convert).CallStatic(nameof(Convert.ToDouble), Type.EmptyTypes, @this),
-				SystemType.Decimal => typeof(Convert).CallStatic(nameof(Convert.ToDecimal), Type.EmptyTypes, @this),
-				SystemType.DateTime => typeof(Convert).CallStatic(nameof(Convert.ToDateTime), Type.EmptyTypes, @this),
-				SystemType.String => typeof(Convert).CallStatic(nameof(Convert.ToString), Type.EmptyTypes, @this),
+				_ when type.Implements<IConvertible>() => typeof(Convert).CallStatic(nameof(Convert.ChangeType), Type.EmptyTypes, @this, type.Constant<Type>()).Cast(type),
 				_ => @this.Cast(type)
 			};
 

@@ -8,7 +8,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IEnumeratorExtensions
+	public static class EnumeratorExtensions
 	{
 		public static int Count(this IEnumerator @this)
 		{

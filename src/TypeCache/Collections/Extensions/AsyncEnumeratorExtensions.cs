@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IAsyncEnumeratorExtensions
+	public static class AsyncEnumeratorExtensions
 	{
 		public async static ValueTask<int> CountAsync<T>(this IAsyncEnumerator<T> @this)
 		{

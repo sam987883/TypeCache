@@ -12,7 +12,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IAsyncEnumerableExtensions
+	public static class AsyncEnumerableExtensions
 	{
 		/// <summary>
 		/// <c><see cref="Task.Yield"/></c>

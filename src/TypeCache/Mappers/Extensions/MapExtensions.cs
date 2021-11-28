@@ -10,7 +10,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Mappers.Extensions
 {
-	public static class ValueTupleExtensions
+	public static class MapExtensions
 	{
 		/// <exception cref="ArgumentNullException"/>
 		public static K[] Map<K, V>(this (IDictionary<K, V> From, IDictionary<K, V> To) @this)

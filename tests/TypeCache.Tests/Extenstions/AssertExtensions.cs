@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using TypeCache.Collections;
 using TypeCache.Extensions;
 using Xunit;
 
@@ -25,17 +26,6 @@ namespace TypeCache.Tests.Extensions
 		}
 
 		[Fact]
-		public void AssertNotNull()
-		{
-			const string NAME = nameof(AssertNotNull);
-
-			((int?)123456).AssertNotNull(NAME);
-			"AAA".AssertNotNull(NAME);
-			Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotNull(NAME));
-			Xunit.Assert.Throws<ArgumentNullException>(() => (null as int?).AssertNotNull(NAME));
-		}
-
-		[Fact]
 		public void AssertNotBlank()
 		{
 			const string NAME = nameof(AssertNotBlank);
@@ -44,6 +34,29 @@ namespace TypeCache.Tests.Extensions
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertNotBlank(NAME));
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotBlank(NAME));
 			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "      ".AssertNotBlank(NAME));
+		}
+
+		[Fact]
+		public void AssertNotEmpty()
+		{
+			const string NAME = nameof(AssertNotEmpty);
+
+			"AAA".AssertNotEmpty(NAME);
+			Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotEmpty(NAME));
+			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotEmpty(NAME));
+			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.AssertNotEmpty(NAME));
+			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.AssertNotEmpty(NAME));
+		}
+
+		[Fact]
+		public void AssertNotNull()
+		{
+			const string NAME = nameof(AssertNotNull);
+
+			((int?)123456).AssertNotNull(NAME);
+			"AAA".AssertNotNull(NAME);
+			Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotNull(NAME));
+			Xunit.Assert.Throws<ArgumentNullException>(() => (null as int?).AssertNotNull(NAME));
 		}
 
 		[Fact]

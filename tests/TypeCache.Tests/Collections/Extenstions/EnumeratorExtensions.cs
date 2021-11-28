@@ -6,7 +6,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IEnumeratorExtensions
+	public class EnumeratorExtensions
 	{
 		private IEnumerable<int> GetInts()
 		{

@@ -9,7 +9,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IDictionaryExtensions
+	public static class DictionaryExtensions
 	{
 		/// <summary>
 		/// <c><see cref="IDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>

@@ -6,7 +6,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IReadOnlyDictionaryExtensions
+	public static class ReadOnlyDictionaryExtensions
 	{
 		/// <summary>
 		/// <c><see cref="IReadOnlyDictionary{K, V}.TryGetValue(K, out V)"/> ? value : null</c>

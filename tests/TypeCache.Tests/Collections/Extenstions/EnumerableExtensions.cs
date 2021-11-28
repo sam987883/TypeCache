@@ -12,7 +12,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IEnumerableExtensions
+	public class EnumerableExtensions
 	{
 		private IEnumerable<int> GetItems()
 		{
@@ -502,17 +502,6 @@ namespace TypeCache.Tests.Collections.Extensions
 			await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().ToAsync<int, string>(null).ToListAsync());
 
 			await Task.CompletedTask;
-		}
-
-		[Fact]
-		public void ToCSV()
-		{
-			var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-
-			Assert.Equal("1,2,3,4,5,6", intArray.ToCSV());
-			Assert.Equal("1,2,3,4,5,6", intArray.ToCSV(i => i.ToString()));
-			Assert.Throws<ArgumentNullException>(() => intArray.ToCSV(null));
-			Assert.Equal(@"""""""abc"""",""""def"""""",ghi", new[] { @"""abc"",""def""", "ghi" }.ToCSV());
 		}
 
 		[Fact]

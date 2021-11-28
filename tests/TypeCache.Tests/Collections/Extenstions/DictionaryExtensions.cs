@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IDictionaryExtensions
+	public class DictionaryExtensions
 	{
 		[Fact]
 		public void Get()

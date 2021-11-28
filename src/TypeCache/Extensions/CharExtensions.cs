@@ -137,13 +137,6 @@ namespace TypeCache.Extensions
 			=> string.Join(@this, values);
 
 		/// <summary>
-		/// <c><see cref="BitConverter.GetBytes(char)"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static byte[] ToBytes(this char @this)
-			=> BitConverter.GetBytes(@this);
-
-		/// <summary>
 		/// <c><see cref="char.ToLowerInvariant(char)"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]

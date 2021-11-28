@@ -63,6 +63,34 @@ namespace TypeCache.Extensions
 			=> Parallel.Invoke(@this.Item1, @this.Item2, @this.Item3, @this.Item4, @this.Item5, @this.Item6, @this.Item7, @this.Item8);
 
 		/// <summary>
+		/// <c>@<paramref name="this"/>.Item1 &gt; @<paramref name="this"/>.Item2 ? @<paramref name="this"/>.Item1 : @<paramref name="this"/>.Item2</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static int Maximum(this (int, int) @this)
+			=> @this.Item1 > @this.Item2 ? @this.Item1 : @this.Item2;
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Item1.Value &gt; @<paramref name="this"/>.Item2.Value ? @<paramref name="this"/>.Item1 : @<paramref name="this"/>.Item2</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static Index Maximum(this (Index, Index) @this)
+			=> @this.Item1.Value > @this.Item2.Value ? @this.Item1 : @this.Item2;
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Item1 &lt; @<paramref name="this"/>.Item2 ? @<paramref name="this"/>.Item1 : @<paramref name="this"/>.Item2</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static int Minimum(this (int, int) @this)
+			=> @this.Item1 < @this.Item2 ? @this.Item1 : @this.Item2;
+
+		/// <summary>
+		/// <c>@<paramref name="this"/>.Item1.Value &lt; @<paramref name="this"/>.Item2.Value ? @<paramref name="this"/>.Item1 : @<paramref name="this"/>.Item2</c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static Index Minimum(this (Index, Index) @this)
+			=> @this.Item1.Value < @this.Item2.Value ? @this.Item1 : @this.Item2;
+
+		/// <summary>
 		/// <c>(@<paramref name="this"/>.Item2, @<paramref name="this"/>.Item1)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]

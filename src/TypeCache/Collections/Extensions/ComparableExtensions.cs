@@ -6,7 +6,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IComparableExtensions
+	public static class ComparableExtensions
 	{
 		/// <summary>
 		/// <c>@<paramref name="this"/>.CompareTo(<paramref name="value1"/>) &gt;= 0 &amp;&amp; @<paramref name="this"/>.CompareTo(<paramref name="value2"/>) &lt;= 0</c>

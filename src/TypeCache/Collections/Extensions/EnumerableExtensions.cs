@@ -13,7 +13,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections.Extensions
 {
-	public static class IEnumerableExtensions
+	public static class EnumerableExtensions
 	{
 		/// <exception cref="ArgumentNullException"/>
 		public static T Aggregate<T>(this IEnumerable<T>? @this, T initialValue, Func<T, T, T> aggregator)
@@ -49,18 +49,18 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c><see cref="Task.WhenAll{TResult}(IEnumerable{Task{TResult}})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
-			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
-
-		/// <summary>
 		/// <c><see cref="Task.WhenAll(IEnumerable{Task})"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static async ValueTask AllAsync<T>(this IEnumerable<Task> @this)
 			=> await Task.WhenAll(@this);
+
+		/// <summary>
+		/// <c><see cref="Task.WhenAll{TResult}(IEnumerable{Task{TResult}})"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
+			=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.And(<paramref name="sets"/>.Gather())</c>
@@ -86,7 +86,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.And(<paramref name="items"/> as <see cref="IEnumerable{T}"/>)</c>
+		/// <c>@<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T?[]? items)
@@ -100,12 +100,15 @@ namespace TypeCache.Collections.Extensions
 			=> @this.If<T>().Any();
 
 		/// <summary>
-		/// <list type="table">
-		/// <item><c><term><see langword="null"/></term> <see langword="false"/></c></item>
-		/// <item><c><term><see cref="ICollection{T}"/> collection</term> collection.Count &gt; 0</c></item>
-		/// <item><c><term><see cref="IReadOnlyCollection{T}"/> collection</term> collection.Count &gt; 0</c></item>
-		/// <item><c>@<paramref name="this"/>.GetEnumerator().MoveNext()</c></item>
-		/// </list>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; <see langword="false"/>,<br/>
+		/// <see cref="ICollection{T}"/> collection =&gt; collection.Count &gt; 0,<br/>
+		/// <see cref="IReadOnlyCollection{T}"/> collection =&gt; collection.Count &gt; 0,<br/>
+		/// _ =&gt; @<paramref name="this"/>.GetEnumerator().MoveNext()<br/>
+		/// }<br/>
+		/// </code>
 		/// </summary>
 		public static bool Any<T>([NotNullWhen(true)] this IEnumerable<T>? @this)
 			=> @this switch
@@ -124,6 +127,13 @@ namespace TypeCache.Collections.Extensions
 			=> @this.If(filter).Any();
 
 		/// <summary>
+		/// <c><see cref="Task.WhenAny(IEnumerable{Task})"/></c>
+		/// </summary>
+		[MethodImpl(METHOD_IMPL_OPTIONS)]
+		public static async ValueTask<bool> AnyAsync<T>(this IEnumerable<Task> @this)
+			=> (await Task.WhenAny(@this)).IsCompletedSuccessfully;
+
+		/// <summary>
 		/// <c><see cref="Task.WhenAny{TResult}(IEnumerable{Task{TResult}})"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -131,18 +141,22 @@ namespace TypeCache.Collections.Extensions
 			=> await Task.WhenAny(@this);
 
 		/// <summary>
-		/// <c><see cref="Task.WhenAny(IEnumerable{Task})"/></c>
+		/// <c>@<paramref name="this"/>.Any(<paramref name="item"/>.Equals)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static async ValueTask AnyAsync<T>(this IEnumerable<Task> @this)
-			=> await Task.WhenAny(@this);
+		public static bool AnyOf<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item)
+			where T : IEquatable<T>
+			=> @this.Any(item.Equals);
 
 		/// <summary>
-		/// <list type="table">
-		/// <item><c><term><see langword="null"/></term> <see cref="Enumerable{T}"/>.Empty</c></item>
-		/// <item><c><term><see cref="IEnumerable{T}"/> enumerable</term> enumerable</c></item>
-		/// <item><c><see cref="Enumerable{T}"/>.As(@<paramref name="this"/>)</c></item>
-		/// </list>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; <see cref="Enumerable{T}"/>.Empty,<br/>
+		/// <see cref="IEnumerable{T}"/> enumerable =&gt; enumerable,<br/>
+		/// _ =&gt; <see cref="Enumerable{T}"/>.As(@<paramref name="this"/>)<br/>
+		/// }<br/>
+		/// </code>
 		/// </summary>
 		public static IEnumerable<T?> As<T>(this IEnumerable? @this)
 			=> @this switch
@@ -153,12 +167,15 @@ namespace TypeCache.Collections.Extensions
 			};
 
 		/// <summary>
-		/// <list type="table">
-		/// <item><c><term><see langword="null"/></term> 0</c></item>
-		/// <item><c><term><see cref="ICollection{T}"/> collection</term> collection.Count</c></item>
-		/// <item><c><term><see cref="IReadOnlyCollection{T}"/> collection</term> collection.Count</c></item>
-		/// <item><c>@<paramref name="this"/>.GetEnumerator().Count()</c></item>
-		/// </list>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; 0,<br/>
+		/// <see cref="ICollection{T}"/> collection =&gt; collection.Count,<br/>
+		/// <see cref="IReadOnlyCollection{T}"/> collection =&gt; collection.Count,<br/>
+		/// @<paramref name="this"/>.GetEnumerator().Count()<br/>
+		/// }<br/>
+		/// </code>
 		/// </summary>
 		public static int Count<T>(this IEnumerable<T>? @this)
 			=> @this switch
@@ -405,6 +422,54 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
+		/// <c><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(<paramref name="action"/>).ToArray(), <paramref name="cancellationToken"/>)</c>
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static void Do<T>(this IEnumerable<T>? @this, Func<T, Task> action, CancellationToken cancellationToken = default)
+		{
+			action.AssertNotNull(nameof(action));
+
+			if (@this.Any())
+				Task.WaitAll(@this.To(action).ToArray(), cancellationToken);
+		}
+
+		/// <summary>
+		/// <c><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(item =&gt; <paramref name="action"/>(item, <paramref name="cancellationToken"/>)).ToArray(), <paramref name="cancellationToken"/>)</c>
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static void Do<T>(this IEnumerable<T>? @this, Func<T, CancellationToken, Task> action, CancellationToken cancellationToken = default)
+		{
+			action.AssertNotNull(nameof(action));
+
+			if (@this.Any())
+				Task.WaitAll(@this.To(item => action(item, cancellationToken)).ToArray(), cancellationToken);
+		}
+
+		/// <summary>
+		/// <c><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(item =&gt; <paramref name="action"/>(item).AsTask()).ToArray(), <paramref name="cancellationToken"/>)</c>
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static void Do<T>(this IEnumerable<T>? @this, Func<T, ValueTask> action, CancellationToken cancellationToken = default)
+		{
+			action.AssertNotNull(nameof(action));
+
+			if (@this.Any())
+				Task.WaitAll(@this.To(item => action(item).AsTask()).ToArray(), cancellationToken);
+		}
+
+		/// <summary>
+		/// <c><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(item =&gt; <paramref name="action"/>(item).AsTask()).ToArray(), <paramref name="cancellationToken"/>)</c>
+		/// </summary>
+		/// <exception cref="ArgumentNullException"/>
+		public static void Do<T>(this IEnumerable<T>? @this, Func<T, CancellationToken, ValueTask> action, CancellationToken cancellationToken = default)
+		{
+			action.AssertNotNull(nameof(action));
+
+			if (@this.Any())
+				Task.WaitAll(@this.To(item => action(item, cancellationToken).AsTask()).ToArray(), cancellationToken);
+		}
+
+		/// <summary>
 		/// <c>@<paramref name="this"/>.To(item => <paramref name="action"/>(item, <paramref name="cancellationToken"/>)).AllAsync&lt;<typeparamref name="T"/>&gt;()</c>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
@@ -576,6 +641,17 @@ namespace TypeCache.Collections.Extensions
 			}
 		}
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see cref="IList{T}"/> list <see langword="when"/> list.Has(<paramref name="index"/>) =&gt; list[<paramref name="index"/>],<br/>
+		/// <see cref="IReadOnlyList{T}"/> list <see langword="when"/> list.Has(<paramref name="index"/>)  =&gt; list[<paramref name="index"/>],<br/>
+		/// <see langword="null"/> <see langword="or"/> <see cref="IList{T}"/> <see langword="or"/> <see cref="IReadOnlyList{T}"/> =&gt; <see langword="null"/>,<br/>
+		/// _ =&gt; @<paramref name="this"/>.GetEnumerator().Get(<paramref name="index"/>.IsFromEnd ? <paramref name="index"/>.GetOffset(@<paramref name="this"/>.Count()) : <paramref name="index"/>.Value)<br/>
+		/// }<br/>
+		/// </code>
+		/// </summary>
 		public static T? Get<T>(this IEnumerable<T>? @this, Index index)
 			where T : class
 			=> @this switch
@@ -597,6 +673,17 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.ToArray().Get(range)
 			};
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see cref="IList{T}"/> list <see langword="when"/> list.Has(<paramref name="index"/>) =&gt; list[<paramref name="index"/>],<br/>
+		/// <see cref="IReadOnlyList{T}"/> list <see langword="when"/> list.Has(<paramref name="index"/>)  =&gt; list[<paramref name="index"/>],<br/>
+		/// <see langword="null"/> <see langword="or"/> <see cref="IList{T}"/> <see langword="or"/> <see cref="IReadOnlyList{T}"/> =&gt; <see langword="null"/>,<br/>
+		/// _ =&gt; @<paramref name="this"/>.GetEnumerator().GetValue(<paramref name="index"/>.IsFromEnd ? <paramref name="index"/>.GetOffset(@<paramref name="this"/>.Count()) : <paramref name="index"/>.Value)<br/>
+		/// }<br/>
+		/// </code>
+		/// </summary>
 		public static T? GetValue<T>(this IEnumerable<T>? @this, Index index)
 			where T : struct
 			=> @this switch
@@ -619,7 +706,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value))</c>
+		/// <c><paramref name="values"/>.All(value =&gt; @<paramref name="this"/>.Has(value))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
@@ -627,7 +714,7 @@ namespace TypeCache.Collections.Extensions
 			=> values.All(@this.Has);
 
 		/// <summary>
-		/// <c><paramref name="values"/>.All(value => @<paramref name="this"/>.Has(value, <paramref name="comparer"/>))</c>
+		/// <c><paramref name="values"/>.All(value =&gt; @<paramref name="this"/>.Has(value, <paramref name="comparer"/>))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
@@ -739,14 +826,14 @@ namespace TypeCache.Collections.Extensions
 			=> @this.ToHashSet(comparer).SetEquals(items ?? Enumerable<T>.Empty);
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>) : <see cref="string.Empty"/></c>
+		/// <c>@<paramref name="this"/> <see langword="is not null"/> ? <see cref="string"/>.Join(<paramref name="delimeter"/>, @<paramref name="this"/>) : <see cref="string.Empty"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string Join<T>(this IEnumerable<T>? @this, char delimeter)
 			=> @this is not null ? string.Join(delimeter, @this) : string.Empty;
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? <see cref="string"/>.Join(<paramref name="delimeter"/>)) : <see cref="string.Empty"/></c>
+		/// <c>@<paramref name="this"/> <see langword="is not null"/> ? <see cref="string"/>.Join(<paramref name="delimeter"/>)) : <see cref="string.Empty"/></c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static string Join<T>(this IEnumerable<T>? @this, string delimeter)
@@ -797,7 +884,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.Aggregate(default, <paramref name="comparer"/>.Maximum)</c>
+		/// <c>@<paramref name="this"/>.Aggregate(<see langword="default"/>, <paramref name="comparer"/>.Maximum)</c>
 		/// </summary>
 		public static T Maximum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
@@ -809,7 +896,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.Aggregate(default, <paramref name="comparer"/>.Minimum)</c>
+		/// <c>@<paramref name="this"/>.Aggregate(<see langword="default"/>, <paramref name="comparer"/>.Minimum)</c>
 		/// </summary>
 		public static T Minimum<T>(this IEnumerable<T>? @this, IComparer<T>? comparer = null)
 			where T : unmanaged
@@ -831,7 +918,7 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.Get(new Range(count, ^1))</c>
+		/// <c>@<paramref name="this"/>.Get(<see langword="new"/> Range(<paramref name="count"/>, ^1))</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
@@ -853,11 +940,11 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.Get(new Range(0, <paramref name="count"/>))</c>
+		/// <c>@<paramref name="this"/>.Get(0..<paramref name="count"/>)</c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
-			=> @this.Get(new Range(0, count));
+			=> @this.Get(0..count);
 
 		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
@@ -913,24 +1000,6 @@ namespace TypeCache.Collections.Extensions
 			foreach (var item in @this)
 				yield return await map(item);
 		}
-
-		public static string ToCSV<T>(this IEnumerable<T>? @this)
-			=> @this.Any() ? string.Join(',', @this.To(value => value switch
-			{
-				null => string.Empty,
-				bool or sbyte or short or int or nint or long or byte or ushort or uint or nuint or ulong or float or double or Half or decimal _ => value.ToString(),
-				',' => "\",\"",
-				'\"' => "\"\"\"\"",
-				char character => character.ToString(),
-				DateTime dateTime => dateTime.ToString("o"),
-				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("o"),
-				TimeSpan time => time.ToString("c"),
-				Guid guid => guid.ToString("D"),
-				Enum token => token.ToString("D"),
-				string text when text.Contains(',') => $"\"{text.Replace("\"", "\"\"")}\"",
-				string text => text.Replace("\"", "\"\""),
-				_ => $"\"{value.ToString()?.Replace("\"", "\"\"")}\""
-			})) : string.Empty;
 
 		/// <summary>
 		/// <c>@<paramref name="this"/>.To(<paramref name="map"/>).ToCsv()</c>
@@ -994,17 +1063,24 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/>.Any() ? new <see cref="HashSet{T}"/>(@<paramref name="this"/>, <paramref name="comparer"/>) : new <see cref="HashSet{T}"/>(0, <paramref name="comparer"/>)</c>
+		/// <c>
+		/// @<paramref name="this"/>.Any()
+		/// ? <see langword="new"/> <see cref="HashSet{T}"/>(@<paramref name="this"/>, <paramref name="comparer"/>)
+		/// : <see langword="new"/> <see cref="HashSet{T}"/>(0, <paramref name="comparer"/>)
+		/// </c>
 		/// </summary>
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
 			=> @this.Any() ? new HashSet<T>(@this, comparer) : new HashSet<T>(0, comparer);
 
 		/// <summary>
 		/// <code>
-		/// <list type="table">
-		/// <item><see cref="ImmutableQueue.CreateRange{T}(IEnumerable{T})"/></item>
-		/// <item><see cref="ImmutableQueue.Create{T}(T[])"/></item>
-		/// </list>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// _ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableQueue{T}.Empty"/>,<br/>
+		/// T[] array =&gt; <see cref="ImmutableQueue.Create{T}(T[])"/>,<br/>
+		/// <see cref="List{T}"/> list =&gt; <see cref="ImmutableQueue.Create{T}(T[])"/>,<br/>
+		/// _ =&gt; <see cref="ImmutableQueue.CreateRange{T}(IEnumerable{T})"/>,<br/>
+		/// }<br/>
 		/// </code>
 		/// </summary>
 		public static ImmutableQueue<T> ToImmutableQueue<T>(this IEnumerable<T>? @this)
@@ -1019,11 +1095,13 @@ namespace TypeCache.Collections.Extensions
 
 		/// <summary>
 		/// <code>
-		/// <list type="table">
-		/// <item><see cref="ImmutableStack.CreateRange{T}(IEnumerable{T})"/></item>
-		/// <item><see cref="ImmutableStack.Create{T}(T[])"/></item>
-		/// <item><see cref="ImmutableStack{T}.Empty"/></item>
-		/// </list>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// _ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableStack{T}.Empty"/>,<br/>
+		/// T[] array =&gt; <see cref="ImmutableStack.Create{T}(T[])"/>,<br/>
+		/// <see cref="List{T}"/> list =&gt; <see cref="ImmutableStack.Create{T}(T[])"/>,<br/>
+		/// _ =&gt; <see cref="ImmutableStack.CreateRange{T}(IEnumerable{T})"/>,<br/>
+		/// }<br/>
 		/// </code>
 		/// </summary>
 		public static ImmutableStack<T> ToImmutableStack<T>(this IEnumerable<T>? @this)
@@ -1036,13 +1114,25 @@ namespace TypeCache.Collections.Extensions
 				_ => ImmutableStack.CreateRange<T>(@this)
 			};
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; Enumerable&lt;int&gt;.Empty,<br/>
+		/// <see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.ToIndex(<paramref name="filter"/>),<br/>
+		/// T[] array =&gt; array.ToIndex(<paramref name="filter"/>),<br/>
+		/// <see cref="List{T}"/> list =&gt; list.ToIndex(<paramref name="filter"/>),<br/>
+		/// _ =&gt; <see cref="Enumerable{T}"/>.ToIndex(@<paramref name="this"/>, <paramref name="filter"/>),<br/>
+		/// }<br/>
+		/// </code>
+		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, Predicate<T> filter)
 			=> @this switch
 			{
 				null => Enumerable<int>.Empty,
-				T[] array => array.ToIndex(filter),
 				ImmutableArray<T> immutableArray => immutableArray.ToIndex(filter),
+				T[] array => array.ToIndex(filter),
 				List<T> list => list.ToIndex(filter),
 				_ => Enumerable<T>.ToIndex(@this, filter)
 			};
@@ -1061,7 +1151,11 @@ namespace TypeCache.Collections.Extensions
 		}
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? new <see cref="List{T}"/>(@<paramref name="this"/>) : new <see cref="List{T}"/>(0)</c>
+		/// <c>
+		/// @<paramref name="this"/> <see langword="is not null"/>
+		/// ? <see langword="new"/> <see cref="List{T}"/>(@<paramref name="this"/>)
+		/// : <see langword="new"/> <see cref="List{T}"/>(0)
+		/// </c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static List<T> ToList<T>(this IEnumerable<T>? @this)
@@ -1075,12 +1169,28 @@ namespace TypeCache.Collections.Extensions
 			=> @this.To(map).Gather();
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? new <see cref="Queue{T}"/>(@<paramref name="this"/>) : new <see cref="Queue{T}"/>(0)</c>
+		/// <c>
+		/// @<paramref name="this"/> <see langword="is not null"/>
+		/// ? <see langword="new"/> <see cref="Queue{T}"/>(@<paramref name="this"/>)
+		/// : <see langword="new"/> <see cref="Queue{T}"/>(0)
+		/// </c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Queue<T> ToQueue<T>(this IEnumerable<T>? @this)
 			=> @this.Any() ? new Queue<T>(@this) : new Queue<T>(0);
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; <see cref="ReadOnlySpan{T}"/>.Empty,<br/>
+		/// <see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.AsSpan(),<br/>
+		/// T[] array =&gt; array.AsSpan(),<br/>
+		/// <see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+		/// _ =&gt; @<paramref name="this"/>.ToArray().AsSpan(),<br/>
+		/// }<br/>
+		/// </code>
+		/// </summary>
 		public static ReadOnlySpan<T> ToReadOnlySpan<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
@@ -1091,6 +1201,17 @@ namespace TypeCache.Collections.Extensions
 				_ => @this.ToArray().AsSpan(),
 			};
 
+		/// <summary>
+		/// <code>
+		/// @<paramref name="this"/> <see langword="switch"/><br/>
+		/// {<br/>
+		/// <see langword="null"/> =&gt; <see cref="Span{T}"/>.Empty,<br/>
+		/// T[] array =&gt; array.AsSpan(),<br/>
+		/// <see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+		/// _ =&gt; @<paramref name="this"/>.ToArray().AsSpan(),<br/>
+		/// }<br/>
+		/// </code>
+		/// </summary>
 		public static Span<T> ToSpan<T>(this IEnumerable<T>? @this)
 			=> @this switch
 			{
@@ -1101,7 +1222,11 @@ namespace TypeCache.Collections.Extensions
 			};
 
 		/// <summary>
-		/// <c>@<paramref name="this"/> is not null ? new <see cref="Stack{T}"/>(@<paramref name="this"/>) : new <see cref="Stack{T}"/>(0)</c>
+		/// <c>
+		/// @<paramref name="this"/> <see langword="is not null"/>
+		/// ? <see langword="new"/> <see cref="Stack{T}"/>(@<paramref name="this"/>)
+		/// : <see langword="new"/> <see cref="Stack{T}"/>(0)
+		/// </c>
 		/// </summary>
 		[MethodImpl(METHOD_IMPL_OPTIONS)]
 		public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)

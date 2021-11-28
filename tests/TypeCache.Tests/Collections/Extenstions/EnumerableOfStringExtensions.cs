@@ -9,7 +9,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IEnumerableStringExtensions
+	public class EnumerableOfStringExtensions
 	{
 		private IEnumerable<string> GetStrings()
 		{

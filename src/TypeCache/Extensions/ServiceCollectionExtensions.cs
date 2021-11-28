@@ -14,7 +14,7 @@ using TypeCache.Security;
 
 namespace TypeCache.Extensions
 {
-	public static class IServiceCollectionExtensions
+	public static class ServiceCollectionExtensions
 	{
 		/// <summary>
 		/// Registers Singleton:
@@ -28,11 +28,29 @@ namespace TypeCache.Extensions
 		/// <summary>
 		/// Registers Singleton:
 		/// <list type="bullet">
+		/// <item><term><c><see cref="IFieldToCsvMapper{T}"/></c></term> Default field to CSV mapper implementation matching by field names only.</item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterDefaultFieldToCsvMapper(this IServiceCollection @this)
+			=> @this.AddSingleton(typeof(IFieldToCsvMapper<>), typeof(DefaultFieldToCsvMapper<>));
+
+		/// <summary>
+		/// Registers Singleton:
+		/// <list type="bullet">
 		/// <item><term><c><see cref="IPropertyMapper{FROM, TO}"/></c></term> Default property mapper implementation matching by property names only.</item>
 		/// </list>
 		/// </summary>
 		public static IServiceCollection RegisterDefaultPropertyMapper(this IServiceCollection @this)
 			=> @this.AddSingleton(typeof(IPropertyMapper<,>), typeof(DefaultPropertyMapper<,>));
+
+		/// <summary>
+		/// Registers Singleton:
+		/// <list type="bullet">
+		/// <item><term><c><see cref="IPropertyToCsvMapper{T}"/></c></term> Default property to CSV mapper implementation matching by property names only.</item>
+		/// </list>
+		/// </summary>
+		public static IServiceCollection RegisterDefaultPropertyToCsvMapper(this IServiceCollection @this)
+			=> @this.AddSingleton(typeof(IPropertyToCsvMapper<>), typeof(DefaultPropertyToCsvMapper<>));
 
 		/// <summary>
 		/// Registers Singletons:

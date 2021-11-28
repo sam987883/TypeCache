@@ -4,6 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 

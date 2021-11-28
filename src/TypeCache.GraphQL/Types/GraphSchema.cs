@@ -352,7 +352,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update-Batch-{Table}</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -386,7 +386,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -418,7 +418,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -441,7 +441,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -465,7 +465,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -487,7 +487,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Page{Table}</term> Pages records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -509,7 +509,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Query: Select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>
@@ -532,7 +532,7 @@ namespace TypeCache.GraphQL.Types
 		/// <item><term>Mutation: Update{Table}Data</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
 		/// </list>
 		/// <i>Requires call to:</i>
-		/// <code><see cref="TypeCache.Extensions.IServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+		/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="ArgumentOutOfRangeException"/>

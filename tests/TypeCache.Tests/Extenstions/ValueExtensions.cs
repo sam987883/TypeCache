@@ -11,21 +11,10 @@ namespace TypeCache.Tests.Extensions
 	public class ValueExtensions
 	{
 		[Fact]
-		public void IsReverse()
-		{
-			Assert.True(new Range(Index.FromStart(20), Index.FromStart(3)).IsReverse());
-			Assert.False(new Range(Index.FromStart(6), Index.FromStart(6)).IsReverse());
-			Assert.False(new Range(Index.FromStart(3), Index.FromStart(20)).IsReverse());
-		}
-
-		[Fact]
 		public void Normalize()
 		{
 			Assert.Equal(Index.FromStart(15), Index.FromEnd(5).Normalize(20));
 			Assert.Equal(Index.FromStart(5), Index.FromStart(5).Normalize(20));
-
-			Assert.Equal(new Range(Index.FromStart(5), Index.FromStart(15)), new Range(Index.FromEnd(15), Index.FromEnd(5)).Normalize(20));
-			Assert.Equal(new Range(Index.FromStart(5), Index.FromStart(15)), new Range(Index.FromStart(5), Index.FromStart(15)).Normalize(20));
 		}
 
 		[Fact]
@@ -76,15 +65,6 @@ namespace TypeCache.Tests.Extensions
 		{
 			Assert.Equal(float.MinValue, float.MinValue.ToInt32().ToSingle());
 			Assert.Equal(float.MaxValue, float.MaxValue.ToInt32().ToSingle());
-		}
-
-		[Fact]
-		public void Values()
-		{
-			Assert.Equal(new[] { 5, 6, 7 }, new Range(Index.FromStart(5), Index.FromStart(8)).Values().ToArray());
-			Assert.Equal(new[] { 7, 6, 5 }, new Range(Index.FromStart(7), Index.FromStart(4)).Values().ToArray());
-			Assert.Equal(new[] { 0, 1, 2, 3 }, new Range(Index.FromStart(0), Index.FromStart(4)).Values().ToArray());
-			Assert.Equal(new[] { 4, 3, 2, 1 }, new Range(Index.FromStart(4), Index.FromStart(0)).Values().ToArray());
 		}
 	}
 }

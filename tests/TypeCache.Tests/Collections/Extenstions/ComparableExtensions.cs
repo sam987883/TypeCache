@@ -6,7 +6,7 @@ using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions
 {
-	public class IComparableExtensions
+	public class ComparableExtensions
 	{
 		[Fact]
 		public void Between()
