@@ -90,6 +90,32 @@ public static class MathExtensions
 		=> Math.Ceiling(@this);
 
 	/// <summary>
+	/// <code>
+	/// (@<paramref name="this"/> &gt;= 0).Assert(<see cref="true"/>);<br/>
+	/// <br/>
+	/// <see langword="var"/> result = 1UL;<br/>
+	/// <see langword="while"/> (@<paramref name="this"/> &gt; 0)<br/>
+	/// {<br/>
+	/// <see langword="    "/>result *= (ulong)@<paramref name="this"/>;<br/>
+	/// <see langword="    "/>--@<paramref name="this"/>;<br/>
+	/// }<br/>
+	/// <see langword="return"/> result;
+	/// </code>
+	/// </summary>
+	public static ulong Factorial(this int @this)
+	{
+		(@this >= 0).Assert(true);
+
+		var result = 1UL;
+		while (@this > 0)
+		{
+			result *= (ulong)@this;
+			--@this;
+		}
+		return result;
+	}
+
+	/// <summary>
 	/// <c>=&gt; <see cref="Math"/>.Floor(@<paramref name="this"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
