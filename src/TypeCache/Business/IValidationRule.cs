@@ -3,10 +3,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Business
+namespace TypeCache.Business;
+
+public interface IValidationRule<in I>
 {
-	public interface IValidationRule<in I>
-	{
-		ValueTask ValidateAsync(I request, CancellationToken cancellationToken = default);
-	}
+	ValueTask ValidateAsync(I request, CancellationToken cancellationToken = default);
 }

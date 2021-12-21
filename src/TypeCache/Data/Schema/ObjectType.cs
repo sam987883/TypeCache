@@ -2,15 +2,14 @@
 
 using System.Text.Json.Serialization;
 
-namespace TypeCache.Data.Schema
+namespace TypeCache.Data.Schema;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum ObjectType
 {
-	[JsonConverter(typeof(JsonStringEnumConverter))]
-	public enum ObjectType
-	{
-		Table,
-		View,
-		Function,
-		StoredProcedure,
-		TableType
-	}
+	Table,
+	View,
+	Function,
+	StoredProcedure,
+	TableType
 }

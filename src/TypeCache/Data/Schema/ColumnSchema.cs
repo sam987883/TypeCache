@@ -1,16 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Data;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
-namespace TypeCache.Data.Schema
+namespace TypeCache.Data.Schema;
+
+public readonly struct ColumnSchema
 {
-	public readonly struct ColumnSchema
-	{
-		public static string SQL { get; } = Invariant(@$"
+	public static string SQL { get; } = Invariant(@$"
 SELECT c.[column_id] AS [Id]
 , c.[name] AS [Name]
 , ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
@@ -31,22 +29,21 @@ WHERE c.[object_id] = @ObjectId
 ORDER BY c.[column_id] ASC;
 ");
 
-		public int Id { get; init; }
+	public int Id { get; init; }
 
-		public string Name { get; init; }
+	public string Name { get; init; }
 
-		public SqlDbType Type { get; init; }
+	public SqlDbType Type { get; init; }
 
-		public bool Nullable { get; init; }
+	public bool Nullable { get; init; }
 
-		public bool ReadOnly { get; init; }
+	public bool ReadOnly { get; init; }
 
-		public bool Hidden { get; init; }
+	public bool Hidden { get; init; }
 
-		public bool Identity { get; init; }
+	public bool Identity { get; init; }
 
-		public bool PrimaryKey { get; init; }
+	public bool PrimaryKey { get; init; }
 
-		public int Length { get; init; }
-	}
+	public int Length { get; init; }
 }

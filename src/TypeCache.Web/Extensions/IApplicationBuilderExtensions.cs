@@ -3,15 +3,14 @@
 using Microsoft.AspNetCore.Builder;
 using TypeCache.Web.Middleware;
 
-namespace TypeCache.Web.Extensions
+namespace TypeCache.Web.Extensions;
+
+public static class IApplicationBuilderExtensions
 {
-	public static class IApplicationBuilderExtensions
-	{
-		/// <summary>
-		/// Registers <see cref="SqlApiErrorHandlerMiddleware"/>.
-		/// </summary>
-		/// <remarks>Must be called before any other UseSqlApi... middelware registration.</remarks>
-		public static IApplicationBuilder UseSqlApiErrorHanler(this IApplicationBuilder @this)
-			=> @this.UseMiddleware<SqlApiErrorHandlerMiddleware>();
-	}
+	/// <summary>
+	/// Registers <see cref="SqlApiErrorHandlerMiddleware"/>.
+	/// </summary>
+	/// <remarks>Must be called before any other UseSqlApi... middelware registration.</remarks>
+	public static IApplicationBuilder UseSqlApiErrorHanler(this IApplicationBuilder @this)
+		=> @this.UseMiddleware<SqlApiErrorHandlerMiddleware>();
 }

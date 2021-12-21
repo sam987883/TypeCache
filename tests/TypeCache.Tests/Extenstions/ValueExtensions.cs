@@ -6,65 +6,64 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Extensions
+namespace TypeCache.Tests.Extensions;
+
+public class ValueExtensions
 {
-	public class ValueExtensions
+	[Fact]
+	public void Normalize()
 	{
-		[Fact]
-		public void Normalize()
-		{
-			Assert.Equal(Index.FromStart(15), Index.FromEnd(5).Normalize(20));
-			Assert.Equal(Index.FromStart(5), Index.FromStart(5).Normalize(20));
-		}
+		Assert.Equal(Index.FromStart(15), Index.FromEnd(5).FromStart(20));
+		Assert.Equal(Index.FromStart(5), Index.FromStart(5).FromStart(20));
+	}
 
-		[Fact]
-		public void Range()
-		{
-			Assert.Equal(new[] { -2, -1, 0, 1, 2 }, (-2).Range(5).ToArray());
-			Assert.Equal(new[] { 2, 2, 2, 2, 2, 2 }, 2.Range(6, 0).ToArray());
-			Assert.Equal(new[] { 9, 6, 3, 0, -3, -6 }, 9.Range(6, -3).ToArray());
-			Assert.Equal(Array<int>.Empty, 123.Range(0, 123).ToArray());
-		}
+	[Fact]
+	public void Range()
+	{
+		Assert.Equal(new[] { -2, -1, 0, 1, 2 }, (-2).Range(5).ToArray());
+		Assert.Equal(new[] { 2, 2, 2, 2, 2, 2 }, 2.Range(6, 0).ToArray());
+		Assert.Equal(new[] { 9, 6, 3, 0, -3, -6 }, 9.Range(6, -3).ToArray());
+		Assert.Equal(Array<int>.Empty, 123.Range(0, 123).ToArray());
+	}
 
-		[Fact]
-		public void Repeat()
-		{
-			Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
-			Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
-			Assert.Equal(Array<int>.Empty, 123.Repeat(-18).ToArray());
-		}
+	[Fact]
+	public void Repeat()
+	{
+		Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
+		Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
+		Assert.Equal(Array<int>.Empty, 123.Repeat(-18).ToArray());
+	}
 
-		[Fact]
-		public void Swap()
-		{
-			var a = 123;
-			var b = -456;
-			b.Swap(ref a);
-			Assert.Equal(123, b);
-		}
+	[Fact]
+	public void Swap()
+	{
+		var a = 123;
+		var b = -456;
+		b.Swap(ref a);
+		Assert.Equal(123, b);
+	}
 
-		[Fact]
-		public void ToBytes()
-		{
-			Assert.Equal(16, (-999999.9999M).ToBytes().Length);
-			Assert.Equal(16, 999999.9999M.ToBytes().Length);
+	[Fact]
+	public void ToBytes()
+	{
+		Assert.Equal(16, (-999999.9999M).ToBytes().Length);
+		Assert.Equal(16, 999999.9999M.ToBytes().Length);
 
-			Assert.NotEmpty(decimal.MinValue.ToBytes());
-			Assert.NotEmpty(decimal.MaxValue.ToBytes());
-		}
+		Assert.NotEmpty(decimal.MinValue.ToBytes());
+		Assert.NotEmpty(decimal.MaxValue.ToBytes());
+	}
 
-		[Fact]
-		public void ToDouble()
-		{
-			Assert.Equal(double.MinValue, double.MinValue.ToInt64().ToDouble());
-			Assert.Equal(double.MaxValue, double.MaxValue.ToInt64().ToDouble());
-		}
+	[Fact]
+	public void ToDouble()
+	{
+		Assert.Equal(double.MinValue, double.MinValue.ToInt64().ToDouble());
+		Assert.Equal(double.MaxValue, double.MaxValue.ToInt64().ToDouble());
+	}
 
-		[Fact]
-		public void ToSingle()
-		{
-			Assert.Equal(float.MinValue, float.MinValue.ToInt32().ToSingle());
-			Assert.Equal(float.MaxValue, float.MaxValue.ToInt32().ToSingle());
-		}
+	[Fact]
+	public void ToSingle()
+	{
+		Assert.Equal(float.MinValue, float.MinValue.ToInt32().ToSingle());
+		Assert.Equal(float.MaxValue, float.MaxValue.ToInt32().ToSingle());
 	}
 }

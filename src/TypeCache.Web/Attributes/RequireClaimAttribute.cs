@@ -8,40 +8,38 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Requirements;
 
-namespace TypeCache.Web.Attributes
+namespace TypeCache.Web.Attributes;
+
+/// <summary>
+/// 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+public class RequireClaimAttribute : AuthorizeAttribute
 {
-	/// <summary>
-	/// 
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-	public class RequireClaimAttribute : AuthorizeAttribute
+	public IDictionary<string, string[]> Claims { get; }
+
+	public RequireClaimAttribute(params string[] claims) : base(nameof(ClaimAuthorizationRequirement))
 	{
-		public IDictionary<string, string[]> Claims { get; }
+		const char separator = '=';
 
-		public RequireClaimAttribute(params string[] claims) : base(nameof(ClaimAuthorizationRequirement))
+		claims.AssertNotEmpty();
+
+		this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
+		claims.Do(claim =>
 		{
-			const char separator = '=';
+			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.CountOf(separator) > 1).Assert(false);
 
-			claims.AssertNotEmpty(nameof(claims));
-
-			this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
-			claims.Do(claim =>
+			if (claim.Contains(separator))
 			{
-				(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.If(c => c == separator).Count() > 1).Assert(nameof(claim), false);
+				(string? key, string? value, IEnumerable<string> _) = claim.Split(separator);
 
-				if (claim.Contains('='))
-				{
-					(string? key, string? value, IEnumerable<string> _) = claim.Split(separator);
-					var values = this.Claims.Get(key!);
-
-					if (values is not null)
-						this.Claims[key!] = values.And(value).ToArray();
-					else
-						this.Claims.Add(key!, new[] { value! });
-				}
+				if (this.Claims.Get(key!).TryFirst(out var values))
+					this.Claims[key!] = values.And(value).ToArray();
 				else
-					this.Claims.Add(claim, Array<string>.Empty);
-			});
-		}
+					this.Claims.Add(key!, new[] { value! });
+			}
+			else
+				this.Claims.Add(claim, Array<string>.Empty);
+		});
 	}
 }

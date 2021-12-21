@@ -2,12 +2,11 @@
 
 using System.Text.Json.Serialization;
 
-namespace TypeCache.Data
+namespace TypeCache.Data;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum LogicalOperator
 {
-	[JsonConverter(typeof(JsonStringEnumConverter))]
-	public enum LogicalOperator
-	{
-		And,
-		Or
-	}
+	And,
+	Or
 }

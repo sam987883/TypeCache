@@ -9,27 +9,26 @@ using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
-namespace TypeCache.Data.Business
+namespace TypeCache.Data.Business;
+
+internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureRequest>
 {
-	internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureRequest>
+	private readonly ISqlApi _SqlApi;
+
+	public StoredProcedureValidationRule(ISqlApi sqlApi)
 	{
-		private readonly ISqlApi _SqlApi;
+		this._SqlApi = sqlApi;
+	}
 
-		public StoredProcedureValidationRule(ISqlApi sqlApi)
-		{
-			this._SqlApi = sqlApi;
-		}
+	public async ValueTask ValidateAsync(StoredProcedureRequest request, CancellationToken cancellationToken)
+	{
+		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure);
+		schema.Type.Assert(ObjectType.StoredProcedure);
 
-		public async ValueTask ValidateAsync(StoredProcedureRequest request, CancellationToken cancellationToken)
-		{
-			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure);
-			schema.Type.Assert(nameof(StoredProcedureRequest), ObjectType.StoredProcedure);
+		var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
+		if (!invalidParameterCsv.IsBlank())
+			throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
 
-			var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
-			if (!invalidParameterCsv.IsBlank())
-				throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
-
-			await ValueTask.CompletedTask;
-		}
+		await ValueTask.CompletedTask;
 	}
 }

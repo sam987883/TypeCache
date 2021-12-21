@@ -5,27 +5,26 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Converters;
 
-namespace TypeCache.Data
+namespace TypeCache.Data;
+
+/// <summary>
+/// <code>
+/// {<br />
+///		"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
+///		"Rows": [ [ "Data", 123, null ], [ ... ], ... ]<br />
+/// }
+/// </code>
+/// </summary>
+public class RowSet
 {
-	/// <summary>
-	/// <code>
-	/// {<br />
-	///		"Columns": [ "Column1", "Column2", "Column3", ... ],<br />
-	///		"Rows": [ [ "Data", 123, null ], [ ... ], ... ]<br />
-	/// }
-	/// </code>
-	/// </summary>
-	public class RowSet
-	{
-		public static RowSet Empty { get; } = new RowSet();
+	public static RowSet Empty { get; } = new RowSet();
 
-		public string[] Columns { get; set; } = Array<string>.Empty;
+	public string[] Columns { get; set; } = Array<string>.Empty;
 
-		public long Count { get; set; }
+	public long Count { get; set; }
 
-		[JsonConverter(typeof(RowsJsonConverter))]
-		public object?[][] Rows { get; set; } = Array<object[]>.Empty;
+	[JsonConverter(typeof(RowsJsonConverter))]
+	public object?[][] Rows { get; set; } = Array<object[]>.Empty;
 
-		public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column).FirstValue()!.Value];
-	}
+	public object? this[int row, string column] => this.Rows[row][this.Columns.ToIndex(column).First()!];
 }

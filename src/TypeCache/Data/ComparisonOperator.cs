@@ -2,58 +2,57 @@
 
 using System.Text.Json.Serialization;
 
-namespace TypeCache.Data
+namespace TypeCache.Data;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum ComparisonOperator
 {
-	[JsonConverter(typeof(JsonStringEnumConverter))]
-	public enum ComparisonOperator
-	{
-		/// <summary>
-		/// =
-		/// </summary>
-		Equal,
-		/// <summary>
-		/// &lt;&gt;
-		/// </summary>
-		NotEqual,
-		/// <summary>
-		/// &gt;
-		/// </summary>
-		MoreThan,
-		/// <summary>
-		/// &gt;=
-		/// </summary>
-		MoreThanOrEqual,
-		/// <summary>
-		/// &lt;
-		/// </summary>
-		LessThan,
-		/// <summary>
-		/// &lt;=
-		/// </summary>
-		LessThanOrEqual,
-		/// <summary>
-		/// LIKE N'Value%'
-		/// </summary>
-		StartWith,
-		/// <summary>
-		/// NOT LIKE N'Value%'
-		/// </summary>
-		NotStartWith,
-		/// <summary>
-		/// LIKE N'%Value'
-		/// </summary>
-		EndWith,
-		/// <summary>
-		/// NOT LIKE N'%Value'
-		/// </summary>
-		NotEndWith,
-		/// <summary>
-		/// LIKE N'%Value%'
-		/// </summary>
-		Like,
-		/// <summary>
-		/// NOT LIKE N'%Value%'
-		/// </summary>
-		NotLike
-	}
+	/// <summary>
+	/// =
+	/// </summary>
+	Equal,
+	/// <summary>
+	/// &lt;&gt;
+	/// </summary>
+	NotEqual,
+	/// <summary>
+	/// &gt;
+	/// </summary>
+	MoreThan,
+	/// <summary>
+	/// &gt;=
+	/// </summary>
+	MoreThanOrEqual,
+	/// <summary>
+	/// &lt;
+	/// </summary>
+	LessThan,
+	/// <summary>
+	/// &lt;=
+	/// </summary>
+	LessThanOrEqual,
+	/// <summary>
+	/// LIKE N'Value%'
+	/// </summary>
+	StartWith,
+	/// <summary>
+	/// NOT LIKE N'Value%'
+	/// </summary>
+	NotStartWith,
+	/// <summary>
+	/// LIKE N'%Value'
+	/// </summary>
+	EndWith,
+	/// <summary>
+	/// NOT LIKE N'%Value'
+	/// </summary>
+	NotEndWith,
+	/// <summary>
+	/// LIKE N'%Value%'
+	/// </summary>
+	Like,
+	/// <summary>
+	/// NOT LIKE N'%Value%'
+	/// </summary>
+	NotLike
 }

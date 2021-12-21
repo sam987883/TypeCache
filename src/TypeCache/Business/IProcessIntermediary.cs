@@ -3,10 +3,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Business
+namespace TypeCache.Business;
+
+public interface IProcessIntermediary<in I>
 {
-	public interface IProcessIntermediary<in I>
-	{
-		ValueTask HandleAsync(I request, CancellationToken cancellationToken = default);
-	}
+	ValueTask HandleAsync(I request, CancellationToken cancellationToken = default);
 }

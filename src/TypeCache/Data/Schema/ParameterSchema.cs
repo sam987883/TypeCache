@@ -4,11 +4,11 @@ using System.Data;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
-namespace TypeCache.Data.Schema
+namespace TypeCache.Data.Schema;
+
+public readonly struct ParameterSchema
 {
-	public readonly struct ParameterSchema
-	{
-		public static string SQL { get; } = Invariant($@"
+	public static string SQL { get; } = Invariant($@"
 SELECT p.[parameter_id] AS [Id]
 , p.[name] AS [Name]
 , ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
@@ -20,14 +20,13 @@ WHERE p.[object_id] = @ObjectId
 ORDER BY [Id] ASC;
 ");
 
-		public int Id { get; init; }
+	public int Id { get; init; }
 
-		public string Name { get; init; }
+	public string Name { get; init; }
 
-		public SqlDbType Type { get; init; }
+	public SqlDbType Type { get; init; }
 
-		public bool Output { get; init; }
+	public bool Output { get; init; }
 
-		public bool Return { get; init; }
-	}
+	public bool Return { get; init; }
 }

@@ -3,14 +3,13 @@
 using System.IO;
 using Xunit;
 
-namespace TypeCache.Tests
+namespace TypeCache.Tests;
+
+public class EventOfTests
 {
-	public class EventOfTests
+	[Fact]
+	public void EventOfFileSystemWatcher()
 	{
-		[Fact]
-		public void EventOfFileSystemWatcher()
-		{
-			Assert.Equal(6, EventOf<FileSystemWatcher>.Events.Count);
-		}
+		Assert.Equal(6, EventOf<FileSystemWatcher>.Events.Count);
 	}
 }

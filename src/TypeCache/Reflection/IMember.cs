@@ -3,16 +3,15 @@
 using System;
 using System.Collections.Immutable;
 
-namespace TypeCache.Reflection
+namespace TypeCache.Reflection;
+
+public interface IMember
 {
-	public interface IMember
-	{
-		public IImmutableList<Attribute> Attributes { get; }
+	public IImmutableList<Attribute> Attributes { get; }
 
-		public bool Internal { get; }
+	public bool Internal { get; }
 
-		public string Name { get; }
+	public string Name { get; }
 
-		public bool Public { get; }
-	}
+	public bool Public { get; }
 }

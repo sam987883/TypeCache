@@ -2,10 +2,9 @@
 
 using System;
 
-namespace TypeCache.Collections
+namespace TypeCache.Collections;
+
+public static class Array<T>
 {
-	public static class Array<T>
-	{
-		public static T[] Empty => Array.Empty<T>();
-	}
+	public static T[] Empty => Array.Empty<T>();
 }

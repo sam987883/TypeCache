@@ -3,10 +3,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Business
+namespace TypeCache.Business;
+
+public interface IProcess<in T>
 {
-	public interface IProcess<in T>
-	{
-		ValueTask RunAsync(T request, CancellationToken cancellationToken = default);
-	}
+	ValueTask RunAsync(T request, CancellationToken cancellationToken = default);
 }

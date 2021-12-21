@@ -4,14 +4,13 @@ using System.Runtime.CompilerServices;
 using TypeCache.Mappers.Extensions;
 using static TypeCache.Default;
 
-namespace TypeCache.Mappers
+namespace TypeCache.Mappers;
+
+internal class DefaultPropertyMapper<FROM, TO> : IPropertyMapper<FROM, TO>
+	where FROM : notnull
+	where TO : notnull
 {
-	internal class DefaultPropertyMapper<FROM, TO> : IPropertyMapper<FROM, TO>
-		where FROM : notnull
-		where TO : notnull
-	{
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public string[] Map(FROM from, TO to)
-			=> (from, to).MapProperties();
-	}
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public string[] Map(FROM from, TO to)
+		=> (from, to).MapProperties();
 }

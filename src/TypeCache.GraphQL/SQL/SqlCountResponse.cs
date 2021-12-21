@@ -1,15 +1,12 @@
-﻿using GraphQL.Types.Relay.DataObjects;
-using TypeCache.Collections;
-using TypeCache.GraphQL.Types;
+﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.GraphQL.SQL
+namespace TypeCache.GraphQL.SQL;
+
+public class SqlCountResponse
 {
-	public class SqlCountResponse
-	{
-		public long Count { get; set; }
+	public long Count { get; set; }
 
-		public string? SQL { get; set; }
+	public string? SQL { get; set; }
 
-		public string? Table { get; set; }
-	}
+	public string? Table { get; set; }
 }

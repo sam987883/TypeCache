@@ -9,32 +9,31 @@ using System.Text.RegularExpressions;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 
-namespace TypeCache
+namespace TypeCache;
+
+public static class Default
 {
-	public static class Default
-	{
-		public const BindingFlags BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+	public const BindingFlags BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
-		public const string DATASOURCE = "Default";
+	public const string DATASOURCE = "Default";
 
-		public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+	public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
-		public const MethodImplOptions METHOD_IMPL_OPTIONS = MethodImplOptions.AggressiveInlining;
+	public const MethodImplOptions METHOD_IMPL_OPTIONS = MethodImplOptions.AggressiveInlining;
 
-		public const StringComparison NAME_STRING_COMPARISON = StringComparison.Ordinal;
+	public const StringComparison NAME_STRING_COMPARISON = StringComparison.Ordinal;
 
-		public const RegexOptions REGEX_OPTIONS = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
+	public const RegexOptions REGEX_OPTIONS = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
 
-		public const StringComparison SORT_STRING_COMPARISON = StringComparison.Ordinal;
+	public const StringComparison SORT_STRING_COMPARISON = StringComparison.Ordinal;
 
-		public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+	public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
-		public const StringComparison STRING_COMPARISON = StringComparison.OrdinalIgnoreCase;
+	public const StringComparison STRING_COMPARISON = StringComparison.OrdinalIgnoreCase;
 
-		public static readonly ConstantExpression NullExpression = Expression.Constant(null);
+	public static readonly ConstantExpression NullExpression = Expression.Constant(null);
 
-		public static readonly IComparer<ParameterInfo> ParameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
+	public static readonly IComparer<ParameterInfo> ParameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
 
-		public static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
-	}
+	public static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
 }

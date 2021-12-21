@@ -5,68 +5,59 @@ using TypeCache.Collections;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Extensions
+namespace TypeCache.Tests.Extensions;
+
+public class AssertExtensions
 {
-	public class AssertExtensions
+	[Fact]
+	public void Assert()
 	{
-		[Fact]
-		public void Assert()
-		{
-			const string NAME = "TestName";
+		123456.Assert(123456);
+		"AAA".Assert("AAA");
+		(null as string).Assert(null);
+		"AAA".Assert("AAA", StringComparer.Ordinal);
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => 123.Assert(456));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".Assert("bbb"));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).Assert("bbb"));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".Assert("bbb", StringComparer.Ordinal));
+		Xunit.Assert.Throws<ArgumentNullException>(() => "AAA".Assert(null, null));
+	}
 
-			123456.Assert(NAME, 123456);
-			"AAA".Assert(NAME, "AAA");
-			(null as string).Assert(NAME, null);
-			"AAA".Assert(NAME, "AAA", StringComparer.Ordinal);
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => 123.Assert(NAME, 456));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".Assert(NAME, "bbb"));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).Assert(NAME, "bbb"));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".Assert(NAME, "bbb", StringComparer.Ordinal));
-			Xunit.Assert.Throws<ArgumentNullException>(() => "AAA".Assert(NAME, null, null));
-		}
+	[Fact]
+	public void AssertNotBlank()
+	{
+		"AAA".AssertNotBlank();
+		Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotBlank());
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotBlank());
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "      ".AssertNotBlank());
+	}
 
-		[Fact]
-		public void AssertNotBlank()
-		{
-			const string NAME = nameof(AssertNotBlank);
+	[Fact]
+	public void AssertNotEmpty()
+	{
+		"AAA".AssertNotEmpty();
+		Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotEmpty());
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotEmpty());
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.AssertNotEmpty());
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.AssertNotEmpty());
+	}
 
-			"AAA".AssertNotBlank(NAME);
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertNotBlank(NAME));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotBlank(NAME));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "      ".AssertNotBlank(NAME));
-		}
+	[Fact]
+	public void AssertNotNull()
+	{
+		((int?)123456).AssertNotNull();
+		"AAA".AssertNotNull();
+		Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotNull());
+		Xunit.Assert.Throws<ArgumentNullException>(() => (null as int?).AssertNotNull());
+	}
 
-		[Fact]
-		public void AssertNotEmpty()
-		{
-			const string NAME = nameof(AssertNotEmpty);
+	[Fact]
+	public void AssertNotSame()
+	{
+		var a = new object();
+		var b = new object();
 
-			"AAA".AssertNotEmpty(NAME);
-			Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotEmpty(NAME));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.AssertNotEmpty(NAME));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.AssertNotEmpty(NAME));
-			Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.AssertNotEmpty(NAME));
-		}
-
-		[Fact]
-		public void AssertNotNull()
-		{
-			const string NAME = nameof(AssertNotNull);
-
-			((int?)123456).AssertNotNull(NAME);
-			"AAA".AssertNotNull(NAME);
-			Xunit.Assert.Throws<ArgumentNullException>(() => (null as string).AssertNotNull(NAME));
-			Xunit.Assert.Throws<ArgumentNullException>(() => (null as int?).AssertNotNull(NAME));
-		}
-
-		[Fact]
-		public void AssertNotSame()
-		{
-			var a = new object();
-			var b = new object();
-
-			(a, b).AssertNotSame((nameof(a), nameof(b)));
-			Xunit.Assert.Throws<ArgumentException>(() => (a, a).AssertNotSame((nameof(a), nameof(a))));
-		}
+		(a, b).AssertNotSame();
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (a, a).AssertNotSame());
 	}
 }

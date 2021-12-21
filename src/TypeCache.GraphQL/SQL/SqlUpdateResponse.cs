@@ -1,15 +1,16 @@
-﻿using TypeCache.Collections;
+﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.GraphQL.SQL
+using TypeCache.Collections;
+
+namespace TypeCache.GraphQL.SQL;
+
+public class SqlUpdateResponse<T>
 {
-	public class SqlUpdateResponse<T>
-	{
-		public T[]? Deleted { get; set; }
+	public T[]? Deleted { get; set; }
 
-		public T[]? Inserted { get; set; }
+	public T[]? Inserted { get; set; }
 
-		public string? SQL { get; set; }
+	public string? SQL { get; set; }
 
-		public string? Table { get; set; }
-	}
+	public string? Table { get; set; }
 }

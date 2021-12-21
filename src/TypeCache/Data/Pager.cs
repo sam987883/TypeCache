@@ -1,17 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.Data
+namespace TypeCache.Data;
+
+public struct Pager
 {
-	public struct Pager
+	public Pager(uint first, uint after)
 	{
-		public Pager(uint first, uint after)
-		{
-			this.First = first;
-			this.After = after;
-		}
-
-		public uint First { get; init; }
-
-		public uint After { get; init; }
+		this.First = first;
+		this.After = after;
 	}
+
+	public uint First { get; init; }
+
+	public uint After { get; init; }
 }

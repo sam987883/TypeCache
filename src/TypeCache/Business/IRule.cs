@@ -3,10 +3,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Business
+namespace TypeCache.Business;
+
+public interface IRule<in T, R>
 {
-	public interface IRule<in T, R>
-	{
-		ValueTask<R> ApplyAsync(T request, CancellationToken cancellationToken = default);
-	}
+	ValueTask<R> ApplyAsync(T request, CancellationToken cancellationToken = default);
 }

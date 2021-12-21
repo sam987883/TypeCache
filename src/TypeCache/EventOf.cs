@@ -6,47 +6,46 @@ using System.Collections.Immutable;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
-namespace TypeCache
+namespace TypeCache;
+
+public static class EventOf<T>
+	where T : class
 {
-	public static class EventOf<T>
-		where T : class
+	private sealed record HandlerReference(WeakReference<T> Instance, EventMember EventMember, Delegate EventHandler);
+
+	private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
+
+	public static IImmutableDictionary<string, EventMember> Events => TypeOf<T>.Member.Events;
+
+	public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 	{
-		private sealed record HandlerReference(WeakReference<T> Instance, EventMember EventMember, Delegate EventHandler);
+		instance.AssertNotNull();
+		eventMemberName.AssertNotBlank();
+		handler.AssertNotNull();
 
-		private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
+		var key = DateTime.UtcNow.Ticks;
+		var eventMember = Events[eventMemberName];
+		var reference = new HandlerReference(new WeakReference<T>(instance), eventMember, handler);
+		eventMember.Add(instance!, handler);
+		EventHandlers.Add(key, reference);
+		return key;
+	}
 
-		public static IImmutableDictionary<string, EventMember> Events => TypeOf<T>.Member.Events;
+	public static Delegate? GetEventHandler(long key)
+		=> EventHandlers.TryGetValue(key, out var handler) ? handler.EventHandler : null;
 
-		public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
+	public static T? GetEventInstance(long key)
+		=> EventHandlers.TryGetValue(key, out var handler) && handler.Instance.TryGetTarget(out var target) ? target : null;
+
+	public static bool RemoveEventHandler(long key)
+	{
+		if (EventHandlers.TryGetValue(key, out var handler))
 		{
-			instance.AssertNotNull(nameof(instance));
-			eventMemberName.AssertNotBlank(nameof(eventMemberName));
-			handler.AssertNotNull(nameof(handler));
+			if (handler.Instance.TryGetTarget(out var target))
+				handler.EventMember.Remove(target, handler.EventHandler);
 
-			var key = DateTime.UtcNow.Ticks;
-			var eventMember = Events[eventMemberName];
-			var reference = new HandlerReference(new WeakReference<T>(instance), eventMember, handler);
-			eventMember.Add(instance!, handler);
-			EventHandlers.Add(key, reference);
-			return key;
+			return EventHandlers.Remove(key);
 		}
-
-		public static Delegate? GetEventHandler(long key)
-			=> EventHandlers.TryGetValue(key, out var handler) ? handler.EventHandler : null;
-
-		public static T? GetEventInstance(long key)
-			=> EventHandlers.TryGetValue(key, out var handler) && handler.Instance.TryGetTarget(out var target) ? target : null;
-
-		public static bool RemoveEventHandler(long key)
-		{
-			if (EventHandlers.TryGetValue(key, out var handler))
-			{
-				if (handler.Instance.TryGetTarget(out var target))
-					handler.EventMember.Remove(target, handler.EventHandler);
-
-				return EventHandlers.Remove(key);
-			}
-			return false;
-		}
+		return false;
 	}
 }

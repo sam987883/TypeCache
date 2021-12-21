@@ -2,13 +2,12 @@
 
 using TypeCache.GraphQL.Attributes;
 
-namespace TypeCache.GraphQL.SQL
-{
-	public class Parameter
-	{
-		[GraphType(ScalarType.NonNullableString)]
-		public string Name { get; set; } = string.Empty;
+namespace TypeCache.GraphQL.SQL;
 
-		public object? Value { get; set; }
-	}
+public class Parameter
+{
+	[GraphType(ScalarType.NonNullableString)]
+	public string Name { get; set; } = string.Empty;
+
+	public object? Value { get; set; }
 }

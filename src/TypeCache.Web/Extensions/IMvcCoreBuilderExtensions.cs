@@ -3,14 +3,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Web.Controllers;
 
-namespace TypeCache.Web.Extensions
+namespace TypeCache.Web.Extensions;
+
+public static class IMvcCoreBuilderExtensions
 {
-	public static class IMvcCoreBuilderExtensions
-	{
-		/// <summary>
-		/// Adds the TypeCache.Web assembly as an Application Part to MVC.
-		/// </summary>
-		public static IMvcCoreBuilder AddSqlApiControllers(this IMvcCoreBuilder @this)
-			=> @this.AddApplicationPart(typeof(CommandController).Assembly);
-	}
+	/// <summary>
+	/// Adds the TypeCache.Web assembly as an Application Part to MVC.
+	/// </summary>
+	public static IMvcCoreBuilder AddSqlApiControllers(this IMvcCoreBuilder @this)
+		=> @this.AddApplicationPart(typeof(CommandController).Assembly);
 }

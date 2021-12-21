@@ -7,34 +7,33 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace TypeCache.Web.Middleware
+namespace TypeCache.Web.Middleware;
+
+public class SqlApiErrorHandlerMiddleware
 {
-	public class SqlApiErrorHandlerMiddleware
+	private readonly RequestDelegate _Next;
+
+	public SqlApiErrorHandlerMiddleware(RequestDelegate next)
 	{
-		private readonly RequestDelegate _Next;
+		this._Next = next;
+	}
 
-		public SqlApiErrorHandlerMiddleware(RequestDelegate next)
+	public async Task Invoke(HttpContext httpContext)
+	{
+		try
 		{
-			this._Next = next;
+			await this._Next.Invoke(httpContext);
 		}
-
-		public async Task Invoke(HttpContext httpContext)
+		catch (Exception exception)
 		{
-			try
+			httpContext.Response.ContentType = Application.Json;
+			httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+			await JsonSerializer.SerializeAsync(httpContext.Response.Body, new
 			{
-				await this._Next.Invoke(httpContext);
-			}
-			catch (Exception exception)
-			{
-				httpContext.Response.ContentType = Application.Json;
-				httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				await JsonSerializer.SerializeAsync(httpContext.Response.Body, new
-				{
-					ErrorType = exception.GetType().Name,
-					ErrorMessage = exception.Message,
-					exception.StackTrace
-				});
-			}
+				ErrorType = exception.GetType().Name,
+				ErrorMessage = exception.Message,
+				exception.StackTrace
+			});
 		}
 	}
 }

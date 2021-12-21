@@ -2,14 +2,13 @@
 
 using System;
 
-namespace TypeCache.GraphQL.Attributes
+namespace TypeCache.GraphQL.Attributes;
+
+/// <summary>
+/// <b>GraphQL</b><br />
+/// Ignore a parameter, enum field or property.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
+public class GraphIgnoreAttribute : Attribute
 {
-	/// <summary>
-	/// <b>GraphQL</b><br />
-	/// Ignore a parameter, enum field or property.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
-	public class GraphIgnoreAttribute : Attribute
-	{
-	}
 }

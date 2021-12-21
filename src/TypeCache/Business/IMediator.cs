@@ -3,12 +3,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TypeCache.Business
-{
-	public interface IMediator
-	{
-		ValueTask<O> ApplyRulesAsync<I, O>(I request, CancellationToken cancellationToken = default);
+namespace TypeCache.Business;
 
-		ValueTask RunProcessAsync<I>(I request, CancellationToken cancellationToken = default);
-	}
+public interface IMediator
+{
+	ValueTask<O> ApplyRulesAsync<I, O>(I request, CancellationToken cancellationToken = default);
+
+	ValueTask RunProcessAsync<I>(I request, CancellationToken cancellationToken = default);
 }

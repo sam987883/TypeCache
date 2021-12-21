@@ -5,22 +5,21 @@ using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Data.Requests;
 
-namespace TypeCache.Data.Business
+namespace TypeCache.Data.Business;
+
+internal class CountValidationRule : IValidationRule<CountRequest>
 {
-	internal class CountValidationRule : IValidationRule<CountRequest>
+	private readonly ISqlApi _SqlApi;
+
+	public CountValidationRule(ISqlApi sqlApi)
 	{
-		private readonly ISqlApi _SqlApi;
+		this._SqlApi = sqlApi;
+	}
 
-		public CountValidationRule(ISqlApi sqlApi)
-		{
-			this._SqlApi = sqlApi;
-		}
+	public async ValueTask ValidateAsync(CountRequest request, CancellationToken cancellationToken)
+	{
+		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
 
-		public async ValueTask ValidateAsync(CountRequest request, CancellationToken cancellationToken)
-		{
-			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
-
-			await ValueTask.CompletedTask;
-		}
+		await ValueTask.CompletedTask;
 	}
 }

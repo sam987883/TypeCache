@@ -6,92 +6,93 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using TypeCache.Reflection;
 using static TypeCache.Default;
+using static TypeCache.Reflection.Unsafe;
 
-namespace TypeCache.Extensions
+namespace TypeCache.Extensions;
+
+public static class ReadOnlySpanExtensions
 {
-	public static class ReadOnlySpanExtensions
-	{
-		public static T Parse<T>(this ReadOnlySpan<char> @this)
-			where T : unmanaged
-			=> (T)(TypeOf<T>.SystemType switch
-			{
-				_ when TypeOf<T>.Kind == Kind.Enum => (object)Enum.Parse<T>(@this),
-				SystemType.Boolean => (object)bool.Parse(@this),
-				SystemType.Char => (object)@this[0].ToString(),
-				SystemType.SByte => (object)sbyte.Parse(@this),
-				SystemType.Int16 => (object)short.Parse(@this),
-				SystemType.Int32 => (object)int.Parse(@this),
-				SystemType.Int64 => (object)long.Parse(@this),
-				SystemType.Byte => (object)sbyte.Parse(@this),
-				SystemType.UInt16 => (object)ushort.Parse(@this),
-				SystemType.UInt32 => (object)uint.Parse(@this),
-				SystemType.UInt64 => (object)ulong.Parse(@this),
-				SystemType.Single => (object)float.Parse(@this),
-				SystemType.Double => (object)double.Parse(@this),
-				SystemType.Decimal => (object)decimal.Parse(@this),
-				_ => (object)default(T)
-			});
+	/// <summary>
+	/// <code>
+	/// =&gt; <see cref="TypeOf{T}.SystemType"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <see cref="TypeOf{T}.Kind"/> == <see cref="Kind.Enum"/> &amp;&amp; <see cref="Enum"/>.TryParse&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; value,<br/>
+	/// <see langword="    "/><see cref="SystemType.Boolean"/> <see langword="when"/> <see cref="bool"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="bool"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Char"/> =&gt; Convert&lt;<see cref="char"/>, <typeparamref name="T"/>&gt;(@<paramref name="this"/>[0]),<br/>
+	/// <see langword="    "/><see cref="SystemType.SByte"/> <see langword="when"/> <see cref="sbyte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="sbyte"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int16"/> <see langword="when"/> <see cref="short"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="short"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int32"/> <see langword="when"/> <see cref="int"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="int"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int64"/> <see langword="when"/> <see cref="long"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="long"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Byte"/> <see langword="when"/> <see cref="byte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="byte"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt16"/> <see langword="when"/> <see cref="ushort"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="ushort"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt32"/> <see langword="when"/> <see cref="uint"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="uint"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt64"/> <see langword="when"/> <see cref="ulong"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="ulong"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Single"/> <see langword="when"/> <see cref="float"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="float"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Double"/> <see langword="when"/> <see cref="double"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="double"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Decimal"/> <see langword="when"/> <see cref="decimal"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; Convert&lt;<see cref="decimal"/>, <typeparamref name="T"/>&gt;(<see langword="ref"/> value),<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// };
+	/// </code>
+	/// </summary>
+	public static T? Parse<T>(this ReadOnlySpan<char> @this)
+		where T : unmanaged
+		=> TypeOf<T>.SystemType switch
+		{
+			_ when TypeOf<T>.Kind == Kind.Enum && Enum.TryParse<T>(@this, out var value) => value,
+			SystemType.Boolean when bool.TryParse(@this, out var value) => Convert<bool, T>(ref value),
+			SystemType.Char => Convert<char, T>(@this[0]),
+			SystemType.SByte when sbyte.TryParse(@this, out var value) => Convert<sbyte, T>(ref value),
+			SystemType.Int16 when short.TryParse(@this, out var value) => Convert<short, T>(ref value),
+			SystemType.Int32 when int.TryParse(@this, out var value) => Convert<int, T>(ref value),
+			SystemType.Int64 when long.TryParse(@this, out var value) => Convert<long, T>(ref value),
+			SystemType.Byte when byte.TryParse(@this, out var value) => Convert<byte, T>(ref value),
+			SystemType.UInt16 when ushort.TryParse(@this, out var value) => Convert<ushort, T>(ref value),
+			SystemType.UInt32 when uint.TryParse(@this, out var value) => Convert<uint, T>(ref value),
+			SystemType.UInt64 when ulong.TryParse(@this, out var value) => Convert<ulong, T>(ref value),
+			SystemType.Single when float.TryParse(@this, out var value) => Convert<float, T>(ref value),
+			SystemType.Double when double.TryParse(@this, out var value) => Convert<double, T>(ref value),
+			SystemType.Decimal when decimal.TryParse(@this, out var value) => Convert<decimal, T>(ref value),
+			_ => null
+		};
 
-		/// <summary>
-		/// <c><see cref="MemoryMarshal.Read{T}(ReadOnlySpan{byte})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static T To<T>(this ReadOnlySpan<byte> @this)
-			where T : struct
-			=> MemoryMarshal.Read<T>(@this);
+	/// <summary>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static T To<T>(this ReadOnlySpan<byte> @this)
+		where T : struct
+		=> MemoryMarshal.Read<T>(@this);
 
-		/// <summary>
-		/// <c><see cref="MemoryMarshal.Cast{TFrom, TTo}(ReadOnlySpan{TFrom})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ReadOnlySpan<R> To<T, R>(this ReadOnlySpan<T> @this)
-			where T : struct
-			where R : struct
-			=> MemoryMarshal.Cast<T, R>(@this);
+	/// <summary>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.Cast&lt;<typeparamref name="T"/>, <typeparamref name="R"/>&gt;(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static ReadOnlySpan<R> To<T, R>(this ReadOnlySpan<T> @this)
+		where T : struct
+		where R : struct
+		=> MemoryMarshal.Cast<T, R>(@this);
 
-		/// <summary>
-		/// <c><see cref="MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ReadOnlySpan<byte> ToBytes<T>(this ReadOnlySpan<T> @this)
-			where T : struct
-			=> MemoryMarshal.AsBytes(@this);
+	/// <summary>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static ReadOnlySpan<byte> ToBytes<T>(this ReadOnlySpan<T> @this)
+		where T : struct
+		=> MemoryMarshal.AsBytes(@this);
 
-		/// <summary>
-		/// <c><see cref="MemoryMarshal.ToEnumerable{T}(ReadOnlyMemory{T})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static IEnumerable<T> ToEnumerable<T>(this ReadOnlyMemory<T> @this)
-			where T : struct
-			=> MemoryMarshal.ToEnumerable(@this);
+	/// <summary>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.ToEnumerable(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> ToEnumerable<T>(this ReadOnlyMemory<T> @this)
+		where T : struct
+		=> MemoryMarshal.ToEnumerable(@this);
 
-		/// <summary>
-		/// <c><see cref="MemoryMarshal.AsRef{T}(ReadOnlySpan{byte})"/></c>
-		/// </summary>
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static ref readonly T ToRef<T>(this ReadOnlySpan<byte> @this)
-			where T : struct
-			=> ref MemoryMarshal.AsRef<T>(@this);
-
-		public static T? TryParse<T>(this ReadOnlySpan<char> @this)
-			where T : unmanaged
-			=> TypeOf<T>.SystemType switch
-			{
-				_ when TypeOf<T>.Kind == Kind.Enum => Enum.TryParse<T>(@this, out var value) ? (object)value : null,
-				SystemType.Boolean => bool.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Char => (object)@this[0].ToString(),
-				SystemType.SByte => sbyte.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Int16 => short.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Int32 => int.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Int64 => long.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Byte => sbyte.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.UInt16 => ushort.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.UInt32 => uint.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.UInt64 => ulong.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Single => float.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Double => double.TryParse(@this, out var value) ? (object)value : null,
-				SystemType.Decimal => decimal.TryParse(@this, out var value) ? (object)value : null,
-				_ => null
-			} as T?;
-	}
+	/// <summary>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsRef&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static ref readonly T ToRef<T>(this ReadOnlySpan<byte> @this)
+		where T : struct
+		=> ref MemoryMarshal.AsRef<T>(@this);
 }

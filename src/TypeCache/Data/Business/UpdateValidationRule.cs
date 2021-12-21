@@ -9,26 +9,25 @@ using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
-namespace TypeCache.Data.Business
+namespace TypeCache.Data.Business;
+
+internal class UpdateValidationRule : IValidationRule<UpdateRequest>
 {
-	internal class UpdateValidationRule : IValidationRule<UpdateRequest>
+	private readonly ISqlApi _SqlApi;
+
+	public UpdateValidationRule(ISqlApi sqlApi)
 	{
-		private readonly ISqlApi _SqlApi;
+		this._SqlApi = sqlApi;
+	}
 
-		public UpdateValidationRule(ISqlApi sqlApi)
-		{
-			this._SqlApi = sqlApi;
-		}
+	public async ValueTask ValidateAsync(UpdateRequest request, CancellationToken cancellationToken)
+	{
+		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
+		schema.Type.Assert(ObjectType.Table);
 
-		public async ValueTask ValidateAsync(UpdateRequest request, CancellationToken cancellationToken)
-		{
-			var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
-			schema.Type.Assert($"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Table)}", ObjectType.Table);
+		if (!request.Set.Any())
+			throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
 
-			if (!request.Set.Any())
-				throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
-
-			await ValueTask.CompletedTask;
-		}
+		await ValueTask.CompletedTask;
 	}
 }

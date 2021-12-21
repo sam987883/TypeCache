@@ -9,36 +9,35 @@ using TypeCache.Web.Attributes;
 using TypeCache.Web.Extensions;
 using TypeCache.Web.Requirements;
 
-namespace TypeCache.Web.Handlers
+namespace TypeCache.Web.Handlers;
+
+public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizationRequirement>
 {
-	public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizationRequirement>
+	private IHttpContextAccessor _HttpContextAccessor;
+
+	public HeaderAuthorizationHandler(IHttpContextAccessor httpContextAccessor)
 	{
-		private IHttpContextAccessor _HttpContextAccessor;
+		this._HttpContextAccessor = httpContextAccessor;
+	}
 
-		public HeaderAuthorizationHandler(IHttpContextAccessor httpContextAccessor)
+	protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HeaderAuthorizationRequirement requirement)
+	{
+		var controller = context.GetControllerActionDescriptor();
+		if (controller is not null)
 		{
-			this._HttpContextAccessor = httpContextAccessor;
-		}
+			var type = controller.ControllerTypeInfo.GetTypeMember();
+			var method = controller.MethodInfo.GetMethodMember();
+			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
+			var success = type.Attributes.If<RequireHeaderAttribute>()
+				.And(method.Attributes.If<RequireHeaderAttribute>())
+				.All(attribue => headers.TryGetValue(attribue.Key, out var values)
+					&& (!attribue.AllowedValues.Any() || attribue.AllowedValues.Any(values.Has)));
 
-		protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HeaderAuthorizationRequirement requirement)
-		{
-			var controller = context.GetControllerActionDescriptor();
-			if (controller is not null)
-			{
-				var type = controller.ControllerTypeInfo.GetTypeMember();
-				var method = controller.MethodInfo.GetMethodMember();
-				var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
-				var success = type.Attributes.If<RequireHeaderAttribute>()
-					.And(method.Attributes.If<RequireHeaderAttribute>())
-					.All(attribue => headers.TryGetValue(attribue.Key, out var values)
-						&& (!attribue.AllowedValues.Any() || attribue.AllowedValues.Any(values.Has)));
-
-				if (success)
-					context.Succeed(requirement);
-				else
-					context.Fail();
-			}
-			await Task.CompletedTask;
+			if (success)
+				context.Succeed(requirement);
+			else
+				context.Fail();
 		}
+		await Task.CompletedTask;
 	}
 }

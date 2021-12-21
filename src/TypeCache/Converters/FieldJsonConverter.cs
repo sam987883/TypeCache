@@ -7,52 +7,51 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
-namespace TypeCache.Converters
+namespace TypeCache.Converters;
+
+public class FieldJsonConverter<T> : JsonConverter<T?>
+	where T : class, new()
 {
-	public class FieldJsonConverter<T> : JsonConverter<T?>
-		where T : class, new()
+	public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		if (reader.TokenType == JsonTokenType.StartObject)
 		{
-			if (reader.TokenType == JsonTokenType.StartObject)
+			var output = TypeOf<T>.Create();
+			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
-				var output = TypeOf<T>.Create();
-				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+				var name = reader.GetString()!;
+				if (reader.Read())
 				{
-					var name = reader.GetString()!;
-					if (reader.Read())
-					{
-						var field = TypeOf<T>.Fields[name];
-						if (!field.Static && field.Setter is not null)
-							field.SetValue(output, reader.TokenType switch
-							{
-								JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
-								_ => reader.GetValue()
-							});
-					}
+					var field = TypeOf<T>.Fields[name];
+					if (!field.Static && field.Setter is not null)
+						field.SetValue(output, reader.TokenType switch
+						{
+							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
+							_ => reader.GetValue()
+						});
 				}
-
-				return output;
 			}
 
-			return null;
+			return output;
 		}
 
-		public override void Write(Utf8JsonWriter writer, T? input, JsonSerializerOptions options)
+		return null;
+	}
+
+	public override void Write(Utf8JsonWriter writer, T? input, JsonSerializerOptions options)
+	{
+		if (input is not null)
 		{
-			if (input is not null)
+			writer.WriteStartObject();
+			TypeOf<T>.Fields.Values.If(field => !field.Static && field!.Getter is not null).Do(field =>
 			{
-				writer.WriteStartObject();
-				TypeOf<T>.Fields.Values.If(field => !field.Static && field!.Getter is not null).Do(field =>
-				{
-					writer.WritePropertyName(field!.Name);
-					var value = field.GetValue(input);
-					writer.WriteValue(value, options);
-				});
-				writer.WriteEndObject();
-			}
-			else
-				writer.WriteNullValue();
+				writer.WritePropertyName(field!.Name);
+				var value = field.GetValue(input);
+				writer.WriteValue(value, options);
+			});
+			writer.WriteEndObject();
 		}
+		else
+			writer.WriteNullValue();
 	}
 }

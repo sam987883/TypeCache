@@ -3,22 +3,21 @@
 using System;
 using System.Linq.Expressions;
 
-namespace TypeCache.Business
+namespace TypeCache.Business;
+
+public class Validator
 {
-	public class Validator
+	public bool Validate<T>(T value, Expression<Predicate<T>> test, out string? message)
 	{
-		public bool Validate<T>(T value, Expression<Predicate<T>> test, out string? message)
+		if (test.Compile()(value))
 		{
-			if (test.Compile()(value))
-			{
-				message = null;
-				return true;
-			}
-			else
-			{
-				message = $"Fail: [{value}] in: {test}";
-				return false;
-			}
+			message = null;
+			return true;
+		}
+		else
+		{
+			message = $"Fail: [{value}] in: {test}";
+			return false;
 		}
 	}
 }

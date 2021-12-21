@@ -6,33 +6,32 @@ using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
 using static TypeCache.Default;
 
-namespace TypeCache
+namespace TypeCache;
+
+public static class DelegateOf<T>
+	where T : Delegate
 {
-	public static class DelegateOf<T>
-		where T : Delegate
-	{
-		private static readonly DelegateMember Member = DelegateMember.Cache[typeof(T).TypeHandle];
+	private static readonly DelegateMember Member = DelegateMember.Cache[typeof(T).TypeHandle];
 
-		public static IImmutableList<Attribute> Attributes => Member.Attributes;
+	public static IImmutableList<Attribute> Attributes => Member.Attributes;
 
-		public static RuntimeTypeHandle Handle => Member.Handle;
+	public static RuntimeTypeHandle Handle => Member.Handle;
 
-		public static bool Internal => Member.Internal;
+	public static bool Internal => Member.Internal;
 
-		public static Delegate Method => Member.Method!;
+	public static Delegate Method => Member.Method!;
 
-		public static RuntimeMethodHandle MethodHandle => Member.MethodHandle;
+	public static RuntimeMethodHandle MethodHandle => Member.MethodHandle;
 
-		public static string Name => Member.Name;
+	public static string Name => Member.Name;
 
-		public static IImmutableList<MethodParameter> Parameters => Member.Parameters;
+	public static IImmutableList<MethodParameter> Parameters => Member.Parameters;
 
-		public static bool Public => Member.Public;
+	public static bool Public => Member.Public;
 
-		public static ReturnParameter Return => Member.Return;
+	public static ReturnParameter Return => Member.Return;
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public static object? Invoke(object instance, params object?[]? arguments)
-			=> Member.Invoke(instance, arguments);
-	}
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static object? Invoke(object instance, params object?[]? arguments)
+		=> Member.Invoke(instance, arguments);
 }

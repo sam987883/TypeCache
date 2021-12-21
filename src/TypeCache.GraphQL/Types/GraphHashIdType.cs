@@ -9,49 +9,48 @@ using TypeCache.Extensions;
 using TypeCache.Security;
 using static TypeCache.Default;
 
-namespace TypeCache.GraphQL.Types
+namespace TypeCache.GraphQL.Types;
+
+/// <summary>
+/// Requires call to either one of:
+/// <list type="bullet">
+/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, byte[], byte[])"/></item>
+/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
+/// </list>
+/// </summary>
+public class GraphHashIdType : ScalarGraphType
 {
-	/// <summary>
-	/// Requires call to either one of:
-	/// <list type="bullet">
-	/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, byte[], byte[])"/></item>
-	/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
-	/// </list>
-	/// </summary>
-	public class GraphHashIdType : ScalarGraphType
+	private readonly IHashMaker _HashMaker;
+
+	/// <exception cref="ArgumentNullException"/>
+	public GraphHashIdType(IHashMaker hashMaker)
 	{
-		private readonly IHashMaker _HashMaker;
+		hashMaker.AssertNotNull();
 
-		/// <exception cref="ArgumentNullException"/>
-		public GraphHashIdType(IHashMaker hashMaker)
-		{
-			hashMaker.AssertNotNull(nameof(hashMaker));
-
-			this._HashMaker = hashMaker;
-			this.Name = "HashID";
-			this.Description = "A hashed ID.";
-		}
-
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public override object? ParseLiteral(IValue value)
-			=> this.ParseValue(value.Value);
-
-		public override object? ParseValue(object? value)
-			=> value switch
-			{
-				int id => id,
-				long id => id,
-				string hashId => this._HashMaker.Decrypt(hashId),
-				_ => value
-			};
-
-		public override object? Serialize(object? value)
-			=> value switch
-			{
-				int id => this._HashMaker.Encrypt(id),
-				long id => this._HashMaker.Encrypt(id),
-				string hashId => this._HashMaker.Decrypt(hashId),
-				_ => value
-			};
+		this._HashMaker = hashMaker;
+		this.Name = "HashID";
+		this.Description = "A hashed ID.";
 	}
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public override object? ParseLiteral(IValue value)
+		=> this.ParseValue(value.Value);
+
+	public override object? ParseValue(object? value)
+		=> value switch
+		{
+			int id => id,
+			long id => id,
+			string hashId => this._HashMaker.Decrypt(hashId),
+			_ => value
+		};
+
+	public override object? Serialize(object? value)
+		=> value switch
+		{
+			int id => this._HashMaker.Encrypt(id),
+			long id => this._HashMaker.Encrypt(id),
+			string hashId => this._HashMaker.Decrypt(hashId),
+			_ => value
+		};
 }

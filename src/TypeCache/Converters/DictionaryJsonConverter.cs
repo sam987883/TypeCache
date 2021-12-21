@@ -8,41 +8,40 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
-namespace TypeCache.Converters
+namespace TypeCache.Converters;
+
+public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?>>
 {
-	public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?>>
+	public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		var dictionary = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
+
+		if (reader.TokenType == JsonTokenType.StartObject)
 		{
-			var dictionary = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
-
-			if (reader.TokenType == JsonTokenType.StartObject)
+			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
-				while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
-				{
-					var name = reader.GetString()!;
-					if (reader.Read())
-						dictionary.Add(name, reader.GetValue());
-				}
+				var name = reader.GetString()!;
+				if (reader.Read())
+					dictionary.Add(name, reader.GetValue());
 			}
-
-			return dictionary;
 		}
 
-		public override void Write(Utf8JsonWriter writer, IDictionary<string, object?> dictionary, JsonSerializerOptions options)
+		return dictionary;
+	}
+
+	public override void Write(Utf8JsonWriter writer, IDictionary<string, object?> dictionary, JsonSerializerOptions options)
+	{
+		if (dictionary.Any())
 		{
-			if (dictionary.Any())
+			writer.WriteStartObject();
+			dictionary.Do(pair =>
 			{
-				writer.WriteStartObject();
-				dictionary.Do(pair =>
-				{
-					writer.WritePropertyName(pair.Key);
-					writer.WriteValue(pair.Value, options);
-				});
-				writer.WriteEndObject();
-			}
-			else
-				writer.WriteNullValue();
+				writer.WritePropertyName(pair.Key);
+				writer.WriteValue(pair.Value, options);
+			});
+			writer.WriteEndObject();
 		}
+		else
+			writer.WriteNullValue();
 	}
 }

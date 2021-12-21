@@ -9,42 +9,41 @@ using System.Threading.Tasks;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
-namespace TypeCache.Data.Extensions
+namespace TypeCache.Data.Extensions;
+
+public static class DbDataReaderExtensions
 {
-	public static class DbDataReaderExtensions
+	public static string[] GetColumns(this IDataReader @this)
+		=> 0.Range(@this.FieldCount).To(@this.GetName).ToArray();
+
+	public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
-		public static string[] GetColumns(this IDataReader @this)
-			=> 0.Range(@this.FieldCount).To(@this.GetName).ToArray();
-
-		public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		var columnCount = @this.FieldCount;
+		var indexes = 0.Range(columnCount);
+		while (await @this.ReadAsync(cancellationToken))
 		{
-			var columnCount = @this.FieldCount;
-			var indexes = 0.Range(columnCount);
-			while (await @this.ReadAsync(cancellationToken))
-			{
-				var values = new object[columnCount];
-				await indexes.DoAsync(async i => values[i] = await @this.GetFieldValueAsync<object>(i));
-				yield return values;
-			}
+			var values = new object[columnCount];
+			await indexes.DoAsync(async i => values[i] = await @this.GetFieldValueAsync<object>(i));
+			yield return values;
 		}
+	}
 
-		public static async ValueTask<RowSet> ReadRowSetAsync(this DbDataReader @this, CancellationToken cancellationToken = default)
+	public static async ValueTask<RowSet> ReadRowSetAsync(this DbDataReader @this, CancellationToken cancellationToken = default)
+	{
+		var rowSet = new RowSet
 		{
-			var rowSet = new RowSet
-			{
-				Columns = @this.GetColumns(),
-				Rows = (await @this.ReadRowsAsync(cancellationToken).ToListAsync()).ToArray()
-			};
-			rowSet.Count = rowSet.Rows.LongLength;
-			return rowSet;
-		}
+			Columns = @this.GetColumns(),
+			Rows = (await @this.ReadRowsAsync(cancellationToken).ToListAsync()).ToArray()
+		};
+		rowSet.Count = rowSet.Rows.LongLength;
+		return rowSet;
+	}
 
-		public static async IAsyncEnumerable<RowSet> ReadRowSetsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	public static async IAsyncEnumerable<RowSet> ReadRowSetsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	{
+		do
 		{
-			do
-			{
-				yield return await @this.ReadRowSetAsync();
-			} while (await @this.NextResultAsync(cancellationToken));
-		}
+			yield return await @this.ReadRowSetAsync();
+		} while (await @this.NextResultAsync(cancellationToken));
 	}
 }

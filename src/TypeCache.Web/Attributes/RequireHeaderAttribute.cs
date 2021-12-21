@@ -7,22 +7,21 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Requirements;
 
-namespace TypeCache.Web.Attributes
+namespace TypeCache.Web.Attributes;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+public class RequireHeaderAttribute : AuthorizeAttribute
 {
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-	public class RequireHeaderAttribute : AuthorizeAttribute
+	public string[] AllowedValues { get; set; }
+
+	public string Key { get; set; }
+
+	public RequireHeaderAttribute(string key, params string[] allowedValues) : base(nameof(HeaderAuthorizationRequirement))
 	{
-		public string[] AllowedValues { get; set; }
+		key.AssertNotBlank();
+		allowedValues.Do(allowedValue => allowedValue.AssertNotBlank());
 
-		public string Key { get; set; }
-
-		public RequireHeaderAttribute(string key, params string[] allowedValues) : base(nameof(HeaderAuthorizationRequirement))
-		{
-			key.AssertNotBlank(nameof(key));
-			allowedValues.Do(allowedValue => allowedValue.AssertNotBlank(nameof(allowedValue)));
-
-			this.Key = key;
-			this.AllowedValues = allowedValues ?? Array<string>.Empty;
-		}
+		this.Key = key;
+		this.AllowedValues = allowedValues ?? Array<string>.Empty;
 	}
 }

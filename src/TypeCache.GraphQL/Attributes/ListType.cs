@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.GraphQL.Attributes
+namespace TypeCache.GraphQL.Attributes;
+
+public enum ListType
 {
-	public enum ListType
-	{
-		None,
-		List,
-		NonNullList,
-	}
+	None,
+	List,
+	NonNullList,
 }

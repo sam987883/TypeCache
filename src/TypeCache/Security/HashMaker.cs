@@ -9,81 +9,80 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
-namespace TypeCache.Security
+namespace TypeCache.Security;
+
+public class HashMaker : IHashMaker
 {
-	public class HashMaker : IHashMaker
+	private readonly byte[] _RgbKey;
+	private readonly byte[] _RgbIV;
+
+	public HashMaker(byte[] rgbKey, byte[] rgbIV)
 	{
-		private readonly byte[] _RgbKey;
-		private readonly byte[] _RgbIV;
+		this._RgbKey = rgbKey;
+		this._RgbIV = rgbIV;
+	}
 
-		public HashMaker(byte[] rgbKey, byte[] rgbIV)
-		{
-			this._RgbKey = rgbKey;
-			this._RgbIV = rgbIV;
-		}
+	public HashMaker(decimal rgbKey, decimal rgbIV)
+	{
+		this._RgbKey = rgbKey.ToBytes();
+		this._RgbIV = rgbIV.ToBytes();
+	}
 
-		public HashMaker(decimal rgbKey, decimal rgbIV)
-		{
-			this._RgbKey = rgbKey.ToBytes();
-			this._RgbIV = rgbIV.ToBytes();
-		}
+	public long Decrypt(string hashId)
+		=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
 
-		public long Decrypt(string hashId)
-			=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public long[]? Decrypt(string[] hashIds)
+		=> hashIds?.ToArray(this.Decrypt);
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public long[]? Decrypt(string[] hashIds)
-			=> hashIds?.ToArray(this.Decrypt);
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public long[]? Decrypt(IEnumerable<string> hashIds)
+		=> hashIds?.To(this.Decrypt).ToArray();
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public long[]? Decrypt(IEnumerable<string> hashIds)
-			=> hashIds?.To(this.Decrypt).ToArray();
+	public string Encrypt(long id)
+		=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
 
-		public string Encrypt(long id)
-			=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public string? Encrypt(long? id)
+		=> id.HasValue ? this.Encrypt(id.Value) : null;
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public string? Encrypt(long? id)
-			=> id.HasValue ? this.Encrypt(id.Value) : null;
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public string[]? Encrypt(long[] ids)
+		=> ids?.ToArray(this.Encrypt);
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public string[]? Encrypt(long[] ids)
-			=> ids?.ToArray(this.Encrypt);
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public string[]? Encrypt(IEnumerable<long> ids)
+		=> ids?.To(this.Encrypt).ToArray();
 
-		[MethodImpl(METHOD_IMPL_OPTIONS)]
-		public string[]? Encrypt(IEnumerable<long> ids)
-			=> ids?.To(this.Encrypt).ToArray();
+	public byte[] Decrypt(byte[] data)
+	{
+		using var aes = Aes.Create();
+		using var decryptor = aes.CreateDecryptor(this._RgbKey, this._RgbIV);
+		return Transform(data, decryptor);
+	}
 
-		public byte[] Decrypt(byte[] data)
-		{
-			using var aes = Aes.Create();
-			using var decryptor = aes.CreateDecryptor(this._RgbKey, this._RgbIV);
-			return Transform(data, decryptor);
-		}
+	public byte[] Encrypt(byte[] data)
+	{
+		using var aes = Aes.Create();
+		using var encryptor = aes.CreateEncryptor(this._RgbKey, this._RgbIV);
+		return Transform(data, encryptor);
+	}
 
-		public byte[] Encrypt(byte[] data)
-		{
-			using var aes = Aes.Create();
-			using var encryptor = aes.CreateEncryptor(this._RgbKey, this._RgbIV);
-			return Transform(data, encryptor);
-		}
+	private static byte[] Transform(byte[] data, ICryptoTransform transform)
+	{
+		using var memoryStream = new MemoryStream();
+		using var cryptoStream = new CryptoStream(memoryStream, transform, CryptoStreamMode.Write);
 
-		private static byte[] Transform(byte[] data, ICryptoTransform transform)
-		{
-			using var memoryStream = new MemoryStream();
-			using var cryptoStream = new CryptoStream(memoryStream, transform, CryptoStreamMode.Write);
+		cryptoStream.Write(data, 0, data.Length);
+		cryptoStream.FlushFinalBlock();
 
-			cryptoStream.Write(data, 0, data.Length);
-			cryptoStream.FlushFinalBlock();
+		memoryStream.Position = 0;
+		var result = new byte[memoryStream.Length];
+		memoryStream.Read(result, 0, result.Length);
 
-			memoryStream.Position = 0;
-			var result = new byte[memoryStream.Length];
-			memoryStream.Read(result, 0, result.Length);
+		cryptoStream.Close();
+		memoryStream.Close();
 
-			cryptoStream.Close();
-			memoryStream.Close();
-
-			return result;
-		}
+		return result;
 	}
 }

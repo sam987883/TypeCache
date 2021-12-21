@@ -2,9 +2,8 @@
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace TypeCache.Web.Requirements
+namespace TypeCache.Web.Requirements;
+
+public class HeaderAuthorizationRequirement : IAuthorizationRequirement
 {
-	public class HeaderAuthorizationRequirement : IAuthorizationRequirement
-	{
-	}
 }
