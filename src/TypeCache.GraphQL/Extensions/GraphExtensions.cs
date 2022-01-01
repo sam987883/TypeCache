@@ -262,7 +262,7 @@ public static class GraphExtensions
 		{
 			var current = @this switch
 			{
-				IHaveName name when !prefix.IsBlank() => $"{prefix}.{name.NameNode.Name}",
+				IHaveName name when prefix.IsNotBlank() => $"{prefix}.{name.NameNode.Name}",
 				IHaveName name => name.NameNode.Name,
 				_ => prefix
 			};

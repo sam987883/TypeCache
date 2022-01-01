@@ -21,13 +21,13 @@ public class DateTimeExtensions
 	}
 
 	[Fact]
-	public void ConvertTime()
+	public void ChangeTimeZone()
 	{
 		var now = DateTime.Now;
 
-		Assert.Equal(now, now.ConvertTime(TimeZoneInfo.Local, TimeZoneInfo.Utc).ConvertTime(TimeZoneInfo.Utc, TimeZoneInfo.Local));
+		Assert.Equal(now, now.ChangeTimeZone(TimeZoneInfo.Local, TimeZoneInfo.Utc).ChangeTimeZone(TimeZoneInfo.Utc, TimeZoneInfo.Local));
 
-		Assert.Equal(now, now.ConvertTime(TimeZoneInfo.Local.Id, TimeZoneInfo.Utc.Id).ConvertTime(TimeZoneInfo.Utc.Id, TimeZoneInfo.Local.Id));
+		Assert.Equal(now, now.ChangeTimeZone(TimeZoneInfo.Local.Id, TimeZoneInfo.Utc.Id).ChangeTimeZone(TimeZoneInfo.Utc.Id, TimeZoneInfo.Local.Id));
 	}
 
 	[Fact]
@@ -35,7 +35,7 @@ public class DateTimeExtensions
 	{
 		var now = DateTime.Now;
 
-		Assert.Equal(now, now.ConvertTimeToUTC(TimeZoneInfo.Local).ConvertTime(TimeZoneInfo.Utc.Id, TimeZoneInfo.Local.Id));
+		Assert.Equal(now, now.ConvertTimeToUTC(TimeZoneInfo.Local).ChangeTimeZone(TimeZoneInfo.Utc.Id, TimeZoneInfo.Local.Id));
 	}
 
 	[Fact]

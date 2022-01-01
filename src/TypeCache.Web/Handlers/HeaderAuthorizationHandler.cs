@@ -26,11 +26,11 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 		if (controller is not null)
 		{
 			var type = controller.ControllerTypeInfo.GetTypeMember();
-			var method = controller.MethodInfo.GetMethodMember();
+			var method = type.GetMethodMember(controller.MethodInfo.MethodHandle)!;
 			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
 			var success = type.Attributes.If<RequireHeaderAttribute>()
 				.And(method.Attributes.If<RequireHeaderAttribute>())
-				.All(attribue => headers.TryGetValue(attribue.Key, out var values)
+				.All(attribue => headers.TryGetValue(attribue!.Key, out var values)
 					&& (!attribue.AllowedValues.Any() || attribue.AllowedValues.Any(values.Has)));
 
 			if (success)

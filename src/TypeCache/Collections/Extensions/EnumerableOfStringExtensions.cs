@@ -43,11 +43,11 @@ public static class EnumerableOfStringExtensions
 		=> @this.Any(value => value.Left(text, comparison));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Any(text =&gt; !text.IsBlank());</c>
+	/// <c>=&gt; @<paramref name="this"/>.Any(text =&gt; text.IsNotBlank());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool AnyNotBlank(this IEnumerable<string?>? @this)
-		=> @this.Any(value => !value.IsBlank())!;
+		=> @this.Any(value => value.IsNotBlank())!;
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; !value.Contains(<paramref name="character"/>, <paramref name="comparison"/>));</c>
@@ -246,11 +246,11 @@ public static class EnumerableOfStringExtensions
 		=> @this.If(value => value.Left(text, comparison));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.If(text =&gt; !text.IsBlank());</c>
+	/// <c>=&gt; @<paramref name="this"/>.If(value =&gt; value.IsNotBlank());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static IEnumerable<string> IfNotBlank(this IEnumerable<string?>? @this)
-		=> @this.If(value => !value.IsBlank())!;
+		=> @this.If(value => value.IsNotBlank())!;
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.If(value =&gt; !value.Contains(<paramref name="character"/>, <paramref name="comparison"/>));</c>
@@ -331,14 +331,14 @@ public static class EnumerableOfStringExtensions
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/>.Any()<br/>
-	/// ? @this.To(text => !text.IsBlank() ? text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"") : <see cref="string.Empty"/>).Join(',')<br/>
-	/// : <see cref="string.Empty"/>
+	/// =&gt; @<paramref name="this"/>.Any()<br/>
+	/// <see langword="    "/>? @<paramref name="this"/>.To(text =&gt; text.IsNotBlank() ? (text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"")) : <see cref="string.Empty"/>).Join(',')<br/>
+	/// <see langword="    "/>: <see cref="string.Empty"/>;
 	/// </code>
 	/// </summary>
 	public static string ToCSV(this IEnumerable<string>? @this)
 		=> @this.Any()
-			? @this.To(text => !text.IsBlank() ? text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"") : string.Empty).Join(',')
+			? @this.To(text => text.IsNotBlank() ? (text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"")) : string.Empty).Join(',')
 			: string.Empty;
 
 	/// <summary>

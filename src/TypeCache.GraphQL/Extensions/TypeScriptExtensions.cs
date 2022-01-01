@@ -31,7 +31,7 @@ public static class TypeScriptExtensions
 	public static string ToTypeScript(this EnumerationGraphType @this)
 	{
 		var builder = new StringBuilder();
-		if (!@this.Description.IsBlank())
+		if (@this.Description.IsNotBlank())
 			builder.AppendLine("/*").AppendLine(@this.Description).AppendLine("*/");
 		builder.Append("export enum ").AppendLine(@this.Name).Append('{');
 		@this.Values.Do(value =>
@@ -46,7 +46,7 @@ public static class TypeScriptExtensions
 	public static string ToTypeScript(this IComplexGraphType @this)
 	{
 		var builder = new StringBuilder();
-		if (!@this.Description.IsBlank())
+		if (@this.Description.IsNotBlank())
 			builder.AppendLine("/*").AppendLine(@this.Description).AppendLine("*/");
 		builder.AppendLine($"export type {@this.Name} = {{");
 		@this.Fields.Do(field => builder.AppendLine($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};"));

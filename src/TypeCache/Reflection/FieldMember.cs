@@ -1,40 +1,21 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-public readonly struct FieldMember
-	: IMember, IEquatable<FieldMember>
+public class FieldMember : Member, IEquatable<FieldMember>
 {
-	static FieldMember()
+	internal FieldMember(FieldInfo fieldInfo, TypeMember type) : base(fieldInfo)
 	{
-		Cache = new LazyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember>(CreateFieldMember);
-
-		static FieldMember CreateFieldMember((RuntimeFieldHandle FieldHandle, RuntimeTypeHandle TypeHandle) handle)
-			=> new FieldMember((FieldInfo)handle.TypeHandle.ToFieldInfo(handle.FieldHandle)!);
-	}
-
-	internal static IReadOnlyDictionary<(RuntimeFieldHandle, RuntimeTypeHandle), FieldMember> Cache { get; }
-
-	internal FieldMember(FieldInfo fieldInfo)
-	{
-		this.Attributes = fieldInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? fieldInfo.Name;
+		this.Type = type;
 		this.FieldType = fieldInfo.FieldType.GetTypeMember();
-		this.Internal = fieldInfo.IsAssembly;
 		this.Handle = fieldInfo.FieldHandle;
-		this.Public = fieldInfo.IsPublic;
 		this.Static = fieldInfo.IsStatic;
-		this.Type = fieldInfo.GetTypeMember();
 
 		this.Getter = fieldInfo.FieldGetter().Compile();
 		this._GetValue = fieldInfo.FieldGetValue().Compile();
@@ -50,10 +31,6 @@ public readonly struct FieldMember
 
 	public TypeMember Type { get; }
 
-	public IImmutableList<Attribute> Attributes { get; }
-
-	public string Name { get; }
-
 	public TypeMember FieldType { get; }
 
 	public RuntimeFieldHandle Handle { get; }
@@ -61,10 +38,6 @@ public readonly struct FieldMember
 	public Delegate? Getter { get; }
 
 	public Delegate? Setter { get; }
-
-	public bool Internal { get; }
-
-	public bool Public { get; }
 
 	public bool Static { get; }
 
@@ -84,8 +57,8 @@ public readonly struct FieldMember
 		=> this._SetValue?.Invoke(instance, value);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(FieldMember other)
-		=> this.Handle == other.Handle;
+	public bool Equals(FieldMember? other)
+		=> this.Handle == other?.Handle;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public override int GetHashCode()

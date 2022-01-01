@@ -58,6 +58,17 @@ public class StringExtensions
 	}
 
 	[Fact]
+	public void IsNotBlank()
+	{
+		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
+
+		Assert.False(string.Empty.IsNotBlank());
+		Assert.False(" \t \r \n ".IsNotBlank());
+		Assert.False((null as string).IsNotBlank());
+		Assert.True(TEST_STRING.IsNotBlank());
+	}
+
+	[Fact]
 	public void Join()
 	{
 		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";

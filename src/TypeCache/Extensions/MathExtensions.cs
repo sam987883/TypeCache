@@ -91,7 +91,7 @@ public static class MathExtensions
 
 	/// <summary>
 	/// <code>
-	/// (@<paramref name="this"/> &gt;= 0).Assert(<see cref="true"/>);<br/>
+	/// (@<paramref name="this"/> &gt;= 0).Assert(<see langword="true"/>);<br/>
 	/// <br/>
 	/// <see langword="var"/> result = 1UL;<br/>
 	/// <see langword="while"/> (@<paramref name="this"/> &gt; 0)<br/>

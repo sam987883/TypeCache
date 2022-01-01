@@ -30,7 +30,7 @@ internal class InsertValidationRule : IValidationRule<InsertRequest>
 
 		var columns = schema.Columns.To(column => column.Name).ToArray();
 		var invalidColumnCsv = request.Insert.Without(columns).ToCSV(column => $"[{column}]");
-		if (!invalidColumnCsv.IsBlank())
+		if (invalidColumnCsv.IsNotBlank())
 			throw new ArgumentException($"Columns were not found on table [{nameof(InsertRequest.Into)}]: {invalidColumnCsv}", $"{nameof(InsertRequest)}.{nameof(InsertRequest.Insert)}");
 
 		if (!request.Select.Any())

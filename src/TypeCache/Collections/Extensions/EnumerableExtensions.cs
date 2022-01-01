@@ -63,7 +63,7 @@ public static class EnumerableExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static bool All<T>(this IEnumerable<T>? @this, Predicate<T> filter)
+	public static bool All<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter)
 	{
 		filter.AssertNotNull();
 
@@ -101,11 +101,10 @@ public static class EnumerableExtensions
 	/// <br/>
 	/// <see langword="if"/> (<paramref name="items"/> <see langword="is not null"/>)<br/>
 	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> items)<br/>
-	/// <see langword="        if"/> (item <see langword="is not null"/>)<br/>
-	/// <see langword="            yield return"/> item;
+	/// <see langword="        yield return"/> item;
 	/// </code>
 	/// </summary>
-	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<T?>? items)
+	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
 	{
 		if (@this is not null)
 			foreach (var item in @this)
@@ -113,15 +112,14 @@ public static class EnumerableExtensions
 
 		if (items is not null)
 			foreach (var item in items)
-				if (item is not null)
-					yield return item;
+				yield return item;
 	}
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T?[]? items)
+	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[]? items)
 		=> @this.And(items as IEnumerable<T>);
 
 	/// <summary>
@@ -173,12 +171,20 @@ public static class EnumerableExtensions
 		=> await await Task.WhenAny(@this);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Any(<paramref name="item"/>.Equals);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; !value.HasValue);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool AnyOf<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item)
-		where T : IEquatable<T>
-		=> @this.Any(item.Equals);
+	public static bool AnyNull<T>([NotNullWhen(true)] this IEnumerable<T?>? @this)
+		where T : struct
+		=> @this.Any(value => !value.HasValue);
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; value <see langword="is null"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static bool AnyNull<T>([NotNullWhen(true)] this IEnumerable<T>? @this)
+		where T : class
+		=> @this.Any(value => value is null);
 
 	/// <summary>
 	/// <code>
@@ -209,7 +215,7 @@ public static class EnumerableExtensions
 	/// };
 	/// </code>
 	/// </summary>
-	public static bool AtLeast<T>(this IEnumerable<T>? @this, int count)
+	public static bool AtLeast<T>([NotNullWhen(true)] this IEnumerable<T>? @this, int count)
 		=> @this switch
 		{
 			null => false,
@@ -229,7 +235,7 @@ public static class EnumerableExtensions
 	/// };
 	/// </code>
 	/// </summary>
-	public static bool AtMost<T>(this IEnumerable<T>? @this, int count)
+	public static bool AtMost<T>([NotNullWhen(true)] this IEnumerable<T>? @this, int count)
 		=> @this switch
 		{
 			null => false,
@@ -938,39 +944,26 @@ public static class EnumerableExtensions
 		=> values.All(value => @this.Has(value, comparer));
 
 	/// <summary>
-	/// <code>
-	/// =&gt; <paramref name="index"/>.Value &lt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    null"/> =&gt; 0,<br/>
-	///	<see langword="    "/><see cref="ICollection{T}"/> collection =&gt; collection.Count,<br/>
-	///	<see langword="    "/><see cref="IReadOnlyCollection{T}"/> collection =&gt; collection.Count,<br/>
-	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.Count()<br/>
-	/// };
-	/// </code>
+	/// <c>=&gt; <paramref name="index"/>.Value &lt; @<paramref name="this"/>.Count();</c>
 	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index)
-		=> index.Value < @this switch
-		{
-			null => 0,
-			ICollection<T> collection => collection.Count,
-			IReadOnlyCollection<T> collection => collection.Count,
-			_ => @this.Count()
-		};
+		=> index.Value < @this.Count();
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.ToIndex(<paramref name="value"/>).Any();</c>
+	/// <c>=&gt; <paramref name="item"/> <see langword="is not null"/> ? @<paramref name="this"/>.Any(<paramref name="item"/>.Equals) : @<paramref name="this"/>.Any(value =&gt; value <see langword="is null"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value)
+	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item)
 		where T : IEquatable<T>
-		=> @this.ToIndex(value).Any();
+		=> item is not null ? @this.Any(item.Equals) : @this.Any(value => value is null);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.ToIndex(value, <paramref name="comparer"/>).Any();</c>
+	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; <paramref name="comparer"/>.Equals(<paramref name="item"/>, value));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T value, IEqualityComparer<T> comparer)
-		=> @this.ToIndex(value, comparer).Any();
+	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item, IEqualityComparer<T> comparer)
+		=> @this.Any(value => comparer.Equals(item, value));
 
 	/// <summary>
 	/// <code>
@@ -1279,7 +1272,7 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    null"/> =&gt; <see cref="Enumerable"/>&lt;V&gt;.Empty,<br/>
+	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
 	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.To(<paramref name="map"/>),<br/>
 	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.To(<paramref name="map"/>),<br/>
 	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.To(<paramref name="map"/>),<br/>
@@ -1302,7 +1295,7 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    null"/> =&gt; <see cref="Enumerable"/>&lt;V&gt;.Empty,<br/>
+	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
 	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.To(<paramref name="map"/>),<br/>
 	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.To(<paramref name="map"/>),<br/>
 	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.To(<paramref name="map"/>),<br/>
@@ -1636,10 +1629,10 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		_ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableQueue{T}.Empty"/>,<br/>
-	///		T[] array =&gt; <see cref="ImmutableQueue"/>.Create(array),<br/>
-	///		<see cref="List{T}"/> list =&gt; <see cref="ImmutableQueue"/>.Create(list.ToArray()),<br/>
-	///		_ =&gt; <see cref="ImmutableQueue.CreateRange{T}"/>(@<paramref name="this"/>)<br/>
+	///	<see langword="    "/>_ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableQueue{T}.Empty"/>,<br/>
+	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; <see cref="ImmutableQueue"/>.Create(array),<br/>
+	///	<see langword="    "/><see cref="List{T}"/> list =&gt; <see cref="ImmutableQueue"/>.Create(list.ToArray()),<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="ImmutableQueue.CreateRange{T}"/>(@<paramref name="this"/>)<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1657,10 +1650,10 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		_ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableStack{T}.Empty"/>,<br/>
-	///		T[] array =&gt; <see cref="ImmutableStack"/>.Create(array),<br/>
-	///		<see cref="List{T}"/> list =&gt; <see cref="ImmutableStack"/>.Create(list.ToArray()),<br/>
-	///		_ =&gt; <see cref="ImmutableStack.CreateRange{T}"/>(@<paramref name="this"/>)<br/>
+	///	<see langword="    "/>_ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="ImmutableStack{T}.Empty"/>,<br/>
+	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; <see cref="ImmutableStack"/>.Create(array),<br/>
+	///	<see langword="    "/><see cref="List{T}"/> list =&gt; <see cref="ImmutableStack"/>.Create(list.ToArray()),<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="ImmutableStack.CreateRange{T}"/>(@<paramref name="this"/>)<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1678,11 +1671,11 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		<see langword="null"/> =&gt; Enumerable&lt;<see cref="int"/>&gt;.Empty,<br/>
-	///		<see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.ToIndex(<paramref name="filter"/>),<br/>
-	///		T[] array =&gt; array.ToIndex(<paramref name="filter"/>),<br/>
-	///		<see cref="List{T}"/> list =&gt; list.ToIndex(<paramref name="filter"/>),<br/>
-	///		_ =&gt; <see cref="Enumerable{T}"/>.ToIndex(@<paramref name="this"/>, <paramref name="filter"/>)<br/>
+	///	<see langword="    null"/> =&gt; Enumerable&lt;<see cref="int"/>&gt;.Empty,<br/>
+	///	<see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.ToIndex(<paramref name="filter"/>),<br/>
+	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; array.ToIndex(<paramref name="filter"/>),<br/>
+	///	<see langword="    "/><see cref="List{T}"/> list =&gt; list.ToIndex(<paramref name="filter"/>),<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.ToIndex(@<paramref name="this"/>, <paramref name="filter"/>)<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1749,11 +1742,11 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="null"/> =&gt; <see cref="ReadOnlySpan{T}"/>.Empty,<br/>
-	/// <see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.AsSpan(),<br/>
-	/// T[] array =&gt; array.AsSpan(),<br/>
-	/// <see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
-	/// _ =&gt; @<paramref name="this"/>.ToArray().AsSpan(),<br/>
+	/// <see langword="    null"/> =&gt; <see cref="ReadOnlySpan{T}"/>.Empty,<br/>
+	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.AsSpan(),<br/>
+	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsSpan(),<br/>
+	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.ToArray().AsSpan(),<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1771,10 +1764,10 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		<see langword="null"/> =&gt; <see cref="Span{T}"/>.Empty,<br/>
-	///		<typeparamref name="T"/>[] array =&gt; array.AsSpan(),<br/>
-	///		<see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
-	///		_ =&gt; @<paramref name="this"/>.ToArray().AsSpan()<br/>
+	///	<see langword="    null"/> =&gt; <see cref="Span{T}"/>.Empty,<br/>
+	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsSpan(),<br/>
+	///	<see langword="    "/><see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.ToArray().AsSpan()<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1800,14 +1793,14 @@ public static class EnumerableExtensions
 	/// <c>=&gt; @<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().TryGet(0, <see langword="out"/> <paramref name="item"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryFirst<T>(this IEnumerable? @this, out T? item)
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable? @this, [NotNullWhen(true)] out T? item)
 		=> @this.If<T>().TryGet(0, out item);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.TryGet(0, <see langword="out"/> <paramref name="item"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryFirst<T>(this IEnumerable<T>? @this, out T? item)
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T>? @this, [NotNullWhen(true)] out T? item)
 		=> @this.TryGet(0, out item);
 
 	/// <summary>
@@ -1815,7 +1808,7 @@ public static class EnumerableExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryFirst<T>(this IEnumerable<T>? @this, Predicate<T> filter, out T? item)
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter, [NotNullWhen(true)] out T? item)
 		=> @this.If(filter).TryGet(0, out item);
 
 	/// <summary>
@@ -1825,37 +1818,33 @@ public static class EnumerableExtensions
 	///	<see langword="    null"/> =&gt; <see cref="Enumerable{T}"/>.NoGet(out <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, out <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, out <paramref name="item"/>),<br/>
-	///	<see langword="    "/><see cref="ICollection{T}"/> collection =&gt; @<paramref name="this"/>.GetEnumerator().Get(<paramref name="index"/>.FromStart(collection.Count).Value),<br/>
-	///	<see langword="    "/><see cref="IReadOnlyCollection{T}"/> collection =&gt; @<paramref name="this"/>.GetEnumerator().Get(<paramref name="index"/>.FromStart(collection.Count).Value),<br/>
-	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetEnumerator().Get(<paramref name="index"/>.IsFromEnd ? <paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()) : <paramref name="index"/>.Value)<br/>
+	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetEnumerator().Get(<paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()))<br/>
 	/// };
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	/// <exception cref="IndexOutOfRangeException" />
-	public static bool TryGet<T>(this IEnumerable<T>? @this, Index index, out T? item)
+	public static bool TryGet<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Index index, [NotNullWhen(true)] out T? item)
 		=> @this switch
 		{
 			null => Enumerable<T>.NoGet(out item),
 			IList<T> list => list.TryGet(index, out item),
 			IReadOnlyList<T> list => list.TryGet(index, out item),
-			ICollection<T> collection => Enumerable<T>.TryGet(@this, index.FromStart(collection.Count).Value, out item),
-			IReadOnlyCollection<T> collection => Enumerable<T>.TryGet(@this, index.FromStart(collection.Count).Value, out item),
-			_ => Enumerable<T>.TryGet(@this, index.IsFromEnd ? index.FromStart(@this.Count()).Value : index.Value, out item)
+			_ => Enumerable<T>.TryGet(@this, index.FromStart(@this.Count()).Value, out item)
 		};
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().TryGet(^0, <see langword="out"/> <paramref name="item"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryLast<T>(this IEnumerable? @this, out T? item)
+	public static bool TryLast<T>([NotNullWhen(true)] this IEnumerable? @this, [NotNullWhen(true)] out T? item)
 		=> @this.If<T>().TryGet(^0, out item);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.TryGet(^0, <see langword="out"/> <paramref name="item"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryLast<T>(this IEnumerable<T>? @this, out T? item)
+	public static bool TryLast<T>([NotNullWhen(true)] this IEnumerable<T>? @this, [NotNullWhen(true)] out T? item)
 		where T : class
 		=> @this.TryGet(^0, out item);
 
@@ -1864,7 +1853,7 @@ public static class EnumerableExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryLast<T>(this IEnumerable<T>? @this, Predicate<T> filter, out T? item)
+	public static bool TryLast<T>([NotNullWhen(true)] this IEnumerable<T>? @this, Predicate<T> filter, [NotNullWhen(true)] out T? item)
 		where T : class
 		=> @this.If(filter).TryGet(^0, out item);
 

@@ -12,55 +12,34 @@ namespace TypeCache.Reflection.Extensions;
 public static class MemberExtensions
 {
 	/// <summary>
-	/// <c><see cref="MethodMember"/>.Cache[(@<paramref name="this"/>.MethodHandle, @<paramref name="this"/>.DeclaringType!.TypeHandle)]</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static MethodMember GetMethodMember(this MethodInfo @this)
-		=> MethodMember.Cache[(@this.MethodHandle, @this.DeclaringType!.TypeHandle)];
-
-	/// <summary>
 	/// <code>
 	/// @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		<see cref="Type"/> type => type.TypeHandle.GetTypeMember(),<br/>
-	///		<see cref="MemberInfo"/> memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),<br/>
-	///		<see langword="null"/> => TypeOf&lt;<typeparamref name="T"/>&gt;.Member,<br/>
-	///		_ => @<paramref name="this"/>.GetType().TypeHandle.GetTypeMember()<br/>
+	///	<see langword="    null"/> => TypeOf&lt;<typeparamref name="T"/>&gt;.Member,<br/>
+	///	<see langword="    "/><see cref="Type"/> type => type.TypeHandle.GetTypeMember(),<br/>
+	///	<see langword="    "/><see cref="MemberInfo"/> memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),<br/>
+	///	<see langword="    "/>_ => @<paramref name="this"/>.GetType().TypeHandle.GetTypeMember()<br/>
 	/// }<br/>
 	/// </code>
 	/// </summary>
 	public static TypeMember GetTypeMember<T>(this T @this)
 		=> @this switch
 		{
+			null => TypeOf<T>.Member,
 			Type type => type.TypeHandle.GetTypeMember(),
 			MemberInfo memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),
-			null => TypeOf<T>.Member,
 			_ => @this.GetType().TypeHandle.GetTypeMember()
 		};
 
 	internal static bool IsCallableWith(this IEnumerable<MethodParameter> @this, params object?[]? arguments)
 	{
-		if (arguments.Any())
-		{
-			var argumentEnumerator = arguments.GetEnumerator();
-			foreach (var parameter in @this)
-			{
-				if (argumentEnumerator.MoveNext())
-				{
-					if (argumentEnumerator.Current is not null)
-					{
-						if (!parameter.Type.Supports(argumentEnumerator.Current.GetType()))
-							return false;
-					}
-					else if (!parameter.Type.Nullable)
-						return false;
-				}
-				else if (!parameter.HasDefaultValue && !parameter.IsOptional)
-					return false;
-			}
-			return !argumentEnumerator.MoveNext();
-		}
-		return !@this.Any() || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
+		if (!arguments.Any())
+			return !@this.Any() || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
+
+		var argumentEnumerator = arguments.GetEnumerator();
+		return @this.All(parameter => argumentEnumerator.TryNext(out var argument)
+			? (argument is not null ? parameter.Type.Supports(argument.GetType()) : parameter.Type.Nullable)
+			: parameter.HasDefaultValue || parameter.IsOptional) && !argumentEnumerator.MoveNext();
 	}
 
 	/// <summary>

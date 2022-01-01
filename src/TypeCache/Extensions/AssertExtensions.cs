@@ -30,8 +30,6 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <paramref name="name"/>.AssertNotBlank(<see langword="nameof"/>(<paramref name="name"/>));<br/>
-	/// <br/>
 	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is"/> <see cref="IEquatable{T}"/> equatable)<br/>
 	///	<see langword="    "/>equatable.Equals(<paramref name="value"/>).Assert(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
 	///	<see langword="else"/><br/>
@@ -89,7 +87,7 @@ public static class AssertExtensions
 		[CallerMemberName] string? caller = null)
 	{
 		@this.AssertNotNull(argument, caller);
-		(!@this.IsBlank()).Assert(argument, caller);
+		@this.IsNotBlank().Assert(argument, caller);
 	}
 
 	/// <summary>

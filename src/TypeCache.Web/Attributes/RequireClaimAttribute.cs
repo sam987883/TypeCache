@@ -34,7 +34,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 				(string? key, string? value, IEnumerable<string> _) = claim.Split(separator);
 
 				if (this.Claims.Get(key!).TryFirst(out var values))
-					this.Claims[key!] = values.And(value).ToArray();
+					this.Claims[key!] = values.And(value).ToArray()!;
 				else
 					this.Claims.Add(key!, new[] { value! });
 			}

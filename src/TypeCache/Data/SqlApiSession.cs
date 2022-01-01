@@ -59,10 +59,10 @@ internal sealed class SqlApiSession : ISqlApiSession
 		var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries).ToArray(part => part.TrimStart('[').TrimEnd(']'));
 		var fullName = parts.Length switch
 		{
-			1 when !database.IsBlank() => $"[{database}]..[{HandleFunctionName(parts[0])}]",
+			1 when database.IsNotBlank() => $"[{database}]..[{HandleFunctionName(parts[0])}]",
 			1 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [{DATABASE}] or [{INITIAL_CATALOG}] specified for database object.", name),
 			2 when name.Contains("..") => $"[{parts[0]}]..[{HandleFunctionName(parts[1])}]",
-			2 when !database.IsBlank() => $"[{database}].[{parts[0]}].[{HandleFunctionName(parts[1])}]",
+			2 when database.IsNotBlank() => $"[{database}].[{parts[0]}].[{HandleFunctionName(parts[1])}]",
 			2 => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: ConnectionString must have [{DATABASE}] or [{INITIAL_CATALOG}] specified for database object.", name),
 			3 => $"[{parts[0]}].[{parts[1]}].[{HandleFunctionName(parts[2])}]",
 			_ => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Invalid table source name.", name)

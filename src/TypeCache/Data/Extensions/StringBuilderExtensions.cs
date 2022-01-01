@@ -17,7 +17,7 @@ public static class StringBuilderExtensions
 			.Append(')').AppendLine();
 
 	public static StringBuilder AppendSQL(this StringBuilder @this, string keyword, string? clause)
-		=> !clause.IsBlank() ? @this.Append(keyword).Append(' ').AppendLine(clause) : @this;
+		=> clause.IsNotBlank() ? @this.Append(keyword).Append(' ').AppendLine(clause) : @this;
 
 	public static StringBuilder AppendSQL(this StringBuilder @this, string keyword, string clause1, string clause2)
 		=> @this.Append(keyword).Append(' ').Append(clause1).Append(' ').AppendLine(clause2);

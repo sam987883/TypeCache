@@ -50,7 +50,7 @@ public class TypeOfTests
 		var type = typeof(object);
 
 		Assert.Equal(1, member.Attributes.Count);
-		Assert.Equal(typeof(object), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
 		Assert.Null(member.EnclosedType);
 		Assert.Empty(member.Events);
@@ -138,7 +138,7 @@ public class TypeOfTests
 		type = typeof(IList<ulong>);
 
 		Assert.Equal(2, member.Attributes.Count);
-		Assert.Equal(typeof(object), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Equal(TypeOf<ulong>.Member, member.EnclosedType);
 		Assert.Empty(member.Events);
@@ -213,7 +213,7 @@ public class TypeOfTests
 		var type = typeof(ISqlApi);
 
 		Assert.Equal(1, member.Attributes.Count);
-		Assert.Equal(typeof(object), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Null(member.EnclosedType);
 		Assert.Empty(member.Events);
@@ -238,7 +238,7 @@ public class TypeOfTests
 		var member = type.GetTypeMember();
 
 		Assert.Empty(member.Attributes);
-		Assert.Equal(typeof(ValueType), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Equal(typeof(void).GetTypeMember(), member.EnclosedType);
 		Assert.Empty(member.Events);
@@ -259,7 +259,7 @@ public class TypeOfTests
 		member = type.GetTypeMember();
 
 		Assert.Empty(member.Attributes);
-		Assert.Equal(typeof(ValueType), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Equal(TypeOf<int>.Member, member.EnclosedType);
 		Assert.Empty(member.Events);
@@ -280,7 +280,7 @@ public class TypeOfTests
 		member = type.GetTypeMember();
 
 		Assert.Empty(member.Attributes);
-		Assert.Equal(typeof(ValueType), member.BaseType);
+		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Equal(TypeOf<bool>.Member, member.EnclosedType);
 		Assert.Empty(member.Events);

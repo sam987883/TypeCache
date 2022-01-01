@@ -25,7 +25,7 @@ public class EnumerableOfStringExtensions
 	[Fact]
 	public void Group()
 	{
-		var group = this.GetStrings().Group(_ => !_.IsBlank() ? _[0].ToString() : "_", StringComparison.Ordinal);
+		var group = this.GetStrings().Group(_ => _.IsNotBlank() ? _[0].ToString() : "_", StringComparison.Ordinal);
 		Assert.Contains("_", group.Keys);
 		Assert.Contains("a", group.Keys);
 		Assert.Contains("B", group.Keys);

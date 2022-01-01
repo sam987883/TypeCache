@@ -22,7 +22,7 @@ public class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
 				if (reader.Read())
 				{
 					var property = TypeOf<T>.Properties[name!];
-					if (property.Setter is not null && !property.Setter.Value.Static)
+					if (property.Setter?.Static is false)
 						property.SetValue(output, reader.TokenType switch
 						{
 							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
@@ -42,9 +42,9 @@ public class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
 		if (input is not null)
 		{
 			writer.WriteStartObject();
-			TypeOf<T>.Properties.Values.If(property => property!.Getter is not null && !property.Getter.Value.Static).Do(property =>
+			TypeOf<T>.Properties.Values.If(property => property.Getter?.Static is false).Do(property =>
 			{
-				writer.WritePropertyName(property!.Name);
+				writer.WritePropertyName(property.Name);
 				var value = property.GetValue(input);
 				writer.WriteValue(value, options);
 			});

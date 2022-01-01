@@ -14,10 +14,10 @@ public static class EnumeratorExtensions
 {
 	/// <summary>
 	/// <code>
-	/// <see langword="var"/> <paramref name="count"/> = 0;<br/>
+	/// <see langword="var"/> count = 0;<br/>
 	/// <see langword="while"/> (@<paramref name="this"/>.MoveNext())<br/>
-	///	<see langword="    "/>++<paramref name="count"/>;<br/>
-	///	<see langword="return"/> <paramref name="count"/>;
+	///	<see langword="    "/>++count;<br/>
+	///	<see langword="return"/> count;
 	/// </code>
 	/// </summary>
 	public static int Count(this IEnumerator @this)
@@ -173,29 +173,113 @@ public static class EnumeratorExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="var"/> success = @<paramref name="this"/>.Move(<paramref name="index"/>.Next().Value);<br/>
-	/// <paramref name="item"/> = success ? @<paramref name="this"/>.Current : <see langword="default"/>;<br/>
-	/// <see langword="return"/> success;
+	/// <see langword="if"/> (@<paramref name="this"/>.Move(<paramref name="index"/> + 1)<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>.Current;<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = <see langword="null"/>;<br/>
+	/// <see langword="    return false"/>;<br/>
+	/// }
 	/// </code>
 	/// </summary>
-	public static bool TryGet<T>(this IEnumerator<T> @this, int index, [NotNullWhen(true)] out T? item)
+	public static bool TryGet(this IEnumerator @this, int index, [NotNullWhen(true)] out object? item)
 	{
-		var success = @this.Move(index + 1);
-		item = success ? @this.Current : default;
-		return success;
+		if (@this.Move(index + 1))
+		{
+			item = @this.Current!;
+			return true;
+		}
+		else
+		{
+			item = null;
+			return false;
+		}
 	}
 
 	/// <summary>
 	/// <code>
-	/// <see langword="var"/> success = @<paramref name="this"/>.MoveNext();<br/>
-	/// <paramref name="item"/> = success ? @<paramref name="this"/>.Current : <see langword="default"/>;<br/>
-	/// <see langword="return"/> success;
+	/// <see langword="if"/> (@<paramref name="this"/>.Move(<paramref name="index"/> + 1)<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>.Current;<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = <see langword="default"/>;<br/>
+	/// <see langword="    return false"/>;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	public static bool TryGet<T>(this IEnumerator<T> @this, int index, [NotNullWhen(true)] out T? item)
+	{
+		if (@this.Move(index + 1))
+		{
+			item = @this.Current!;
+			return true;
+		}
+		else
+		{
+			item = default;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (@<paramref name="this"/>.MoveNext())<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>.Current;<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = <see langword="null"/>;<br/>
+	/// <see langword="    return false"/>;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	public static bool TryNext(this IEnumerator @this, [NotNullWhen(true)] out object? item)
+	{
+		if (@this.MoveNext())
+		{
+			item = @this.Current!;
+			return true;
+		}
+		else
+		{
+			item = null;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (@<paramref name="this"/>.MoveNext())<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>.Current;<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = <see langword="default"/>;<br/>
+	/// <see langword="    return false"/>;<br/>
+	/// }
 	/// </code>
 	/// </summary>
 	public static bool TryNext<T>(this IEnumerator<T> @this, [NotNullWhen(true)] out T? item)
 	{
-		var success = @this.MoveNext();
-		item = success ? @this.Current : default;
-		return success;
+		if (@this.MoveNext())
+		{
+			item = @this.Current!;
+			return true;
+		}
+		else
+		{
+			item = default;
+			return false;
+		}
 	}
 }

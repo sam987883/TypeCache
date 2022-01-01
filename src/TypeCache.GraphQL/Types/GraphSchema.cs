@@ -235,18 +235,18 @@ public class GraphSchema : Schema
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
 		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
-			|| parentKeyProperty.Getter is null)
+			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.EnclosedType!.Value;
-		if (childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
-			|| childKeyProperty.Getter is null)
+		var childType = method.Return.Type.EnclosedType!;
+		if (!childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
+			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var getParentKey = parentKeyProperty.Getter.Value.Method;
-		var getChildKey = childKeyProperty.Getter.Value.Method;
+		var getParentKey = parentKeyProperty.Getter.Method;
+		var getChildKey = childKeyProperty.Getter.Method;
 
-		var addSubQueryBatchMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryBatch)].If(method => method.GenericTypes == 3).First();
+		var addSubQueryBatchMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryBatch)].If(method => method.GenericTypes == 3).First()!;
 		return (FieldType)addSubQueryBatchMethod.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, method, getParentKey, getChildKey)!;
 	}
 
@@ -299,19 +299,19 @@ public class GraphSchema : Schema
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
 		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
-			|| parentKeyProperty.Getter is null)
+			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.EnclosedType!.Value;
-		if (childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
-			|| childKeyProperty.Getter is null)
+		var childType = method.Return.Type.EnclosedType!;
+		if (!childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
+			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var getParentKey = parentKeyProperty.Getter.Value.Method;
-		var getChildKey = childKeyProperty.Getter.Value.Method;
+		var getParentKey = parentKeyProperty.Getter.Method;
+		var getChildKey = childKeyProperty.Getter.Method;
 
 		var addSubqueryCollectionMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryCollection)].If(method => method.GenericTypes == 3).First();
-		return (FieldType)addSubqueryCollectionMethod.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, method, getParentKey, getChildKey)!;
+		return (FieldType)addSubqueryCollectionMethod!.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, method, getParentKey, getChildKey)!;
 	}
 
 	/// <summary>

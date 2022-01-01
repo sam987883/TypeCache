@@ -13,34 +13,21 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-public readonly struct MethodMember
-	: IMember, IEquatable<MethodMember>
+public class MethodMember : Member, IEquatable<MethodMember>
 {
-	static MethodMember()
-	{
-		Cache = new LazyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember>(CreateMethodMember);
-
-		static MethodMember CreateMethodMember((RuntimeMethodHandle MethodHandle, RuntimeTypeHandle TypeHandle) handle)
-			=> new MethodMember((MethodInfo)handle.TypeHandle.ToMethodBase(handle.MethodHandle)!);
-	}
-
 	private readonly IReadOnlyDictionary<RuntimeTypeHandle[], InvokeType>? _Cache;
 
 	private readonly InvokeType? _Invoke;
 
-	internal MethodMember(MethodInfo methodInfo)
+	internal MethodMember(MethodInfo methodInfo, TypeMember type) : base(methodInfo)
 	{
-		this.Type = methodInfo.GetTypeMember();
-		this.Attributes = methodInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? methodInfo.Name;
+		this.Type = type;
 		this.GenericTypes = methodInfo.GetGenericArguments().Length;
 		this.Handle = methodInfo.MethodHandle;
 		this.Method = !methodInfo.ContainsGenericParameters ? methodInfo.Lambda().Compile() : null;
 		this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Static = methodInfo.IsStatic;
 		this.Return = new ReturnParameter(methodInfo);
-		this.Internal = methodInfo.IsAssembly;
-		this.Public = methodInfo.IsPublic;
 
 		this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, Default.RuntimeTypeHandleArrayComparer) : null;
 		this._Invoke = !methodInfo.ContainsGenericParameters ? methodInfo.LambdaInvokeType().Compile() : null;
@@ -52,21 +39,13 @@ public readonly struct MethodMember
 		}
 	}
 
-	public IImmutableList<Attribute> Attributes { get; }
-
 	public int GenericTypes { get; }
 
 	public RuntimeMethodHandle Handle { get; }
 
-	public bool Internal { get; }
-
 	public Delegate? Method { get; }
 
-	public string Name { get; }
-
 	public IImmutableList<MethodParameter> Parameters { get; }
-
-	public bool Public { get; }
 
 	public ReturnParameter Return { get; }
 
@@ -74,15 +53,9 @@ public readonly struct MethodMember
 
 	public TypeMember Type { get; }
 
-	internal static IReadOnlyDictionary<(RuntimeMethodHandle, RuntimeTypeHandle), MethodMember> Cache { get; }
-
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(MethodMember other)
-		=> this.Handle == other.Handle;
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+	public bool Equals(MethodMember? other)
+		=> this.Handle == other?.Handle && this.Type.Equals(other?.Type);
 
 	/// <param name="instance">Pass null if the method is static.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]

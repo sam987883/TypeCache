@@ -24,6 +24,7 @@ public static class EnumOf<T>
 		var equals = CreateEquals(underlyingType);
 		var getHashCode = CreateGetHashCode(underlyingType);
 
+		_UnderlyingType = new Lazy<TypeMember>(() => Handle.ToType().GetEnumUnderlyingType().GetTypeMember(), false);
 		Attributes = type.GetCustomAttributes<Attribute>().ToImmutableArray();
 		Comparer = new CustomComparer<T>(compare, equals, getHashCode);
 		Handle = type.TypeHandle;
@@ -31,11 +32,11 @@ public static class EnumOf<T>
 		Internal = !type.IsVisible;
 		Public = type.IsPublic;
 		Name = type.GetName();
-		UnderlyingType = type.GetSystemType();
-		UnderlyingTypeHandle = underlyingType.TypeHandle;
 
 		Tokens = type.GetFields(STATIC_BINDING_FLAGS).To(fieldInfo => new Token(fieldInfo)).ToImmutableDictionary(_ => _.Value, Comparer);
 	}
+
+	private static Lazy<TypeMember> _UnderlyingType;
 
 	public static IImmutableList<Attribute> Attributes { get; }
 
@@ -53,9 +54,46 @@ public static class EnumOf<T>
 
 	public static IImmutableDictionary<T, Token> Tokens { get; }
 
-	public static SystemType UnderlyingType { get; }
+	public static TypeMember UnderlyingType => _UnderlyingType.Value;
 
-	public static RuntimeTypeHandle UnderlyingTypeHandle { get; }
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static bool IsValid(T value)
+		=> Tokens.ContainsKey(value);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static string Parse(T value)
+		=> Tokens.TryGetValue(value, out var token) ? token.Name : value.ToString("D");
+
+	public static T? Parse(string text, StringComparison comparison = STRING_COMPARISON)
+		=> Tokens.Values.If(token => token.Name.Is(text, comparison)).TryFirst(out var token) ? (T?)token.Value : null;
+
+	public static bool TryParse(T value, out string text)
+	{
+		if (Tokens.TryGetValue(value, out var token))
+		{
+			text = token.Name;
+			return true;
+		}
+		else
+		{
+			text = value.ToString("D");
+			return false;
+		}
+	}
+
+	public static bool TryParse(string text, out T value, StringComparison comparison = STRING_COMPARISON)
+	{
+		if (Tokens.Values.TryFirst(token => token.Name.Is(text, comparison), out var token))
+		{
+			value = token.Value;
+			return true;
+		}
+		else
+		{
+			value = default;
+			return false;
+		}
+	}
 
 	private static Comparison<T> CreateCompare(Type underlyingType)
 		=> LambdaFactory.CreateComparison<T>((value1, value2) => value1.Cast(underlyingType).Call(nameof(IComparable<T>.CompareTo), value2.Cast(underlyingType))).Compile();

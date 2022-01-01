@@ -100,7 +100,7 @@ public static class StringExtensions
 	/// <c>=&gt; <paramref name="comparison"/>.ToStringComparer().Equals(@<paramref name="this"/>, <paramref name="value"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Is([NotNullWhen(true)] this string? @this, string? value, StringComparison comparison = STRING_COMPARISON)
+	public static bool Is(this string? @this, string? value, StringComparison comparison = STRING_COMPARISON)
 		=> comparison.ToStringComparer().Equals(@this, value);
 
 	/// <summary>
@@ -109,6 +109,13 @@ public static class StringExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool IsBlank([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrWhiteSpace(@this);
+
+	/// <summary>
+	/// <c>=&gt; !<see cref="string"/>.IsNullOrWhiteSpace(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static bool IsNotBlank([NotNullWhen(true)] this string? @this)
+		=> !string.IsNullOrWhiteSpace(@this);
 
 	/// <summary>
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
@@ -438,20 +445,20 @@ public static class StringExtensions
 		=> encoding.GetString(@this);
 
 	/// <summary>
-	/// <c>=&gt; !<paramref name="text"/>.IsBlank() &amp;&amp; @<paramref name="this"/>?.Right(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
+	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Right(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(0, @<paramref name="this"/>.Length - <paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
 	/// </summary>
 	public static string TrimEnd(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
-		=> !text.IsBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
+		=> text.IsNotBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
 	/// <summary>
-	/// <c>=&gt; !<paramref name="text"/>.IsBlank() &amp;&amp; @<paramref name="this"/>?.Left(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
+	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Left(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(<paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
 	/// </summary>
 	public static string TrimStart(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
-		=> !text.IsBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
+		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 
 	/// <summary>
 	/// <code>

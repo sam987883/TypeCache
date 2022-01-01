@@ -195,7 +195,7 @@ public static class Enumerable<T>
 		}
 	}
 
-	internal static bool TryGet(IEnumerable<T> enumerable, int index, out T? item)
+	internal static bool TryGet(IEnumerable<T> enumerable, int index, [NotNullWhen(true)] out T? item)
 	{
 		using var enumerator = enumerable.GetEnumerator();
 		return enumerator.TryGet(index, out item);

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -13,8 +12,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-public readonly struct TypeMember
-	: IMember, IEquatable<TypeMember>
+public class TypeMember : Member, IEquatable<TypeMember>
 {
 	static TypeMember()
 	{
@@ -23,52 +21,97 @@ public readonly struct TypeMember
 
 	internal static IReadOnlyDictionary<RuntimeTypeHandle, TypeMember> Cache { get; }
 
-	internal TypeMember(Type type)
+	internal TypeMember(Type type) : base(type)
 	{
-		var kind = type.GetKind();
-		var systemType = type.GetSystemType();
-
-		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
+		this.GenericHandle = type.IsGenericType && !type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().TypeHandle : null;
 		this.Handle = type.TypeHandle;
-		this.Kind = kind;
-		this.Nullable = kind is not Kind.Struct || systemType is SystemType.Nullable;
+		this.Kind = type.GetKind();
+		this.SystemType = type.GetSystemType();
+		this.Nullable = this.SystemType is SystemType.Nullable || this.Kind is not Kind.Struct;
 		this.Ref = type.IsByRef || type.IsByRefLike;
-		this.SystemType = systemType;
-		this.Internal = !type.IsVisible;
-		this.Public = type.IsPublic;
 
-		this._BaseType = new Lazy<TypeMember>(() => kind switch
-		{
-			Kind.Enum => typeof(Enum).GetTypeMember(),
-			Kind.Struct or Kind.Pointer => typeof(ValueType).GetTypeMember(),
-			_ when type.BaseType is not null => type.BaseType.GetTypeMember(),
-			_ => typeof(object).GetTypeMember()
-		}, false);
-		this._EnclosedType = new Lazy<TypeMember?>(() => systemType switch
-		{
-			_ when type.HasElementType => type.GetElementType()?.GetTypeMember(),
-			SystemType.Dictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary or SystemType.SortedDictionary
-				=> typeof(KeyValuePair<,>).MakeGenericType(type.GenericTypeArguments).GetTypeMember(),
-			_ when type.GenericTypeArguments.Length == 1 => type.GenericTypeArguments[0].GetTypeMember(),
-			_ => null
-		}, false);
-		this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() => type.GenericTypeArguments.To(_ => _.GetTypeMember()).ToImmutableArray(), false);
-		this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() => type.GetInterfaces().To(_ => _.GetTypeMember()).ToImmutableArray(), false);
+		this._BaseType = type.BaseType is not null ? new Lazy<TypeMember?>(() => this.Handle.ToType().BaseType.GetTypeMember(), false) : Lazy.Null<TypeMember>();
 
-		this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() => type.TypeHandle.CreateConstructorMembers().ToImmutableArray(), false);
-		this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() => type.TypeHandle.CreateEventMembers().ToImmutableDictionary(), false);
+		if (type.HasElementType)
+			this._EnclosedType = new Lazy<TypeMember?>(() => this.Handle.ToType().GetElementType()?.GetTypeMember(), false);
+		else if (type.GenericTypeArguments.Length == 1)
+			this._EnclosedType = new Lazy<TypeMember?>(() => this.Handle.ToType().GenericTypeArguments[0].GetTypeMember(), false);
+		else
+		{
+			this._EnclosedType = this.SystemType switch
+			{
+				SystemType.Dictionary or SystemType.SortedDictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary =>
+					new Lazy<TypeMember?>(() => typeof(KeyValuePair<,>).MakeGenericType(this.Handle.ToType().GenericTypeArguments).GetTypeMember(), false),
+				_ => Lazy.Null<TypeMember>()
+			};
+		}
+
+		if (type.GenericTypeArguments.Any())
+			this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() =>
+				this.Handle.ToType().GenericTypeArguments
+					.To(_ => _.GetTypeMember())
+					.ToImmutableArray(), false);
+		else
+			this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() => ImmutableArray<TypeMember>.Empty, true);
+ 
+		if (type.GetInterfaces().Any())
+			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() =>
+				this.Handle.ToType().GetInterfaces()
+					.To(_ => _.GetTypeMember())
+					.ToImmutableArray(), false);
+		else
+			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() => ImmutableArray<TypeMember>.Empty, true);
+
+		if (type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable()))
+			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() =>
+				this.Handle.ToType().GetConstructors(INSTANCE_BINDING_FLAGS)
+					.If(constructorInfo => constructorInfo.IsInvokable())
+					.To(constructorInfo => new ConstructorMember(constructorInfo, this))
+					.ToImmutableArray(), false);
+		else
+			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() => ImmutableArray<ConstructorMember>.Empty, true);
+
+		if (type.GetEvents(BINDING_FLAGS).Any())
+			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() =>
+				this.Handle.ToType().GetEvents(BINDING_FLAGS)
+					.To(eventInfo => KeyValuePair.Create(eventInfo.Name, new EventMember(eventInfo, this)))
+					.ToImmutableDictionary(NAME_STRING_COMPARISON), false);
+		else
+			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() => ImmutableDictionary<string, EventMember>.Empty, true);
+
 		this._Fields = this.Kind switch
 		{
-			Kind.Delegate => new Lazy<IImmutableDictionary<string, FieldMember>>(() => ImmutableDictionary<string, FieldMember>.Empty, false),
-			_ => new Lazy<IImmutableDictionary<string, FieldMember>>(() => type.TypeHandle.CreateFieldMembers().ToImmutableDictionary(), false)
+			Kind.Delegate => new Lazy<IImmutableDictionary<string, FieldMember>>(() => ImmutableDictionary<string, FieldMember>.Empty, true),
+			_ when type.GetFields(BINDING_FLAGS).Any(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike) =>
+				new Lazy<IImmutableDictionary<string, FieldMember>>(() =>
+					this.Handle.ToType().GetFields(BINDING_FLAGS)
+						.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
+						.To(fieldInfo => KeyValuePair.Create(fieldInfo.Name, new FieldMember(fieldInfo, this)))
+						.ToImmutableDictionary(NAME_STRING_COMPARISON), false),
+			_ => new Lazy<IImmutableDictionary<string, FieldMember>>(() => ImmutableDictionary<string, FieldMember>.Empty, true)
 		};
-		this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() =>
-			type.TypeHandle.CreateMethodMembers().ToDictionary(pair => pair.Key, pair => (IImmutableList<MethodMember>)pair.Value.ToImmutableArray()).ToImmutableDictionary(), false);
-		this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() => type.TypeHandle.CreatePropertyMembers().ToImmutableDictionary(), false);
+
+		if (this.Handle.ToType().GetMethods(BINDING_FLAGS).Any(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable()))
+			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() =>
+				this.Handle.ToType().GetMethods(BINDING_FLAGS)
+					.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
+					.To(methodInfo => new MethodMember(methodInfo, this))
+					.Group(method => method.Name, NAME_STRING_COMPARISON.ToStringComparer())
+					.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)_.Value.ToImmutableArray(), NAME_STRING_COMPARISON), false);
+		else
+			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() => ImmutableDictionary<string, IImmutableList<MethodMember>>.Empty, true);
+
+		if (this.Handle.ToType().GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
+			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() =>
+				this.Handle.ToType().GetProperties(BINDING_FLAGS)
+					.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
+					.To(propertyInfo => KeyValuePair.Create(propertyInfo.Name, new PropertyMember(propertyInfo, this)))
+					.ToImmutableDictionary(NAME_STRING_COMPARISON), false);
+		else
+			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() => ImmutableDictionary<string, PropertyMember>.Empty, true);
 	}
 
-	private readonly Lazy<TypeMember> _BaseType;
+	private readonly Lazy<TypeMember?> _BaseType;
 
 	private readonly Lazy<TypeMember?> _EnclosedType;
 
@@ -86,9 +129,11 @@ public readonly struct TypeMember
 
 	private readonly Lazy<IImmutableDictionary<string, PropertyMember>> _Properties;
 
-	public IImmutableList<Attribute> Attributes { get; }
-
-	public string Name { get; }
+	private ConstructorMember[] CreateConstructorMembers()
+		=> this.Handle.ToType().GetConstructors(INSTANCE_BINDING_FLAGS)
+			.If(constructorInfo => constructorInfo.IsInvokable())
+			.To(constructorInfo => new ConstructorMember(constructorInfo, this))
+			.ToArray();
 
 	public IImmutableList<ConstructorMember> Constructors => this._Constructors.Value;
 
@@ -100,9 +145,11 @@ public readonly struct TypeMember
 
 	public IImmutableDictionary<string, PropertyMember> Properties => this._Properties.Value;
 
-	public TypeMember BaseType => this._BaseType.Value;
+	public TypeMember? BaseType => this._BaseType.Value;
 
 	public TypeMember? EnclosedType => this._EnclosedType.Value;
+
+	public RuntimeTypeHandle? GenericHandle { get; }
 
 	public IImmutableList<TypeMember> GenericTypes => this._GenericTypes.Value;
 
@@ -117,10 +164,6 @@ public readonly struct TypeMember
 	public bool Ref { get; }
 
 	public SystemType SystemType { get; }
-
-	public bool Internal { get; }
-
-	public bool Public { get; }
 
 	/// <summary>
 	/// <code>
@@ -145,6 +188,12 @@ public readonly struct TypeMember
 		=> this.Constructors.To(constructor => constructor.Method).First<D>();
 
 	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Constructors.First(constructor =&gt; constructor.Handle == handle);</c>
+	/// </summary>
+	public ConstructorMember? GetConstructorMember(RuntimeMethodHandle handle)
+		=> this.Constructors.First(constructor => constructor.Handle == handle);
+
+	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Methods.Get(<paramref name="name"/>).TryFirst(<see langword="out var"/> methods) ? methods.If(method =&gt; method.Static == <paramref name="isStatic"/>).To(method =&gt; method!.Method).First&lt;<typeparamref name="D"/>&gt;() : <see langword="null"/>;</c>
 	/// </summary>
 	public D? GetMethod<D>(string name, bool isStatic = false)
@@ -152,18 +201,84 @@ public readonly struct TypeMember
 		=> this.Methods.Get(name).TryFirst(out var methods) ? methods.If(method => method.Static == isStatic).To(method => method!.Method).First<D>() : null;
 
 	/// <summary>
-	/// <c>=&gt; ((<see cref="Type"/>)<see langword="this"/>).Implements&lt;<typeparamref name="T"/>&gt;();</c>
+	/// <c>=&gt; <see langword="this"/>.Methods.Values.Gather().First(method =&gt; method.Handle == handle);</c>
+	/// </summary>
+	public MethodMember? GetMethodMember(RuntimeMethodHandle handle)
+		=> this.Methods.Values.Gather().First(method => method.Handle == handle);
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Implements<T>()
-		=> ((Type)this).Implements<T>();
+		=> this.Implements(typeof(T));
 
 	/// <summary>
-	/// <c>=&gt; ((<see cref="Type"/>)<see langword="this"/>).Implements(<paramref name="type"/>);</c>
+	/// <code>
+	/// <see langword="var"/> handle = <paramref name="type"/>.TypeHandle;<br/>
+	/// <see langword="var"/> baseType = <see langword="this"/>.BaseType;<br/>
+	/// <see langword="if"/> (<paramref name="type"/>.IsGenericTypeDefinition)<br/>
+	/// {<br/>
+	/// <see langword="    if"/> (<see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.GenericHandle.Equals(handle)))<br/>
+	/// <see langword="        return true"/>;<br/>
+	/// <br/>
+	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (baseType.GenericHandle.Equals(handle) || baseType.InterfaceTypes.Any(_ =&gt; _.GenericHandle.Equals(handle)))<br/>
+	/// <see langword="             return true"/>;<br/>
+	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    if"/> (<see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.Handle.Equals(handle)))<br/>
+	/// <see langword="        return true"/>;<br/>
+	/// <br/>
+	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (baseType.Handle.Equals(handle) || baseType.InterfaceTypes.Any(_ =&gt; _.Handle.Equals(handle)))<br/>
+	/// <see langword="             return true"/>;<br/>
+	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }<br/>
+	/// <br/>
+	/// <see langword="return false"/>;
+	/// </code>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Implements(Type type)
-		=> ((Type)this).Implements(type);
+	{
+		var handle = type.TypeHandle;
+		var baseType = this.BaseType;
+		if (type.IsGenericTypeDefinition)
+		{
+			if (this.InterfaceTypes.Any(_ => _.GenericHandle.Equals(handle)))
+				return true;
+
+			while (baseType is not null)
+			{
+				if (baseType.GenericHandle.Equals(handle)
+					|| baseType.InterfaceTypes.Any(_ => _.GenericHandle.Equals(handle)))
+					return true;
+				baseType = baseType.BaseType;
+			}
+		}
+		else
+		{
+			if (this.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
+				return true;
+
+			while (baseType is not null)
+			{
+				if (baseType.Handle.Equals(handle)
+					|| baseType.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
+					return true;
+				baseType = baseType.BaseType;
+			}
+		}
+
+		return false;
+	}
 
 	/// <summary>
 	/// <code>
@@ -248,46 +363,16 @@ public readonly struct TypeMember
 		=> this.Handle.Is(type);
 
 	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Handle == <paramref name="other"/>?.Handle;</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public bool Equals(TypeMember? other)
+		=> this.Handle == other?.Handle;
+
+	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToType();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator Type(TypeMember member)
 		=> member.Handle.ToType();
-
-	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Handle.Equals(<paramref name="other"/>.Handle);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(TypeMember other)
-		=> this.Handle.Equals(other.Handle);
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="value"/> <see langword="is"/> <see cref="TypeMember"/> typeMember
-	/// ? <see langword="this"/>.Handle.Equals(typeMember.Handle)
-	/// : <see langword="false"/>;</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override bool Equals(object? value)
-		=> value is TypeMember typeMember ? this.Handle.Equals(typeMember.Handle) : false;
-
-	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Handle.GetHashCode();</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="typeMember1"/>.Equals(<paramref name="typeMember2"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool operator ==(TypeMember typeMember1, TypeMember typeMember2)
-		=> typeMember1.Equals(typeMember2);
-
-	/// <summary>
-	/// <c>=&gt; !<paramref name="typeMember1"/>.Equals(<paramref name="typeMember2"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool operator !=(TypeMember typeMember1, TypeMember typeMember2)
-		=> !typeMember1.Equals(typeMember2);
 }

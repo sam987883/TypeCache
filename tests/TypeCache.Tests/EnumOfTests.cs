@@ -23,8 +23,8 @@ public class EnumOfTests
 		Assert.True(EnumOf<BindingFlags>.Public);
 		Assert.Equal(Enum.GetValues(typeof(BindingFlags)), EnumOf<BindingFlags>.Tokens.Values.To(_ => _.Value).ToArray());
 		Assert.Equal(Enum.GetNames(typeof(BindingFlags)), EnumOf<BindingFlags>.Tokens.Values.To(_ => _.Name).ToArray(), StringComparer.Ordinal);
-		Assert.Equal(SystemType.Int32, EnumOf<BindingFlags>.UnderlyingType);
-		Assert.Equal(typeof(int).TypeHandle, EnumOf<BindingFlags>.UnderlyingTypeHandle);
+		Assert.Equal(SystemType.Int32, EnumOf<BindingFlags>.UnderlyingType.SystemType);
+		Assert.Equal(typeof(int).TypeHandle, EnumOf<BindingFlags>.UnderlyingType.Handle);
 	}
 
 	[Fact]
@@ -39,8 +39,8 @@ public class EnumOfTests
 		Assert.True(EnumOf<Kind>.Public);
 		Assert.Equal(Enum.GetValues(typeof(Kind)), EnumOf<Kind>.Tokens.Values.To(_ => _.Value).ToArray());
 		Assert.Equal(Enum.GetNames(typeof(Kind)), EnumOf<Kind>.Tokens.Values.To(_ => _.Name).ToArray(), StringComparer.Ordinal);
-		Assert.Equal(SystemType.Int32, EnumOf<Kind>.UnderlyingType);
-		Assert.Equal(typeof(int).TypeHandle, EnumOf<Kind>.UnderlyingTypeHandle);
+		Assert.Equal(SystemType.Int32, EnumOf<Kind>.UnderlyingType.SystemType);
+		Assert.Equal(typeof(int).TypeHandle, EnumOf<Kind>.UnderlyingType.Handle);
 	}
 
 	[Fact]
@@ -55,7 +55,7 @@ public class EnumOfTests
 		Assert.True(EnumOf<SystemType>.Public);
 		Assert.Equal(Enum.GetValues(typeof(SystemType)), EnumOf<SystemType>.Tokens.Values.To(_ => _.Value).ToArray());
 		Assert.Equal(Enum.GetNames(typeof(SystemType)), EnumOf<SystemType>.Tokens.Values.To(_ => _.Name).ToArray(), StringComparer.Ordinal);
-		Assert.Equal(SystemType.Int32, EnumOf<SystemType>.UnderlyingType);
-		Assert.Equal(typeof(int).TypeHandle, EnumOf<SystemType>.UnderlyingTypeHandle);
+		Assert.Equal(SystemType.Int32, EnumOf<SystemType>.UnderlyingType.SystemType);
+		Assert.Equal(typeof(int).TypeHandle, EnumOf<SystemType>.UnderlyingType.Handle);
 	}
 }

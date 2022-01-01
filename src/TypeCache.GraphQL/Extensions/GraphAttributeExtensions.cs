@@ -137,7 +137,7 @@ public static class GraphAttributeExtensions
 		{
 			Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 			Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
-			Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.Value.GraphType(isInputType)),
+			Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.GraphType(isInputType)),
 			Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
 			_ => @this.SystemType switch
 			{
@@ -159,7 +159,7 @@ public static class GraphAttributeExtensions
 				SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
 				SystemType.Guid => typeof(GuidGraphType),
 				SystemType.Range => typeof(StringGraphType),
-				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.Value.GraphType(isInputType),
+				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.GraphType(isInputType),
 				_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphOrderByType<>).MakeGenericType(@this),
 				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
 				_ => typeof(GraphObjectType<>).MakeGenericType(@this)

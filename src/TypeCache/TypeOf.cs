@@ -15,7 +15,7 @@ public static class TypeOf<T>
 
 	public static IImmutableList<Attribute> Attributes => Member.Attributes;
 
-	public static TypeMember BaseType => Member.BaseType;
+	public static TypeMember? BaseType => Member.BaseType;
 
 	public static TypeMember? EnclosedType => Member.EnclosedType;
 
