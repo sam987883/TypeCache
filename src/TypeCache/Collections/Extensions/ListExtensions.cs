@@ -218,33 +218,57 @@ public static class ListExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="var"/> success = @<paramref name="item"/>.Has(<paramref name="index"/>);<br/>
-	/// <paramref name="item"/> = success ? @this![<paramref name="index"/>] : <see langword="default"/>;<br/>
-	/// <see langword="return"/> success;
+	/// <see langword="if"/> (@<paramref name="this"/>.Has(<paramref name="index"/>))<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>[<paramref name="index"/>];<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <paramref name="item"/> = <see langword="default"/>;<br/>
+	/// <see langword="return false"/>;
 	/// </code>
 	/// </summary>
 	public static bool TryGet<T>(this IList<T>? @this, Index index, out T? item)
 	{
-		var success = @this.Has(index);
-		item = success ? @this![index] : default;
-		return success;
+		if (@this.Has(index))
+		{
+			item = @this[index];
+			return true;
+		}
+		item = default;
+		return false;
 	}
 
 	/// <summary>
 	/// <code>
-	/// <see langword="var"/> success = @<paramref name="item"/>.Has(<paramref name="index"/>);<br/>
-	/// <paramref name="item"/> = success ? @this![<paramref name="index"/>] : <see langword="default"/>;<br/>
-	/// <see langword="return"/> success;
+	/// <see langword="if"/> (@<paramref name="this"/>.Has(<paramref name="index"/>))<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="item"/> = @<paramref name="this"/>[<paramref name="index"/>];<br/>
+	/// <see langword="    return true"/>;<br/>
+	/// }<br/>
+	/// <paramref name="item"/> = <see langword="default"/>;<br/>
+	/// <see langword="return false"/>;
 	/// </code>
 	/// </summary>
 	public static bool TryGet<T>(this IReadOnlyList<T>? @this, Index index, out T? item)
 	{
-		var success = @this.Has(index);
-		item = success ? @this![index] : default;
-		return success;
+		if (@this.Has(index))
+		{
+			item = @this[index];
+			return true;
+		}
+		item = default;
+		return false;
 	}
 
+	/// <summary>
+	/// <code>
+	/// <paramref name="filter"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="return"/> @this <see langword="is not null"/> ? 0.Range(@<paramref name="this"/>.Count).If(i =&gt; <paramref name="filter"/>(@<paramref name="this"/>[i])) : Enumerable&lt;<see cref="int"/>&gt;.Empty;
+	/// </code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static IEnumerable<int> ToIndex<T>(this List<T>? @this, Predicate<T> filter)
 	{
 		filter.AssertNotNull();

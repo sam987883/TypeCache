@@ -139,26 +139,26 @@ public static class TypeExtensions
 	private static readonly IImmutableDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
 
 	/// <summary>
-	/// <c><paramref name="types"/>.Any(@<paramref name="this"/>.Is)</c>
+	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool Any(this Type? @this, params Type[] types)
-		=> types.Any(@this.Is!);
+		=> types.Any(@this.Is);
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/> <see langword="switch"/><br/>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// 	_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see cref="Kind.Class"/>,<br/>
-	/// 	{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
-	/// 	{ IsEnum: <see langword="true"/> } =&gt; <see cref="Kind.Enum"/>,<br/>
-	/// 	{ IsArray: <see langword="true"/> } =&gt; <see cref="Kind.Collection"/>,<br/>
-	/// 	_ <see langword="when"/> <see langword="typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
-	/// 	_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="Kind.Collection"/>,<br/>
-	/// 	{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
-	/// 	{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
-	/// 	_ =&gt; <see cref="Kind.Class"/><br/>
-	/// }
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see cref="Kind.Class"/>,<br/>
+	/// <see langword="    "/>{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
+	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see cref="Kind.Enum"/>,<br/>
+	/// <see langword="    "/>{ IsArray: <see langword="true"/> } =&gt; <see cref="Kind.Collection"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <see langword="typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="Kind.Collection"/>,<br/>
+	/// <see langword="    "/>{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
+	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="Kind.Class"/><br/>
+	/// };
 	/// </code>
 	/// </summary>
 	public static Kind GetKind(this Type @this)
@@ -176,22 +176,22 @@ public static class TypeExtensions
 		};
 
 	/// <summary>
-	/// <c>@<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name
-	///		?? (@<paramref name="this"/>.Name.Contains('`') ? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) : @<paramref name="this"/>.Name)</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name
+	///		?? (@<paramref name="this"/>.Name.Contains('`') ? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) : @<paramref name="this"/>.Name);</c>
 	/// </summary>
 	public static string GetName(this MemberInfo @this)
 		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? (@this.Name.Contains('`') ? @this.Name.Left(@this.Name.IndexOf('`')) : @this.Name);
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/> <see langword="switch"/><br/>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// 	_ <see langword="when"/> <see cref="SystemTypes"/>.TryGetValue(@<paramref name="this"/>.ToGenericType()?.TypeHandle ?? @<paramref name="this"/>.TypeHandle, <see langword="out var"/> systemType) =&gt; systemType,<br/>
-	/// 	{ IsEnum: <see langword="true"/> } =&gt; @<paramref name="this"/>.GetEnumUnderlyingType().GetSystemType(),<br/>
-	/// 	{ IsArray: <see langword="true"/> } =&gt; <see cref="SystemType.Array"/>,<br/>
-	/// 	_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="SystemType.Enumerable"/>,<br/>
-	/// 	_ =&gt; <see cref="SystemType.Unknown"/><br/>
-	/// }
+	/// <see langword="    "/>_ <see langword="when"/> <see cref="SystemTypes"/>.TryGetValue(@<paramref name="this"/>.ToGenericType()?.TypeHandle ?? @<paramref name="this"/>.TypeHandle, <see langword="out var"/> systemType) =&gt; systemType,<br/>
+	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; @<paramref name="this"/>.GetEnumUnderlyingType().GetSystemType(),<br/>
+	/// <see langword="    "/>{ IsArray: <see langword="true"/> } =&gt; <see cref="SystemType.Array"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="SystemType.Enumerable"/>,<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="SystemType.Unknown"/><br/>
+	/// };
 	/// </code>
 	/// </summary>
 	public static SystemType GetSystemType(this Type @this)
@@ -205,7 +205,7 @@ public static class TypeExtensions
 		};
 
 	/// <summary>
-	/// <c>@<paramref name="this"/>.Implements(typeof(<typeparamref name="T"/>))</c>
+	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool Implements<T>(this Type @this)
@@ -213,50 +213,101 @@ public static class TypeExtensions
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/>BaseType.Is(<paramref name="type"/>)
-	/// || (<paramref name="type"/>.IsInterface &amp;&amp; @<paramref name="this"/>.GetInterfaces().Any(_ =&gt; _.Is(<paramref name="type"/>)))
+	/// <see langword="if"/> (<paramref name="type"/>.IsInterface)<br/>
+	/// {<br/>
+	/// <see langword="    return"/> <paramref name="type"/>.IsGenericTypeDefinition<br/>
+	/// <see langword="        "/>? @<paramref name="this"/>.GetInterfaces().Any(_ =&gt; _.ToGenericType()?.TypeHandle.Equals(<paramref name="type"/>.TypeHandle) <see langword="is true"/>)<br/>
+	/// <see langword="        "/>: @<paramref name="this"/>.GetInterfaces().Any(_ =&gt; _.TypeHandle.Equals(<paramref name="type"/>.TypeHandle));<br/>
+	/// }<br/>
+	/// <see langword="else if"/> (<paramref name="type"/>.IsGenericTypeDefinition)<br/>
+	/// {<br/>
+	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
+	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (baseType.ToGenericType()?.TypeHandle.Equals(<paramref name="type"/>.TypeHandle) <see langword="is true"/>)<br/>
+	/// <see langword="             return true"/>;<br/>
+	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
+	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (baseType.TypeHandle.Equals(<paramref name="type"/>.TypeHandle))<br/>
+	/// <see langword="             return true"/>;<br/>
+	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }<br/>
+	/// <see langword="return false"/>;
 	/// </code>
 	/// </summary>
 	public static bool Implements(this Type @this, Type type)
-		=> @this.BaseType.Is(type) || (type.IsInterface && @this.GetInterfaces().Any(_ => _.Is(type)));
+	{
+		if (type.IsInterface)
+		{
+			return type.IsGenericTypeDefinition
+				? @this.GetInterfaces().Any(_ => _.ToGenericType()?.TypeHandle.Equals(type.TypeHandle) is true)
+				: @this.GetInterfaces().Any(_ => _.TypeHandle.Equals(type.TypeHandle));
+		}
+		else if (type.IsGenericTypeDefinition)
+		{
+			var baseType = @this.BaseType;
+			while (baseType is not null)
+			{
+				if (baseType.ToGenericType()?.TypeHandle.Equals(type.TypeHandle) is true)
+					return true;
+				baseType = baseType.BaseType;
+			}
+		}
+		else
+		{
+			var baseType = @this.BaseType;
+			while (baseType is not null)
+			{
+				if (baseType.TypeHandle.Equals(type.TypeHandle))
+					return true;
+				baseType = baseType.BaseType;
+			}
+		}
+		return false;
+	}
 
 	/// <summary>
-	/// <c>@<paramref name="this"/> == typeof(<typeparamref name="T"/>)</c>
+	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static bool Is<T>(this Type? @this)
 		=> @this == typeof(T);
 
 	/// <summary>
-	/// <code>
-	/// @<paramref name="this"/> == <paramref name="type"/>
-	/// || (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType())
-	/// </code>
+	/// <c>=&gt; @<paramref name="this"/> == <paramref name="type"/>
+	///		|| (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType());</c>
 	/// </summary>
 	public static bool Is(this Type? @this, Type type)
 		=> @this == type || (type.IsGenericTypeDefinition && type == @this.ToGenericType());
 
 	/// <summary>
-	/// <c>@<paramref name="this"/>.Is&lt;<see cref="IEnumerable"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable"/>&gt;()</c>
+	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable"/>&gt;();</c>
 	/// </summary>
 	public static bool IsEnumerable(this Type @this)
 		=> @this.Is<IEnumerable>() || @this.Implements<IEnumerable>();
 
 	/// <summary>
-	/// <c>@<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;()</c>
+	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
 	/// </summary>
 	public static bool IsEnumerableOf<T>(this Type @this)
 		=> @this.Is<IEnumerable<T>>() || @this.Implements<IEnumerable<T>>();
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/> switch<br/>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///		<see langword="null"/> =&gt; <see langword="null"/>,<br/>
-	///		_ <see langword="when"/> @<paramref name="this"/>.IsGenericTypeDefinition =&gt; @<paramref name="this"/>,<br/>
-	///		_ <see langword="when"/> @<paramref name="this"/>.IsGenericType =&gt; @<paramref name="this"/>.GetGenericTypeDefinition(),<br/>
-	///		_ =&gt; <see langword="null"/><br/>
-	/// }
+	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
+	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsGenericTypeDefinition =&gt; @<paramref name="this"/>,<br/>
+	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsGenericType =&gt; @<paramref name="this"/>.GetGenericTypeDefinition(),<br/>
+	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// };
 	/// </code>
 	/// </summary>
 	public static Type? ToGenericType(this Type? @this)

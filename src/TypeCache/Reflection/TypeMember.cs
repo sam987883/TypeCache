@@ -219,29 +219,28 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="var"/> baseType = <see langword="this"/>.BaseType;<br/>
 	/// <see langword="if"/> (<paramref name="type"/>.IsGenericTypeDefinition)<br/>
 	/// {<br/>
-	/// <see langword="    if"/> (<see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.GenericHandle.Equals(handle)))<br/>
+	/// <see langword="    if"/> (<paramref name="type"/>.IsInterface &amp;&amp; <see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.GenericHandle.Equals(handle)))<br/>
 	/// <see langword="        return true"/>;<br/>
 	/// <br/>
 	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        if"/> (baseType.GenericHandle.Equals(handle) || baseType.InterfaceTypes.Any(_ =&gt; _.GenericHandle.Equals(handle)))<br/>
+	/// <see langword="        if"/> (baseType.GenericHandle.Equals(handle))<br/>
 	/// <see langword="             return true"/>;<br/>
 	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
 	/// <see langword="    "/>}<br/>
 	/// }<br/>
 	/// <see langword="else"/><br/>
 	/// {<br/>
-	/// <see langword="    if"/> (<see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.Handle.Equals(handle)))<br/>
+	/// <see langword="    if"/> (<paramref name="type"/>.IsInterface &amp;&amp; <see langword="this"/>.InterfaceTypes.Any(_ =&gt; _.Handle.Equals(handle)))<br/>
 	/// <see langword="        return true"/>;<br/>
 	/// <br/>
 	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        if"/> (baseType.Handle.Equals(handle) || baseType.InterfaceTypes.Any(_ =&gt; _.Handle.Equals(handle)))<br/>
+	/// <see langword="        if"/> (baseType.Handle.Equals(handle))<br/>
 	/// <see langword="             return true"/>;<br/>
 	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
 	/// <see langword="    "/>}<br/>
 	/// }<br/>
-	/// <br/>
 	/// <see langword="return false"/>;
 	/// </code>
 	/// </summary>
@@ -252,31 +251,28 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		var baseType = this.BaseType;
 		if (type.IsGenericTypeDefinition)
 		{
-			if (this.InterfaceTypes.Any(_ => _.GenericHandle.Equals(handle)))
+			if (type.IsInterface && this.InterfaceTypes.Any(_ => _.GenericHandle.Equals(handle)))
 				return true;
 
 			while (baseType is not null)
 			{
-				if (baseType.GenericHandle.Equals(handle)
-					|| baseType.InterfaceTypes.Any(_ => _.GenericHandle.Equals(handle)))
+				if (baseType.GenericHandle.Equals(handle))
 					return true;
 				baseType = baseType.BaseType;
 			}
 		}
 		else
 		{
-			if (this.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
+			if (type.IsInterface && this.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
 				return true;
 
 			while (baseType is not null)
 			{
-				if (baseType.Handle.Equals(handle)
-					|| baseType.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
+				if (baseType.Handle.Equals(handle))
 					return true;
 				baseType = baseType.BaseType;
 			}
 		}
-
 		return false;
 	}
 
@@ -349,18 +345,18 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	}
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Handle.Is&lt;<typeparamref name="V"/>&gt;();</c>
+	/// <c>=&gt; <see langword="this"/>.Handle.Equals(<see langword="typeof"/>(<typeparamref name="V"/>).TypeHandle);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Is<V>()
-		=> this.Handle.Is<V>();
+		=> this.Handle.Equals(typeof(V).TypeHandle);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Handle.Is(<paramref name="type"/>);</c>
+	/// <c>=&gt; <see langword="this"/>.Handle.Equals(<paramref name="type"/>.TypeHandle) || <see langword="this"/>.GenericHandle.Equals(<paramref name="type"/>.TypeHandle);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Is(Type type)
-		=> this.Handle.Is(type);
+		=> this.Handle.Equals(type.TypeHandle) || this.GenericHandle.Equals(type.TypeHandle);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Handle == <paramref name="other"/>?.Handle;</c>
