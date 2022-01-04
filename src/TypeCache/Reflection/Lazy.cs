@@ -12,4 +12,7 @@ public static class Lazy
 	public static Lazy<T?> Null<T>()
 		where T : class
 		=> new Lazy<T?>(() => null, true);
+
+	public static Lazy<T> Value<T>(T value)
+		=> new Lazy<T>(() => value, true);
 }

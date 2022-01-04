@@ -4,26 +4,26 @@ namespace TypeCache.Reflection.Extensions;
 
 public enum UnaryOperator
 {
-	/// <summary><code>i is true</code></summary>
+	/// <summary><c>i <see langword="is true"/></c></summary>
 	IsTrue,
-	/// <summary><code>i is false</code></summary>
+	/// <summary><c>i <see langword="is false"/></c></summary>
 	IsFalse,
-	/// <summary><code>++i</code></summary>
+	/// <summary><c>++i</c></summary>
 	PreIncrement,
-	/// <summary><code>i + 1</code></summary>
+	/// <summary><c>i + 1</c></summary>
 	Increment,
-	/// <summary><code>i++</code></summary>
+	/// <summary><c>i++</c></summary>
 	PostIncrement,
-	/// <summary><code>--i</code></summary>
+	/// <summary><c>--i</c></summary>
 	PreDecrement,
-	/// <summary><code>i - 1</code></summary>
+	/// <summary><c>i - 1</c></summary>
 	Decrement,
-	/// <summary><code>i--</code></summary>
+	/// <summary><c>i--</c></summary>
 	PostDecrement,
-	/// <summary><code>-i</code></summary>
+	/// <summary><c>-i</c></summary>
 	Negate,
-	/// <summary><code>checked(-i)</code></summary>
+	/// <summary><c><see langword="checked"/>(-i)</c></summary>
 	NegateChecked,
-	/// <summary><code>~i</code></summary>
+	/// <summary><c>~i</c></summary>
 	Complement
 }

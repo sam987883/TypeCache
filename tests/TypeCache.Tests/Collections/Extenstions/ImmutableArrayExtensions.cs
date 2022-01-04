@@ -100,7 +100,7 @@ public class ImmutableArrayExtensions
 		Assert.Equal(new[] { 4, 3 }, intArray.Get(3..1));
 		Assert.Empty(intArray.Get(2..2));
 		Assert.Equal(new[] { 3, 4, 5 }, intArray.Get(2..^1));
-		Assert.Throws<IndexOutOfRangeException>(() => intArray.Get(^0..0).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => intArray.Get(^0..0).ToArray());
 		Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray.Get(0..^0));
 	}
 

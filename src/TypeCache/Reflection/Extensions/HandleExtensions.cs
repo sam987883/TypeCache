@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions;
@@ -31,7 +29,7 @@ public static class HandleExtensions
 		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 
 	/// <summary>
-	/// <c><see cref="TypeMember.Cache"/>[@<paramref name="this"/>]</c>
+	/// <c>=&gt; <see cref="TypeMember.Cache"/>[@<paramref name="this"/>];</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static TypeMember GetTypeMember(this RuntimeTypeHandle @this)
@@ -60,11 +58,12 @@ public static class HandleExtensions
 		=> FieldInfo.GetFieldFromHandle(@this);
 
 	/// <summary>
-	/// <c>=&gt; <see cref="FieldInfo"/>.GetFieldFromHandle(<paramref name="fieldHandle"/>, @<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="FieldInfo"/>.GetFieldFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </summary>
+	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeFieldHandle"/> is a field whose type is a generic parameter of its declared type.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static FieldInfo ToFieldInfo(this RuntimeTypeHandle @this, RuntimeFieldHandle fieldHandle)
-		=> FieldInfo.GetFieldFromHandle(fieldHandle, @this);
+	public static FieldInfo ToFieldInfo(this RuntimeFieldHandle @this, RuntimeTypeHandle typeHandle)
+		=> FieldInfo.GetFieldFromHandle(@this, typeHandle);
 
 	/// <summary>
 	/// <code>
@@ -86,12 +85,12 @@ public static class HandleExtensions
 		=> MethodBase.GetMethodFromHandle(@this);
 
 	/// <summary>
-	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(<paramref name="methodHandle"/>, @<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </summary>
-	/// <param name="this"><see cref="RuntimeTypeHandle"/> is needed when <paramref name="methodHandle"/> is a method using a generic parameter of its declared type.</param>
+	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method using a generic parameter of its declared type.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static MethodBase? ToMethodBase(this RuntimeTypeHandle @this, RuntimeMethodHandle methodHandle)
-		=> MethodBase.GetMethodFromHandle(methodHandle, @this);
+	public static MethodBase? ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
+		=> MethodBase.GetMethodFromHandle(@this, typeHandle);
 
 	/// <summary>
 	/// <c>=&gt; <see cref="Type"/>.GetTypeFromHandle(@<paramref name="this"/>);</c>

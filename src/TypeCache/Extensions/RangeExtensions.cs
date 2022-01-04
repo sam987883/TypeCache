@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
 using static System.Math;
 using static TypeCache.Default;
 
@@ -178,6 +177,24 @@ public static class RangeExtensions
 
 	/// <summary>
 	/// <code>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    false"/> =&gt; @<paramref name="this"/>.End.Previous()..@<paramref name="this"/>.Start.Previous(),<br/>
+	/// <see langword="    true"/> =&gt; @<paramref name="this"/>.End.Next()..@<paramref name="this"/>.Start.Next(),<br/>
+	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.End..@<paramref name="this"/>.Start<br/>
+	/// };
+	/// </code>
+	/// </summary>
+	public static Range Reverse(this Range @this)
+		=> @this.IsReverse() switch
+		{
+			false => @this.End.Previous()..@this.Start.Previous(),
+			true => @this.End.Next()..@this.Start.Next(),
+			_ => @this.End..@this.Start
+		};
+
+	/// <summary>
+	/// <code>
 	/// =&gt; @<paramref name="this"/>.Has(<paramref name="other"/>.Start) || @<paramref name="this"/>.Has(<paramref name="other"/>.End) || <paramref name="other"/>.Has(@<paramref name="this"/>.Start) || <paramref name="other"/>.Has(@<paramref name="this"/>.End) ? (@<paramref name="this"/>.IsReverse(), <paramref name="other"/>.IsReverse()) <see langword="switch"/><br/>
 	/// {<br/>
 	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.Start).Maximum()..(@<paramref name="this"/>.End, <paramref name="other"/>.End).Minimum(),<br/>
@@ -200,19 +217,25 @@ public static class RangeExtensions
 
 	/// <summary>
 	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    true"/> =&gt; @<paramref name="this"/>.Start.Value.Range(@<paramref name="this"/>.Start.Value - @<paramref name="this"/>.End.Value, -1),<br/>
-	///	<see langword="    false"/> =&gt; @<paramref name="this"/>.Start.Value.Range(@<paramref name="this"/>.End.Value - @<paramref name="this"/>.Start.Value, 1),<br/>
-	///	<see langword="    "/>_ =&gt; Enumerable&lt;<see cref="int"/>&gt;.Empty<br/>
-	/// };
+	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
+	/// <see langword="if"/> (reverse <see langword="is false"/>)<br/>
+	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &lt; @<paramref name="this"/>.End.Value; ++i)<br/>
+	///	<see langword="        yield return"/> i;<br/>
+	/// <see langword="if"/> (reverse <see langword="is true"/>)<br/>
+	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &gt; @<paramref name="this"/>.End.Value; --i)<br/>
+	///	<see langword="        yield return"/> i;<br/>
+	/// <see langword="yield break"/>;
 	/// </code>
 	/// </summary>
 	public static IEnumerable<int> Values(this Range @this)
-		=> @this.IsReverse() switch
-		{
-			true => @this.Start.Value.Range(@this.Start.Value - @this.End.Value, -1),
-			false => @this.Start.Value.Range(@this.End.Value - @this.Start.Value, 1),
-			_ => Enumerable<int>.Empty
-		};
+	{
+		var reverse = @this.IsReverse();
+		if (reverse is false)
+			for (var i = @this.Start.Value; i < @this.End.Value; ++i)
+				yield return i;
+		else if (reverse is true)
+			for (var i = @this.Start.Value; i > @this.End.Value; --i)
+				yield return i;
+		yield break;
+	}
 }

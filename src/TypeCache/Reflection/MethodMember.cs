@@ -22,6 +22,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	internal MethodMember(MethodInfo methodInfo, TypeMember type) : base(methodInfo)
 	{
 		this.Type = type;
+		this.Abstract = methodInfo.IsAbstract;
 		this.GenericTypes = methodInfo.GetGenericArguments().Length;
 		this.Handle = methodInfo.MethodHandle;
 		this.Method = !methodInfo.ContainsGenericParameters ? methodInfo.Lambda().Compile() : null;
@@ -38,6 +39,8 @@ public class MethodMember : Member, IEquatable<MethodMember>
 			return methodInfo.MakeGenericMethod(types).LambdaInvokeType().Compile();
 		}
 	}
+
+	public bool Abstract { get; }
 
 	public int GenericTypes { get; }
 
@@ -67,7 +70,10 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	public object? InvokeGeneric(object? instance, Type[] genericTypes, params object?[]? arguments)
 		=> this._Cache?[genericTypes.To(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
+	/// <summary>
+	/// <c>=&gt; <paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
+	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator MethodInfo(MethodMember member)
-		=> (MethodInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
+		=> (MethodInfo)member.Handle.ToMethodBase(member.Type.Handle)!;
 }

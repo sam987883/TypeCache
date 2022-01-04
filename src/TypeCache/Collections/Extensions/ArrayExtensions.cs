@@ -219,7 +219,41 @@ public static class ArrayExtensions
 
 	/// <exception cref="IndexOutOfRangeException" />
 	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
-		=> range.Normalize(@this.Length).Values().To(i => @this[i]);
+	{
+		range = range.Normalize(@this.Length);
+		var copy = new T[range.Length()];
+		if (range.IsReverse() is true)
+		{
+			@this.AsSpan(range.Reverse()).CopyTo(copy.AsSpan());
+			copy.Reverse();
+		}
+		else
+			@this.AsSpan(range).CopyTo(copy.AsSpan());
+		return copy;
+	}
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="    return"/> <see cref="Array{T}.Empty"/><br/>
+	/// <br/>
+	/// <see langword="var"/> copy = <see langword="new"/> T[@<paramref name="this"/>.Length];<br/>
+	/// @<paramref name="this"/>.AsSpan().CopyTo(copy.AsSpan());<br/>
+	/// <see langword="return"/> copy;
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="IndexOutOfRangeException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static T[] GetCopy<T>(this T[] @this)
+	{
+		if (!@this.Any())
+			return Array<T>.Empty;
+
+		var copy = new T[@this.Length];
+		@this.AsSpan().CopyTo(copy.AsSpan());
+		return copy;
+	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> If<T>(this T[]? @this, Predicate<T> filter)
@@ -428,12 +462,18 @@ public static class ArrayExtensions
 		where T : notnull
 		=> ImmutableStack.Create(@this ?? Array<T>.Empty);
 
+	/// <summary>
+	/// <code>
+	/// <paramref name="filter"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="return"/> @<paramref name="this"/> <see langword="is not null"/> ? (0..@<paramref name="this"/>.Length).Values().If(i =&gt; <paramref name="filter"/>(@<paramref name="this"/>[i])) : Enumerable&lt;<see cref="int"/>&gt;.Empty;</code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<int> ToIndex<T>(this T[]? @this, Predicate<T> filter)
 	{
 		filter.AssertNotNull();
 
-		return @this is not null ? 0.Range(@this.Length).If(i => filter(@this[i])) : Enumerable<int>.Empty;
+		return @this is not null ? (0..@this.Length).Values().If(i => filter(@this[i])) : Enumerable<int>.Empty;
 	}
 
 	/// <summary>

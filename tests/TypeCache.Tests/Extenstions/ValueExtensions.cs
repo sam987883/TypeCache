@@ -18,15 +18,6 @@ public class ValueExtensions
 	}
 
 	[Fact]
-	public void Range()
-	{
-		Assert.Equal(new[] { -2, -1, 0, 1, 2 }, (-2).Range(5).ToArray());
-		Assert.Equal(new[] { 2, 2, 2, 2, 2, 2 }, 2.Range(6, 0).ToArray());
-		Assert.Equal(new[] { 9, 6, 3, 0, -3, -6 }, 9.Range(6, -3).ToArray());
-		Assert.Equal(Array<int>.Empty, 123.Range(0, 123).ToArray());
-	}
-
-	[Fact]
 	public void Repeat()
 	{
 		Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());

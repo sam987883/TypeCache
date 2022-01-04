@@ -45,9 +45,9 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 		=> this.Handle == other?.Handle;
 
 	/// <summary>
-	/// <c>=&gt; (<see cref="ConstructorInfo"/>)<paramref name="member"/>.Type.Handle.ToMethodBase(<paramref name="member"/>.Handle)!;</c>
+	/// <c>=&gt; (<see cref="ConstructorInfo"/>)<paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator ConstructorInfo(ConstructorMember member)
-		=> (ConstructorInfo)member.Type.Handle.ToMethodBase(member.Handle)!;
+		=> (ConstructorInfo)member.Handle.ToMethodBase(member.Type.Handle)!;
 }

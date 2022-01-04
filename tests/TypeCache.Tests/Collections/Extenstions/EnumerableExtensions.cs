@@ -218,23 +218,17 @@ public class EnumerableExtensions
 	[Fact]
 	public void First()
 	{
+		Assert.Equal(default, (null as IEnumerable).First<int>());
+		Assert.Equal(default, ((IEnumerable)Array<int>.Empty).First<int>());
+		Assert.Equal(1, this.GetItems().First<int>());
 		Assert.Null((null as IEnumerable).First<string>());
 		Assert.Null(((IEnumerable)Array<string>.Empty).First<string>());
 		Assert.Null(this.GetItems().First<string>());
 
-		Assert.Null(new List<string>().First());
-		Assert.Equal("1", new List<string> { "1", "2", "3" }.First());
-	}
-
-	[Fact]
-	public void FirstValue()
-	{
-		Assert.Equal(default, (null as IEnumerable).First<int>());
-		Assert.Equal(default, ((IEnumerable)Array<int>.Empty).First<int>());
-		Assert.Equal(1, this.GetItems().First<int>());
-
 		Assert.Equal(default, new List<int>().First());
 		Assert.Equal(1, new List<int> { 1, 2, 3 }.First());
+		Assert.Null(new List<string>().First());
+		Assert.Equal("1", new List<string> { "1", "2", "3" }.First());
 	}
 
 	[Fact]
@@ -287,10 +281,10 @@ public class EnumerableExtensions
 		Assert.Equal(new[] { 3, 4, 5 }, immutableArray.Get(2..^1));
 		Assert.Equal(new[] { 3, 4, 5 }, list.Get(2..^1));
 		Assert.Equal(new[] { 3, 4, 5 }, enumerable.Get(2..^1));
-		Assert.Throws<IndexOutOfRangeException>(() => array.Get(^0..0).ToArray());
-		Assert.Throws<IndexOutOfRangeException>(() => immutableArray.Get(^0..0).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => array.Get(^0..0).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => immutableArray.Get(^0..0).ToArray());
 		Assert.Throws<ArgumentOutOfRangeException>(() => list.Get(^0..0).ToArray());
-		Assert.Throws<IndexOutOfRangeException>(() => enumerable.Get(^0..0).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => enumerable.Get(^0..0).ToArray());
 		Assert.Equal(array, array.Get(0..^0));
 		Assert.Equal(array, immutableArray.Get(0..^0));
 		Assert.Equal(array, list.Get(0..^0));
@@ -391,10 +385,28 @@ public class EnumerableExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal("1,2,3,4,5,6", intArray.Join(','));
-		Assert.Equal("1.2.3.4.5.6", intArray.Join("."));
+		Assert.Equal("1,2,3,4,5,6", this.GetItems().Join(','));
+		Assert.Equal("1.2.3.4.5.6", this.GetItems().Join("."));
 		Assert.Equal(string.Empty, (null as IEnumerable<int>).Join('!'));
 		Assert.Equal(string.Empty, Enumerable<int>.Empty.Join("aaa"));
+	}
+
+	[Fact]
+	public void Last()
+	{
+		Assert.Equal(default, (null as IEnumerable).Last<int>());
+		Assert.Equal(default, ((IEnumerable)Array<int>.Empty).Last<int>());
+		Assert.Equal(6, this.GetItems().Last<int>());
+		Assert.Null((null as IEnumerable).Last<string>());
+		Assert.Null(((IEnumerable)Array<string>.Empty).Last<string>());
+		Assert.Null(this.GetItems().Last<string>());
+
+		Assert.Equal(default, new List<int>().Last());
+		Assert.Equal(3, new List<int> { 1, 2, 3 }.Last());
+		Assert.Null(new List<string>().Last());
+		Assert.Equal("3", new List<string> { "1", "2", "3" }.Last());
+
+		Assert.Equal(new[] { 4, 5, 6 }, this.GetItems().TakeLast(3).ToArray());
 	}
 
 	[Fact]
@@ -444,7 +456,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 3, 4, 5, 6 }, intArray.Skip(2));
 		Assert.Equal(Array<int>.Empty, intArray.Skip(6));
-		Assert.Throws<IndexOutOfRangeException>(() => Enumerable<int>.Empty.Skip(3).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.Skip(3).ToArray());
 	}
 
 	[Fact]
@@ -463,7 +475,15 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 1, 2 }, intArray.Take(2));
 		Assert.Equal(intArray, intArray.Take(6));
-		Assert.Throws<IndexOutOfRangeException>(() => Enumerable<int>.Empty.Take(3).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.Take(3).ToArray());
+	}
+
+	[Fact]
+	public void TakeLast()
+	{
+		Assert.Empty(this.GetItems().TakeLast(0).ToArray());
+		Assert.Equal(new[] { 6 }, this.GetItems().TakeLast(1).ToArray());
+		Assert.Equal(new[] { 4, 5, 6 }, this.GetItems().TakeLast(3).ToArray());
 	}
 
 	[Fact]

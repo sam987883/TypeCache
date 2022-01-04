@@ -52,7 +52,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.To(_ => _.GetTypeMember())
 					.ToImmutableArray(), false);
 		else
-			this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() => ImmutableArray<TypeMember>.Empty, true);
+			this._GenericTypes = Lazy.Value<IImmutableList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
  
 		if (type.GetInterfaces().Any())
 			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() =>
@@ -60,7 +60,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.To(_ => _.GetTypeMember())
 					.ToImmutableArray(), false);
 		else
-			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() => ImmutableArray<TypeMember>.Empty, true);
+			this._InterfaceTypes = Lazy.Value<IImmutableList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
 
 		if (type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable()))
 			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() =>
@@ -69,7 +69,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.To(constructorInfo => new ConstructorMember(constructorInfo, this))
 					.ToImmutableArray(), false);
 		else
-			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() => ImmutableArray<ConstructorMember>.Empty, true);
+			this._Constructors = Lazy.Value<IImmutableList<ConstructorMember>>(ImmutableArray<ConstructorMember>.Empty);
 
 		if (type.GetEvents(BINDING_FLAGS).Any())
 			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() =>
@@ -77,7 +77,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.To(eventInfo => KeyValuePair.Create(eventInfo.Name, new EventMember(eventInfo, this)))
 					.ToImmutableDictionary(NAME_STRING_COMPARISON), false);
 		else
-			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() => ImmutableDictionary<string, EventMember>.Empty, true);
+			this._Events = Lazy.Value<IImmutableDictionary<string, EventMember>>(ImmutableDictionary<string, EventMember>.Empty);
 
 		this._Fields = this.Kind switch
 		{
@@ -99,7 +99,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.Group(method => method.Name, NAME_STRING_COMPARISON.ToStringComparer())
 					.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)_.Value.ToImmutableArray(), NAME_STRING_COMPARISON), false);
 		else
-			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() => ImmutableDictionary<string, IImmutableList<MethodMember>>.Empty, true);
+			this._Methods = Lazy.Value<IImmutableDictionary<string, IImmutableList<MethodMember>>>(ImmutableDictionary<string, IImmutableList<MethodMember>>.Empty);
 
 		if (this.Handle.ToType().GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
 			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() =>
@@ -108,7 +108,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 					.To(propertyInfo => KeyValuePair.Create(propertyInfo.Name, new PropertyMember(propertyInfo, this)))
 					.ToImmutableDictionary(NAME_STRING_COMPARISON), false);
 		else
-			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() => ImmutableDictionary<string, PropertyMember>.Empty, true);
+			this._Properties = Lazy.Value<IImmutableDictionary<string, PropertyMember>>(ImmutableDictionary<string, PropertyMember>.Empty);
 	}
 
 	private readonly Lazy<TypeMember?> _BaseType;
@@ -128,12 +128,6 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	private readonly Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>> _Methods;
 
 	private readonly Lazy<IImmutableDictionary<string, PropertyMember>> _Properties;
-
-	private ConstructorMember[] CreateConstructorMembers()
-		=> this.Handle.ToType().GetConstructors(INSTANCE_BINDING_FLAGS)
-			.If(constructorInfo => constructorInfo.IsInvokable())
-			.To(constructorInfo => new ConstructorMember(constructorInfo, this))
-			.ToArray();
 
 	public IImmutableList<ConstructorMember> Constructors => this._Constructors.Value;
 
@@ -188,7 +182,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		=> this.Constructors.To(constructor => constructor.Method).First<D>();
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Constructors.First(constructor =&gt; constructor.Handle == handle);</c>
+	/// <c>=&gt; <see langword="this"/>.Constructors.First(constructor =&gt; constructor.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
 	public ConstructorMember? GetConstructorMember(RuntimeMethodHandle handle)
 		=> this.Constructors.First(constructor => constructor.Handle == handle);
@@ -201,7 +195,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		=> this.Methods.Get(name).TryFirst(out var methods) ? methods.If(method => method.Static == isStatic).To(method => method!.Method).First<D>() : null;
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.Values.Gather().First(method =&gt; method.Handle == handle);</c>
+	/// <c>=&gt; <see langword="this"/>.Methods.Values.Gather().First(method =&gt; method.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
 	public MethodMember? GetMethodMember(RuntimeMethodHandle handle)
 		=> this.Methods.Values.Gather().First(method => method.Handle == handle);
@@ -281,7 +275,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="if"/> (<see langword="this"/>.Methods.Get(<paramref name="name"/>).TryFirst(<see langword="out var"/> methods)<br/>
 	/// <see langword="    "/>&amp;&amp; methods.TryFirst(method =&gt; !method.IsStatic &amp;&amp; method.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> method))<br/>
 	/// <see langword="    return"/> method.Invoke(<paramref name="instance"/>, <paramref name="parameters"/>);<br/>
-	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(InvokeMethod)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
+	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(<see cref="InvokeMethod"/>)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
@@ -298,7 +292,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="if"/> (<see langword="this"/>.Methods.Get(<paramref name="name"/>).TryFirst(<see langword="out var"/> methods)<br/>
 	/// <see langword="    "/>&amp;&amp; methods.TryFirst(method =&gt; method.IsStatic &amp;&amp; method.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> method))<br/>
 	/// <see langword="    return"/> method.Invoke(<see langword="null"/>, <paramref name="parameters"/>);<br/>
-	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(InvokeStaticMethod)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
+	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(<see cref="InvokeStaticMethod"/>)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
@@ -315,7 +309,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="if"/> (<see langword="this"/>.Methods.Get(<paramref name="name"/>).TryFirst(<see langword="out var"/> methods)<br/>
 	/// <see langword="    "/>&amp;&amp; methods.TryFirst(method =&gt; !method.IsStatic &amp;&amp; method.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> method))<br/>
 	/// <see langword="    return"/> method.InvokeGeneric(<paramref name="instance"/>, <paramref name="genericTypes"/>, <paramref name="parameters"/>);<br/>
-	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(InvokeGenericMethod)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
+	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(<see cref="InvokeGenericMethod"/>)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
@@ -332,7 +326,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="if"/> (<see langword="this"/>.Methods.Get(<paramref name="name"/>).TryFirst(<see langword="out var"/> methods)<br/>
 	/// <see langword="    "/>&amp;&amp; methods.TryFirst(method =&gt; method.IsStatic &amp;&amp; method.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> method))<br/>
 	/// <see langword="    return"/> method.InvokeGeneric(<see langword="null"/>, <paramref name="genericTypes"/>, <paramref name="parameters"/>);<br/>
-	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(InvokeGenericStaticMethod)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
+	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(<see cref="InvokeGenericStaticMethod"/>)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>

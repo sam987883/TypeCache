@@ -9,11 +9,10 @@ namespace TypeCache.Extensions;
 public static class IndexExtensions
 {
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsFromEnd ? <see langword="new"/> <see cref="Index"/>(<paramref name="count"/> - @<paramref name="this"/>.Value) : @<paramref name="this"/>;</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsFromEnd ?  (<paramref name="count"/> &gt; 0 ? <see langword="new"/> <see cref="Index"/>(<paramref name="count"/> - @<paramref name="this"/>.Value) : <see langword="default"/>) : @<paramref name="this"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static Index FromStart(this Index @this, int count)
-		=> @this.IsFromEnd ? new Index(count - @this.Value) : @this;
+		=> @this.IsFromEnd ? (count > 0 ? new Index(count - @this.Value) : default) : @this;
 
 	/// <summary>
 	/// <c>=&gt; <see langword="new"/> <see cref="Index"/>(@<paramref name="this"/>.Value + <paramref name="increment"/>);</c>

@@ -14,12 +14,12 @@ namespace TypeCache.Data.Extensions;
 public static class DbDataReaderExtensions
 {
 	public static string[] GetColumns(this IDataReader @this)
-		=> 0.Range(@this.FieldCount).To(@this.GetName).ToArray();
+		=> (0..@this.FieldCount).Values().To(@this.GetName).ToArray();
 
 	public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		var columnCount = @this.FieldCount;
-		var indexes = 0.Range(columnCount);
+		var indexes = (0..columnCount).Values().ToArray();
 		while (await @this.ReadAsync(cancellationToken))
 		{
 			var values = new object[columnCount];

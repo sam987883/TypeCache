@@ -6,52 +6,59 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Reflection.Extensions;
 
-public record ArrayExpressionBuilder(Expression Expression)
+public readonly struct ArrayExpressionBuilder
 {
+	private readonly Expression _Expression;
+
+	public ArrayExpressionBuilder(Expression expression)
+	{
+		this._Expression = expression;
+	}
+
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </summary>
 	public IndexExpression this[int index]
-		=> Expression.ArrayAccess(this.Expression, Expression.Constant(index));
+		=> Expression.ArrayAccess(this._Expression, Expression.Constant(index));
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.ToArray(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </summary>
 	public IndexExpression this[params int[] indexes]
-		=> Expression.ArrayAccess(this.Expression, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayAccess(this._Expression, indexes.ToArray(index => (Expression)Expression.Constant(index)));
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </summary>
 	public IndexExpression this[long index]
-		=> Expression.ArrayAccess(this.Expression, Expression.Constant(index));
+		=> Expression.ArrayAccess(this._Expression, Expression.Constant(index));
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.ToArray(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </summary>
 	public IndexExpression this[params long[] indexes]
-		=> Expression.ArrayAccess(this.Expression, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayAccess(this._Expression, indexes.ToArray(index => (Expression)Expression.Constant(index)));
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="index"/>);</c>
 	/// </summary>
 	public IndexExpression this[Expression index]
-		=> Expression.ArrayAccess(this.Expression, index);
+		=> Expression.ArrayAccess(this._Expression, index);
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, IEnumerable{Expression})"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>);</c>
 	/// </summary>
 	public IndexExpression this[IEnumerable<Expression> indexes]
-		=> Expression.ArrayAccess(this.Expression, indexes);
+		=> Expression.ArrayAccess(this._Expression, indexes);
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayAccess(Expression, Expression[])"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>);</c>
 	/// </summary>
 	public IndexExpression this[params Expression[] indexes]
-		=> Expression.ArrayAccess(this.Expression, indexes);
+		=> Expression.ArrayAccess(this._Expression, indexes);
 
 	/// <summary>
-	/// <c><see cref="Expression.ArrayLength(Expression)"/></c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayLength(<see langword="this"/>._Expression);</c>
 	/// </summary>
-	public UnaryExpression Length => Expression.ArrayLength(this.Expression);
+	public UnaryExpression Length => Expression.ArrayLength(this._Expression);
 }

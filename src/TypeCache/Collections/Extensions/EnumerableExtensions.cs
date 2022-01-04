@@ -645,70 +645,64 @@ public static class EnumerableExtensions
 	/// <summary>
 	/// <code>
 	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	///	<see langword="    return"/>;<br/>
+	///	<see langword="    return default"/>;<br/>
 	///	<br/>
-	/// <see langword="if"/> (<paramref name="options"/> <see langword="is not null"/>)<br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>);<br/>
-	/// <see langword="else"/><br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
+	/// <see langword="return"/> <paramref name="options"/> <see langword="is not null"/><br/>
+	///	<see langword="    "/>? <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>)<br/>
+	///	<see langword="    "/>: <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static void DoInParallel<T>(this IEnumerable<T>? @this, Action<T, ParallelLoopState, long> action, ParallelOptions? options = null)
+	public static ParallelLoopResult DoInParallel<T>(this IEnumerable<T>? @this, Action<T> action, ParallelOptions? options = null)
 	{
 		if (@this is null)
-			return;
+			return default;
 
-		if (options is not null)
-			Parallel.ForEach(@this, options, action);
-		else
-			Parallel.ForEach(@this, action);
+		return options is not null
+			? Parallel.ForEach(@this, options, action)
+			: Parallel.ForEach(@this, action);
 	}
 
 	/// <summary>
 	/// <code>
 	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	///	<see langword="    return"/>;<br/>
+	///	<see langword="    return default"/>;<br/>
 	///	<br/>
-	/// <see langword="if"/> (<paramref name="options"/> <see langword="is not null"/>)<br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>);<br/>
-	/// <see langword="else"/><br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
+	/// <see langword="return"/> <paramref name="options"/> <see langword="is not null"/><br/>
+	///	<see langword="    "/>? <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>)<br/>
+	///	<see langword="    "/>: <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static void DoInParallel<T>(this IEnumerable<T>? @this, Action<T, ParallelLoopState> action, ParallelOptions? options = null)
+	public static ParallelLoopResult DoInParallel<T>(this IEnumerable<T>? @this, Action<T, ParallelLoopState> action, ParallelOptions? options = null)
 	{
 		if (@this is null)
-			return;
+			return default;
 
-		if (options is not null)
-			Parallel.ForEach(@this, options, action);
-		else
-			Parallel.ForEach(@this, action);
+		return options is not null
+			? Parallel.ForEach(@this, options, action)
+			: Parallel.ForEach(@this, action);
 	}
 
 	/// <summary>
 	/// <code>
 	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	///	<see langword="    return"/>;<br/>
+	///	<see langword="    return default"/>;<br/>
 	///	<br/>
-	/// <see langword="if"/> (<paramref name="options"/> <see langword="is not null"/>)<br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>);<br/>
-	/// <see langword="else"/><br/>
-	///	<see langword="    "/><see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
+	/// <see langword="return"/> <paramref name="options"/> <see langword="is not null"/><br/>
+	///	<see langword="    "/>? <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="options"/>, <paramref name="action"/>)<br/>
+	///	<see langword="    "/>: <see cref="Parallel"/>.ForEach(@<paramref name="this"/>, <paramref name="action"/>);
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static void DoInParallel<T>(this IEnumerable<T>? @this, Action<T> action, ParallelOptions? options = null)
+	public static ParallelLoopResult DoInParallel<T>(this IEnumerable<T>? @this, Action<T, ParallelLoopState, long> action, ParallelOptions? options = null)
 	{
 		if (@this is null)
-			return;
+			return default;
 
-		if (options is not null)
-			Parallel.ForEach(@this, options, action);
-		else
-			Parallel.ForEach(@this, action);
+		return options is not null
+			? Parallel.ForEach(@this, options, action)
+			: Parallel.ForEach(@this, action);
 	}
 
 	/// <summary>
@@ -1141,11 +1135,11 @@ public static class EnumerableExtensions
 		=> @this.If<T>().Last(defaultValue);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Get(^0, <paramref name="defaultValue"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Get(^1, <paramref name="defaultValue"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static T? Last<T>(this IEnumerable<T>? @this, T? defaultValue = default)
-		=> @this.Get(^0, defaultValue);
+		=> @this.Get(^1, defaultValue);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.If(<paramref name="filter"/>).Last(<paramref name="defaultValue"/>);</c>
@@ -1195,7 +1189,6 @@ public static class EnumerableExtensions
 		comparer ??= Comparer<T>.Default;
 		return @this.TryFirst(out var initial) ? @this.Aggregate(initial, comparer.Maximum) : defaultValue;
 	}
-
 
 	/// <summary>
 	/// <code>
@@ -1315,6 +1308,13 @@ public static class EnumerableExtensions
 		=> @this.Get(0..count);
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Get(0..<paramref name="count"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> @this, int count)
+		=> @this.Get(Index.FromEnd(count)..^0);
+
+	/// <summary>
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
@@ -1379,7 +1379,7 @@ public static class EnumerableExtensions
 		=> @this switch
 		{
 			null => Array<T>.Empty,
-			T[] array => array.AsSpan().ToArray(),
+			T[] array => array.GetCopy(),
 			ImmutableArray<T> immutableArray => immutableArray.AsSpan().ToArray(),
 			List<T> list => list.ToArray(),
 			Stack<T> stack => stack.ToArray(),
@@ -1927,8 +1927,8 @@ public static class EnumerableExtensions
 	///	<see langword="    null"/> =&gt; <see cref="Enumerable{T}"/>.NoGet(<see langword="out"/> <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="index"/>.IsFromEnd =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.Value, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()).Value, <see langword="out"/> <paramref name="item"/>)<br/>
+	///	<see langword="    "/>_ <see langword="when"/> <paramref name="index"/>.IsFromEnd =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()).Value, <see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.Value, <see langword="out"/> <paramref name="item"/>)<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -1940,8 +1940,8 @@ public static class EnumerableExtensions
 			null => Enumerable<T>.NoGet(out item),
 			IList<T> list => list.TryGet(index, out item),
 			IReadOnlyList<T> list => list.TryGet(index, out item),
-			_ when index.IsFromEnd => Enumerable<T>.TryGet(@this, index.Value, out item),
-			_ => Enumerable<T>.TryGet(@this, index.FromStart(@this.Count()).Value, out item)
+			_ when index.IsFromEnd => Enumerable<T>.TryGet(@this, index.FromStart(@this.Count()).Value, out item),
+			_ => Enumerable<T>.TryGet(@this, index.Value, out item)
 		};
 
 	/// <summary>

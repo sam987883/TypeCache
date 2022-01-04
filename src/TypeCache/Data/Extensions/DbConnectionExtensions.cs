@@ -56,7 +56,7 @@ public static class DbConnectionExtensions
 		var columns = Array<ColumnSchema>.Empty;
 		if (columnRowSet?.Rows.Any() is true)
 		{
-			columns = 0.Range(columnRowSet!.Rows.Length).To(i => new ColumnSchema
+			columns = (0..columnRowSet!.Rows.Length).Values().To(i => new ColumnSchema
 			{
 				Hidden = (bool)columnRowSet[i, nameof(ColumnSchema.Hidden)]!,
 				Id = (int)columnRowSet[i, nameof(ColumnSchema.Id)]!,
@@ -73,7 +73,7 @@ public static class DbConnectionExtensions
 		var parameters = Array<ParameterSchema>.Empty;
 		if (parameterRowSet?.Rows.Any() is true)
 		{
-			parameters = 0.Range(parameterRowSet!.Rows.Length).To(i => new ParameterSchema
+			parameters = (0..parameterRowSet!.Rows.Length).Values().To(i => new ParameterSchema
 			{
 				Id = (int)parameterRowSet[i, nameof(ParameterSchema.Id)]!,
 				Name = (string)parameterRowSet[i, nameof(ParameterSchema.Name)]!,

@@ -309,18 +309,60 @@ public static class EnumerableOfStringExtensions
 		=> @this.IsSet(items, comparison.ToStringComparer());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Match(<paramref name="items"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// <c>=&gt; @<paramref name="this"/>.MatchBy(<paramref name="items"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static HashSet<string> Match(this IEnumerable<string>? @this, IEnumerable<string>? items, StringComparison comparison = STRING_COMPARISON)
 		=> @this.Match(items, comparison.ToStringComparer());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Neither(<paramref name="items"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// <c>=&gt; @<paramref name="this"/>.MatchBy(<paramref name="items"/>, <paramref name="getKey"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static HashSet<T> MatchBy<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, Func<T, string> getKey, StringComparison comparison = STRING_COMPARISON)
+		=> @this.MatchBy(items, getKey, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Maximum(<paramref name="defaultValue"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	public static string? Maximum(this IEnumerable<string>? @this, string? defaultValue = default, StringComparison comparison = STRING_COMPARISON)
+		=> @this.Maximum(defaultValue, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.MaximumBy(<paramref name="getValue"/>, <paramref name="defaultValue"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static T? MaximumBy<T>(this IEnumerable<T>? @this, Func<T, string> getValue, T? defaultValue = default, StringComparison comparison = STRING_COMPARISON)
+		=> @this.MaximumBy(getValue, defaultValue, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Minimum(<paramref name="defaultValue"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	public static string? Minimum(this IEnumerable<string>? @this, string? defaultValue = default, StringComparison comparison = STRING_COMPARISON)
+		=> @this.Minimum(defaultValue, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.MinimumBy(<paramref name="getValue"/>, <paramref name="defaultValue"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static T? MinimumBy<T>(this IEnumerable<T>? @this, Func<T, string> getValue, T? defaultValue = default, StringComparison comparison = STRING_COMPARISON)
+		=> @this.MinimumBy(getValue, defaultValue, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.NotMatch(<paramref name="items"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static HashSet<string> NotMatch(this IEnumerable<string>? @this, IEnumerable<string>? items, StringComparison comparison = STRING_COMPARISON)
 		=> @this.NotMatch(items, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.NotMatchBy(<paramref name="items"/>, <paramref name="getKey"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static HashSet<T> NotMatchBy<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, Func<T, string> getKey, StringComparison comparison = STRING_COMPARISON)
+		=> @this.NotMatchBy(items, getKey, comparison.ToStringComparer());
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Sort(<paramref name="comparison"/>.ToStringComparer());</c>
@@ -382,6 +424,14 @@ public static class EnumerableOfStringExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static HashSet<string> ToHashSet(this IEnumerable<string>? @this, StringComparison comparison = STRING_COMPARISON)
 		=> @this.ToHashSet(comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.ToHashSetBy(<paramref name="getKey"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static HashSet<T> ToHashSetBy<T>(this IEnumerable<T>? @this, Func<T, string> getKey, StringComparison comparison = STRING_COMPARISON)
+		=> @this.ToHashSetBy(getKey, comparison.ToStringComparer());
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>?.ToImmutableDictionary(<paramref name="keyComparison"/>.ToStringComparer())
@@ -534,9 +584,25 @@ public static class EnumerableOfStringExtensions
 		=> @this.Union(items, comparison.ToStringComparer());
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.UnionBy(<paramref name="items"/>, <paramref name="getKey"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static HashSet<T> UnionBy<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, Func<T, string> getKey, StringComparison comparison = STRING_COMPARISON)
+		=> @this.UnionBy(items, getKey, comparison.ToStringComparer());
+
+	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Without(<paramref name="items"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static HashSet<string> Without(this IEnumerable<string>? @this, IEnumerable<string>? items, StringComparison comparison = STRING_COMPARISON)
 		=> @this.Without(items, comparison.ToStringComparer());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.WithoutBy(<paramref name="items"/>, <paramref name="getKey"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static HashSet<T> WithoutBy<T>(this IEnumerable<T>? @this, IEnumerable<T>? items, Func<T, string> getKey, StringComparison comparison = STRING_COMPARISON)
+		=> @this.WithoutBy(items, getKey, comparison.ToStringComparer());
 }

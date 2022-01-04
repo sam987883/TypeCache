@@ -135,7 +135,7 @@ public static class ImmutableArrayExtensions
 
 	/// <exception cref="IndexOutOfRangeException" />
 	public static IEnumerable<T> Get<T>(this ImmutableArray<T> @this, Range range)
-		=> range.Normalize(@this.Length).Values().To(i => @this[i]);
+		=> @this.AsSpan().ToArray().Get(range);
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> If<T>(this ImmutableArray<T> @this, Predicate<T> filter)

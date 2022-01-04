@@ -41,10 +41,6 @@ public class FieldMember : Member, IEquatable<FieldMember>
 
 	public bool Static { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static implicit operator FieldInfo(FieldMember member)
-		=> member.Type.Handle.ToFieldInfo(member.Handle);
-
 	/// <param name="instance">Pass null if the field is static.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public object? GetValue(object? instance)
@@ -60,7 +56,10 @@ public class FieldMember : Member, IEquatable<FieldMember>
 	public bool Equals(FieldMember? other)
 		=> this.Handle == other?.Handle;
 
+	/// <summary>
+	/// <c>=&gt; <paramref name="member"/>.Handle.ToFieldInfo(<paramref name="member"/>.Type.Handle)!;</c>
+	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+	public static implicit operator FieldInfo(FieldMember member)
+		=> member.Handle.ToFieldInfo(member.Type.Handle);
 }

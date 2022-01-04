@@ -264,7 +264,7 @@ public static class ListExtensions
 	/// <code>
 	/// <paramref name="filter"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="return"/> @this <see langword="is not null"/> ? 0.Range(@<paramref name="this"/>.Count).If(i =&gt; <paramref name="filter"/>(@<paramref name="this"/>[i])) : Enumerable&lt;<see cref="int"/>&gt;.Empty;
+	/// <see langword="return"/> @this <see langword="is not null"/> ? (0..(@<paramref name="this"/>.Count).Values().If(i =&gt; <paramref name="filter"/>(@<paramref name="this"/>[i])) : Enumerable&lt;<see cref="int"/>&gt;.Empty;
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -273,6 +273,6 @@ public static class ListExtensions
 	{
 		filter.AssertNotNull();
 
-		return @this is not null ? 0.Range(@this.Count).If(i => filter(@this[i])) : Enumerable<int>.Empty;
+		return @this is not null ? (0..@this.Count).Values().If(i => filter(@this[i])) : Enumerable<int>.Empty;
 	}
 }

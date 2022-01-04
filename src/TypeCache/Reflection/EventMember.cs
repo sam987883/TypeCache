@@ -47,8 +47,4 @@ public class EventMember : Member, IEquatable<EventMember>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(EventMember? other)
 		=> this.AddEventHandler.Handle == other?.AddEventHandler.Handle;
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this.AddEventHandler.Handle.GetHashCode();
 }
