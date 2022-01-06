@@ -13,5 +13,5 @@ internal class DefaultFieldToCsvMapper<T> : IFieldToCsvMapper<T>
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public string[] Map(params T[] rows)
-		=> rows.To(row => TypeOf<T>.Fields.Values.To(field => field.GetValue(row)).ToArray()).ToArray().ToCSV();
+		=> rows.Map(row => TypeOf<T>.Fields.Values.Map(field => field.GetValue(row)).ToArray()).ToArray().ToCSV();
 }

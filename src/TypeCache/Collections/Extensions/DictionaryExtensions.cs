@@ -58,7 +58,7 @@ public static class DictionaryExtensions
 	/// </summary>
 	public static IDictionary<K, (V1, V2)> Match<K, V1, V2>(this (IDictionary<K, V1>, IDictionary<K, V2>) @this, IEqualityComparer<K>? comparer)
 		where K : notnull
-		=> @this.Item1.Keys.Match(@this.Item2.Keys, comparer).To(key => KeyValuePair.Create(key, (@this.Item1[key], @this.Item2[key]))).ToDictionary(comparer);
+		=> @this.Item1.Keys.Match(@this.Item2.Keys, comparer).Map(key => KeyValuePair.Create(key, (@this.Item1[key], @this.Item2[key]))).ToDictionary(comparer);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Match(<paramref name="comparison"/>.ToStringComparer());</c>

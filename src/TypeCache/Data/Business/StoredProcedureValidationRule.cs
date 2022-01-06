@@ -25,7 +25,7 @@ internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureRe
 		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure);
 		schema.Type.Assert(ObjectType.StoredProcedure);
 
-		var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).To(parameter => parameter!.Name)).ToCSV();
+		var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).Map(parameter => parameter!.Name)).ToCSV();
 		if (invalidParameterCsv.IsNotBlank())
 			throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
 

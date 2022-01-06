@@ -32,8 +32,7 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 
 		dataLoader.AssertNotNull();
 
-		if (!method.Return.Type.Is<T>()
-			&& ((method.Return.IsTask || method.Return.IsValueTask) && method.Return.Type.EnclosedType?.Is<T>() is false))
+		if (!method.Return.Type.Is<T>() && !method.Return.Type.Is<Task<T>>() && !method.Return.Type.Is<ValueTask<T>>())
 			throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Member.GraphName()}] instead of [{method.Return.Type.Name}].");
 
 		this._Method = method;

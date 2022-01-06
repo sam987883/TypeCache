@@ -52,7 +52,7 @@ public class TypeOfTests
 		Assert.Equal(1, member.Attributes.Count);
 		Assert.Null(member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Empty(member.GenericTypes);
@@ -73,7 +73,7 @@ public class TypeOfTests
 		Assert.Equal(5, member.Attributes.Count);
 		Assert.Equal(typeof(object), member.BaseType);
 		Assert.Equal(3, member.Constructors.Count);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(3, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
@@ -94,7 +94,7 @@ public class TypeOfTests
 		Assert.Equal(2, member.Attributes.Count);
 		Assert.Equal(typeof(SelectRequest), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(3, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
@@ -119,7 +119,7 @@ public class TypeOfTests
 		Assert.Equal(6, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
-		Assert.Equal(TypeOf<string>.Member, member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(2, member.Fields.Count);
 		Assert.Contains(TypeOf<string>.Member, member.GenericTypes);
@@ -140,7 +140,7 @@ public class TypeOfTests
 		Assert.Equal(2, member.Attributes.Count);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Equal(TypeOf<ulong>.Member, member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Contains(TypeOf<ulong>.Member, member.GenericTypes);
@@ -165,7 +165,7 @@ public class TypeOfTests
 		Assert.Empty(member.Attributes);
 		Assert.Equal(typeof(MulticastDelegate), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
-		Assert.Equal(TypeOf<string>.Member, member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Contains(TypeOf<string>.Member, member.GenericTypes);
@@ -190,7 +190,7 @@ public class TypeOfTests
 		Assert.Equal(0, member.Attributes.Count);
 		Assert.Equal(typeof(Enum), member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Equal(0, member.Events.Count);
 		Assert.Equal(1, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
@@ -215,7 +215,7 @@ public class TypeOfTests
 		Assert.Equal(1, member.Attributes.Count);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Empty(member.GenericTypes);
@@ -240,7 +240,7 @@ public class TypeOfTests
 		Assert.Empty(member.Attributes);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Equal(typeof(void).GetTypeMember(), member.EnclosedType);
+		Assert.Equal(typeof(void).GetTypeMember(), member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Empty(member.GenericTypes);
@@ -261,7 +261,7 @@ public class TypeOfTests
 		Assert.Empty(member.Attributes);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Equal(TypeOf<int>.Member, member.EnclosedType);
+		Assert.Equal(typeof(int).GetTypeMember(), member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Empty(member.GenericTypes);
@@ -282,7 +282,7 @@ public class TypeOfTests
 		Assert.Empty(member.Attributes);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Equal(TypeOf<bool>.Member, member.EnclosedType);
+		Assert.Equal(typeof(bool).GetTypeMember(), member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
 		Assert.Empty(member.GenericTypes);
@@ -307,7 +307,7 @@ public class TypeOfTests
 		Assert.Equal(3, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(1, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
@@ -327,7 +327,7 @@ public class TypeOfTests
 		Assert.Equal(3, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(3, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
@@ -348,7 +348,7 @@ public class TypeOfTests
 		Assert.Equal(3, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
-		Assert.Equal(TypeOf<int>.Member, member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(2, member.Fields.Count);
 		Assert.Contains(TypeOf<int>.Member, member.GenericTypes);
@@ -369,7 +369,7 @@ public class TypeOfTests
 		Assert.Equal(3, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Empty(member.Constructors);
-		Assert.Null(member.EnclosedType);
+		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Equal(10, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);

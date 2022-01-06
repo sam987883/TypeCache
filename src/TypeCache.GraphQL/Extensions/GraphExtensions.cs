@@ -152,7 +152,7 @@ public static class GraphExtensions
 		var end = start + items.Length;
 		var connection = new Connection<T>
 		{
-			Edges = items.To((item, i) => new Edge<T>
+			Edges = items.Map((item, i) => new Edge<T>
 			{
 				Cursor = (start + i).ToString(),
 				Node = item
@@ -178,7 +178,7 @@ public static class GraphExtensions
 			Description = @this.GraphDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
 			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
-			Subscriber = (IEventStreamResolver)typeof(GraphExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type }, @this, handler)!,
+			Subscriber = (IEventStreamResolver)typeof(GraphExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, handler)!,
 			Type = @this.Return.GraphType()
 		};
 
@@ -305,7 +305,7 @@ public static class GraphExtensions
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 		=> new QueryArguments(@this
 			.If(parameter => !parameter.GraphIgnore())
-			.To(parameter => new QueryArgument(parameter.GraphType())
+			.Map(parameter => new QueryArgument(parameter.GraphType())
 			{
 				Name = parameter.GraphName(),
 				Description = parameter.GraphDescription(),

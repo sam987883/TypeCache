@@ -133,8 +133,8 @@ public class ImmutableArrayExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 }.ToImmutableArray();
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" }.ToImmutableArray();
 
-		Assert.Equal(stringArray, intArray.To(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.To((x, i) => (i + 1).ToString()));
+		Assert.Equal(stringArray, intArray.Map(i => i.ToString()));
+		Assert.Equal(stringArray, intArray.Map((x, i) => (i + 1).ToString()));
 	}
 
 	[Fact]
@@ -143,7 +143,7 @@ public class ImmutableArrayExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 }.ToImmutableArray();
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" }.ToImmutableArray();
 
-		Assert.Equal(await stringArray.ToAsync().ToListAsync(), await intArray.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+		Assert.Equal(await stringArray.ToAsync().ToListAsync(), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 	}
 
 	[Fact]

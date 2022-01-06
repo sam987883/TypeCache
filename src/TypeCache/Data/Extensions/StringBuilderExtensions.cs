@@ -13,7 +13,7 @@ public static class StringBuilderExtensions
 {
 	public static StringBuilder AppendColumnsSQL(this StringBuilder @this, string[] columns)
 		=> @this.Append('(')
-			.AppendJoin(", ", columns.To(column => column.EscapeIdentifier()))
+			.AppendJoin(", ", columns.Map(column => column.EscapeIdentifier()))
 			.Append(')').AppendLine();
 
 	public static StringBuilder AppendSQL(this StringBuilder @this, string keyword, string? clause)
@@ -63,5 +63,5 @@ public static class StringBuilderExtensions
 	}
 
 	public static StringBuilder AppendValuesSQL(this StringBuilder @this, object?[][] rows)
-		=> @this.AppendSQL("VALUES", rows.To(row => Invariant($"({row.To(value => value.ToSQL()).Join(", ")})")));
+		=> @this.AppendSQL("VALUES", rows.Map(row => Invariant($"({row.Map(value => value.ToSQL()).Join(", ")})")));
 }

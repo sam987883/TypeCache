@@ -132,10 +132,10 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 	public string Name { get; init; }
 
 	public bool HasColumn(string column) =>
-		this.Columns.To(_ => _.Name).Has(column);
+		this.Columns.Map(_ => _.Name).Has(column);
 
 	public bool HasParameter(string parameter) =>
-		this.Parameters.To(_ => _.Name).Has(parameter);
+		this.Parameters.Map(_ => _.Name).Has(parameter);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(ObjectSchema? other)

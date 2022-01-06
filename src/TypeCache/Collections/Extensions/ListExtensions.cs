@@ -133,7 +133,7 @@ public static class ListExtensions
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static IEnumerable<T> Get<T>(this List<T> @this, Range range)
-		=> range.Normalize(@this.Count).Values().To(i => @this[i]);
+		=> range.Normalize(@this.Count).Values().Map(i => @this[i]);
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> If<T>(this List<T>? @this, Predicate<T> filter)
@@ -184,7 +184,7 @@ public static class ListExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this List<T>? @this, Func<T, V> map)
+	public static IEnumerable<V> Map<T, V>(this List<T>? @this, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
@@ -194,7 +194,7 @@ public static class ListExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this List<T>? @this, Func<T, int, V> map)
+	public static IEnumerable<V> Map<T, V>(this List<T>? @this, Func<T, int, V> map)
 	{
 		map.AssertNotNull();
 
@@ -204,7 +204,7 @@ public static class ListExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	internal static async IAsyncEnumerable<V> ToAsync<T, V>(T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
+	internal static async IAsyncEnumerable<V> MapAsync<T, V>(T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
 	{
 		map.AssertNotNull();
 

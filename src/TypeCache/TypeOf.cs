@@ -17,7 +17,7 @@ public static class TypeOf<T>
 
 	public static TypeMember? BaseType => Member.BaseType;
 
-	public static TypeMember? EnclosedType => Member.EnclosedType;
+	public static TypeMember? ElementType => Member.ElementType;
 
 	public static IImmutableList<TypeMember> GenericTypes => Member.GenericTypes;
 

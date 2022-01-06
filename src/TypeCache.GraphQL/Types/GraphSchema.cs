@@ -73,26 +73,26 @@ public class GraphSchema : Schema
 		var fieldTypes = new List<FieldType>();
 
 		var methods = TypeOf<T>.Methods.Values.Gather().ToArray();
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQueryAttribute>()).To(this.AddQuery));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphMutationAttribute>()).To(this.AddMutation));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).To(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQueryAttribute>()).Map(this.AddQuery));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphMutationAttribute>()).Map(this.AddMutation));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).Map(method =>
 		{
 			var parentType = method.Attributes.First<GraphSubqueryAttribute>()!.ParentType;
 			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).To(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).Map(method =>
 		{
 			var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
 			return this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).To(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).Map(method =>
 		{
 			var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
 			return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubscriptionAttribute>()).To(this.AddSubscription));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubscriptionAttribute>()).Map(this.AddSubscription));
 
 		return fieldTypes.ToArray();
 	}
@@ -108,7 +108,7 @@ public class GraphSchema : Schema
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddMutation<T>(string method)
-		=> TypeOf<T>.Methods[method].To(this.AddMutation).ToArray();
+		=> TypeOf<T>.Methods[method].Map(this.AddMutation).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -122,7 +122,7 @@ public class GraphSchema : Schema
 	/// <exception cref="ArgumentException"/>
 	public FieldType AddMutation(MethodMember method)
 	{
-		if (method.Return.IsVoid)
+		if (method.Return.Void)
 			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
 		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
@@ -140,7 +140,7 @@ public class GraphSchema : Schema
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddQuery<T>(string method)
-		=> TypeOf<T>.Methods[method].To(this.AddQuery).ToArray();
+		=> TypeOf<T>.Methods[method].Map(this.AddQuery).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -154,7 +154,7 @@ public class GraphSchema : Schema
 	/// <exception cref="ArgumentException"/>
 	public FieldType AddQuery(MethodMember method)
 	{
-		if (method.Return.IsVoid)
+		if (method.Return.Void)
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
 		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
@@ -172,7 +172,7 @@ public class GraphSchema : Schema
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddSubscription<T>(string method)
-		=> TypeOf<T>.Methods[method].To(this.AddSubscription).ToArray();
+		=> TypeOf<T>.Methods[method].Map(this.AddSubscription).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -238,8 +238,8 @@ public class GraphSchema : Schema
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.EnclosedType!;
-		if (!childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
+		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
+		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
@@ -302,8 +302,8 @@ public class GraphSchema : Schema
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.EnclosedType!;
-		if (!childType.Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var childKeyProperty)
+		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
+		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
@@ -404,7 +404,7 @@ public class GraphSchema : Schema
 		}, StringComparer.OrdinalIgnoreCase);
 		this.Query.AddField(new()
 		{
-			Arguments = new QueryArguments(arguments.To(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true)) { Name = _.Key })),
+			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true)) { Name = _.Key })),
 			Name = $"Call{schema.ObjectName}",
 			Description = $"Calls stored procedure: {schema.Name}.",
 			Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),

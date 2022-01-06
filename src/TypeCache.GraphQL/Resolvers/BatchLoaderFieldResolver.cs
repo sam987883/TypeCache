@@ -37,7 +37,7 @@ public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IData
 		getChildKey.AssertNotNull();
 
 		if (!method.Return.Type.Implements<IEnumerable<CHILD>>()
-			&& ((method.Return.IsTask || method.Return.IsValueTask) && method.Return.Type.EnclosedType?.Implements<IEnumerable<CHILD>>() is false))
+			&& ((method.Return.Task || method.Return.ValueTask) && !method.Return.Type.GenericTypes.First()!.Implements<IEnumerable<CHILD>>()))
 			throw new ArgumentException($"{nameof(BatchLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
 		this._Method = method;

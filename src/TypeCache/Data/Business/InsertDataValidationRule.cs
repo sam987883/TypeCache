@@ -25,7 +25,7 @@ internal class InsertDataValidationRule : IValidationRule<InsertDataRequest>
 		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Into);
 		schema.Type.Assert(ObjectType.Table);
 
-		var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).To(column => column.Name)).ToCSV(column => $"[{column}]");
+		var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).ToCSV(column => $"[{column}]");
 		if (invalidColumnCsv.IsNotBlank())
 			throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} contains non-writable columns: {invalidColumnCsv}.", $"{nameof(InsertDataRequest)}.{nameof(InsertDataRequest.Input)}");
 

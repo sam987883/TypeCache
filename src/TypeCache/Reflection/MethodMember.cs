@@ -26,7 +26,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 		this.GenericTypes = methodInfo.GetGenericArguments().Length;
 		this.Handle = methodInfo.MethodHandle;
 		this.Method = !methodInfo.ContainsGenericParameters ? methodInfo.Lambda().Compile() : null;
-		this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = methodInfo.GetParameters().Map(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Static = methodInfo.IsStatic;
 		this.Return = new ReturnParameter(methodInfo);
 
@@ -35,7 +35,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 
 		InvokeType CreateGenericInvoke(params RuntimeTypeHandle[] handles)
 		{
-			var types = handles.To(handle => handle.ToType()).ToArray();
+			var types = handles.Map(handle => handle.ToType()).ToArray();
 			return methodInfo.MakeGenericMethod(types).LambdaInvokeType().Compile();
 		}
 	}
@@ -56,19 +56,28 @@ public class MethodMember : Member, IEquatable<MethodMember>
 
 	public TypeMember Type { get; }
 
+	/// <summary>
+	/// <c>=&gt; <paramref name="other"/> <see langword="is not null"/> &amp;&amp; <see langword="this"/>.Handle.Equals(<paramref name="other"/>.Handle) &amp;&amp; <see langword="this"/>.Type.Equals(<paramref name="other"/>.Type);</c>
+	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(MethodMember? other)
-		=> this.Handle == other?.Handle && this.Type.Equals(other?.Type);
+		=> other is not null && this.Handle.Equals(other.Handle) && this.Type.Equals(other.Type);
 
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>._Invoke?.Invoke(<paramref name="instance"/>, <paramref name="arguments"/>);</c>
+	/// </summary>
 	/// <param name="instance">Pass null if the method is static.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public object? Invoke(object? instance, params object?[]? arguments)
 		=> this._Invoke?.Invoke(instance, arguments);
 
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>._Cache?[<paramref name="genericTypes"/>.To(type =&gt; type.TypeHandle).ToArray()].Invoke(<paramref name="instance"/>, <paramref name="arguments"/>);</c>
+	/// </summary>
 	/// <param name="instance">Pass null if the method is static.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public object? InvokeGeneric(object? instance, Type[] genericTypes, params object?[]? arguments)
-		=> this._Cache?[genericTypes.To(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
+		=> this._Cache?[genericTypes.Map(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>

@@ -17,7 +17,7 @@ public static class CsvExtensions
 		};
 
 	public static string[] ToCSV(this object?[][] @this, CsvOptions options = default)
-		=> @this.To(row => row.To(value => value switch
+		=> @this.Map(row => row.Map(value => value switch
 		{
 			null => options.NullText,
 			true => options.TrueText,

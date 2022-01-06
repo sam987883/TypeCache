@@ -133,9 +133,9 @@ public class ListExtensions
 		var intList = new List<int>() { 1, 2, 3, 4, 5, 6 };
 		var stringList = new List<string>() { "1", "2", "3", "4", "5", "6" };
 
-		Assert.Empty((null as int[]).To(i => i.ToString()));
-		Assert.Equal(stringList, intList.To(i => i.ToString()));
-		Assert.Equal(stringList, intList.To((x, i) => (i + 1).ToString()));
+		Assert.Empty((null as int[]).Map(i => i.ToString()));
+		Assert.Equal(stringList, intList.Map(i => i.ToString()));
+		Assert.Equal(stringList, intList.Map((x, i) => (i + 1).ToString()));
 	}
 
 	[Fact]
@@ -144,7 +144,7 @@ public class ListExtensions
 		var intList = new List<int>() { 1, 2, 3, 4, 5, 6 };
 		var stringList = new List<string>() { "1", "2", "3", "4", "5", "6" };
 
-		Assert.Equal(await stringList.ToAsync().ToListAsync(), await intList.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+		Assert.Equal(await stringList.ToAsync().ToListAsync(), await intList.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 	}
 
 	[Fact]

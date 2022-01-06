@@ -270,7 +270,7 @@ public class SqlApi<T>
 				.Each(selection => selection.Replace(insertedPrefix, "INSERTED.").Replace(deletedPrefix, "DELETED."))
 				.ToArray(),
 			Set = context.GetArgument<IDictionary<string, object>>(nameof(set))
-				.To(pair => Invariant($"{pair.Key.EscapeIdentifier()} = {pair.Value.ToSQL()}"))
+				.Map(pair => Invariant($"{pair.Key.EscapeIdentifier()} = {pair.Value.ToSQL()}"))
 				.ToArray(),
 			Table = this._Table,
 			Where = where

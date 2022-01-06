@@ -119,7 +119,7 @@ public static class SqlExtensions
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.AppendValuesSQL(@this.Input.Rows)
-			.Append(") AS i (").AppendJoin(", ", @this.Input.Columns.To(column => column.EscapeIdentifier())).Append(')').AppendLine()
+			.Append(") AS i (").AppendJoin(", ", @this.Input.Columns.Map(column => column.EscapeIdentifier())).Append(')').AppendLine()
 			.AppendSQL("ON", @this.On.Each(column => Invariant($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}")).Join(" AND "))
 			.AppendStatementEndSQL()
 			.ToString();
@@ -154,7 +154,7 @@ public static class SqlExtensions
 		Range range => Invariant($"'{range}'"),
 		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
 		byte[] binary => Invariant($"0x{binary.ToHex()}"),
-		IEnumerable enumerable => Invariant($"({enumerable.As<object>().To(_ => _.ToSQL()).Join(", ")})"),
+		IEnumerable enumerable => Invariant($"({enumerable.As<object>().Map(_ => _.ToSQL()).Join(", ")})"),
 		_ => @this.ToString() ?? "NULL"
 	};
 }

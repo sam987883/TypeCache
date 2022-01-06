@@ -124,16 +124,16 @@ public class EnumerableOfStringExtensions
 	{
 		var array = this.GetStrings().ToArray();
 
-		Assert.Equal(array.Length - 1, array.IfNotNull().To(_ => KeyValuePair.Create(_, _)).ToDictionary(StringComparison.Ordinal).Count);
-		Assert.Throws<ArgumentException>(() => array.IfNotNull().To(_ => KeyValuePair.Create(_, _)).ToDictionary());
+		Assert.Equal(array.Length - 1, array.IfNotNull().Map(_ => KeyValuePair.Create(_, _)).ToDictionary(StringComparison.Ordinal).Count);
+		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => KeyValuePair.Create(_, _)).ToDictionary());
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
 
-		Assert.Equal(array.Length - 1, array.IfNotNull().To(_ => Tuple.Create(_, _)).ToDictionary(StringComparison.Ordinal).Count);
-		Assert.Throws<ArgumentException>(() => array.IfNotNull().To(_ => Tuple.Create(_, _)).ToDictionary());
+		Assert.Equal(array.Length - 1, array.IfNotNull().Map(_ => Tuple.Create(_, _)).ToDictionary(StringComparison.Ordinal).Count);
+		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => Tuple.Create(_, _)).ToDictionary());
 		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
-		Assert.Equal(array.Length - 1, array.IfNotNull().To(_ => (_, _)).ToDictionary(StringComparison.Ordinal).Count);
-		Assert.Throws<ArgumentException>(() => array.IfNotNull().To(_ => (_, _)).ToDictionary());
+		Assert.Equal(array.Length - 1, array.IfNotNull().Map(_ => (_, _)).ToDictionary(StringComparison.Ordinal).Count);
+		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => (_, _)).ToDictionary());
 		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
 		Assert.Equal(array.Length - 1, this.GetStrings().IfNotNull().ToDictionary(_ => _, StringComparison.Ordinal).Count);
@@ -158,7 +158,7 @@ public class EnumerableOfStringExtensions
 	[Fact]
 	public void ToImmutableDictionary()
 	{
-		var pairs = this.GetStrings().IfNotNull().To(value => KeyValuePair.Create(value, 1));
+		var pairs = this.GetStrings().IfNotNull().Map(value => KeyValuePair.Create(value, 1));
 		var immutableDictionary1 = pairs.ToImmutableDictionary(StringComparison.Ordinal);
 		var immutableDictionary2 = pairs.ToImmutableDictionary(pair => pair.Key, StringComparison.Ordinal);
 		var immutableDictionary3 = pairs.ToImmutableDictionary(pair => pair.Key, pair => pair.Value, StringComparison.Ordinal);
@@ -174,7 +174,7 @@ public class EnumerableOfStringExtensions
 	[Fact]
 	public void ToImmutableSortedDictionary()
 	{
-		Assert.NotEmpty(this.GetStrings().IfNotNull().To(_ => KeyValuePair.Create(_, 1)).ToImmutableSortedDictionary(StringComparison.Ordinal));
+		Assert.NotEmpty(this.GetStrings().IfNotNull().Map(_ => KeyValuePair.Create(_, 1)).ToImmutableSortedDictionary(StringComparison.Ordinal));
 	}
 
 	[Fact]

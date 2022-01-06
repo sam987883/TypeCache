@@ -26,12 +26,12 @@ internal class UpdateDataValidationRule : IValidationRule<UpdateDataRequest>
 		schema.Type.Assert(ObjectType.Table);
 		request.Table = schema.Name;
 
-		var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).To(column => column.Name)).ToCSV(column => $"[{column}]");
+		var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).ToCSV(column => $"[{column}]");
 		if (invalidColumnCsv.IsNotBlank())
 			throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} contains non-writable columns: {invalidColumnCsv}.", $"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Input)}");
 
 		if (!request.On.Any())
-			request.On = schema.Columns.If(column => column.PrimaryKey).To(column => column.Name).ToArray();
+			request.On = schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name).ToArray();
 
 		await ValueTask.CompletedTask;
 	}

@@ -16,9 +16,9 @@ public static class RowSetExtensions
 	/// </summary>
 	public static T[] MapRecords<T>(this RowSet @this)
 	{
-		var constructor = TypeOf<T>.Constructors.First(_ => _!.Parameters.To(parameter => parameter.Name).IsSet(@this.Columns));
+		var constructor = TypeOf<T>.Constructors.First(_ => _!.Parameters.Map(parameter => parameter.Name).IsSet(@this.Columns));
 		constructor.AssertNotNull();
-		var columnIndexes = constructor!.Parameters.To(parameter => @this.Columns.ToIndex(parameter.Name)).Gather().ToArray();
+		var columnIndexes = constructor!.Parameters.Map(parameter => @this.Columns.ToIndex(parameter.Name)).Gather().ToArray();
 
 		var items = new T[@this.Rows.Length];
 		@this.Rows.Do((row, rowIndex) =>
@@ -38,7 +38,7 @@ public static class RowSetExtensions
 	{
 		(PropertyMember Property, int ColumnIndex)[] properties = TypeOf<T>.Properties.Get(@this.Columns)
 			.If(property => property.Setter is not null)
-			.To(property => (property, @this.Columns.ToIndex(property.Name).First()!))
+			.Map(property => (property, @this.Columns.ToIndex(property.Name).First()!))
 			.ToArray();
 
 		var items = new T[@this.Rows.Length];
@@ -58,7 +58,7 @@ public static class RowSetExtensions
 	public static RowSet MapRowSet<T>(this T[] @this, string[] columns)
 	{
 		var properties = TypeOf<T>.Properties;
-		var getters = properties.Values.If(property => property!.Getter is not null).To(property => property!.Name);
+		var getters = properties.Values.If(property => property!.Getter is not null).Map(property => property!.Name);
 
 		var rowSet = new RowSet
 		{

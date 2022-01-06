@@ -23,7 +23,7 @@ public static class JsonExtensions
 	{
 		@this.ValueKind.Assert(JsonValueKind.Array);
 
-		return @this.EnumerateArrayValues().To(jsonElement => jsonElement.GetValue()).ToArray();
+		return @this.EnumerateArrayValues().Map(jsonElement => jsonElement.GetValue()).ToArray();
 	}
 
 	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)

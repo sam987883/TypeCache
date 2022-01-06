@@ -20,7 +20,7 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 		this.Type = type;
 		this.Handle = constructorInfo.MethodHandle;
 		this.Method = constructorInfo.Lambda().Compile();
-		this.Parameters = constructorInfo.GetParameters().To(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = constructorInfo.GetParameters().Map(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
 
 		this._Create = constructorInfo.LambdaCreateType().Compile();
 	}

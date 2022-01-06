@@ -52,6 +52,46 @@ public static class ArrayExtensions
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 		=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
 
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/>)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> count = (<paramref name="tuple"/>.Item1.Length, <paramref name="tuple"/>.Item2.Length).Minimum();<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    yield return"/> (<paramref name="tuple"/>.Item1[i], <paramref name="tuple"/>.Item2[i]);<br/>
+	/// </code>
+	/// </summary>
+	public static IEnumerable<(A, B)> Combine<A, B>((A[], B[]) tuple)
+	{
+		if (tuple.Item1 is null || tuple.Item2 is null)
+			yield break;
+
+		var count = (tuple.Item1.Length, tuple.Item2.Length).Minimum();
+		for (var i = 0; i < count; ++i)
+			yield return (tuple.Item1[i], tuple.Item2[i]);
+	}
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/> || tuple.Item3 <see langword="is null"/>)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> count = ((<paramref name="tuple"/>.Item1.Length, <paramref name="tuple"/>.Item2.Length).Minimum(), <paramref name="tuple"/>.Item3.Length).Minimum();<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    yield return"/> (<paramref name="tuple"/>.Item1[i], <paramref name="tuple"/>.Item2[i], <paramref name="tuple"/>.Item3[i]);<br/>
+	/// </code>
+	/// </summary>
+	public static IEnumerable<(A, B, C)> Combine<A, B, C>((A[], B[], C[]) tuple)
+	{
+		if (tuple.Item1 is null || tuple.Item2 is null || tuple.Item3 is null)
+			yield break;
+
+		var count = ((tuple.Item1.Length, tuple.Item2.Length).Minimum(), tuple.Item3.Length).Minimum();
+		for (var i = 0; i < count; ++i)
+			yield return (tuple.Item1[i], tuple.Item2[i], tuple.Item3[i]);
+	}
+
 	public static void Deconstruct<T>(this T[]? @this, out T? first, out IEnumerable<T> rest)
 		where T : struct
 	{
@@ -142,7 +182,7 @@ public static class ArrayExtensions
 	{
 		action.AssertNotNull();
 		if (@this?.Length > 0)
-			Task.WaitAll((0..@this.Length).Values().To(i => action(@this[i])).ToArray(), token);
+			Task.WaitAll((0..@this.Length).Values().Map(i => action(@this[i])).ToArray(), token);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -150,7 +190,7 @@ public static class ArrayExtensions
 	{
 		action.AssertNotNull();
 		if (@this?.Length > 0)
-			Task.WaitAll((0..@this.Length).Values().To(i => action(@this[i]).AsTask()).ToArray(), token);
+			Task.WaitAll((0..@this.Length).Values().Map(i => action(@this[i]).AsTask()).ToArray(), token);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -313,6 +353,26 @@ public static class ArrayExtensions
 	public static void InvokeInParallel(this Action[] @this)
 		=> Parallel.Invoke(@this);
 
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<V> Map<T, V>(this T[]? @this, Func<T, int, V> map)
+	{
+		map.AssertNotNull();
+
+		var count = @this?.Length ?? 0;
+		for (var i = 0; i < count; ++i)
+			yield return map(@this![i], i);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<V> Map<T, V>(this T[]? @this, Func<T, V> map)
+	{
+		map.AssertNotNull();
+
+		var count = @this?.Length ?? 0;
+		for (var i = 0; i < count; ++i)
+			yield return map(@this![i]);
+	}
+
 	/// <summary>
 	/// <c>=&gt; <see cref="Array"/>.Reverse(@<paramref name="this"/>);</c>
 	/// </summary>
@@ -378,26 +438,6 @@ public static class ArrayExtensions
 		var array = new T[length > 0 ? length : (@this.Length - sourceIndex)];
 		Array.Copy(@this, sourceIndex, array, 0, array.Length);
 		return array;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, int, V> map)
-	{
-		map.AssertNotNull();
-
-		var count = @this?.Length ?? 0;
-		for (var i = 0; i < count; ++i)
-			yield return map(@this![i], i);
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this T[]? @this, Func<T, V> map)
-	{
-		map.AssertNotNull();
-
-		var count = @this?.Length ?? 0;
-		for (var i = 0; i < count; ++i)
-			yield return map(@this![i]);
 	}
 
 	public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)

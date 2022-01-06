@@ -11,7 +11,7 @@ namespace TypeCache;
 public static class DelegateOf<T>
 	where T : Delegate
 {
-	private static readonly DelegateMember Member = DelegateMember.Cache[typeof(T).TypeHandle];
+	private static readonly DelegateMember Member = new DelegateMember(typeof(T));
 
 	public static IImmutableList<Attribute> Attributes => Member.Attributes;
 

@@ -77,7 +77,7 @@ public static class GraphAttributeExtensions
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static Type GraphType(this ReturnParameter @this)
-		=> @this.Attributes.GraphType() ?? @this.Type.GraphType(false);
+		=> @this.Attributes.GraphType() ?? @this.Type!.GraphType(false);
 
 	public static Type GraphType(this ScalarType @this)
 		=> @this switch
@@ -137,7 +137,7 @@ public static class GraphAttributeExtensions
 		{
 			Kind.Delegate or Kind.Pointer => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 			Kind.Enum => typeof(GraphEnumType<>).MakeGenericType(@this),
-			Kind.Collection => typeof(ListGraphType<>).MakeGenericType(@this.EnclosedType!.GraphType(isInputType)),
+			Kind.Collection => typeof(ListGraphType<>).MakeGenericType((Type)@this.CollectionType()!),
 			Kind.Interface => typeof(GraphInterfaceType<>).MakeGenericType(@this),
 			_ => @this.SystemType switch
 			{
@@ -159,7 +159,7 @@ public static class GraphAttributeExtensions
 				SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
 				SystemType.Guid => typeof(GuidGraphType),
 				SystemType.Range => typeof(StringGraphType),
-				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.EnclosedType!.GraphType(isInputType),
+				SystemType.Nullable or SystemType.Task or SystemType.ValueTask => @this.GenericTypes.First()!.GraphType(isInputType),
 				_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphOrderByType<>).MakeGenericType(@this),
 				_ when isInputType => typeof(GraphInputType<>).MakeGenericType(@this),
 				_ => typeof(GraphObjectType<>).MakeGenericType(@this)

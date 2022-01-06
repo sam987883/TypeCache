@@ -37,7 +37,7 @@ public class HashMaker : IHashMaker
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public long[]? Decrypt(IEnumerable<string> hashIds)
-		=> hashIds?.To(this.Decrypt).ToArray();
+		=> hashIds?.Map(this.Decrypt).ToArray();
 
 	public string Encrypt(long id)
 		=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
@@ -52,7 +52,7 @@ public class HashMaker : IHashMaker
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public string[]? Encrypt(IEnumerable<long> ids)
-		=> ids?.To(this.Encrypt).ToArray();
+		=> ids?.Map(this.Encrypt).ToArray();
 
 	public byte[] Decrypt(byte[] data)
 	{

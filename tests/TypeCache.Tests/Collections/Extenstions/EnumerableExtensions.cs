@@ -26,6 +26,16 @@ public class EnumerableExtensions
 	}
 
 	[Fact]
+	public void Add()
+	{
+		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+
+		Assert.Equal(intArray, new[] { 1, 2, 3 }.Add(4, 5, 6));
+		Assert.Equal(intArray, new[] { 1, 2, 3 }.Add((IEnumerable<int>)new[] { 4, 5, 6 }));
+		Assert.Equal(intArray, new[] { 1, 2 }.Add((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
+	}
+
+	[Fact]
 	public void Aggregate()
 	{
 		Assert.Equal(22, this.GetItems().Aggregate(1, (a, b) => a + b));
@@ -56,16 +66,6 @@ public class EnumerableExtensions
 		Assert.Equal(new[] { 1, 2, 3 }, await new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3) }.AllAsync());
 
 		await Task.CompletedTask;
-	}
-
-	[Fact]
-	public void And()
-	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-
-		Assert.Equal(intArray, new[] { 1, 2, 3 }.And(4, 5, 6));
-		Assert.Equal(intArray, new[] { 1, 2, 3 }.And((IEnumerable<int>)new[] { 4, 5, 6 }));
-		Assert.Equal(intArray, new[] { 1, 2 }.And((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
 	}
 
 	[Fact]
@@ -492,12 +492,12 @@ public class EnumerableExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
-		Assert.Empty((null as IEnumerable<int>).To(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.To(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.ToImmutableArray().To(i => i.ToString()));
-		Assert.Equal(stringArray, new List<int>(intArray).To(i => i.ToString()));
-		Assert.Equal(stringArray, this.GetItems().To(i => i.ToString()));
-		Assert.Equal(stringArray, this.GetItems().To((x, i) => (i + 1).ToString()));
+		Assert.Empty((null as IEnumerable<int>).Map(i => i.ToString()));
+		Assert.Equal(stringArray, intArray.Map(i => i.ToString()));
+		Assert.Equal(stringArray, intArray.ToImmutableArray().Map(i => i.ToString()));
+		Assert.Equal(stringArray, new List<int>(intArray).Map(i => i.ToString()));
+		Assert.Equal(stringArray, this.GetItems().Map(i => i.ToString()));
+		Assert.Equal(stringArray, this.GetItems().Map((x, i) => (i + 1).ToString()));
 	}
 
 	[Fact]
@@ -519,10 +519,10 @@ public class EnumerableExtensions
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
 		Assert.NotEmpty(await stringArray.ToAsync().ToListAsync());
-		Assert.True(stringArray.IsSet(await this.GetItems().ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync()));
-		Assert.Empty(await Enumerable<string>.Empty.ToAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().ToAsync<int, string>(null as Func<int, Task<string>>).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().ToAsync<int, string>(null as Func<int, CancellationToken, Task<string>>).ToListAsync());
+		Assert.True(stringArray.IsSet(await this.GetItems().MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync()));
+		Assert.Empty(await Enumerable<string>.Empty.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().MapAsync<int, string>(null as Func<int, Task<string>>).ToListAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().MapAsync<int, string>(null as Func<int, CancellationToken, Task<string>>).ToListAsync());
 
 		await Task.CompletedTask;
 	}
@@ -532,13 +532,13 @@ public class EnumerableExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(intArray.Length, intArray.To(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
+		Assert.Equal(intArray.Length, intArray.Map(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
 
-		Assert.Equal(intArray.Length, intArray.To(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
+		Assert.Equal(intArray.Length, intArray.Map(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
 		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
-		Assert.Equal(intArray.Length, intArray.To(i => (i, i.ToString())).ToDictionary().Count);
+		Assert.Equal(intArray.Length, intArray.Map(i => (i, i.ToString())).ToDictionary().Count);
 		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
 
 		Assert.Equal(intArray.Length, this.GetItems().ToDictionary(i => i.ToString()).Count);

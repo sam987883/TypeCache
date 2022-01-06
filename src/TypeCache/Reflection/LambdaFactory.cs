@@ -12,7 +12,7 @@ public static class LambdaFactory
 {
 	public static LambdaExpression Create(Type[] parameterTypes, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.To((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
+		var parameters = parameterTypes.Map((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
 		return bodyFactory(parameters).Lambda(parameters);
 	}
 
@@ -25,7 +25,7 @@ public static class LambdaFactory
 
 	public static LambdaExpression CreateAction(Type[] parameterTypes, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.To((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
+		var parameters = parameterTypes.Map((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
 		return bodyFactory(parameters).LambdaAction(parameters);
 	}
 
@@ -104,7 +104,7 @@ public static class LambdaFactory
 
 	public static LambdaExpression CreateFunc(Type[] parameterTypes, Type returnType, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.To((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
+		var parameters = parameterTypes.Map((type, i) => $"parameter{i + 1}".Parameter(type)).ToArray();
 		return bodyFactory(parameters).LambdaFunc(returnType, parameters);
 	}
 

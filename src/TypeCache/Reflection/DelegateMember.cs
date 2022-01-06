@@ -1,11 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -13,64 +10,40 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-public readonly struct DelegateMember
-	: IMember, IEquatable<DelegateMember>
+public class DelegateMember : Member, IEquatable<DelegateMember>
 {
 	private const string METHOD_NAME = "Invoke";
 
-	internal static IReadOnlyDictionary<RuntimeTypeHandle, DelegateMember> Cache { get; }
-
-	static DelegateMember()
-	{
-		Cache = new LazyDictionary<RuntimeTypeHandle, DelegateMember>(handle => new DelegateMember(handle.ToType()));
-	}
-
 	private readonly InvokeType _Invoke;
 
-	internal DelegateMember(Type type)
+	internal DelegateMember(Type type) : base(type)
 	{
 		typeof(Delegate).IsAssignableFrom(type.BaseType).Assert(true);
 
 		this.Handle = type.TypeHandle;
-		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? type.Name;
 
 		var methodInfo = type.GetMethod(METHOD_NAME, INSTANCE_BINDING_FLAGS)!;
 
 		this._Invoke = methodInfo.LambdaInvokeType().Compile();
 		this.Method = methodInfo.Lambda().Compile();
 		this.MethodHandle = methodInfo.MethodHandle;
-		this.Parameters = methodInfo.GetParameters().To(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = methodInfo.GetParameters().Map(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Return = new ReturnParameter(methodInfo);
-		this.Internal = !type.IsVisible;
-		this.Public = type.IsPublic;
 	}
 
-	public IImmutableList<Attribute> Attributes { get; }
-
 	public RuntimeTypeHandle Handle { get; }
-
-	public bool Internal { get; }
 
 	public Delegate Method { get; }
 
 	public RuntimeMethodHandle MethodHandle { get; }
 
-	public string Name { get; }
-
 	public IImmutableList<MethodParameter> Parameters { get; }
-
-	public bool Public { get; }
 
 	public ReturnParameter Return { get; }
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(DelegateMember other)
-		=> this.Handle.Equals(other.Handle);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+	public bool Equals(DelegateMember? other)
+		=> other is not null && this.Handle.Equals(other.Handle);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public object? Invoke(object instance, params object?[]? arguments)

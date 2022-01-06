@@ -46,5 +46,5 @@ public class EventMember : Member, IEquatable<EventMember>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(EventMember? other)
-		=> this.AddEventHandler.Handle == other?.AddEventHandler.Handle;
+		=> other?.AddEventHandler is not null && this.AddEventHandler.Handle.Equals(other.AddEventHandler.Handle);
 }

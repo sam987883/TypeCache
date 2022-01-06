@@ -125,13 +125,7 @@ public static class Enumerable<T>
 				yield return item;
 	}
 
-	internal static bool NoGet(out T? item)
-	{
-		item = default;
-		return false;
-	}
-
-	internal static IEnumerable<V> To<V>(IEnumerable<T> enumerable, Func<T, V> map)
+	internal static IEnumerable<V> Map<V>(IEnumerable<T> enumerable, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
@@ -139,7 +133,7 @@ public static class Enumerable<T>
 			yield return map(item);
 	}
 
-	internal static IEnumerable<V> To<V>(IEnumerable<T> enumerable, Func<T, int, V> map)
+	internal static IEnumerable<V> Map<V>(IEnumerable<T> enumerable, Func<T, int, V> map)
 	{
 		map.AssertNotNull();
 
@@ -148,41 +142,47 @@ public static class Enumerable<T>
 			yield return map(item, ++i);
 	}
 
+	internal static async IAsyncEnumerable<V> MapAsync<V>(IEnumerable<T> enumerable, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
+	{
+		foreach (var item in enumerable)
+			yield return await map(item);
+	}
+
+	internal static async IAsyncEnumerable<V> MapAsync<V>(IEnumerable<T> enumerable, Func<T, ValueTask<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
+	{
+		foreach (var item in enumerable)
+			yield return await map(item);
+	}
+
+	internal static async IAsyncEnumerable<V> MapAsync<V>(IEnumerable<T> enumerable, Func<T, CancellationToken, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
+	{
+		foreach (var item in enumerable)
+		{
+			yield return await map(item, token);
+			if (token.IsCancellationRequested)
+				yield break;
+		}
+	}
+
+	internal static async IAsyncEnumerable<V> MapAsync<V>(IEnumerable<T> enumerable, Func<T, CancellationToken, ValueTask<V>> map, [EnumeratorCancellation] CancellationToken token = default)
+	{
+		foreach (var item in enumerable)
+		{
+			yield return await map(item, token);
+			if (token.IsCancellationRequested)
+				yield break;
+		}
+	}
+
+	internal static bool NoGet(out T? item)
+	{
+		item = default;
+		return false;
+	}
+
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	internal static T[] ToArray(IEnumerable<T> enumerable)
 		=> new Queue<T>(enumerable).ToArray();
-
-	public static async IAsyncEnumerable<V> ToAsync<V>(IEnumerable<T> enumerable, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
-	{
-		foreach (var item in enumerable)
-			yield return await map(item);
-	}
-
-	public static async IAsyncEnumerable<V> ToAsync<V>(IEnumerable<T> enumerable, Func<T, ValueTask<V>> map, [EnumeratorCancellation] CancellationToken _ = default)
-	{
-		foreach (var item in enumerable)
-			yield return await map(item);
-	}
-
-	public static async IAsyncEnumerable<V> ToAsync<V>(IEnumerable<T> enumerable, Func<T, CancellationToken, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		foreach (var item in enumerable)
-		{
-			yield return await map(item, token);
-			if (token.IsCancellationRequested)
-				yield break;
-		}
-	}
-
-	public static async IAsyncEnumerable<V> ToAsync<V>(IEnumerable<T> enumerable, Func<T, CancellationToken, ValueTask<V>> map, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		foreach (var item in enumerable)
-		{
-			yield return await map(item, token);
-			if (token.IsCancellationRequested)
-				yield break;
-		}
-	}
 
 	internal static IEnumerable<int> ToIndex(IEnumerable<T> enumerable, Predicate<T> filter)
 	{

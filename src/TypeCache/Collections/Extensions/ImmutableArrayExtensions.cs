@@ -186,7 +186,7 @@ public static class ImmutableArrayExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this ImmutableArray<T> @this, Func<T, V> map)
+	public static IEnumerable<V> Map<T, V>(this ImmutableArray<T> @this, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
@@ -196,7 +196,7 @@ public static class ImmutableArrayExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this ImmutableArray<T> @this, Func<T, int, V> map)
+	public static IEnumerable<V> Map<T, V>(this ImmutableArray<T> @this, Func<T, int, V> map)
 	{
 		map.AssertNotNull();
 

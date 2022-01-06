@@ -54,7 +54,7 @@ public class FieldMember : Member, IEquatable<FieldMember>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(FieldMember? other)
-		=> this.Handle == other?.Handle;
+		=> other is not null && this.Handle.Equals(other.Handle);
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToFieldInfo(<paramref name="member"/>.Type.Handle)!;</c>

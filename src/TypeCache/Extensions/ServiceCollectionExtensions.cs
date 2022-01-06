@@ -102,7 +102,7 @@ public static class ServiceCollectionExtensions
 	/// </code>
 	/// </summary>
 	public static IServiceCollection RegisterSqlApi(this IServiceCollection @this, IConfigurationSection dataSourceSection)
-		=> @this.AddSingleton<ISqlApi>(new SqlApi(dataSourceSection.GetChildren().To(section => new DataSource
+		=> @this.AddSingleton<ISqlApi>(new SqlApi(dataSourceSection.GetChildren().Map(section => new DataSource
 		{
 			Name = section.Key,
 			ConnectionString = section.GetSection("connectionString").Value,

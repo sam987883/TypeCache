@@ -20,7 +20,7 @@ public class ClaimAuthorizationHandler : AuthorizationHandler<ClaimAuthorization
 			var type = controller.ControllerTypeInfo.GetTypeMember();
 			var method = type.GetMethodMember(controller.MethodInfo.MethodHandle)!;
 			var success = type.Attributes.If<RequireClaimAttribute>()
-				.And(method.Attributes.If<RequireClaimAttribute>())
+				.Add(method.Attributes.If<RequireClaimAttribute>())
 				.All(attribute => attribute!.Claims.Any(pair => context.User.Any(pair.Key, pair.Value)));
 
 			if (success)

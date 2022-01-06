@@ -17,6 +17,42 @@ public static class EnumerableExtensions
 {
 	/// <summary>
 	/// <code>
+	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is not null"/>)<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
+	/// <see langword="        yield return"/> item;<br/>
+	/// <br/>
+	/// <see langword="if"/> (<paramref name="items"/> <see langword="is not null"/>)<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> <paramref name="items"/>)<br/>
+	/// <see langword="        yield return"/> item;
+	/// </code>
+	/// </summary>
+	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+	{
+		if (@this is not null)
+			foreach (var item in @this)
+				yield return item;
+
+		if (items is not null)
+			foreach (var item in items)
+				yield return item;
+	}
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="sets"/>.Gather());</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
+		=> @this.Add(sets.Gather());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, params T[]? items)
+		=> @this.Add(items as IEnumerable<T>);
+
+	/// <summary>
+	/// <code>
 	/// <paramref name="aggregator"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="var"/> result = <paramref name="initialValue"/>;<br/>
@@ -83,42 +119,6 @@ public static class EnumerableExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static async ValueTask<T[]> AllAsync<T>(this IEnumerable<Task<T>>? @this)
 		=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="sets"/>.Gather());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
-		=> @this.And(sets.Gather());
-
-	/// <summary>
-	/// <code>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is not null"/>)<br/>
-	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
-	/// <see langword="        yield return"/> item;<br/>
-	/// <br/>
-	/// <see langword="if"/> (<paramref name="items"/> <see langword="is not null"/>)<br/>
-	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> items)<br/>
-	/// <see langword="        yield return"/> item;
-	/// </code>
-	/// </summary>
-	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-	{
-		if (@this is not null)
-			foreach (var item in @this)
-				yield return item;
-
-		if (items is not null)
-			foreach (var item in items)
-				yield return item;
-	}
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IEnumerable<T> And<T>(this IEnumerable<T>? @this, params T[]? items)
-		=> @this.And(items as IEnumerable<T>);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.If&lt;<typeparamref name="T"/>&gt;().Any()</c>
@@ -235,6 +235,52 @@ public static class EnumerableExtensions
 			_ when @this.TryCount(out var collectionCount) => count <= collectionCount,
 			_ => !@this.GetEnumerator().Move(count + 1)
 		};
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/>)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="using var"/> enumerator1 = <paramref name="tuple"/>.Item1.GetEnumerator();<br/>
+	/// <see langword="using var"/> enumerator2 = <paramref name="tuple"/>.Item2.GetEnumerator();<br/>
+	/// <see langword="while"/> (enumerator1.TryNext(<see langword="out var"/> item1) &amp;&amp; enumerator2.TryNext(<see langword="out var"/> item2))<br/>
+	/// <see langword="    yield return"/> (item1, item2);<br/>
+	/// </code>
+	/// </summary>
+	public static IEnumerable<(A, B)> Combine<A, B>((IEnumerable<A>, IEnumerable<B>) tuple)
+	{
+		if (tuple.Item1 is null || tuple.Item2 is null)
+			yield break;
+
+		using var enumerator1 = tuple.Item1.GetEnumerator();
+		using var enumerator2 = tuple.Item2.GetEnumerator();
+		while (enumerator1.TryNext(out var item1) && enumerator2.TryNext(out var item2))
+			yield return (item1, item2);
+	}
+
+	/// <summary>
+	/// <code>
+	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/> || tuple.Item3 <see langword="is null"/>)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="using var"/> enumerator1 = <paramref name="tuple"/>.Item1.GetEnumerator();<br/>
+	/// <see langword="using var"/> enumerator2 = <paramref name="tuple"/>.Item2.GetEnumerator();<br/>
+	/// <see langword="using var"/> enumerator3 = <paramref name="tuple"/>.Item3.GetEnumerator();<br/>
+	/// <see langword="while"/> (enumerator1.TryNext(<see langword="out var"/> item1) &amp;&amp; enumerator2.TryNext(<see langword="out var"/> item2) &amp;&amp; enumerator3.TryNext(<see langword="out var"/> item3))<br/>
+	/// <see langword="    yield return"/> (item1, item2, item3);<br/>
+	/// </code>
+	/// </summary>
+	public static IEnumerable<(A, B, C)> Combine<A, B, C>((IEnumerable<A>, IEnumerable<B>, IEnumerable<C>) tuple)
+	{
+		if (tuple.Item1 is null || tuple.Item2 is null || tuple.Item3 is null)
+			yield break;
+
+		using var enumerator1 = tuple.Item1.GetEnumerator();
+		using var enumerator2 = tuple.Item2.GetEnumerator();
+		using var enumerator3 = tuple.Item3.GetEnumerator();
+		while (enumerator1.TryNext(out var item1) && enumerator2.TryNext(out var item2) && enumerator3.TryNext(out var item3))
+			yield return (item1, item2, item3);
+	}
 
 	/// <summary>
 	/// <code>
@@ -588,7 +634,7 @@ public static class EnumerableExtensions
 		action.AssertNotNull();
 
 		if (@this.Any())
-			Task.WaitAll(@this.To(action).ToArray(), cancellationToken);
+			Task.WaitAll(@this.Map(action).ToArray(), cancellationToken);
 	}
 
 	/// <summary>
@@ -605,7 +651,7 @@ public static class EnumerableExtensions
 		action.AssertNotNull();
 
 		if (@this.Any())
-			Task.WaitAll(@this.To(item => action(item, cancellationToken)).ToArray(), cancellationToken);
+			Task.WaitAll(@this.Map(item => action(item, cancellationToken)).ToArray(), cancellationToken);
 	}
 
 	/// <summary>
@@ -622,7 +668,7 @@ public static class EnumerableExtensions
 		action.AssertNotNull();
 
 		if (@this.Any())
-			await @this.To(item => action(item, cancellationToken)).AllAsync<T>();
+			await @this.Map(item => action(item, cancellationToken)).AllAsync<T>();
 	}
 
 	/// <summary>
@@ -639,7 +685,7 @@ public static class EnumerableExtensions
 		action.AssertNotNull();
 
 		if (@this.Any())
-			await @this.To(action).AllAsync<T>();
+			await @this.Map(action).AllAsync<T>();
 	}
 
 	/// <summary>
@@ -888,9 +934,9 @@ public static class EnumerableExtensions
 	{
 		keyFactory.AssertNotNull();
 
-		(K Key, V Value)[] items = @this.To(item => (keyFactory(item), item)).ToArray();
-		var keys = items.To(_ => _.Key).ToHashSet(comparer);
-		return keys.ToDictionary(key => items.If(_ => keys.Comparer.Equals(_.Key, key)).To(_ => _.Value));
+		(K Key, V Value)[] items = @this.Map(item => (keyFactory(item), item)).ToArray();
+		var keys = items.Map(_ => _.Key).ToHashSet(comparer);
+		return keys.ToDictionary(key => items.If(_ => keys.Comparer.Equals(_.Key, key)).Map(_ => _.Value));
 	}
 
 	/// <summary>
@@ -1151,6 +1197,206 @@ public static class EnumerableExtensions
 
 	/// <summary>
 	/// <code>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
+	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.Map(@<paramref name="this"/>, <paramref name="map"/>)<br/>
+	/// };
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<V> Map<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
+		=> @this switch
+		{
+			null => Enumerable<V>.Empty,
+			T[] array => array.Map(map),
+			ImmutableArray<T> immutableArray => immutableArray.Map(map),
+			List<T> list => list.Map(map),
+			_ => Enumerable<T>.Map(@this, map)
+		};
+
+	/// <summary>
+	/// <code>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
+	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.Map(<paramref name="map"/>),<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.Map(@<paramref name="this"/>, <paramref name="map"/>)<br/>
+	/// };
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<V> Map<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
+		=> @this switch
+		{
+			null => Enumerable<V>.Empty,
+			T[] array => array.Map(map),
+			ImmutableArray<T> immutableArray => immutableArray.Map(map),
+			List<T> list => list.Map(map),
+			_ => Enumerable<T>.Map(@this, map)
+		};
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="map"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
+	/// <see langword="     yield break"/>;<br/>
+	/// <br/>
+	/// <see cref="int"/> count;<br/>
+	/// <see langword="switch"/> (@<paramref name="this"/>)<br/>
+	/// {<br/>
+	/// <see langword="    case"/> <typeparamref name="T"/>[] array:<br/>
+	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i]);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	/// <see langword="    case"/> <see cref="ImmutableArray{T}"/> array:<br/>
+	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i]);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	/// <see langword="    default"/>:<br/>
+	/// <see langword="        foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	///	}
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static async IAsyncEnumerable<V> MapAsync<T, V>(this IEnumerable<T>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
+	{
+		map.AssertNotNull();
+
+		if (@this is null)
+			yield break;
+
+		int count;
+		switch (@this)
+		{
+			case T[] array:
+				count = array.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					yield return await map(array[i]);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+			case ImmutableArray<T> array:
+				count = array.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					yield return await map(array[i]);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+			default:
+				foreach (var item in @this)
+				{
+					yield return await map(item);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+		}
+	}
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="map"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
+	/// <see langword="     yield break"/>;<br/>
+	/// <br/>
+	/// <see cref="int"/> count;<br/>
+	/// <see langword="switch"/> (@<paramref name="this"/>)<br/>
+	/// {<br/>
+	/// <see langword="    case"/> <typeparamref name="T"/>[] array:<br/>
+	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i], <paramref name="token"/>);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	/// <see langword="    case"/> <see cref="ImmutableArray{T}"/> array:<br/>
+	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i], <paramref name="token"/>);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	/// <see langword="    default"/>:<br/>
+	/// <see langword="        foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
+	/// <see langword="        "/>{<br/>
+	///	<see langword="            yield return await"/> <paramref name="map"/>(item, <paramref name="token"/>);<br/>
+	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
+	///	<see langword="                yield break"/>;<br/>
+	///	<see langword="        "/>}<br/>
+	///	<see langword="        yield break"/>;<br/>
+	///	}
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static async IAsyncEnumerable<V> MapAsync<T, V>(this IEnumerable<T>? @this, Func<T?, CancellationToken, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
+	{
+		map.AssertNotNull();
+
+		if (@this is null)
+			yield break;
+
+		int count;
+		switch (@this)
+		{
+			case T[] array:
+				count = array.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					yield return await map(array[i], token);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+			case ImmutableArray<T> array:
+				count = array.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					yield return await map(array[i], token);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+			default:
+				foreach (var item in @this)
+				{
+					yield return await map(item, token);
+					if (token.IsCancellationRequested)
+						yield break;
+				}
+				yield break;
+		}
+	}
+
+	/// <summary>
+	/// <code>
 	/// <see langword="var"/> hashSet = @<paramref name="this"/>.ToHashSet(<paramref name="comparer"/>);<br/>
 	/// hashSet.IntersectWith(<paramref name="items"/> ?? <see cref="Enumerable{T}.Empty"/>);<br/>
 	/// <see langword="return"/> hashSet;
@@ -1318,52 +1564,6 @@ public static class EnumerableExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
-	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.To(@<paramref name="this"/>, <paramref name="map"/>)<br/>
-	/// };
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
-		=> @this switch
-		{
-			null => Enumerable<V>.Empty,
-			T[] array => array.To(map),
-			ImmutableArray<T> immutableArray => immutableArray.To(map),
-			List<T> list => list.To(map),
-			_ => Enumerable<T>.To(@this, map)
-		};
-
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    null"/> =&gt; Enumerable&lt;V&gt;.Empty,<br/>
-	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.To(<paramref name="map"/>),<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.To(@<paramref name="this"/>, <paramref name="map"/>)<br/>
-	/// };
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> To<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
-		=> @this switch
-		{
-			null => Enumerable<V>.Empty,
-			T[] array => array.To(map),
-			ImmutableArray<T> immutableArray => immutableArray.To(map),
-			List<T> list => list.To(map),
-			_ => Enumerable<T>.To(@this, map)
-		};
-
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
 	/// <see langword="    null"/> =&gt; <see cref="Array{T}.Empty"/>,<br/>
 	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsSpan().ToArray(),<br/>
 	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.AsSpan().ToArray(),<br/>
@@ -1409,160 +1609,6 @@ public static class EnumerableExtensions
 	/// <code>
 	/// <paramref name="map"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	/// <see langword="     yield break"/>;<br/>
-	/// <br/>
-	/// <see cref="int"/> count;<br/>
-	/// <see langword="switch"/> (@<paramref name="this"/>)<br/>
-	/// {<br/>
-	/// <see langword="    case"/> <typeparamref name="T"/>[] array:<br/>
-	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i]);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	/// <see langword="    case"/> <see cref="ImmutableArray{T}"/> array:<br/>
-	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i]);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	/// <see langword="    default"/>:<br/>
-	/// <see langword="        foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	///	}
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<V> ToAsync<T, V>(this IEnumerable<T>? @this, Func<T?, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		map.AssertNotNull();
-
-		if (@this is null)
-			yield break;
-
-		int count;
-		switch (@this)
-		{
-			case T[] array:
-				count = array.Length;
-				for (var i = 0; i < count; ++i)
-				{
-					yield return await map(array[i]);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-			case ImmutableArray<T> array:
-				count = array.Length;
-				for (var i = 0; i < count; ++i)
-				{
-					yield return await map(array[i]);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-			default:
-				foreach (var item in @this)
-				{
-					yield return await map(item);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-		}
-	}
-
-	/// <summary>
-	/// <code>
-	/// <paramref name="map"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	/// <see langword="     yield break"/>;<br/>
-	/// <br/>
-	/// <see cref="int"/> count;<br/>
-	/// <see langword="switch"/> (@<paramref name="this"/>)<br/>
-	/// {<br/>
-	/// <see langword="    case"/> <typeparamref name="T"/>[] array:<br/>
-	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i], <paramref name="token"/>);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	/// <see langword="    case"/> <see cref="ImmutableArray{T}"/> array:<br/>
-	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item[i], <paramref name="token"/>);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	/// <see langword="    default"/>:<br/>
-	/// <see langword="        foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
-	/// <see langword="        "/>{<br/>
-	///	<see langword="            yield return await"/> <paramref name="map"/>(item, <paramref name="token"/>);<br/>
-	///	<see langword="            if"/> (<paramref name="token"/>.IsCancellationRequested)<br/>
-	///	<see langword="                yield break"/>;<br/>
-	///	<see langword="        "/>}<br/>
-	///	<see langword="        yield break"/>;<br/>
-	///	}
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<V> ToAsync<T, V>(this IEnumerable<T>? @this, Func<T?, CancellationToken, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		map.AssertNotNull();
-
-		if (@this is null)
-			yield break;
-
-		int count;
-		switch (@this)
-		{
-			case T[] array:
-				count = array.Length;
-				for (var i = 0; i < count; ++i)
-				{
-					yield return await map(array[i], token);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-			case ImmutableArray<T> array:
-				count = array.Length;
-				for (var i = 0; i < count; ++i)
-				{
-					yield return await map(array[i], token);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-			default:
-				foreach (var item in @this)
-				{
-					yield return await map(item, token);
-					if (token.IsCancellationRequested)
-						yield break;
-				}
-				yield break;
-		}
-	}
-
-	/// <summary>
-	/// <code>
-	/// <paramref name="map"/>.AssertNotNull();<br/>
-	/// <br/>
 	/// <see langword="return"/> @<paramref name="this"/>.To(<paramref name="map"/>).ToCsv();
 	/// </code>
 	/// </summary>
@@ -1571,7 +1617,7 @@ public static class EnumerableExtensions
 	{
 		map.AssertNotNull();
 
-		return @this.To(map).ToCSV();
+		return @this.Map(map).ToCSV();
 	}
 
 	/// <summary>
@@ -1639,7 +1685,7 @@ public static class EnumerableExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<Tuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 		where K : notnull
-		=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
+		=> @this.Map(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.To(tuple =&gt; <see cref="KeyValuePair"/>.Create(tuple.Item1, tuple.Item2)).ToDictionary(<paramref name="comparer"/>);</c>
@@ -1647,7 +1693,7 @@ public static class EnumerableExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static Dictionary<K, V> ToDictionary<K, V>(this IEnumerable<ValueTuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
 		where K : notnull
-		=> @this.To(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
+		=> @this.Map(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
 	/// <summary>
 	/// <code>
@@ -1792,7 +1838,7 @@ public static class EnumerableExtensions
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)
-		=> @this.To(map).Gather();
+		=> @this.Map(map).Gather();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/>

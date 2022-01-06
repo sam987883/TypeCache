@@ -25,7 +25,7 @@ internal class DeleteDataValidationRule : IValidationRule<DeleteDataRequest>
 		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
 		schema.Type.Assert(ObjectType.Table);
 
-		if (!request.Input.Columns.Has(schema.Columns.If(column => column.PrimaryKey).To(column => column.Name)))
+		if (!request.Input.Columns.Has(schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name)))
 			throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} must contain all Primary Key column(s).", $"{nameof(DeleteDataRequest)}.{nameof(DeleteDataRequest.Input)}");
 
 		await ValueTask.CompletedTask;

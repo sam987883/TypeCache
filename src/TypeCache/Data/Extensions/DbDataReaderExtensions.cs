@@ -14,7 +14,7 @@ namespace TypeCache.Data.Extensions;
 public static class DbDataReaderExtensions
 {
 	public static string[] GetColumns(this IDataReader @this)
-		=> (0..@this.FieldCount).Values().To(@this.GetName).ToArray();
+		=> (0..@this.FieldCount).Values().Map(@this.GetName).ToArray();
 
 	public static async IAsyncEnumerable<object[]> ReadRowsAsync(this DbDataReader @this, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
