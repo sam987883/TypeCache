@@ -13,24 +13,6 @@ public static class ValueExtensions
 	/// <summary>
 	/// <code>
 	/// <see langword="while"/> (--<paramref name="count"/> &gt; -1)<br/>
-	/// {<br/>
-	/// <see langword="    yield return"/> @<paramref name="this"/>;<br/>
-	/// <see langword="    "/>@<paramref name="this"/> += <paramref name="increment"/>;<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	public static IEnumerable<int> Range(this int @this, int count, int increment = 1)
-	{
-		while (--count > -1)
-		{
-			yield return @this;
-			@this += increment;
-		}
-	}
-
-	/// <summary>
-	/// <code>
-	/// <see langword="while"/> (--<paramref name="count"/> &gt; -1)<br/>
 	/// <see langword="    yield return"/> @<paramref name="this"/>;
 	/// </code>
 	/// </summary>

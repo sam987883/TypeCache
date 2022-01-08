@@ -219,22 +219,22 @@ public static class RangeExtensions
 	/// <code>
 	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
 	/// <see langword="if"/> (reverse <see langword="is false"/>)<br/>
-	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &lt; @<paramref name="this"/>.End.Value; ++i)<br/>
+	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &lt; @<paramref name="this"/>.End.Value; i += <paramref name="step"/>)<br/>
 	///	<see langword="        yield return"/> i;<br/>
 	/// <see langword="if"/> (reverse <see langword="is true"/>)<br/>
-	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &gt; @<paramref name="this"/>.End.Value; --i)<br/>
+	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &gt; @<paramref name="this"/>.End.Value; i -= <paramref name="step"/>)<br/>
 	///	<see langword="        yield return"/> i;<br/>
 	/// <see langword="yield break"/>;
 	/// </code>
 	/// </summary>
-	public static IEnumerable<int> Values(this Range @this)
+	public static IEnumerable<int> Values(this Range @this, int step = 1)
 	{
 		var reverse = @this.IsReverse();
 		if (reverse is false)
-			for (var i = @this.Start.Value; i < @this.End.Value; ++i)
+			for (var i = @this.Start.Value; i < @this.End.Value; i += step)
 				yield return i;
 		else if (reverse is true)
-			for (var i = @this.Start.Value; i > @this.End.Value; --i)
+			for (var i = @this.Start.Value; i > @this.End.Value; i -= step)
 				yield return i;
 		yield break;
 	}

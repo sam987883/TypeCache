@@ -31,7 +31,7 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 			var success = type.Attributes.If<RequireHeaderAttribute>()
 				.Add(method.Attributes.If<RequireHeaderAttribute>())
 				.All(attribue => headers.TryGetValue(attribue!.Key, out var values)
-					&& (!attribue.AllowedValues.Any() || attribue.AllowedValues.Any(values.Has)));
+					&& (!attribue.AllowedValues.Any() || values.HasAny(attribue.AllowedValues)));
 
 			if (success)
 				context.Succeed(requirement);

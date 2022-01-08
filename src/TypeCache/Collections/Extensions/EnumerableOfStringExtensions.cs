@@ -92,6 +92,12 @@ public static class EnumerableOfStringExtensions
 		=> @this.Any(value => value.Right(text, comparison));
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.CountOf(<paramref name="item"/>, <paramref name="comparison"/>.ToStringComparer());</c>
+	/// </summary>
+	public static int CountOf(this IEnumerable<string>? @this, string item, StringComparison comparison = STRING_COMPARISON)
+		=> @this.CountOf(item, comparison.ToStringComparer());
+
+	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Each(value =&gt; value.Left(<paramref name="length"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]

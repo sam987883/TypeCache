@@ -16,26 +16,10 @@ namespace TypeCache.Collections.Extensions;
 public static class EnumerableExtensions
 {
 	/// <summary>
-	/// <code>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is not null"/>)<br/>
-	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> @<paramref name="this"/>)<br/>
-	/// <see langword="        yield return"/> item;<br/>
-	/// <br/>
-	/// <see langword="if"/> (<paramref name="items"/> <see langword="is not null"/>)<br/>
-	/// <see langword="    foreach"/> (<see langword="var"/> item <see langword="in"/> <paramref name="items"/>)<br/>
-	/// <see langword="        yield return"/> item;
-	/// </code>
+	/// <c>=&gt; <see langword="new"/>[] { @<paramref name="this"/>, <paramref name="items"/> }.Gather();</c>
 	/// </summary>
 	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-	{
-		if (@this is not null)
-			foreach (var item in @this)
-				yield return item;
-
-		if (items is not null)
-			foreach (var item in items)
-				yield return item;
-	}
+		=> new[] { @this, items }.Gather();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="sets"/>.Gather());</c>
@@ -301,14 +285,18 @@ public static class EnumerableExtensions
 		};
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="item"/> <see langword="is not null"/>
-	/// ? @<paramref name="this"/>.If(<paramref name="item"/>.Equals).Count()
-	/// : @<paramref name="this"/>.If(_ =&gt; _ <see langword="is null"/>).Count();</c>
+	/// <code>
+	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
+	/// <br/>
+	/// <see langword="return"/> @<paramref name="this"/>.If(_ =&gt; <paramref name="comparer"/>.Equals(_, item)).Count();
+	/// </code>
 	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static int CountOf<T>(this IEnumerable<T>? @this, T item)
-		where T : IEquatable<T>
-		=> item is not null ? @this.If(item.Equals).Count() : @this.If(_ => _ is null).Count();
+	public static int CountOf<T>(this IEnumerable<T>? @this, T item, IEqualityComparer<T>? comparer = null)
+	{
+		comparer ??= EqualityComparer<T>.Default;
+
+		return @this.If(_ => comparer.Equals(_, item)).Count();
+	}
 
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
 		where T : struct
@@ -826,31 +814,18 @@ public static class EnumerableExtensions
 	/// <br/>
 	/// <see langword="foreach"/> (<see langword="var"/> items <see langword="in"/> @<paramref name="this"/>)<br/>
 	/// {<br/>
-	/// <see langword="    "/><see cref="int"/> count;<br/>
-	/// <see langword="    switch"/> (items)<br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        continue"/>;<br/>
+	/// <br/>
+	/// <see langword="    if"/> (items.TryAsSpan(<see langword="out var"/> memory))<br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        case null"/>:<br/>
-	/// <see langword="            continue"/>;<br/>
-	/// <see langword="        case "/><typeparamref name="T"/>[]:<br/>
-	/// <see langword="            "/>count = array.Length;<br/>
-	/// <see langword="            for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="                yield return"/> array[i];<br/>
-	/// <see langword="            continue"/>;<br/>
-	/// <see langword="        case "/><see cref="ImmutableArray{T}"/> immutableArray:<br/>
-	/// <see langword="            "/>count = immutableArray.Length;<br/>
-	/// <see langword="            for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="                yield return"/> immutableArray[i];<br/>
-	/// <see langword="            continue"/>;<br/>
-	/// <see langword="        case "/><see cref="List{T}"/> list:<br/>
-	/// <see langword="            "/>count = list.Count;<br/>
-	/// <see langword="            for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="                yield return"/> list[i];<br/>
-	/// <see langword="            continue"/>;<br/>
-	/// <see langword="        default"/>:<br/>
-	/// <see langword="            foreach"/> (<see langword="var"/> item <see langword="in"/> items)<br/>
-	/// <see langword="                yield return"/> item;<br/>
-	/// <see langword="            continue"/>;<br/>
+	/// <see langword="        var"/> count = memory.Length;<br/>
+	/// <see langword="        for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="            yield return"/> memory.Span[i]:<br/>
 	/// <see langword="    "/>}<br/>
+	/// <see langword="    else"/><br/>
+	/// <see langword="        foreach"/> (<see langword="var"/> item <see langword="in"/> items)<br/>
+	/// <see langword="            yield return"/> item:<br/>
 	/// }
 	/// </code>
 	/// </summary>
@@ -862,31 +837,21 @@ public static class EnumerableExtensions
 
 		foreach (var items in @this)
 		{
-			int count;
-			switch (items)
+			if (!items.Any())
+				continue;
+
+			if (items.TryAsMemory(out var memory))
 			{
-				case null:
-					continue;
-				case T[] array:
-					count = array.Length;
-					for (var i = 0; i < count; ++i)
-						yield return array[i];
-					continue;
-				case ImmutableArray<T> immutableArray:
-					count = immutableArray.Length;
-					for (var i = 0; i < count; ++i)
-						yield return immutableArray[i];
-					continue;
-				case List<T> list:
-					count = list.Count;
-					for (var i = 0; i < count; ++i)
-						yield return list[i];
-					continue;
-				default:
-					foreach (var item in items)
-						yield return item;
-					continue;
+				var count = memory.Length;
+				for (var i = 0; i < count; ++i)
+				{
+					var item = memory.Span[i];
+					yield return item;
+				}
 			}
+			else
+				foreach (var item in items)
+					yield return item;
 		}
 	}
 
@@ -940,19 +905,34 @@ public static class EnumerableExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="values"/>.All(@<paramref name="this"/>.Has);</c>
+	/// <code>
+	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
+	/// <br/>
+	/// <see langword="return"/> @<paramref name="this"/>.Any(value =&gt; <paramref name="comparer"/>.Equals(item, value));
+	/// </code>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values)
-		where T : IEquatable<T>
-		=> values.All(@this.Has);
+	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item, IEqualityComparer<T>? comparer = null)
+	{
+		comparer ??= EqualityComparer<T>.Default;
+
+		return @this.Any(value => comparer.Equals(item, value));
+	}
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="values"/>.All(value =&gt; @<paramref name="this"/>.Has(value, <paramref name="comparer"/>));</c>
+	/// <code>
+	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
+	/// <br/>
+	/// <see langword="return"/> <paramref name="values"/>.All(value =&gt; @<paramref name="this"/>.Has(value, <paramref name="comparer"/>));
+	/// </code>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T> comparer)
-		=> values.All(value => @this.Has(value, comparer));
+	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
+	{
+		comparer ??= EqualityComparer<T>.Default;
+
+		return values.All(value => @this.Has(value, comparer));
+	}
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="index"/>.Value &lt; @<paramref name="this"/>.Count();</c>
@@ -962,19 +942,19 @@ public static class EnumerableExtensions
 		=> index.Value < @this.Count();
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="item"/> <see langword="is not null"/> ? @<paramref name="this"/>.Any(<paramref name="item"/>.Equals) : @<paramref name="this"/>.Any(value =&gt; value <see langword="is null"/>);</c>
+	/// <code>
+	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
+	/// <br/>
+	/// <see langword="return"/> <paramref name="values"/>.Any(value =&gt; @<paramref name="this"/>.Has(value, <paramref name="comparer"/>));
+	/// </code>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item)
-		where T : IEquatable<T>
-		=> item is not null ? @this.Any(item.Equals) : @this.Any(value => value is null);
+	public static bool HasAny<T>([NotNullWhen(true)] this IEnumerable<T>? @this, IEnumerable<T>? values, IEqualityComparer<T>? comparer = null)
+	{
+		comparer ??= EqualityComparer<T>.Default;
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; <paramref name="comparer"/>.Equals(<paramref name="item"/>, value));</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool Has<T>([NotNullWhen(true)] this IEnumerable<T>? @this, T item, IEqualityComparer<T> comparer)
-		=> @this.Any(value => comparer.Equals(item, value));
+		return values.Any(value => @this.Has(value, comparer));
+	}
 
 	/// <summary>
 	/// <code>
@@ -1516,11 +1496,73 @@ public static class EnumerableExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Get(<paramref name="count"/>..^1));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Get(<paramref name="count"/>..^0));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
 		=> @this.Get(count..^0);
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="skip"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/>.TryAsMemory(<see langword="out var"/> memory))<br/>
+	/// {<br/>
+	/// <see langword="    var"/> count = memory.Length;<br/>
+	/// <see langword="    var"/> i = 0;<br/>
+	/// <see langword="    while"/> (i &lt; count &amp;&amp; <paramref name="skip"/>(memory.Span[i]))<br/>
+	/// <see langword="        "/>++i;<br/>
+	/// <see langword="    while"/> (i &lt; count)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        "/>++i;<br/>
+	/// <see langword="        yield return"/> memory.Span[i];<br/>
+	/// <see langword="    "/>}<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
+	/// <see langword="    while"/> (enumerator.TryNext(<see langword="out var"/> item))<br/>
+	/// <see langword="        if"/> (!<paramref name="skip"/>(item))<br/>
+	/// <see langword="            break"/>;<br/>
+	/// <see langword="    while"/> (enumerator.TryNext(<see langword="out var"/> item))<br/>
+	/// <see langword="        yield return"/> item;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> SkipWhile<T>(this IEnumerable<T> @this, Predicate<T> skip)
+	{
+		skip.AssertNotNull();
+
+		if (!@this.Any())
+			yield break;
+
+		if (@this.TryAsMemory(out var memory))
+		{
+			var count = memory.Length;
+			var i = 0;
+			while (i < count && skip(memory.Span[i]))
+				++i;
+			while (i < count)
+			{
+				++i;
+				yield return memory.Span[i];
+			}
+		}
+		else
+		{
+			using var enumerator = @this.GetEnumerator();
+			while (enumerator.TryNext(out var item))
+				if (!skip(item))
+					break;
+			while (enumerator.TryNext(out var item))
+				yield return item;
+		}
+	}
 
 	/// <summary>
 	/// <code>
@@ -1559,6 +1601,52 @@ public static class EnumerableExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> @this, int count)
 		=> @this.Get(Index.FromEnd(count)..^0);
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="take"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/>.TryAsMemory(<see langword="out var"/> memory))<br/>
+	/// {<br/>
+	/// <see langword="    var"/> count = memory.Length;<br/>
+	/// <see langword="    var"/> i = -1;<br/>
+	/// <see langword="    while"/> (++i &lt; count &amp;&amp; <paramref name="take"/>(memory.Span[i]))<br/>
+	/// <see langword="        yield return"/> memory.Span[i];<br/>
+	/// }<br/>
+	/// <see langword="else"/><br/>
+	/// {<br/>
+	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
+	/// <see langword="    while"/> (enumerator.TryNext(<see langword="out var"/> item) &amp;&amp; <paramref name="take"/>(item))<br/>
+	/// <see langword="        yield return"/> item;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> TakeWhile<T>(this IEnumerable<T> @this, Predicate<T> take)
+	{
+		take.AssertNotNull();
+
+		if (!@this.Any())
+			yield break;
+
+		if (@this.TryAsMemory(out var memory))
+		{
+			var count = memory.Length;
+			var i = -1;
+			while (++i < count && take(memory.Span[i]))
+				yield return memory.Span[i];
+		}
+		else
+		{
+			using var enumerator = @this.GetEnumerator();
+			while (enumerator.TryNext(out var item) && take(item))
+				yield return item;
+		}
+	}
 
 	/// <summary>
 	/// <code>
@@ -1802,23 +1890,15 @@ public static class EnumerableExtensions
 		};
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="item"/> <see langword="is not null"/> ? @<paramref name="this"/>.ToIndex(item.Equals) : @<paramref name="this"/>.ToIndex(value =&gt; value <see langword="is null"/>);</c>
-	/// </summary>
-	public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T item)
-		where T : IEquatable<T>
-		=> item is not null ? @this.ToIndex(item.Equals) : @this.ToIndex(value => value is null);
-
-	/// <summary>
 	/// <code>
-	/// <paramref name="comparer"/>.AssertNotNull();<br/>
+	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
 	/// <br/>
 	/// @<paramref name="this"/>.ToIndex(value =&gt; <paramref name="comparer"/>.Equals(value, <paramref name="item"/>);
 	/// </code>
 	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T item, IEqualityComparer<T> comparer)
+	public static IEnumerable<int> ToIndex<T>(this IEnumerable<T>? @this, T item, IEqualityComparer<T>? comparer = null)
 	{
-		comparer.AssertNotNull();
+		comparer ??= EqualityComparer<T>.Default;
 
 		return @this.ToIndex(value => comparer.Equals(value, item));
 	}
@@ -1857,6 +1937,8 @@ public static class EnumerableExtensions
 	/// <see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; immutableArray.AsSpan(),<br/>
 	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsSpan(),<br/>
 	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+	/// <see langword="    "/><see cref="Queue{T}"/> queue =&gt; queue.ToArray().AsSpan(),<br/>
+	/// <see langword="    "/><see cref="Stack{T}"/> stack =&gt; stack.ToArray().AsSpan(),<br/>
 	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.ToArray().AsSpan(),<br/>
 	/// };
 	/// </code>
@@ -1868,6 +1950,8 @@ public static class EnumerableExtensions
 			ImmutableArray<T> immutableArray => immutableArray.AsSpan(),
 			T[] array => array.AsSpan(),
 			List<T> list => list.ToArray().AsSpan(),
+			Queue<T> queue => queue.ToArray().AsSpan(),
+			Stack<T> stack => stack.ToArray().AsSpan(),
 			_ => @this.ToArray().AsSpan(),
 		};
 
@@ -1878,6 +1962,8 @@ public static class EnumerableExtensions
 	///	<see langword="    null"/> =&gt; <see cref="Span{T}"/>.Empty,<br/>
 	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsSpan(),<br/>
 	///	<see langword="    "/><see cref="List{T}"/> list =&gt; list.ToArray().AsSpan(),<br/>
+	///	<see langword="    "/><see cref="Queue{T}"/> queue =&gt; queue.ToArray().AsSpan(),<br/>
+	///	<see langword="    "/><see cref="Stack{T}"/> stack =&gt; stack.ToArray().AsSpan(),<br/>
 	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.ToArray().AsSpan()<br/>
 	/// };
 	/// </code>
@@ -1888,6 +1974,8 @@ public static class EnumerableExtensions
 			null => Span<T>.Empty,
 			T[] array => array.AsSpan(),
 			List<T> list => list.ToArray().AsSpan(),
+			Queue<T> queue => queue.ToArray().AsSpan(),
+			Stack<T> stack => stack.ToArray().AsSpan(),
 			_ => @this.ToArray().AsSpan(),
 		};
 
@@ -1899,6 +1987,34 @@ public static class EnumerableExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static Stack<T> ToStack<T>(this IEnumerable<T>? @this)
 		=> @this is not null ? new Stack<T>(@this) : new Stack<T>(0);
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="memory"/> = @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/><typeparamref name="T"/>[] array =&gt; array.AsMemory(),<br/>
+	/// <see langword="    "/><see cref="ImmutableArray{T}"/> array =&gt; array.AsMemory(),<br/>
+	/// <see langword="    "/><see cref="List{T}"/> list =&gt; list.ToArray().AsMemory(),<br/>
+	/// <see langword="    "/><see cref="Queue{T}"/> queue =&gt; queue.ToArray().AsMemory(),<br/>
+	/// <see langword="    "/><see cref="Stack{T}"/> stack =&gt; stack.ToArray().AsMemory(),<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="ReadOnlyMemory{T}.Empty"/><br/>
+	/// }<br/>
+	/// <see langword="return"/> !<paramref name="memory"/>.IsEmpty;
+	/// </code>
+	/// </summary>
+	public static bool TryAsMemory<T>([NotNullWhen(true)] this IEnumerable<T>? @this, out ReadOnlyMemory<T> memory)
+	{
+		memory = @this switch
+		{
+			T[] array => array.AsMemory(),
+			ImmutableArray<T> array => array.AsMemory(),
+			List<T> list => list.ToArray().AsMemory(),
+			Queue<T> queue => queue.ToArray().AsMemory(),
+			Stack<T> stack => stack.ToArray().AsMemory(),
+			_ => ReadOnlyMemory<T>.Empty
+		};
+		return !memory.IsEmpty;
+	}
 
 	/// <summary>
 	/// <code>
@@ -1973,8 +2089,8 @@ public static class EnumerableExtensions
 	///	<see langword="    null"/> =&gt; <see cref="Enumerable{T}"/>.NoGet(<see langword="out"/> <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
 	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> list =&gt; list.TryGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="index"/>.IsFromEnd =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()).Value, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetEnumerator().TryGet(<paramref name="index"/>.Value, <see langword="out"/> <paramref name="item"/>)<br/>
+	///	<see langword="    "/>_ <see langword="when"/> <paramref name="index"/>.IsFromEnd =&gt; <see cref="Enumerable{T}"/>.TryGet(@<paramref name="this"/>, <paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()).Value, <see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.TryGet(@<paramref name="this"/>, <paramref name="index"/>.Value, <see langword="out"/> <paramref name="item"/>)<br/>
 	/// };
 	/// </code>
 	/// </summary>
@@ -2023,39 +2139,23 @@ public static class EnumerableExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	/// <see langword="    return"/> <see cref="Enumerable{T}"/>.NoGet(<see langword="out"/> <paramref name="item"/>);<br/>
-	///	<see langword="else if"/> (@<paramref name="this"/> <see langword="is"/> <see cref="IList{T}"/> list)<br/>
-	/// <see langword="    return"/> list.TryGet(0, <see langword="out"/> <paramref name="item"/>) &amp;&amp; list.Count == 1;<br/>
-	///	<see langword="else if"/> (@<paramref name="this"/> <see langword="is"/> <see cref="IReadOnlyList{T}"/> readOnlyList)<br/>
-	/// <see langword="    return"/> readOnlyList.TryGet(0, <see langword="out"/> <paramref name="item"/>) &amp;&amp; readOnlyList.Count == 1;<br/>
-	///	<see langword="else"/><br/>
-	///	{<br/>
-	///	<see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	///	<see langword="    if"/> (enumerator.TryNext(<see langword="out"/> <paramref name="item"/>))<br/>
-	///	<see langword="        return"/> enumerator.MoveNext();<br/>
-	/// }<br/>
-	/// <see langword="return false"/>;
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	///	<see langword="    null"/> =&gt; <see cref="Enumerable{T}"/>.NoGet(<see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; list.TryGet(0, <see langword="out"/> <paramref name="item"/>) &amp;&amp; list.Count == 1,<br/>
+	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> list =&gt; list.TryGet(0, <see langword="out"/> <paramref name="item"/>) &amp;&amp; list.Count == 1,<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="Enumerable{T}"/>.TrySingle(@<paramref name="this"/>, <see langword="out"/> <paramref name="item"/>)<br/>
+	/// };
 	/// </code>
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	/// <exception cref="IndexOutOfRangeException"/>
 	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T>? @this, [NotNullWhen(true)] out T? item)
-	{
-		if (@this is null)
-			return Enumerable<T>.NoGet(out item);
-		else if (@this is IList<T> list)
-			return list.TryGet(0, out item) && list.Count == 1;
-		else if (@this is IReadOnlyList<T> readOnlyList)
-			return readOnlyList.TryGet(0, out item) && readOnlyList.Count == 1;
-		else
+		=> @this switch
 		{
-			using var enumerator = @this.GetEnumerator();
-			if (enumerator.TryNext(out item))
-				return enumerator.MoveNext();
-		}
-		return false;
-	}
+			null => Enumerable<T>.NoGet(out item),
+			IList<T> list => list.TryGet(0, out item) && list.Count == 1,
+			IReadOnlyList<T> list => list.TryGet(0, out item) && list.Count == 1,
+			_ => Enumerable<T>.TrySingle(@this, out item)
+		};
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.If(<paramref name="filter"/>).TrySingle(<see langword="out"/> <paramref name="item"/>);</c>

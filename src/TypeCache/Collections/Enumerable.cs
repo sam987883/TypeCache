@@ -200,4 +200,10 @@ public static class Enumerable<T>
 		using var enumerator = enumerable.GetEnumerator();
 		return enumerator.TryGet(index, out item);
 	}
+
+	internal static bool TrySingle(IEnumerable<T> enumerable, [NotNullWhen(true)] out T? item)
+	{
+		using var enumerator = enumerable.GetEnumerator();
+		return enumerator.TryNext(out item) && enumerator.MoveNext();
+	}
 }
