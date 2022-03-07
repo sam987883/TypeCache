@@ -8,7 +8,7 @@ public class SqlCountResponse
 
 	public string DataSource { get; set; } = string.Empty;
 
-	public string SQL { get; set; } = string.Empty;
+	public string Sql { get; set; } = string.Empty;
 
 	public string Table { get; set; } = string.Empty;
 }

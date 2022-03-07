@@ -4,6 +4,7 @@ using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
 using GraphQL.Server;
+using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ public static class IServiceCollectionExtensions
 	/// Registers Singletons:
 	/// <list type="bullet">
 	/// <item><term><see cref="IDocumentExecuter"/></term> An instance of: <see cref="DocumentExecuter"/>.</item>
+	/// <item><term><see cref="IDocumentWriter"/></term> An instance of: <see cref="DocumentWriter"/>.</item>
 	/// <item><term><see cref="IGraphQLExecuter{TSchema}"/></term> An instance of: <see cref="BasicGraphQLExecuter{TSchema}"/>.</item>
 	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> An instance of: <see cref="DataLoaderContextAccessor"/>.</item>
 	/// <item><term><see cref="IDocumentExecutionListener"/></term> An instance of: <see cref="DataLoaderDocumentListener"/>.</item>
@@ -31,6 +33,7 @@ public static class IServiceCollectionExtensions
 	/// </summary>
 	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
 		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
+			.AddSingleton<IDocumentWriter, DocumentWriter>()
 			.AddSingleton(typeof(IGraphQLExecuter<>), typeof(BasicGraphQLExecuter<>))
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
@@ -41,6 +44,9 @@ public static class IServiceCollectionExtensions
 			.AddSingleton(typeof(GraphQLObjectType<>))
 			.AddSingleton(typeof(GraphQLOrderByType<>));
 
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.UseMiddleware&lt;<see cref="GraphQLMiddleware{T}"/>&gt;(<see langword="new"/> <see cref="PathString"/>(<paramref name="route"/>));</c>
+	/// </summary>
 	/// <param name="route">The route to use for this <see cref="ISchema"/>.</param>
 	public static IApplicationBuilder UseGraphQLSchema<T>(this IApplicationBuilder @this, string route)
 		where T : ISchema

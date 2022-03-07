@@ -12,8 +12,6 @@ using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections.Extensions;
-using TypeCache.Converters;
-using TypeCache.GraphQL.Types;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.GraphQL.Web;
@@ -34,10 +32,9 @@ public class GraphQLMiddleware<T>
 			PropertyNameCaseInsensitive = true,
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 		};
-		this._JsonSerializerOptions.Converters.Add(new TypeJsonConverter());
 	}
 
-	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer)
+	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IDocumentWriter writer)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -62,6 +59,7 @@ public class GraphQLMiddleware<T>
 		};
 		var options = new ExecutionOptions
 		{
+			CancellationToken = httpContext.RequestAborted,
 			Inputs = request.Variables?.ToString().ToInputs(),
 			OperationName = request.OperationName,
 			Query = request.Query,
@@ -71,26 +69,11 @@ public class GraphQLMiddleware<T>
 			ValidationRules = DocumentValidator.CoreRules
 		};
 		var result = await executer.ExecuteAsync(options);
-		var response = new GraphQLResponse
-		{
-			Data = result.Data,
-			Errors = result.Errors?.Map(error => new GraphQLError
-			{
-				Data = error.Data,
-				Extensions = result.Extensions,
-				Locations = error.Locations,
-				Message = error.Message,
-				Path = error.Path
-			}).ToArray()
-		};
-		response.Extensions["RequestId"] = requestId;
-		response.Extensions["RequestTime"] = requestTime;
+		result.Extensions!["RequestId"] = requestId;
+		result.Extensions["RequestTime"] = requestTime;
 
-		var json = JsonSerializer.Serialize(response, this._JsonSerializerOptions);
 		httpContext.Response.ContentType = Application.Json;
 		httpContext.Response.StatusCode = (int)HttpStatusCode.OK;
-		await JsonSerializer.SerializeAsync(httpContext.Response.Body, response, this._JsonSerializerOptions);
-
-		await this._Next.Invoke(httpContext);
+		await writer.WriteAsync(httpContext.Response.Body, result, httpContext.RequestAborted);
 	}
 }

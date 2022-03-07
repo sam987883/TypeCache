@@ -62,8 +62,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<CountRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<CountRequest, string>(request);
 
 		return sqlResponse;
 	}
@@ -94,8 +94,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<DeleteRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<DeleteRequest, string>(request);
 
 		if (request.Output.Any())
 		{
@@ -130,8 +130,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, string>(request);
 
 		if (request.Output.Any())
 		{
@@ -166,8 +166,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<InsertDataRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<InsertDataRequest, string>(request);
 
 		if (request.Output.Any())
 		{
@@ -213,8 +213,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
 
 		if (request.Select.Any())
 		{
@@ -258,8 +258,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
+		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
 
 		if (request.Select.Any())
 		{
@@ -301,8 +301,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlUpdateResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlUpdateResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateRequest, string>(request);
+		if (selections.Has(nameof(SqlUpdateResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<UpdateRequest, string>(request);
 
 		if (request.Output.Any())
 		{
@@ -350,8 +350,8 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlUpdateResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlUpdateResponse<T>.SQL)))
-			sqlResponse.SQL = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, string>(request);
+		if (selections.Has(nameof(SqlUpdateResponse<T>.Sql)))
+			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, string>(request);
 
 		if (request.Output.Any())
 		{
