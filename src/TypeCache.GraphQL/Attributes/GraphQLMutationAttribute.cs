@@ -6,9 +6,9 @@ namespace TypeCache.GraphQL.Attributes;
 
 /// <summary>
 /// <b>GraphQL</b><br />
-/// Marks a method to be used as a root level Query endpoint.
+/// Marks a method to be used as a root level Mutation endpoint.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphQueryAttribute : Attribute
+public class GraphQLMutationAttribute : Attribute
 {
 }

@@ -9,6 +9,8 @@ namespace TypeCache.Reflection;
 
 public abstract class Member : IMember
 {
+	private const char GENERIC_TICK = '`';
+
 	protected Member(MemberInfo memberInfo)
 	{
 		this.Attributes = memberInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
@@ -21,7 +23,11 @@ public abstract class Member : IMember
 			EventInfo eventInfo => eventInfo.AddMethod!.IsAssembly,
 			_ => default
 		};
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? memberInfo.Name;
+		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? memberInfo.Name.IndexOf(GENERIC_TICK) switch
+		{
+			-1 => memberInfo.Name,
+			var i => memberInfo.Name.Substring(0, i)
+		};
 		this.Public = memberInfo switch
 		{
 			Type type => type.IsPublic,
@@ -35,6 +41,9 @@ public abstract class Member : IMember
 
 	public IImmutableList<Attribute> Attributes { get; }
 
+	/// <summary>
+	/// Owning assembly level scope.
+	/// </summary>
 	public bool Internal { get; }
 
 	/// <summary>

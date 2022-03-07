@@ -18,13 +18,13 @@ namespace TypeCache.GraphQL.Attributes;
 /// If the parameter a type of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext{TSource}"/>, then it will not show up in the endpoint-<br />
 /// Instead it will be injected with the instance of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext{TSource}"/>.
 /// </summary>
-[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
-public class GraphTypeAttribute : Attribute
+[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, AllowMultiple = false)]
+public class GraphQLTypeAttribute : Attribute
 {
 	/// <summary>
 	/// Overrides the Graph Type of the object property or endpoint parameter.
 	/// </summary>
-	public GraphTypeAttribute(Type graphType)
+	public GraphQLTypeAttribute(Type graphType)
 	{
 		graphType.AssertNotNull();
 		graphType.IsGraphType().Assert(true);
@@ -35,17 +35,17 @@ public class GraphTypeAttribute : Attribute
 	/// <summary>
 	/// Overrides the Graph Type of the object property or endpoint parameter using a scalar type.
 	/// </summary>
-	public GraphTypeAttribute(ScalarType scalarType)
+	public GraphQLTypeAttribute(ScalarType scalarType)
 		=> this.GraphType = scalarType.GraphType();
 
 	/// <summary>
 	/// Overrides the Graph Type of the object property or endpoint parameter using a list of scalar type.
 	/// </summary>
-	public GraphTypeAttribute(ListType listType, ScalarType scalarType)
+	public GraphQLTypeAttribute(ListType listType, ScalarType scalarType)
 		=> this.GraphType = listType switch
 		{
 			ListType.List => typeof(ListGraphType<>).MakeGenericType(scalarType.GraphType()),
-			ListType.NonNullList => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>)).MakeGenericType(scalarType.GraphType()),
+			ListType.NotNullList => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>)).MakeGenericType(scalarType.GraphType()),
 			_ => scalarType.GraphType()
 		};
 
@@ -53,4 +53,6 @@ public class GraphTypeAttribute : Attribute
 	/// The Graph Type for override.
 	/// </summary>
 	public Type GraphType { get; }
+
+	public static GraphQLTypeAttribute Int => new GraphQLTypeAttribute(typeof(IntGraphType));
 }

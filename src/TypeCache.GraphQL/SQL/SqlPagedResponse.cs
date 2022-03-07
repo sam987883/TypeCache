@@ -10,7 +10,9 @@ public class SqlPagedResponse<T>
 {
 	public Connection<T>? Data { get; set; }
 
-	public string? SQL { get; set; }
+	public string DataSource { get; set; } = string.Empty;
 
-	public string? Table { get; set; }
+	public string SQL { get; set; } = string.Empty;
+
+	public string Table { get; set; } = string.Empty;
 }

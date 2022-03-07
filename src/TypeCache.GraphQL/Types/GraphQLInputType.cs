@@ -7,9 +7,9 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
-public sealed class GraphInputType<T> : InputObjectGraphType<T>
+public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 {
-	public GraphInputType()
+	public GraphQLInputType()
 	{
 		this.Name = TypeOf<T>.Member.GraphInputName();
 		this.Description = TypeOf<T>.Member.GraphDescription();

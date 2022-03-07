@@ -93,7 +93,7 @@ internal sealed class SqlApi : ISqlApi
 			3 => $"[{parts[0]}].[{parts[1]}].[{HandleFunctionName(parts[2])}]",
 			_ => throw new ArgumentException($"{nameof(SqlApi)}.{nameof(GetObjectSchema)}: Invalid table source name.", name)
 		};
-		return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetResultAsync(dataSource, _ => _.GetObjectSchema(name)).Result);
+		return ObjectSchema.Cache[dataSource].GetOrAdd(fullName, name => _GetResultAsync(dataSource, async _ => await _.GetObjectSchema(name)).Result);
 	}
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]

@@ -13,7 +13,7 @@ SELECT p.[parameter_id] AS [Id]
 , p.[name] AS [Name]
 , ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
 , p.[is_output] AS [Output]
-, IIF(p.[is_output] = 1 AND p.[parameter_id] = 0, 1, 0) AS [Return]
+, IIF(p.[is_output] = 1 AND p.[parameter_id] = 0, CAST(1 AS BIT), CAST(0 AS BIT)) AS [Return]
 FROM [sys].[parameters] AS p
 INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
 WHERE p.[object_id] = @ObjectId

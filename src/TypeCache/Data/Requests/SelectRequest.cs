@@ -80,7 +80,7 @@ public class SelectRequest
 	/// JSON: <code>"WITH(NOLOCK)"</code>
 	/// SQL: <code>FROM [Database1]..[Table1] WITH(NOLOCK)</code>
 	/// </summary>
-	public string? TableHints { get; set; }
+	public string TableHints { get; set; } = "WITH(NOLOCK)";
 
 	/// <summary>
 	/// JSON: <code>

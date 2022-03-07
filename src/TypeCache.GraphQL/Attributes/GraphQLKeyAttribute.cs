@@ -13,9 +13,9 @@ namespace TypeCache.GraphQL.Attributes;
 /// The GraphKey name must be unique within a model though a model may contain multiple GraphKeys.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class GraphKeyAttribute : Attribute
+public class GraphQLKeyAttribute : Attribute
 {
-	public GraphKeyAttribute(string name)
+	public GraphQLKeyAttribute(string name)
 	{
 		this.Name = name;
 	}

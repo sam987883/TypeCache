@@ -9,11 +9,11 @@ using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Types;
 
-public sealed class GraphEnumType<T> : EnumerationGraphType<T> where T : struct, Enum
+public sealed class GraphQLEnumType<T> : EnumerationGraphType<T> where T : struct, Enum
 {
 	private readonly Func<string, string> _ChangeEnumCase = DefaultChangeEnumCase;
 
-	public GraphEnumType()
+	public GraphQLEnumType()
 	{
 		this.Name = TypeOf<T>.Member.GraphName();
 

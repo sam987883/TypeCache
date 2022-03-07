@@ -20,7 +20,7 @@ public static class MemberExtensions
 	///	<see langword="    "/><see cref="SystemType.Array"/> =&gt; @<paramref name="this"/>.ElementType,<br/>
 	///	<see langword="    "/><see cref="SystemType.Dictionary"/> <see langword="or"/> <see cref="SystemType.SortedDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableSortedDictionary"/><br/>
 	///	<see langword="        "/>=&gt; <see langword="typeof"/>(<see cref="KeyValuePair"/>&lt;,&gt;).MakeGenericType(@<paramref name="this"/>.GenericTypes.To(_ =&gt; (<see cref="Type"/>)_).ToArray()).GetTypeMember(),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>?.Kind == <see cref="Kind.Collection"/> =&gt; @<paramref name="this"/>.GenericTypes.First()<br/>
+	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.SystemType.IsCollection() =&gt; @<paramref name="this"/>.GenericTypes.First()<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// };<br/>
 	/// </code>
@@ -32,7 +32,7 @@ public static class MemberExtensions
 			SystemType.Array => @this.ElementType,
 			SystemType.Dictionary or SystemType.SortedDictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
 				=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypes.Map(_ => (Type)_).ToArray()).GetTypeMember(),
-			_ when @this.Kind == Kind.Collection => @this.GenericTypes.First(),
+			_ when @this.SystemType.IsCollection() => @this.GenericTypes.First(),
 			_ => null
 		};
 

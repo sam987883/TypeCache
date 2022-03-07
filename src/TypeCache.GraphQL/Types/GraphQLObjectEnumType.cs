@@ -7,11 +7,11 @@ using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
-public sealed class GraphObjectEnumType<T> : EnumerationGraphType where T : class
+public sealed class GraphQLObjectEnumType<T> : EnumerationGraphType where T : class
 {
-	public GraphObjectEnumType()
+	public GraphQLObjectEnumType()
 	{
-		var graphName = TypeOf<T>.Attributes.First<GraphNameAttribute>()?.Name;
+		var graphName = TypeOf<T>.Attributes.First<GraphQLNameAttribute>()?.Name;
 		this.Name = graphName ?? $"{TypeOf<T>.Name}Fields";
 		this.Description = $"Fields of type `{graphName ?? TypeOf<T>.Name}`.";
 

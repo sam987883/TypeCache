@@ -9,6 +9,5 @@ public enum Kind
 	Delegate,
 	Struct,
 	Enum,
-	Collection,
 	Pointer
 }

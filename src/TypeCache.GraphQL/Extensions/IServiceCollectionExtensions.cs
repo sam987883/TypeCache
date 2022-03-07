@@ -1,11 +1,15 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
+using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
+using GraphQL.Server;
 using GraphQL.Types;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.GraphQL.Types;
+using TypeCache.GraphQL.Web;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -14,26 +18,31 @@ public static class IServiceCollectionExtensions
 	/// <summary>
 	/// Registers Singletons:
 	/// <list type="bullet">
+	/// <item><term><see cref="IDocumentExecuter"/></term> An instance of: <see cref="DocumentExecuter"/>.</item>
+	/// <item><term><see cref="IGraphQLExecuter{TSchema}"/></term> An instance of: <see cref="BasicGraphQLExecuter{TSchema}"/>.</item>
 	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> An instance of: <see cref="DataLoaderContextAccessor"/>.</item>
 	/// <item><term><see cref="IDocumentExecutionListener"/></term> An instance of: <see cref="DataLoaderDocumentListener"/>.</item>
-	/// <item><term><see cref="GraphObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>
-	/// <item><term><see cref="GraphObjectEnumType{T}"/></term> Treats the property names of a type as a GraphEnumType.</item>
-	/// <item><term><see cref="GraphInputType{T}"/></term> The GraphQL InputObjectGraphType.</item>
-	/// <item><term><see cref="GraphEnumType{T}"/></term> The GraphQL EnumerationGraphType.</item>
-	/// <item><term><see cref="GraphHashIdType"/></term> A <see cref="ScalarGraphType"/> that hashes and unhashes integer identifier types to prevent a sequential attack.</item>
-	/// <item><term><see cref="ISchema"/></term> The main GraphQL schema.</item>
+	/// <item><term><see cref="GraphQLEnumType{T}"/></term> The GraphQL EnumerationGraphType.</item>
+	/// <item><term><see cref="GraphQLHashIdType"/></term> A <see cref="ScalarGraphType"/> that hashes and unhashes integer identifier types to prevent a sequential attack.</item>
+	/// <item><term><see cref="GraphQLInputType{T}"/></term> The GraphQL InputObjectGraphType.</item>
+	/// <item><term><see cref="GraphQLObjectEnumType{T}"/></term> Treats the property names of a type as a GraphEnumType.</item>
+	/// <item><term><see cref="GraphQLObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>
 	/// </list>
 	/// </summary>
-	/// <param name="addEndpoints">Use this to register handler classes containing endpoint methods or to register SQL API generated endpoints.</param>
-	/// <param name="version">The version number of the Graph Schema.</param>
-	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this, Action<GraphSchema> addEndpoints, string version = "0")
-		=> @this
+	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
+		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
+			.AddSingleton(typeof(IGraphQLExecuter<>), typeof(BasicGraphQLExecuter<>))
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
-			.AddSingleton(typeof(GraphObjectType<>))
-			.AddSingleton(typeof(GraphObjectEnumType<>))
-			.AddSingleton(typeof(GraphInputType<>))
-			.AddSingleton(typeof(GraphEnumType<>))
-			.AddSingleton(typeof(GraphHashIdType))
-			.AddSingleton<ISchema>(provider => new GraphSchema(provider, addEndpoints, version));
+			.AddSingleton(typeof(GraphQLEnumType<>))
+			.AddSingleton<GraphQLHashIdType>()
+			.AddSingleton(typeof(GraphQLInputType<>))
+			.AddSingleton(typeof(GraphQLObjectEnumType<>))
+			.AddSingleton(typeof(GraphQLObjectType<>))
+			.AddSingleton(typeof(GraphQLOrderByType<>));
+
+	/// <param name="route">The route to use for this <see cref="ISchema"/>.</param>
+	public static IApplicationBuilder UseGraphQLSchema<T>(this IApplicationBuilder @this, string route)
+		where T : ISchema
+		=> @this.UseMiddleware<GraphQLMiddleware<T>>(new PathString(route));
 }

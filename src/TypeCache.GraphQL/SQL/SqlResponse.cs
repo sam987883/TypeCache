@@ -6,9 +6,11 @@ namespace TypeCache.GraphQL.SQL;
 
 public class SqlResponse<T>
 {
-	public T[]? Data { get; set; }
+	public T[] Data { get; set; } = Array<T>.Empty;
 
-	public string? SQL { get; set; }
+	public string DataSource { get; set; } = string.Empty;
 
-	public string? Table { get; set; }
+	public string SQL { get; set; } = string.Empty;
+
+	public string Table { get; set; } = string.Empty;
 }

@@ -43,8 +43,8 @@ public static class DbConnectionExtensions
 
 	public static async ValueTask<ObjectSchema> GetObjectSchema(this DbConnection @this, string name)
 	{
-		var objectName = name.Split('.').Get(^1)!;
-		var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!;
+		var objectName = name.Split('.').Get(^1)!.TrimStart('[').TrimEnd(']');
+		var schemaName = name.Contains("..") ? (object)DBNull.Value : name.Split('.').Get(^2)!.TrimStart('[').TrimEnd(']');
 		var request = new SqlRequest { SQL = ObjectSchema.SQL };
 		request.Parameters.Add(ObjectSchema.OBJECT_NAME, objectName);
 		request.Parameters.Add(ObjectSchema.SCHEMA_NAME, schemaName);

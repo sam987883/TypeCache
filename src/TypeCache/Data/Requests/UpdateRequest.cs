@@ -54,7 +54,7 @@ public class UpdateRequest
 	/// JSON: <code>"WITH(UPDLOCK)"</code>
 	/// SQL: <code>UPDATE [Database1]..[Table1] WITH(UPDLOCK)</code>
 	/// </summary>
-	public string? TableHints { get; set; }
+	public string TableHints { get; set; } = "WITH(UPDLOCK)";
 
 	/// <summary>
 	/// JSON: <code>

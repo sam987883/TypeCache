@@ -10,10 +10,10 @@ namespace TypeCache.GraphQL.Attributes;
 /// Sets the name of the object type, object property, enum type, enum field, endpoint or endpoint parameter.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue | AttributeTargets.Struct)]
-public class GraphNameAttribute : Attribute
+public class GraphQLNameAttribute : Attribute
 {
 	/// <exception cref="ArgumentNullException"/>
-	public GraphNameAttribute(string name)
+	public GraphQLNameAttribute(string name)
 	{
 		name.AssertNotBlank();
 

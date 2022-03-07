@@ -5,13 +5,14 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SQL;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
-public class GraphOrderByType<T> : EnumerationGraphType
+public class GraphQLOrderByType<T> : EnumerationGraphType
 	where T : class
 {
-	public GraphOrderByType()
+	public GraphQLOrderByType()
 	{
 		this.Name = TypeOf<T>.Attributes.GraphName() ?? $"{TypeOf<T>.Name}_OrderBy";
 		this.Description = $"Order by `{TypeOf<T>.Name}`.";
@@ -22,8 +23,8 @@ public class GraphOrderByType<T> : EnumerationGraphType
 			var description = property.GraphDescription();
 			var deprecationReason = property.ObsoleteMessage();
 
-			this.AddValue($"{propertyName}_ASC", description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending }, deprecationReason);
-			this.AddValue($"{propertyName}_DESC", description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Descending }, deprecationReason);
+			this.AddValue(Invariant($"{propertyName}_ASC"), description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending }, deprecationReason);
+			this.AddValue(Invariant($"{propertyName}_DESC"), description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Descending }, deprecationReason);
 		}
 	}
 }

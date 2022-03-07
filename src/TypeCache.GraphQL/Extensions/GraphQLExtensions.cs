@@ -16,7 +16,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Extensions;
 
-public static class GraphExtensions
+public static class GraphQLExtensions
 {
 	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, object? overrideValue = null)
 	{
@@ -178,7 +178,7 @@ public static class GraphExtensions
 			Description = @this.GraphDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
 			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
-			Subscriber = (IEventStreamResolver)typeof(GraphExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, handler)!,
+			Subscriber = (IEventStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, handler)!,
 			Type = @this.Return.GraphType()
 		};
 

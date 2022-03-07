@@ -6,7 +6,9 @@ public class SqlCountResponse
 {
 	public long Count { get; set; }
 
-	public string? SQL { get; set; }
+	public string DataSource { get; set; } = string.Empty;
 
-	public string? Table { get; set; }
+	public string SQL { get; set; } = string.Empty;
+
+	public string Table { get; set; } = string.Empty;
 }

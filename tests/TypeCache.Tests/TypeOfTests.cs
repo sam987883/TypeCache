@@ -126,7 +126,8 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.Handle);
 		Assert.Equal(13, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
-		Assert.Equal(Kind.Collection, member.Kind);
+		Assert.True(member.SystemType.IsCollection());
+		Assert.True(member.SystemType.IsImmutable());
 		Assert.Equal(61, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Equal(18, member.Properties.Count);
@@ -147,13 +148,14 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.Handle);
 		Assert.Equal(3, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
-		Assert.Equal(Kind.Collection, member.Kind);
+		Assert.True(member.SystemType.IsCollection());
+		Assert.False(member.SystemType.IsImmutable());
 		Assert.Equal(3, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Equal(1, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Enumerable, member.SystemType);
+		Assert.Equal(SystemType.IList, member.SystemType);
 	}
 
 	[Fact]

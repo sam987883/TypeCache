@@ -34,8 +34,8 @@ public class SqlApi<T>
 		this._Table = table;
 	}
 
-	[GraphName("Count{0}")]
-	[GraphDescription("SELECT COUNT(1) FROM {0} WHERE ...")]
+	[GraphQLName("Count{0}")]
+	[GraphQLDescription("SELECT COUNT(1) FROM {0} WHERE ...")]
 	public async Task<SqlCountResponse> Count(
 		[AllowNull] Parameter[] parameters,
 		[AllowNull] string where,
@@ -56,6 +56,9 @@ public class SqlApi<T>
 			Count = await this._Mediator.ApplyRulesAsync<CountRequest, long>(request)
 		};
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -65,8 +68,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Delete{0}")]
-	[GraphDescription("DELETE ... OUTPUT ... FROM {0} WHERE ...")]
+	[GraphQLName("Delete{0}")]
+	[GraphQLDescription("DELETE ... OUTPUT ... FROM {0} WHERE ...")]
 	public async Task<SqlResponse<T>> Delete(
 		[AllowNull] Parameter[] parameters,
 		string where,
@@ -85,6 +88,9 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlResponse<T>();
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -99,8 +105,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Delete{0}Data")]
-	[GraphDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES ...")]
+	[GraphQLName("Delete{0}Data")]
+	[GraphQLDescription("DELETE ... OUTPUT ... FROM {0} ... VALUES ...")]
 	public async Task<SqlResponse<T>> DeleteData(
 		[NotNull] T[] data,
 		IResolveFieldContext context)
@@ -118,6 +124,9 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlResponse<T>();
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -132,9 +141,9 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Insert{0}Data")]
-	[GraphDescription("INSERT INTO {0} ... VALUES ...")]
-	public async Task<SqlResponse<T>> InsertBatch(
+	[GraphQLName("Insert{0}Data")]
+	[GraphQLDescription("INSERT INTO {0} ... VALUES ...")]
+	public async Task<SqlResponse<T>> InsertData(
 		[NotNull] T[] batch,
 		IResolveFieldContext context)
 	{
@@ -151,6 +160,9 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlResponse<T>();
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -165,8 +177,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Page{0}")]
-	[GraphDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ... OFFSET ... FETCH ...")]
+	[GraphQLName("Page{0}")]
+	[GraphQLDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ... OFFSET ... FETCH ...")]
 	public async Task<SqlPagedResponse<T>> Page(
 		uint first,
 		uint after,
@@ -195,6 +207,9 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlPagedResponse<T>();
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -210,8 +225,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Select{0}")]
-	[GraphDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
+	[GraphQLName("Select{0}")]
+	[GraphQLDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
 	public async Task<SqlResponse<T>> Select(
 		[AllowNull] Parameter[] parameters,
 		[AllowNull] string where,
@@ -237,6 +252,9 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlResponse<T>();
 
+		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+			sqlResponse.DataSource = this._DataSource;
+
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
@@ -251,8 +269,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Update{0}")]
-	[GraphDescription("UPDATE {0} SET ... OUTPUT ... WHERE ...")]
+	[GraphQLName("Update{0}")]
+	[GraphQLDescription("UPDATE {0} SET ... OUTPUT ... WHERE ...")]
 	public async Task<SqlUpdateResponse<T>> Update(
 		[AllowNull] Parameter[] parameters,
 		[NotNull] T set,
@@ -308,8 +326,8 @@ public class SqlApi<T>
 		return sqlResponse;
 	}
 
-	[GraphName("Update{0}Data")]
-	[GraphDescription("UPDATE {0} SET ... OUTPUT ...")]
+	[GraphQLName("Update{0}Data")]
+	[GraphQLDescription("UPDATE {0} SET ... OUTPUT ...")]
 	public async Task<SqlUpdateResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
 	{
 		var deletedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Deleted)}.");

@@ -15,9 +15,9 @@ SELECT c.[column_id] AS [Id]
 , c.[is_hidden] AS [Hidden]
 , c.[is_identity] AS [Identity]
 , c.[is_nullable] AS [Nullable]
-, IIF(i.[is_primary_key] = 1, 1, 0) AS [PrimaryKey]
-, IIF(1 IN (c.[is_computed], c.[is_identity], c.[is_rowguidcol]), 1, 0) AS [Readonly]
-, c.[max_length] AS [Length]
+, IIF(i.[is_primary_key] = 1, CAST(1 AS BIT), CAST(0 AS BIT)) AS [PrimaryKey]
+, IIF(1 IN (c.[is_computed], c.[is_identity], c.[is_rowguidcol]), CAST(1 AS BIT), CAST(0 AS BIT)) AS [Readonly]
+, CAST(c.[max_length] AS INTEGER) AS [Length]
 FROM [sys].[columns] AS c
 INNER JOIN [sys].[types] AS t ON t.[user_type_id] = c.[user_type_id]
 LEFT JOIN

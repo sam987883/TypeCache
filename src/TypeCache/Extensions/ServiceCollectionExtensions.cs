@@ -1,10 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data.Common;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Business;
 using TypeCache.Data.Requests;
@@ -16,6 +14,12 @@ namespace TypeCache.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+	public static IServiceCollection RegisterDatabaseProviderFactory(this IServiceCollection @this, string providerName, DbProviderFactory providerFactory)
+	{
+		DbProviderFactories.RegisterFactory(providerName, providerFactory);
+		return @this;
+	}
+
 	/// <summary>
 	/// Registers Singleton:
 	/// <list type="bullet">
@@ -88,28 +92,6 @@ public static class ServiceCollectionExtensions
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 	/// <summary>
-	/// Provides various database operations: <c><see cref="ISqlApi"/></c><br/><br/>
-	/// <i><b>Requires call to:</b></i>
-	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-	/// Sample config section:
-	/// <code>
-	/// "dataSources": [<br/>
-	///   "Default": {<br/>
-	///     "connectionString": "Data Source=localhost;Initial Catalog=Customers; Integrated Security=SSPI",<br/>
-	///     "databaseProvider": "Microsoft.Data.SqlClient"<br/>
-	///   }, ...<br/>
-	/// ]
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApi(this IServiceCollection @this, IConfigurationSection dataSourceSection)
-		=> @this.AddSingleton<ISqlApi>(new SqlApi(dataSourceSection.GetChildren().Map(section => new DataSource
-		{
-			Name = section.Key,
-			ConnectionString = section.GetSection("connectionString").Value,
-			DatabaseProvider = section.GetSection("databaseProvider")?.Value ?? "Microsoft.Data.SqlClient"
-		}).ToArray()));
-
-	/// <summary>
 	/// Provides various database operations: <c><see cref="ISqlApi"/></c><br/>
 	/// <i><b>Requires call to:</b></i>
 	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
@@ -124,8 +106,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -140,8 +120,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -157,8 +135,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -172,8 +148,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -187,8 +161,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -204,8 +176,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -232,8 +202,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -254,8 +222,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -271,8 +237,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>
@@ -288,8 +252,6 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires calls to:</b></i>
 	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, IConfigurationSection)"/><br/>
-	/// - or -<br/>
 	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
 	/// </code>
 	/// </summary>

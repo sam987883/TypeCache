@@ -18,12 +18,12 @@ namespace TypeCache.GraphQL.Types;
 /// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
 /// </list>
 /// </summary>
-public class GraphHashIdType : ScalarGraphType
+public class GraphQLHashIdType : ScalarGraphType
 {
 	private readonly IHashMaker _HashMaker;
 
 	/// <exception cref="ArgumentNullException"/>
-	public GraphHashIdType(IHashMaker hashMaker)
+	public GraphQLHashIdType(IHashMaker hashMaker)
 	{
 		hashMaker.AssertNotNull();
 

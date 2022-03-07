@@ -24,46 +24,43 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
-public class GraphSchema : Schema
+public abstract class GraphQLSchema : Schema
 {
-	private readonly IDataLoaderContextAccessor _DataLoader;
-	private readonly IMediator _Mediator;
-	private readonly ISqlApi? _SqlApi;
+	protected readonly IDataLoaderContextAccessor _DataLoader;
+	protected readonly IMediator _Mediator;
+	protected readonly ISqlApi? _SqlApi;
 
-	public GraphSchema(IServiceProvider provider, Action<GraphSchema> addEndpoints, string version) : base(provider)
+	public GraphQLSchema(IServiceProvider provider) : base(provider)
 	{
-		this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
-		this.Query = new ObjectGraphType { Name = nameof(this.Query) };
-		this.Subscription = new ObjectGraphType { Name = nameof(this.Subscription) };
-		this.Version = version;
-		this.Description = $"{nameof(GraphSchema)} v{version}";
+		this.Description = this.GetType().Name;
 
 		this._DataLoader = this.GetRequiredService<IDataLoaderContextAccessor>();
 		this._Mediator = this.GetRequiredService<IMediator>();
 		this._SqlApi = this.GetService<ISqlApi>();
-
-		this.Query.AddField(new()
-		{
-			Name = nameof(this.Version),
-			DefaultValue = "0",
-			Description = $"The version number of this {nameof(GraphSchema)}.",
-			Resolver = new FuncFieldResolver<string>(context => ((GraphSchema)context.Schema).Version),
-			Type = typeof(NonNullGraphType<StringGraphType>)
-		});
-
-		addEndpoints(this);
 	}
 
-	public string Version { get; }
+	/// <summary>
+	/// Adds a GraphQL endpoint that returns the version of the GraphQL schema.
+	/// </summary>
+	/// <param name="version">The version of this GraphQL schema</param>
+	public FieldType AddVersion(string version)
+		=> this.Query.AddField(new()
+		{
+			Name = "Version",
+			DefaultValue = "0",
+			Description = $"The version number of this {this.GetType().Name}.",
+			Resolver = new FuncFieldResolver<string>(context => version),
+			Type = typeof(NonNullGraphType<StringGraphType>)
+		});
 
 	/// <summary>
 	/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
 	/// <list type="bullet">
-	/// <item><see cref="GraphQueryAttribute"/></item>
-	/// <item><see cref="GraphMutationAttribute"/></item>
-	/// <item><see cref="GraphSubqueryAttribute"/></item>
-	/// <item><see cref="GraphSubqueryBatchAttribute"/></item>
-	/// <item><see cref="GraphSubqueryCollectionAttribute"/></item>
+	/// <item><see cref="GraphQLQueryAttribute"/></item>
+	/// <item><see cref="GraphQLMutationAttribute"/></item>
+	/// <item><see cref="GraphQLSubqueryAttribute"/></item>
+	/// <item><see cref="GraphQLSubqueryBatchAttribute"/></item>
+	/// <item><see cref="GraphQLSubqueryCollectionAttribute"/></item>
 	/// </list>
 	/// </summary>
 	/// <typeparam name="T">The class containing the decorated methods that will be converted into GraphQL endpoints.</typeparam>
@@ -73,26 +70,26 @@ public class GraphSchema : Schema
 		var fieldTypes = new List<FieldType>();
 
 		var methods = TypeOf<T>.Methods.Values.Gather().ToArray();
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQueryAttribute>()).Map(this.AddQuery));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphMutationAttribute>()).Map(this.AddMutation));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLQueryAttribute>()).Map(this.AddQuery));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLMutationAttribute>()).Map(this.AddMutation));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Map(method =>
 		{
-			var parentType = method.Attributes.First<GraphSubqueryAttribute>()!.ParentType;
+			var parentType = method.Attributes.First<GraphQLSubqueryAttribute>()!.ParentType;
 			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryBatchAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Map(method =>
 		{
-			var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
+			var attribute = method.Attributes.First<GraphQLSubqueryCollectionAttribute>()!;
 			return this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubqueryCollectionAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryCollectionAttribute>()).Map(method =>
 		{
-			var attribute = method.Attributes.First<GraphSubqueryCollectionAttribute>()!;
+			var attribute = method.Attributes.First<GraphQLSubqueryCollectionAttribute>()!;
 			return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphSubscriptionAttribute>()).Map(this.AddSubscription));
+		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubscriptionAttribute>()).Map(this.AddSubscription));
 
 		return fieldTypes.ToArray();
 	}
@@ -225,28 +222,28 @@ public class GraphSchema : Schema
 	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
 	/// <param name="method">Graph endpoint implementation.</param>
 	/// <param name="parentType">Gets the parent instance type.</param>
-	/// <param name="key">The <see cref="GraphKeyAttribute"/> used to match parent and child type properties.</param>
+	/// <param name="key">The <see cref="GraphQLKeyAttribute"/> used to match parent and child type properties.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	public FieldType AddSubqueryBatch(MethodMember method, Type parentType, string key)
 	{
-		if (method.Return.Type.Kind is not Kind.Collection)
+		if (!method.Return.Type.SystemType.IsCollection())
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
 		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
 		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var getParentKey = parentKeyProperty.Getter.Method;
 		var getChildKey = childKeyProperty.Getter.Method;
 
-		var addSubQueryBatchMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryBatch)].If(method => method.GenericTypes == 3).First()!;
+		var addSubQueryBatchMethod = TypeOf<GraphQLSchema>.Methods[nameof(AddSubqueryBatch)].If(method => method.GenericTypes == 3).First()!;
 		return (FieldType)addSubQueryBatchMethod.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, method, getParentKey, getChildKey)!;
 	}
 
@@ -289,28 +286,28 @@ public class GraphSchema : Schema
 	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
 	/// <param name="method">Graph endpoint implementation.</param>
 	/// <param name="parentType">Gets the parent instance type.</param>
-	/// <param name="key">The <see cref="GraphKeyAttribute"/> used to match parent and child type properties.</param>
+	/// <param name="key">The <see cref="GraphQLKeyAttribute"/> used to match parent and child type properties.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	public FieldType AddSubqueryCollection(MethodMember method, Type parentType, string key)
 	{
-		if (method.Return.Type.Kind is not Kind.Collection)
+		if (!method.Return.Type.SystemType.IsCollection())
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
 		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
 		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var getParentKey = parentKeyProperty.Getter.Method;
 		var getChildKey = childKeyProperty.Getter.Method;
 
-		var addSubqueryCollectionMethod = TypeOf<GraphSchema>.Methods[nameof(AddSubqueryCollection)].If(method => method.GenericTypes == 3).First();
+		var addSubqueryCollectionMethod = TypeOf<GraphQLSchema>.Methods[nameof(AddSubqueryCollection)].If(method => method.GenericTypes == 3).First();
 		return (FieldType)addSubqueryCollectionMethod!.InvokeGeneric(this, new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, method, getParentKey, getChildKey)!;
 	}
 
@@ -344,12 +341,14 @@ public class GraphSchema : Schema
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
 	/// <list type="table">
-	/// <item><term>Mutation: Delete-{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Delete-Batch-{Table}</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
-	/// <item><term>Mutation: Insert-Batch-{Table}</term> Inserts a batch of records.</item>
-	/// <item><term>Query: Select-{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Update-{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Update-Batch-{Table}</term> Updates a batch records based on a table's <c>Primary Key</c>.</item>
+	/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
+	/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
+	/// <item><term>Query: Page{Table}</term> Pages records based on a <c>WHERE</c> clause and <c>pager</c>.</item>
+	/// <item><term>Query: Select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: Update{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: Update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
 	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
@@ -404,11 +403,11 @@ public class GraphSchema : Schema
 		}, StringComparer.OrdinalIgnoreCase);
 		this.Query.AddField(new()
 		{
-			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true)) { Name = _.Key })),
+			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true, false)) { Name = _.Key })),
 			Name = $"Call{schema.ObjectName}",
 			Description = $"Calls stored procedure: {schema.Name}.",
 			Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),
-			Type = TypeOf<StoredProcedureResponse>.Member.GraphType(false)
+			Type = TypeOf<StoredProcedureResponse>.Member.GraphType(false, false)
 		});
 	}
 

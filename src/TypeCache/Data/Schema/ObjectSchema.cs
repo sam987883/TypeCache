@@ -77,9 +77,7 @@ SELECT tt.[type_table_object_id] AS [Id]
 FROM [sys].[table_types] AS tt
 INNER JOIN [sys].[schemas] AS s ON s.[schema_id] = tt.[schema_id]
 WHERE tt.[type_table_object_id] = @ObjectId;
-
 {ColumnSchema.SQL}
-
 {ParameterSchema.SQL}
 ");
 
@@ -102,8 +100,8 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 		this.DatabaseName = rowSet[0, nameof(ObjectSchema.DatabaseName)]!.ToString()!;
 		this.SchemaName = rowSet[0, nameof(ObjectSchema.SchemaName)]!.ToString()!;
 		this.ObjectName = rowSet[0, nameof(ObjectSchema.ObjectName)]!.ToString()!;
-		this.Name = $"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]";
-		this._Id = $"{this.DataSource}:{this.Name}";
+		this.Name = Invariant($"[{this.DatabaseName}].[{this.SchemaName}].[{this.ObjectName}]");
+		this._Id = Invariant($"{this.DataSource}:{this.Name}");
 		this.Columns = columns.ToImmutableArray();
 		this.Parameters = parameters.ToImmutableArray();
 	}
@@ -140,8 +138,4 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(ObjectSchema? other)
 		=> this._Id.Is(other?._Id);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override int GetHashCode()
-		=> this._Id.GetHashCode();
 }

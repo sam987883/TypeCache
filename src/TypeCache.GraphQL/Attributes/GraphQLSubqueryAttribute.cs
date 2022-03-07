@@ -9,9 +9,9 @@ namespace TypeCache.GraphQL.Attributes;
 /// Marks a method to be used as a Subquery endpoint on the specified parent type.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphSubqueryAttribute : Attribute
+public class GraphQLSubqueryAttribute : Attribute
 {
-	public GraphSubqueryAttribute(Type parentType)
+	public GraphQLSubqueryAttribute(Type parentType)
 	{
 		this.ParentType = parentType;
 	}

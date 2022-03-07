@@ -20,7 +20,7 @@ public class CountRequest
 	public string DataSource { get; set; } = DATASOURCE;
 
 	/// <summary>
-	/// JSON: <code>"Table1" or "dbo.Table1" or "[Database1].dbo.[Table1]"</code>
+	/// JSON: <code>"Table1" or "dbo.Table1" or "Database1.dbo.Table1"</code>
 	/// SQL: <code>[Database1]..[Table1] or [Database1].[dbo].[Table1]</code>
 	/// </summary>
 	public string From { get; set; } = string.Empty;
@@ -41,7 +41,7 @@ public class CountRequest
 	/// JSON: <code>"WITH(NOLOCK)"</code>
 	/// SQL: <code>FROM [Database1]..[Table1] WITH(NOLOCK)</code>
 	/// </summary>
-	public string? TableHints { get; set; }
+	public string TableHints { get; set; } = "WITH(NOLOCK)";
 
 	/// <summary>
 	/// JSON: <code>

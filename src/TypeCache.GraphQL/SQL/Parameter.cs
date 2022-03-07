@@ -6,8 +6,9 @@ namespace TypeCache.GraphQL.SQL;
 
 public class Parameter
 {
-	[GraphType(ScalarType.NonNullableString)]
+	[GraphQLType(ScalarType.NotNullString)]
 	public string Name { get; set; } = string.Empty;
 
-	public object? Value { get; set; }
+	[GraphQLType(ScalarType.NotNullString)]
+	public string Value { get; set; } = string.Empty;
 }

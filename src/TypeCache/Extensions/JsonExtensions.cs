@@ -126,12 +126,12 @@ public static class JsonExtensions
 				case SystemType.UInt32:
 					@this.WriteNumberValue((uint)value);
 					break;
-				case SystemType.NInt:
 				case SystemType.Int64:
+				case SystemType.IntPtr:
 					@this.WriteNumberValue((long)value);
 					break;
-				case SystemType.NUInt:
 				case SystemType.UInt64:
+				case SystemType.UIntPtr:
 					@this.WriteNumberValue((ulong)value);
 					break;
 				case SystemType.Single:

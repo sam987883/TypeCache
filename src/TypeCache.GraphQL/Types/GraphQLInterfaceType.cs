@@ -8,10 +8,10 @@ using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types;
 
-public class GraphInterfaceType<T> : InterfaceGraphType<T>
+public class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 	where T : class
 {
-	public GraphInterfaceType()
+	public GraphQLInterfaceType()
 	{
 		TypeOf<T>.Kind.Assert(Kind.Interface);
 
