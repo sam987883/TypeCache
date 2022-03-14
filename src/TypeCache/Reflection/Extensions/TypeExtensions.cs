@@ -202,9 +202,7 @@ public static class TypeExtensions
 	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see cref="Kind.Class"/>,<br/>
 	/// <see langword="    "/>{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
 	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see cref="Kind.Enum"/>,<br/>
-	/// <see langword="    "/>{ IsArray: <see langword="true"/> } =&gt; <see cref="Kind.Collection"/>,<br/>
 	/// <see langword="    "/>_ <see langword="when typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="Kind.Collection"/>,<br/>
 	/// <see langword="    "/>{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
 	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
 	/// <see langword="    "/>_ =&gt; <see cref="Kind.Class"/><br/>
