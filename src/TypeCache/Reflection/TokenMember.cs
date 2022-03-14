@@ -23,7 +23,7 @@ public class TokenMember<T> : Member, IEquatable<TokenMember<T>>
 
 	public string Number { get; }
 
-	public EnumMember<T> Type { get; }
+	public new EnumMember<T> Type { get; }
 
 	public T Value { get; }
 

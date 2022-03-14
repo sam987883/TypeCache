@@ -21,7 +21,7 @@ namespace TypeCache.GraphQL.Extensions;
 public static class GraphQLAttributeExtensions
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string? GraphDescription(this IMember @this)
+	public static string? GraphDescription(this Member @this)
 		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -29,7 +29,7 @@ public static class GraphQLAttributeExtensions
 		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool GraphIgnore(this IMember @this)
+	public static bool GraphIgnore(this Member @this)
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -37,7 +37,7 @@ public static class GraphQLAttributeExtensions
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>() || @this.Type.Handle.Is<IResolveFieldContext>();
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string? GraphKey(this IMember @this)
+	public static string? GraphKey(this Member @this)
 		=> @this.Attributes.First<GraphQLKeyAttribute>()?.Name;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -45,7 +45,7 @@ public static class GraphQLAttributeExtensions
 		=> @this.Attributes.First<GraphQLInputNameAttribute>()?.Name ?? $"{@this.Name}Input";
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string GraphName(this IMember @this)
+	public static string GraphName(this Member @this)
 		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
@@ -81,7 +81,7 @@ public static class GraphQLAttributeExtensions
 		=> ScalarGraphTypes.TryGetValue(@this, out var handle) ? handle.ToType() : typeof(StringGraphType);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string? ObsoleteMessage(this IMember @this)
+	public static string? ObsoleteMessage(this Member @this)
 		=> @this.Attributes.First<ObsoleteAttribute>()?.Message;
 
 	internal static Type GraphType(this TypeMember @this, bool isInputType, bool isNotNull)
@@ -93,7 +93,8 @@ public static class GraphQLAttributeExtensions
 			(_, SystemType.Nullable) when @this.GenericTypes.First()!.Kind == Kind.Enum => typeof(GraphQLEnumType<>).MakeGenericType(@this),
 			(_, SystemType.Nullable) => SystemGraphTypes[@this.GenericTypes.First()!.SystemType].ToType(),
 			(_, SystemType.ValueTask) or (_, SystemType.Task) => @this.GenericTypes.First()!.GraphType(isInputType, isNotNull),
-			_ when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => typeof(NonNullGraphType<>).MakeGenericType(handle.ToType()),
+			(Kind.Class, _) when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
+			(Kind.Struct, _) when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => typeof(NonNullGraphType<>).MakeGenericType(handle.ToType()),
 			_ when @this.SystemType.IsCollection() && isNotNull => typeof(NonNullGraphType<>).MakeGenericType(typeof(ListGraphType<>).MakeGenericType((Type)@this.CollectionType()!.GraphType(isInputType, false))),
 			_ when @this.SystemType.IsCollection() => typeof(ListGraphType<>).MakeGenericType((Type)@this.CollectionType()!.GraphType(isInputType, false)),
 			_ when @this.Is(typeof(OrderBy<>)) && isNotNull => typeof(NonNullGraphType<>).MakeGenericType(typeof(GraphQLOrderByType<>).MakeGenericType(@this.GenericTypes.First()!)),

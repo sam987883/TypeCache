@@ -120,9 +120,9 @@ WHERE tt.[type_table_object_id] = @ObjectId;
 
 	public string ObjectName { get; init; }
 
-	public IImmutableList<ColumnSchema> Columns { get; init; }
+	public IReadOnlyList<ColumnSchema> Columns { get; init; }
 
-	public IImmutableList<ParameterSchema> Parameters { get; init; }
+	public IReadOnlyList<ParameterSchema> Parameters { get; init; }
 
 	/// <summary>
 	/// The fully qualified database object name.

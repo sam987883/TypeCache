@@ -65,7 +65,7 @@ public class TypeOfTests
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.Object, member.SystemType);
 
 		member = TypeOf<string>.Member;
 		type = typeof(string);
@@ -129,7 +129,7 @@ public class TypeOfTests
 		Assert.True(member.SystemType.IsCollection());
 		Assert.True(member.SystemType.IsImmutable());
 		Assert.Equal(61, member.Methods.Count);
-		Assert.Equal(type.Name, member.Name);
+		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(18, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
@@ -151,7 +151,7 @@ public class TypeOfTests
 		Assert.True(member.SystemType.IsCollection());
 		Assert.False(member.SystemType.IsImmutable());
 		Assert.Equal(3, member.Methods.Count);
-		Assert.Equal(type.Name, member.Name);
+		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(1, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
@@ -176,7 +176,7 @@ public class TypeOfTests
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Delegate, member.Kind);
 		Assert.Equal(27, member.Methods.Count);
-		Assert.Equal(type.Name, member.Name);
+		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(2, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
@@ -359,7 +359,7 @@ public class TypeOfTests
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Struct, member.Kind);
 		Assert.Equal(7, member.Methods.Count);
-		Assert.Equal(type.Name, member.Name);
+		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(2, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);

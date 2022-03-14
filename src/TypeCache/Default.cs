@@ -17,6 +17,8 @@ public static class Default
 
 	public const string DATASOURCE = "Default";
 
+	public const char GENERIC_TICKMARK = '`';
+
 	public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
 	public const MethodImplOptions METHOD_IMPL_OPTIONS = MethodImplOptions.AggressiveInlining;

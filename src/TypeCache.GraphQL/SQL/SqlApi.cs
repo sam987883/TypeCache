@@ -72,7 +72,7 @@ public class SqlApi<T>
 	[GraphQLDescription("DELETE ... OUTPUT ... FROM {0} WHERE ...")]
 	public async Task<SqlResponse<T>> Delete(
 		[AllowNull] Parameter[] parameters,
-		string where,
+		[AllowNull] string where,
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");

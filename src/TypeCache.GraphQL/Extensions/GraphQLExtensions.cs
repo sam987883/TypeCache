@@ -22,24 +22,25 @@ public static class GraphQLExtensions
 	{
 		foreach (var parameter in method.Parameters)
 		{
-			if (parameter.GraphIgnore())
-				continue;
-
 			var name = parameter.GraphName();
 			if (parameter.Type.Is<IResolveFieldContext>())
 				yield return @this;
+			else if (parameter.GraphIgnore())
+				yield return null;
 			else if (parameter.Type.Is<TSource>() && !typeof(TSource).Is<object>())
 				yield return @this.Source;
 			else if (overrideValue is not null && parameter.Type.Is(overrideValue.GetType()))
 				yield return overrideValue;
 			else if (@this.HasArgument(name))
 			{
-				var argument = @this.GetArgument<object>(name);
+				var argument = @this.GetArgument(parameter.Type, name);
 				if (argument is IDictionary<string, object?> dictionary && !parameter.Type.Is<IDictionary<string, object?>>())
 					yield return dictionary.MapModel(parameter.Type);
 				else
 					yield return argument;
 			}
+			else
+				yield return null;
 		}
 	}
 
@@ -92,8 +93,10 @@ public static class GraphQLExtensions
 	/// </summary>
 	public static ConnectionSelections GetQueryConnectionSelections(this IResolveFieldContext @this)
 	{
-		var selections = new ConnectionSelections();
-		selections.TotalCount = @this.SubFields!.ContainsKey("totalCount");
+		var selections = new ConnectionSelections
+		{
+			TotalCount = @this.SubFields!.ContainsKey("totalCount")
+		};
 
 		if (@this.SubFields.TryGetValue("pageInfo", out var pageInfo))
 		{
@@ -201,7 +204,7 @@ public static class GraphQLExtensions
 			Name = string.Format(@this.GraphName()!, table),
 			Description = string.Format(@this.GraphDescription()!, table),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<object>(@this).ToArray())),
+			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<SqlApi<T>>(@this).ToArray())),
 			Type = @this.Return.GraphType()
 		};
 
@@ -212,7 +215,7 @@ public static class GraphQLExtensions
 			Name = @this.GraphName(),
 			Description = @this.GraphDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = !isInputType ? new FuncFieldResolver<object>(context => context.Source) : null
+			Resolver = !isInputType ? new FuncFieldResolver<object>(context => @this.GetValue(context.Source)) : null
 		};
 
 	private static IEventStreamResolver CreateEventStreamResolver<T>(MethodMember method, object? handler)
@@ -260,7 +263,7 @@ public static class GraphQLExtensions
 	{
 		foreach (var selection in @this.SelectionSet!.Selections)
 		{
-			var current = @this switch
+			var current = selection switch
 			{
 				IHaveName name when prefix.IsNotBlank() => $"{prefix}.{name.NameNode.Name}",
 				IHaveName name => name.NameNode.Name,

@@ -95,10 +95,11 @@ public static class SqlExtensions
 			sqlBuilder.AppendLine()
 				.AppendSQL("SELECT", "@Count = COUNT_BIG(1)")
 				.AppendSQL("FROM", @this.From, "WITH(NOLOCK)")
-				.AppendSQL("WHERE", @this.Where);
+				.AppendSQL("WHERE", @this.Where)
+				.AppendStatementEndSQL();
 		}
 
-		return sqlBuilder.AppendStatementEndSQL().ToString();
+		return sqlBuilder.ToString();
 	}
 
 	public static string ToSQL([NotNull] this UpdateRequest @this)

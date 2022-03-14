@@ -963,7 +963,7 @@ public static class ExpressionExtensions
 	public static Expression SystemConvert(this Expression @this, Type type)
 		=> type switch
 		{
-			_ when type == @this.Type => @this,
+			_ when @this.Type == type => @this,
 			_ when type.Implements<IConvertible>() => typeof(Convert).CallStatic(nameof(System.Convert.ChangeType), Type.EmptyTypes, @this, type.Constant<Type>()).Cast(type),
 			_ => @this.Cast(type)
 		};

@@ -207,6 +207,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this)
 		=> @this.RegisterSqlApiCallRules()
+			.RegisterSqlApiCountRules()
 			.RegisterSqlApiDeleteDataRules()
 			.RegisterSqlApiDeleteRules()
 			.RegisterSqlApiInsertDataRules()
@@ -214,6 +215,21 @@ public static class ServiceCollectionExtensions
 			.RegisterSqlApiSelectRules()
 			.RegisterSqlApiUpdateDataRules()
 			.RegisterSqlApiUpdateRules();
+
+	/// <summary>
+	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing counts.<br/>
+	/// You can register the following validation rules to validate the request before the database call is made:
+	/// <code>IValidationRule&lt;<see cref="CountRequest" />&gt;</code>
+	/// <i><b>Requires calls to:</b></i>
+	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
+	/// <code>
+	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
+	/// </code>
+	/// </summary>
+	public static IServiceCollection RegisterSqlApiCountRules(this IServiceCollection @this)
+		=> @this.AddSingleton<IRule<CountRequest, long>, CountRule>()
+			.AddSingleton<IRule<CountRequest, string>, CountRule>()
+			.AddSingleton<IValidationRule<CountRequest>, CountValidationRule>();
 
 	/// <summary>
 	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing selects.<br/>

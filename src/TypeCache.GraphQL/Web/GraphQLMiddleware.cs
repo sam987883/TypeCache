@@ -69,8 +69,11 @@ public class GraphQLMiddleware<T>
 			ValidationRules = DocumentValidator.CoreRules
 		};
 		var result = await executer.ExecuteAsync(options);
-		result.Extensions!["RequestId"] = requestId;
-		result.Extensions["RequestTime"] = requestTime;
+		if (result.Extensions is not null)
+		{
+			result.Extensions["RequestId"] = requestId;
+			result.Extensions["RequestTime"] = requestTime;
+		}
 
 		httpContext.Response.ContentType = Application.Json;
 		httpContext.Response.StatusCode = (int)HttpStatusCode.OK;

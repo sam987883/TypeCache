@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -21,7 +20,6 @@ public class MethodMember : Member, IEquatable<MethodMember>
 
 	internal MethodMember(MethodInfo methodInfo, TypeMember type) : base(methodInfo)
 	{
-		this.Type = type;
 		this.Abstract = methodInfo.IsAbstract;
 		this.GenericTypes = methodInfo.GetGenericArguments().Length;
 		this.Handle = methodInfo.MethodHandle;
@@ -48,20 +46,18 @@ public class MethodMember : Member, IEquatable<MethodMember>
 
 	public Delegate? Method { get; }
 
-	public IImmutableList<MethodParameter> Parameters { get; }
+	public IReadOnlyList<MethodParameter> Parameters { get; }
 
 	public ReturnParameter Return { get; }
 
 	public bool Static { get; }
-
-	public TypeMember Type { get; }
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="other"/> <see langword="is not null"/> &amp;&amp; <see langword="this"/>.Handle.Equals(<paramref name="other"/>.Handle) &amp;&amp; <see langword="this"/>.Type.Equals(<paramref name="other"/>.Type);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(MethodMember? other)
-		=> other is not null && this.Handle.Equals(other.Handle) && this.Type.Equals(other.Type);
+		=> other is not null && this.Handle.Equals(other.Handle) && this.Type!.Equals(other.Type);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Invoke?.Invoke(<paramref name="instance"/>, <paramref name="arguments"/>);</c>
@@ -84,5 +80,5 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator MethodInfo(MethodMember member)
-		=> (MethodInfo)member.Handle.ToMethodBase(member.Type.Handle)!;
+		=> (MethodInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
 }

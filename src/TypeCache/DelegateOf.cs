@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
 using static TypeCache.Default;
@@ -13,7 +13,7 @@ public static class DelegateOf<T>
 {
 	private static readonly DelegateMember Member = new DelegateMember(typeof(T));
 
-	public static IImmutableList<Attribute> Attributes => Member.Attributes;
+	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
 	public static RuntimeTypeHandle Handle => Member.Handle;
 
@@ -25,7 +25,7 @@ public static class DelegateOf<T>
 
 	public static string Name => Member.Name;
 
-	public static IImmutableList<MethodParameter> Parameters => Member.Parameters;
+	public static IReadOnlyList<MethodParameter> Parameters => Member.Parameters;
 
 	public static bool Public => Member.Public;
 

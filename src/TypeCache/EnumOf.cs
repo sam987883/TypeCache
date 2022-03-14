@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Reflection;
@@ -14,7 +14,7 @@ public static class EnumOf<T>
 {
 	private static readonly EnumMember<T> Member = new EnumMember<T>();
 
-	public static IImmutableList<Attribute> Attributes => Member.Attributes;
+	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
 	public static CustomComparer<T> Comparer => Member.Comparer;
 
@@ -28,7 +28,7 @@ public static class EnumOf<T>
 
 	public static bool Public => Member.Public;
 
-	public static IImmutableDictionary<T, TokenMember<T>> Tokens => Member.Tokens;
+	public static IReadOnlyDictionary<T, TokenMember<T>> Tokens => Member.Tokens;
 
 	public static TypeMember UnderlyingType => Member.UnderlyingType;
 

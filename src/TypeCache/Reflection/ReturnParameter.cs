@@ -16,7 +16,7 @@ public readonly struct ReturnParameter : IEquatable<ReturnParameter>
 		this._MethodHandle = methodInfo.MethodHandle;
 		this.Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true)?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 		this.Type = methodInfo.ReturnType.GetTypeMember();
-		this.Void = methodInfo.ReturnType == typeof(void);
+		this.Void = this.Type.SystemType is SystemType.Void;
 		this.Task = this.Type.SystemType is SystemType.Task;
 		this.ValueTask = this.Type.SystemType is SystemType.ValueTask;
 	}

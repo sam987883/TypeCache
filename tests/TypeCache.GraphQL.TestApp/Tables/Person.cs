@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.TestApp.Tables;
 
@@ -17,6 +18,7 @@ public class Person
 	public int EmailPromotion { get; set; }
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
-	public Guid RowGuid { get; set; }
+	[Name("rowguid")]
+	public Guid Rowguid { get; set; }
 	public DateTime ModifiedDate { get; set; }
 }

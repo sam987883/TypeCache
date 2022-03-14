@@ -37,8 +37,8 @@ app.UseGraphQLSchema<TestGraphQLSchema>("/graphql");
 app.UseGraphQLPlayground(new()
 {
 	BetaUpdates = true,
-	EditorCursorShape = EditorCursorShape.Block,
-	//EditorFontFamily = "FixedSys",
+	EditorCursorShape = EditorCursorShape.Line,
+	EditorFontFamily = "Lucida Console",
 	EditorFontSize = 12,
 	EditorReuseHeaders = true,
 	EditorTheme = EditorTheme.Dark,

@@ -203,7 +203,7 @@ public static class TypeExtensions
 	/// <see langword="    "/>{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
 	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see cref="Kind.Enum"/>,<br/>
 	/// <see langword="    "/>{ IsArray: <see langword="true"/> } =&gt; <see cref="Kind.Collection"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see langword="typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
 	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsEnumerable() =&gt; <see cref="Kind.Collection"/>,<br/>
 	/// <see langword="    "/>{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
 	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
@@ -227,8 +227,12 @@ public static class TypeExtensions
 	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name
 	///		?? (@<paramref name="this"/>.Name.Contains('`') ? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) : @<paramref name="this"/>.Name);</c>
 	/// </summary>
-	public static string GetName(this MemberInfo @this)
-		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? (@this.Name.Contains('`') ? @this.Name.Left(@this.Name.IndexOf('`')) : @this.Name);
+	public static string Name(this MemberInfo @this)
+		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name.IndexOf(GENERIC_TICKMARK) switch
+		{
+			-1 => @this.Name,
+			var i => @this.Name.Left(i)
+		};
 
 	/// <summary>
 	/// <code>

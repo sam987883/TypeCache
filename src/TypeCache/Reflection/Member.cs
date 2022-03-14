@@ -1,16 +1,17 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
+using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection;
 
-public abstract class Member : IMember
+public abstract class Member
 {
-	private const char GENERIC_TICK = '`';
-
 	protected Member(MemberInfo memberInfo)
 	{
 		this.Attributes = memberInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
@@ -23,11 +24,7 @@ public abstract class Member : IMember
 			EventInfo eventInfo => eventInfo.AddMethod!.IsAssembly,
 			_ => default
 		};
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? memberInfo.Name.IndexOf(GENERIC_TICK) switch
-		{
-			-1 => memberInfo.Name,
-			var i => memberInfo.Name.Substring(0, i)
-		};
+		this.Name = memberInfo.Name();
 		this.Public = memberInfo switch
 		{
 			Type type => type.IsPublic,
@@ -37,9 +34,13 @@ public abstract class Member : IMember
 			EventInfo eventInfo => eventInfo.AddMethod!.IsPublic,
 			_ => default
 		};
+		this.Type = memberInfo.DeclaringType?.GetTypeMember()!;
 	}
 
-	public IImmutableList<Attribute> Attributes { get; }
+	/// <summary>
+	/// The custom attributes of the <see cref="Member"/>.
+	/// </summary>
+	public IReadOnlyList<Attribute> Attributes { get; }
 
 	/// <summary>
 	/// Owning assembly level scope.
@@ -51,5 +52,13 @@ public abstract class Member : IMember
 	/// </summary>
 	public string Name { get; }
 
+	/// <summary>
+	/// Whether the <see cref="Member"/> is publicly visible to consumers.
+	/// </summary>
 	public bool Public { get; }
+
+	/// <summary>
+	/// The owning type; the <see cref="TypeMember"/> that contains this <see cref="Member"/>.
+	/// </summary>
+	public TypeMember Type { get; }
 }

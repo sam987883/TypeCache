@@ -8,12 +8,13 @@ namespace TypeCache.Mappers.Extensions;
 
 public static class CsvExtensions
 {
-	private static string EscapeValue(string value)
-		=> value switch
+	private static string EscapeValue(this string @this)
+		=> @this switch
 		{
-			_ when value.Contains('"') => Invariant($"\"{value.Replace("\"", "\"\"")}\""),
-			_ when value.Contains(',') => Invariant($"\"{value}\""),
-			_ => value
+			null => string.Empty,
+			_ when @this.Contains('"') => Invariant($"\"{@this.Replace("\"", "\"\"")}\""),
+			_ when @this.Contains(',') || @this.Contains('\r') || @this.Contains('\n') => Invariant($"\"{@this}\""),
+			_ => @this
 		};
 
 	public static string[] ToCSV(this object?[][] @this, CsvOptions options = default)
@@ -45,7 +46,7 @@ public static class CsvExtensions
 			TimeSpan time => time.ToString(options.TimeSpanFormatSpecifier),
 			Guid guid => guid.ToString(options.GuidFormatSpecifier),
 			Enum token => token.ToString(options.EnumFormatSpecifier),
-			string text => EscapeValue(text),
-			_ => EscapeValue(value.ToString() ?? string.Empty)
+			string text => text.EscapeValue(),
+			_ => value.ToString()!.EscapeValue()
 		}).Join(',')).ToArray();
 }

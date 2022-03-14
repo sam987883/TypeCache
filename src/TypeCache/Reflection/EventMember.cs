@@ -12,14 +12,11 @@ public class EventMember : Member, IEquatable<EventMember>
 {
 	public EventMember(EventInfo eventInfo, TypeMember type) : base(eventInfo)
 	{
-		this.Type = type;
 		this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
 		this.AddEventHandler = new MethodMember(eventInfo.AddMethod!, type);
 		this.RaiseEvent = eventInfo.RaiseMethod is not null ? new MethodMember(eventInfo.RaiseMethod, type) : null;
 		this.RemoveEventHandler = new MethodMember(eventInfo.RemoveMethod!, type);
 	}
-
-	public TypeMember Type { get; }
 
 	public TypeMember EventHandlerType { get; }
 

@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data.Requests;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
@@ -26,6 +27,7 @@ internal class SelectValidationRule : IValidationRule<SelectRequest>
 			throw new ArgumentOutOfRangeException(nameof(SelectRequest.From), $"Cannot SELECT from a {schema.Type.Name()}.");
 
 		request.From = schema.Name;
+		request.Select = schema.Columns.Map(column => column.Name).If(name => request.Select.Has(name, StringComparison.OrdinalIgnoreCase)).ToArray();
 
 		await ValueTask.CompletedTask;
 	}

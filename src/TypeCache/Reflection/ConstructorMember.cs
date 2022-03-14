@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -17,7 +17,6 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 
 	internal ConstructorMember(ConstructorInfo constructorInfo, TypeMember type) : base(constructorInfo)
 	{
-		this.Type = type;
 		this.Handle = constructorInfo.MethodHandle;
 		this.Method = constructorInfo.Lambda().Compile();
 		this.Parameters = constructorInfo.GetParameters().Map(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
@@ -29,9 +28,7 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 
 	public Delegate? Method { get; }
 
-	public IImmutableList<MethodParameter> Parameters { get; }
-
-	public TypeMember Type { get; }
+	public IReadOnlyList<MethodParameter> Parameters { get; }
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Create(<paramref name="arguments"/>);</c>
@@ -49,5 +46,5 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator ConstructorInfo(ConstructorMember member)
-		=> (ConstructorInfo)member.Handle.ToMethodBase(member.Type.Handle)!;
+		=> (ConstructorInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
 }

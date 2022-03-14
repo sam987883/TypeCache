@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
@@ -28,6 +27,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		this.GenericHandle = type.IsGenericType && !type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().TypeHandle : null;
 		this.Handle = type.TypeHandle;
 		this.Kind = type.GetKind();
+		this.Namespace = type.Namespace!;
 		this.SystemType = type.GetSystemType();
 		this.Nullable = this.SystemType is SystemType.Nullable || this.Kind is not Kind.Struct;
 		this.Ref = type.IsByRef || type.IsByRefLike;
@@ -36,97 +36,97 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		this._ElementType = type.HasElementType ? new Lazy<TypeMember?>(() => this.Handle.ToType().GetElementType()!.GetTypeMember(), ExecutionAndPublication) : Lazy.Null<TypeMember>();
 
 		if (type.GenericTypeArguments.Any())
-			this._GenericTypes = new Lazy<IImmutableList<TypeMember>>(() =>
+			this._GenericTypes = new Lazy<IReadOnlyList<TypeMember>>(() =>
 				this.Handle.ToType().GenericTypeArguments
 					.Map(_ => _.GetTypeMember())
 					.ToImmutableArray(), ExecutionAndPublication);
 		else
-			this._GenericTypes = Lazy.Value<IImmutableList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
+			this._GenericTypes = Lazy.Value<IReadOnlyList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
  
 		if (type.GetInterfaces().Any())
-			this._InterfaceTypes = new Lazy<IImmutableList<TypeMember>>(() =>
+			this._InterfaceTypes = new Lazy<IReadOnlyList<TypeMember>>(() =>
 				this.Handle.ToType().GetInterfaces()
 					.Map(_ => _.GetTypeMember())
 					.ToImmutableArray(), ExecutionAndPublication);
 		else
-			this._InterfaceTypes = Lazy.Value<IImmutableList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
+			this._InterfaceTypes = Lazy.Value<IReadOnlyList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
 
 		if (type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable()))
-			this._Constructors = new Lazy<IImmutableList<ConstructorMember>>(() =>
+			this._Constructors = new Lazy<IReadOnlyList<ConstructorMember>>(() =>
 				this.Handle.ToType().GetConstructors(INSTANCE_BINDING_FLAGS)
 					.If(constructorInfo => constructorInfo.IsInvokable())
 					.Map(constructorInfo => new ConstructorMember(constructorInfo, this))
 					.ToImmutableArray(), ExecutionAndPublication);
 		else
-			this._Constructors = Lazy.Value<IImmutableList<ConstructorMember>>(ImmutableArray<ConstructorMember>.Empty);
+			this._Constructors = Lazy.Value<IReadOnlyList<ConstructorMember>>(ImmutableArray<ConstructorMember>.Empty);
 
 		if (type.GetEvents(BINDING_FLAGS).Any())
-			this._Events = new Lazy<IImmutableDictionary<string, EventMember>>(() =>
+			this._Events = new Lazy<IReadOnlyDictionary<string, EventMember>>(() =>
 				this.Handle.ToType().GetEvents(BINDING_FLAGS)
-					.Map(eventInfo => KeyValuePair.Create(eventInfo.Name, new EventMember(eventInfo, this)))
-					.ToImmutableDictionary(NAME_STRING_COMPARISON), ExecutionAndPublication);
+					.Map(eventInfo => new EventMember(eventInfo, this))
+					.ToImmutableDictionary(_ => _.Name, NAME_STRING_COMPARISON), ExecutionAndPublication);
 		else
-			this._Events = Lazy.Value<IImmutableDictionary<string, EventMember>>(ImmutableDictionary<string, EventMember>.Empty);
+			this._Events = Lazy.Value<IReadOnlyDictionary<string, EventMember>>(ImmutableDictionary<string, EventMember>.Empty);
 
 		this._Fields = this.Kind switch
 		{
-			Kind.Delegate => Lazy.Value<IImmutableDictionary<string, FieldMember>>(ImmutableDictionary<string, FieldMember>.Empty),
+			Kind.Delegate => Lazy.Value<IReadOnlyDictionary<string, FieldMember>>(ImmutableDictionary<string, FieldMember>.Empty),
 			_ when type.GetFields(BINDING_FLAGS).Any(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike) =>
-				new Lazy<IImmutableDictionary<string, FieldMember>>(() =>
+				new Lazy<IReadOnlyDictionary<string, FieldMember>>(() =>
 					this.Handle.ToType().GetFields(BINDING_FLAGS)
 						.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
-						.Map(fieldInfo => KeyValuePair.Create(fieldInfo.Name, new FieldMember(fieldInfo, this)))
-						.ToImmutableDictionary(NAME_STRING_COMPARISON), ExecutionAndPublication),
-			_ => Lazy.Value<IImmutableDictionary<string, FieldMember>>(ImmutableDictionary<string, FieldMember>.Empty)
+						.Map(fieldInfo => new FieldMember(fieldInfo, this))
+						.ToImmutableDictionary(_ => _.Name, NAME_STRING_COMPARISON), ExecutionAndPublication),
+			_ => Lazy.Value<IReadOnlyDictionary<string, FieldMember>>(ImmutableDictionary<string, FieldMember>.Empty)
 		};
 
 		if (this.Handle.ToType().GetMethods(BINDING_FLAGS).Any(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable()))
-			this._Methods = new Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>>(() =>
+			this._Methods = new Lazy<IReadOnlyDictionary<string, IReadOnlyList<MethodMember>>>(() =>
 				this.Handle.ToType().GetMethods(BINDING_FLAGS)
 					.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
 					.Map(methodInfo => new MethodMember(methodInfo, this))
-					.Group(method => method.Name, NAME_STRING_COMPARISON.ToStringComparer())
-					.ToImmutableDictionary(_ => _.Key, _ => (IImmutableList<MethodMember>)_.Value.ToImmutableArray(), NAME_STRING_COMPARISON), ExecutionAndPublication);
+					.Group(method => method.Name, NAME_STRING_COMPARISON)
+					.ToImmutableDictionary(_ => _.Key, _ => (IReadOnlyList<MethodMember>)_.Value.ToImmutableArray(), NAME_STRING_COMPARISON), ExecutionAndPublication);
 		else
-			this._Methods = Lazy.Value<IImmutableDictionary<string, IImmutableList<MethodMember>>>(ImmutableDictionary<string, IImmutableList<MethodMember>>.Empty);
+			this._Methods = Lazy.Value<IReadOnlyDictionary<string, IReadOnlyList<MethodMember>>>(ImmutableDictionary<string, IReadOnlyList<MethodMember>>.Empty);
 
 		if (this.Handle.ToType().GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
-			this._Properties = new Lazy<IImmutableDictionary<string, PropertyMember>>(() =>
+			this._Properties = new Lazy<IReadOnlyDictionary<string, PropertyMember>>(() =>
 				this.Handle.ToType().GetProperties(BINDING_FLAGS)
 					.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
-					.Map(propertyInfo => KeyValuePair.Create(propertyInfo.Name, new PropertyMember(propertyInfo, this)))
-					.ToImmutableDictionary(NAME_STRING_COMPARISON), ExecutionAndPublication);
+					.Map(propertyInfo => new PropertyMember(propertyInfo, this))
+					.ToImmutableDictionary(_ => _.Name, NAME_STRING_COMPARISON), ExecutionAndPublication);
 		else
-			this._Properties = Lazy.Value<IImmutableDictionary<string, PropertyMember>>(ImmutableDictionary<string, PropertyMember>.Empty);
+			this._Properties = Lazy.Value<IReadOnlyDictionary<string, PropertyMember>>(ImmutableDictionary<string, PropertyMember>.Empty);
 	}
 
 	private readonly Lazy<TypeMember?> _BaseType;
 
 	private readonly Lazy<TypeMember?> _ElementType;
 
-	private readonly Lazy<IImmutableList<TypeMember>> _GenericTypes;
+	private readonly Lazy<IReadOnlyList<TypeMember>> _GenericTypes;
 
-	private readonly Lazy<IImmutableList<TypeMember>> _InterfaceTypes;
+	private readonly Lazy<IReadOnlyList<TypeMember>> _InterfaceTypes;
 
-	private readonly Lazy<IImmutableList<ConstructorMember>> _Constructors;
+	private readonly Lazy<IReadOnlyList<ConstructorMember>> _Constructors;
 
-	private readonly Lazy<IImmutableDictionary<string, EventMember>> _Events;
+	private readonly Lazy<IReadOnlyDictionary<string, EventMember>> _Events;
 
-	private readonly Lazy<IImmutableDictionary<string, FieldMember>> _Fields;
+	private readonly Lazy<IReadOnlyDictionary<string, FieldMember>> _Fields;
 
-	private readonly Lazy<IImmutableDictionary<string, IImmutableList<MethodMember>>> _Methods;
+	private readonly Lazy<IReadOnlyDictionary<string, IReadOnlyList<MethodMember>>> _Methods;
 
-	private readonly Lazy<IImmutableDictionary<string, PropertyMember>> _Properties;
+	private readonly Lazy<IReadOnlyDictionary<string, PropertyMember>> _Properties;
 
-	public IImmutableList<ConstructorMember> Constructors => this._Constructors.Value;
+	public IReadOnlyList<ConstructorMember> Constructors => this._Constructors.Value;
 
-	public IImmutableDictionary<string, EventMember> Events => this._Events.Value;
+	public IReadOnlyDictionary<string, EventMember> Events => this._Events.Value;
 
-	public IImmutableDictionary<string, FieldMember> Fields => this._Fields.Value;
+	public IReadOnlyDictionary<string, FieldMember> Fields => this._Fields.Value;
 
-	public IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => this._Methods.Value;
+	public IReadOnlyDictionary<string, IReadOnlyList<MethodMember>> Methods => this._Methods.Value;
 
-	public IImmutableDictionary<string, PropertyMember> Properties => this._Properties.Value;
+	public IReadOnlyDictionary<string, PropertyMember> Properties => this._Properties.Value;
 
 	public TypeMember? BaseType => this._BaseType.Value;
 
@@ -134,13 +134,15 @@ public class TypeMember : Member, IEquatable<TypeMember>
 
 	public RuntimeTypeHandle? GenericHandle { get; }
 
-	public IImmutableList<TypeMember> GenericTypes => this._GenericTypes.Value;
+	public IReadOnlyList<TypeMember> GenericTypes => this._GenericTypes.Value;
 
 	public RuntimeTypeHandle Handle { get; }
 
-	public IImmutableList<TypeMember> InterfaceTypes => this._InterfaceTypes.Value;
+	public IReadOnlyList<TypeMember> InterfaceTypes => this._InterfaceTypes.Value;
 
 	public Kind Kind { get; }
+
+	public string Namespace { get; }
 
 	public bool Nullable { get; }
 

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
@@ -23,7 +24,7 @@ public static class RowSetExtensions
 		var items = new T[@this.Rows.Length];
 		@this.Rows.Do((row, rowIndex) =>
 		{
-			var item = TypeOf<T>.Create(columnIndexes.ToArray(columnIndex => row[columnIndex])!);
+			var item = TypeOf<T>.Create(columnIndexes.Map(columnIndex => row[columnIndex]).Map(value => value != DBNull.Value ? value : null)!);
 			items[rowIndex] = item;
 		});
 		return items;
@@ -45,7 +46,7 @@ public static class RowSetExtensions
 		@this.Rows.Do((row, rowIndex) =>
 		{
 			var item = TypeOf<T>.Create();
-			properties.Do(_ => _.Property.SetValue(item, row[_.ColumnIndex]));
+			properties.Map(_ => (_.Property, Value: row[_.ColumnIndex])).Do(_ => _.Property.SetValue(item, _.Value != DBNull.Value ? _.Value : null));
 			items[rowIndex] = item;
 		});
 		return items;
@@ -62,13 +63,13 @@ public static class RowSetExtensions
 
 		var rowSet = new RowSet
 		{
-			Columns = columns.Any() ? columns.Match(getters, STRING_COMPARISON.ToStringComparer()).ToArray() : getters.ToArray(),
+			Columns = columns.Any() ? columns.Match(getters, STRING_COMPARISON).ToArray() : getters.ToArray(),
 			Rows = new object?[@this.Length][]
 		};
 		@this.Do((item, rowIndex) =>
 		{
 			var row = new object?[rowSet.Columns.Length];
-			rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = properties[column].GetValue(item));
+			rowSet.Columns.Do((column, columnIndex) => row[columnIndex] = properties[column].GetValue(item) ?? DBNull.Value);
 			rowSet.Rows[rowIndex] = row;
 		});
 		return rowSet;

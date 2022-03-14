@@ -12,7 +12,6 @@ public class FieldMember : Member, IEquatable<FieldMember>
 {
 	internal FieldMember(FieldInfo fieldInfo, TypeMember type) : base(fieldInfo)
 	{
-		this.Type = type;
 		this.FieldType = fieldInfo.FieldType.GetTypeMember();
 		this.Handle = fieldInfo.FieldHandle;
 		this.Static = fieldInfo.IsStatic;
@@ -28,8 +27,6 @@ public class FieldMember : Member, IEquatable<FieldMember>
 	private readonly GetValue? _GetValue;
 
 	private readonly SetValue? _SetValue;
-
-	public TypeMember Type { get; }
 
 	public TypeMember FieldType { get; }
 
@@ -61,5 +58,5 @@ public class FieldMember : Member, IEquatable<FieldMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static implicit operator FieldInfo(FieldMember member)
-		=> member.Handle.ToFieldInfo(member.Type.Handle);
+		=> member.Handle.ToFieldInfo(member.Type!.Handle);
 }

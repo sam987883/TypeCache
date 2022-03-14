@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
@@ -15,7 +14,7 @@ public static class EventOf<T>
 
 	private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
 
-	public static IImmutableDictionary<string, EventMember> Events => TypeOf<T>.Member.Events;
+	public static IReadOnlyDictionary<string, EventMember> Events => TypeOf<T>.Member.Events;
 
 	public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 	{

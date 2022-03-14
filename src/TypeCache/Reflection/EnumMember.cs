@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
@@ -46,7 +47,7 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 
 	public RuntimeTypeHandle Handle { get; }
 
-	public IImmutableDictionary<T, TokenMember<T>> Tokens { get; }
+	public IReadOnlyDictionary<T, TokenMember<T>> Tokens { get; }
 
 	public TypeMember UnderlyingType => this._UnderlyingType.Value;
 

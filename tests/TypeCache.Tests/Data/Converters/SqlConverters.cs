@@ -30,7 +30,7 @@ public class SqlConverters
 	""DataSource"":""LocalInstance"",
 	""From"":""[dbo].[NonCustomers]"",
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""TableHints"":null,
+	""TableHints"":""WITH(NOLOCK)"",
 	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 

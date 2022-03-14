@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -13,17 +13,17 @@ public static class TypeOf<T>
 {
 	public static TypeMember Member { get; } = typeof(T).GetTypeMember();
 
-	public static IImmutableList<Attribute> Attributes => Member.Attributes;
+	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
 	public static TypeMember? BaseType => Member.BaseType;
 
 	public static TypeMember? ElementType => Member.ElementType;
 
-	public static IImmutableList<TypeMember> GenericTypes => Member.GenericTypes;
+	public static IReadOnlyList<TypeMember> GenericTypes => Member.GenericTypes;
 
 	public static RuntimeTypeHandle Handle => Member.Handle;
 
-	public static IImmutableList<TypeMember> InterfaceTypes => Member.InterfaceTypes;
+	public static IReadOnlyList<TypeMember> InterfaceTypes => Member.InterfaceTypes;
 
 	public static bool Internal => Member.Internal;
 
@@ -37,13 +37,13 @@ public static class TypeOf<T>
 
 	public static SystemType SystemType => Member.SystemType;
 
-	public static IImmutableList<ConstructorMember> Constructors => Member.Constructors;
+	public static IReadOnlyList<ConstructorMember> Constructors => Member.Constructors;
 
-	public static IImmutableDictionary<string, FieldMember> Fields => Member.Fields;
+	public static IReadOnlyDictionary<string, FieldMember> Fields => Member.Fields;
 
-	public static IImmutableDictionary<string, IImmutableList<MethodMember>> Methods => Member.Methods;
+	public static IReadOnlyDictionary<string, IReadOnlyList<MethodMember>> Methods => Member.Methods;
 
-	public static IImmutableDictionary<string, PropertyMember> Properties => Member.Properties;
+	public static IReadOnlyDictionary<string, PropertyMember> Properties => Member.Properties;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public static T Create(params object?[]? parameters)

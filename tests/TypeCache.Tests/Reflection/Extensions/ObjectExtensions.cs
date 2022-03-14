@@ -66,12 +66,12 @@ public class ObjectExtensions
 	public void ReadFields()
 	{
 		var testModel1 = new TestModel1();
-		var dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
-			{
-				{ "_TestField1", 101 },
-				{ "_TestField2", 'X' },
-				{ "_TestField3", "ABCdef" },
-			};
+		IReadOnlyDictionary<string, object> dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
+		{
+			{ "_TestField1", 101 },
+			{ "_TestField2", 'X' },
+			{ "_TestField3", "ABCdef" },
+		};
 		(dictionary, testModel1).MapFields();
 		Assert.Equal(101, testModel1.TestProperty1);
 		Assert.Equal('X', testModel1.TestProperty2);
@@ -82,12 +82,12 @@ public class ObjectExtensions
 	public void ReadProperties()
 	{
 		var testModel2 = new TestModel2();
-		var dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
-			{
-				{ nameof(TestModel1.TestProperty4), 101 },
-				{ nameof(TestModel1.TestProperty5), 'X' },
-				{ nameof(TestModel1.TestProperty6), "ABCdef" },
-			};
+		IReadOnlyDictionary<string, object> dictionary = new Dictionary<string, object>(StringComparer.Ordinal)
+		{
+			{ nameof(TestModel1.TestProperty4), 101 },
+			{ nameof(TestModel1.TestProperty5), 'X' },
+			{ nameof(TestModel1.TestProperty6), "ABCdef" },
+		};
 		(dictionary, testModel2).MapProperties();
 		Assert.Equal(101, testModel2.TestProperty4);
 		Assert.Equal('X', testModel2.TestProperty5);

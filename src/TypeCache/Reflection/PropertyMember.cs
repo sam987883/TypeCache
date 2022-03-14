@@ -13,14 +13,11 @@ public class PropertyMember	: Member, IEquatable<PropertyMember>
 {
 	internal PropertyMember(PropertyInfo propertyInfo, TypeMember type) : base(propertyInfo)
 	{
-		this.Type = type;
 		this.PropertyType = propertyInfo.PropertyType.GetTypeMember();
 		this.Indexer = propertyInfo.GetIndexParameters().Any();
 		this.Getter = propertyInfo.GetMethod is not null ? new MethodMember(propertyInfo.GetMethod, type) : null;
 		this.Setter = propertyInfo.SetMethod is not null ? new MethodMember(propertyInfo.SetMethod, type) : null;
 	}
-
-	public TypeMember Type { get; }
 
 	public bool Indexer { get; }
 

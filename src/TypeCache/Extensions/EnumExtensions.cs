@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
@@ -14,7 +14,7 @@ public static class EnumExtensions
 	/// <c>=&gt; <see cref="EnumOf{T}.Tokens"/>[@<paramref name="this"/>].Attributes;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IImmutableList<Attribute> Attributes<T>(this T @this)
+	public static IReadOnlyList<Attribute> Attributes<T>(this T @this)
 		where T : struct, Enum
 		=> EnumOf<T>.Tokens[@this].Attributes;
 
