@@ -16,26 +16,6 @@ namespace TypeCache.Collections.Extensions;
 public static class EnumerableExtensions
 {
 	/// <summary>
-	/// <c>=&gt; <see langword="new"/>[] { @<paramref name="this"/>, <paramref name="items"/> }.Gather();</c>
-	/// </summary>
-	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
-		=> new[] { @this, items }.Gather();
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="sets"/>.Gather());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
-		=> @this.Add(sets.Gather());
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IEnumerable<T> Add<T>(this IEnumerable<T>? @this, params T[]? items)
-		=> @this.Add(items as IEnumerable<T>);
-
-	/// <summary>
 	/// <code>
 	/// <paramref name="aggregator"/>.AssertNotNull();<br/>
 	/// <br/>
@@ -165,6 +145,26 @@ public static class EnumerableExtensions
 	public static bool AnyNull<T>([NotNullWhen(true)] this IEnumerable<T>? @this)
 		where T : class
 		=> @this.Any(value => value is null);
+
+	/// <summary>
+	/// <c>=&gt; <see langword="new"/>[] { @<paramref name="this"/>, <paramref name="items"/> }.Gather();</c>
+	/// </summary>
+	public static IEnumerable<T> Append<T>(this IEnumerable<T>? @this, IEnumerable<T>? items)
+		=> new[] { @this, items }.Gather();
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="sets"/>.Gather());</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> Append<T>(this IEnumerable<T>? @this, IEnumerable<IEnumerable<T>?>? sets)
+		=> @this.Append(sets.Gather());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.And(<paramref name="items"/> <see langword="as"/> <see cref="IEnumerable{T}"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static IEnumerable<T> Append<T>(this IEnumerable<T>? @this, params T[]? items)
+		=> @this.Append(items as IEnumerable<T>);
 
 	/// <summary>
 	/// <code>

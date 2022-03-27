@@ -4,6 +4,8 @@ namespace TypeCache.Mappers;
 
 public struct CsvOptions
 {
+	public CsvOptions() { }
+
 	public string ByteFormatSpecifier { get; set; } = "X";
 
 	public string DateOnlyFormatSpecifier { get; set; } = "o";

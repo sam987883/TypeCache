@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection.Extensions;
@@ -8,6 +9,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("{Type}.{Name,nq}", Name = "{Name}")]
 public class FieldMember : Member, IEquatable<FieldMember>
 {
 	internal FieldMember(FieldInfo fieldInfo, TypeMember type) : base(fieldInfo)

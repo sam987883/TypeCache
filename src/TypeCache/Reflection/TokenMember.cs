@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -8,6 +9,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("{Type}.{Name,nq}", Name = "{Name}")]
 public class TokenMember<T> : Member, IEquatable<TokenMember<T>>
 	where T : struct, Enum
 {

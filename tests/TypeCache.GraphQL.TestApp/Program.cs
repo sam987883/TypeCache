@@ -1,13 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Microsoft.Data.SqlClient;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Schemas;
-using TypeCache.GraphQL.TestApp.Tables;
 using static System.Math;
 using static TypeCache.Default;
 
@@ -43,7 +41,7 @@ app.UseGraphQLPlayground(new()
 	EditorReuseHeaders = true,
 	EditorTheme = EditorTheme.Dark,
 	HideTracingResponse = true,
-	PrettierTabWidth = 4,
+	PrettierTabWidth = 2,
 	SchemaPollingEnabled = true,
 	SchemaPollingInterval = 10000
 }, "/playground");

@@ -18,7 +18,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SQL;
 
-public class SqlApi<T>
+public class SqlApiController<T>
 	where T : class, new()
 {
 	private readonly string _DataSource;
@@ -27,45 +27,11 @@ public class SqlApi<T>
 
 	private readonly string _Table;
 
-	public SqlApi(IMediator mediator, string dataSource, string table)
+	public SqlApiController(IMediator mediator, string dataSource, string table)
 	{
 		this._DataSource = dataSource;
 		this._Mediator = mediator;
 		this._Table = table;
-	}
-
-	[GraphQLName("Count{0}")]
-	[GraphQLDescription("SELECT COUNT(1) FROM {0} WHERE ...")]
-	public async Task<SqlCountResponse> Count(
-		[AllowNull] Parameter[] parameters,
-		[AllowNull] string where,
-		IResolveFieldContext context)
-	{
-		var selections = context.GetQuerySelections().ToArray();
-		var request = new CountRequest
-		{
-			DataSource = this._DataSource,
-			From = this._Table,
-			Where = where
-		};
-
-		parameters.Do(parameter => request.Parameters[parameter.Name] = parameter.Value);
-
-		var sqlResponse = new SqlCountResponse
-		{
-			Count = await this._Mediator.ApplyRulesAsync<CountRequest, long>(request)
-		};
-
-		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
-			sqlResponse.DataSource = this._DataSource;
-
-		if (selections.Has(nameof(SqlResponse<T>.Table)))
-			sqlResponse.Table = this._Table;
-
-		if (selections.Has(nameof(SqlResponse<T>.Sql)))
-			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<CountRequest, string>(request);
-
-		return sqlResponse;
 	}
 
 	[GraphQLName("Delete{0}")]
@@ -76,7 +42,7 @@ public class SqlApi<T>
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
-		var selections = context.GetQuerySelections().ToArray();
+		var selections = context.GetSelections().ToArray();
 		var request = new DeleteRequest
 		{
 			DataSource = this._DataSource,
@@ -97,11 +63,14 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<DeleteRequest, string>(request);
 
-		if (request.Output.Any())
-		{
-			var output = await this._Mediator.ApplyRulesAsync<DeleteRequest, RowSet>(request);
+		var output = await this._Mediator.ApplyRulesAsync<DeleteRequest, RowSet>(request);
+
+		if (selections.Has(nameof(SqlResponse<T>.Count)))
+			sqlResponse.Count = request.Output.Any() ? output.Rows.LongLength : (long)output[0, "RowCount"]!;
+
+		if (selections.Has(nameof(SqlResponse<T>.Data)))
 			sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
-		}
+
 		return sqlResponse;
 	}
 
@@ -112,13 +81,13 @@ public class SqlApi<T>
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
-		var selections = context.GetQuerySelections().ToArray();
-		var columns = context.GetArgument<IDictionary<string, object>>(nameof(data))!.Keys.ToArray();
+		var selections = context.GetSelections().ToArray();
+		var inputs = context.GetInputs();
 		var request = new DeleteDataRequest
 		{
 			DataSource = this._DataSource,
 			From = this._Table,
-			Input = data.MapRowSet(columns),
+			Input = (RowSet)inputs[nameof(data)]!,
 			Output = selections.IfLeft(dataPrefix).EachReplace(dataPrefix, "DELETED.").ToArray()
 		};
 
@@ -133,28 +102,31 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, string>(request);
 
-		if (request.Output.Any())
-		{
-			var output = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, RowSet>(request);
+		var output = await this._Mediator.ApplyRulesAsync<DeleteDataRequest, RowSet>(request);
+
+		if (selections.Has(nameof(SqlResponse<T>.Count)))
+			sqlResponse.Count = request.Output.Any() ? output.Rows.LongLength : (long)output[0, "RowCount"]!;
+
+		if (selections.Has(nameof(SqlResponse<T>.Data)))
 			sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
-		}
+
 		return sqlResponse;
 	}
 
 	[GraphQLName("Insert{0}Data")]
 	[GraphQLDescription("INSERT INTO {0} ... VALUES ...")]
 	public async Task<SqlResponse<T>> InsertData(
-		[NotNull] T[] batch,
+		[NotNull] T[] data,
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
-		var selections = context.GetQuerySelections().ToArray();
-		var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(batch)).First()?.Keys.ToArray() ?? Array<string>.Empty;
+		var selections = context.GetSelections().ToArray();
+		var inputs = context.GetInputs();
 		var request = new InsertDataRequest
 		{
 			DataSource = this._DataSource,
 			Into = this._Table,
-			Input = batch.MapRowSet(columns),
+			Input = (RowSet)inputs[nameof(data)]!,
 			Output = selections.IfLeft(dataPrefix).EachReplace(dataPrefix, "INSERTED.").ToArray()
 		};
 
@@ -169,16 +141,19 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<InsertDataRequest, string>(request);
 
-		if (request.Output.Any())
-		{
-			var output = await this._Mediator.ApplyRulesAsync<InsertDataRequest, RowSet>(request);
+		var output = await this._Mediator.ApplyRulesAsync<InsertDataRequest, RowSet>(request);
+
+		if (selections.Has(nameof(SqlResponse<T>.Count)))
+			sqlResponse.Count = request.Output.Any() ? output.Rows.LongLength : (long)output[0, "RowCount"]!;
+
+		if (selections.Has(nameof(SqlResponse<T>.Data)))
 			sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
-		}
+
 		return sqlResponse;
 	}
 
 	[GraphQLName("Page{0}")]
-	[GraphQLDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ... OFFSET ... FETCH ...")]
+	[GraphQLDescription("SELECT ... FROM {0} WHERE ... ORDER BY ... OFFSET ... FETCH ...")]
 	public async Task<SqlPagedResponse<T>> Page(
 		uint first,
 		uint after,
@@ -190,7 +165,7 @@ public class SqlApi<T>
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlPagedResponse<T>.Data)}.");
-		var selections = context.GetQuerySelections().ToArray();
+		var selections = context.GetSelections().ToArray();
 		var request = new SelectRequest
 		{
 			DataSource = this._DataSource,
@@ -207,13 +182,13 @@ public class SqlApi<T>
 
 		var sqlResponse = new SqlPagedResponse<T>();
 
-		if (selections.Has(nameof(SqlResponse<T>.DataSource)))
+		if (selections.Has(nameof(SqlPagedResponse<T>.DataSource)))
 			sqlResponse.DataSource = this._DataSource;
 
-		if (selections.Has(nameof(SqlResponse<T>.Table)))
+		if (selections.Has(nameof(SqlPagedResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.Sql)))
+		if (selections.Has(nameof(SqlPagedResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
 
 		if (request.Select.Any())
@@ -226,25 +201,29 @@ public class SqlApi<T>
 	}
 
 	[GraphQLName("Select{0}")]
-	[GraphQLDescription("SELECT ... FROM {0} HAVING ... WHERE ... ORDER BY ...")]
+	[GraphQLDescription("SELECT ... FROM {0} WHERE ... ORDER BY ...")]
 	public async Task<SqlResponse<T>> Select(
 		[AllowNull] Parameter[] parameters,
+		bool? distinct,
+		int? top,
+		bool? percent,
+		bool? withTies,
 		[AllowNull] string where,
-		[AllowNull] string[] groupBy,
-		[AllowNull] string having,
 		[AllowNull] OrderBy<T>[] orderBy,
 		IResolveFieldContext context)
 	{
 		var dataPrefix = Invariant($"{nameof(SqlResponse<T>.Data)}.");
-		var selections = context.GetQuerySelections().ToArray();
+		var selections = context.GetSelections().ToArray();
 		var request = new SelectRequest
 		{
 			DataSource = this._DataSource,
+			Distinct = distinct ?? false,
 			From = this._Table,
-			GroupBy = groupBy,
-			Having = having,
 			OrderBy = orderBy.ToArray(_ => $"{_.Expression} {_.Sort.ToSQL()}"),
 			Select = selections.IfLeft(dataPrefix).EachTrimStart(dataPrefix).ToArray(),
+			Top = top ?? 0,
+			Percent = percent ?? false,
+			WithTies = withTies ?? false,
 			Where = where
 		};
 
@@ -258,14 +237,29 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlResponse<T>.Table)))
 			sqlResponse.Table = this._Table;
 
-		if (selections.Has(nameof(SqlResponse<T>.Sql)))
-			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
-
 		if (request.Select.Any())
 		{
 			var output = await this._Mediator.ApplyRulesAsync<SelectRequest, RowSet>(request);
 			sqlResponse.Data = output?.Rows is not null ? output.MapModels<T>() : Array<T>.Empty;
+			if (selections.Has(nameof(SqlResponse<T>.Count)))
+				sqlResponse.Count = sqlResponse.Data.Length;
+
+			if (selections.Has(nameof(SqlResponse<T>.Sql)))
+				sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<SelectRequest, string>(request);
 		}
+		else if (selections.Has(nameof(SqlResponse<T>.Count)))
+		{
+			var countRequest = new CountRequest
+			{
+				DataSource = this._DataSource,
+				From = this._Table,
+				Where = where
+			};
+			sqlResponse.Count = await this._Mediator.ApplyRulesAsync<CountRequest, long>(countRequest);
+			if (selections.Has(nameof(SqlResponse<T>.Sql)))
+				sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<CountRequest, string>(countRequest);
+		}
+
 		return sqlResponse;
 	}
 
@@ -279,7 +273,7 @@ public class SqlApi<T>
 	{
 		var deletedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Deleted)}.");
 		var insertedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Inserted)}.");
-		var selections = context.GetQuerySelections().ToArray();
+		var selections = context.GetSelections().ToArray();
 		var request = new UpdateRequest
 		{
 			DataSource = this._DataSource,
@@ -304,40 +298,37 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlUpdateResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<UpdateRequest, string>(request);
 
-		if (request.Output.Any())
+		var output = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
+
+		if (selections.Has(nameof(SqlResponse<T>.Count)))
+			sqlResponse.Count = request.Output.Any() ? output.Rows.LongLength : (long)output[0, "RowCount"]!;
+
+		if (selections.Has(nameof(SqlResponse<T>.Data)))
 		{
-			var output = await this._Mediator.ApplyRulesAsync<UpdateRequest, RowSet>(request);
-			if (output?.Rows is not null)
-			{
-				var outputColumns = output.Columns;
+			output.Columns = output.Columns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
+			sqlResponse.Deleted = output.MapModels<T>();
 
-				output.Columns = outputColumns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
-				sqlResponse.Deleted = output.MapModels<T>();
-
-				output.Columns = outputColumns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
-				sqlResponse.Inserted = output.MapModels<T>();
-			}
-			else
-			{
-				sqlResponse.Deleted = Array<T>.Empty;
-				sqlResponse.Inserted = Array<T>.Empty;
-			}
+			output.Columns = output.Columns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
+			sqlResponse.Inserted = output.MapModels<T>();
 		}
+
 		return sqlResponse;
 	}
 
 	[GraphQLName("Update{0}Data")]
 	[GraphQLDescription("UPDATE {0} SET ... OUTPUT ...")]
-	public async Task<SqlUpdateResponse<T>> UpdateData([NotNull] T[] data, IResolveFieldContext context)
+	public async Task<SqlUpdateResponse<T>> UpdateData(
+		[NotNull] T[] data,
+		IResolveFieldContext context)
 	{
 		var deletedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Deleted)}.");
 		var insertedPrefix = Invariant($"{nameof(SqlUpdateResponse<T>.Inserted)}.");
-		var selections = context.GetQuerySelections().ToArray();
-		var columns = context.GetArgument<IDictionary<string, object>[]>(nameof(data)).First()?.Keys.ToArray() ?? Array<string>.Empty;
+		var selections = context.GetSelections().ToArray();
+		var inputs = context.GetInputs();
 		var request = new UpdateDataRequest
 		{
 			DataSource = this._DataSource,
-			Input = data.MapRowSet(columns),
+			Input = (RowSet)inputs[nameof(data)]!,
 			Output = selections
 				.If(selection => selection.Left(insertedPrefix) || selection.Left(deletedPrefix))
 				.Each(selection => selection.Replace(insertedPrefix, "INSERTED.").Replace(deletedPrefix, "DELETED."))
@@ -353,25 +344,20 @@ public class SqlApi<T>
 		if (selections.Has(nameof(SqlUpdateResponse<T>.Sql)))
 			sqlResponse.Sql = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, string>(request);
 
-		if (request.Output.Any())
+		var output = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, RowSet>(request);
+
+		if (selections.Has(nameof(SqlResponse<T>.Count)))
+			sqlResponse.Count = request.Output.Any() ? output.Rows.LongLength : (long)output[0, "RowCount"]!;
+
+		if (selections.Has(nameof(SqlResponse<T>.Data)))
 		{
-			var output = await this._Mediator.ApplyRulesAsync<UpdateDataRequest, RowSet>(request);
-			if (output?.Rows is not null)
-			{
-				var outputColumns = output.Columns;
+			output.Columns = output.Columns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
+			sqlResponse.Deleted = output.MapModels<T>();
 
-				output.Columns = outputColumns.IfLeft("DELETED.").EachTrimStart("DELETED.").ToArray();
-				sqlResponse.Deleted = output.MapModels<T>();
-
-				output.Columns = outputColumns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
-				sqlResponse.Inserted = output.MapModels<T>();
-			}
-			else
-			{
-				sqlResponse.Deleted = Array<T>.Empty;
-				sqlResponse.Inserted = Array<T>.Empty;
-			}
+			output.Columns = output.Columns.IfLeft("INSERTED.").EachTrimStart("INSERTED.").ToArray();
+			sqlResponse.Inserted = output.MapModels<T>();
 		}
+
 		return sqlResponse;
 	}
 }

@@ -186,7 +186,7 @@ public static class TypeExtensions
 		}.ToImmutableDictionary();
 	}
 
-	private static readonly IImmutableDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
+	private static readonly IReadOnlyDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>

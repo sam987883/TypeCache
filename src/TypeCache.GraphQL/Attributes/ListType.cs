@@ -5,5 +5,5 @@ namespace TypeCache.GraphQL.Attributes;
 public enum ListType
 {
 	List,
-	NotNullList,
+	NonNullList,
 }

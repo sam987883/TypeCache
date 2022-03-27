@@ -62,14 +62,14 @@ public static class DateTimeExtensions
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static DateTime To(this DateTime @this, DateTimeKind kind)
+	public static DateTime ToTimeZone(this DateTime @this, DateTimeKind kind)
 		=> kind switch
 		{
 			_ when kind == @this.Kind => @this,
 			DateTimeKind.Local => ConvertTimeFromUtc(@this, TimeZoneInfo.Local),
 			DateTimeKind.Unspecified => @this.As(kind),
 			DateTimeKind.Utc => ConvertTimeToUtc(@this),
-			_ => throw new ArgumentOutOfRangeException($"{nameof(To)}: {nameof(DateTimeKind)} value of {kind} is not supported.")
+			_ => throw new ArgumentOutOfRangeException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind} is not supported.")
 		};
 
 	/// <summary>
@@ -83,7 +83,7 @@ public static class DateTimeExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="TimeZoneNotFoundException"/>
-	public static DateTime To(this DateTime @this, TimeZoneInfo targetTimeZone)
+	public static DateTime ToTimeZone(this DateTime @this, TimeZoneInfo targetTimeZone)
 		=> @this.Kind switch
 		{
 			DateTimeKind.Local => ConvertTime(@this, targetTimeZone),
@@ -96,7 +96,7 @@ public static class DateTimeExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static DateTimeOffset To(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
+	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
 		=> ConvertTime(@this, targetTimeZone);
 
 	/// <summary>
@@ -107,6 +107,6 @@ public static class DateTimeExtensions
 	/// <exception cref="SecurityException"/>
 	/// <exception cref="TimeZoneNotFoundException"/>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static DateTimeOffset To(this DateTimeOffset @this, string targetSystemTimeZoneId)
+	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, string targetSystemTimeZoneId)
 		=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
 }

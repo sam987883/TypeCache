@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -11,6 +12,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("{Type,nq}.ctor", Name = "{Name}")]
 public class ConstructorMember : Member, IEquatable<ConstructorMember>
 {
 	private readonly CreateType _Create;

@@ -15,12 +15,12 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType<T> where T : struc
 
 	public GraphQLEnumType()
 	{
-		this.Name = TypeOf<T>.Member.GraphName();
+		this.Name = TypeOf<T>.Member.GraphQLName();
 
-		EnumOf<T>.Tokens.Values.If(token => !token.GraphIgnore()).Do(token =>
+		EnumOf<T>.Tokens.Values.If(token => !token.GraphQLIgnore()).Do(token =>
 		{
-			var name = token.GraphName();
-			var description = token.GraphDescription();
+			var name = token.GraphQLName();
+			var description = token.GraphQLDescription();
 			var deprecationReason = token.ObsoleteMessage();
 
 			this.AddValue(name, description, token.Value, deprecationReason);

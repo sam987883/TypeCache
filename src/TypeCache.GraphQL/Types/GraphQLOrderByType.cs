@@ -14,13 +14,14 @@ public class GraphQLOrderByType<T> : EnumerationGraphType
 {
 	public GraphQLOrderByType()
 	{
-		this.Name = TypeOf<T>.Attributes.GraphName() ?? $"{TypeOf<T>.Name}_OrderBy";
-		this.Description = $"Order by `{TypeOf<T>.Name}`.";
+		var typeName = TypeOf<T>.Member.GraphQLName();
+		this.Name = Invariant($"{typeName}_OrderBy");
+		this.Description = $"Order by `{typeName}`.";
 
-		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphIgnore()))
+		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphQLIgnore()))
 		{
-			var propertyName = property.GraphName();
-			var description = property.GraphDescription();
+			var propertyName = property.GraphQLName();
+			var description = property.GraphQLDescription();
 			var deprecationReason = property.ObsoleteMessage();
 
 			this.AddValue(Invariant($"{propertyName}_ASC"), description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending }, deprecationReason);

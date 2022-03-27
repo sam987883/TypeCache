@@ -10,6 +10,8 @@ public class SqlUpdateResponse<T>
 
 	public T[] Inserted { get; set; } = Array<T>.Empty;
 
+	public long Count { get; set; }
+
 	public string DataSource { get; set; } = string.Empty;
 
 	public string Sql { get; set; } = string.Empty;

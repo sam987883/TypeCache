@@ -3,14 +3,15 @@
 using System;
 using System.Collections.Generic;
 using GraphQL;
-using GraphQL.Language.AST;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SQL;
+using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 
@@ -18,127 +19,6 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLExtensions
 {
-	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, object? overrideValue = null)
-	{
-		foreach (var parameter in method.Parameters)
-		{
-			var name = parameter.GraphName();
-			if (parameter.Type.Is<IResolveFieldContext>())
-				yield return @this;
-			else if (parameter.GraphIgnore())
-				yield return null;
-			else if (parameter.Type.Is<TSource>() && !typeof(TSource).Is<object>())
-				yield return @this.Source;
-			else if (overrideValue is not null && parameter.Type.Is(overrideValue.GetType()))
-				yield return overrideValue;
-			else if (@this.HasArgument(name))
-			{
-				var argument = @this.GetArgument(parameter.Type, name);
-				if (argument is IDictionary<string, object?> dictionary && !parameter.Type.Is<IDictionary<string, object?>>())
-					yield return dictionary.MapModel(parameter.Type);
-				else
-					yield return argument;
-			}
-			else
-				yield return null;
-		}
-	}
-
-	/// <summary>
-	/// Gets the input arguments and fields that have had a value set.
-	/// </summary>
-	public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this)
-	{
-		foreach (var pair in @this.Arguments!)
-		{
-			if (pair.Value.Value is IDictionary<string, object> dictionary)
-			{
-				foreach (var key in GetKeys(pair.Key, dictionary))
-					yield return key;
-			}
-			else
-				yield return pair.Key;
-		}
-	}
-
-	/// <summary>
-	/// Gets the input fields that have had a value set for a particular input object.
-	/// </summary>
-	public static IEnumerable<string> GetMutationInputs(this IResolveFieldContext @this, string path)
-	{
-		var inputs = path.Split('.', StringSplitOptions.RemoveEmptyEntries).ToQueue();
-		if (inputs.TryDequeue(out var input) && @this.Arguments!.TryGetValue(input, out var value))
-		{
-			var dictionary = value.Value as IDictionary<string, object>;
-			if (inputs.Any())
-			{
-				if (dictionary is not null)
-				{
-					foreach (var key in GetKeys(inputs, dictionary))
-						yield return key;
-				}
-			}
-			else if (dictionary is not null)
-			{
-				foreach (var key in dictionary.Keys)
-					yield return key;
-			}
-			else
-				yield return input;
-		}
-	}
-
-	/// <summary>
-	/// Gets the query selections for the Connection GraphQL Relay type including nested selections and fragments.
-	/// </summary>
-	public static ConnectionSelections GetQueryConnectionSelections(this IResolveFieldContext @this)
-	{
-		var selections = new ConnectionSelections
-		{
-			TotalCount = @this.SubFields!.ContainsKey("totalCount")
-		};
-
-		if (@this.SubFields.TryGetValue("pageInfo", out var pageInfo))
-		{
-			var fields = pageInfo.SelectionSet!.Selections.If<Field>().ToArray();
-			selections.HasNextPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasNextPage)));
-			selections.HasPreviousPage = fields.Any(field => field.Name.Is(nameof(PageInfo.HasPreviousPage)));
-			selections.StartCursor = fields.Any(field => field.Name.Is(nameof(PageInfo.StartCursor)));
-			selections.EndCursor = fields.Any(field => field.Name.Is(nameof(PageInfo.EndCursor)));
-		}
-
-		if (@this.SubFields.TryGetValue("edges", out var edges))
-		{
-			selections.Cursor = edges.SelectionSet!.Selections.If<Field>().Any(field => field.Name.Is("cursor"));
-			var node = edges.SelectionSet.Selections.First(selection => selection is IHaveName name && name.NameNode.Name.Is("node"));
-
-			if (node is IHaveSelectionSet selectionSet)
-				selections.EdgeNodeFields = selectionSet.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
-		}
-
-		if (@this.SubFields.TryGetValue("items", out var items) && items.SelectionSet!.Selections.Any())
-			selections.ItemFields = items.GetSelections(@this.Document.Fragments, string.Empty).ToArray();
-
-		return selections;
-	}
-
-	/// <summary>
-	/// Gets a list of query selections including nested selections and fragments.
-	/// </summary>
-	public static IEnumerable<string> GetQuerySelections(this IResolveFieldContext @this)
-	{
-		foreach (var subField in @this.SubFields!)
-		{
-			if (subField.Value.SelectionSet!.Selections.Any())
-			{
-				foreach (var selection in subField.Value.GetSelections(@this.Document.Fragments, subField.Key))
-					yield return selection;
-			}
-			else
-				yield return subField.Key;
-		}
-	}
-
 	/// <summary>
 	/// Use this to create a Graph QL Connection object to return in your endpoint to support paging.
 	/// </summary>
@@ -173,53 +53,153 @@ public static class GraphQLExtensions
 		return connection;
 	}
 
-	internal static EventStreamFieldType ToEventStreamFieldType(this MethodMember @this, object? handler)
+	internal static EventStreamFieldType ToEventStreamFieldType(this MethodMember @this, object? controller)
 		=> new()
 		{
 			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = @this.GraphName(),
-			Description = @this.GraphDescription(),
+			Name = @this.GraphQLName(),
+			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
-			Subscriber = (IEventStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, handler)!,
-			Type = @this.Return.GraphType()
+			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(controller, context.GetArguments<object>(@this).ToArray())),
+			Subscriber = (IEventStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, controller)!,
+			Type = @this.Return.GraphQLType()
 		};
 
-	internal static FieldType ToFieldType(this MethodMember @this, object? handler)
+	internal static FieldType ToFieldType(this MethodMember @this, object? controller)
 		=> new()
 		{
 			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = @this.GraphName(),
-			Description = @this.GraphDescription(),
+			Name = @this.GraphQLName(),
+			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(handler, context.GetArguments<object>(@this).ToArray())),
-			Type = @this.Return.GraphType()
+			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(controller, context.GetArguments<object>(@this).ToArray())),
+			Type = @this.Return.GraphQLType()
 		};
 
-	internal static FieldType ToFieldType<T>(this MethodMember @this, string table, SqlApi<T> sqlApi)
+	internal static FieldType ToFieldType<T>(this MethodMember @this, string table, SqlApiController<T> sqlApi)
 		where T : class, new()
 		=> new()
 		{
 			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = string.Format(@this.GraphName()!, table),
-			Description = string.Format(@this.GraphDescription()!, table),
+			Name = string.Format(@this.GraphQLName()!, table),
+			Description = string.Format(@this.GraphQLDescription()!, table),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<SqlApi<T>>(@this).ToArray())),
-			Type = @this.Return.GraphType()
+			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<SqlApiController<T>>(@this).ToArray())),
+			Type = @this.Return.GraphQLType()
 		};
 
-	internal static FieldType ToFieldType(this PropertyMember @this, bool isInputType)
+	internal static FieldType ToFieldType(this PropertyMember @this)
+	{
+		var type = @this.GraphQLType(false);
+		var arguments = new QueryArguments();
+
+		if (type.Implements<ScalarGraphType>())
+			arguments.Add(new QueryArgument(type)
+			{
+				Name = "null",
+				Description = "Return this value instead of null."
+			});
+
+		if (type.Is<DateTimeGraphType>() || type.Is<NonNullGraphType<DateTimeGraphType>>())
+		{
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "timeZone",
+				Description = "Converts the DateTime value to the specified time zone which must be supported by .Net's TimeZoneInfo class.  Use a comma to separate `from,to` time zones otherwise UTC will be assumed for the from value."
+			});
+		}
+		if (type.Is<DateTimeOffsetGraphType>() || type.Is<NonNullGraphType<DateTimeOffsetGraphType>>())
+		{
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "timeZone",
+				Description = "Converts the DateTimeOffset value to the specified time zone which must be supported by .Net's TimeZoneInfo class."
+			});
+		}
+		else if (type.Is<StringGraphType>()
+			|| type.Is<NonNullGraphType<StringGraphType>>())
+		{
+			if (@this.PropertyType.SystemType is SystemType.Boolean
+				|| @this.PropertyType.Is<Nullable<bool>>())
+			{
+				arguments.Add(new QueryArgument<StringGraphType>()
+				{
+					Name = "true",
+					Description = "Return this value when property value is true."
+				});
+				arguments.Add(new QueryArgument<StringGraphType>()
+				{
+					Name = "false",
+					Description = "Return this value when property value is false."
+				});
+			}
+
+			arguments.Add(new QueryArgument<GraphQLEnumType<StringCase>>()
+			{
+				Name = "case",
+				Description = "Convert string value to upper or lower case."
+			});
+
+			if (@this.PropertyType.Implements<IFormattable>())
+				arguments.Add(new QueryArgument<NonNullGraphType<StringGraphType>>()
+				{
+					Name = "format",
+					Description = "Use .NET format specifiers to format the data."
+				});
+
+			arguments.Add(new QueryArgument<IntGraphType>()
+			{
+				Name = "length",
+				Description = "Exclude the rest of the string value if it exceeds this length."
+			});
+
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "match",
+				Description = "Returns the matching result based on the specified regular expression pattern, null if no match."
+			});
+
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "trim",
+				Description = "Use .NET string.Trim to trim the string value of specified chars, or whitespaces if empty."
+			});
+
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "trimEnd",
+				Description = "Use .NET string.TrimEnd to trim the string value of specified chars, or whitespaces if empty."
+			});
+
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "trimStart",
+				Description = "Use .NET string.TrimStart to trim the string value of specified chars, or whitespaces if empty."
+			});
+		}
+
+		return new()
+		{
+			Arguments = arguments,
+			Type = type,
+			Name = @this.GraphQLName(),
+			Description = @this.GraphQLDescription(),
+			DeprecationReason = @this.ObsoleteMessage(),
+			Resolver = new PropertyFieldResolver(@this)
+		};
+	}
+
+	internal static FieldType ToInputFieldType(this PropertyMember @this)
 		=> new()
 		{
-			Type = @this.GraphType(isInputType),
-			Name = @this.GraphName(),
-			Description = @this.GraphDescription(),
+			Type = @this.GraphQLType(true),
+			Name = @this.GraphQLName(),
+			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = !isInputType ? new FuncFieldResolver<object>(context => @this.GetValue(context.Source)) : null
 		};
 
-	private static IEventStreamResolver CreateEventStreamResolver<T>(MethodMember method, object? handler)
-		=> new EventStreamResolver<T>(context => (IObservable<T>)method.Invoke(handler, context.GetArguments<object>(method).ToArray())!);
+	private static IEventStreamResolver CreateEventStreamResolver<T>(MethodMember method, object? controller)
+		=> new EventStreamResolver<T>(context => (IObservable<T>)method.Invoke(controller, context.GetArguments<object>(method).ToArray())!);
 
 	private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
 	{
@@ -244,73 +224,12 @@ public static class GraphQLExtensions
 		}
 	}
 
-	private static IEnumerable<string> GetKeys(string path, IDictionary<string, object> dictionary)
-	{
-		foreach (var pair in dictionary)
-		{
-			var current = $"{path}.{pair.Key}";
-			if (pair.Value is IDictionary<string, object> subDictionary)
-			{
-				foreach (var key in GetKeys(current, subDictionary))
-					yield return key;
-			}
-			else
-				yield return current;
-		}
-	}
-
-	private static IEnumerable<string> GetSelections(this IHaveSelectionSet @this, Fragments fragments, string prefix)
-	{
-		foreach (var selection in @this.SelectionSet!.Selections)
-		{
-			var current = selection switch
-			{
-				IHaveName name when prefix.IsNotBlank() => $"{prefix}.{name.NameNode.Name}",
-				IHaveName name => name.NameNode.Name,
-				_ => prefix
-			};
-
-			if (selection is FragmentSpread fragmentSpread)
-			{
-				var selectionSet = fragments.FindDefinition(fragmentSpread.Name) as IHaveSelectionSet;
-				if (selectionSet is not null)
-				{
-					foreach (var fragmentSelection in selectionSet.GetSelections(fragments, prefix))
-						yield return fragmentSelection;
-				}
-			}
-			else if (selection is IHaveSelectionSet selectionSet && selectionSet.SelectionSet!.Selections.Any())
-			{
-				foreach (var subSelection in selectionSet.GetSelections(fragments, current))
-					yield return subSelection;
-			}
-			else if (selection is Field field)
-				yield return current;
-		}
-	}
-
-	private static object MapModel(this IDictionary<string, object?> @this, TypeMember modelType)
-	{
-		var model = modelType.Create();
-
-		var properties = modelType.Properties.Values.ToDictionary(property => property.GraphName(), property => property, StringComparison.Ordinal);
-		foreach (var match in (@this, properties).Match(StringComparison.Ordinal))
-		{
-			var value = match.Value.Item1;
-			if (value is IDictionary<string, object?> argument && !match.Value.Item2.PropertyType.Implements<IDictionary<string, object?>>())
-				value = argument.MapModel(match.Value.Item2.PropertyType);
-			match.Value.Item2.SetValue(model, value);
-		}
-
-		return model;
-	}
-
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 		=> new QueryArguments(@this
-			.If(parameter => !parameter.GraphIgnore())
-			.Map(parameter => new QueryArgument(parameter.GraphType())
+			.If(parameter => !parameter.GraphQLIgnore() && !parameter.Type.Handle.Is<IResolveFieldContext>())
+			.Map(parameter => new QueryArgument(parameter.GraphQLType())
 			{
-				Name = parameter.GraphName(),
-				Description = parameter.GraphDescription(),
+				Name = parameter.GraphQLName(),
+				Description = parameter.GraphQLDescription(),
 			}));
 }

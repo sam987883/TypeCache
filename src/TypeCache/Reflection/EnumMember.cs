@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -12,6 +13,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("Enum {Name,nq}", Name = "{Name}")]
 public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 	where T : struct, Enum
 {
@@ -34,7 +36,7 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 		var equals = CreateEquals(underlyingType);
 		var getHashCode = CreateGetHashCode(underlyingType);
 
-		this._UnderlyingType = new Lazy<TypeMember>(() => this.Handle.ToType().GetEnumUnderlyingType().GetTypeMember(), false);
+		this._UnderlyingType = Lazy.Create(() => this.Handle.ToType().GetEnumUnderlyingType().GetTypeMember());
 		this.Comparer = new CustomComparer<T>(compare, equals, getHashCode);
 		this.Handle = type.TypeHandle;
 		this.Flags = this.Attributes.Any<FlagsAttribute>();

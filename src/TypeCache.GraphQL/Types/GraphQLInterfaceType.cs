@@ -15,10 +15,10 @@ public class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 	{
 		TypeOf<T>.Kind.Assert(Kind.Interface);
 
-		this.Name = TypeOf<T>.Member.GraphName();
+		this.Name = TypeOf<T>.Member.GraphQLName();
 
 		TypeOf<T>.Properties.Values
-			.If(property => property.Getter is not null && !property.GraphIgnore())
-			.Do(property => this.AddField(property.ToFieldType(false)));
+			.If(property => property.Getter is not null && !property.GraphQLIgnore())
+			.Do(property => this.AddField(property.ToFieldType()));
 	}
 }

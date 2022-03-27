@@ -14,8 +14,8 @@ namespace TypeCache.GraphQL.Types;
 /// <summary>
 /// Requires call to either one of:
 /// <list type="bullet">
-/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, byte[], byte[])"/></item>
-/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
+/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, byte[], byte[])"/></item>
+/// <item><see cref="ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
 /// </list>
 /// </summary>
 public class GraphQLHashIdType : ScalarGraphType

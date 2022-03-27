@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
@@ -9,6 +10,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("Parameter: {Name,nq}(,,,)", Name = "{Name}")]
 public readonly struct MethodParameter : IEquatable<MethodParameter>
 {
 	private readonly RuntimeMethodHandle _MethodHandle;

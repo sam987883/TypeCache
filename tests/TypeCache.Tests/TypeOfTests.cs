@@ -104,7 +104,7 @@ public class TypeOfTests
 		Assert.Equal(Kind.Class, member.Kind);
 		Assert.Equal(6, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
-		Assert.Equal(13, member.Properties.Count);
+		Assert.Equal(17, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 		Assert.Equal(SystemType.Unknown, member.SystemType);

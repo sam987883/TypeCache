@@ -18,25 +18,25 @@ namespace TypeCache.GraphQL.Resolvers;
 public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 {
 	private readonly MethodMember _Method;
-	private readonly object? _Handler;
+	private readonly object? _Controller;
 	private readonly IDataLoaderContextAccessor _DataLoader;
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public ItemLoaderFieldResolver(MethodMember method, object? handler, IDataLoaderContextAccessor dataLoader)
+	public ItemLoaderFieldResolver(MethodMember method, object? controller, IDataLoaderContextAccessor dataLoader)
 	{
 		dataLoader.AssertNotNull();
 
 		if (!method.Static)
-			handler.AssertNotNull();
+			controller.AssertNotNull();
 
 		dataLoader.AssertNotNull();
 
 		if (!method.Return.Type.Is<T>() && !method.Return.Type.Is<Task<T>>() && !method.Return.Type.Is<ValueTask<T>>())
-			throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Member.GraphName()}] instead of [{method.Return.Type.Name}].");
+			throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Member.GraphQLName()}] instead of [{method.Return.Type.Name}].");
 
 		this._Method = method;
-		this._Handler = handler;
+		this._Controller = controller;
 		this._DataLoader = dataLoader;
 	}
 
@@ -51,16 +51,17 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 		context.Source.AssertNotNull();
 
 		var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
-			$"{context.Source!.GetTypeMember().GraphName()}.{this._Method.GraphName()}",
+			$"{context.Source!.GetTypeMember().GraphQLName()}.{this._Method.GraphQLName()}",
 			async () =>
 			{
 				var arguments = context.GetArguments<T>(this._Method).ToArray();
-				var result = this._Method.Invoke(this._Handler, arguments);
+				var result = this._Method.Invoke(this._Controller, arguments);
 				return result switch
 				{
 					ValueTask<T> valueTask => await valueTask,
 					Task<T> task => await task,
-					_ => await Task.FromResult((T)result!)
+					T item => await Task.FromResult(item),
+					_ => await Task.FromResult<T>(default!)
 				};
 			});
 

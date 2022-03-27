@@ -15,10 +15,10 @@ public sealed class GraphQLObjectEnumType<T> : EnumerationGraphType where T : cl
 		this.Name = graphName ?? $"{TypeOf<T>.Name}Fields";
 		this.Description = $"Fields of type `{graphName ?? TypeOf<T>.Name}`.";
 
-		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphIgnore()))
+		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphQLIgnore()))
 		{
-			var name = property.GraphName() ?? property.Name;
-			var description = property.GraphDescription();
+			var name = property.GraphQLName();
+			var description = property.GraphQLDescription();
 			var deprecationReason = property.ObsoleteMessage();
 
 			this.AddValue(name, description, name, deprecationReason);

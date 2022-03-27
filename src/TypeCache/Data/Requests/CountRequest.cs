@@ -20,6 +20,11 @@ public class CountRequest
 	public string DataSource { get; set; } = DATASOURCE;
 
 	/// <summary>
+	/// SQL: <code>SELECT COUNT_BIG(DISTINCT [...])</code>
+	/// </summary>
+	public string Distinct { get; set; } = string.Empty;
+
+	/// <summary>
 	/// JSON: <code>"Table1" or "dbo.Table1" or "Database1.dbo.Table1"</code>
 	/// SQL: <code>[Database1]..[Table1] or [Database1].[dbo].[Table1]</code>
 	/// </summary>

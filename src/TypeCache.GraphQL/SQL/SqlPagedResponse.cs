@@ -2,10 +2,12 @@
 
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections;
+using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.SQL;
 
+[GraphQLDescription("Paged SQL response for an object of type `{0}`.")]
 public class SqlPagedResponse<T>
 {
 	public Connection<T>? Data { get; set; }

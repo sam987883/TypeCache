@@ -46,7 +46,7 @@ public class SqlExtensions
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
 
-		var expected = Invariant($@"SELECT COUNT_BIG(1)
+		var expected = Invariant($@"SELECT COUNT_BIG(*)
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");

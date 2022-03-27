@@ -30,9 +30,9 @@ public class EnumerableExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(intArray, new[] { 1, 2, 3 }.Add(4, 5, 6));
-		Assert.Equal(intArray, new[] { 1, 2, 3 }.Add((IEnumerable<int>)new[] { 4, 5, 6 }));
-		Assert.Equal(intArray, new[] { 1, 2 }.Add((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
+		Assert.Equal(intArray, new[] { 1, 2, 3 }.Append(4, 5, 6));
+		Assert.Equal(intArray, new[] { 1, 2, 3 }.Append((IEnumerable<int>)new[] { 4, 5, 6 }));
+		Assert.Equal(intArray, new[] { 1, 2 }.Append((IEnumerable<IEnumerable<int>>)new[] { (IEnumerable<int>)new[] { 3, 4 }, (IEnumerable<int>)new[] { 5, 6 } }));
 	}
 
 	[Fact]

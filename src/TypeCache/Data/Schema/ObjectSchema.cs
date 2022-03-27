@@ -23,7 +23,7 @@ public sealed class ObjectSchema : IEquatable<ObjectSchema>
 	static ObjectSchema()
 	{
 		Cache = new LazyDictionary<string, ConcurrentDictionary<string, ObjectSchema>>(server =>
-			new(STRING_COMPARISON.ToStringComparer()), STRING_COMPARISON.ToStringComparer());
+			new(STRING_COMPARISON.ToStringComparer()), comparer: STRING_COMPARISON.ToStringComparer());
 	}
 
 	internal static IReadOnlyDictionary<string, ConcurrentDictionary<string, ObjectSchema>> Cache { get; }

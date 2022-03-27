@@ -19,6 +19,8 @@ public static class TypeOf<T>
 
 	public static TypeMember? ElementType => Member.ElementType;
 
+	public static RuntimeTypeHandle? GenericHandle => Member.GenericHandle;
+
 	public static IReadOnlyList<TypeMember> GenericTypes => Member.GenericTypes;
 
 	public static RuntimeTypeHandle Handle => Member.Handle;
@@ -30,6 +32,8 @@ public static class TypeOf<T>
 	public static Kind Kind => Member.Kind;
 
 	public static string Name => Member.Name;
+
+	public static string Namespace => Member.Namespace;
 
 	public static bool Nullable => Member.Nullable;
 

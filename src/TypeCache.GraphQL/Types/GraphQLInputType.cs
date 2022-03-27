@@ -11,11 +11,11 @@ public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 {
 	public GraphQLInputType()
 	{
-		this.Name = TypeOf<T>.Member.GraphInputName();
-		this.Description = TypeOf<T>.Member.GraphDescription();
+		this.Name = TypeOf<T>.Member.GraphQLInputName();
+		this.Description = TypeOf<T>.Member.GraphQLDescription();
 
 		TypeOf<T>.Properties.Values
-			.If(property => property.Getter is not null && property.Setter is not null && !property.GraphIgnore())
-			.Do(property => this.AddField(property!.ToFieldType(true)));
+			.If(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
+			.Do(property => this.AddField(property!.ToInputFieldType()));
 	}
 }

@@ -75,8 +75,8 @@ public abstract class GraphQLSchema : Schema
 		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Map(method =>
 		{
 			var parentType = method.Attributes.First<GraphQLSubqueryAttribute>()!.ParentType;
-			var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, handler, this._DataLoader);
+			var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, controller, this._DataLoader);
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}));
 		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Map(method =>
@@ -122,8 +122,8 @@ public abstract class GraphQLSchema : Schema
 		if (method.Return.Void)
 			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		return this.Mutation!.AddField(method.ToFieldType(handler));
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		return this.Mutation!.AddField(method.ToFieldType(controller));
 	}
 
 	/// <summary>
@@ -154,8 +154,8 @@ public abstract class GraphQLSchema : Schema
 		if (method.Return.Void)
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		return this.Query.AddField(method.ToFieldType(handler));
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		return this.Query.AddField(method.ToFieldType(controller));
 	}
 
 	/// <summary>
@@ -186,8 +186,8 @@ public abstract class GraphQLSchema : Schema
 		if (!method.Return.Type.Is(typeof(IObservable<>)))
 			throw new ArgumentException($"{nameof(AddSubscription)}: GraphQL subscription endpoints must have a return type of IObservable<...>.");
 
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		return this.Subscription!.AddField(method.ToEventStreamFieldType(handler));
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		return this.Subscription!.AddField(method.ToEventStreamFieldType(controller));
 	}
 
 	/// <summary>
@@ -205,8 +205,8 @@ public abstract class GraphQLSchema : Schema
 	/// <exception cref="ArgumentNullException"/>
 	public FieldType AddSubquery<T>(MethodMember method)
 	{
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		var resolver = new ItemLoaderFieldResolver<T>(method, handler, this._DataLoader);
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		var resolver = new ItemLoaderFieldResolver<T>(method, controller, this._DataLoader);
 		return this.Query.AddField(method.ToFieldType(resolver));
 	}
 
@@ -231,12 +231,12 @@ public abstract class GraphQLSchema : Schema
 		if (!method.Return.Type.SystemType.IsCollection())
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
-		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
+		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphQLKey()?.Is(key) is true, out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
-		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
+		if (!childType.Properties.Values.TryFirst(property => property.GraphQLKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
@@ -269,8 +269,8 @@ public abstract class GraphQLSchema : Schema
 	public FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		where PARENT : class
 	{
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		var resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, controller, this._DataLoader, getParentKey, getChildKey);
 		return this.Query.AddField(method.ToFieldType(resolver));
 	}
 
@@ -295,12 +295,12 @@ public abstract class GraphQLSchema : Schema
 		if (!method.Return.Type.SystemType.IsCollection())
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
-		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphKey()?.Is(key) is true, out var parentKeyProperty)
+		if (!parentType.GetTypeMember().Properties.Values.TryFirst(property => property.GraphQLKey()?.Is(key) is true, out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
-		if (!childType.Properties.Values.TryFirst(property => property.GraphKey().Is(key), out var childKeyProperty)
+		if (!childType.Properties.Values.TryFirst(property => property.GraphQLKey().Is(key), out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
@@ -333,15 +333,14 @@ public abstract class GraphQLSchema : Schema
 	public FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		where PARENT : class
 	{
-		var handler = !method.Static ? this.GetRequiredService(method.Type) : null;
-		var resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(method, handler, this._DataLoader, getParentKey, getChildKey);
+		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
+		var resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(method, controller, this._DataLoader, getParentKey, getChildKey);
 		return this.Query.AddField(method.ToFieldType(resolver));
 	}
 
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
 	/// <list type="table">
-	/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
 	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
 	/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
@@ -362,21 +361,22 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
-		var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
+		var methods = TypeOf<SqlApiController<T>>.Methods;
 
-		if (schema.Type == ObjectType.Table)
+		if (schema.Type == ObjectType.Table && this.Mutation is not null)
 		{
-			this.Mutation!.AddField(sqlApiMethods["Delete"][0].ToFieldType(schema.ObjectName, sqlApi));
-			this.Mutation.AddField(sqlApiMethods["DeleteData"][0].ToFieldType(schema.ObjectName, sqlApi));
-			this.Mutation.AddField(sqlApiMethods["InsertData"][0].ToFieldType(schema.ObjectName, sqlApi));
-			this.Mutation.AddField(sqlApiMethods["Update"][0].ToFieldType(schema.ObjectName, sqlApi));
-			this.Mutation.AddField(sqlApiMethods["UpdateData"][0].ToFieldType(schema.ObjectName, sqlApi));
+			this.Mutation!.AddField(methods["Delete"][0].ToFieldType(schema.ObjectName, controller));
+			this.Mutation.AddField(methods["DeleteData"][0].ToFieldType(schema.ObjectName, controller));
+			this.Mutation.AddField(methods["InsertData"][0].ToFieldType(schema.ObjectName, controller));
+			this.Mutation.AddField(methods["Update"][0].ToFieldType(schema.ObjectName, controller));
+			this.Mutation.AddField(methods["UpdateData"][0].ToFieldType(schema.ObjectName, controller));
 		}
-
-		this.Query.AddField(sqlApiMethods["Count"][0].ToFieldType(schema.ObjectName, sqlApi));
-		this.Query.AddField(sqlApiMethods["Page"][0].ToFieldType(schema.ObjectName, sqlApi));
-		this.Query.AddField(sqlApiMethods["Select"][0].ToFieldType(schema.ObjectName, sqlApi));
+		if (this.Query is not null)
+		{
+			this.Query.AddField(methods["Page"][0].ToFieldType(schema.ObjectName, controller));
+			this.Query.AddField(methods["Select"][0].ToFieldType(schema.ObjectName, controller));
+		}
 	}
 
 	/// <summary>
@@ -403,34 +403,12 @@ public abstract class GraphQLSchema : Schema
 		}, StringComparer.OrdinalIgnoreCase);
 		this.Query.AddField(new()
 		{
-			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphType(true, false)) { Name = _.Key })),
+			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphQLType(true)) { Name = _.Key })),
 			Name = $"Call{schema.ObjectName}",
 			Description = $"Calls stored procedure: {schema.Name}.",
 			Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),
-			Type = TypeOf<StoredProcedureResponse>.Member.GraphType(false, false)
+			Type = TypeOf<StoredProcedureResponse>.Member.GraphQLType(false).GraphQLNonNull()
 		});
-	}
-
-	/// <summary>
-	/// Creates the following GraphQL endpoints:
-	/// <list type="table">
-	/// <item><term>Query: Count{Table}</term> Counts records based on a <c>WHERE</c> clause.</item>
-	/// </list>
-	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddCountEndpoint<T>(string dataSource, string table)
-		where T : class, new()
-	{
-		table.AssertNotBlank();
-		this._SqlApi.AssertNotNull();
-
-		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
-
-		TypeOf<SqlApi<T>>.Methods["Count"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
 	}
 
 	/// <summary>
@@ -451,11 +429,11 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
-		var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
+		var methods = TypeOf<SqlApiController<T>>.Methods;
 
-		sqlApiMethods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
-		sqlApiMethods["DeleteData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+		methods["Delete"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, controller)));
+		methods["DeleteData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, controller)));
 	}
 
 	/// <summary>
@@ -475,9 +453,9 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
 
-		TypeOf<SqlApi<T>>.Methods["InsertData"].Do(method => this.Mutation!.AddField(method.ToFieldType(sqlApi)));
+		TypeOf<SqlApiController<T>>.Methods["InsertData"].Do(method => this.Mutation!.AddField(method.ToFieldType(controller)));
 	}
 
 	/// <summary>
@@ -497,9 +475,9 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
 
-		TypeOf<SqlApi<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+		TypeOf<SqlApiController<T>>.Methods["Page"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, controller)));
 	}
 
 	/// <summary>
@@ -519,9 +497,9 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
 
-		TypeOf<SqlApi<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+		TypeOf<SqlApiController<T>>.Methods["Select"].Do(method => this.Query.AddField(method.ToFieldType(schema.ObjectName, controller)));
 	}
 
 	/// <summary>
@@ -542,10 +520,10 @@ public abstract class GraphQLSchema : Schema
 		this._SqlApi.AssertNotNull();
 
 		var schema = this._SqlApi!.GetObjectSchema(dataSource, table);
-		var sqlApi = new SqlApi<T>(this._Mediator, dataSource, schema.Name);
-		var sqlApiMethods = TypeOf<SqlApi<T>>.Methods;
+		var controller = new SqlApiController<T>(this._Mediator, dataSource, schema.Name);
+		var methods = TypeOf<SqlApiController<T>>.Methods;
 
-		sqlApiMethods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
-		sqlApiMethods["UpdateData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, sqlApi)));
+		methods["Update"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, controller)));
+		methods["UpdateData"].Do(method => this.Mutation!.AddField(method.ToFieldType(schema.ObjectName, controller)));
 	}
 }

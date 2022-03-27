@@ -30,14 +30,15 @@ public static class SqlExtensions
 
 	public static string ToSQL([NotNull] this CountRequest @this)
 		=> new StringBuilder()
-			.AppendSQL("SELECT", "COUNT_BIG(1)")
+			.AppendSQL("SELECT", @this.Distinct.IsNotBlank() ? Invariant($"COUNT_BIG(DISTINCT {@this.Distinct.EscapeIdentifier()})") : "COUNT_BIG(*)")
 			.AppendSQL("FROM", @this.From, @this.TableHints ?? "WITH(NOLOCK)")
 			.AppendSQL("WHERE", @this.Where)
 			.AppendStatementEndSQL()
 			.ToString();
 
 	public static string ToSQL([NotNull] this DeleteDataRequest @this)
-		=> new StringBuilder()
+	{
+		var sqlBuilder = new StringBuilder()
 			.AppendSQL("DELETE", "FROM", "x")
 			.AppendSQL("OUTPUT", @this.Output)
 			.AppendSQL("FROM", @this.From, "x")
@@ -46,24 +47,53 @@ public static class SqlExtensions
 			.AppendValuesSQL(@this.Input.Rows)
 			.Append(')').Append(" AS i ").AppendColumnsSQL(@this.Input.Columns)
 			.AppendSQL("ON", @this.Input.Columns.Each(column => Invariant($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}")).Join(" AND "))
-			.AppendStatementEndSQL()
-			.ToString();
+			.AppendStatementEndSQL();
+
+		if (!@this.Output.Any())
+		{
+			sqlBuilder.AppendLine()
+				.AppendSQL("SELECT", "@@ROWCOUNT AS [RowCount]")
+				.AppendStatementEndSQL();
+		}
+
+		return sqlBuilder.ToString();
+	}
 
 	public static string ToSQL([NotNull] this DeleteRequest @this)
-		=> new StringBuilder()
+	{
+		var sqlBuilder = new StringBuilder()
 			.AppendSQL("DELETE", @this.From)
 			.AppendSQL("OUTPUT", @this.Output)
 			.AppendSQL("WHERE", @this.Where)
-			.AppendStatementEndSQL()
-			.ToString();
+			.AppendStatementEndSQL();
+
+		if (!@this.Output.Any())
+		{
+			sqlBuilder.AppendLine()
+				.AppendSQL("SELECT", "@@ROWCOUNT AS [RowCount]")
+				.AppendStatementEndSQL();
+		}
+
+		return sqlBuilder.ToString();
+	}
 
 	public static string ToSQL([NotNull] this InsertDataRequest @this)
-		=> new StringBuilder()
+	{
+		var sqlBuilder = new StringBuilder()
 			.AppendInsertSQL(@this.Into, @this.Input.Columns)
 			.AppendSQL("OUTPUT", @this.Output)
 			.AppendValuesSQL(@this.Input.Rows)
-			.AppendStatementEndSQL()
-			.ToString();
+			.AppendStatementEndSQL();
+
+		if (!@this.Output.Any())
+		{
+			sqlBuilder.AppendLine()
+				.AppendSQL("SELECT", "@@ROWCOUNT AS [RowCount]")
+				.AppendStatementEndSQL();
+		}
+
+		return sqlBuilder.ToString();
+	}
 
 	public static string ToSQL([NotNull] this InsertRequest @this)
 		=> new StringBuilder()
@@ -80,8 +110,21 @@ public static class SqlExtensions
 
 	public static string ToSQL([NotNull] this SelectRequest @this)
 	{
-		var sqlBuilder = new StringBuilder()
-			.AppendSQL("SELECT", @this.Select.Any() ? @this.Select : new[] { "*" })
+		var sqlBuilder = new StringBuilder("SELECT");
+		if (@this.Distinct)
+			sqlBuilder.Append(" DISTINCT");
+
+		if (@this.Top > 0)
+		{
+			sqlBuilder.Append(Invariant($" TOP ({@this.Top})"));
+			if (@this.Percent)
+				sqlBuilder.Append(" PERCENT");
+			if (@this.WithTies)
+				sqlBuilder.Append(" WITH TIES");
+		}
+
+		sqlBuilder
+			.AppendSQL(string.Empty, @this.Select.Any() ? @this.Select : new[] { "*" })
 			.AppendSQL("FROM", @this.From, @this.TableHints ?? "WITH(NOLOCK)")
 			.AppendSQL("WHERE", @this.Where)
 			.AppendSQL("GROUP BY", @this.GroupBy)
@@ -103,16 +146,27 @@ public static class SqlExtensions
 	}
 
 	public static string ToSQL([NotNull] this UpdateRequest @this)
-		=> new StringBuilder()
+	{
+		var sqlBuilder = new StringBuilder()
 			.AppendSQL("UPDATE", @this.Table, @this.TableHints ?? "WITH(UPDLOCK)")
 			.AppendSQL("SET", @this.Set)
 			.AppendSQL("OUTPUT", @this.Output)
 			.AppendSQL("WHERE", @this.Where)
-			.AppendStatementEndSQL()
-			.ToString();
+			.AppendStatementEndSQL();
+
+		if (!@this.Output.Any())
+		{
+			sqlBuilder.AppendLine()
+				.AppendSQL("SELECT", "@@ROWCOUNT AS [RowCount]")
+				.AppendStatementEndSQL();
+		}
+
+		return sqlBuilder.ToString();
+	}
 
 	public static string ToSQL([NotNull] this UpdateDataRequest @this)
-		=> new StringBuilder()
+	{
+		var sqlBuilder = new StringBuilder()
 			.AppendSQL("UPDATE", "x", @this.TableHints ?? "WITH(UPDLOCK)")
 			.AppendSQL("SET", @this.Input.Columns.Without(@this.On).Each(column => Invariant($"{column.EscapeIdentifier()} = i.{column.EscapeIdentifier()}")))
 			.AppendSQL("OUTPUT", @this.Output)
@@ -122,8 +176,17 @@ public static class SqlExtensions
 			.AppendValuesSQL(@this.Input.Rows)
 			.Append(") AS i (").AppendJoin(", ", @this.Input.Columns.Map(column => column.EscapeIdentifier())).Append(')').AppendLine()
 			.AppendSQL("ON", @this.On.Each(column => Invariant($"i.{column.EscapeIdentifier()} = x.{column.EscapeIdentifier()}")).Join(" AND "))
-			.AppendStatementEndSQL()
-			.ToString();
+			.AppendStatementEndSQL();
+
+		if (!@this.Output.Any())
+		{
+			sqlBuilder.AppendLine()
+				.AppendSQL("SELECT", "@@ROWCOUNT AS [RowCount]")
+				.AppendStatementEndSQL();
+		}
+
+		return sqlBuilder.ToString();
+	}
 
 	public static string ToSQL(this object? @this) => @this switch
 	{

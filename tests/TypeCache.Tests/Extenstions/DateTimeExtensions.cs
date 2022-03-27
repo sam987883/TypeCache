@@ -45,12 +45,12 @@ public class DateTimeExtensions
 		var nowOffset = DateTimeOffset.Now;
 		var utcNow = DateTime.UtcNow;
 
-		Assert.Equal(now, now.To(DateTimeKind.Utc).To(DateTimeKind.Local));
-		Assert.Equal(utcNow, utcNow.To(DateTimeKind.Local).To(DateTimeKind.Utc));
+		Assert.Equal(now, now.ToTimeZone(DateTimeKind.Utc).ToTimeZone(DateTimeKind.Local));
+		Assert.Equal(utcNow, utcNow.ToTimeZone(DateTimeKind.Local).ToTimeZone(DateTimeKind.Utc));
 
-		Assert.Equal(now, now.To(TimeZoneInfo.Utc).To(TimeZoneInfo.Local));
-		Assert.Equal(nowOffset, nowOffset.To(TimeZoneInfo.Utc).To(TimeZoneInfo.Local));
+		Assert.Equal(now, now.ToTimeZone(TimeZoneInfo.Utc).ToTimeZone(TimeZoneInfo.Local));
+		Assert.Equal(nowOffset, nowOffset.ToTimeZone(TimeZoneInfo.Utc).ToTimeZone(TimeZoneInfo.Local));
 
-		Assert.Equal(nowOffset, nowOffset.To(TimeZoneInfo.Utc.Id).To(TimeZoneInfo.Local.Id));
+		Assert.Equal(nowOffset, nowOffset.ToTimeZone(TimeZoneInfo.Utc.Id).ToTimeZone(TimeZoneInfo.Local.Id));
 	}
 }

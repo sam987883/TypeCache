@@ -21,6 +21,11 @@ public class SelectRequest
 	public string DataSource { get; set; } = DATASOURCE;
 
 	/// <summary>
+	/// SQL: <code>SELECT DISTINCT</code>
+	/// </summary>
+	public bool Distinct { get; set; }
+
+	/// <summary>
 	/// JSON: <code>"Table1" or "dbo.Table1" or "[Database1].dbo.[Table1]"</code>
 	/// SQL: <code>[Database1]..[Table1] or [Database1].[dbo].[Table1]</code>
 	/// </summary>
@@ -71,6 +76,11 @@ public class SelectRequest
 	public IDictionary<string, object?> Parameters { get; set; } = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
 	/// <summary>
+	/// SQL: <code>SELECT TOP (100) PERCENT</code>
+	/// </summary>
+	public bool Percent { get; set; }
+
+	/// <summary>
 	/// JSON: <code>"Select": [ "NULLIF([Column1], 22) AS [Alias 1]", "TRIM([Column 2]) [Alias 2]", "Column3" }</code>
 	/// SQL: <code>SELECT NULLIF([Column1], 22) AS [Alias 1], TRIM([Column 2]) [Alias 2], Column3</code>
 	/// </summary>
@@ -81,6 +91,11 @@ public class SelectRequest
 	/// SQL: <code>FROM [Database1]..[Table1] WITH(NOLOCK)</code>
 	/// </summary>
 	public string TableHints { get; set; } = "WITH(NOLOCK)";
+
+	/// <summary>
+	/// SQL: <code>SELECT TOP (100)</code>
+	/// </summary>
+	public int Top { get; set; }
 
 	/// <summary>
 	/// JSON: <code>
@@ -95,4 +110,9 @@ public class SelectRequest
 	/// </code>
 	/// </summary>
 	public string? Where { get; set; }
+
+	/// <summary>
+	/// SQL: <code>SELECT TOP (100) WITH TIES</code>
+	/// </summary>
+	public bool WithTies { get; set; }
 }

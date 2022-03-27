@@ -12,6 +12,7 @@ using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.GraphQL.Web;
@@ -69,11 +70,23 @@ public class GraphQLMiddleware<T>
 			ValidationRules = DocumentValidator.CoreRules
 		};
 		var result = await executer.ExecuteAsync(options);
+		var error = result.Errors?[0].InnerException;
 		if (result.Extensions is not null)
 		{
 			result.Extensions["RequestId"] = requestId;
 			result.Extensions["RequestTime"] = requestTime;
+			if (error is not null)
+			{
+				result.Extensions["ErrorMessage"] = error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+				result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim();
+			}
 		}
+		else if (error is not null)
+			result.Extensions = new Dictionary<string, object?>(2, StringComparer.OrdinalIgnoreCase)
+			{
+				{ "ErrorMessage", error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries) },
+				{ "ErrorStackTrace", error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim() }
+			};
 
 		httpContext.Response.ContentType = Application.Json;
 		httpContext.Response.StatusCode = (int)HttpStatusCode.OK;

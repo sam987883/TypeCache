@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
@@ -10,6 +11,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("Delegate {Name,nq}", Name = "{Name}")]
 public class DelegateMember : Member, IEquatable<DelegateMember>
 {
 	private const string METHOD_NAME = "Invoke";

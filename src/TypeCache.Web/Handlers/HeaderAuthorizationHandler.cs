@@ -29,7 +29,7 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 			var method = type.GetMethodMember(controller.MethodInfo.MethodHandle)!;
 			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
 			var success = type.Attributes.If<RequireHeaderAttribute>()
-				.Add(method.Attributes.If<RequireHeaderAttribute>())
+				.Append(method.Attributes.If<RequireHeaderAttribute>())
 				.All(attribue => headers.TryGetValue(attribue!.Key, out var values)
 					&& (!attribue.AllowedValues.Any() || values.HasAny(attribue.AllowedValues)));
 

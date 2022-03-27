@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
@@ -12,6 +13,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("{Type,nq}.{Name,nq}(,,,)", Name = "{Name}")]
 public class MethodMember : Member, IEquatable<MethodMember>
 {
 	private readonly IReadOnlyDictionary<RuntimeTypeHandle[], InvokeType>? _Cache;
@@ -28,7 +30,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 		this.Static = methodInfo.IsStatic;
 		this.Return = new ReturnParameter(methodInfo);
 
-		this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, Default.RuntimeTypeHandleArrayComparer) : null;
+		this._Cache = methodInfo.ContainsGenericParameters ? new LazyDictionary<RuntimeTypeHandle[], InvokeType>(CreateGenericInvoke, comparer: RuntimeTypeHandleArrayComparer) : null;
 		this._Invoke = !methodInfo.ContainsGenericParameters ? methodInfo.LambdaInvokeType().Compile() : null;
 
 		InvokeType CreateGenericInvoke(params RuntimeTypeHandle[] handles)

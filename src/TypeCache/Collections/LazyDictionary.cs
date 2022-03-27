@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static TypeCache.Default;
 
 namespace TypeCache.Collections;
@@ -20,20 +21,20 @@ public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 	private readonly Func<K, Lazy<V>> _CreateValue;
 
 	/// <exception cref="ArgumentNullException"/>
-	public LazyDictionary(Func<K, V> createValue, IEqualityComparer<K>? comparer = null)
+	public LazyDictionary(Func<K, V> createValue, LazyThreadSafetyMode mode = LazyThreadSafetyMode.PublicationOnly, IEqualityComparer<K>? comparer = null)
 	{
 		createValue.AssertNotNull();
 
-		this._CreateValue = key => new Lazy<V>(() => createValue(key), LazyThreadSafetyMode.ExecutionAndPublication);
+		this._CreateValue = key => Lazy.Create(() => createValue(key), mode);
 		this._Dictionary = new(comparer);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public LazyDictionary(Func<K, V> createValue, int concurrencyLevel, int capacity, IEqualityComparer<K>? comparer = null)
+	public LazyDictionary(Func<K, V> createValue, int concurrencyLevel, int capacity, LazyThreadSafetyMode mode = LazyThreadSafetyMode.PublicationOnly, IEqualityComparer<K>? comparer = null)
 	{
 		createValue.AssertNotNull();
 
-		this._CreateValue = key => new Lazy<V>(() => createValue(key), LazyThreadSafetyMode.ExecutionAndPublication);
+		this._CreateValue = key => Lazy.Create(() => createValue(key), mode);
 		this._Dictionary = new(concurrencyLevel, capacity, comparer);
 	}
 

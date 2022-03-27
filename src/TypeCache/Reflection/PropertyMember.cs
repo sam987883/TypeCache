@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -9,6 +10,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
+[DebuggerDisplay("{Type}.{Name,nq}", Name = "{Name}")]
 public class PropertyMember	: Member, IEquatable<PropertyMember>
 {
 	internal PropertyMember(PropertyInfo propertyInfo, TypeMember type) : base(propertyInfo)
@@ -37,7 +39,7 @@ public class PropertyMember	: Member, IEquatable<PropertyMember>
 	/// <param name="value">The value to set the property to.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
 	public void SetValue(object? instance, object? value, params object?[]? indexers)
-		=> this.Setter?.Invoke(instance, indexers.Add(value).ToArray());
+		=> this.Setter?.Invoke(instance, indexers.Append(value).ToArray());
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
 	public bool Equals(PropertyMember? other)

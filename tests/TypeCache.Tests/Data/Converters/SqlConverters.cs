@@ -28,6 +28,7 @@ public class SqlConverters
 		var expected = Invariant(@$"
 {{
 	""DataSource"":""LocalInstance"",
+	""Distinct"":"""",
 	""From"":""[dbo].[NonCustomers]"",
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
 	""TableHints"":""WITH(NOLOCK)"",
@@ -183,15 +184,19 @@ public class SqlConverters
 	""Into"":""Customers"",
 	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
 	""DataSource"":""LocalInstance"",
+	""Distinct"":false,
 	""From"":""[dbo].[NonCustomers]"",
 	""GroupBy"":null,
 	""Having"":""MAX([Age]) \u003E 40"",
 	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
 	""Pager"":null,
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""Percent"":false,
 	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
 	""TableHints"":""WITH(NOLOCK)"",
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+	""Top"":0,
+	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""WithTies"":false
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
@@ -232,15 +237,19 @@ public class SqlConverters
 		var expected = Invariant(@$"
 {{
 	""DataSource"":""LocalInstance"",
+	""Distinct"":false,
 	""From"":""[dbo].[NonCustomers]"",
 	""GroupBy"":null,
 	""Having"":""MAX([Age]) \u003E 40"",
 	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
 	""Pager"":{{""First"":100,""After"":0}},
 	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""Percent"":false,
 	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
 	""TableHints"":""WITH(NOLOCK)"",
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+	""Top"":0,
+	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""WithTies"":false
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
