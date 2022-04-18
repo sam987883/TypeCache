@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
@@ -70,12 +71,88 @@ public static class ValueExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes(<see cref="MemoryMarshal"/>.CreateReadOnlySpan(<see langword="ref"/> @<paramref name="this"/>, 1)).ToArray();</c>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static byte[] ToBytes<T>(this T @this)
-		where T : struct
-		=> MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref @this, 1)).ToArray();
+	public static byte[] ToBytes(this bool @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this char @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).Map(i => i.ToBytes()).Gather().ToArray();</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this decimal @this)
+		=> decimal.GetBits(@this).Map(i => i.ToBytes()).Gather().ToArray();
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this double @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this float @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this Half @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this int @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this long @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this short @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this uint @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this ulong @this)
+		=> BitConverter.GetBytes(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static byte[] ToBytes(this ushort @this)
+		=> BitConverter.GetBytes(@this);
 
 	/// <summary>
 	/// <c>=&gt; <see cref="BitConverter"/>.Int64BitsToDouble(@<paramref name="this"/>);</c>

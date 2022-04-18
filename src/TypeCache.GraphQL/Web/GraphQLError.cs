@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GraphQL;
+using GraphQL.Execution;
 
 namespace TypeCache.GraphQL.Web;
 
@@ -10,7 +11,7 @@ public class GraphQLError
 {
 	public string? Message { set; get; }
 
-	public IEnumerable<ErrorLocation>? Locations { get; set; }
+	public IEnumerable<DocumentError>? Locations { get; set; }
 
 	public IEnumerable<object>? Path { get; set; }
 

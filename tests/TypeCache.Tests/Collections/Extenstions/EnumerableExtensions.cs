@@ -103,7 +103,7 @@ public class EnumerableExtensions
 		Assert.NotNull((null as IEnumerable).As<int>());
 		Assert.IsType<int[]>(((IEnumerable)new[] { 1, 2, 3 }).As<int>());
 		Assert.NotNull(this.GetItems().As<int>());
-		Assert.Equal(new string[] { null, null, null, null, null, null }, this.GetItems().As<string>());
+		Assert.Equal(new string[0], this.GetItems().As<string>());
 	}
 
 	[Fact]

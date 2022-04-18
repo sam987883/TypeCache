@@ -187,7 +187,7 @@ public abstract class GraphQLSchema : Schema
 			throw new ArgumentException($"{nameof(AddSubscription)}: GraphQL subscription endpoints must have a return type of IObservable<...>.");
 
 		var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
-		return this.Subscription!.AddField(method.ToEventStreamFieldType(controller));
+		return this.Subscription!.AddField(method.ToSourceStreamFieldType(controller));
 	}
 
 	/// <summary>
@@ -407,7 +407,7 @@ public abstract class GraphQLSchema : Schema
 			Name = $"Call{schema.ObjectName}",
 			Description = $"Calls stored procedure: {schema.Name}.",
 			Resolver = new ProcedureFieldResolver(dataSource, procedure, arguments, this._Mediator),
-			Type = TypeOf<StoredProcedureResponse>.Member.GraphQLType(false).GraphQLNonNull()
+			Type = TypeOf<StoredProcedureResponse>.Member.GraphQLType(false).ToNonNullGraphType()
 		});
 	}
 

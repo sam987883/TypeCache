@@ -17,14 +17,14 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType<T> where T : struc
 	{
 		this.Name = TypeOf<T>.Member.GraphQLName();
 
-		EnumOf<T>.Tokens.Values.If(token => !token.GraphQLIgnore()).Do(token =>
-		{
-			var name = token.GraphQLName();
-			var description = token.GraphQLDescription();
-			var deprecationReason = token.ObsoleteMessage();
-
-			this.AddValue(name, description, token.Value, deprecationReason);
-		});
+		EnumOf<T>.Tokens.Values
+			.If(token => !token.GraphQLIgnore())
+			.Map(token => new EnumValueDefinition(token.GraphQLName(), token.Value)
+			{
+				Description = token.GraphQLDescription(),
+				DeprecationReason = token.GraphQLDeprecationReason()
+			})
+			.Do(this.Add);
 	}
 
 	[MethodImpl(METHOD_IMPL_OPTIONS)]

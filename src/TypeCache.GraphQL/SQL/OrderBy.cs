@@ -6,7 +6,6 @@ using TypeCache.GraphQL.Attributes;
 namespace TypeCache.GraphQL.SQL;
 
 public class OrderBy<T>
-	where T : class
 {
 	[GraphQLType(ScalarType.NotNullString)]
 	public string Expression { get; set; } = string.Empty;

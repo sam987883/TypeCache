@@ -12,10 +12,11 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
+public class ItemLoaderFieldResolver<T> : IFieldResolver
 {
 	private readonly MethodMember _Method;
 	private readonly object? _Controller;
@@ -23,7 +24,10 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public ItemLoaderFieldResolver(MethodMember method, object? controller, IDataLoaderContextAccessor dataLoader)
+	public ItemLoaderFieldResolver(
+		MethodMember method,
+		object? controller,
+		IDataLoaderContextAccessor dataLoader)
 	{
 		dataLoader.AssertNotNull();
 
@@ -40,31 +44,24 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver<IDataLoaderResult<T>>
 		this._DataLoader = dataLoader;
 	}
 
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	object IFieldResolver.Resolve(IResolveFieldContext context)
-		=> this.Resolve(context);
-
-	/// <exception cref="ArgumentNullException"/>
-	public IDataLoaderResult<T> Resolve(IResolveFieldContext context)
+	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.Source.AssertNotNull();
 
-		var dataLoader = this._DataLoader!.Context.GetOrAddLoader<T>(
-			$"{context.Source!.GetTypeMember().GraphQLName()}.{this._Method.GraphQLName()}",
-			async () =>
+		var loaderKey = Invariant($"{context.Source!.GetTypeMember().GraphQLName()}.{this._Method.GraphQLName()}");
+		var dataLoader = this._DataLoader.Context!.GetOrAddLoader<T>(loaderKey, async () =>
+		{
+			var arguments = context.GetArguments<T>(this._Method).ToArray();
+			var result = this._Method.Invoke(this._Controller, arguments);
+			return result switch
 			{
-				var arguments = context.GetArguments<T>(this._Method).ToArray();
-				var result = this._Method.Invoke(this._Controller, arguments);
-				return result switch
-				{
-					ValueTask<T> valueTask => await valueTask,
-					Task<T> task => await task,
-					T item => await Task.FromResult(item),
-					_ => await Task.FromResult<T>(default!)
-				};
-			});
+				ValueTask<T> valueTask => await valueTask,
+				Task<T> task => await task,
+				T item => await Task.FromResult(item),
+				_ => await Task.FromResult<T>(default!)
+			};
+		});
 
-		return dataLoader.LoadAsync();
+		return await dataLoader.LoadAsync().GetResultAsync(context.CancellationToken);
 	}
 }

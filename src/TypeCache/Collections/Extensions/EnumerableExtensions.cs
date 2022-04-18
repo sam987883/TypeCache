@@ -176,7 +176,7 @@ public static class EnumerableExtensions
 	/// };
 	/// </code>
 	/// </summary>
-	public static IEnumerable<T?> As<T>(this IEnumerable? @this)
+	public static IEnumerable<T> As<T>(this IEnumerable? @this)
 		=> @this switch
 		{
 			null => Enumerable<T>.Empty,

@@ -27,13 +27,10 @@ public class ObjectExtensions
 			TestProperty1 = 1,
 			TestProperty2 = '2',
 			TestProperty3 = "333",
-			TestProperty4 = 4,
-			TestProperty5 = '5',
-			TestProperty6 = "666666"
 		};
 
 		var testModel2 = new TestModel2();
-		(testModel1, testModel2).MapFields();
+		var fields = testModel2.MapFields(testModel1).ToArray();
 		Assert.Equal(1, testModel2.TestProperty1);
 		Assert.Equal('2', testModel2.TestProperty2);
 		Assert.Equal("333", testModel2.TestProperty3);
@@ -53,7 +50,7 @@ public class ObjectExtensions
 		};
 
 		var testModel2 = new TestModel2();
-		(testModel1, testModel2).MapProperties();
+		var properties = testModel2.MapProperties(testModel1).ToArray();
 		Assert.Equal(1, testModel2.TestProperty1);
 		Assert.Equal('2', testModel2.TestProperty2);
 		Assert.Equal("333", testModel2.TestProperty3);
@@ -72,7 +69,7 @@ public class ObjectExtensions
 			{ "_TestField2", 'X' },
 			{ "_TestField3", "ABCdef" },
 		};
-		(dictionary, testModel1).MapFields();
+		var fields = testModel1.MapFields(dictionary).ToArray();
 		Assert.Equal(101, testModel1.TestProperty1);
 		Assert.Equal('X', testModel1.TestProperty2);
 		Assert.Equal("ABCdef", testModel1.TestProperty3);
@@ -88,7 +85,7 @@ public class ObjectExtensions
 			{ nameof(TestModel1.TestProperty5), 'X' },
 			{ nameof(TestModel1.TestProperty6), "ABCdef" },
 		};
-		(dictionary, testModel2).MapProperties();
+		var properties = testModel2.MapProperties(dictionary).ToArray();
 		Assert.Equal(101, testModel2.TestProperty4);
 		Assert.Equal('X', testModel2.TestProperty5);
 		Assert.Equal("ABCdef", testModel2.TestProperty6);

@@ -8,6 +8,7 @@ namespace TypeCache.GraphQL.TestApp.Tables;
 
 public class Person
 {
+	[GraphQLType(ScalarType.HashID)]
 	public int BusinessEntityID { get; set; }
 	public string? PersonType { get; set; }
 	public bool NameStyle { get; set; }

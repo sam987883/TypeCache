@@ -1,17 +1,19 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class PropertyFieldResolver : IFieldResolver<object>
+public class PropertyFieldResolver : IFieldResolver
 {
 	private readonly PropertyMember _PropertyMember;
 
@@ -20,9 +22,15 @@ public class PropertyFieldResolver : IFieldResolver<object>
 		this._PropertyMember = propertyMember;
 	}
 
-	public object? Resolve(IResolveFieldContext context)
+	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		var value = this._PropertyMember.GetValue(context.Source);
+		await Task.CompletedTask;
+
+		var source = context.Source;
+		if (context.Source?.GetType().Is(typeof(ValueTask<>)) is true)
+			source = context.Source?.GetTypeMember().Properties["Result"].GetValue(context.Source);
+
+		var value = this._PropertyMember.GetValue(source);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 

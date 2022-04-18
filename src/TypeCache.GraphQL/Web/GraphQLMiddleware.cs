@@ -6,13 +6,11 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.GraphQL.Web;
@@ -35,7 +33,7 @@ public class GraphQLMiddleware<T>
 		};
 	}
 
-	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IDocumentWriter writer)
+	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -61,7 +59,7 @@ public class GraphQLMiddleware<T>
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
-			Inputs = request.Variables?.ToString().ToInputs(),
+			Variables = request.Variables is not null ? new Inputs(request.Variables) : null,
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
@@ -75,21 +73,18 @@ public class GraphQLMiddleware<T>
 		{
 			result.Extensions["RequestId"] = requestId;
 			result.Extensions["RequestTime"] = requestTime;
-			if (error is not null)
-			{
-				result.Extensions["ErrorMessage"] = error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-				result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim();
-			}
 		}
-		else if (error is not null)
-			result.Extensions = new Dictionary<string, object?>(2, StringComparer.OrdinalIgnoreCase)
-			{
-				{ "ErrorMessage", error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries) },
-				{ "ErrorStackTrace", error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim() }
-			};
+		else
+			result.Extensions = new Dictionary<string, object?>(2, StringComparer.OrdinalIgnoreCase);
+
+		if (error is not null)
+		{
+			result.Extensions["ErrorMessage"] = error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim();
+		}
 
 		httpContext.Response.ContentType = Application.Json;
 		httpContext.Response.StatusCode = (int)HttpStatusCode.OK;
-		await writer.WriteAsync(httpContext.Response.Body, result, httpContext.RequestAborted);
+		await graphQLSerializer.WriteAsync(httpContext.Response.Body, result, httpContext.RequestAborted);
 	}
 }

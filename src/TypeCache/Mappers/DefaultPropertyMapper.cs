@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TypeCache.Mappers.Extensions;
 using static TypeCache.Default;
@@ -11,6 +12,6 @@ internal class DefaultPropertyMapper<FROM, TO> : IPropertyMapper<FROM, TO>
 	where TO : notnull
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public string[] Map(FROM from, TO to)
-		=> (from, to).MapProperties();
+	public IEnumerable<string> Map(FROM from, TO to)
+		=> to.MapProperties(from);
 }

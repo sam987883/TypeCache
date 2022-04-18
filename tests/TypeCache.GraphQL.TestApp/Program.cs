@@ -19,7 +19,7 @@ var defaultDataSource = new DataSource
 };
 
 builder.Services.RegisterMediator()
-	.RegisterHashMaker((decimal)Tau, (decimal)E)
+	.RegisterHashMaker((decimal)(Tau - E), (decimal)(Tau + 2*E))
 	.RegisterDatabaseProviderFactory(defaultDataSource.DatabaseProvider, SqlClientFactory.Instance)
 	.RegisterSqlApi(defaultDataSource)
 	.RegisterSqlApiRules()

@@ -36,6 +36,7 @@ public static class HttpContextExtensions
 	{
 		@this.Response.ContentType = Text.Plain;
 		@this.Response.StatusCode = (int)HttpStatusCode.OK;
-		await JsonSerializer.SerializeAsync(@this.Response.Body, response);
+		using var writer = new StreamWriter(@this.Request.Body);
+		await writer.WriteAsync(response);
 	}
 }

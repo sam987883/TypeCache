@@ -202,7 +202,7 @@ public class SqlApiController<T>
 
 	[GraphQLName("Select{0}")]
 	[GraphQLDescription("SELECT ... FROM {0} WHERE ... ORDER BY ...")]
-	public async Task<SqlResponse<T>> Select(
+	public async ValueTask<SqlResponse<T>> Select(
 		[AllowNull] Parameter[] parameters,
 		bool? distinct,
 		int? top,

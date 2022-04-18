@@ -2,8 +2,8 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using GraphQL.Language.AST;
 using GraphQL.Types;
+using GraphQLParser.AST;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.Security;
@@ -32,15 +32,20 @@ public class GraphQLHashIdType : ScalarGraphType
 		this.Description = "A hashed ID.";
 	}
 
+	public override bool CanParseLiteral(GraphQLValue value)
+		=> value is GraphQLNullValue || value is GraphQLIntValue || value is GraphQLStringValue;
+
+	public override bool CanParseValue(object? value)
+		=> value is null || value is int || value is long || value is Guid || value is string;
+
 	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public override object? ParseLiteral(IValue value)
-		=> this.ParseValue(value.Value);
+	public override object? ParseLiteral(GraphQLValue value)
+		=> this.ParseValue(value);
 
 	public override object? ParseValue(object? value)
 		=> value switch
 		{
-			int id => id,
-			long id => id,
+			Guid hashId => this._HashMaker.Decrypt(hashId.ToByteArray()),
 			string hashId => this._HashMaker.Decrypt(hashId),
 			_ => value
 		};
@@ -50,7 +55,6 @@ public class GraphQLHashIdType : ScalarGraphType
 		{
 			int id => this._HashMaker.Encrypt(id),
 			long id => this._HashMaker.Encrypt(id),
-			string hashId => this._HashMaker.Decrypt(hashId),
 			_ => value
 		};
 }

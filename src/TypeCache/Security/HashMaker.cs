@@ -2,12 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Security;
 
@@ -31,58 +29,55 @@ public class HashMaker : IHashMaker
 	public long Decrypt(string hashId)
 		=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public long[]? Decrypt(string[] hashIds)
-		=> hashIds?.ToArray(this.Decrypt);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public long[]? Decrypt(IEnumerable<string> hashIds)
-		=> hashIds?.Map(this.Decrypt).ToArray();
+	public long[] Decrypt(IEnumerable<string> hashIds)
+		=> this.Decrypt(hashIds.Map(hashId => Guid.TryParseExact(hashId, "N", out var guid) ? guid.ToByteArray() : Array<byte>.Empty))
+			.Map(buffer => buffer.ToInt64()).ToArray();
 
 	public string Encrypt(long id)
 		=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public string? Encrypt(long? id)
-		=> id.HasValue ? this.Encrypt(id.Value) : null;
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public string[]? Encrypt(long[] ids)
-		=> ids?.ToArray(this.Encrypt);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public string[]? Encrypt(IEnumerable<long> ids)
-		=> ids?.Map(this.Encrypt).ToArray();
+	public string[] Encrypt(IEnumerable<long> ids)
+	{
+		ids.AssertNotNull();
+		var buffers = this.Encrypt(ids.Map(id => id.ToBytes()).ToArray());
+		return buffers.Map(buffer => new Guid(buffer).ToString("N")).ToArray();
+	}
 
 	public byte[] Decrypt(byte[] data)
 	{
-		using var aes = Aes.Create();
-		using var decryptor = aes.CreateDecryptor(this._RgbKey, this._RgbIV);
-		return Transform(data, decryptor);
+		using var provider = Aes.Create();
+		using var decryptor = provider.CreateDecryptor(this._RgbKey, this._RgbIV);
+		var result = decryptor.TransformFinalBlock(data, 0, data.Length);
+		provider.Clear();
+		return result;
 	}
 
 	public byte[] Encrypt(byte[] data)
 	{
-		using var aes = Aes.Create();
-		using var encryptor = aes.CreateEncryptor(this._RgbKey, this._RgbIV);
-		return Transform(data, encryptor);
+		using var provider = Aes.Create();
+		using var encryptor = provider.CreateEncryptor(this._RgbKey, this._RgbIV);
+		var result = encryptor.TransformFinalBlock(data, 0, data.Length);
+		provider.Clear();
+		return result;
 	}
 
-	private static byte[] Transform(byte[] data, ICryptoTransform transform)
+	public byte[][] Decrypt(IEnumerable<byte[]> items)
 	{
-		using var memoryStream = new MemoryStream();
-		using var cryptoStream = new CryptoStream(memoryStream, transform, CryptoStreamMode.Write);
+		using var provider = Aes.Create();
+		using var decryptor = provider.CreateDecryptor(this._RgbKey, this._RgbIV);
+		//var results = await items.Map(async data => await Transform(data, decryptor, cancellationToken)).AllAsync();
+		var results = items.Map(data => decryptor.TransformFinalBlock(data, 0, data.Length)).ToArray();
+		provider.Clear();
+		return results;
+	}
 
-		cryptoStream.Write(data, 0, data.Length);
-		cryptoStream.FlushFinalBlock();
-
-		memoryStream.Position = 0;
-		var result = new byte[memoryStream.Length];
-		memoryStream.Read(result, 0, result.Length);
-
-		cryptoStream.Close();
-		memoryStream.Close();
-
-		return result;
+	public byte[][] Encrypt(IEnumerable<byte[]> items)
+	{
+		using var provider = Aes.Create();
+		using var encryptor = provider.CreateEncryptor(this._RgbKey, this._RgbIV);
+		//var results = await items.Map(async data => await Transform(data, encryptor, cancellationToken)).AllAsync();
+		var results = items.Map(data => encryptor.TransformFinalBlock(data, 0, data.Length)).ToArray();
+		provider.Clear();
+		return results;
 	}
 }

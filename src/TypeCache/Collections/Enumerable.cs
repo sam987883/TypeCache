@@ -23,10 +23,11 @@ public static class Enumerable<T>
 		return enumerator.MoveNext();
 	}
 
-	internal static IEnumerable<T?> As(IEnumerable enumerable)
+	internal static IEnumerable<T> As(IEnumerable enumerable)
 	{
 		foreach (var item in enumerable)
-			yield return item is T value ? value : default;
+			if (item is T value)
+				yield return value;
 	}
 
 	internal static int Count(IEnumerable<T> enumerable)

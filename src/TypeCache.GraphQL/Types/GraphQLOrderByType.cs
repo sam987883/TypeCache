@@ -10,22 +10,28 @@ using static System.FormattableString;
 namespace TypeCache.GraphQL.Types;
 
 public class GraphQLOrderByType<T> : EnumerationGraphType
-	where T : class
 {
 	public GraphQLOrderByType()
 	{
-		var typeName = TypeOf<T>.Member.GraphQLName();
-		this.Name = Invariant($"{typeName}_OrderBy");
-		this.Description = $"Order by `{typeName}`.";
+		var graphName = TypeOf<T>.Member.GraphQLName();
+		this.Name = Invariant($"{graphName}OrderBy");
+		this.Description = $"Order by `{graphName}`.";
 
 		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var description = property.GraphQLDescription();
-			var deprecationReason = property.ObsoleteMessage();
-
-			this.AddValue(Invariant($"{propertyName}_ASC"), description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending }, deprecationReason);
-			this.AddValue(Invariant($"{propertyName}_DESC"), description, new OrderBy<T> { Expression = propertyName, Sort = Sort.Descending }, deprecationReason);
+			var deprecationReason = property.GraphQLDeprecationReason();
+			this.Add(new EnumValueDefinition(Invariant($"{propertyName}_ASC"), new OrderBy<T> { Expression = propertyName, Sort = Sort.Ascending })
+			{
+				Description = description,
+				DeprecationReason = deprecationReason
+			});
+			this.Add(new EnumValueDefinition(Invariant($"{propertyName}_DESC"), new OrderBy<T> { Expression = propertyName, Sort = Sort.Descending })
+			{
+				Description = description,
+				DeprecationReason = deprecationReason
+			});
 		}
 	}
 }

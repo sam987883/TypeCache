@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
@@ -14,6 +15,7 @@ using TypeCache.GraphQL.SQL;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -53,15 +55,31 @@ public static class GraphQLExtensions
 		return connection;
 	}
 
-	internal static EventStreamFieldType ToEventStreamFieldType(this MethodMember @this, object? controller)
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static Type ToGraphQLInputType(this Type @this)
+		=> typeof(GraphQLInputType<>).MakeGenericType(@this);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static Type ToGraphQLObjectType(this Type @this)
+		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static Type ToListGraphType(this Type @this)
+		=> typeof(ListGraphType<>).MakeGenericType(@this);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static Type ToNonNullGraphType(this Type @this)
+		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
+
+	internal static FieldType ToSourceStreamFieldType(this MethodMember @this, object? controller)
 		=> new()
 		{
 			Arguments = @this.Parameters.ToQueryArguments(),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.ObsoleteMessage(),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
 			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(controller, context.GetArguments<object>(@this).ToArray())),
-			Subscriber = (IEventStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateEventStreamResolver), new[] { (Type)@this.Return.Type! }, @this, controller)!,
+			StreamResolver = (ISourceStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateSourceStreamResolver), new[] { (Type)@this.Return.Type! }, @this, controller)!,
 			Type = @this.Return.GraphQLType()
 		};
 
@@ -71,8 +89,8 @@ public static class GraphQLExtensions
 			Arguments = @this.Parameters.ToQueryArguments(),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(controller, context.GetArguments<object>(@this).ToArray())),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
+			Resolver = new MethodFieldResolver(controller, @this),
 			Type = @this.Return.GraphQLType()
 		};
 
@@ -83,8 +101,8 @@ public static class GraphQLExtensions
 			Arguments = @this.Parameters.ToQueryArguments(),
 			Name = string.Format(@this.GraphQLName()!, table),
 			Description = string.Format(@this.GraphQLDescription()!, table),
-			DeprecationReason = @this.ObsoleteMessage(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(sqlApi, context.GetArguments<SqlApiController<T>>(@this).ToArray())),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
+			Resolver = new MethodFieldResolver(sqlApi, @this),
 			Type = @this.Return.GraphQLType()
 		};
 
@@ -184,7 +202,7 @@ public static class GraphQLExtensions
 			Type = type,
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.ObsoleteMessage(),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
 			Resolver = new PropertyFieldResolver(@this)
 		};
 	}
@@ -195,11 +213,11 @@ public static class GraphQLExtensions
 			Type = @this.GraphQLType(true),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.ObsoleteMessage(),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
 		};
 
-	private static IEventStreamResolver CreateEventStreamResolver<T>(MethodMember method, object? controller)
-		=> new EventStreamResolver<T>(context => (IObservable<T>)method.Invoke(controller, context.GetArguments<object>(method).ToArray())!);
+	private static ISourceStreamResolver CreateSourceStreamResolver<T>(MethodMember method, object? controller)
+		=> new SourceStreamResolver<T>(context => (IObservable<T>)method.Invoke(controller, context.GetArguments<object>(method).ToArray())!);
 
 	private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
 	{

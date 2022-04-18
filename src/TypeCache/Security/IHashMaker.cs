@@ -10,15 +10,11 @@ public interface IHashMaker
 
 	long Decrypt(string hashId);
 
-	long[]? Decrypt(string[] hashIds);
-
-	long[]? Decrypt(IEnumerable<string> hashIds);
+	long[] Decrypt(IEnumerable<string> hashIds);
 
 	byte[] Encrypt(byte[] data);
 
 	string Encrypt(long id);
 
-	string[]? Encrypt(long[] ids);
-
-	string[]? Encrypt(IEnumerable<long> ids);
+	string[] Encrypt(IEnumerable<long> ids);
 }

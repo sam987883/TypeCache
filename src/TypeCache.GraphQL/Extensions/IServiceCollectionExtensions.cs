@@ -20,7 +20,7 @@ public static class IServiceCollectionExtensions
 	/// Registers Singletons:
 	/// <list type="bullet">
 	/// <item><term><see cref="IDocumentExecuter"/></term> An instance of: <see cref="DocumentExecuter"/>.</item>
-	/// <item><term><see cref="IDocumentWriter"/></term> An instance of: <see cref="DocumentWriter"/>.</item>
+	/// <item><term><see cref="IGraphQLSerializer"/></term> An instance of: <see cref="GraphQLSerializer"/>.</item>
 	/// <item><term><see cref="IGraphQLExecuter{TSchema}"/></term> An instance of: <see cref="BasicGraphQLExecuter{TSchema}"/>.</item>
 	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> An instance of: <see cref="DataLoaderContextAccessor"/>.</item>
 	/// <item><term><see cref="IDocumentExecutionListener"/></term> An instance of: <see cref="DataLoaderDocumentListener"/>.</item>
@@ -33,7 +33,7 @@ public static class IServiceCollectionExtensions
 	/// </summary>
 	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
 		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-			.AddSingleton<IDocumentWriter, DocumentWriter>()
+			.AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
 			.AddSingleton(typeof(IGraphQLExecuter<>), typeof(BasicGraphQLExecuter<>))
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()

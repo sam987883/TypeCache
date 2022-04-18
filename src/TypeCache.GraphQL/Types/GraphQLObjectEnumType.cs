@@ -2,8 +2,8 @@
 
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -11,17 +11,17 @@ public sealed class GraphQLObjectEnumType<T> : EnumerationGraphType where T : cl
 {
 	public GraphQLObjectEnumType()
 	{
-		var graphName = TypeOf<T>.Attributes.First<GraphQLNameAttribute>()?.Name;
-		this.Name = graphName ?? $"{TypeOf<T>.Name}Fields";
-		this.Description = $"Fields of type `{graphName ?? TypeOf<T>.Name}`.";
+		var graphName = TypeOf<T>.Member.GraphQLName();
+		this.Name = Invariant($"{graphName}Fields");
+		this.Description = Invariant($"Fields of type `{graphName}`.");
 
-		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphQLIgnore()))
-		{
-			var name = property.GraphQLName();
-			var description = property.GraphQLDescription();
-			var deprecationReason = property.ObsoleteMessage();
-
-			this.AddValue(name, description, name, deprecationReason);
-		}
+		TypeOf<T>.Properties.Values
+			.If(property => !property.GraphQLIgnore())
+			.Map(property => new EnumValueDefinition(property.GraphQLName(), property.GraphQLName())
+			{
+				Description = property.GraphQLDescription(),
+				DeprecationReason = property.GraphQLDeprecationReason()
+			})
+			.Do(this.Add);
 	}
 }

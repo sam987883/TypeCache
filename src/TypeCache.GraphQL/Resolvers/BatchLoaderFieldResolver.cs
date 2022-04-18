@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
@@ -13,11 +12,11 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
-using static TypeCache.Default;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IDataLoaderResult<CHILD>>
+public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 {
 	private readonly MethodMember _Method;
 	private readonly object? _Controller;
@@ -27,7 +26,12 @@ public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IData
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public BatchLoaderFieldResolver(MethodMember method, object? controller, IDataLoaderContextAccessor dataLoader, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+	public BatchLoaderFieldResolver(
+		MethodMember method,
+		object? controller,
+		IDataLoaderContextAccessor dataLoader,
+		Func<PARENT, KEY> getParentKey,
+		Func<CHILD, KEY> getChildKey)
 	{
 		dataLoader.AssertNotNull();
 
@@ -48,33 +52,26 @@ public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver<IData
 		this._GetChildKey = getChildKey;
 	}
 
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	object IFieldResolver.Resolve(IResolveFieldContext context)
-		=> this.Resolve(context);
-
-	/// <exception cref="ArgumentNullException"/>
-	public IDataLoaderResult<CHILD> Resolve(IResolveFieldContext context)
+	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.Source.AssertNotNull();
 
-		var parentType = context.Source!.GetTypeMember();
-		var dataLoader = this._DataLoader!.Context.GetOrAddBatchLoader<KEY, CHILD>(
-			$"{parentType.GraphQLName()}.{this._Method.GraphQLName()}",
-			async keys =>
+		var parentType = context.Source.GetTypeMember();
+		var loaderKey = Invariant($"{parentType.GraphQLName()}.{this._Method.GraphQLName()}");
+		var dataLoader = this._DataLoader.Context!.GetOrAddBatchLoader<KEY, CHILD>(loaderKey, async keys =>
+		{
+			var arguments = context.GetArguments<PARENT>(this._Method, keys).ToArray();
+			var result = this._Method.Invoke(this._Controller, arguments);
+			return result switch
 			{
-				var arguments = context.GetArguments<PARENT>(this._Method, keys).ToArray();
-				var result = this._Method.Invoke(this._Controller, arguments);
-				return result switch
-				{
-					ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
-					Task<IEnumerable<CHILD>> task => await task,
-					IEnumerable<CHILD> items => items,
-					_ => Enumerable<CHILD>.Empty
-				};
-			},
-			this._GetChildKey);
+				ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
+				Task<IEnumerable<CHILD>> task => await task,
+				IEnumerable<CHILD> items => items,
+				_ => Enumerable<CHILD>.Empty
+			};
+		}, this._GetChildKey);
 
-		return dataLoader.LoadAsync(this._GetParentKey((PARENT)context.Source!));
+		var key = this._GetParentKey((PARENT)context.Source!);
+		return await dataLoader.LoadAsync(key).GetResultAsync(context.CancellationToken);
 	}
 }

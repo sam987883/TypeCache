@@ -21,18 +21,15 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLAttributeExtensions
 {
-	public static string? GraphQLDescription(this Member @this)
-		=> @this switch
-		{
-			TypeMember type => type.GraphQLDescription(),
-			_ => @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description
-		};
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static string? GraphQLDeprecationReason(this Member @this)
+		=> @this.Attributes.First<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
-	public static string? GraphQLDescription(this TypeMember @this)
+	public static string? GraphQLDescription(this Member @this)
 		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description switch
 		{
 			null => null,
-			var description when @this.GenericHandle.HasValue => string.Format(InvariantCulture, description, @this.GenericTypes.Map(type => type.GraphQLName()).ToArray()),
+			var description when @this is TypeMember type && type.GenericHandle.HasValue => string.Format(InvariantCulture, description, type.GenericTypes.Map(_ => _.GraphQLName()).ToArray()),
 			var description => description
 		};
 
@@ -53,10 +50,12 @@ public static class GraphQLAttributeExtensions
 		=> @this.Attributes.First<GraphQLKeyAttribute>()?.Name;
 
 	public static string GraphQLInputName(this TypeMember @this)
-		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name
-			?? (@this.GenericHandle.HasValue
-				? string.Format(InvariantCulture, @this.Name, @this.GenericTypes.Map(_ => _.Name).ToArray())
-				: Invariant($"{@this.Name}Input"));
+		=> @this.Attributes.First<GraphQLInputNameAttribute>()?.Name switch
+		{
+			null => Invariant($"{@this.GraphQLName()}Input"),
+			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Map(_ => _.Name).ToArray()),
+			var name => name
+		};
 
 	public static string GraphQLName(this Member @this)
 		=> @this switch
@@ -83,68 +82,61 @@ public static class GraphQLAttributeExtensions
 	public static string GraphQLName(this MethodParameter @this)
 		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static Type? GraphQLType(this IEnumerable<Attribute> @this)
-		=> @this.First<GraphQLTypeAttribute>()?.GraphType;
-
 	public static Type GraphQLType(this MethodParameter @this)
-		=> @this.Attributes.GraphQLType()
-			?? (@this.Attributes.Any<NotNullAttribute>()
-				? @this.Type!.GraphQLType(true).GraphQLNonNull()
-				: @this.Type!.GraphQLType(true));
+		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		{
+			null => @this.Type!.GraphQLType(true) switch
+			{
+				var type when !type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>() => type.ToNonNullGraphType(),
+				var type => type
+			},
+			var type => type
+		};
 
 	public static Type GraphQLType(this PropertyMember @this, bool isInputType)
-		=> @this.Attributes.GraphQLType()
-			?? (@this.Attributes.Any<NotNullAttribute>()
-				? @this.PropertyType.GraphQLType(isInputType).GraphQLNonNull()
-				: @this.PropertyType.GraphQLType(isInputType));
+		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		{
+			null => @this.PropertyType.GraphQLType(isInputType) switch
+			{
+				var type when !type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>() => type.ToNonNullGraphType(),
+				var type => type
+			},
+			var type => type
+		};
 
 	public static Type GraphQLType(this ReturnParameter @this)
-		=> @this.Attributes.GraphQLType()
-			?? (@this.Attributes.Any<NotNullAttribute>()
-				? @this.Type!.GraphQLType(false).GraphQLNonNull()
-				: @this.Type!.GraphQLType(false));
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string? ObsoleteMessage(this Member @this)
-		=> @this.Attributes.First<ObsoleteAttribute>()?.Message;
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	internal static Type GraphQLList(this Type @this)
-		=> typeof(ListGraphType<>).MakeGenericType(@this);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	internal static Type GraphQLNonNull(this Type @this)
-		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
+		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		{
+			null => @this.Type!.GraphQLType(false) switch
+			{
+				var type when !type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>() => type.ToNonNullGraphType(),
+				var type => type
+			},
+			var type => type
+		};
 
 	internal static Type GraphQLType(this TypeMember @this, bool isInputType)
-	{
-		var objectGraphQLType = isInputType ? typeof(GraphQLInputType<>) : typeof(GraphQLObjectType<>);
-		return getGraphQLType(@this);
-
-		Type getGraphQLType(TypeMember typeMember)
-			=> typeMember switch
+		=> @this switch
+		{
+			{ Kind: Kind.Delegate or Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
+			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First()! switch
 			{
-				{ Kind: Kind.Delegate or Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-				{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
-				{ SystemType: SystemType.Nullable } => typeMember.GenericTypes.First()! switch
-				{
-					{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(typeMember),
-					var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
-				},
-				_ when typeMember.SystemType.IsCollection() => typeof(ListGraphType<>).MakeGenericType(getGraphQLType(typeMember.CollectionType()!)),
-				_ when typeMember.Is(typeof(OrderBy<>)) => typeof(GraphQLOrderByType<>).MakeGenericType(typeMember.GenericTypes.First()!),
-				{ SystemType: SystemType.ValueTask or SystemType.Task } => getGraphQLType(typeMember.GenericTypes.First()!),
-				{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(typeMember).GraphQLNonNull(),
-				{ Kind: Kind.Class } when SystemGraphTypes.TryGetValue(typeMember.SystemType, out var handle) => handle.ToType(),
-				{ Kind: Kind.Struct } when SystemGraphTypes.TryGetValue(typeMember.SystemType, out var handle) => handle.ToType().GraphQLNonNull(),
-				{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(typeMember),
-				_ => objectGraphQLType.MakeGenericType(typeMember)
-			};
-	}
+				{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
+				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
+			},
+			_ when @this.SystemType.IsCollection() => @this.CollectionType()!.GraphQLType(isInputType).ToListGraphType(),
+			_ when @this.Is(typeof(OrderBy<>)) => typeof(GraphQLOrderByType<>).MakeGenericType(@this.GenericTypes.First()!),
+			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First()!.GraphQLType(isInputType),
+			{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
+			{ Kind: Kind.Class } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
+			{ Kind: Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType().ToNonNullGraphType(),
+			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
+			_ when isInputType => ((Type)@this).ToGraphQLInputType(),
+			_ => ((Type)@this).ToGraphQLObjectType()
+		};
 
-	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes =
-		new Dictionary<SystemType, RuntimeTypeHandle>(22, EnumOf<SystemType>.Comparer)
+	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes = new Dictionary<SystemType, RuntimeTypeHandle>(22, EnumOf<SystemType>.Comparer)
 	{
 		{ SystemType.String, typeof(StringGraphType).TypeHandle },
 		{ SystemType.Uri, typeof(UriGraphType).TypeHandle },
@@ -160,11 +152,14 @@ public static class GraphQLAttributeExtensions
 		{ SystemType.UInt32, typeof(UIntGraphType).TypeHandle },
 		{ SystemType.UInt64, typeof(ULongGraphType).TypeHandle },
 		{ SystemType.UIntPtr, typeof(ULongGraphType).TypeHandle },
+		{ SystemType.BigInteger, typeof(BigIntGraphType).TypeHandle },
 		{ SystemType.Single, typeof(FloatGraphType).TypeHandle },
 		{ SystemType.Double, typeof(FloatGraphType).TypeHandle },
 		{ SystemType.Decimal, typeof(DecimalGraphType).TypeHandle },
+		{ SystemType.DateOnly, typeof(DateOnlyGraphType).TypeHandle },
 		{ SystemType.DateTime, typeof(DateTimeGraphType).TypeHandle },
 		{ SystemType.DateTimeOffset, typeof(DateTimeOffsetGraphType).TypeHandle },
+		{ SystemType.TimeOnly, typeof(TimeOnlyGraphType).TypeHandle },
 		{ SystemType.TimeSpan, typeof(TimeSpanSecondsGraphType).TypeHandle },
 		{ SystemType.Guid, typeof(GuidGraphType).TypeHandle },
 		{ SystemType.Range, typeof(StringGraphType).TypeHandle },

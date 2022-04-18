@@ -54,16 +54,17 @@ public static class ReadOnlyDictionaryExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Item1.Keys.Match(@<paramref name="this"/>.Item2.Keys, <paramref name="comparer"/>).To(key =&gt; <see cref="KeyValuePair"/>.Create(key, (@<paramref name="this"/>.Item1[key], @<paramref name="this"/>.Item2[key]))).ToDictionary(<paramref name="comparer"/>);</c>
+	/// <code>
+	/// <see langword="foreach"/> (<see langword="var"/> pair <see langword="in"/> <paramref name="pairs"/>)<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/>.TryGetValue(pair.Key, <see langword="out var"/> value))<br/>
+	/// <see langword="        yield return"/> <see cref="KeyValuePair"/>.Create(pair.Key, (value, pair.Value));
+	/// </code>
 	/// </summary>
-	public static IDictionary<K, (V1, V2)> Match<K, V1, V2>(this (IReadOnlyDictionary<K, V1>, IReadOnlyDictionary<K, V2>) @this, IEqualityComparer<K>? comparer)
+	public static IEnumerable<KeyValuePair<K, (V1, V2)>> Match<K, V1, V2>(this IReadOnlyDictionary<K, V1> @this, IEnumerable<KeyValuePair<K, V2>> pairs)
 		where K : notnull
-		=> @this.Item1.Keys.Match(@this.Item2.Keys, comparer).Map(key => KeyValuePair.Create(key, (@this.Item1[key], @this.Item2[key]))).ToDictionary(comparer);
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Match(<paramref name="comparison"/>.ToStringComparer());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IDictionary<string, (V1, V2)> Match<V1, V2>(this (IReadOnlyDictionary<string, V1>, IReadOnlyDictionary<string, V2>) @this, StringComparison comparison)
-		=> @this.Match(comparison.ToStringComparer());
+	{
+		foreach (var pair in pairs)
+			if (@this.TryGetValue(pair.Key, out var value))
+				yield return KeyValuePair.Create(pair.Key, (value, pair.Value));
+	}
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Business;
@@ -19,7 +20,11 @@ public class ProcedureFieldResolver : IFieldResolver
 	private readonly IMediator _Mediator;
 	private readonly string _Procedure;
 
-	public ProcedureFieldResolver(string dataSource, string procedure, IDictionary<string, RuntimeTypeHandle> arguments, IMediator mediator)
+	public ProcedureFieldResolver(
+		string dataSource,
+		string procedure,
+		IDictionary<string, RuntimeTypeHandle> arguments,
+		IMediator mediator)
 	{
 		this._Arguments = arguments;
 		this._DataSource = dataSource;
@@ -27,7 +32,7 @@ public class ProcedureFieldResolver : IFieldResolver
 		this._Procedure = procedure;
 	}
 
-	public object? Resolve(IResolveFieldContext context)
+	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var request = new StoredProcedureRequest
 		{
@@ -35,6 +40,6 @@ public class ProcedureFieldResolver : IFieldResolver
 			Procedure = this._Procedure
 		};
 		this._Arguments.Do(argument => request.Parameters.Add(argument.Key, context.GetArgument(argument.Value.ToType(), argument.Key)));
-		return this._Mediator.ApplyRulesAsync<StoredProcedureRequest, StoredProcedureResponse>(request);
+		return await this._Mediator.ApplyRulesAsync<StoredProcedureRequest, StoredProcedureResponse>(request, context.CancellationToken);
 	}
 }
