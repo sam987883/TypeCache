@@ -40,7 +40,7 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver
 			throw new ArgumentException($"{nameof(ItemLoaderFieldResolver<T>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<T>.Member.GraphQLName()}] instead of [{method.Return.Type.Name}].");
 
 		this._Method = method;
-		this._Controller = controller;
+		this._Controller = !method.Static ? controller : null;
 		this._DataLoader = dataLoader;
 	}
 
@@ -57,8 +57,8 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver
 			{
 				ValueTask<T> valueTask => await valueTask,
 				Task<T> task => await task,
-				T item => await Task.FromResult(item),
-				_ => await Task.FromResult<T>(default!)
+				T item => item,
+				_ => default!
 			};
 		});
 

@@ -2,20 +2,23 @@
 
 using System;
 using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
 public sealed class GraphQLObjectType<T> : GraphQLComplexType, IObjectGraphType
 {
-	public GraphQLObjectType()
+	private readonly IDataLoaderContextAccessor _DataLoader;
+
+	public GraphQLObjectType(IDataLoaderContextAccessor dataLoader)
 		: base(TypeOf<T>.Member.GraphQLName())
 	{
+		this._DataLoader = dataLoader;
 		this.Interfaces = new();
 		this.ResolvedInterfaces = new();
 

@@ -3,12 +3,13 @@
 using System;
 using TypeCache.Collections.Extensions;
 using static System.FormattableString;
+using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Mappers.Extensions;
 
 public static class CsvExtensions
 {
-	private static string EscapeValue(this string @this)
+	private static string EscapeCSV(this string @this)
 		=> @this switch
 		{
 			null => string.Empty,
@@ -23,30 +24,30 @@ public static class CsvExtensions
 			null => options.NullText,
 			true => options.TrueText,
 			false => options.FalseText,
-			sbyte number => number.ToString(options.ByteFormatSpecifier),
-			byte number => number.ToString(options.ByteFormatSpecifier),
-			short number => number.ToString(options.IntegerFormatSpecifier),
-			int number => number.ToString(options.IntegerFormatSpecifier),
-			nint number => number.ToString(options.IntegerFormatSpecifier),
-			long number => number.ToString(options.IntegerFormatSpecifier),
-			ushort number => number.ToString(options.IntegerFormatSpecifier),
-			uint number => number.ToString(options.IntegerFormatSpecifier),
-			nuint number => number.ToString(options.IntegerFormatSpecifier),
-			ulong number => number.ToString(options.IntegerFormatSpecifier),
-			float number => number.ToString(options.DecimalFormatSpecifier),
-			double number => number.ToString(options.DecimalFormatSpecifier),
-			Half number => number.ToString(options.DecimalFormatSpecifier),
-			decimal number => number.ToString(options.DecimalFormatSpecifier),
+			sbyte number => number.ToString(options.ByteFormatSpecifier, InvariantCulture),
+			byte number => number.ToString(options.ByteFormatSpecifier, InvariantCulture),
+			short number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			int number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			nint number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			long number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			ushort number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			uint number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			nuint number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			ulong number => number.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			float number => number.ToString(options.DecimalFormatSpecifier, InvariantCulture),
+			double number => number.ToString(options.DecimalFormatSpecifier, InvariantCulture),
+			Half number => number.ToString(options.DecimalFormatSpecifier, InvariantCulture),
+			decimal number => number.ToString(options.DecimalFormatSpecifier, InvariantCulture),
 			',' => "\",\"",
 			'"' => "\"\"\"\"",
-			DateOnly date => date.ToString(options.DateOnlyFormatSpecifier),
-			DateTime dateTime => dateTime.ToString(options.DateTimeFormatSpecifier),
-			DateTimeOffset dateTimeOffset => dateTimeOffset.ToString(options.DateTimeOffsetFormatSpecifier),
-			TimeOnly time => time.ToString(options.TimeOnlyFormatSpecifier),
-			TimeSpan time => time.ToString(options.TimeSpanFormatSpecifier),
-			Guid guid => guid.ToString(options.GuidFormatSpecifier),
-			Enum token => token.ToString(options.EnumFormatSpecifier),
-			string text => text.EscapeValue(),
-			_ => value.ToString()!.EscapeValue()
+			DateOnly date => date.ToString(options.DateOnlyFormatSpecifier, InvariantCulture),
+			DateTime dateTime => dateTime.ToString(options.DateTimeFormatSpecifier, InvariantCulture),
+			DateTimeOffset dateTimeOffset => dateTimeOffset.ToString(options.DateTimeOffsetFormatSpecifier, InvariantCulture),
+			TimeOnly time => time.ToString(options.TimeOnlyFormatSpecifier, InvariantCulture),
+			TimeSpan time => time.ToString(options.TimeSpanFormatSpecifier, InvariantCulture),
+			Guid guid => guid.ToString(options.GuidFormatSpecifier, InvariantCulture),
+			Enum token => token.ToString(options.EnumFormatSpecifier, InvariantCulture),
+			string text => text.EscapeCSV(),
+			_ => value.ToString()!.EscapeCSV()
 		}).Join(',')).ToArray();
 }

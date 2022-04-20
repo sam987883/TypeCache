@@ -11,7 +11,6 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
-using TypeCache.GraphQL.SQL;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -71,42 +70,42 @@ public static class GraphQLExtensions
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
-	internal static FieldType ToSourceStreamFieldType(this MethodMember @this, object? controller)
+	public static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
+	{
+		var fieldType = @this.ToFieldType();
+		fieldType.Resolver = resolver;
+		return fieldType;
+	}
+
+	public static FieldType ToFieldType(this MethodMember @this, ISourceStreamResolver resolver)
+	{
+		var fieldType = @this.ToFieldType();
+		fieldType.StreamResolver = resolver;
+		return fieldType;
+	}
+
+	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	public static FieldType ToFieldType(this MethodMember @this, object? controller)
+	{
+		var fieldType = @this.ToFieldType();
+		if (@this.Return.Type.Is(typeof(IObservable<>)) || @this.Return.Type.Implements(typeof(IObservable<>)))
+			fieldType.StreamResolver = new MethodSourceStreamResolver(@this, controller);
+		else
+			fieldType.Resolver = new MethodFieldResolver(@this, controller);
+		return fieldType;
+	}
+
+	internal static FieldType ToFieldType(this MethodMember @this)
 		=> new()
 		{
 			Arguments = @this.Parameters.ToQueryArguments(),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = new FuncFieldResolver<object?>(context => @this.Invoke(controller, context.GetArguments<object>(@this).ToArray())),
-			StreamResolver = (ISourceStreamResolver)typeof(GraphQLExtensions).GetTypeMember().InvokeGenericMethod(nameof(CreateSourceStreamResolver), new[] { (Type)@this.Return.Type! }, @this, controller)!,
 			Type = @this.Return.GraphQLType()
 		};
 
-	internal static FieldType ToFieldType(this MethodMember @this, object? controller)
-		=> new()
-		{
-			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = new MethodFieldResolver(controller, @this),
-			Type = @this.Return.GraphQLType()
-		};
-
-	internal static FieldType ToFieldType<T>(this MethodMember @this, string table, SqlApiController<T> sqlApi)
-		where T : class, new()
-		=> new()
-		{
-			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = string.Format(@this.GraphQLName()!, table),
-			Description = string.Format(@this.GraphQLDescription()!, table),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = new MethodFieldResolver(sqlApi, @this),
-			Type = @this.Return.GraphQLType()
-		};
-
-	internal static FieldType ToFieldType(this PropertyMember @this)
+	public static FieldType ToFieldType(this PropertyMember @this)
 	{
 		var type = @this.GraphQLType(false);
 		var arguments = new QueryArguments();
@@ -207,7 +206,7 @@ public static class GraphQLExtensions
 		};
 	}
 
-	internal static FieldType ToInputFieldType(this PropertyMember @this)
+	public static FieldType ToInputFieldType(this PropertyMember @this)
 		=> new()
 		{
 			Type = @this.GraphQLType(true),
@@ -216,30 +215,12 @@ public static class GraphQLExtensions
 			DeprecationReason = @this.GraphQLDeprecationReason(),
 		};
 
-	private static ISourceStreamResolver CreateSourceStreamResolver<T>(MethodMember method, object? controller)
-		=> new SourceStreamResolver<T>(context => (IObservable<T>)method.Invoke(controller, context.GetArguments<object>(method).ToArray())!);
-
-	private static IEnumerable<string> GetKeys(Queue<string> inputs, IDictionary<string, object> dictionary)
+	internal static FieldType ApplyName(this FieldType @this, string table)
 	{
-		if (inputs.TryDequeue(out var input) && dictionary.TryGetValue(input, out var value))
-		{
-			var subDictionary = value as IDictionary<string, object>;
-			if (inputs.Any())
-			{
-				if (subDictionary is not null)
-				{
-					foreach (var key in GetKeys(inputs, subDictionary))
-						yield return key;
-				}
-			}
-			else if (subDictionary is not null)
-			{
-				foreach (var key in subDictionary.Keys)
-					yield return key;
-			}
-			else
-				yield return input;
-		}
+		@this.Name = string.Format(@this.Name, table);
+		if (@this.Description.IsNotBlank())
+			@this.Description = string.Format(@this.Description, table);
+		return @this;
 	}
 
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)

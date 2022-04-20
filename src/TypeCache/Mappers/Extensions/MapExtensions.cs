@@ -38,7 +38,18 @@ public static partial class MapExtensions
 					|| (pair.Value.Item2 is not null && pair.Value.Item1.FieldType.Supports(pair.Value.Item2.GetType()))))
 			.Map(pair =>
 			{
-				pair.Value.Item1.SetValue(@this, pair.Value.Item2);
+				var value = pair.Value.Item2;
+				if (pair.Value.Item2 is not null && pair.Value.Item1.FieldType.SystemType == SystemType.Unknown)
+				{
+					var item = pair.Value.Item1.FieldType.Create();
+					if (item is not null)
+						item.MapFields(pair.Value.Item2);
+					else
+						item = pair.Value.Item1.FieldType.Create(pair.Value.Item2);
+					pair.Value.Item1.SetValue(@this, item);
+				}
+				else
+					pair.Value.Item1.SetValue(@this, pair.Value.Item2);
 				return pair.Key;
 			});
 	}
@@ -59,13 +70,23 @@ public static partial class MapExtensions
 		from.AssertNotNull();
 		(@this, from).AssertNotSame();
 
-		return from.GetTypeMember().Fields.Match(@this.GetTypeMember().Fields)
-			.If(pair => pair.Value.Item1.Getter is not null
-				&& pair.Value.Item2.Setter is not null
-				&& pair.Value.Item2.FieldType.Supports(pair.Value.Item1.FieldType))
+		return @this.GetTypeMember().Fields.Match(from.GetTypeMember().Fields)
+			.If(pair => pair.Value.Item1.Setter is not null
+				&& pair.Value.Item2.Getter is not null
+				&& pair.Value.Item1.FieldType.Supports(pair.Value.Item2.FieldType))
 			.Map(pair =>
 			{
-				pair.Value.Item2.SetValue(@this, pair.Value.Item1.GetValue(from));
+				if (pair.Value.Item2 is not null && pair.Value.Item1.FieldType.SystemType == SystemType.Unknown)
+				{
+					var item = pair.Value.Item1.FieldType.Create();
+					if (item is not null)
+						item.MapFields(pair.Value.Item2);
+					else
+						item = pair.Value.Item1.FieldType.Create(pair.Value.Item2.GetValue(from));
+					pair.Value.Item1.SetValue(@this, item);
+				}
+				else
+					pair.Value.Item1.SetValue(@this, pair.Value.Item2.GetValue(from));
 				return pair.Key;
 			});
 	}
@@ -82,7 +103,17 @@ public static partial class MapExtensions
 					|| (pair.Value.Item2 is not null && pair.Value.Item1.PropertyType.Supports(pair.Value.Item2.GetType()))))
 			.Map(pair =>
 			{
-				pair.Value.Item1.SetValue(@this, pair.Value.Item2);
+				if (pair.Value.Item2 is not null && pair.Value.Item1.PropertyType.SystemType == SystemType.Unknown)
+				{
+					var item = pair.Value.Item1.PropertyType.Create();
+					if (item is not null)
+						item.MapProperties(pair.Value.Item2);
+					else
+						item = pair.Value.Item1.PropertyType.Create(pair.Value.Item2);
+					pair.Value.Item1.SetValue(@this, item);
+				}
+				else
+					pair.Value.Item1.SetValue(@this, pair.Value.Item2);
 				return pair.Key;
 			});
 	}
@@ -103,13 +134,23 @@ public static partial class MapExtensions
 		from.AssertNotNull();
 		(@this, from).AssertNotSame();
 
-		return from.GetTypeMember().Properties.Match(@this.GetTypeMember().Properties)
-			.If(pair => pair.Value.Item1.Getter is not null
-				&& pair.Value.Item2.Setter is not null
-				&& pair.Value.Item2.PropertyType.Supports(pair.Value.Item1.PropertyType))
+		return @this.GetTypeMember().Properties.Match(from.GetTypeMember().Properties)
+			.If(pair => pair.Value.Item1.Setter is not null
+				&& pair.Value.Item2.Getter is not null
+				&& pair.Value.Item1.PropertyType.Supports(pair.Value.Item2.PropertyType))
 			.Map(pair =>
 			{
-				pair.Value.Item2.SetValue(@this, pair.Value.Item1.GetValue(from));
+				if (pair.Value.Item2 is not null && pair.Value.Item1.PropertyType.SystemType == SystemType.Unknown)
+				{
+					var item = pair.Value.Item1.PropertyType.Create();
+					if (item is not null)
+						item.MapFields(pair.Value.Item2);
+					else
+						item = pair.Value.Item1.PropertyType.Create(pair.Value.Item2.GetValue(from));
+					pair.Value.Item1.SetValue(@this, item);
+				}
+				else
+					pair.Value.Item1.SetValue(@this, pair.Value.Item2?.GetValue(from));
 				return pair.Key;
 			});
 	}
