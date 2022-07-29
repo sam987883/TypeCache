@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQL.Resolvers;
@@ -11,6 +12,7 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
+using TypeCache.GraphQL.SQL;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -54,19 +56,19 @@ public static class GraphQLExtensions
 		return connection;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToGraphQLInputType(this Type @this)
 		=> typeof(GraphQLInputType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
 		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToListGraphType(this Type @this)
 		=> typeof(ListGraphType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
@@ -84,7 +86,7 @@ public static class GraphQLExtensions
 		return fieldType;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static FieldType ToFieldType(this MethodMember @this, object? controller)
 	{
 		var fieldType = @this.ToFieldType();
@@ -105,7 +107,19 @@ public static class GraphQLExtensions
 			Type = @this.Return.GraphQLType()
 		};
 
-	public static FieldType ToFieldType(this PropertyMember @this)
+	internal static FieldType ToFieldType<T>(this MethodMember @this, SqlApiController<T> controller, string table)
+		where T : class, new()
+		=> new()
+		{
+			Arguments = @this.Parameters.ToQueryArguments(),
+			Name = string.Format(@this.GraphQLName(), table),
+			Description = string.Format(@this.GraphQLDescription() ?? string.Empty, table),
+			DeprecationReason = @this.GraphQLDeprecationReason(),
+			Resolver = new MethodFieldResolver(@this, controller),
+			Type = @this.Return.GraphQLType()
+		};
+
+	public static FieldType ToFieldType<T>(this PropertyMember @this)
 	{
 		var type = @this.GraphQLType(false);
 		var arguments = new QueryArguments();
@@ -202,25 +216,8 @@ public static class GraphQLExtensions
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = new PropertyFieldResolver(@this)
+			Resolver = new PropertyFieldResolver<T>(@this)
 		};
-	}
-
-	public static FieldType ToInputFieldType(this PropertyMember @this)
-		=> new()
-		{
-			Type = @this.GraphQLType(true),
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-		};
-
-	internal static FieldType ApplyName(this FieldType @this, string table)
-	{
-		@this.Name = string.Format(@this.Name, table);
-		if (@this.Description.IsNotBlank())
-			@this.Description = string.Format(@this.Description, table);
-		return @this;
 	}
 
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)

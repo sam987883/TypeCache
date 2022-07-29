@@ -1,29 +1,42 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq.Expressions;
+
 namespace TypeCache.Reflection.Extensions;
 
 public enum UnaryOperator
 {
-	/// <summary><c>i <see langword="is true"/></c></summary>
+	/// <inheritdoc cref="Expression.IsTrue(Expression)"/>
+	/// <remarks><c>i <see langword="is true"/></c></remarks>
 	IsTrue,
-	/// <summary><c>i <see langword="is false"/></c></summary>
+	/// <inheritdoc cref="Expression.IsFalse(Expression)"/>
+	/// <remarks><c>i <see langword="is false"/></c></remarks>
 	IsFalse,
-	/// <summary><c>++i</c></summary>
+	/// <inheritdoc cref="Expression.PreIncrementAssign(Expression)"/>
+	/// <remarks><c>++i</c></remarks>
 	PreIncrement,
-	/// <summary><c>i + 1</c></summary>
+	/// <inheritdoc cref="Expression.Increment(Expression)"/>
+	/// <remarks><c>i + 1</c></remarks>
 	Increment,
-	/// <summary><c>i++</c></summary>
+	/// <inheritdoc cref="Expression.PostIncrementAssign(Expression)"/>
+	/// <remarks><c>i++</c></remarks>
 	PostIncrement,
-	/// <summary><c>--i</c></summary>
+	/// <inheritdoc cref="Expression.PreDecrementAssign(Expression)"/>
+	/// <remarks><c>--i</c></remarks>
 	PreDecrement,
-	/// <summary><c>i - 1</c></summary>
+	/// <inheritdoc cref="Expression.Decrement(Expression)"/>
+	/// <remarks><c>i - 1</c></remarks>
 	Decrement,
-	/// <summary><c>i--</c></summary>
+	/// <inheritdoc cref="Expression.PostDecrementAssign(Expression)"/>
+	/// <remarks><c>i--</c></remarks>
 	PostDecrement,
-	/// <summary><c>-i</c></summary>
+	/// <inheritdoc cref="Expression.Negate(Expression)"/>
+	/// <remarks><c>-i</c></remarks>
 	Negate,
-	/// <summary><c><see langword="checked"/>(-i)</c></summary>
+	/// <inheritdoc cref="Expression.NegateChecked(Expression)"/>
+	/// <remarks><c><see langword="checked"/>(-i)</c></remarks>
 	NegateChecked,
-	/// <summary><c>~i</c></summary>
+	/// <inheritdoc cref="Expression.OnesComplement(Expression)"/>
+	/// <remarks><c>~i</c></remarks>
 	Complement
 }

@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using TypeCache.Collections.Extensions;
-using TypeCache.Mappers.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using Xunit;
 
@@ -30,7 +30,7 @@ public class ObjectExtensions
 		};
 
 		var testModel2 = new TestModel2();
-		var fields = testModel2.MapFields(testModel1).ToArray();
+		testModel2.MapFields(testModel1);
 		Assert.Equal(1, testModel2.TestProperty1);
 		Assert.Equal('2', testModel2.TestProperty2);
 		Assert.Equal("333", testModel2.TestProperty3);
@@ -50,7 +50,7 @@ public class ObjectExtensions
 		};
 
 		var testModel2 = new TestModel2();
-		var properties = testModel2.MapProperties(testModel1).ToArray();
+		; testModel2.MapProperties(testModel1);
 		Assert.Equal(1, testModel2.TestProperty1);
 		Assert.Equal('2', testModel2.TestProperty2);
 		Assert.Equal("333", testModel2.TestProperty3);
@@ -69,7 +69,7 @@ public class ObjectExtensions
 			{ "_TestField2", 'X' },
 			{ "_TestField3", "ABCdef" },
 		};
-		var fields = testModel1.MapFields(dictionary).ToArray();
+		testModel1.MapFields(dictionary);
 		Assert.Equal(101, testModel1.TestProperty1);
 		Assert.Equal('X', testModel1.TestProperty2);
 		Assert.Equal("ABCdef", testModel1.TestProperty3);
@@ -85,7 +85,7 @@ public class ObjectExtensions
 			{ nameof(TestModel1.TestProperty5), 'X' },
 			{ nameof(TestModel1.TestProperty6), "ABCdef" },
 		};
-		var properties = testModel2.MapProperties(dictionary).ToArray();
+		testModel2.MapProperties(dictionary);
 		Assert.Equal(101, testModel2.TestProperty4);
 		Assert.Equal('X', testModel2.TestProperty5);
 		Assert.Equal("ABCdef", testModel2.TestProperty6);

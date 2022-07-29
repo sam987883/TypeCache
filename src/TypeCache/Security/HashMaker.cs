@@ -1,9 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
-using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
@@ -11,73 +9,58 @@ namespace TypeCache.Security;
 
 public class HashMaker : IHashMaker
 {
-	private readonly byte[] _RgbKey;
-	private readonly byte[] _RgbIV;
+	private readonly Aes _Provider;
 
 	public HashMaker(byte[] rgbKey, byte[] rgbIV)
 	{
-		this._RgbKey = rgbKey;
-		this._RgbIV = rgbIV;
+		this._Provider = Aes.Create();
+		this._Provider.Key = rgbKey;
+		this._Provider.IV = rgbIV;
 	}
 
 	public HashMaker(decimal rgbKey, decimal rgbIV)
+		: this(rgbKey.ToBytes(), rgbIV.ToBytes())
 	{
-		this._RgbKey = rgbKey.ToBytes();
-		this._RgbIV = rgbIV.ToBytes();
-	}
-
-	public long Decrypt(string hashId)
-		=> Guid.TryParseExact(hashId, "N", out var guid) ? this.Decrypt(guid.ToByteArray()).ToInt64() : 0L;
-
-	public long[] Decrypt(IEnumerable<string> hashIds)
-		=> this.Decrypt(hashIds.Map(hashId => Guid.TryParseExact(hashId, "N", out var guid) ? guid.ToByteArray() : Array<byte>.Empty))
-			.Map(buffer => buffer.ToInt64()).ToArray();
-
-	public string Encrypt(long id)
-		=> new Guid(this.Encrypt(id.ToBytes())).ToString("N");
-
-	public string[] Encrypt(IEnumerable<long> ids)
-	{
-		ids.AssertNotNull();
-		var buffers = this.Encrypt(ids.Map(id => id.ToBytes()).ToArray());
-		return buffers.Map(buffer => new Guid(buffer).ToString("N")).ToArray();
 	}
 
 	public byte[] Decrypt(byte[] data)
 	{
-		using var provider = Aes.Create();
-		using var decryptor = provider.CreateDecryptor(this._RgbKey, this._RgbIV);
-		var result = decryptor.TransformFinalBlock(data, 0, data.Length);
-		provider.Clear();
-		return result;
+		data.AssertNotNull();
+		return this._Provider.DecryptCbc(data, this._Provider.IV);
+	}
+
+	public long Decrypt(string hashId)
+	{
+		var hasPadding = hashId[^1] == '=' && hashId[^2] == '=';
+		var length = hashId.Length;
+		if (!hasPadding)
+			length += 2;
+		Span<char> span = stackalloc char[length];
+		hashId.CopyTo(span);
+		if (!hasPadding)
+		{
+			span[^1] = '=';
+			span[^2] = '=';
+		}
+		var bytes = new string(span.Replace('-', '+').Replace('_', '/').ToArray()).FromBase64();
+		return this.Decrypt(bytes).ToInt64();
 	}
 
 	public byte[] Encrypt(byte[] data)
 	{
-		using var provider = Aes.Create();
-		using var encryptor = provider.CreateEncryptor(this._RgbKey, this._RgbIV);
-		var result = encryptor.TransformFinalBlock(data, 0, data.Length);
-		provider.Clear();
-		return result;
+		data.AssertNotNull();
+		return this._Provider.EncryptCbc(data, this._Provider.IV);
 	}
 
-	public byte[][] Decrypt(IEnumerable<byte[]> items)
+	public string Encrypt(long id)
 	{
-		using var provider = Aes.Create();
-		using var decryptor = provider.CreateDecryptor(this._RgbKey, this._RgbIV);
-		//var results = await items.Map(async data => await Transform(data, decryptor, cancellationToken)).AllAsync();
-		var results = items.Map(data => decryptor.TransformFinalBlock(data, 0, data.Length)).ToArray();
-		provider.Clear();
-		return results;
+		var chars = this.Encrypt(id.ToBytes()).ToBase64Chars().AsSpan().Replace('+', '-').Replace('/', '_');
+		return new string(chars.Slice(0, chars.Length - 2).ToArray());
 	}
 
-	public byte[][] Encrypt(IEnumerable<byte[]> items)
+	public void Dispose()
 	{
-		using var provider = Aes.Create();
-		using var encryptor = provider.CreateEncryptor(this._RgbKey, this._RgbIV);
-		//var results = await items.Map(async data => await Transform(data, encryptor, cancellationToken)).AllAsync();
-		var results = items.Map(data => encryptor.TransformFinalBlock(data, 0, data.Length)).ToArray();
-		provider.Clear();
-		return results;
+		this._Provider.Clear();
+		this._Provider.Dispose();
 	}
 }

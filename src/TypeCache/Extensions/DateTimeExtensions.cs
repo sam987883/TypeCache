@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
 using static System.TimeZoneInfo;
@@ -10,44 +11,31 @@ namespace TypeCache.Extensions;
 
 public static class DateTimeExtensions
 {
-	/// <summary>
+	/// <inheritdoc cref="DateTime.SpecifyKind(DateTime, DateTimeKind)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="DateTime"/>.SpecifyKind(@<paramref name="this"/>, <paramref name="kind"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static DateTime As(this DateTime @this, DateTimeKind kind)
 		=> DateTime.SpecifyKind(@this, kind);
 
-	/// <summary>
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo, TimeZoneInfo)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTime(@<paramref name="this"/>, <paramref name="sourceTimeZone"/>, <paramref name="targetTimeZone"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentException"/>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static DateTime ChangeTimeZone(this DateTime @this, TimeZoneInfo sourceTimeZone, TimeZoneInfo targetTimeZone)
 		=> ConvertTime(@this, sourceTimeZone, targetTimeZone);
 
-	/// <summary>
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime, string, string)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeBySystemTimeZoneId(@<paramref name="this"/>, <paramref name="sourceSystemTimeZoneId"/>, <paramref name="targetSystemTimeZoneId"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentException"/>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="InvalidTimeZoneException"/>
-	/// <exception cref="SecurityException"/>
-	/// <exception cref="TimeZoneNotFoundException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static DateTime ChangeTimeZone(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 		=> ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
 
-	/// <summary>
-	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>, <paramref name="sourceTimeZone"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentException"/>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static DateTime ConvertTimeToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
-		=> ConvertTimeToUtc(@this, sourceTimeZone);
-
-	/// <summary>
+	/// <remarks>
 	/// <code>
 	/// =&gt; <paramref name="kind"/> <see langword="switch"/><br/>
 	/// {<br/>
@@ -55,10 +43,10 @@ public static class DateTimeExtensions
 	/// <see langword="    "/><see cref="DateTimeKind.Local"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTimeFromUtc(@<paramref name="this"/>, <see cref="TimeZoneInfo.Local"/>),<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Unspecified"/> =&gt; @<paramref name="this"/>.As(<paramref name="kind"/>),<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Utc"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="ArgumentOutOfRangeException"/>($"{<see langword="nameof"/>(To)}: {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} value of {<paramref name="kind"/>} is not supported.")<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="ArgumentOutOfRangeException"/>($"{<see langword="nameof"/>(ToTimeZone)}: {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} value of {<paramref name="kind"/>} is not supported.")<br/>
 	/// };
 	/// </code>
-	/// </summary>
+	/// </remarks>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -72,17 +60,17 @@ public static class DateTimeExtensions
 			_ => throw new ArgumentOutOfRangeException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind} is not supported.")
 		};
 
-	/// <summary>
+	/// <remarks>
 	/// <code>
 	/// =&gt; @<paramref name="this"/>.Kind <see langword="switch"/><br/>
 	/// {<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Local"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTime(@<paramref name="this"/>, <paramref name="targetTimeZone"/>),<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Utc"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTimeFromUtc(@<paramref name="this"/>, <paramref name="targetTimeZone"/>),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="TimeZoneNotFoundException"/>($"{<see langword="nameof"/>(To)}: {<see langword="nameof"/>(<see cref="DateTime"/>)} value must have a {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} of {<see cref="DateTimeKind.Local"/>} or {<see cref="DateTimeKind.Utc"/>}.")<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="TimeZoneNotFoundException"/>($"{<see langword="nameof"/>(ConvertTime)}: {<see langword="nameof"/>(<see cref="DateTime"/>)} value must have a {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} of {<see cref="DateTimeKind.Local"/>} or {<see cref="DateTimeKind.Utc"/>}.")<br/>
 	/// };
 	/// </code>
-	/// </summary>
-	/// <exception cref="TimeZoneNotFoundException"/>
+	/// </remarks>
+	/// <exception cref="TimeZoneNotFoundException">if: <c>@<paramref name="this"/>.Kind = <see cref="DateTimeKind.Unspecified"/></c></exception>
 	public static DateTime ToTimeZone(this DateTime @this, TimeZoneInfo targetTimeZone)
 		=> @this.Kind switch
 		{
@@ -91,22 +79,35 @@ public static class DateTimeExtensions
 			_ => throw new TimeZoneNotFoundException($"{nameof(ConvertTime)}: {nameof(DateTime)} value must have a {nameof(DateTimeKind)} of {DateTimeKind.Local} or {DateTimeKind.Utc}.")
 		};
 
-	/// <summary>
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTime(DateTimeOffset, TimeZoneInfo)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTime(@<paramref name="this"/>, <paramref name="targetTimeZone"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
 		=> ConvertTime(@this, targetTimeZone);
 
-	/// <summary>
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset, string)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeBySystemTimeZoneId(@<paramref name="this"/>, <paramref name="targetSystemTimeZoneId"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="InvalidTimeZoneException"/>
-	/// <exception cref="SecurityException"/>
-	/// <exception cref="TimeZoneNotFoundException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, string targetSystemTimeZoneId)
 		=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
+
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static DateTime ToUTC(this DateTime @this)
+		=> ConvertTimeToUtc(@this);
+
+	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeToUtc(DateTime, TimeZoneInfo)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>, <paramref name="sourceTimeZone"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static DateTime ToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
+		=> ConvertTimeToUtc(@this, sourceTimeZone);
 }

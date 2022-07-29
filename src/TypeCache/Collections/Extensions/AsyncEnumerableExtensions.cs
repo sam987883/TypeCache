@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,7 +18,7 @@ public static class AsyncEnumerableExtensions
 	/// <summary>
 	/// <c><see cref="Task.Yield"/></c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	private static async IAsyncEnumerable<T> Empty<T>()
 	{
 		await Task.Yield();
@@ -33,7 +34,7 @@ public static class AsyncEnumerableExtensions
 		return result;
 	}
 
-	public static async ValueTask<bool> AllAsync<T>(this IAsyncEnumerable<T>? @this, Predicate<T> filter, CancellationToken token = default)
+	public static async Task<bool> AllAsync<T>(this IAsyncEnumerable<T>? @this, Predicate<T> filter, CancellationToken token = default)
 	{
 		filter.AssertNotNull();
 
@@ -82,7 +83,7 @@ public static class AsyncEnumerableExtensions
 	/// <summary>
 	/// <c>await @<paramref name="this"/>.IfAsync(<paramref name="filter"/>).AnyAsync(<paramref name="token"/>)</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static async Task<bool> AnyAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, Predicate<T> filter, CancellationToken token = default)
 		=> await @this.IfAsync(filter).AnyAsync(token);
 
@@ -95,7 +96,7 @@ public static class AsyncEnumerableExtensions
 		return await enumerator.CountAsync();
 	}
 
-	public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action? between = null, CancellationToken token = default)
+	public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action? between = null, CancellationToken token = default)
 	{
 		action.AssertNotNull();
 
@@ -122,7 +123,7 @@ public static class AsyncEnumerableExtensions
 		}
 	}
 
-	public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action? between = null, CancellationToken token = default)
+	public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action? between = null, CancellationToken token = default)
 	{
 		action.AssertNotNull();
 
@@ -150,30 +151,28 @@ public static class AsyncEnumerableExtensions
 		}
 	}
 
-	public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken _ = default)
+	public static async ValueTask<T?> FirstAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 	{
 		if (@this is null)
-			return await Task.FromException<T>(new ArgumentNullException(nameof(@this), $"{nameof(IAsyncEnumerable<T>)} argument is null."));
+			return default;
 
-		await foreach (var item in @this)
-			return item;
-
-		return await Task.FromException<T>(new IndexOutOfRangeException($"{nameof(FirstAsync)} called on {nameof(IAsyncEnumerable<T>)} which has no values."));
+		await using var enumerator = @this.GetAsyncEnumerator(token);
+		return await enumerator.MoveNextAsync() ? enumerator.Current : default;
 	}
 
 	/// <summary>
 	/// <c>await @<paramref name="this"/>.IfAsync(<paramref name="filter"/>).FirstAsync()</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T>? @this, Predicate<T> filter)
-		=> await @this.IfAsync(filter).FirstAsync();
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static async ValueTask<T?> FirstAsync<T>(this IAsyncEnumerable<T>? @this, Predicate<T> filter, CancellationToken token = default)
+		=> await @this.IfAsync(filter, token).FirstAsync(token);
 
 	/// <summary>
 	/// <c>Empty&lt;<typeparamref name="T"/>&gt;().AndAsync(@<paramref name="this"/>)</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IAsyncEnumerable<T> GatherAsync<T>(this IAsyncEnumerable<IAsyncEnumerable<T>?>? @this)
-		=> Empty<T>().AndAsync(@this);
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static IAsyncEnumerable<T> GatherAsync<T>(this IAsyncEnumerable<IAsyncEnumerable<T>?>? @this, CancellationToken token = default)
+		=> Empty<T>().AndAsync(@this, token);
 
 	public static async Task<T> GetAsync<T>(this IAsyncEnumerable<T>? @this, Index index, CancellationToken token = default)
 	{
@@ -185,7 +184,7 @@ public static class AsyncEnumerableExtensions
 
 		if (index.Value >= 0)
 		{
-			await using var enumerator = @this.GetAsyncEnumerator();
+			await using var enumerator = @this.GetAsyncEnumerator(token);
 			return await enumerator.SkipAsync(index.Value);
 		}
 
@@ -198,7 +197,7 @@ public static class AsyncEnumerableExtensions
 			yield break;
 
 		if (range.Start.IsFromEnd || range.End.IsFromEnd)
-			range = range.Normalize(await @this.CountAsync());
+			range = range.Normalize(await @this.CountAsync(token));
 
 		if (range.Start.Value < 0 || range.End.Value < 0)
 			range = new Range(range.Start.Value >= 0 ? range.Start : Index.Start, range.End.Value >= 0 ? range.End : Index.Start);
@@ -243,7 +242,7 @@ public static class AsyncEnumerableExtensions
 	/// <summary>
 	/// <c>await @<paramref name="this"/>.IfAsync(_ =&gt; _ is not null &amp;&amp; _.Equals(<paramref name="value"/>)).AnyAsync()</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static async ValueTask<bool> HasAsync<T>([NotNullWhen(true)] this IAsyncEnumerable<T>? @this, T value)
 		=> await @this.IfAsync(_ => _ is not null && _.Equals(value)).AnyAsync();
 
@@ -336,10 +335,29 @@ public static class AsyncEnumerableExtensions
 				yield return item.Value;
 	}
 
+	/// <exception cref="ArgumentNullException"/>
+	public static async IAsyncEnumerable<V> MapAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, V> map, [EnumeratorCancellation] CancellationToken _ = default)
+	{
+		map.AssertNotNull();
+
+		if (@this is null)
+			yield break;
+
+		await foreach (var item in @this)
+			yield return map(item);
+	}
+
+	/// <summary>
+	/// <c>Empty&lt;<typeparamref name="V"/>&gt;().AndAsync(@<paramref name="this"/>.ToAsync&lt;<typeparamref name="T"/>, IAsyncEnumerable&lt;<typeparamref name="V"/>&gt;&gt;(<paramref name="map"/>))</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static IAsyncEnumerable<V> MapAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, IAsyncEnumerable<V>> map)
+		=> Empty<V>().AndAsync(@this.MapAsync<T, IAsyncEnumerable<V>>(map));
+
 	/// <summary>
 	/// <c>await @<paramref name="this"/>.AggregateAsync(default(T), (x, y) =&gt; x.MoreThan(y) ? x : y)</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static async ValueTask<T?> MaximumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 		=> await @this.AggregateAsync(default(T), (x, y) => x!.GreaterThan(y) ? x : y);
 
@@ -357,7 +375,7 @@ public static class AsyncEnumerableExtensions
 	/// <summary>
 	/// <c>await @<paramref name="this"/>.AggregateAsync(default, (x, y) =&gt; x.LessThan(y) ? x : y)</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static async ValueTask<T?> MinimumAsync<T>(this IAsyncEnumerable<T>? @this) where T : IComparable<T>
 		=> await @this.AggregateAsync(default, (x, y) => x!.LessThan(y) ? x : y);
 
@@ -372,24 +390,18 @@ public static class AsyncEnumerableExtensions
 		return await @this.AggregateAsync(default, comparer!.Minimum);
 	}
 
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<V> ToAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, V> map, [EnumeratorCancellation] CancellationToken _ = default)
+	public static async ValueTask<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T>? @this, int capacity, CancellationToken token = default)
 	{
-		map.AssertNotNull();
-
 		if (@this is null)
-			yield break;
+			return Array<T>.Empty;
 
-		await foreach (var item in @this)
-			yield return map(item);
+		var array = new T[capacity];
+		var i = -1;
+		await using var enumerator = @this.GetAsyncEnumerator(token);
+		while (await enumerator.MoveNextAsync() && ++i < capacity)
+			array[i] = enumerator.Current;
+		return array;
 	}
-
-	/// <summary>
-	/// <c>Empty&lt;<typeparamref name="V"/>&gt;().AndAsync(@<paramref name="this"/>.ToAsync&lt;<typeparamref name="T"/>, IAsyncEnumerable&lt;<typeparamref name="V"/>&gt;&gt;(<paramref name="map"/>))</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static IAsyncEnumerable<V> ToAsync<T, V>(this IAsyncEnumerable<T>? @this, Func<T, IAsyncEnumerable<V>> map)
-		=> Empty<V>().AndAsync(@this.ToAsync<T, IAsyncEnumerable<V>>(map));
 
 	/// <exception cref="ArgumentNullException"/>
 	public static async ValueTask<ConcurrentDictionary<K, V>> ToDictionaryAsync<K, V>(this IAsyncEnumerable<K>? @this, Func<K, V> valueFactory, int concurrencyLevel, CancellationToken token = default) where K : notnull
@@ -397,8 +409,7 @@ public static class AsyncEnumerableExtensions
 		valueFactory.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-		if (@this is not null)
-			await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
+		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
 		return dictionary;
 	}
 
@@ -409,8 +420,7 @@ public static class AsyncEnumerableExtensions
 		comparer.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-		if (@this is not null)
-			await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
+		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
 		return dictionary;
 	}
 
@@ -421,8 +431,7 @@ public static class AsyncEnumerableExtensions
 		valueFactory.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-		if (@this is not null)
-			await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
+		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
 		return dictionary;
 	}
 
@@ -434,20 +443,14 @@ public static class AsyncEnumerableExtensions
 		comparer.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-		if (@this is not null)
-			await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
+		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
 		return dictionary;
 	}
 
-	public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
+	public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, int capacity = 0, CancellationToken token = default)
 	{
-		var list = new List<T>();
-		if (@this is not null)
-		{
-			await using var enumerator = @this.GetAsyncEnumerator();
-			while (await enumerator.MoveNextAsync())
-				list.Add(enumerator.Current);
-		}
+		var list = new List<T>(capacity);
+		await @this.DoAsync(list.Add, token: token);
 		return list;
 	}
 }

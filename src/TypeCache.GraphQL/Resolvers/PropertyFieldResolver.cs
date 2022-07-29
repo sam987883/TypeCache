@@ -13,7 +13,7 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class PropertyFieldResolver : IFieldResolver
+public class PropertyFieldResolver<T> : IFieldResolver
 {
 	private readonly PropertyMember _PropertyMember;
 
@@ -24,15 +24,21 @@ public class PropertyFieldResolver : IFieldResolver
 
 	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		await Task.CompletedTask;
-
-		var source = context.Source;
-		if (context.Source?.GetType().Is(typeof(ValueTask<>)) is true)
-			source = context.Source?.GetTypeMember().Properties["Result"].GetValue(context.Source);
+		var source = context.Source switch
+		{
+			null => null,
+			Task<T> task => await task,
+			ValueTask<T> task => await task,
+			_ => context.Source
+		};
+		//if (context.Source!.GetType().Is(typeof(Task<>)) || context.Source.GetType().Is(typeof(ValueTask<>)))
+		//	source = context.Source?.GetTypeMember().Properties["Result"].GetValue(context.Source);
 
 		var value = this._PropertyMember.GetValue(source);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
+
+		await Task.CompletedTask;
 
 		var format = context.GetArgument<string>("format");
 
@@ -75,7 +81,7 @@ public class PropertyFieldResolver : IFieldResolver
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = text.RegexMatch(pattern);
+				var match = RegexOf.SinglelinePattern(pattern).Match(text);
 				if (match.Success)
 					text = match.Value;
 				else

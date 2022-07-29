@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,139 +11,180 @@ using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 using static TypeCache.Default;
+using Unsafe = TypeCache.Reflection.Unsafe;
 
 namespace TypeCache.Extensions;
 
 public static class StringExtensions
 {
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsDigit());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyDigit(this string @this)
 		=> @this.Any(c => c.IsDigit());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetter());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyLetter(this string @this)
 		=> @this.Any(c => c.IsLetter());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetterOrDigit());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyLetterOrDigit(this string @this)
 		=> @this.Any(c => c.IsLetterOrDigit());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLowercase());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyLowercase(this string @this)
 		=> @this.Any(c => c.IsLowercase());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsNumber());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyNumber(this string @this)
 		=> @this.Any(c => c.IsNumber());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsPunctuation());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyPunctuation(this string @this)
 		=> @this.Any(c => c.IsPunctuation());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsSymbol());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnySymbol(this string @this)
 		=> @this.Any(c => c.IsSymbol());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsUppercase());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyUppercase(this string @this)
 		=> @this.Any(c => c.IsUppercase());
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsWhiteSpace());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyWhiteSpace(this string @this)
 		=> @this.Any(c => c.IsWhiteSpace());
 
-	/// <summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string Edit(this string @this, StringEditor edit)
+		=> edit(@this);
+
+	/// <inheritdoc cref="Convert.FromBase64String(string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Convert"/>.FromBase64String(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static byte[] FromBase64(this string @this)
+		=> Convert.FromBase64String(@this);
+
+	/// <remarks>
 	/// <code>
-	/// Span&lt;<see cref="byte"/>&gt; span = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length];<br/>
-	/// <see langword="return"/> <see cref="Convert"/>.TryFromBase64String(@<paramref name="this"/>, span, <see langword="out var"/> count) ? encoding.GetString(span.TrimEnd((<see cref="byte"/>)0)) : @<paramref name="this"/>;
+	/// Span&lt;<see cref="byte"/>&gt; span = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length * 4];<br/>
+	/// <see langword="return"/> <see cref="Convert"/>.TryFromBase64String(@<paramref name="this"/>, span, <see langword="out var"/> count) ? <paramref name="encoding"/>.GetString(span.Slice(0, count)) : @<paramref name="this"/>;
 	/// </code>
-	/// </summary>
+	/// </remarks>
 	public static string FromBase64(this string @this, Encoding encoding)
 	{
-		Span<byte> span = stackalloc byte[@this.Length];
-		return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.TrimEnd((byte)0)) : @this;
+		Span<byte> span = stackalloc byte[@this.Length * sizeof(char)];
+		return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
 	}
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <paramref name="comparison"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Has(this string @this, string value, StringComparison comparison = STRING_COMPARISON)
 		=> @this.Contains(value, comparison);
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; <paramref name="comparison"/>.ToStringComparer().Equals(@<paramref name="this"/>, <paramref name="value"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is(this string? @this, string? value, StringComparison comparison = STRING_COMPARISON)
 		=> comparison.ToStringComparer().Equals(@this, value);
 
-	/// <summary>
+	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.IsNullOrWhiteSpace(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool IsBlank([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrWhiteSpace(@this);
 
-	/// <summary>
+	/// <inheritdoc cref="string.IsNullOrEmpty(string?)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool IsEmpty([NotNullWhen(false)] this string? @this)
+		=> string.IsNullOrEmpty(@this);
+
+	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
+	/// <remarks>
 	/// <c>=&gt; !<see cref="string"/>.IsNullOrWhiteSpace(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool IsNotBlank([NotNullWhen(true)] this string? @this)
 		=> !string.IsNullOrWhiteSpace(@this);
 
-	/// <summary>
-	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string Join(this string? @this, params string[] values)
-		=> string.Join(@this, values);
+	/// <inheritdoc cref="string.IsNullOrEmpty(string?)"/>
+	/// <remarks>
+	/// <c>=&gt; !<see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool IsNotEmpty([NotNullWhen(true)] this string? @this)
+		=> !string.IsNullOrEmpty(@this);
 
-	/// <summary>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string Join(this string? @this, IEnumerable<string> values)
+		=> @this.AsSpan().Join(values);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string Join(this string? @this, params string[] values)
+		=> @this.AsSpan().Join(values);
+
+	/// <inheritdoc cref="string.StartsWith(char)"/>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Left(this string @this, char text)
 		=> @this.StartsWith(text);
 
-	/// <summary>
+	/// <inheritdoc cref="string.Substring(int, int)"/>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Substring(0, <paramref name="length"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string Left(this string @this, int length)
 		=> @this.Substring(0, length);
 
-	/// <summary>
+	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Left(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> @this.StartsWith(text, comparison);
 
@@ -215,155 +258,89 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	/// <summary>
-	/// <code>
-	/// =&gt; (<typeparamref name="T"/>)<see cref="TypeOf{T}.SystemType"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see cref="TypeOf{T}.Kind"/> == <see cref="Kind.Enum"/> =&gt; (<see cref="object"/>)<see cref="Enum"/>.Parse&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Boolean"/> =&gt; (<see cref="object"/>)<see cref="bool"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Char"/> =&gt; (<see cref="object"/>)<see cref="bool"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.SByte"/> =&gt; (<see cref="object"/>)<see cref="sbyte"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int16"/> =&gt; (<see cref="object"/>)<see cref="short"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int32"/> =&gt; (<see cref="object"/>)<see cref="int"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int64"/> =&gt; (<see cref="object"/>)<see cref="long"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Byte"/> =&gt; (<see cref="object"/>)<see cref="byte"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt16"/> =&gt; (<see cref="object"/>)<see cref="ushort"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt32"/> =&gt; (<see cref="object"/>)<see cref="uint"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt64"/> =&gt; (<see cref="object"/>)<see cref="ulong"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Single"/> =&gt; (<see cref="object"/>)<see cref="float"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Double"/> =&gt; (<see cref="object"/>)<see cref="double"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/><see cref="SystemType.Decimal"/> =&gt; (<see cref="object"/>)<see cref="decimal"/>.Parse(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/>_ =&gt; (<see cref="object"/>)<see langword="default"/>(<typeparamref name="T"/>)<br/>
-	/// };
-	/// </code>
-	/// </summary>
-	public static T Parse<T>(this string @this)
-		where T : unmanaged
-		=> (T)(TypeOf<T>.SystemType switch
-		{
-			_ when TypeOf<T>.Kind == Kind.Enum => (object)Enum.Parse<T>(@this),
-			SystemType.Boolean => (object)bool.Parse(@this),
-			SystemType.Char => (object)char.Parse(@this),
-			SystemType.SByte => (object)sbyte.Parse(@this),
-			SystemType.Int16 => (object)short.Parse(@this),
-			SystemType.Int32 => (object)int.Parse(@this),
-			SystemType.Int64 => (object)long.Parse(@this),
-			SystemType.Byte => (object)sbyte.Parse(@this),
-			SystemType.UInt16 => (object)ushort.Parse(@this),
-			SystemType.UInt32 => (object)uint.Parse(@this),
-			SystemType.UInt64 => (object)ulong.Parse(@this),
-			SystemType.Single => (object)float.Parse(@this),
-			SystemType.Double => (object)double.Parse(@this),
-			SystemType.Decimal => (object)decimal.Parse(@this),
-			_ => (object)default(T)
-		});
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? @<paramref name="this"/> : <see langword="null"/>;</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[return:NotNullIfNotNull("this")]
+	public static string? NullIfBlank(this string? @this)
+		=> @this.IsNotBlank() ? @this : null;
 
-	/// <summary>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.IsNotEmpty() ? @<paramref name="this"/> : <see langword="null"/>;</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[return: NotNullIfNotNull("this")]
+	public static string? NullIfEmpty(this string? @this)
+		=> @this.IsNotEmpty() ? @this : null;
+
+	/// <remarks>
+	/// <code>
+	/// =&gt; <see cref="TypeOf{T}.SystemType"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <see cref="TypeOf{T}.Kind"/> == <see cref="Kind.Enum"/> &amp;&amp; <see cref="Enum"/>.TryParse&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; value,<br/>
+	/// <see langword="    "/><see cref="SystemType.Boolean"/> <see langword="when"/> <see cref="bool"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="bool"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Char"/> <see langword="   when"/> <see cref="char"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="char"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.SByte"/> <see langword="  when"/> <see cref="sbyte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="sbyte"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int16"/> <see langword="  when"/> <see cref="short"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="short"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int32"/> <see langword="  when"/> <see cref="int"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="    "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="int"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Int64"/> <see langword="  when"/> <see cref="long"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="long"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Byte"/> <see langword="   when"/> <see cref="byte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="byte"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt16"/> <see langword=" when"/> <see cref="ushort"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword=" "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="ushort"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt32"/> <see langword=" when"/> <see cref="uint"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="uint"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.UInt64"/> <see langword=" when"/> <see cref="ulong"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="ulong"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Single"/> <see langword=" when"/> <see cref="float"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="float"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Double"/> <see langword=" when"/> <see cref="double"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword=" "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="double"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/><see cref="SystemType.Decimal"/> <see langword="when"/> <see cref="decimal"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="decimal"/>, <typeparamref name="T"/>&gt;(value),<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// } <see langword="as"/> <typeparamref name="T"/>?;
+	/// </code>
+	/// </remarks>
+	public static T? Parse<T>(this string @this)
+		where T : unmanaged
+		=> TypeOf<T>.SystemType switch
+		{
+			_ when TypeOf<T>.Kind == Kind.Enum && Enum.TryParse<T>(@this, out var value) => (T?)value,
+			SystemType.Boolean when bool.TryParse(@this, out var value) => Unsafe.Convert<bool, T>(value),
+			SystemType.Char when char.TryParse(@this, out var value) => Unsafe.Convert<char, T>(value),
+			SystemType.SByte when sbyte.TryParse(@this, out var value) => Unsafe.Convert<sbyte, T>(value),
+			SystemType.Int16 when short.TryParse(@this, out var value) => Unsafe.Convert<short, T>(value),
+			SystemType.Int32 when int.TryParse(@this, out var value) => Unsafe.Convert<int, T>(value),
+			SystemType.Int64 when long.TryParse(@this, out var value) => Unsafe.Convert<long, T>(value),
+			SystemType.Byte when sbyte.TryParse(@this, out var value) => Unsafe.Convert<sbyte, T>(value),
+			SystemType.UInt16 when ushort.TryParse(@this, out var value) => Unsafe.Convert<ushort, T>(value),
+			SystemType.UInt32 when uint.TryParse(@this, out var value) => Unsafe.Convert<uint, T>(value),
+			SystemType.UInt64 when ulong.TryParse(@this, out var value) => Unsafe.Convert<ulong, T>(value),
+			SystemType.Single when float.TryParse(@this, out var value) => Unsafe.Convert<float, T>(value),
+			SystemType.Double when double.TryParse(@this, out var value) => Unsafe.Convert<double, T>(value),
+			SystemType.Decimal when decimal.TryParse(@this, out var value) => Unsafe.Convert<decimal, T>(value),
+			_ => null
+		};
+
+	/// <inheritdoc cref="Regex.Escape(string)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="Regex"/>.Escape(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string RegexEscape(this string @this)
 		=> Regex.Escape(@this);
 
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.IsMatch(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool RegexIsMatch(this string @this, string pattern, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.IsMatch(@this, pattern, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.IsMatch(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool RegexIsMatch(this string @this, string pattern, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.IsMatch(@this, pattern, options, timeout);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Match(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static Match RegexMatch(this string @this, string pattern, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Match(@this, pattern, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Match(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static Match RegexMatch(this string @this, string pattern, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Match(@this, pattern, options, timeout);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Matches(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static MatchCollection RegexMatches(this string @this, string pattern, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Matches(@this, pattern, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Matches(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static MatchCollection RegexMatches(this string @this, string pattern, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Matches(@this, pattern, options, timeout);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="evaluator"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string RegexReplace(this string @this, string pattern, MatchEvaluator evaluator, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Replace(@this, pattern, evaluator, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="evaluator"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string RegexReplace(this string @this, string pattern, MatchEvaluator evaluator, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Replace(@this, pattern, evaluator, options, timeout);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="replacement"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string RegexReplace(this string @this, string pattern, string replacement, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Replace(@this, pattern, replacement, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Replace(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="replacement"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string RegexReplace(this string @this, string pattern, string replacement, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Replace(@this, pattern, replacement, options, timeout);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Split(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string[] RegexSplit(this string @this, string pattern, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Split(@this, pattern, options);
-
-	/// <summary>
-	/// <c>=&gt; <see cref="Regex"/>.Split(@<paramref name="this"/>, <paramref name="pattern"/>, <paramref name="options"/>, <paramref name="timeout"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string[] RegexSplit(this string @this, string pattern, TimeSpan timeout, RegexOptions options = REGEX_OPTIONS)
-		=> Regex.Split(@this, pattern, options, timeout);
-
-	/// <summary>
+	/// <inheritdoc cref="Regex.Unescape(string)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="Regex"/>.Unescape(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string RegexUnescape(this string @this)
 		=> Regex.Unescape(@this);
 
-	/// <summary>
+	/// <remarks>
 	/// <code>
 	/// Span&lt;<see cref="char"/>&gt; span = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
 	/// @<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
 	/// span.Reverse();<br/>
 	/// <see langword="return new"/> <see cref="string"/>(span);
 	/// </code>
-	/// </summary>
+	/// </remarks>
 	public static string Reverse(this string @this)
 	{
 		Span<char> span = stackalloc char[@this.Length];
@@ -372,134 +349,94 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	/// <summary>
+	/// <inheritdoc cref="string.EndsWith(char)"/>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Right(this string @this, char text)
 		=> @this.EndsWith(text);
 
-	/// <summary>
+	/// <inheritdoc cref="string.EndsWith(string, StringComparison)"/>
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Right(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> @this.EndsWith(text, comparison);
 
-	/// <summary>
+	/// <remarks>
 	/// <code>
-	/// Span&lt;<see cref="byte"/>&gt; bytes = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length * <see langword="sizeof"/>(<see cref="int"/>)];<br/>
+	/// Span&lt;<see cref="byte"/>&gt; bytes = <see langword="stackalloc"/> <see cref="byte"/>[<paramref name="encoding"/>.GetMaxByteCount(@<paramref name="this"/>.Length) - 1];<br/>
 	/// @<paramref name="this"/>.ToBytes(<paramref name="encoding"/>, bytes);<br/>
-	/// Span&lt;<see cref="char"/>&gt; chars = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length * <see langword="sizeof"/>(<see cref="int"/>)];<br/>
-	/// <see langword="return"/> <see cref="Convert"/>.TryToBase64Chars(bytes, chars, <see langword="out var"/> count) ? <see langword="new"/> <see cref="string"/>(chars.Slice(0, count)) : @<paramref name="this"/>;
+	/// <br/>
+	/// Span&lt;<see cref="char"/>&gt; chars = <see langword="stackalloc"/> <see cref="char"/>[bytes.Length * <see langword="sizeof"/>(<see cref="char"/>)];<br/>
+	/// <see langword="return"/> <see cref="Convert"/>.TryToBase64Chars(bytes, chars, <see langword="out var"/> count)<br/>
+	/// <see langword="    "/>? <see langword="new"/> <see cref="string"/>(chars.Slice(0, <paramref name="stripPadding"/> ? count - 2 : count))<br/>
+	/// <see langword="    "/>: <see cref="string.Empty"/>;
 	/// </code>
-	/// </summary>
-	public static string ToBase64(this string @this, Encoding encoding)
+	/// </remarks>
+	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
 	{
-		Span<byte> bytes = stackalloc byte[@this.Length * sizeof(int)];
+		Span<byte> bytes = stackalloc byte[encoding.GetMaxByteCount(@this.Length) - 1];
 		@this.ToBytes(encoding, bytes);
-		Span<char> chars = stackalloc char[bytes.Length * sizeof(int)];
-		return Convert.TryToBase64Chars(bytes, chars, out var count) ? new string(chars.Slice(0, count)) : @this;
+
+		Span<char> chars = stackalloc char[bytes.Length * sizeof(char)];
+		return Convert.TryToBase64Chars(bytes, chars, out var count)
+			? new string(chars.Slice(0, stripPadding ? count - 2 : count))
+			: string.Empty;
 	}
 
-	/// <summary>
+	/// <inheritdoc cref="Encoding.GetBytes(string)"/>
+	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static byte[] ToBytes(this string @this, Encoding encoding)
 		=> encoding.GetBytes(@this);
 
-	/// <summary>
+	/// <inheritdoc cref="Encoding.GetBytes(ReadOnlySpan{char}, Span{byte})"/>
+	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>, <paramref name="bytes"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
 		=> encoding.GetBytes(@this, bytes);
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
-	/// </summary>
+	/// </remarks>
 	public static T? ToEnum<T>(this string? @this)
 		where T : struct, Enum
 		=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
 
-	/// <summary>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string ToText(this byte[] @this, Encoding encoding)
-		=> encoding.GetString(@this);
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Uri? ToUri(this string? @this)
+		=> @this is not null ? new Uri(@this) : null;
 
-	/// <summary>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>, <paramref name="index"/>, <paramref name="count"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string ToText(this byte[] @this, Encoding encoding, int index, int count)
-		=> encoding.GetString(@this, index, count);
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>, <paramref name="kind"/>) : <see langword="null"/>;</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Uri? ToUri(this string? @this, UriKind kind)
+		=> @this is not null ? new Uri(@this, kind) : null;
 
-	/// <summary>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static string ToText(this ReadOnlySpan<byte> @this, Encoding encoding)
-		=> encoding.GetString(@this);
-
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Right(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(0, @<paramref name="this"/>.Length - <paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
-	/// </summary>
+	/// </remarks>
 	public static string TrimEnd(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> text.IsNotBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Left(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(<paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
-	/// </summary>
+	/// </remarks>
 	public static string TrimStart(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
-
-	/// <summary>
-	/// <code>
-	/// =&gt; <see cref="TypeOf{T}.SystemType"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see cref="TypeOf{T}.Kind"/> == <see cref="Kind.Enum"/> =&gt; <see cref="Enum"/>.TryParse&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Boolean"/> =&gt; <see cref="bool"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Char"/> =&gt; <see cref="char"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.SByte"/> =&gt; <see cref="sbyte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Int16"/> =&gt; <see cref="short"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Int32"/> =&gt; <see cref="int"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Int64"/> =&gt; <see cref="long"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Byte"/> =&gt; <see cref="byte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt16"/> =&gt; <see cref="ushort"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt32"/> =&gt; <see cref="uint"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt64"/> =&gt; <see cref="ulong"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Single"/> =&gt; <see cref="float"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Double"/> =&gt; <see cref="double"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/><see cref="SystemType.Decimal"/> =&gt; <see cref="decimal"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) ? (<see cref="object"/>)value : <see langword="null"/>,<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// } <see langword="as"/> <typeparamref name="T"/>?;
-	/// </code>
-	/// </summary>
-	public static T? TryParse<T>(this string @this)
-		where T : unmanaged
-		=> TypeOf<T>.SystemType switch
-		{
-			_ when TypeOf<T>.Kind == Kind.Enum => Enum.TryParse<T>(@this, out var value) ? (object)value : null,
-			SystemType.Boolean => bool.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Char => char.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.SByte => sbyte.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Int16 => short.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Int32 => int.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Int64 => long.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Byte => sbyte.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.UInt16 => ushort.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.UInt32 => uint.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.UInt64 => ulong.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Single => float.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Double => double.TryParse(@this, out var value) ? (object)value : null,
-			SystemType.Decimal => decimal.TryParse(@this, out var value) ? (object)value : null,
-			_ => null
-		} as T?;
 }

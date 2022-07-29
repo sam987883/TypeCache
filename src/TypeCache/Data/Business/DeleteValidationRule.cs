@@ -1,28 +1,40 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using TypeCache.Business;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
-using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class DeleteValidationRule : IValidationRule<DeleteRequest>
+internal class DeleteValidationRule : IValidationRule<DeleteCommand>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public DeleteValidationRule(ISqlApi sqlApi)
+	public DeleteValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(DeleteRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(DeleteCommand request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
-		schema.Type.Assert(ObjectType.Table);
+		var validator = new Validator();
+		validator.AssertNotNull(request);
 
-		await ValueTask.CompletedTask;
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.Table);
+		}
+
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			validator.AssertEquals(schema.Type, ObjectType.Table);
+			if (validator.Success)
+				request.Table = schema.Name;
+		}
+
+		return validator.Fails;
 	}
 }

@@ -1,26 +1,34 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Extensions;
 
 namespace TypeCache.Net.Business;
 
-internal class HttpClientValidationRule : IValidationRule<HttpRequestMessage>, IValidationRule<(HttpRequestMessage HttpRequest, string HttpClientName)>
+internal class HttpClientValidationRule
+	: IValidationRule<HttpRequestMessage>
+	, IValidationRule<(HttpRequestMessage HttpRequest, string HttpClientName)>
 {
-	public async ValueTask ValidateAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+	public IEnumerable<string> Validate(HttpRequestMessage request)
 	{
-		request.RequestUri.AssertNotNull();
-		request.RequestUri!.IsAbsoluteUri.Assert(true);
-		await ValueTask.CompletedTask;
+		var validator = new Validator();
+		validator.AssertNotNull(request?.RequestUri);
+
+		if (validator.Success)
+			validator.AssertEquals(request!.RequestUri!.IsAbsoluteUri, true);
+
+		return validator.Fails;
 	}
 
-	public async ValueTask ValidateAsync((HttpRequestMessage HttpRequest, string HttpClientName) request, CancellationToken cancellationToken = default)
+	public IEnumerable<string> Validate((HttpRequestMessage HttpRequest, string HttpClientName) request)
 	{
-		request.HttpRequest.RequestUri.AssertNotNull();
-		request.HttpRequest.RequestUri!.IsAbsoluteUri.Assert(false);
-		await ValueTask.CompletedTask;
+		var validator = new Validator();
+		validator.AssertNotNull(request.HttpRequest?.RequestUri);
+
+		if (validator.Success)
+			validator.AssertEquals(request.HttpRequest!.RequestUri!.IsAbsoluteUri, true);
+
+		return validator.Fails;
 	}
 }

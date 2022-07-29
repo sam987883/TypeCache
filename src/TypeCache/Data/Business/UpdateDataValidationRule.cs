@@ -1,38 +1,47 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class UpdateDataValidationRule : IValidationRule<UpdateDataRequest>
+internal class UpdateDataValidationRule<T> : IValidationRule<UpdateDataCommand<T>>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public UpdateDataValidationRule(ISqlApi sqlApi)
+	public UpdateDataValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(UpdateDataRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(UpdateDataCommand<T> request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
-		schema.Type.Assert(ObjectType.Table);
-		request.Table = schema.Name;
+		var validator = new Validator();
+		validator.AssertNotNull(request);
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.Table);
+		}
 
-		var invalidColumnCsv = request.Input.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).ToCSV(column => $"[{column}]");
-		if (invalidColumnCsv.IsNotBlank())
-			throw new ArgumentException($"{nameof(request.Input)}.{nameof(request.Input.Columns)} contains non-writable columns: {invalidColumnCsv}.", $"{nameof(UpdateDataRequest)}.{nameof(UpdateDataRequest.Input)}");
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			validator.AssertEquals(schema.Type, ObjectType.Table);
+			validator.AssertEquals(request.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).Any(), false);
 
-		if (!request.On.Any())
-			request.On = schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name).ToArray();
+			if (validator.Success)
+			{
+				request.Table = schema.Name;
+				if (!request.On.Any())
+					request.On = schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name).ToArray();
+			}
+		}
 
-		await ValueTask.CompletedTask;
+		return validator.Fails;
 	}
 }

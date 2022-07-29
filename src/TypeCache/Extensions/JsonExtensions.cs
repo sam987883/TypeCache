@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -14,21 +15,21 @@ public static class JsonExtensions
 {
 	public static JsonElement[] GetArrayElements(this JsonElement @this)
 	{
-		@this.ValueKind.Assert(JsonValueKind.Array);
+		@this.ValueKind.AssertEquals(JsonValueKind.Array);
 
 		return @this.EnumerateArrayValues().ToArray();
 	}
 
 	public static object?[]? GetArrayValues(this JsonElement @this)
 	{
-		@this.ValueKind.Assert(JsonValueKind.Array);
+		@this.ValueKind.AssertEquals(JsonValueKind.Array);
 
 		return @this.EnumerateArrayValues().Map(jsonElement => jsonElement.GetValue()).ToArray();
 	}
 
 	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)
 	{
-		@this.ValueKind.Assert(JsonValueKind.Object);
+		@this.ValueKind.AssertEquals(JsonValueKind.Object);
 
 		var properties = new Dictionary<string, JsonElement>(NAME_STRING_COMPARISON.ToStringComparer());
 		using var enumerator = @this.EnumerateObject();
@@ -41,7 +42,7 @@ public static class JsonExtensions
 
 	public static IDictionary<string, object?> GetObjectValues(this JsonElement @this)
 	{
-		@this.ValueKind.Assert(JsonValueKind.Object);
+		@this.ValueKind.AssertEquals(JsonValueKind.Object);
 
 		var properties = new Dictionary<string, object?>(NAME_STRING_COMPARISON.ToStringComparer());
 		using var enumerator = @this.EnumerateObject();
@@ -95,6 +96,9 @@ public static class JsonExtensions
 				return true;
 		return false;
 	}
+
+	public static T[]? ToArray<T>(this JsonArray @this, JsonSerializerOptions? options = null)
+		=> JsonSerializer.Deserialize<T[]?>(@this, options);
 
 	public static void WriteValue(this Utf8JsonWriter @this, object? value, JsonSerializerOptions options)
 	{

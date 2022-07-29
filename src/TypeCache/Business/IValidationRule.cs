@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace TypeCache.Business;
 
-public interface IValidationRule<in I>
+public interface IValidationRule<in REQUEST>
 {
-	ValueTask ValidateAsync(I request, CancellationToken cancellationToken = default);
+	IEnumerable<string> Validate(REQUEST request);
 }

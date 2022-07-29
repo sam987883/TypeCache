@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,22 +8,30 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business;
 
-public class DefaultProcessIntermediary<I> : IProcessIntermediary<I>
+public class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary<REQUEST>
 {
-	private readonly IProcess<I> _Process;
-	private readonly IEnumerable<IValidationRule<I>> _ValidationRules;
+	private readonly IProcess<REQUEST> _Process;
+	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;
 
-	public DefaultProcessIntermediary(IProcess<I> process, IEnumerable<IValidationRule<I>> validationRules)
+	public DefaultProcessIntermediary(IProcess<REQUEST> process, IEnumerable<IValidationRule<REQUEST>> validationRules)
 	{
 		this._Process = process;
 		this._ValidationRules = validationRules;
 	}
 
-	public async ValueTask HandleAsync(I request, CancellationToken cancellationToken)
+	public async ValueTask RunAsync(REQUEST request, CancellationToken token)
 	{
-		if (this._ValidationRules.Any())
-			await this._ValidationRules.DoAsync(async validationRule => await validationRule.ValidateAsync(request));
-
-		await this._Process.RunAsync(request, cancellationToken);
+		try
+		{
+			var validationMessages = this._ValidationRules.Map(_ => _.Validate(request)).Gather().ToArray();
+			if (validationMessages.Any())
+				await ValueTask.FromException(new ValidationException(validationMessages));
+			else
+				await this._Process.PublishAsync(request, token);
+		}
+		catch (Exception error)
+		{
+			await ValueTask.FromException(error);
+		}
 	}
 }

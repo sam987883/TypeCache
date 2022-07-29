@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -43,103 +44,103 @@ public static class TypeOf<T>
 
 	public static IReadOnlyList<ConstructorMember> Constructors => Member.Constructors;
 
-	public static IReadOnlyDictionary<string, FieldMember> Fields => Member.Fields;
+	public static IReadOnlyList<FieldMember> Fields => Member.Fields;
 
-	public static IReadOnlyDictionary<string, IReadOnlyList<MethodMember>> Methods => Member.Methods;
+	public static IReadOnlyList<MethodMember> Methods => Member.Methods;
 
-	public static IReadOnlyDictionary<string, PropertyMember> Properties => Member.Properties;
+	public static IReadOnlyList<PropertyMember> Properties => Member.Properties;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static T Create(params object?[]? parameters)
-		=> (T)Member.Create(parameters);
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T? Create(params object?[]? parameters)
+		=> (T?)Member.Create(parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Implements<V>()
 		where V : class
 		=> Member.Implements<V>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Implements(Type type)
 		=> Member.Implements(type);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeMethod(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeMethod(name, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1, T2>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1, T2, T3>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1, T2, T3, T4>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1, T2, T3, T4, T5>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod<T1, T2, T3, T4, T5, T6>(string name, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6) }, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericMethod(string name, Type[] genericTypes, object instance, params object?[]? parameters)
 		=> Member.InvokeGenericMethod(name, genericTypes, instance, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1, T2>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1), typeof(T2) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1, T2, T3>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1, T2, T3, T4>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1, T2, T3, T4, T5>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod<T1, T2, T3, T4, T5, T6>(string name, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, new[] { typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6) }, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeGenericStaticMethod(string name, Type[] genericTypes, params object?[]? parameters)
 		=> Member.InvokeGenericStaticMethod(name, genericTypes, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? InvokeStaticMethod(string name, params object?[]? parameters)
 		=> Member.InvokeStaticMethod(name, parameters);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is<V>()
 		=> Member.Is<V>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is(Type type)
 		=> Member.Is(type);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static D? GetConstructor<D>()
 		where D : Delegate
 		=> Member.GetConstructor<D>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static D? GetMethod<D>(string name, bool isStatic = false)
 		where D : Delegate
 		=> Member.GetMethod<D>(name, isStatic);

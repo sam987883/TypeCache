@@ -26,7 +26,7 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 		if (controller is not null)
 		{
 			var type = controller.ControllerTypeInfo.GetTypeMember();
-			var method = type.GetMethodMember(controller.MethodInfo.MethodHandle)!;
+			var method = type.GetMethod(controller.MethodInfo.MethodHandle)!;
 			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
 			var success = type.Attributes.If<RequireHeaderAttribute>()
 				.Append(method.Attributes.If<RequireHeaderAttribute>())

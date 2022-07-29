@@ -12,107 +12,18 @@ namespace TypeCache.Collections.Extensions;
 
 public static class ImmutableArrayExtensions
 {
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out IEnumerable<T> rest)
-		where T : struct
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		rest = @this.Length > 1 ? @this.Skip(1) : Enumerable<T>.Empty;
-	}
-
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
-		where T : struct
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		second = @this.Length > 1 ? @this[1] : null;
-		rest = @this.Length > 2 ? @this.Skip(2) : Enumerable<T>.Empty;
-	}
-
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
-		where T : struct
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		second = @this.Length > 1 ? @this[1] : null;
-		third = @this.Length > 2 ? @this[2] : null;
-		rest = @this.Length > 3 ? @this.Skip(3) : Enumerable<T>.Empty;
-	}
-
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out IEnumerable<T> rest)
-		where T : class
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		rest = @this.Length > 1 ? @this.Skip(1) : Enumerable<T>.Empty;
-	}
-
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
-		where T : class
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		second = @this.Length > 1 ? @this[1] : null;
-		rest = @this.Length > 2 ? @this.Skip(2) : Enumerable<T>.Empty;
-	}
-
-	public static void Deconstruct<T>(this ImmutableArray<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
-		where T : class
-	{
-		first = @this.Length > 0 ? @this[0] : null;
-		second = @this.Length > 1 ? @this[1] : null;
-		third = @this.Length > 2 ? @this[2] : null;
-		rest = @this.Length > 3 ? @this.Skip(3) : Enumerable<T>.Empty;
-	}
-
-	public static void Do<T>(this ImmutableArray<T> @this, Action<T> action)
-	{
-		action.AssertNotNull();
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			action(@this[i]);
-	}
-
-	public static void Do<T>(this ImmutableArray<T> @this, Action<T, int> action)
-	{
-		action.AssertNotNull();
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			action(@this[i], i);
-	}
-
-	public static void Do<T>(this ImmutableArray<T> @this, Action<T> action, Action between)
-	{
-		action.AssertNotNull();
-		between.AssertNotNull();
-
-		var count = @this.Length;
-		if (count > 0)
-		{
-			action(@this[0]);
-			for (var i = 1; i < count; ++i)
-			{
-				between();
-				action(@this[i]);
-			}
-		}
-	}
-
-	public static void Do<T>(this ImmutableArray<T> @this, Action<T, int> action, Action between)
-	{
-		action.AssertNotNull();
-		between.AssertNotNull();
-
-		var count = @this.Length;
-		if (count > 0)
-		{
-			var i = 0;
-			action(@this[0], i);
-			for (i = 1; i < count; ++i)
-			{
-				between();
-				action(@this[i], i);
-			}
-		}
-	}
-
+	/// <remarks>
+	/// <code>
+	/// <paramref name="edit"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    "/><paramref name="each"/>(@<paramref name="this"/>[i]);
+	/// </code>
+	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> Each<T>(this ImmutableArray<T> @this, Func<T, T> edit)
 	{
@@ -123,6 +34,18 @@ public static class ImmutableArrayExtensions
 			yield return edit(@this[i]);
 	}
 
+	/// <remarks>
+	/// <code>
+	/// <paramref name="edit"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    "/><paramref name="each"/>(@<paramref name="this"/>[i], i);
+	/// </code>
+	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> Each<T>(this ImmutableArray<T> @this, Func<T, int, T> edit)
 	{
@@ -159,12 +82,12 @@ public static class ImmutableArrayExtensions
 		var count = @this.Length;
 		for (var i = 0; i < count; ++i)
 		{
+			if (token.IsCancellationRequested)
+				yield break;
+
 			var item = @this[i];
 			if (await filter(item))
 				yield return item;
-
-			if (token.IsCancellationRequested)
-				break;
 		}
 	}
 
@@ -176,12 +99,12 @@ public static class ImmutableArrayExtensions
 		var count = @this.Length;
 		for (var i = 0; i < count; ++i)
 		{
+			if (token.IsCancellationRequested)
+				yield break;
+
 			var item = @this[i];
 			if (await filter(item, token))
 				yield return item;
-
-			if (token.IsCancellationRequested)
-				break;
 		}
 	}
 
@@ -191,8 +114,11 @@ public static class ImmutableArrayExtensions
 		map.AssertNotNull();
 
 		var count = @this.Length;
+		var array = new V[count];
 		for (var i = 0; i < count; ++i)
-			yield return map(@this[i]);
+			array[i] = map(@this[i]);
+
+		return array;
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -201,15 +127,10 @@ public static class ImmutableArrayExtensions
 		map.AssertNotNull();
 
 		var count = @this.Length;
+		var array = new V[count];
 		for (var i = 0; i < count; ++i)
-			yield return map(@this[i], i);
-	}
+			array[i] = map(@this[i], i);
 
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<int> ToIndex<T>(this ImmutableArray<T> @this, Predicate<T> filter)
-	{
-		filter.AssertNotNull();
-
-		return (0..@this.Length).Values().If(i => filter(@this[i]));
+		return array;
 	}
 }

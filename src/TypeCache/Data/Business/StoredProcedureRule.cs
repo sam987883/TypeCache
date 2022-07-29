@@ -3,27 +3,25 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
-using TypeCache.Data.Requests;
-using TypeCache.Data.Responses;
+using TypeCache.Data.Domain;
+using TypeCache.Data.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class StoredProcedureRule : IRule<StoredProcedureRequest, StoredProcedureResponse>
+internal class StoredProcedureRule : IRule<StoredProcedureCommand, object>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public StoredProcedureRule(ISqlApi sqlApi)
+	public StoredProcedureRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	public async ValueTask<StoredProcedureResponse> ApplyAsync(StoredProcedureRequest request, CancellationToken cancellationToken)
+	async ValueTask<object> IRule<StoredProcedureCommand, object>.ApplyAsync(StoredProcedureCommand request, CancellationToken token)
 	{
-		request.Procedure = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure).Name;
-		return new StoredProcedureResponse
-		{
-			Output = await this._SqlApi.CallAsync(request, cancellationToken),
-			Parameters = request.Parameters
-		};
+		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		return request.ReadData is not null
+			? await connection.ExecuteAsync(request, request.ReadData, token)
+			: await connection.ExecuteAsync(request, token);
 	}
 }

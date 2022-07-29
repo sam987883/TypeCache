@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using TypeCache.Attributes;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -42,9 +43,7 @@ public abstract class Member
 	/// </summary>
 	public IReadOnlyList<Attribute> Attributes { get; }
 
-	/// <summary>
-	/// Owning assembly level scope.
-	/// </summary>
+	/// <inheritdoc cref="Type.IsVisible"/>
 	public bool Internal { get; }
 
 	/// <summary>
@@ -52,13 +51,11 @@ public abstract class Member
 	/// </summary>
 	public string Name { get; }
 
-	/// <summary>
-	/// Whether the <see cref="Member"/> is publicly visible to consumers.
-	/// </summary>
+	/// <inheritdoc cref="Type.IsPublic"/>
 	public bool Public { get; }
 
 	/// <summary>
-	/// The owning type; the <see cref="TypeMember"/> that contains this <see cref="Member"/>.
+	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
 	/// </summary>
 	public TypeMember Type { get; }
 }

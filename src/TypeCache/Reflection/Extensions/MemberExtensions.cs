@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -40,26 +41,24 @@ public static class MemberExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    null"/> =&gt; <see cref="TypeOf{T}.Member"/>,<br/>
 	///	<see langword="    "/><see cref="Type"/> type =&gt; type.TypeHandle.GetTypeMember(),<br/>
 	///	<see langword="    "/><see cref="MemberInfo"/> memberInfo =&gt; memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),<br/>
-	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetType().TypeHandle.GetTypeMember()<br/>
+	///	<see langword="    "/>_ =&gt; <see cref="TypeOf{T}.Member"/><br/>
 	/// };<br/>
 	/// </code>
 	/// </summary>
 	public static TypeMember GetTypeMember<T>(this T @this)
 		=> @this switch
 		{
-			null => TypeOf<T>.Member,
 			Type type => type.TypeHandle.GetTypeMember(),
 			MemberInfo memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),
-			_ => @this.GetType().TypeHandle.GetTypeMember()
+			_ => TypeOf<T>.Member,
 		};
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Implements<T>(this TypeMember? @this)
 		=> @this.Implements(typeof(T));
 
@@ -100,7 +99,7 @@ public static class MemberExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Implements(this TypeMember? @this, Type type)
 	{
 		type.AssertNotNull();
@@ -140,7 +139,7 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> &amp;&amp; @<paramref name="this"/>.Handle.Equals(<see langword="typeof"/>(<typeparamref name="V"/>).TypeHandle);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is<V>(this TypeMember? @this)
 		=> @this is not null && @this.Handle.Equals(typeof(V).TypeHandle);
 
@@ -149,7 +148,7 @@ public static class MemberExtensions
 	/// (@<paramref name="this"/>.Handle.Equals(<paramref name="type"/>.TypeHandle)
 	///		|| @<paramref name="this"/>.GenericHandle.Equals(<paramref name="type"/>.TypeHandle));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is(this TypeMember? @this, Type type)
 		=> @this is not null && (@this.Handle.Equals(type.TypeHandle) || @this.GenericHandle.Equals(type.TypeHandle));
 
@@ -159,7 +158,7 @@ public static class MemberExtensions
 	/// <see langword="    return"/> !@<paramref name="this"/>.Any() || @<paramref name="this"/>.All(parameter =&gt; parameter!.HasDefaultValue || parameter.IsOptional);<br/>
 	/// <br/>
 	/// <see langword="var"/> argumentEnumerator = arguments.GetEnumerator();<br/>
-	/// <see langword="return"/> @<paramref name="this"/>.All(parameter =&gt; argumentEnumerator.TryNext(<see langword="out var"/> argument)<br/>
+	/// <see langword="return"/> @<paramref name="this"/>.All(parameter =&gt; argumentEnumerator.IfNext(<see langword="out var"/> argument)<br/>
 	/// <see langword="    "/>? (argument <see langword="is not null"/> ? parameter.Type.Supports(argument.GetType()) : parameter.Type.Nullable)<br/>
 	/// <see langword="    "/>: parameter.HasDefaultValue || parameter.IsOptional) &amp;&amp; !argumentEnumerator.MoveNext();
 	/// </code>
@@ -170,7 +169,7 @@ public static class MemberExtensions
 			return !@this.Any() || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 
 		var argumentEnumerator = arguments.GetEnumerator();
-		return @this.All(parameter => argumentEnumerator.TryNext(out var argument)
+		return @this.All(parameter => argumentEnumerator.IfNext(out var argument)
 			? (argument is not null ? parameter.Type.Supports(argument.GetType()) : parameter.Type.Nullable)
 			: parameter.HasDefaultValue || parameter.IsOptional) && !argumentEnumerator.MoveNext();
 	}
@@ -186,14 +185,14 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; ((<see cref="Type"/>)@<paramref name="this"/>).IsSubclassOf((<see cref="Type"/>)<paramref name="typeMember"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool IsSubclassOf(this TypeMember @this, TypeMember typeMember)
 		=> ((Type)@this).IsSubclassOf((Type)typeMember);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Supports(<paramref name="type"/>.GetTypeMember();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Supports(this TypeMember @this, Type type)
 		=> @this.Supports(type.GetTypeMember());
 

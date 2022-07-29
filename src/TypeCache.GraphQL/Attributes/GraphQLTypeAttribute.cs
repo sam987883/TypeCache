@@ -82,7 +82,7 @@ public class GraphQLTypeAttribute : Attribute
 	public GraphQLTypeAttribute(Type graphType)
 	{
 		graphType.AssertNotNull();
-		graphType.IsGraphType().Assert(true);
+		graphType.IsGraphType().AssertEquals(true);
 
 		this._GraphType = graphType.TypeHandle;
 	}

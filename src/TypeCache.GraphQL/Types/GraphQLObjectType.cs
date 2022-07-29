@@ -25,9 +25,9 @@ public sealed class GraphQLObjectType<T> : GraphQLComplexType, IObjectGraphType
 		this.Description = TypeOf<T>.Member.GraphQLDescription();
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
-		TypeOf<T>.Properties.Values
+		TypeOf<T>.Properties
 			.If(property => property.Getter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property.ToFieldType()));
+			.Do(property => this.AddField(property.ToFieldType<T>()));
 
 		TypeOf<T>.InterfaceTypes
 			.If(type => type.ElementType is null && !type.GenericHandle.HasValue)

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
 using static TypeCache.Default;
@@ -31,7 +32,7 @@ public static class DelegateOf<T>
 
 	public static ReturnParameter Return => Member.Return;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static object? Invoke(object instance, params object?[]? arguments)
 		=> Member.Invoke(instance, arguments);
 }

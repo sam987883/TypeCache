@@ -1,11 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
+using TypeCache.Attributes;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.TestApp.Tables;
 
+[SqlApi]
 public class Person
 {
 	[GraphQLType(ScalarType.HashID)]

@@ -1,60 +1,37 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Data.Common;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using TypeCache.Attributes;
 using TypeCache.Business;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Business;
-using TypeCache.Data.Requests;
-using TypeCache.Data.Responses;
-using TypeCache.Mappers;
+using TypeCache.Data.Domain;
+using TypeCache.Data.Schema;
 using TypeCache.Security;
 
 namespace TypeCache.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection RegisterDatabaseProviderFactory(this IServiceCollection @this, string providerName, DbProviderFactory providerFactory)
-	{
-		DbProviderFactories.RegisterFactory(providerName, providerFactory);
-		return @this;
-	}
+	/// <summary>
+	/// Registers singleton <c><see cref="DataSource"/></c> to be available via: <c>IAccessor&lt;<see cref="DataSource"/>&gt;</c><br/>
+	/// <i><b>Requires call to:</b></i>
+	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
+	/// </summary>
+	public static IServiceCollection RegisterDataSource(this IServiceCollection @this, string name, string databaseProvider, string connectionString)
+		=> @this.AddSingleton<DataSource>(new DataSource(name, databaseProvider, connectionString));
 
 	/// <summary>
-	/// Registers Singleton:
-	/// <list type="bullet">
-	/// <item><term><c><see cref="IFieldMapper{FROM, TO}"/></c></term> Default field mapper implementation matching by field names only.</item>
-	/// </list>
+	/// Provides data source related information: <c>IAccessor&lt;<see cref="DataSource"/>&gt;</c><br/>
+	/// <i><b>Requires call to:</b></i>
+	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
 	/// </summary>
-	public static IServiceCollection RegisterDefaultFieldMapper(this IServiceCollection @this)
-		=> @this.AddSingleton(typeof(IFieldMapper<,>), typeof(DefaultFieldMapper<,>));
-
-	/// <summary>
-	/// Registers Singleton:
-	/// <list type="bullet">
-	/// <item><term><c><see cref="IFieldToCsvMapper{T}"/></c></term> Default field to CSV mapper implementation matching by field names only.</item>
-	/// </list>
-	/// </summary>
-	public static IServiceCollection RegisterDefaultFieldToCsvMapper(this IServiceCollection @this)
-		=> @this.AddSingleton(typeof(IFieldToCsvMapper<>), typeof(DefaultFieldToCsvMapper<>));
-
-	/// <summary>
-	/// Registers Singleton:
-	/// <list type="bullet">
-	/// <item><term><c><see cref="IPropertyMapper{FROM, TO}"/></c></term> Default property mapper implementation matching by property names only.</item>
-	/// </list>
-	/// </summary>
-	public static IServiceCollection RegisterDefaultPropertyMapper(this IServiceCollection @this)
-		=> @this.AddSingleton(typeof(IPropertyMapper<,>), typeof(DefaultPropertyMapper<,>));
-
-	/// <summary>
-	/// Registers Singleton:
-	/// <list type="bullet">
-	/// <item><term><c><see cref="IPropertyToCsvMapper{T}"/></c></term> Default property to CSV mapper implementation matching by property names only.</item>
-	/// </list>
-	/// </summary>
-	public static IServiceCollection RegisterDefaultPropertyToCsvMapper(this IServiceCollection @this)
-		=> @this.AddSingleton(typeof(IPropertyToCsvMapper<>), typeof(DefaultPropertyToCsvMapper<>));
+	public static IServiceCollection RegisterDataSourceAccessor(this IServiceCollection @this)
+		=> @this.AddSingleton<IAccessor<DataSource>>(provider => new DataSourceAccessor(provider.GetServices<DataSource>().ToArray()));
 
 	/// <summary>
 	/// Registers Singletons:
@@ -65,7 +42,7 @@ public static class ServiceCollectionExtensions
 	/// <param name="rgbKey">Any random 16 bytes</param>
 	/// <param name="rgbIV">Any random 16 bytes</param>
 	public static IServiceCollection RegisterHashMaker(this IServiceCollection @this, byte[] rgbKey, byte[] rgbIV)
-		=> @this.AddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
 	/// Registers Singletons:
@@ -76,14 +53,14 @@ public static class ServiceCollectionExtensions
 	/// <param name="rgbKey">Any random decimal value (gets converted to a 16 byte array)</param>
 	/// <param name="rgbIV">Any random decimal value (gets converted to a 16 byte array)</param>
 	public static IServiceCollection RegisterHashMaker(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
-		=> @this.AddSingleton<IHashMaker>(new HashMaker(rgbKey, rgbIV));
+		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
 	/// Registers Singletons:
 	/// <list type="bullet">
 	/// <item><c><see cref="IMediator"/></c></item>
-	/// <item><term><c><see cref="DefaultProcessIntermediary{I}"/></c></term> Default implementation of <c><see cref="IProcessIntermediary{I}"/></c>.</item>
-	/// <item><term><c><see cref="DefaultRuleIntermediary{I, O}"/></c></term> Default implementation of <c><see cref="IRuleIntermediary{I, O}"/></c>.</item>
+	/// <item><term><c><see cref="DefaultProcessIntermediary{REQUEST}"/></c></term> Default implementation of <c><see cref="IProcessIntermediary{REQUEST}"/></c>.</item>
+	/// <item><term><c><see cref="DefaultRuleIntermediary{REQUEST, RESPONSE}"/></c></term> Default implementation of <c><see cref="IRuleIntermediary{REQUEST, RESPONSE}"/></c>.</item>
 	/// </list>
 	/// </summary>
 	public static IServiceCollection RegisterMediator(this IServiceCollection @this)
@@ -92,187 +69,83 @@ public static class ServiceCollectionExtensions
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 	/// <summary>
-	/// Provides various database operations: <c><see cref="ISqlApi"/></c><br/>
-	/// <i><b>Requires call to:</b></i>
-	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApi(this IServiceCollection @this, params DataSource[] dataSources)
-		=> @this.AddSingleton<ISqlApi>(new SqlApi(dataSources));
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for calling procedures.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="StoredProcedureRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiCallRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<StoredProcedureRequest, StoredProcedureResponse>, StoredProcedureRule>()
-			.AddSingleton<IValidationRule<StoredProcedureRequest>, StoredProcedureValidationRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for deleting a batch of records.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="DeleteDataRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiDeleteDataRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<DeleteDataRequest, RowSet>, DeleteDataRule>()
-			.AddSingleton<IRule<DeleteDataRequest, string>, DeleteDataRule>()
-			.AddSingleton<IValidationRule<DeleteDataRequest>, DeleteDataValidationRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing deletes.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="DeleteRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiDeleteRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<DeleteRequest, RowSet>, DeleteRule>()
-			.AddSingleton<IRule<DeleteRequest, string>, DeleteRule>()
-			.AddSingleton<IValidationRule<DeleteRequest>, DeleteValidationRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for executing raw SQL.<br/>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiExecuteSqlRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<SqlRequest, RowSet[]>, ExecuteSqlRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for inserting a batch of records.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="InsertDataRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiInsertDataRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<InsertDataRequest, RowSet>, InsertDataRule>()
-			.AddSingleton<IRule<InsertDataRequest, string>, InsertDataRule>()
-			.AddSingleton<IValidationRule<InsertDataRequest>, InsertDataValidationRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing inserts.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="InsertRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiInsertRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<InsertRequest, RowSet>, InsertRule>()
-			.AddSingleton<IRule<InsertRequest, string>, InsertRule>()
-			.AddSingleton<IValidationRule<InsertRequest>, InsertValidationRule>();
-
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API.<br/>
+	/// Registers Singleton Rules and RuleHandlers for the SQL API Commands.<br/>
 	/// You can implement the following validation rules to validate the request before the database call is made:
 	/// <c>
 	/// <list type="table">
-	/// <item>IValidationRule&lt;<see cref="StoredProcedureRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="DeleteDataRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="DeleteRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="InsertDataRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="InsertRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="SelectRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="UpdateDataRequest" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="UpdateRequest" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="StoredProcedureCommand" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="DeleteDataCommand{T}" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="DeleteCommand" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="InsertDataCommand{T}" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="InsertCommand" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="SelectCommand" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="UpdateDataCommand{T}" />&gt;</item>
+	/// <item>IValidationRule&lt;<see cref="UpdateCommand" />&gt;</item>
 	/// </list>
 	/// </c>
 	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
 	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
+	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
+	/// <see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/>
 	/// </code>
 	/// </summary>
-	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this)
-		=> @this.RegisterSqlApiCallRules()
-			.RegisterSqlApiCountRules()
-			.RegisterSqlApiDeleteDataRules()
-			.RegisterSqlApiDeleteRules()
-			.RegisterSqlApiInsertDataRules()
-			.RegisterSqlApiInsertRules()
-			.RegisterSqlApiSelectRules()
-			.RegisterSqlApiUpdateDataRules()
-			.RegisterSqlApiUpdateRules();
+	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this, Assembly? typeAssembly)
+	{
+		@this.AddSingleton<IValidationRule<SchemaRequest>, SchemaValidationRule>()
+			.AddSingleton<IValidationRule<CountCommand>, CountValidationRule>()
+			.AddSingleton<IValidationRule<StoredProcedureCommand>, StoredProcedureValidationRule>()
+			.AddSingleton<IRule<SchemaRequest, ObjectSchema>, SchemaRule>()
+			.AddSingleton<IRule<SchemaRequest, string>, SchemaRule>()
+			.AddSingleton<IRule<StoredProcedureCommand, object>, StoredProcedureRule>()
+			.AddSingleton<IRule<CountCommand, long>, CountRule>()
+			.AddSingleton<IRule<CountCommand, string>, CountRule>()
+			.AddSingleton<IRule<ExecuteCommands, object>, ExecuteCommandsRule>()
+			.AddSingleton<IRule<SqlCommand, object>, ExecuteSqlRule>();
 
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing counts.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="CountRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiCountRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<CountRequest, long>, CountRule>()
-			.AddSingleton<IRule<CountRequest, string>, CountRule>()
-			.AddSingleton<IValidationRule<CountRequest>, CountValidationRule>();
+		if (typeAssembly is not null)
+		{
+			@this.AddSingleton<IValidationRule<DeleteCommand>, DeleteValidationRule>()
+				.AddSingleton<IValidationRule<InsertCommand>, InsertValidationRule>()
+				.AddSingleton<IValidationRule<SelectCommand>, SelectValidationRule>()
+				.AddSingleton<IValidationRule<UpdateCommand>, UpdateValidationRule>();
 
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing selects.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="SelectRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiSelectRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<SelectRequest, RowSet>, SelectRule>()
-			.AddSingleton<IRule<SelectRequest, string>, SelectRule>()
-			.AddSingleton<IValidationRule<SelectRequest>, SelectValidationRule>();
+			typeAssembly.DefinedTypes.If(type => type.IsDefined(typeof(SqlApiAttribute), false)).Do(type =>
+			{
+				var deleteDataCommandType = typeof(DeleteDataCommand<>).MakeGenericType(type);
+				var insertDataCommandType = typeof(InsertDataCommand<>).MakeGenericType(type);
+				var updateDataCommandType = typeof(UpdateDataCommand<>).MakeGenericType(type);
 
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for updating a batch of records.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="UpdateDataRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiUpdateDataRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<UpdateDataRequest, RowSet>, UpdateDataRule>()
-			.AddSingleton<IRule<UpdateDataRequest, string>, UpdateDataRule>()
-			.AddSingleton<IValidationRule<UpdateDataRequest>, UpdateDataValidationRule>();
+				var rowSetResponseType = typeof(RowSetResponse<>).MakeGenericType(type);
+				var updateRowSetResponseType = typeof(UpdateRowSetResponse<>).MakeGenericType(type);
 
-	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers consumed by SQL API for performing updates.<br/>
-	/// You can register the following validation rules to validate the request before the database call is made:
-	/// <code>IValidationRule&lt;<see cref="UpdateRequest" />&gt;</code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code><see cref="RegisterMediator(IServiceCollection)"/></code>
-	/// <code>
-	/// <see cref="RegisterSqlApi(IServiceCollection, DataSource[])"/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiUpdateRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<UpdateRequest, RowSet>, UpdateRule>()
-			.AddSingleton<IRule<UpdateRequest, string>, UpdateRule>()
-			.AddSingleton<IValidationRule<UpdateRequest>, UpdateValidationRule>();
+				var deleteDataRuleType = typeof(DeleteDataRule<>).MakeGenericType(type);
+				var deleteRuleType = typeof(DeleteRule<>).MakeGenericType(type);
+				var insertDataRuleType = typeof(InsertDataRule<>).MakeGenericType(type);
+				var insertRuleType = typeof(InsertRule<>).MakeGenericType(type);
+				var selectRuleType = typeof(SelectRule<>).MakeGenericType(type);
+				var updateDataRuleType = typeof(UpdateDataRule<>).MakeGenericType(type);
+				var updateRuleType = typeof(UpdateRule<>).MakeGenericType(type);
+
+				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(deleteDataCommandType), typeof(DeleteDataValidationRule<>).MakeGenericType(type))
+					.AddSingleton(typeof(IValidationRule<>).MakeGenericType(insertDataCommandType), typeof(InsertDataValidationRule<>).MakeGenericType(type))
+					.AddSingleton(typeof(IValidationRule<>).MakeGenericType(updateDataCommandType), typeof(UpdateDataValidationRule<>).MakeGenericType(type))
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, rowSetResponseType), deleteDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(string)), deleteDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(DeleteCommand), rowSetResponseType), deleteRuleType)
+					.AddSingleton(typeof(IRule<DeleteCommand, string>), deleteRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, rowSetResponseType), insertDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(string)), insertDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(InsertCommand), rowSetResponseType), insertRuleType)
+					.AddSingleton(typeof(IRule<InsertCommand, string>), insertRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(SelectCommand), rowSetResponseType), selectRuleType)
+					.AddSingleton(typeof(IRule<SelectCommand, string>), selectRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, updateRowSetResponseType), updateDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(string)), updateDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(UpdateCommand), updateRowSetResponseType), updateRuleType)
+					.AddSingleton(typeof(IRule<UpdateCommand, string>), updateRuleType);
+			});
+		}
+
+		return @this;
+	}
 }

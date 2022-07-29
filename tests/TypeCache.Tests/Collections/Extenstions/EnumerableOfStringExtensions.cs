@@ -54,7 +54,7 @@ public class EnumerableOfStringExtensions
 	public void IfNotBlank()
 	{
 		Assert.Equal(new[] { "aaa", "Aaa", "BBB", "CcC" }, this.GetStrings().IfNotBlank());
-		Assert.Empty(Enumerable<string>.Empty.IfNotBlank());
+		Assert.Empty(Array<string>.Empty.IfNotBlank());
 		Assert.Empty((null as IEnumerable<string>).IfNotBlank());
 	}
 
@@ -62,9 +62,9 @@ public class EnumerableOfStringExtensions
 	public void IsSequence()
 	{
 		Assert.True(this.GetStrings().IsSequence(this.GetStrings(), StringComparison.Ordinal));
-		Assert.True(Enumerable<string>.Empty.IsSequence(Enumerable<string>.Empty, StringComparison.Ordinal));
-		Assert.False(Enumerable<string>.Empty.IsSequence(null, StringComparison.Ordinal));
-		Assert.False((null as IEnumerable<string>).IsSequence(Enumerable<string>.Empty, StringComparison.Ordinal));
+		Assert.True(Array<string>.Empty.IsSequence(Array<string>.Empty, StringComparison.Ordinal));
+		Assert.False(Array<string>.Empty.IsSequence(null, StringComparison.Ordinal));
+		Assert.False((null as IEnumerable<string>).IsSequence(Array<string>.Empty, StringComparison.Ordinal));
 		Assert.True((null as IEnumerable<string>).IsSequence(null, StringComparison.Ordinal));
 	}
 
@@ -74,8 +74,8 @@ public class EnumerableOfStringExtensions
 		var array = this.GetStrings().ToArray();
 
 		Assert.True(array.IsSet(this.GetStrings(), StringComparison.Ordinal));
-		Assert.True(Enumerable<string>.Empty.IsSet(null, StringComparison.Ordinal));
-		Assert.True((null as IEnumerable<string>).IsSet(Enumerable<string>.Empty, StringComparison.Ordinal));
+		Assert.True(Array<string>.Empty.IsSet(null, StringComparison.Ordinal));
+		Assert.True((null as IEnumerable<string>).IsSet(Array<string>.Empty, StringComparison.Ordinal));
 		Assert.True((null as IEnumerable<string>).IsSet(null, StringComparison.Ordinal));
 	}
 
@@ -87,7 +87,7 @@ public class EnumerableOfStringExtensions
 		Assert.Equal(array, this.GetStrings().Match(array, StringComparison.Ordinal));
 		Assert.NotEqual(array, this.GetStrings().Match(array));
 		Assert.True(new[] { "aaa", "bbb" }.IsSet(this.GetStrings().Match(new[] { "aaa", "bbb" }, StringComparison.OrdinalIgnoreCase)));
-		Assert.Equal(Enumerable<string>.Empty, this.GetStrings().Match(null));
+		Assert.Equal(Array<string>.Empty, this.GetStrings().Match(null));
 	}
 
 	[Fact]
@@ -97,8 +97,8 @@ public class EnumerableOfStringExtensions
 
 		Assert.Equal(Array<string>.Empty, this.GetStrings().NotMatch(array));
 		Assert.True(this.GetStrings().NotMatch(new[] { "aaa", "bbb" }).SetEquals(new[] { "  ", "", null, "CcC" }));
-		Assert.Equal(array, this.GetStrings().NotMatch(Enumerable<string>.Empty, StringComparison.Ordinal));
-		Assert.NotEqual(array, this.GetStrings().NotMatch(Enumerable<string>.Empty));
+		Assert.Equal(array, this.GetStrings().NotMatch(Array<string>.Empty, StringComparison.Ordinal));
+		Assert.NotEqual(array, this.GetStrings().NotMatch(Array<string>.Empty));
 		Assert.Equal(array, this.GetStrings().NotMatch(null, StringComparison.Ordinal));
 		Assert.NotEqual(array, this.GetStrings().NotMatch(null));
 	}
@@ -113,10 +113,10 @@ public class EnumerableOfStringExtensions
 	[Fact]
 	public void ToCSV()
 	{
-		Assert.Equal(",,,aaa,Aaa,BBB,CcC", this.GetStrings().ToCSV());
-		Assert.Equal(",,,AAA,AAA,BBB,CCC", this.GetStrings().ToCSV(_ => _?.Trim().ToUpperInvariant()));
+		Assert.Equal("  , , , aaa, Aaa, BBB, CcC", this.GetStrings().ToCSV());
+		Assert.Equal(", , , AAA, AAA, BBB, CCC", this.GetStrings().ToCSV(_ => _?.Trim().ToUpperInvariant()));
 		Assert.Throws<ArgumentNullException>(() => this.GetStrings().ToCSV(null));
-		Assert.Equal(@"""""""abc"""",""""def"""""",ghi", ((IEnumerable<string>)new[] { @"""abc"",""def""", "ghi" }).ToCSV());
+		Assert.Equal(@"""""""abc"""",""""def"""""",ghi", ((IEnumerable<string>)new[] { @"""abc"",""def""", "ghi" }).ToCSV(true));
 	}
 
 	[Fact]
@@ -151,7 +151,7 @@ public class EnumerableOfStringExtensions
 		var array = this.GetStrings().ToArray();
 
 		Assert.True(array.IsSet(this.GetStrings().ToHashSet(StringComparison.Ordinal), StringComparison.Ordinal));
-		Assert.Empty(Enumerable<string>.Empty.ToHashSet(StringComparison.Ordinal));
+		Assert.Empty(Array<string>.Empty.ToHashSet(StringComparison.Ordinal));
 		Assert.Empty((null as IEnumerable<string>).ToHashSet(StringComparison.Ordinal));
 	}
 
@@ -201,8 +201,8 @@ public class EnumerableOfStringExtensions
 
 		Assert.Equal(array, this.GetStrings().Union(array, StringComparison.Ordinal));
 		Assert.NotEqual(array, this.GetStrings().Union(array));
-		Assert.Equal(array, this.GetStrings().Union(Enumerable<string>.Empty, StringComparison.Ordinal));
-		Assert.NotEqual(array, this.GetStrings().Union(Enumerable<string>.Empty));
+		Assert.Equal(array, this.GetStrings().Union(Array<string>.Empty, StringComparison.Ordinal));
+		Assert.NotEqual(array, this.GetStrings().Union(Array<string>.Empty));
 		Assert.Equal(array, this.GetStrings().Union(null, StringComparison.Ordinal));
 		Assert.NotEqual(array, this.GetStrings().Union(null));
 		Assert.NotEqual(array, this.GetStrings().Union(new[] { "1111" }, StringComparison.Ordinal));
@@ -216,8 +216,8 @@ public class EnumerableOfStringExtensions
 
 		Assert.Equal(Array<string>.Empty, this.GetStrings().Without(array));
 		Assert.True(this.GetStrings().Without(new[] { "aaa", "bbb" }).SetEquals(new[] { "  ", "", null, "CcC" }));
-		Assert.Equal(array, this.GetStrings().Without(Enumerable<string>.Empty, StringComparison.Ordinal));
-		Assert.NotEqual(array, this.GetStrings().Without(Enumerable<string>.Empty));
+		Assert.Equal(array, this.GetStrings().Without(Array<string>.Empty, StringComparison.Ordinal));
+		Assert.NotEqual(array, this.GetStrings().Without(Array<string>.Empty));
 		Assert.Equal(array, this.GetStrings().Without(null, StringComparison.Ordinal));
 		Assert.NotEqual(array, this.GetStrings().Without(null));
 	}

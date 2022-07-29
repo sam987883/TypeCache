@@ -3,26 +3,28 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business;
 
-internal class InsertDataRule : IRule<InsertDataRequest, RowSet>, IRule<InsertDataRequest, string>
+internal class InsertDataRule<T> : IRule<InsertDataCommand<T>, RowSetResponse<T>>, IRule<InsertDataCommand<T>, string>
+	where T : new()
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public InsertDataRule(ISqlApi sqlApi)
+	public InsertDataRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	async ValueTask<RowSet> IRule<InsertDataRequest, RowSet>.ApplyAsync(InsertDataRequest request, CancellationToken cancellationToken)
+	async ValueTask<RowSetResponse<T>> IRule<InsertDataCommand<T>, RowSetResponse<T>>.ApplyAsync(InsertDataCommand<T> request, CancellationToken token)
 	{
-		request.Into = this._SqlApi.GetObjectSchema(request.DataSource, request.Into).Name;
-		return await this._SqlApi.InsertDataAsync(request, cancellationToken);
+		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+		return await connection.InsertDataAsync(request, token);
 	}
 
-	async ValueTask<string> IRule<InsertDataRequest, string>.ApplyAsync(InsertDataRequest request, CancellationToken cancellationToken)
-		=> await ValueTask.FromResult(request.ToSQL());
+	async ValueTask<string> IRule<InsertDataCommand<T>, string>.ApplyAsync(InsertDataCommand<T> request, CancellationToken token)
+		=> await Task.Run(() => request.ToSQL());
 }

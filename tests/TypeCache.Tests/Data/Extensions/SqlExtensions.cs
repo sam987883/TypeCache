@@ -1,8 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using TypeCache.Attributes;
+using TypeCache.Collections.Extensions;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
+using TypeCache.Extensions;
 using Xunit;
 using static System.FormattableString;
 
@@ -10,6 +13,19 @@ namespace TypeCache.Tests.Data.Extensions;
 
 public class SqlExtensions
 {
+	public class Person
+	{
+		public int ID { get; set; }
+
+		[Name("First Name")]
+		public string FirstName { get; set; }
+
+		[Name("Last_Name")]
+		public string LastName { get; set; }
+
+		public int Age { get; set; }
+	}
+
 	[Fact]
 	public void EscapeIdentifier()
 	{
@@ -40,9 +56,9 @@ public class SqlExtensions
 	[Fact]
 	public void ToSQL_CountRequest()
 	{
-		var request = new CountRequest
+		var command = new CountCommand
 		{
-			From = "[dbo].[NonCustomers]",
+			Table = "[dbo].[NonCustomers]",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
 
@@ -51,7 +67,7 @@ FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
@@ -60,32 +76,29 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
 
-		var request = new DeleteDataRequest
+		var command = new DeleteDataCommand<Guid>
 		{
-			From = "Customers",
-			Input = new()
-			{
-				Columns = new[] { "ID1", "ID2" },
-				Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
-			},
-			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" }
+			Table = "Customers",
+			Input = new[] { id, id, id },
+			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 		};
+		TypeOf<DeleteDataCommand<Guid>>.Properties.If(_ => _.Name.Is("PrimaryKeys")).First()!.SetValue(command, new[] { "ID" });
 
-		var expected = Invariant($@"DELETE FROM x
+		var expected = Invariant($@"DELETE FROM _
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
-FROM Customers x
+FROM Customers _
 INNER JOIN
 (
-VALUES (1, 2)
-	, (1, 3)
-	, (2, 1)
-) AS i ([ID1], [ID2])
-ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
+VALUES ('{id:D}')
+	, ('{id:D}')
+	, ('{id:D}')
+) AS pk ([ID])
+ON pk.[ID] = _.[ID];
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
@@ -94,9 +107,9 @@ ON i.[ID1] = x.[ID1] AND i.[ID2] = x.[ID2];
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
 
-		var request = new DeleteRequest
+		var command = new DeleteCommand
 		{
-			From = "Customers",
+			Table = "Customers",
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
@@ -108,7 +121,7 @@ OUTPUT INSERTED.[First Name] AS [First Name]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
@@ -117,18 +130,15 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
 
-		var request = new InsertDataRequest
+		var command = new InsertDataCommand<Person>
 		{
-			Into = "Customers",
-			Input = new()
+			Columns = new[] { "First Name", "Last_Name", "ID" },
+			Table = "Customers",
+			Input = new[]
 			{
-				Columns = new[] { "First Name", "Last_Name", "ID" },
-				Rows = new object[][]
-				{
-						new object[] { "FirstName1", "LastName1", 1 },
-						new object[] { "FirstName2", "LastName2", 2 },
-						new object[] { "FirstName3", "LastName3", 3 }
-				}
+				new Person { ID = 1, FirstName = "FirstName1", LastName = "LastName1", Age = 30 },
+				new Person { ID = 2, FirstName = "FirstName2", LastName = "LastName2", Age = 31 },
+				new Person { ID = 3, FirstName = "FirstName3", LastName = "LastName3", Age = 32 }
 			},
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" }
 		};
@@ -143,17 +153,17 @@ VALUES (N'FirstName1', N'LastName1', 1)
 	, (N'FirstName3', N'LastName3', 3);
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
 	public void ToSQL_InsertRequest()
 	{
-		var request = new InsertRequest
+		var command = new InsertCommand
 		{
 			From = "[dbo].[NonCustomers]",
-			Into = "Customers",
-			Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "Age", "Amount" },
+			Table = "Customers",
+			Columns = new[] { "[ID]", "[First Name]", "[Last_Name]", "Age", "Amount" },
 			Having = "MAX([Age]) > 40",
 			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
@@ -178,13 +188,13 @@ ORDER BY [First Name] ASC
 	, Last_Name DESC;
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
 	public void ToSQL_SelectRequest()
 	{
-		var request = new SelectRequest
+		var command = new SelectCommand
 		{
 			Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 			From = "[dbo].[NonCustomers]",
@@ -207,12 +217,12 @@ ORDER BY [First Name] ASC
 OFFSET 0 ROWS
 FETCH NEXT 100 ROWS ONLY;
 
-SELECT @Count = COUNT_BIG(1)
+SELECT @RowCount = COUNT_BIG(1)
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
@@ -221,42 +231,39 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
 
-		var request = new UpdateDataRequest
+		var command = new UpdateDataCommand<Person>
 		{
+			Columns = new[] { "First Name", "Last_Name", "ID" },
 			Table = "Customers",
-			Input = new()
+			Input = new[]
 			{
-				Columns = new[] { "ID1", "[ID2]", "First Name", "Last_Name", "ID" },
-				Rows = new object[][]
-				{
-						new object[] { 1, 2, "FirstName1", "LastName1", 1 },
-						new object[] { 1, 3, "FirstName2", "LastName2", 2 },
-						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
-				}
+				new Person { ID = 1, FirstName = "FirstName1", LastName = "LastName1", Age = 30 },
+				new Person { ID = 2, FirstName = "FirstName2", LastName = "LastName2", Age = 31 },
+				new Person { ID = 3, FirstName = "FirstName3", LastName = "LastName3", Age = 32 }
 			},
 			On = new[] { "ID1", "[ID2]" },
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 			TableHints = "WITH(UPDLOCK)"
 		};
 
-		var expected = Invariant($@"UPDATE x WITH(UPDLOCK)
-SET [First Name] = i.[First Name]
-	, [Last_Name] = i.[Last_Name]
-	, [ID] = i.[ID]
+		var expected = Invariant($@"UPDATE _ WITH(UPDLOCK)
+SET [First Name] = data.[First Name]
+	, [Last_Name] = data.[Last_Name]
+	, [ID] = data.[ID]
 OUTPUT INSERTED.[First Name] AS [First Name]
 	, DELETED.[Last_Name] AS [Last_Name]
 	, INSERTED.[ID] AS [ID]
-FROM Customers x
+FROM Customers _
 INNER JOIN
 (
-VALUES (1, 2, N'FirstName1', N'LastName1', 1)
-	, (1, 3, N'FirstName2', N'LastName2', 2)
-	, (2, 1, N'FirstName3', N'LastName3', 3)
-) AS i ([ID1], [[ID2]]], [First Name], [Last_Name], [ID])
-ON i.[ID1] = x.[ID1] AND i.[[ID2]]] = x.[[ID2]]];
+VALUES (N'FirstName1', N'LastName1', 1)
+	, (N'FirstName2', N'LastName2', 2)
+	, (N'FirstName3', N'LastName3', 3)
+) AS data ([First Name], [Last_Name], [ID])
+ON data.[ID1] = _.[ID1] AND data.[[ID2]]] = _.[[ID2]]];
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 
 	[Fact]
@@ -264,10 +271,10 @@ ON i.[ID1] = x.[ID1] AND i.[[ID2]]] = x.[[ID2]]];
 	{
 		var id = Guid.NewGuid();
 
-		var request = new UpdateRequest
+		var command = new UpdateCommand
 		{
 			Table = "Customers",
-			Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+			Columns = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
@@ -283,6 +290,6 @@ OUTPUT INSERTED.[First Name] AS [First Name]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 
-		Assert.Equal(expected, request.ToSQL());
+		Assert.Equal(expected, command.ToSQL());
 	}
 }

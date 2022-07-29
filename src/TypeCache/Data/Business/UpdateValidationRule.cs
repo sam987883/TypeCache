@@ -1,33 +1,43 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class UpdateValidationRule : IValidationRule<UpdateRequest>
+internal class UpdateValidationRule : IValidationRule<UpdateCommand>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public UpdateValidationRule(ISqlApi sqlApi)
+	public UpdateValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(UpdateRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(UpdateCommand request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Table);
-		schema.Type.Assert(ObjectType.Table);
+		var validator = new Validator();
+		validator.AssertNotNull(request);
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.Table);
+			validator.AssertEquals(request.Columns.Any(), true);
+		}
 
-		if (!request.Set.Any())
-			throw new ArgumentException($"Columns are required.", $"{nameof(UpdateRequest)}.{nameof(UpdateRequest.Set)}");
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			schema.Type.AssertEquals(ObjectType.Table);
 
-		await ValueTask.CompletedTask;
+			if (validator.Success)
+				request.Table = schema.Name;
+		}
+
+		return validator.Fails;
 	}
 }

@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
+using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
 using Xunit;
@@ -29,14 +30,14 @@ public class TypeOfTests
 	{
 		var tester = new Tester1();
 
-		var method = TypeOf<Tester1>.Methods[nameof(Tester1.GenericMethod)].First();
+		var method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
 		Assert.NotEqual(default, method);
 
 		var value = method.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
 		Assert.Equal(0, value);
 
 		// Test pulling it out of cache
-		method = TypeOf<Tester1>.Methods[nameof(Tester1.GenericMethod)].First();
+		method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
 		Assert.NotEqual(default, method);
 
 		value = method.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
@@ -88,11 +89,11 @@ public class TypeOfTests
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 		Assert.Equal(SystemType.String, member.SystemType);
 
-		member = TypeOf<InsertRequest>.Member;
-		type = typeof(InsertRequest);
+		member = TypeOf<InsertCommand>.Member;
+		type = typeof(InsertCommand);
 
 		Assert.Equal(2, member.Attributes.Count);
-		Assert.Equal(typeof(SelectRequest), member.BaseType);
+		Assert.Equal(typeof(SelectCommand), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
 		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
@@ -102,9 +103,9 @@ public class TypeOfTests
 		Assert.Equal(0, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Class, member.Kind);
-		Assert.Equal(6, member.Methods.Count);
+		Assert.Equal(7, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
-		Assert.Equal(17, member.Properties.Count);
+		Assert.Equal(19, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 		Assert.Equal(SystemType.Unknown, member.SystemType);
@@ -211,23 +212,23 @@ public class TypeOfTests
 	[Fact]
 	public void TypeOfInterface()
 	{
-		var member = TypeOf<ISqlApi>.Member;
-		var type = typeof(ISqlApi);
+		var member = TypeOf<IAccessor<DataSource>>.Member;
+		var type = typeof(IAccessor<DataSource>);
 
-		Assert.Equal(1, member.Attributes.Count);
+		Assert.Equal(2, member.Attributes.Count);
 		Assert.Null(member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
 		Assert.Empty(member.Fields);
-		Assert.Empty(member.GenericTypes);
+		Assert.Equal(1, member.GenericTypes.Count);
 		Assert.Equal(type.TypeHandle, member.Handle);
 		Assert.Empty(member.InterfaceTypes);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Interface, member.Kind);
-		Assert.Equal(14, member.Methods.Count);
-		Assert.Equal(type.Name, member.Name);
-		Assert.Empty(member.Properties);
+		Assert.Equal(1, member.Methods.Count);
+		Assert.True(type.Name.StartsWith(member.Name, StringComparison.Ordinal));
+		Assert.Equal(1, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 		Assert.Equal(SystemType.Unknown, member.SystemType);
@@ -306,7 +307,7 @@ public class TypeOfTests
 		var member = TypeOf<int>.Member;
 		var type = typeof(int);
 
-		Assert.Equal(3, member.Attributes.Count);
+		Assert.Equal(type.GetCustomAttributes(true).Length, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
 		Assert.Empty(member.Constructors);
 		Assert.Null(member.ElementType);
@@ -370,10 +371,10 @@ public class TypeOfTests
 
 		Assert.Equal(3, member.Attributes.Count);
 		Assert.Equal(typeof(ValueType), member.BaseType);
-		Assert.Empty(member.Constructors);
+		Assert.Equal(1, member.Constructors.Count);
 		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
-		Assert.Equal(10, member.Fields.Count);
+		Assert.Equal(11, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
 		Assert.Equal(type.TypeHandle, member.Handle);
 		Assert.Empty(member.InterfaceTypes);

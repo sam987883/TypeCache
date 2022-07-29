@@ -15,7 +15,7 @@ public sealed class GraphQLObjectEnumType<T> : EnumerationGraphType where T : cl
 		this.Name = Invariant($"{graphName}Fields");
 		this.Description = Invariant($"Fields of type `{graphName}`.");
 
-		TypeOf<T>.Properties.Values
+		TypeOf<T>.Properties
 			.If(property => !property.GraphQLIgnore())
 			.Map(property => new EnumValueDefinition(property.GraphQLName(), property.GraphQLName())
 			{

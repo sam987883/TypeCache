@@ -3,21 +3,17 @@
 using System.IO;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Converters;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.Web.Extensions;
 
 public static class HttpContextExtensions
 {
-	public static async ValueTask<T?> GetJsonRequestAsync<T>(this HttpContext @this)
-	{
-		var jsonOptions = new JsonSerializerOptions();
-		jsonOptions.Converters.Add(new ObjectJsonConverter());
-		return await JsonSerializer.DeserializeAsync<T>(@this.Request.Body, jsonOptions);
-	}
+	public static async ValueTask<T?> GetJsonRequestAsync<T>(this HttpContext @this, JsonSerializerOptions? options = null, CancellationToken token = default)
+		=> await JsonSerializer.DeserializeAsync<T>(@this.Request.Body, options, token);
 
 	public static async ValueTask<string> GetRequestAsync(this HttpContext @this)
 	{
@@ -25,11 +21,11 @@ public static class HttpContextExtensions
 		return await reader.ReadToEndAsync();
 	}
 
-	public static async ValueTask WriteJsonResponseAsync<T>(this HttpContext @this, T response)
+	public static async ValueTask WriteJsonResponseAsync<T>(this HttpContext @this, T response, JsonSerializerOptions? options = null, CancellationToken token = default)
 	{
 		@this.Response.ContentType = Application.Json;
 		@this.Response.StatusCode = (int)HttpStatusCode.OK;
-		await JsonSerializer.SerializeAsync(@this.Response.Body, response);
+		await JsonSerializer.SerializeAsync(@this.Response.Body, response, options, token);
 	}
 
 	public static async ValueTask WriteResponseAsync(this HttpContext @this, string response)

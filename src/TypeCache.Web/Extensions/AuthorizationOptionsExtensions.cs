@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Collections.Extensions;
@@ -23,11 +24,11 @@ public static class AuthorizationOptionsExtensions
 		return policy;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static AuthorizationPolicy AddClaimAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new ClaimAuthorizationRequirement(), authenticationSchemas);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static AuthorizationPolicy AddHeaderAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new HeaderAuthorizationRequirement(), authenticationSchemas);
 }

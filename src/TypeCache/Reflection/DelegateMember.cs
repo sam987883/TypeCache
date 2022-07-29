@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
@@ -20,7 +21,7 @@ public class DelegateMember : Member, IEquatable<DelegateMember>
 
 	internal DelegateMember(Type type) : base(type)
 	{
-		typeof(Delegate).IsAssignableFrom(type.BaseType).Assert(true);
+		typeof(Delegate).IsAssignableFrom(type.BaseType).AssertEquals(true);
 
 		this.Handle = type.TypeHandle;
 
@@ -43,11 +44,19 @@ public class DelegateMember : Member, IEquatable<DelegateMember>
 
 	public ReturnParameter Return { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(DelegateMember? other)
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public bool Equals([NotNullWhen(true)] DelegateMember? other)
 		=> other is not null && this.Handle.Equals(other.Handle);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> this.Equals(item as DelegateMember);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Handle.GetHashCode();
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? Invoke(object instance, params object?[]? arguments)
 		=> this._Invoke(instance, arguments);
 }

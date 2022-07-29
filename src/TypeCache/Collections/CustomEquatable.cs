@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
@@ -10,7 +11,7 @@ namespace TypeCache.Collections;
 
 public abstract class CustomEquatable<T> : IEquatable<CustomEquatable<T>>
 {
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(CustomEquatable<T>? other)
 		=> other is not null && this.EqualityFactors.ToHashSet().SetEquals(other.EqualityFactors);
 
@@ -19,7 +20,7 @@ public abstract class CustomEquatable<T> : IEquatable<CustomEquatable<T>>
 	/// </summary>
 	protected abstract IEnumerable<object> EqualityFactors { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals(object? other)
 		=> other is T item && this.Equals(item);
 

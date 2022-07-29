@@ -1,32 +1,69 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
+using System.Text;
+using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
 namespace TypeCache.Data.Schema;
 
-public readonly struct ParameterSchema
+public class ParameterSchema
 {
-	public static string SQL { get; } = Invariant($@"
+	private static readonly string _SQL;
+
+	private static readonly string _TypeSQL;
+
+	static ParameterSchema()
+	{
+		var sqlBuilder = new StringBuilder("CASE t.[name]").Append('\n').Append('\t');
+
+		EnumOf<SqlDbType>.Tokens.Do(token =>
+			sqlBuilder.Append("WHEN").Append(' ').Append('\'').Append(token.Name.ToLowerInvariant()).Append('\'').Append(' ').Append("THEN").Append(' ').Append(token.Number),
+			() => sqlBuilder.Append('\n').Append('\t'));
+
+		_TypeSQL = sqlBuilder.Append('\n').Append('\t')
+			.Append("ELSE").Append(' ').Append(SqlDbType.Variant.Number()).Append('\n').Append('\t')
+			.Append("END")
+			.ToString();
+
+		_SQL = Invariant($@"
+SELECT COUNT(1)
+FROM [sys].[parameters] AS p
+INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
+WHERE p.[object_id] = @ObjectId;
+
 SELECT p.[parameter_id] AS [Id]
 , p.[name] AS [Name]
-, ISNULL((SELECT [ID] FROM @SqlDbTypes WHERE [Type] = t.[name]), {SqlDbType.Variant.Number()}) AS [Type]
+, {_TypeSQL} AS [Type]
 , p.[is_output] AS [Output]
-, IIF(p.[is_output] = 1 AND p.[parameter_id] = 0, CAST(1 AS BIT), CAST(0 AS BIT)) AS [Return]
 FROM [sys].[parameters] AS p
 INNER JOIN [sys].[types] AS t ON t.[user_type_id] = p.[user_type_id]
 WHERE p.[object_id] = @ObjectId
 ORDER BY [Id] ASC;
 ");
+	}
 
-	public int Id { get; init; }
+	public static string SQL => _SQL;
 
-	public string Name { get; init; }
+	public ParameterSchema(ParameterSchemaModel parameterSchema)
+	{
+		this.Id = parameterSchema.Id;
+		this.Name = parameterSchema.Name;
+		this.Type = parameterSchema.Type;
+		this.Direction = parameterSchema.Id switch
+		{
+			0 => ParameterDirection.ReturnValue,
+			_ when parameterSchema.Output => ParameterDirection.InputOutput,
+			_ => ParameterDirection.Input
+		};
+	}
 
-	public SqlDbType Type { get; init; }
+	public ParameterDirection Direction { get; }
 
-	public bool Output { get; init; }
+	public int Id { get; }
 
-	public bool Return { get; init; }
+	public string Name { get; }
+
+	public SqlDbType Type { get; }
 }

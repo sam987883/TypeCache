@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection.Extensions;
@@ -35,7 +36,15 @@ public readonly struct ReturnParameter : IEquatable<ReturnParameter>
 
 	public bool Void { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(ReturnParameter other)
 		=> this._MethodHandle == other._MethodHandle;
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> item is ReturnParameter parameter && this.Equals(parameter);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this._MethodHandle.GetHashCode();
 }

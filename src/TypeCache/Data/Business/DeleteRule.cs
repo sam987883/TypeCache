@@ -3,26 +3,27 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business;
 
-internal class DeleteRule : IRule<DeleteRequest, RowSet>, IRule<DeleteRequest, string>
+internal class DeleteRule<T> : IRule<DeleteCommand, RowSetResponse<T>>, IRule<DeleteCommand, string>
+	where T : new()
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public DeleteRule(ISqlApi sqlApi)
+	public DeleteRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	async ValueTask<RowSet> IRule<DeleteRequest, RowSet>.ApplyAsync(DeleteRequest request, CancellationToken cancellationToken)
+	async ValueTask<RowSetResponse<T>> IRule<DeleteCommand, RowSetResponse<T>>.ApplyAsync(DeleteCommand command, CancellationToken token)
 	{
-		request.From = this._SqlApi.GetObjectSchema(request.DataSource, request.From).Name;
-		return await this._SqlApi.DeleteAsync(request, cancellationToken);
+		await using var connection = this._DataSourceAccessor[command.DataSource].CreateDbConnection();
+		return await connection.DeleteAsync<T>(command, token);
 	}
 
-	async ValueTask<string> IRule<DeleteRequest, string>.ApplyAsync(DeleteRequest request, CancellationToken cancellationToken)
-		=> await ValueTask.FromResult(request.ToSQL());
+	async ValueTask<string> IRule<DeleteCommand, string>.ApplyAsync(DeleteCommand command, CancellationToken token)
+		=> await Task.Run(() => command.ToSQL());
 }

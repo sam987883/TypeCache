@@ -17,23 +17,23 @@ internal class HttpClientRule : IRule<HttpRequestMessage, HttpResponseMessage>, 
 		this._Factory = factory;
 	}
 
-	public async ValueTask<HttpResponseMessage> ApplyAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
+	public async ValueTask<HttpResponseMessage> ApplyAsync(HttpRequestMessage request, CancellationToken token = default)
 	{
 		request.AssertNotNull();
 
 		using var httpClient = this._Factory.CreateClient();
-		using var httpResponse = await httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken);
+		using var httpResponse = await httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, token);
 		await httpResponse.Content.LoadIntoBufferAsync();
 		return httpResponse;
 	}
 
-	public async ValueTask<HttpResponseMessage> ApplyAsync((HttpRequestMessage HttpRequest, string HttpClientName) request, CancellationToken cancellationToken = default)
+	public async ValueTask<HttpResponseMessage> ApplyAsync((HttpRequestMessage HttpRequest, string HttpClientName) request, CancellationToken token = default)
 	{
 		request.AssertNotNull();
 		request.HttpClientName.AssertNotBlank();
 
 		using var httpClient = this._Factory.CreateClient(request.HttpClientName);
-		using var httpResponse = await httpClient.SendAsync(request.HttpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
+		using var httpResponse = await httpClient.SendAsync(request.HttpRequest, HttpCompletionOption.ResponseContentRead, token);
 		await httpResponse.Content.LoadIntoBufferAsync();
 		return httpResponse;
 	}

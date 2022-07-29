@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using static TypeCache.Default;
@@ -21,11 +22,11 @@ public readonly struct CustomEnumerable<T> : IEnumerable<T>
 		this._GetEnumerator = getEnumerator;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public IEnumerator<T> GetEnumerator()
 		=> this._GetEnumerator();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this._GetEnumerator();
 }

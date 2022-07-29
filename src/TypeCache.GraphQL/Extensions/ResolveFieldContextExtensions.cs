@@ -6,7 +6,6 @@ using GraphQL;
 using GraphQL.Types.Relay.DataObjects;
 using GraphQLParser.AST;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -58,7 +57,7 @@ public static class ResolveFieldContextExtensions
 	public static IDictionary<string, object?> GetInputs(this IResolveFieldContext @this)
 	{
 		var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-		if (!@this.Operation.SelectionSet.Selections.TryFirst<GraphQLField>(out var root) || !root.Arguments.Any())
+		if (!@this.Operation.SelectionSet.Selections.IfFirst<GraphQLField>(out var root) || !root.Arguments.Any())
 			return dictionary;
 
 		foreach (var argument in root.Arguments)
@@ -129,16 +128,7 @@ public static class ResolveFieldContextExtensions
 		if (value is GraphQLListValue listValue)
 		{
 			if (listValue.Values.Any<GraphQLObjectValue>())
-			{
-				var rows = new List<object?[]>(listValue.Values.Count);
-				listValue.Values.As<GraphQLObjectValue>().Do(_ => rows.Add(_.Fields.Map(field => field.Value.GetScalarValue()).ToArray()));
-				@this[path] = new RowSet
-				{
-					Columns = listValue.Values.First<GraphQLObjectValue>()!.Fields.Map(field => field.Name.StringValue).ToArray(),
-					Count = rows.Count,
-					Rows = rows.ToArray()
-				};
-			}
+				listValue.Values.If<GraphQLObjectValue>().Do((objectValue, i) => objectValue.Fields.Do(field => @this[Invariant($"{path}.{i}.{field.Name}")] = field.Value.GetScalarValue()));
 			else if (listValue.Values.Any())
 				@this[path] = listValue.Values.Map(_ => _.GetScalarValue()).ToArray();
 		}
@@ -189,19 +179,10 @@ public static class ResolveFieldContextExtensions
 		}
 	}
 
-	private static object MapModel(this TypeMember @this, IDictionary<string, object?> from)
+	private static object MapModel(this TypeMember @this, IDictionary<string, object?> source)
 	{
-		var model = @this.Create();
-
-		var properties = @this.Properties.Values.ToDictionary(property => property.GraphQLName(), property => property, StringComparison.Ordinal);
-		foreach (var match in from.Match(properties))
-		{
-			var value = match.Value.Item1;
-			if (value is IDictionary<string, object?> argument && !match.Value.Item2.PropertyType.Implements<IDictionary<string, object?>>())
-				value = match.Value.Item2.PropertyType.MapModel(argument);
-			match.Value.Item2.SetValue(model, value);
-		}
-
+		var model = @this.Create()!;
+		model.MapProperties(source, StringComparison.OrdinalIgnoreCase);
 		return model;
 	}
 }

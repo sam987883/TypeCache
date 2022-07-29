@@ -13,12 +13,12 @@ public class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 {
 	public GraphQLInterfaceType()
 	{
-		TypeOf<T>.Kind.Assert(Kind.Interface);
+		TypeOf<T>.Kind.AssertEquals(Kind.Interface);
 
 		this.Name = TypeOf<T>.Member.GraphQLName();
 
-		TypeOf<T>.Properties.Values
+		TypeOf<T>.Properties
 			.If(property => property.Getter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property.ToFieldType()));
+			.Do(property => this.AddField(property.ToFieldType<T>()));
 	}
 }

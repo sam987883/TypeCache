@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Mappers.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -21,12 +22,17 @@ public sealed class GraphQLInputType<T> : GraphQLComplexType, IInputObjectGraphT
 		this.Description = TypeOf<T>.Member.GraphQLDescription();
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
-		TypeOf<T>.Properties.Values
-			.If(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property!.ToInputFieldType()));
+		var properties = TypeOf<T>.Properties.If(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore());
+		properties.Do(property => this.AddField(new()
+			{
+				Type = property.GraphQLType(true),
+				Name = property.GraphQLName(),
+				Description = property.GraphQLDescription(),
+				DeprecationReason = property.GraphQLDeprecationReason(),
+			}));
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool IsValidDefault(object value)
 		=> value is T;
 
@@ -39,7 +45,8 @@ public sealed class GraphQLInputType<T> : GraphQLComplexType, IInputObjectGraphT
 			return value;
 
 		var item = TypeOf<T>.Create()!;
-		item.MapProperties(value);
+		var mappedValues = value.ToDictionary(_ => TypeOf<T>.Properties.First(property => property.Name.Is(_.Key))!, _ => _.Value);
+		item.MapProperties(mappedValues);
 		return item;
 	}
 

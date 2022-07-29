@@ -3,7 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using TypeCache.Data.Requests;
+using TypeCache.Attributes;
+using TypeCache.Data.Domain;
 using Xunit;
 using static System.FormattableString;
 
@@ -11,37 +12,46 @@ namespace TypeCache.Tests.Data.Converters;
 
 public class SqlConverters
 {
+	public class Person
+	{
+		[Name("First Name")]
+		public string FirstName { get; set; }
+		public string LastName { get; set; }
+		public int Age { get; set; }
+	}
+
 	[Fact]
 	public void ToJSON_CountRequest()
 	{
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new CountRequest
+		var expectedRequest = new CountCommand
 		{
 			DataSource = "LocalInstance",
-			From = "[dbo].[NonCustomers]",
-			Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+			Table = "[dbo].[NonCustomers]",
+			InputParameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""Distinct"":"""",
-	""From"":""[dbo].[NonCustomers]"",
-	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""TableHints"":""WITH(NOLOCK)"",
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+	""{nameof(CountCommand.Distinct)}"":"""",
+	""{nameof(CountCommand.Table)}"":""[dbo].[NonCustomers]"",
+	""{nameof(CountCommand.TableHints)}"":""WITH(NOLOCK)"",
+	""{nameof(CountCommand.Where)}"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""{nameof(CountCommand.DataSource)}"":""LocalInstance"",
+	""{nameof(CountCommand.InputParameters)}"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""{nameof(CountCommand.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<CountRequest>(expected);
+		var request = JsonSerializer.Deserialize<CountCommand>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
-		Assert.Equal(expectedRequest.From, request.From);
-		Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		Assert.Equal(expectedRequest.Table, request.Table);
+		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);
 		Assert.Equal(expectedRequest.Where, request.Where);
 	}
 
@@ -50,34 +60,32 @@ public class SqlConverters
 	{
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
+		var ids = new[] { 6, 5, 4, 3, 2, 1 };
 
-		var expectedRequest = new DeleteDataRequest
+		var expectedRequest = new DeleteDataCommand<int>
 		{
-			From = "Customers",
-			Input = new()
-			{
-				Columns = new[] { "ID1", "ID2" },
-				Rows = new object[][] { new object[] { 1, 2 }, new object[] { 1, 3 }, new object[] { 2, 1 } }
-			},
+			Table = "Customers",
+			Input = ids,
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" }
 		};
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""Default"",
-	""From"":""Customers"",
-	""Input"":{{""Columns"":[""ID1"",""ID2""],""Count"":0,""Rows"":[[1,2],[1,3],[2,1]]}},
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""]
+	""{nameof(DeleteDataCommand<int>.Input)}"":[6,5,4,3,2,1],
+	""{nameof(DeleteDataCommand<int>.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(DeleteDataCommand<int>.Table)}"":""Customers"",
+	""{nameof(DeleteDataCommand<int>.DataSource)}"":""Default"",
+	""{nameof(DeleteDataCommand<int>.InputParameters)}"":null,
+	""{nameof(DeleteDataCommand<int>.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<DeleteDataRequest>(expected);
+		var request = JsonSerializer.Deserialize<DeleteDataCommand<int>>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
-		Assert.Equal(expectedRequest.From, request.From);
-		Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
-		Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
+		Assert.Equal(expectedRequest.Table, request.Table);
+		Assert.Equal(ids, request.Input);
 		Assert.Equal(expectedRequest.Output, request.Output);
 	}
 
@@ -87,33 +95,34 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new DeleteRequest
+		var expectedRequest = new DeleteCommand
 		{
 			DataSource = "LocalInstance",
-			From = "Customers",
+			Table = "Customers",
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-			Parameters = new Dictionary<string, object> { { "Param1", false }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
+			InputParameters = new Dictionary<string, object> { { "Param1", false }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
 		};
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""From"":""Customers"",
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
-	""Parameters"":{{""Param1"":false,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+	""{nameof(DeleteCommand.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(DeleteCommand.Table)}"":""Customers"",
+	""{nameof(DeleteCommand.Where)}"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""{nameof(DeleteCommand.DataSource)}"":""LocalInstance"",
+	""{nameof(DeleteCommand.InputParameters)}"":{{""Param1"":false,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""{nameof(DeleteCommand.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<DeleteRequest>(expected);
+		var request = JsonSerializer.Deserialize<DeleteCommand>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
-		Assert.Equal(expectedRequest.From, request.From);
+		Assert.Equal(expectedRequest.Table, request.Table);
 		Assert.Equal(expectedRequest.Output, request.Output);
 		Assert.Equal(expectedRequest.Where, request.Where);
-		Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);
 	}
 
 	[Fact]
@@ -122,38 +131,38 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new InsertDataRequest
+		var expectedRequest = new InsertDataCommand<Person>
 		{
-			Input = new()
+			Columns = new[] { "First Name", "Last_Name", "ID" },
+			Input = new[]
 			{
-				Columns = new[] { "First Name", "Last_Name", "ID" },
-				Rows = new object[][]
-				{
-						new object[] { "FirstName1", "LastName1", 1 },
-						new object[] { "FirstName2", "LastName2", 2 },
-						new object[] { "FirstName3", "LastName3", 3 }
-				}
+				new Person { FirstName = "FirstName1", LastName = "LastName1", Age = 31 },
+				new Person { FirstName = "FirstName2", LastName = "LastName2", Age = 41 },
+				new Person { FirstName = "FirstName3", LastName = "LastName3", Age = 22 }
 			},
-			Into = "Customers",
+			Table = "Customers",
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" }
 		};
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""Default"",
-	""Input"":{{""Columns"":[""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[""FirstName1"",""LastName1"",1],[""FirstName2"",""LastName2"",2],[""FirstName3"",""LastName3"",3]]}},
-	""Into"":""Customers"",
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""]
+	""{nameof(InsertDataCommand<Person>.Columns)}"":[""First Name"",""Last_Name"",""ID""],
+	""{nameof(InsertDataCommand<Person>.Input)}"":[{{""FirstName"":""FirstName1"",""LastName"":""LastName1"",""Age"":31}},{{""FirstName"":""FirstName2"",""LastName"":""LastName2"",""Age"":41}},{{""FirstName"":""FirstName3"",""LastName"":""LastName3"",""Age"":22}}],
+	""{nameof(InsertDataCommand<Person>.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(InsertDataCommand<Person>.Table)}"":""Customers"",
+	""{nameof(InsertDataCommand<Person>.DataSource)}"":""Default"",
+	""{nameof(InsertDataCommand<Person>.InputParameters)}"":null,
+	""{nameof(InsertDataCommand<Person>.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<InsertDataRequest>(expected);
+		var request = JsonSerializer.Deserialize<InsertDataCommand<Person>>(expected);
 
+		Assert.Equal(expectedRequest.Columns, request.Columns);
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
-		Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
-		Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
-		Assert.Equal(expectedRequest.Into, request.Into);
+		Assert.Equal(JsonSerializer.Serialize(expectedRequest.Input), JsonSerializer.Serialize(request.Input), StringComparer.Ordinal);
+		Assert.Equal(expectedRequest.Table, request.Table);
 		Assert.Equal(expectedRequest.Output, request.Output);
 	}
 
@@ -163,16 +172,16 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new InsertRequest
+		var expectedRequest = new InsertCommand
 		{
 			DataSource = "LocalInstance",
-			Into = "Customers",
-			Insert = new[] { "[ID]", "[First Name]", "[Last_Name]", "[Age]", "[Amount]" },
+			Table = "Customers",
+			Columns = new[] { "[ID]", "[First Name]", "[Last_Name]", "[Age]", "[Amount]" },
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 			From = "[dbo].[NonCustomers]",
 			Having = "MAX([Age]) > 40",
 			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
-			Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+			InputParameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 			Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 			TableHints = "WITH(NOLOCK)",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
@@ -180,37 +189,38 @@ public class SqlConverters
 
 		var expected = Invariant(@$"
 {{
-	""Insert"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
-	""Into"":""Customers"",
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
-	""DataSource"":""LocalInstance"",
-	""Distinct"":false,
-	""From"":""[dbo].[NonCustomers]"",
-	""GroupBy"":null,
-	""Having"":""MAX([Age]) \u003E 40"",
-	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
-	""Pager"":null,
-	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Percent"":false,
-	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
-	""TableHints"":""WITH(NOLOCK)"",
-	""Top"":0,
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
-	""WithTies"":false
+	""{nameof(InsertCommand.Columns)}"":[""[ID]"",""[First Name]"",""[Last_Name]"",""[Age]"",""[Amount]""],
+	""{nameof(InsertCommand.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(InsertCommand.Table)}"":""Customers"",
+	""{nameof(InsertCommand.Distinct)}"":false,
+	""{nameof(InsertCommand.From)}"":""[dbo].[NonCustomers]"",
+	""{nameof(InsertCommand.GroupBy)}"":null,
+	""{nameof(InsertCommand.Having)}"":""MAX([Age]) \u003E 40"",
+	""{nameof(InsertCommand.OrderBy)}"":[""[First Name] ASC"",""Last_Name DESC""],
+	""{nameof(InsertCommand.Pager)}"":null,
+	""{nameof(InsertCommand.Percent)}"":false,
+	""{nameof(InsertCommand.Select)}"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
+	""{nameof(InsertCommand.TableHints)}"":""WITH(NOLOCK)"",
+	""{nameof(InsertCommand.Top)}"":0,
+	""{nameof(InsertCommand.Where)}"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""{nameof(InsertCommand.WithTies)}"":false,
+	""{nameof(InsertCommand.DataSource)}"":""LocalInstance"",
+	""{nameof(InsertCommand.InputParameters)}"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""{nameof(InsertCommand.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<InsertRequest>(expected);
+		var request = JsonSerializer.Deserialize<InsertCommand>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
 		Assert.Equal(expectedRequest.From, request.From);
 		Assert.Equal(expectedRequest.Having, request.Having);
-		Assert.Equal(expectedRequest.Into, request.Into);
-		Assert.Equal(expectedRequest.Insert, request.Insert);
+		Assert.Equal(expectedRequest.Table, request.Table);
+		Assert.Equal(expectedRequest.Columns, request.Columns);
 		Assert.Equal(expectedRequest.OrderBy, request.OrderBy);
 		Assert.Equal(expectedRequest.Output, request.Output);
-		Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);
 		Assert.Equal(expectedRequest.Select, request.Select);
 		Assert.Equal(expectedRequest.Where, request.Where);
 	}
@@ -221,13 +231,13 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new SelectRequest
+		var expectedRequest = new SelectCommand
 		{
 			DataSource = "LocalInstance",
 			From = "[dbo].[NonCustomers]",
 			Having = "MAX([Age]) > 40",
 			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
-			Parameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
+			InputParameters = new Dictionary<string, object> { { "Param1", 333.66M }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } },
 			Pager = new() { After = 0, First = 100 },
 			Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 			TableHints = "WITH(NOLOCK)",
@@ -236,31 +246,32 @@ public class SqlConverters
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""Distinct"":false,
-	""From"":""[dbo].[NonCustomers]"",
-	""GroupBy"":null,
-	""Having"":""MAX([Age]) \u003E 40"",
-	""OrderBy"":[""[First Name] ASC"",""Last_Name DESC""],
-	""Pager"":{{""First"":100,""After"":0}},
-	""Parameters"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Percent"":false,
-	""Select"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
-	""TableHints"":""WITH(NOLOCK)"",
-	""Top"":0,
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
-	""WithTies"":false
+	""{nameof(SelectCommand.Distinct)}"":false,
+	""{nameof(SelectCommand.From)}"":""[dbo].[NonCustomers]"",
+	""{nameof(SelectCommand.GroupBy)}"":null,
+	""{nameof(SelectCommand.Having)}"":""MAX([Age]) \u003E 40"",
+	""{nameof(SelectCommand.OrderBy)}"":[""[First Name] ASC"",""Last_Name DESC""],
+	""{nameof(SelectCommand.Pager)}"":{{""First"":100,""After"":0}},
+	""{nameof(SelectCommand.Percent)}"":false,
+	""{nameof(SelectCommand.Select)}"":[""ID"",""TRIM([First Name]) AS [First Name]"",""UPPER([LastName]) AS LastName"",""40 Age"",""Amount AS Amount""],
+	""{nameof(SelectCommand.TableHints)}"":""WITH(NOLOCK)"",
+	""{nameof(SelectCommand.Top)}"":0,
+	""{nameof(SelectCommand.Where)}"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""{nameof(SelectCommand.WithTies)}"":false,
+	""{nameof(SelectCommand.DataSource)}"":""LocalInstance"",
+	""{nameof(SelectCommand.InputParameters)}"":{{""Param1"":333.66,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""{nameof(SelectCommand.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<SelectRequest>(expected);
+		var request = JsonSerializer.Deserialize<SelectCommand>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
 		Assert.Equal(expectedRequest.From, request.From);
 		Assert.Equal(expectedRequest.Having, request.Having);
 		Assert.Equal(expectedRequest.OrderBy, request.OrderBy);
-		Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);
 		Assert.Equal(expectedRequest.Select, request.Select);
 		Assert.Equal(expectedRequest.Where, request.Where);
 	}
@@ -271,18 +282,15 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new UpdateDataRequest
+		var expectedRequest = new UpdateDataCommand<Person>
 		{
+			Columns = new[] { "ID1", "ID2", "First Name", "Last_Name", "ID" },
 			DataSource = "LOCAL",
-			Input = new()
+			Input = new[]
 			{
-				Columns = new[] { "ID1", "ID2", "First Name", "Last_Name", "ID" },
-				Rows = new object[][]
-				{
-						new object[] { 1, 2, "FirstName1", "LastName1", 1 },
-						new object[] { 1, 3, "FirstName2", "LastName2", 2 },
-						new object[] { 2, 1, "FirstName3", "LastName3", 3 }
-				}
+				new Person { FirstName = "FirstName1", LastName = "LastName1", Age = 31 },
+				new Person { FirstName = "FirstName2", LastName = "LastName2", Age = 41 },
+				new Person { FirstName = "FirstName3", LastName = "LastName3", Age = 22 }
 			},
 			On = new[] { "ID" },
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
@@ -292,22 +300,25 @@ public class SqlConverters
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""LOCAL"",
-	""Input"":{{""Columns"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],""Count"":0,""Rows"":[[1,2,""FirstName1"",""LastName1"",1],[1,3,""FirstName2"",""LastName2"",2],[2,1,""FirstName3"",""LastName3"",3]]}},
-	""On"":[""ID""],
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
-	""Table"":""Customers"",
-	""TableHints"":""WITH(UPDLOCK)""
+	""{nameof(UpdateDataCommand<Person>.Columns)}"":[""ID1"",""ID2"",""First Name"",""Last_Name"",""ID""],
+	""{nameof(UpdateDataCommand<Person>.Input)}"":[{{""FirstName"":""FirstName1"",""LastName"":""LastName1"",""Age"":31}},{{""FirstName"":""FirstName2"",""LastName"":""LastName2"",""Age"":41}},{{""FirstName"":""FirstName3"",""LastName"":""LastName3"",""Age"":22}}],
+	""{nameof(UpdateDataCommand<Person>.On)}"":[""ID""],
+	""{nameof(UpdateDataCommand<Person>.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(UpdateDataCommand<Person>.Table)}"":""Customers"",
+	""{nameof(UpdateDataCommand<Person>.TableHints)}"":""WITH(UPDLOCK)"",
+	""{nameof(UpdateDataCommand<Person>.DataSource)}"":""LOCAL"",
+	""{nameof(UpdateDataCommand<Person>.InputParameters)}"":null,
+	""{nameof(UpdateDataCommand<Person>.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<UpdateDataRequest>(expected);
+		var request = JsonSerializer.Deserialize<UpdateDataCommand<Person>>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
-		Assert.Equal(expectedRequest.Input.Columns, request.Input.Columns);
-		Assert.Equal(expectedRequest.Input.Rows, request.Input.Rows);
+		Assert.Equal(JsonSerializer.Serialize(expectedRequest.Input), JsonSerializer.Serialize(request.Input), StringComparer.Ordinal);
 		Assert.Equal(expectedRequest.Output, request.Output);
+		Assert.Equal(expectedRequest.Columns, request.Columns);
 		Assert.Equal(expectedRequest.Table, request.Table);
 	}
 
@@ -317,37 +328,38 @@ public class SqlConverters
 		var date = new DateTime(637621814434623833L);
 		var guid = Guid.NewGuid();
 
-		var expectedRequest = new UpdateRequest
+		var expectedRequest = new UpdateCommand
 		{
 			DataSource = "LocalInstance",
 			Table = "[dbo].[NonCustomers]",
-			Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+			Columns = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 			TableHints = "WITH(UPDLOCK)",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-			Parameters = new Dictionary<string, object> { { "Param1", 44 }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
+			InputParameters = new Dictionary<string, object> { { "Param1", 44 }, { "Param 2", date }, { "Param_3", "String Value" }, { "Param4", guid } }
 		};
 
 		var expected = Invariant(@$"
 {{
-	""DataSource"":""LocalInstance"",
-	""Output"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
-	""Parameters"":{{""Param1"":44,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
-	""Set"":[""ID = 123456"",""[First Name] = N\u0027Sarah\u0027"",""Last_Name = N\u0027Marshal\u0027"",""Account = @Param1""],
-	""Table"":""[dbo].[NonCustomers]"",
-	""TableHints"":""WITH(UPDLOCK)"",
-	""Where"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027""
+	""{nameof(UpdateCommand.Columns)}"":[""ID = 123456"",""[First Name] = N\u0027Sarah\u0027"",""Last_Name = N\u0027Marshal\u0027"",""Account = @Param1""],
+	""{nameof(UpdateCommand.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
+	""{nameof(UpdateCommand.Table)}"":""[dbo].[NonCustomers]"",
+	""{nameof(UpdateCommand.TableHints)}"":""WITH(UPDLOCK)"",
+	""{nameof(UpdateCommand.Where)}"":""[First Name] = N\u0027Sarah\u0027 AND [Last_Name] = N\u0027Marshal\u0027"",
+	""{nameof(UpdateCommand.DataSource)}"":""LocalInstance"",
+	""{nameof(UpdateCommand.InputParameters)}"":{{""Param1"":44,""Param 2"":""{date:O}"",""Param_3"":""String Value"",""Param4"":""{guid:D}""}},
+	""{nameof(UpdateCommand.OutputParameters)}"":null
 }}").Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
 
 		Assert.Equal(expected, JsonSerializer.Serialize(expectedRequest));
 
-		var request = JsonSerializer.Deserialize<UpdateRequest>(expected);
+		var request = JsonSerializer.Deserialize<UpdateCommand>(expected);
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
 		Assert.Equal(expectedRequest.Table, request.Table);
-		Assert.Equal(expectedRequest.Set, request.Set);
+		Assert.Equal(expectedRequest.Columns, request.Columns);
 		Assert.Equal(expectedRequest.Output, request.Output);
 		Assert.Equal(expectedRequest.Where, request.Where);
-		Assert.Equal(expectedRequest.Parameters, request.Parameters);
+		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);
 	}
 }

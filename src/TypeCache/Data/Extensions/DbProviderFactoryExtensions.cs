@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data.Common;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static TypeCache.Default;
 
@@ -22,7 +23,7 @@ public static class DbProviderFactoryExtensions
 		return dbConnectionStringBuilder;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static void Register(this DbProviderFactory @this, string databaseProvider)
 		=> DbProviderFactories.RegisterFactory(databaseProvider, @this);
 }

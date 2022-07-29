@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static System.Math;
 using static TypeCache.Default;
@@ -11,11 +12,41 @@ namespace TypeCache.Extensions;
 public static class RangeExtensions
 {
 	/// <summary>
-	/// <c>=&gt; !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Start.IsFromEnd == @<paramref name="this"/>.End.IsFromEnd
+	/// &amp;&amp; !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Any(this Range @this)
-		=> !@this.Start.Equals(@this.End);
+		=> @this.Start.IsFromEnd == @this.End.IsFromEnd && !@this.Start.Equals(@this.End);
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="action"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
+	/// <see langword="if"/> (!reverse.HasValue)<br/>
+	/// <see langword="    return"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
+	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
+	/// <see langword="    "/> <paramref name="action"/>(i);
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static void Do(this Range @this, Action<int> action)
+	{
+		action.AssertNotNull();
+
+		var reverse = @this.IsReverse();
+		if (!reverse.HasValue)
+			return;
+
+		var end = @this.End.Value;
+		var increment = reverse.Value ? -1 : 1;
+		for (var i = @this.Start.Value; i != end; i += increment)
+			action(i);
+	}
 
 	/// <summary>
 	/// <code>
@@ -58,10 +89,35 @@ public static class RangeExtensions
 		};
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Start.IsFromEnd == @<paramref name="this"/>.End.IsFromEnd ? @<paramref name="this"/>.Start.IsFromEnd : <see langword="null"/>;</c>
+	/// <code>
+	/// <paramref name="condition"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
+	/// <see langword="if"/> (!reverse.HasValue)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
+	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
+	/// <see langword="    if"/> (<paramref name="condition"/>(i))<br/>
+	/// <see langword="        yield return"/> i;
+	/// </code>
 	/// </summary>
-	public static bool? IsFromEnd(this Range @this)
-		=> @this.Start.IsFromEnd == @this.End.IsFromEnd ? @this.Start.IsFromEnd : null;
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<int> If(this Range @this, Predicate<int> condition)
+	{
+		condition.AssertNotNull();
+
+		var reverse = @this.IsReverse();
+		if (!reverse.HasValue)
+			yield break;
+
+		var end = @this.End.Value;
+		var increment = reverse.Value ? -1 : 1;
+		for (var i = @this.Start.Value; i != end; i += increment)
+			if (condition(i))
+				yield return i;
+	}
 
 	/// <summary>
 	/// <code>
@@ -87,31 +143,60 @@ public static class RangeExtensions
 
 	/// <summary>
 	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsFromEnd() <see langword="switch"/><br/>
+	/// =&gt; (@<paramref name="this"/>.Start.IsFromEnd, @<paramref name="this"/>.End.IsFromEnd) <see langword="switch"/><br/>
 	/// {<br/>
 	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End) =&gt; <see langword="null"/>,<br/>
-	///	<see langword="    true"/> =&gt; @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    false"/> =&gt; @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value,<br/>
+	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value,<br/>
+	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value,<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// };
 	/// </code>
 	/// </summary>
 	/// <remarks>Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.</remarks>
 	public static bool? IsReverse(this Range @this)
-		=> @this.IsFromEnd() switch
+		=> (@this.Start.IsFromEnd, @this.End.IsFromEnd) switch
 		{
-			_ when @this.Start.Equals(@this.End) => null,
-			true => @this.Start.Value < @this.End.Value,
-			false => @this.Start.Value > @this.End.Value,
+			_ when !@this.Any() => false,
+			(true, true) => @this.Start.Value < @this.End.Value,
+			(false, false) => @this.Start.Value > @this.End.Value,
 			_ => null
 		};
 
 	/// <summary>
 	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>.End.Value - @<paramref name="this"/>.Start.Value);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static int Length(this Range @this)
 		=> Abs(@this.End.Value - @this.Start.Value);
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="map"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
+	/// <see langword="if"/> (!reverse.HasValue)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
+	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
+	/// <see langword="    yield return"/> <paramref name="map"/>(i);
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<T> Map<T>(this Range @this, Func<int, T> map)
+	{
+		map.AssertNotNull();
+
+		var reverse = @this.IsReverse();
+		if (!reverse.HasValue)
+			yield break;
+
+		var end = @this.End.Value;
+		var increment = reverse.Value ? -1 : 1;
+		for (var i = @this.Start.Value; i != end; i += increment)
+			yield return map(i);
+	}
 
 	/// <summary>
 	/// <code>
@@ -150,10 +235,10 @@ public static class RangeExtensions
 		};
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Start.Normalize(<paramref name="count"/>)..@<paramref name="this"/>.End.Normalize(<paramref name="count"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Start.FromStart(<paramref name="count"/>)..@<paramref name="this"/>.End.FromStart(<paramref name="count"/>);</c>
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Range Normalize(this Range @this, int count)
 		=> @this.Start.FromStart(count)..@this.End.FromStart(count);
 
@@ -177,7 +262,7 @@ public static class RangeExtensions
 
 	/// <summary>
 	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
 	/// {<br/>
 	/// <see langword="    false"/> =&gt; @<paramref name="this"/>.End.Previous()..@<paramref name="this"/>.Start.Previous(),<br/>
 	/// <see langword="    true"/> =&gt; @<paramref name="this"/>.End.Next()..@<paramref name="this"/>.Start.Next(),<br/>
@@ -218,24 +303,24 @@ public static class RangeExtensions
 	/// <summary>
 	/// <code>
 	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (reverse <see langword="is false"/>)<br/>
-	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &lt; @<paramref name="this"/>.End.Value; i += <paramref name="step"/>)<br/>
-	///	<see langword="        yield return"/> i;<br/>
-	/// <see langword="if"/> (reverse <see langword="is true"/>)<br/>
-	///	<see langword="    for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i &gt; @<paramref name="this"/>.End.Value; i -= <paramref name="step"/>)<br/>
-	///	<see langword="        yield return"/> i;<br/>
-	/// <see langword="yield break"/>;
+	/// <see langword="if"/> (!reverse.HasValue)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
+	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value + increment;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
+	/// <see langword="    yield return"/> i;
 	/// </code>
 	/// </summary>
-	public static IEnumerable<int> Values(this Range @this, int step = 1)
+	public static IEnumerable<int> Values(this Range @this)
 	{
 		var reverse = @this.IsReverse();
-		if (reverse is false)
-			for (var i = @this.Start.Value; i < @this.End.Value; i += step)
-				yield return i;
-		else if (reverse is true)
-			for (var i = @this.Start.Value; i > @this.End.Value; i -= step)
-				yield return i;
-		yield break;
+		if (!reverse.HasValue)
+			yield break;
+
+		var increment = reverse.Value ? -1 : 1;
+		var end = @this.End.Value + increment;
+		for (var i = @this.Start.Value; i != end; i += increment)
+			yield return i;
 	}
 }

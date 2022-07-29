@@ -3,25 +3,27 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business;
 
-internal class SelectRule : IRule<SelectRequest, RowSet>, IRule<SelectRequest, string>
+internal class SelectRule<T> : IRule<SelectCommand, RowSetResponse<T>>, IRule<SelectCommand, string>
+	where T : new()
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public SelectRule(ISqlApi sqlApi)
+	public SelectRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	async ValueTask<RowSet> IRule<SelectRequest, RowSet>.ApplyAsync(SelectRequest request, CancellationToken cancellationToken)
+	async ValueTask<RowSetResponse<T>> IRule<SelectCommand, RowSetResponse<T>>.ApplyAsync(SelectCommand request, CancellationToken token)
 	{
-		return await this._SqlApi.SelectAsync(request, cancellationToken);
+		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		return await connection.SelectAsync<T>(request, token);
 	}
 
-	async ValueTask<string> IRule<SelectRequest, string>.ApplyAsync(SelectRequest request, CancellationToken cancellationToken)
-		=> await ValueTask.FromResult(request.ToSQL());
+	async ValueTask<string> IRule<SelectCommand, string>.ApplyAsync(SelectCommand request, CancellationToken token)
+		=> await Task.Run(() => request.ToSQL());
 }

@@ -17,7 +17,7 @@ public class GraphQLOrderByType<T> : EnumerationGraphType
 		this.Name = Invariant($"{graphName}OrderBy");
 		this.Description = $"Order by `{graphName}`.";
 
-		foreach (var property in TypeOf<T>.Properties.Values.If(property => !property.GraphQLIgnore()))
+		foreach (var property in TypeOf<T>.Properties.If(_ => !_.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var description = property.GraphQLDescription();

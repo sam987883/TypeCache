@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using GraphQL.Utilities;
@@ -120,18 +121,18 @@ public abstract class GraphQLComplexType : IComplexGraphType
 	public bool HasField(string name)
 		=> name.IsNotBlank() && this.Fields.Any(fieldType => fieldType.Name.Is(name, StringComparison.Ordinal));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool HasMetadata(string key)
 		=> this.Metadata.ContainsKey(key);
 
 	public override bool Equals(object? item)
 		=> this == item || (item is IGraphType graphType && this.Name.Is(graphType.Name, StringComparison.Ordinal));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.Name.GetHashCode();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override string ToString()
 		=> this.Name;
 }

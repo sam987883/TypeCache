@@ -27,13 +27,13 @@ public class RequireClaimAttribute : AuthorizeAttribute
 		this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
 		claims.Do(claim =>
 		{
-			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.CountOf(separator) > 1).Assert(false);
+			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.CountOf(separator) > 1).AssertEquals(false);
 
 			if (claim.Contains(separator))
 			{
 				(string? key, string? value, IEnumerable<string> _) = claim.Split(separator);
 
-				if (this.Claims.Get(key!).TryFirst(out var values))
+				if (this.Claims.Get(key!).IfFirst(out var values))
 					this.Claims[key!] = values.Append(value).ToArray()!;
 				else
 					this.Claims.Add(key!, new[] { value! });

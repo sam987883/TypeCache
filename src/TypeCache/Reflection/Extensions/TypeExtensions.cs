@@ -7,11 +7,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+using TypeCache.Attributes;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
@@ -191,7 +193,7 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Any(this Type? @this, params Type[] types)
 		=> types.Any(@this.Is);
 
@@ -255,34 +257,20 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Implements<T>(this Type @this)
 		=> @this.Implements(typeof(T));
 
 	/// <summary>
 	/// <code>
 	/// <see langword="if"/> (<paramref name="type"/>.IsInterface)<br/>
-	/// {<br/>
-	/// <see langword="    return"/> <paramref name="type"/>.IsGenericTypeDefinition<br/>
-	/// <see langword="        "/>? @<paramref name="this"/>.GetInterfaces().Any(_ =&gt; _.ToGenericType()?.TypeHandle.Equals(<paramref name="type"/>.TypeHandle) <see langword="is true"/>)<br/>
-	/// <see langword="        "/>: @<paramref name="this"/>.GetInterfaces().Any(_ =&gt; _.TypeHandle.Equals(<paramref name="type"/>.TypeHandle));<br/>
-	/// }<br/>
-	/// <see langword="else if"/> (<paramref name="type"/>.IsGenericTypeDefinition)<br/>
-	/// {<br/>
-	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
-	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        if"/> (baseType.ToGenericType()?.TypeHandle.Equals(<paramref name="type"/>.TypeHandle) <see langword="is true"/>)<br/>
-	/// <see langword="             return true"/>;<br/>
-	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
-	/// <see langword="    "/>}<br/>
-	/// }<br/>
+	/// <see langword="    return"/> @<paramref name="this"/>.GetInterfaces().Any(<paramref name="type"/>.Is);<br/>
 	/// <see langword="else"/><br/>
 	/// {<br/>
 	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
 	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        if"/> (baseType.TypeHandle.Equals(<paramref name="type"/>.TypeHandle))<br/>
+	/// <see langword="        if"/> (baseType.Is(<paramref name="type"/>))<br/>
 	/// <see langword="             return true"/>;<br/>
 	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
 	/// <see langword="    "/>}<br/>
@@ -293,27 +281,13 @@ public static class TypeExtensions
 	public static bool Implements(this Type @this, Type type)
 	{
 		if (type.IsInterface)
-		{
-			return type.IsGenericTypeDefinition
-				? @this.GetInterfaces().Any(_ => _.ToGenericType()?.TypeHandle.Equals(type.TypeHandle) is true)
-				: @this.GetInterfaces().Any(_ => _.TypeHandle.Equals(type.TypeHandle));
-		}
-		else if (type.IsGenericTypeDefinition)
-		{
-			var baseType = @this.BaseType;
-			while (baseType is not null)
-			{
-				if (baseType.ToGenericType()?.TypeHandle.Equals(type.TypeHandle) is true)
-					return true;
-				baseType = baseType.BaseType;
-			}
-		}
+			return @this.GetInterfaces().Any(type.Is);
 		else
 		{
 			var baseType = @this.BaseType;
 			while (baseType is not null)
 			{
-				if (baseType.TypeHandle.Equals(type.TypeHandle))
+				if (baseType.Is(type))
 					return true;
 				baseType = baseType.BaseType;
 			}
@@ -324,7 +298,7 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is<T>(this Type? @this)
 		=> @this == typeof(T);
 
@@ -332,8 +306,8 @@ public static class TypeExtensions
 	/// <c>=&gt; @<paramref name="this"/> == <paramref name="type"/>
 	///		|| (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType());</c>
 	/// </summary>
-	public static bool Is(this Type? @this, Type type)
-		=> @this == type || (type.IsGenericTypeDefinition && type == @this.ToGenericType());
+	public static bool Is(this Type? @this, Type? type)
+		=> @this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
@@ -345,9 +319,8 @@ public static class TypeExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsGenericTypeDefinition =&gt; @<paramref name="this"/>,<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.IsGenericType =&gt; @<paramref name="this"/>.GetGenericTypeDefinition(),<br/>
+	///	<see langword="    "/>{ IsGenericTypeDefinition: <see langword="true"/> } =&gt; @<paramref name="this"/>,<br/>
+	///	<see langword="    "/>{ IsGenericType: <see langword="true"/> } =&gt; @<paramref name="this"/>.GetGenericTypeDefinition(),<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// };
 	/// </code>
@@ -355,9 +328,8 @@ public static class TypeExtensions
 	public static Type? ToGenericType(this Type? @this)
 		=> @this switch
 		{
-			null => null,
-			_ when @this.IsGenericTypeDefinition => @this,
-			_ when @this.IsGenericType => @this.GetGenericTypeDefinition(),
+			{ IsGenericTypeDefinition: true } => @this,
+			{ IsGenericType: true } => @this.GetGenericTypeDefinition(),
 			_ => null
 		};
 }

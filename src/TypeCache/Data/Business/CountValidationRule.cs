@@ -1,25 +1,38 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using TypeCache.Business;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
+using TypeCache.Data.Schema;
 
 namespace TypeCache.Data.Business;
 
-internal class CountValidationRule : IValidationRule<CountRequest>
+internal class CountValidationRule : IValidationRule<CountCommand>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public CountValidationRule(ISqlApi sqlApi)
+	public CountValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(CountRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(CountCommand request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
+		var validator = new Validator();
+		validator.AssertNotNull(request);
 
-		await ValueTask.CompletedTask;
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.Table);
+		}
+
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			request.Table = schema.Name;
+		}
+
+		return validator.Fails;
 	}
 }

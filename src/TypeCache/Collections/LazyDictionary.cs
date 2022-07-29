@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -24,7 +25,6 @@ public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 	public LazyDictionary(Func<K, V> createValue, LazyThreadSafetyMode mode = LazyThreadSafetyMode.PublicationOnly, IEqualityComparer<K>? comparer = null)
 	{
 		createValue.AssertNotNull();
-
 		this._CreateValue = key => Lazy.Create(() => createValue(key), mode);
 		this._Dictionary = new(comparer);
 	}
@@ -46,26 +46,23 @@ public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 
 	public int Count => this._Dictionary.Count;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool ContainsKey(K key)
 		=> this._Dictionary.ContainsKey(key);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
 		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 
 	bool IReadOnlyDictionary<K, V>.TryGetValue(K key, [MaybeNullWhen(false)] out V value)
 	{
-		if (this._Dictionary.TryGetValue(key, out var lazy) || this._Dictionary.TryAdd(key, lazy = this._CreateValue(key)))
-		{
-			value = lazy.Value;
-			return true;
-		}
-		value = default;
-		return false;
+		var success = this._Dictionary.TryGetValue(key, out var lazy)
+			|| this._Dictionary.TryAdd(key, lazy = this._CreateValue(key));
+		value = success ? lazy.Value : default;
+		return success;
 	}
 }

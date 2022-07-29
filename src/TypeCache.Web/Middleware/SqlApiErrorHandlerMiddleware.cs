@@ -5,30 +5,41 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using TypeCache.Business;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.Web.Middleware;
 
-public class SqlApiErrorHandlerMiddleware
+public class SqlApiErrorHandlerMiddleware : WebMiddleware
 {
-	private readonly RequestDelegate _Next;
-
-	public SqlApiErrorHandlerMiddleware(RequestDelegate next)
+	public SqlApiErrorHandlerMiddleware(IMediator mediator, JsonSerializerOptions? jsonSerializerOptions = null)
+		: base(mediator, jsonSerializerOptions)
 	{
-		this._Next = next;
 	}
 
-	public async Task Invoke(HttpContext httpContext)
+	public override async Task InvokeAsync(HttpContext context, RequestDelegate next)
 	{
 		try
 		{
-			await this._Next.Invoke(httpContext);
+			await next.Invoke(context);
+		}
+		catch (AggregateException aggregateException)
+		{
+			context.Response.ContentType = Application.Json;
+			context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+			var exception = aggregateException.InnerException ?? aggregateException;
+			await JsonSerializer.SerializeAsync(context.Response.Body, new
+			{
+				ErrorType = exception.GetType().Name,
+				ErrorMessage = exception.Message,
+				exception.StackTrace
+			});
 		}
 		catch (Exception exception)
 		{
-			httpContext.Response.ContentType = Application.Json;
-			httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-			await JsonSerializer.SerializeAsync(httpContext.Response.Body, new
+			context.Response.ContentType = Application.Json;
+			context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+			await JsonSerializer.SerializeAsync(context.Response.Body, new
 			{
 				ErrorType = exception.GetType().Name,
 				ErrorMessage = exception.Message,

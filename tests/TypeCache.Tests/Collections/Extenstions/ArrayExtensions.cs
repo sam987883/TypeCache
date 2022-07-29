@@ -58,47 +58,6 @@ public class ArrayExtensions
 	}
 
 	[Fact]
-	public void Deconstruct()
-	{
-		{
-			(int? item1, IEnumerable<int> rest) = new[] { 1, 2 };
-			Assert.Equal(1, item1);
-			Assert.Equal(new[] { 2 }, rest);
-		}
-		{
-			(int? item1, int? item2, IEnumerable<int> rest) = new[] { 1, 2 };
-			Assert.Equal(1, item1);
-			Assert.Equal(2, item2);
-			Assert.Equal(Array<int>.Empty, rest);
-		}
-		{
-			(int? item1, int? item2, int? item3, IEnumerable<int> rest) = new[] { 1, 2 };
-			Assert.Equal(1, item1);
-			Assert.Equal(2, item2);
-			Assert.Null(item3);
-			Assert.Equal(Array<int>.Empty, rest);
-		}
-		{
-			(string item1, IEnumerable<string> rest) = new[] { "1", "2" };
-			Assert.Equal("1", item1);
-			Assert.Equal(new[] { "2" }, rest);
-		}
-		{
-			(string item1, string item2, IEnumerable<string> rest) = new[] { "1", "2" };
-			Assert.Equal("1", item1);
-			Assert.Equal("2", item2);
-			Assert.Equal(Array<string>.Empty, rest);
-		}
-		{
-			(string item1, string item2, string item3, IEnumerable<string> rest) = new[] { "1", "2" };
-			Assert.Equal("1", item1);
-			Assert.Equal("2", item2);
-			Assert.Null(item3);
-			Assert.Equal(Array<string>.Empty, rest);
-		}
-	}
-
-	[Fact]
 	public void Do()
 	{
 		var stringArray = new[] { "123", "abc", "def" };
@@ -183,10 +142,10 @@ public class ArrayExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(new[] { 1, 3, 5 }, await intArray.IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToListAsync());
-		Assert.Empty(await intArray.IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, Task<bool>>).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToListAsync());
+		Assert.Equal(new[] { 1, 3, 5 }, await intArray.IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync(3));
+		Assert.Empty(await intArray.IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync(0));
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, Task<bool>>).ToArrayAsync(5));
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync(10));
 
 		await Task.CompletedTask;
 	}
@@ -261,7 +220,7 @@ public class ArrayExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
-		Assert.Equal(await stringArray.ToAsync().ToListAsync(), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+		Assert.Equal(await stringArray.ToAsync().ToArrayAsync(8), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToArrayAsync(8));
 	}
 
 	[Fact]
@@ -305,22 +264,6 @@ public class ArrayExtensions
 		Assert.Equal(intArray[^1], intArray.ToImmutableStack().First());
 		Assert.Equal(stringArray[^1], stringArray.ToImmutableStack().First());
 		Assert.Equal(ImmutableStack<int>.Empty, Array<int>.Empty.ToImmutableStack());
-	}
-
-	[Fact]
-	public void ToIndex()
-	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-
-		Assert.Equal(new[] { 1, 3, 5 }, intArray.ToIndex(i => i % 2 == 0));
-		Assert.Equal(new[] { 0, 2, 4 }, intArray.ToIndex(i => i % 2 == 1));
-		Assert.Empty(Array<int>.Empty.ToIndex(i => i % 2 == 1));
-		Assert.Empty((null as int[]).ToIndex(i => i % 2 == 1));
-		Assert.Throws<ArgumentNullException>(() => Array<int>.Empty.ToIndex(null));
-		Assert.Equal(new[] { 3 }, intArray.ToIndex(4));
-		Assert.Empty(intArray.ToIndex(7));
-		Assert.Empty(Array<int>.Empty.ToIndex(1));
-		Assert.Empty((null as int[]).ToIndex(1));
 	}
 
 	[Fact]

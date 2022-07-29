@@ -20,7 +20,7 @@ public class MethodSourceStreamResolver : ISourceStreamResolver
 	public MethodSourceStreamResolver(MethodMember method, object? controller)
 	{
 		var isObservable = method.Return.Type.Is(typeof(IObservable<>)) || method.Return.Type.Implements(typeof(IObservable<>));
-		isObservable.Assert(true);
+		isObservable.AssertEquals(true);
 
 		if (!method.Static)
 		{

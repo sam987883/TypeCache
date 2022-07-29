@@ -3,26 +3,26 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business;
 
-internal class CountRule : IRule<CountRequest, long>, IRule<CountRequest, string>
+internal class CountRule : IRule<CountCommand, long>, IRule<CountCommand, string>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public CountRule(ISqlApi sqlApi)
+	public CountRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	async ValueTask<long> IRule<CountRequest, long>.ApplyAsync(CountRequest request, CancellationToken cancellationToken)
+	async ValueTask<long> IRule<CountCommand, long>.ApplyAsync(CountCommand command, CancellationToken token)
 	{
-		request.From = this._SqlApi.GetObjectSchema(request.DataSource, request.From).Name;
-		return await this._SqlApi.CountAsync(request, cancellationToken);
+		await using var connection = this._DataSourceAccessor[command.DataSource].CreateDbConnection();
+		return await connection.CountAsync(command, token);
 	}
 
-	async ValueTask<string> IRule<CountRequest, string>.ApplyAsync(CountRequest request, CancellationToken cancellationToken)
-		=> await ValueTask.FromResult(request.ToSQL());
+	async ValueTask<string> IRule<CountCommand, string>.ApplyAsync(CountCommand command, CancellationToken token)
+		=> await Task.Run(() => command.ToSQL());
 }

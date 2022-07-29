@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,24 +12,26 @@ namespace TypeCache.Extensions;
 
 public static class StringBuilderExtensions
 {
-	/// <summary>
+	/// <inheritdoc cref="StringWriter.StringWriter(StringBuilder)"/>
+	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="StringWriter"/>(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static StringWriter ToStringWriter(this StringBuilder @this)
 		=> new StringWriter(@this);
 
-	/// <summary>
+	/// <inheritdoc cref="StringWriter.StringWriter(StringBuilder, IFormatProvider?)"/>
+	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="StringWriter"/>(@<paramref name="this"/>, <paramref name="formatProvider"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static StringWriter ToStringWriter(this StringBuilder @this, IFormatProvider? formatProvider)
 		=> new StringWriter(@this, formatProvider);
 
-	/// <summary>
+	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="CustomStringWriter"/>(@<paramref name="this"/>, <paramref name="encoding"/>);</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static StringWriter ToStringWriter(this StringBuilder @this, Encoding encoding)
 		=> new CustomStringWriter(@this, encoding);
 }

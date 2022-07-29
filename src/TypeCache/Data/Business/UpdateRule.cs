@@ -3,26 +3,26 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Business;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Requests;
 
 namespace TypeCache.Data.Business;
 
-internal class UpdateRule : IRule<UpdateRequest, RowSet>, IRule<UpdateRequest, string>
+internal class UpdateRule<T> : IRule<UpdateCommand, UpdateRowSetResponse<T>>, IRule<UpdateCommand, string>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IAccessor<DataSource> _DataSourceAccessor;
 
-	public UpdateRule(ISqlApi sqlApi)
+	public UpdateRule(IAccessor<DataSource> dataSourceAccessor)
 	{
-		this._SqlApi = sqlApi;
+		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	async ValueTask<RowSet> IRule<UpdateRequest, RowSet>.ApplyAsync(UpdateRequest request, CancellationToken cancellationToken)
+	async ValueTask<UpdateRowSetResponse<T>> IRule<UpdateCommand, UpdateRowSetResponse<T>>.ApplyAsync(UpdateCommand request, CancellationToken token)
 	{
-		request.Table = this._SqlApi.GetObjectSchema(request.DataSource, request.Table).Name;
-		return await this._SqlApi.UpdateAsync(request, cancellationToken);
+		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		return await connection.UpdateAsync<T>(request, token);
 	}
 
-	async ValueTask<string> IRule<UpdateRequest, string>.ApplyAsync(UpdateRequest request, CancellationToken cancellationToken)
-		=> await ValueTask.FromResult(request.ToSQL());
+	async ValueTask<string> IRule<UpdateCommand, string>.ApplyAsync(UpdateCommand request, CancellationToken token)
+		=> await Task.Run(() => request.ToSQL());
 }

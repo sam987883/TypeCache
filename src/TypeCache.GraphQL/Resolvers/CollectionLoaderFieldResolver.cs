@@ -34,12 +34,11 @@ public class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 		Func<CHILD, KEY> getChildKey)
 	{
 		dataLoader.AssertNotNull();
+		getParentKey.AssertNotNull();
+		getChildKey.AssertNotNull();
 
 		if (!method.Static)
 			controller.AssertNotNull();
-
-		getParentKey.AssertNotNull();
-		getChildKey.AssertNotNull();
 
 		if (!method.Return.Type.Implements<IEnumerable<CHILD>>()
 			&& ((method.Return.Task || method.Return.ValueTask) && !method.Return.Type.GenericTypes.First()!.Implements<IEnumerable<CHILD>>()))
@@ -56,7 +55,7 @@ public class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 	{
 		context.Source.AssertNotNull();
 
-		var loaderKey = Invariant($"{context.Source.GetTypeMember().GraphQLName()}.{this._Method.GraphQLName()}");
+		var loaderKey = Invariant($"{TypeOf<PARENT>.Member.GraphQLName()}.{this._Method.GraphQLName()}");
 		var dataLoader = this._DataLoader.Context!.GetOrAddCollectionBatchLoader<KEY, CHILD>(loaderKey, async keys =>
 		{
 			var arguments = context.GetArguments<PARENT>(this._Method, keys).ToArray();
@@ -65,8 +64,9 @@ public class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 			{
 				ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
 				Task<IEnumerable<CHILD>> task => await task,
+				IAsyncEnumerable<CHILD> items => (await items.ToListAsync()).ToArray(),
 				IEnumerable<CHILD> items => items,
-				_ => Enumerable<CHILD>.Empty
+				_ => Array<CHILD>.Empty
 			};
 		}, this._GetChildKey);
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TypeCache.Business;
 
-public interface IProcessIntermediary<in I>
+public interface IProcessIntermediary<in REQUEST>
 {
-	ValueTask HandleAsync(I request, CancellationToken cancellationToken = default);
+	ValueTask RunAsync(REQUEST request, CancellationToken token = default);
 }

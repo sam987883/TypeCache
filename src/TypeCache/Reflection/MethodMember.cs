@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
@@ -57,15 +58,23 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// <summary>
 	/// <c>=&gt; <paramref name="other"/> <see langword="is not null"/> &amp;&amp; <see langword="this"/>.Handle.Equals(<paramref name="other"/>.Handle) &amp;&amp; <see langword="this"/>.Type.Equals(<paramref name="other"/>.Type);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(MethodMember? other)
 		=> other is not null && this.Handle.Equals(other.Handle) && this.Type!.Equals(other.Type);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> this.Equals(item as MethodMember);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Handle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Invoke?.Invoke(<paramref name="instance"/>, <paramref name="arguments"/>);</c>
 	/// </summary>
 	/// <param name="instance">Pass null if the method is static.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? Invoke(object? instance, params object?[]? arguments)
 		=> this._Invoke?.Invoke(instance, arguments);
 
@@ -73,14 +82,14 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// <c>=&gt; <see langword="this"/>._Cache?[<paramref name="genericTypes"/>.To(type =&gt; type.TypeHandle).ToArray()].Invoke(<paramref name="instance"/>, <paramref name="arguments"/>);</c>
 	/// </summary>
 	/// <param name="instance">Pass null if the method is static.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? InvokeGeneric(object? instance, Type[] genericTypes, params object?[]? arguments)
 		=> this._Cache?[genericTypes.Map(type => type.TypeHandle).ToArray()].Invoke(instance, arguments);
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static implicit operator MethodInfo(MethodMember member)
 		=> (MethodInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
 }

@@ -56,8 +56,7 @@ public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 	{
 		context.Source.AssertNotNull();
 
-		var parentType = context.Source.GetTypeMember();
-		var loaderKey = Invariant($"{parentType.GraphQLName()}.{this._Method.GraphQLName()}");
+		var loaderKey = Invariant($"{TypeOf<PARENT>.Member.GraphQLName()}.{this._Method.GraphQLName()}");
 		var dataLoader = this._DataLoader.Context!.GetOrAddBatchLoader<KEY, CHILD>(loaderKey, async keys =>
 		{
 			var arguments = context.GetArguments<PARENT>(this._Method, keys).ToArray();
@@ -66,8 +65,9 @@ public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 			{
 				ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
 				Task<IEnumerable<CHILD>> task => await task,
+				IAsyncEnumerable<CHILD> items => (await items.ToListAsync()).ToArray(),
 				IEnumerable<CHILD> items => items,
-				_ => Enumerable<CHILD>.Empty
+				_ => Array<CHILD>.Empty
 			};
 		}, this._GetChildKey);
 

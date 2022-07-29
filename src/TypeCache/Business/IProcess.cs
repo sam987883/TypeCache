@@ -7,5 +7,5 @@ namespace TypeCache.Business;
 
 public interface IProcess<in T>
 {
-	ValueTask RunAsync(T request, CancellationToken cancellationToken = default);
+	ValueTask PublishAsync(T request, CancellationToken token = default);
 }

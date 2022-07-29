@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -35,18 +36,26 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Create(<paramref name="arguments"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object Create(params object?[]? arguments)
 		=> this._Create(arguments);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(ConstructorMember? other)
 		=> this.Handle == other?.Handle;
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> item is ConstructorMember member && this.Equals(member);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Handle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; (<see cref="ConstructorInfo"/>)<paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static implicit operator ConstructorInfo(ConstructorMember member)
 		=> (ConstructorInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
 }

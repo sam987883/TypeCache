@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using TypeCache.Reflection.Extensions;
@@ -13,7 +14,7 @@ public static class Unsafe
 		where FROM : unmanaged
 		where TO : unmanaged
 	{
-		public delegate ref TO Convert(ref FROM value);
+		public delegate TO Convert(FROM value);
 
 		static Converter()
 		{
@@ -24,15 +25,9 @@ public static class Unsafe
 		public static Convert To { get; }
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static ref TO Convert<FROM, TO>(ref FROM value)
-		where FROM : unmanaged
-		where TO : unmanaged
-		=> ref Converter<FROM, TO>.To(ref value);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static TO Convert<FROM, TO>(FROM value)
 		where FROM : unmanaged
 		where TO : unmanaged
-		=> Converter<FROM, TO>.To(ref value);
+		=> Converter<FROM, TO>.To(value);
 }

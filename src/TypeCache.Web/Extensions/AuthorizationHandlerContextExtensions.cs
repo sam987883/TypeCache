@@ -14,7 +14,7 @@ public static class AuthorizationHandlerContextExtensions
 		=> @this.Resource switch
 		{
 			AuthorizationFilterContext authorizationFilterContext => authorizationFilterContext.ActionDescriptor as ControllerActionDescriptor, // MVC
-				Endpoint endpoint => endpoint.Metadata.If<ControllerActionDescriptor>().First(), // Web API
-				_ => null
+			Endpoint endpoint => endpoint.Metadata.If<ControllerActionDescriptor>().First(), // Web API
+			_ => null
 		};
 }

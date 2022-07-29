@@ -45,3 +45,40 @@ public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?
 			writer.WriteNullValue();
 	}
 }
+
+public class DictionaryJsonConverter<T> : JsonConverter<IDictionary<string, T>>
+	where T : struct, Enum
+{
+	public override IDictionary<string, T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	{
+		var dictionary = new Dictionary<string, T>(STRING_COMPARISON.ToStringComparer());
+
+		if (reader.TokenType == JsonTokenType.StartObject)
+		{
+			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			{
+				var name = reader.GetString()!;
+				if (reader.Read())
+					dictionary.Add(name, EnumOf<T>.Member[reader.GetString()!]!.Value);
+			}
+		}
+
+		return dictionary;
+	}
+
+	public override void Write(Utf8JsonWriter writer, IDictionary<string, T> dictionary, JsonSerializerOptions options)
+	{
+		if (dictionary.Any())
+		{
+			writer.WriteStartObject();
+			dictionary.Do(pair =>
+			{
+				writer.WritePropertyName(pair.Key);
+				writer.WriteValue(pair.Value, options);
+			});
+			writer.WriteEndObject();
+		}
+		else
+			writer.WriteNullValue();
+	}
+}

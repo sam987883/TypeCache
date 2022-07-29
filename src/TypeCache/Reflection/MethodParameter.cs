@@ -3,10 +3,14 @@
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using TypeCache.Attributes;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
+using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -43,4 +47,12 @@ public readonly struct MethodParameter : IEquatable<MethodParameter>
 
 	public bool Equals(MethodParameter other)
 		=> this._MethodHandle == other._MethodHandle && this.Name.Is(other.Name);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> item is MethodParameter parameter && this.Equals(parameter);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> (this.Name, this._MethodHandle).GetHashCode();
 }

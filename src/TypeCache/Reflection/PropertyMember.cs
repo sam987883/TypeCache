@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -31,17 +32,26 @@ public class PropertyMember	: Member, IEquatable<PropertyMember>
 
 	/// <param name="instance">Pass null if the property getter is static.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? GetValue(object? instance, params object?[]? indexers)
 		=> this.Getter?.Invoke(instance, indexers);
 
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	/// <param name="instance">Pass null if the property setter is static.</param>
 	/// <param name="value">The value to set the property to.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
 	public void SetValue(object? instance, object? value, params object?[]? indexers)
 		=> this.Setter?.Invoke(instance, indexers.Append(value).ToArray());
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(PropertyMember? other)
-		=> this.Getter?.Handle == other?.Getter?.Handle && this.Setter?.Handle == other?.Setter?.Handle;
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public bool Equals([NotNullWhen(true)] PropertyMember? other)
+		=> (this.Getter?.Handle, this.Setter?.Handle).Equals((other?.Getter?.Handle, other?.Setter?.Handle));
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> this.Equals(item as PropertyMember);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> (this.Getter?.Handle, this.Setter?.Handle).GetHashCode();
 }

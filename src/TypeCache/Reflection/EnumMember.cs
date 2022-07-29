@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -40,8 +40,16 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 		this.Comparer = new CustomComparer<T>(compare, equals, getHashCode);
 		this.Handle = type.TypeHandle;
 		this.Flags = this.Attributes.Any<FlagsAttribute>();
-		this.Tokens = type.GetFields(STATIC_BINDING_FLAGS).Map(fieldInfo => new TokenMember<T>(fieldInfo, this)).ToImmutableDictionary(_ => _.Value, Comparer);
+		this.Tokens = type.GetFields(STATIC_BINDING_FLAGS)
+			.Map(fieldInfo => new TokenMember<T>(fieldInfo, this))
+			.ToArray();
 	}
+
+	public TokenMember<T>? this[T value]
+		=> this.Tokens.First(token => this.Comparer.EqualTo(token.Value, value));
+
+	public TokenMember<T>? this[string text, StringComparison comparison = STRING_COMPARISON]
+		=> this.Tokens.First(token => token.Name.Is(text, comparison));
 
 	public CustomComparer<T> Comparer { get; }
 
@@ -49,50 +57,27 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 
 	public RuntimeTypeHandle Handle { get; }
 
-	public IReadOnlyDictionary<T, TokenMember<T>> Tokens { get; }
+	public IReadOnlyCollection<TokenMember<T>> Tokens { get; }
 
 	public TypeMember UnderlyingType => this._UnderlyingType.Value;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool IsValid(T value)
-		=> this.Tokens.ContainsKey(value);
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public bool IsDefined(T value)
+		=> this.Tokens.Any(token => this.Comparer.EqualTo(token.Value, value));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public string Parse(T value)
-		=> this.Tokens.TryGetValue(value, out var token) ? token.Name : value.ToString("D");
+		=> this[value]?.Name ?? value.ToString("G");
 
-	public T? Parse(string text, StringComparison comparison = STRING_COMPARISON)
-		=> this.Tokens.Values.If(token => token.Name.Is(text, comparison)).TryFirst(out var token) ? (T?)token.Value : null;
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public bool Equals([NotNullWhen(true)] EnumMember<T>? other)
+		=> other?.Handle.Equals(this.Handle) is true;
 
-	public bool TryParse(T value, out string text)
-	{
-		if (this.Tokens.TryGetValue(value, out var token))
-		{
-			text = token.Name;
-			return true;
-		}
-		else
-		{
-			text = value.ToString("D");
-			return false;
-		}
-	}
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> this.Equals(item as EnumMember<T>);
 
-	public bool TryParse(string text, out T value, StringComparison comparison = STRING_COMPARISON)
-	{
-		if (this.Tokens.Values.TryFirst(token => token.Name.Is(text, comparison), out var token))
-		{
-			value = token.Value;
-			return true;
-		}
-		else
-		{
-			value = default;
-			return false;
-		}
-	}
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public bool Equals(EnumMember<T>? other)
-		=> other is not null && this.Handle.Equals(other.Handle);
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Handle.GetHashCode();
 }

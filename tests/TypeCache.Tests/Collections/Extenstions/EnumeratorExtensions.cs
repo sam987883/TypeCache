@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests.Collections.Extensions;
@@ -59,7 +60,7 @@ public class EnumeratorExtensions
 			var (value1, value2, value3, _) = ((IEnumerable<int>)new[] { 1, 2 }).GetEnumerator();
 			Assert.Equal(1, value1);
 			Assert.Equal(2, value2);
-			Assert.Null(value3);
+			Assert.Equal(default, value3);
 		}
 		{
 			var (item1, _) = this.GetStrings().GetEnumerator();
@@ -116,7 +117,7 @@ public class EnumeratorExtensions
 		var enumerator = this.GetInts().GetEnumerator();
 		var list = new List<int>(7);
 
-		while (enumerator.TryNext(out var item))
+		while (enumerator.IfNext(out var item))
 			list.Add(item);
 
 		Assert.Equal(7, list.Count);
@@ -125,12 +126,12 @@ public class EnumeratorExtensions
 	[Fact]
 	public void Rest()
 	{
-		var enumerator = this.GetInts().GetEnumerator();
+		var enumerator = (1..7).Values().GetEnumerator();
 		var i = 0;
 		while (++i < 4)
 			enumerator.MoveNext();
 
-		Assert.Equal(new[] { 4, 5, 6, 7 }, enumerator.Rest().ToArray());
+		Assert.Equal(new[] { 5, 6, 7 }, enumerator.Rest().ToArray());
 		Assert.Empty(enumerator.Rest());
 	}
 
@@ -140,7 +141,7 @@ public class EnumeratorExtensions
 		var enumerator = this.GetInts().GetEnumerator();
 		enumerator.Move(4);
 
-		Assert.Equal(new[] { 5, 6, 7 }, enumerator.Rest().ToArray());
+		Assert.Equal(new[] { 6, 7 }, enumerator.Rest().ToArray());
 		Assert.False(enumerator.Move(1));
 		Assert.True(enumerator.Move(0));
 	}

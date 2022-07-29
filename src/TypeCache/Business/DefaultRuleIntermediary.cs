@@ -1,28 +1,43 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Business;
 
-public class DefaultRuleIntermediary<I, O> : IRuleIntermediary<I, O>
+public class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermediary<REQUEST, RESPONSE>
 {
-	private readonly IRule<I, O> _Rule;
-	private readonly IEnumerable<IValidationRule<I>> _ValidationRules;
+	private readonly IRule<REQUEST, RESPONSE> _Rule;
+	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;
 
-	public DefaultRuleIntermediary(IRule<I, O> rule, IEnumerable<IValidationRule<I>> validationRules)
+	public DefaultRuleIntermediary(IRule<REQUEST, RESPONSE> rule, IEnumerable<IValidationRule<REQUEST>> validationRules)
 	{
 		this._Rule = rule;
-		this._ValidationRules = validationRules;
+		this._ValidationRules = validationRules ?? Array<IValidationRule<REQUEST>>.Empty;
 	}
 
-	public async ValueTask<O> HandleAsync(I request, CancellationToken cancellationToken)
+	public async ValueTask<RuleResponse<RESPONSE>> GetAsync(REQUEST request, CancellationToken token = default)
 	{
-		if (this._ValidationRules.Any())
-			await this._ValidationRules.DoAsync(async validationRule => await validationRule.ValidateAsync(request));
+		try
+		{
+			if (this._ValidationRules.Any())
+			{
+				var failedValidation = this._ValidationRules.ToMany(_ => _.Validate(request)).ToArray();
+				if (failedValidation.Any())
+					return new(failedValidation);
+			}
 
-		return await this._Rule.ApplyAsync(request, cancellationToken);
+			return new(await this._Rule.ApplyAsync(request, token));
+		}
+		catch (Exception error)
+		{
+			return new(error);
+		}
 	}
 }

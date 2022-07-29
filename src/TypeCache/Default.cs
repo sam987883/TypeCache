@@ -25,7 +25,7 @@ public static class Default
 
 	public const StringComparison NAME_STRING_COMPARISON = StringComparison.Ordinal;
 
-	public const RegexOptions REGEX_OPTIONS = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
+	public const RegexOptions REGEX_OPTIONS = RegexOptions.Compiled | RegexOptions.CultureInvariant;
 
 	public const StringComparison SORT_STRING_COMPARISON = StringComparison.Ordinal;
 
@@ -36,6 +36,8 @@ public static class Default
 	public static readonly ConstantExpression NullExpression = Expression.Constant(null);
 
 	public static readonly IComparer<ParameterInfo> ParameterPositionComparer = Comparer<ParameterInfo>.Create((x, y) => x.Position - y.Position);
+
+	public static readonly TimeSpan RegexTimeout = TimeSpan.FromMinutes(1);
 
 	public static readonly IEqualityComparer<RuntimeTypeHandle[]> RuntimeTypeHandleArrayComparer = new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a.IsSequence(b));
 }

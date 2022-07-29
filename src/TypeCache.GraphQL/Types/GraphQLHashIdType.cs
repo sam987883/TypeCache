@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using GraphQLParser.AST;
@@ -38,7 +39,7 @@ public class GraphQLHashIdType : ScalarGraphType
 	public override bool CanParseValue(object? value)
 		=> value is null || value is int || value is long || value is Guid || value is string;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override object? ParseLiteral(GraphQLValue value)
 		=> this.ParseValue(value);
 

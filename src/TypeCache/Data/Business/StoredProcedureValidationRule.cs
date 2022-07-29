@@ -1,34 +1,55 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Data;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureRequest>
+internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureCommand>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public StoredProcedureValidationRule(ISqlApi sqlApi)
+	public StoredProcedureValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(StoredProcedureRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(StoredProcedureCommand request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.Procedure);
-		schema.Type.Assert(ObjectType.StoredProcedure);
+		var validator = new Validator();
+		validator.AssertNotNull(request);
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.Procedure);
+		}
 
-		var invalidParameterCsv = request.Parameters.Keys.Without(schema.Parameters.If(parameter => !parameter!.Return).Map(parameter => parameter!.Name)).ToCSV();
-		if (invalidParameterCsv.IsNotBlank())
-			throw new ArgumentException($"{schema.Name} does not have the following parameters: {invalidParameterCsv}.", $"{nameof(StoredProcedureRequest)}.{nameof(StoredProcedureRequest.Parameters)}");
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Procedure)).Result;
+			schema.Type.AssertEquals(ObjectType.StoredProcedure);
 
-		await ValueTask.CompletedTask;
+			if (validator.Success)
+			{
+				request.Procedure = schema.Name;
+
+				var inputParameters = schema.Parameters
+					.If(parameter => parameter.Direction is ParameterDirection.Input || parameter.Direction is ParameterDirection.InputOutput)
+					.Map(parameter => parameter.Name);
+				validator.AssertEquals(inputParameters.Without(request.InputParameters.Keys).Any(), false);
+
+				var outputParameters = schema.Parameters
+					.If(parameter => parameter.Direction is ParameterDirection.Output || parameter.Direction is ParameterDirection.InputOutput)
+					.Map(parameter => parameter.Name);
+				validator.AssertEquals(outputParameters.Without(request.OutputParameters.Keys).Any(), false);
+			}
+		}
+
+		return validator.Fails;
 	}
 }

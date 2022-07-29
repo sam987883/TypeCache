@@ -34,9 +34,9 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>()
+		};
 		return Expression.Lambda<Action<T1, T2>>(bodyFactory(parameters[0], parameters[1]), parameters);
 	}
 
@@ -45,10 +45,10 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>()
+		};
 		return Expression.Lambda<Action<T1, T2, T3>>(bodyFactory(parameters[0], parameters[1], parameters[2]), parameters);
 	}
 
@@ -57,11 +57,11 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>()
+		};
 		return Expression.Lambda<Action<T1, T2, T3, T4>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3]), parameters);
 	}
 
@@ -70,12 +70,12 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>(),
-				"parameter5".Parameter<T5>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>(),
+			"parameter5".Parameter<T5>()
+		};
 		return Expression.Lambda<Action<T1, T2, T3, T4, T5>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4]), parameters);
 	}
 
@@ -84,13 +84,13 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>(),
-				"parameter5".Parameter<T5>(),
-				"parameter6".Parameter<T6>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>(),
+			"parameter5".Parameter<T5>(),
+			"parameter6".Parameter<T6>()
+		};
 		return Expression.Lambda<Action<T1, T2, T3, T4, T5, T6>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5]), parameters);
 	}
 
@@ -119,9 +119,9 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>()
+		};
 		return Expression.Lambda<Func<T1, T2, R>>(bodyFactory(parameters[0], parameters[1]), parameters);
 	}
 
@@ -130,10 +130,10 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>()
+		};
 		return Expression.Lambda<Func<T1, T2, T3, R>>(bodyFactory(parameters[0], parameters[1], parameters[2]), parameters);
 	}
 
@@ -142,11 +142,11 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>()
+		};
 		return Expression.Lambda<Func<T1, T2, T3, T4, R>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3]), parameters);
 	}
 
@@ -155,12 +155,12 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>(),
-				"parameter5".Parameter<T5>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>(),
+			"parameter5".Parameter<T5>()
+		};
 		return Expression.Lambda<Func<T1, T2, T3, T4, T5, R>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4]), parameters);
 	}
 
@@ -169,13 +169,13 @@ public static class LambdaFactory
 	{
 		var parameters = new[]
 		{
-				"parameter1".Parameter<T1>(),
-				"parameter2".Parameter<T2>(),
-				"parameter3".Parameter<T3>(),
-				"parameter4".Parameter<T4>(),
-				"parameter5".Parameter<T5>(),
-				"parameter6".Parameter<T6>()
-			};
+			"parameter1".Parameter<T1>(),
+			"parameter2".Parameter<T2>(),
+			"parameter3".Parameter<T3>(),
+			"parameter4".Parameter<T4>(),
+			"parameter5".Parameter<T5>(),
+			"parameter6".Parameter<T6>()
+		};
 		return Expression.Lambda<Func<T1, T2, T3, T4, T5, T6, R>>(bodyFactory(parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5]), parameters);
 	}
 

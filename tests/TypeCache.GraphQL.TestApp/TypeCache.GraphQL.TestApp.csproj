@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="6.0.0" />
+    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="6.1.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
   </ItemGroup>
 

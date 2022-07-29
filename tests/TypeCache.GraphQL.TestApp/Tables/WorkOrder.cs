@@ -1,9 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
+using TypeCache.Attributes;
 
 namespace TypeCache.GraphQL.TestApp.Tables;
 
+[SqlApi]
 public class WorkOrder
 {
 	public int WorkOrderID { get; set; }

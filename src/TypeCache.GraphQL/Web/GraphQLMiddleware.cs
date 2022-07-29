@@ -11,6 +11,7 @@ using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.GraphQL.Web;

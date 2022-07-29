@@ -83,7 +83,6 @@ public class EnumerableExtensions
 		Assert.True(this.GetItems().Any());
 		Assert.False(Array<string>.Empty.Any());
 		Assert.False(new List<string>(1).Any());
-		Assert.False(Enumerable<string>.Empty.Any());
 		Assert.True(intArray.Any(i => i % 2 == 0));
 		Assert.False(intArray.Any(i => i > 6 || i < 1));
 	}
@@ -103,7 +102,7 @@ public class EnumerableExtensions
 		Assert.NotNull((null as IEnumerable).As<int>());
 		Assert.IsType<int[]>(((IEnumerable)new[] { 1, 2, 3 }).As<int>());
 		Assert.NotNull(this.GetItems().As<int>());
-		Assert.Equal(new string[0], this.GetItems().As<string>());
+		Assert.Equal(new string[] { null, null, null, null, null, null }, this.GetItems().As<string>());
 	}
 
 	[Fact]
@@ -116,7 +115,6 @@ public class EnumerableExtensions
 		Assert.Equal(6, this.GetItems().Count());
 		Assert.Equal(0, Array<string>.Empty.Count());
 		Assert.Equal(0, new List<string>(1).Count());
-		Assert.Equal(0, Enumerable<string>.Empty.Count());
 	}
 
 	[Fact]
@@ -134,10 +132,10 @@ public class EnumerableExtensions
 			Assert.Equal(Array<int>.Empty, rest);
 		}
 		{
-			(int? item1, int? item2, int? item3, IEnumerable<int> rest) = new List<int>(2) { 1, 2 };
+			(int item1, int item2, int item3, IEnumerable<int> rest) = new List<int>(2) { 1, 2 };
 			Assert.Equal(1, item1);
 			Assert.Equal(2, item2);
-			Assert.Null(item3);
+			Assert.Equal(default, item3);
 			Assert.Equal(Array<int>.Empty, rest);
 		}
 		{
@@ -236,9 +234,9 @@ public class EnumerableExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(Enumerable<int>.Empty, new[] { Array<int>.Empty }.Gather());
-		Assert.Equal(Enumerable<int>.Empty, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { ImmutableArray<int>.Empty }).Gather());
-		Assert.Equal(Enumerable<int>.Empty, new List<IEnumerable<int>> { new List<int>(0) }.Gather());
+		Assert.Equal(Array<int>.Empty, new[] { Array<int>.Empty }.Gather().ToArray());
+		Assert.Equal(Array<int>.Empty, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { ImmutableArray<int>.Empty }).Gather().ToArray());
+		Assert.Equal(Array<int>.Empty, new List<IEnumerable<int>> { new List<int>(0) }.Gather().ToArray());
 
 		Assert.Equal(intArray, new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } }.Gather());
 		Assert.Equal(intArray, ((IEnumerable<IEnumerable<int>>)new IEnumerable<int>[] { new[] { 1, 2 }.ToImmutableArray(), new[] { 3, 4 }.ToImmutableArray(), new[] { 5, 6 }.ToImmutableArray() }).Gather());
@@ -335,7 +333,7 @@ public class EnumerableExtensions
 		Assert.Empty(this.GetItems().If<string>());
 
 		Assert.Empty((null as IEnumerable).If<string>());
-		Assert.Empty(((IEnumerable)Enumerable<object>.Empty).If<int>());
+		Assert.Empty(((IEnumerable)Array<object>.Empty).If<int>());
 		Assert.Equal(new[] { 1, 3, 5 }, new object[] { 1, "2", 3, "4", 5, "6" }.If<int>());
 		Assert.Equal(new[] { "2", "4", "6" }, new object[] { 1, "2", 3, "4", 5, "6" }.If<string>());
 		Assert.Equal(new[] { 1, 3, 5 }, ((IEnumerable<int>)intArray).If(i => i % 2 == 1));
@@ -349,10 +347,10 @@ public class EnumerableExtensions
 	[Fact]
 	public async Task IfAsync()
 	{
-		Assert.Equal(new[] { 1, 3, 5 }, await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToListAsync());
-		Assert.Empty(await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, Task<bool>>).ToListAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToListAsync());
+		Assert.Equal(new[] { 1, 3, 5 }, await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync(3));
+		Assert.Empty(await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync(0));
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, Task<bool>>).ToArrayAsync(5));
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync(6));
 
 		await Task.CompletedTask;
 	}
@@ -388,7 +386,7 @@ public class EnumerableExtensions
 		Assert.Equal("1,2,3,4,5,6", this.GetItems().Join(','));
 		Assert.Equal("1.2.3.4.5.6", this.GetItems().Join("."));
 		Assert.Equal(string.Empty, (null as IEnumerable<int>).Join('!'));
-		Assert.Equal(string.Empty, Enumerable<int>.Empty.Join("aaa"));
+		Assert.Equal(string.Empty, Array<int>.Empty.Join("aaa"));
 	}
 
 	[Fact]
@@ -416,7 +414,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(intArray, intArray.Match(intArray));
 		Assert.True(new[] { 2, 4, 6 }.IsSet(intArray.Match(new[] { 0, 2, 4, 6, 8 })));
-		Assert.Equal(Enumerable<int>.Empty, intArray.Match(null));
+		Assert.Equal(Array<int>.Empty, intArray.Match(null).ToArray());
 	}
 
 	[Fact]
@@ -425,7 +423,7 @@ public class EnumerableExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 		Assert.Equal(6, intArray.Maximum());
-		Assert.Equal(0, Enumerable<int>.Empty.Maximum());
+		Assert.Equal(0, Array<int>.Empty.Maximum());
 		Assert.Equal(0, (null as IEnumerable<int>).Maximum());
 	}
 
@@ -435,7 +433,7 @@ public class EnumerableExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 		Assert.Equal(1, intArray.Minimum());
-		Assert.Equal(0, Enumerable<int>.Empty.Minimum());
+		Assert.Equal(0, Array<int>.Empty.Minimum());
 		Assert.Equal(0, (null as IEnumerable<int>).Minimum());
 	}
 
@@ -456,7 +454,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 3, 4, 5, 6 }, intArray.Skip(2));
 		Assert.Equal(Array<int>.Empty, intArray.Skip(6));
-		Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.Skip(3).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.Skip(3).ToArray());
 	}
 
 	[Fact]
@@ -465,7 +463,7 @@ public class EnumerableExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 		Assert.Equal(intArray, this.GetItems().Sort());
-		Assert.Equal(Enumerable<int>.Empty, Enumerable<int>.Empty.Sort());
+		Assert.Equal(Array<int>.Empty, ((IEnumerable<int>)Array<int>.Empty).Sort());
 	}
 
 	[Fact]
@@ -475,7 +473,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 1, 2 }, intArray.Take(2));
 		Assert.Equal(intArray, intArray.Take(6));
-		Assert.Throws<ArgumentOutOfRangeException>(() => Enumerable<int>.Empty.Take(3).ToArray());
+		Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.Take(3).ToArray());
 	}
 
 	[Fact]
@@ -520,7 +518,7 @@ public class EnumerableExtensions
 
 		Assert.NotEmpty(await stringArray.ToAsync().ToListAsync());
 		Assert.True(stringArray.IsSet(await this.GetItems().MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync()));
-		Assert.Empty(await Enumerable<string>.Empty.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
+		Assert.Empty(await Array<string>.Empty.MapAsync(async i => await Task.FromResult(i.ToString())).ToListAsync());
 		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().MapAsync<int, string>(null as Func<int, Task<string>>).ToListAsync());
 		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().MapAsync<int, string>(null as Func<int, CancellationToken, Task<string>>).ToListAsync());
 
@@ -555,7 +553,7 @@ public class EnumerableExtensions
 	public void ToHashCode()
 	{
 		Assert.NotEqual(0, this.GetItems().ToHashCode());
-		Assert.Equal(new HashCode().ToHashCode(), Enumerable<int>.Empty.ToHashCode());
+		Assert.Equal(new HashCode().ToHashCode(), Array<int>.Empty.ToHashCode());
 	}
 
 	[Fact]
@@ -564,7 +562,7 @@ public class EnumerableExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
 		Assert.Equal(intArray, this.GetItems().ToHashSet(EqualityComparer<int>.Default));
-		Assert.Empty(Enumerable<int>.Empty.ToHashSet());
+		Assert.Empty(Array<int>.Empty.ToHashSet());
 		Assert.Empty((null as IEnumerable<int>).ToHashSet());
 	}
 
@@ -575,7 +573,7 @@ public class EnumerableExtensions
 
 		Assert.True(intArray.IsSequence(this.GetItems().ToImmutableQueue()));
 		Assert.True(intArray.IsSequence(((IEnumerable<int>)intArray).ToImmutableQueue()));
-		Assert.Empty(Enumerable<int>.Empty.ToImmutableQueue());
+		Assert.Empty(Array<int>.Empty.ToImmutableQueue());
 		Assert.Empty((null as IEnumerable<int>).ToImmutableQueue());
 	}
 
@@ -586,7 +584,7 @@ public class EnumerableExtensions
 
 		Assert.True(intArray.ToStack().IsSequence(this.GetItems().ToImmutableStack()));
 		Assert.True(intArray.ToStack().IsSequence(((IEnumerable<int>)intArray).ToImmutableStack()));
-		Assert.Empty(Enumerable<int>.Empty.ToImmutableStack());
+		Assert.Empty(Array<int>.Empty.ToImmutableStack());
 		Assert.Empty((null as IEnumerable<int>).ToImmutableStack());
 	}
 
@@ -595,12 +593,12 @@ public class EnumerableExtensions
 	{
 		Assert.Equal(new[] { 1, 3, 5 }, this.GetItems().ToIndex(i => i % 2 == 0));
 		Assert.Equal(new[] { 0, 2, 4 }, this.GetItems().ToIndex(i => i % 2 == 1));
-		Assert.Empty(Enumerable<int>.Empty.ToIndex(i => i % 2 == 1));
+		Assert.Empty(Array<int>.Empty.ToIndex(i => i % 2 == 1));
 		Assert.Empty((null as int[]).ToIndex(i => i % 2 == 1));
-		Assert.Throws<ArgumentNullException>(() => Enumerable<int>.Empty.ToIndex(null));
+		Assert.Throws<ArgumentNullException>(() => Array<int>.Empty.ToIndex(null));
 		Assert.Equal(new[] { 3 }, this.GetItems().ToIndex(4));
 		Assert.Empty(this.GetItems().ToIndex(7));
-		Assert.Empty(Enumerable<int>.Empty.ToIndex(1));
+		Assert.Empty(Array<int>.Empty.ToIndex(1));
 		Assert.Empty((null as int[]).ToIndex(1));
 	}
 
@@ -611,7 +609,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(intArray, this.GetItems().ToList());
 		Assert.True(intArray.IsSequence(this.GetItems().ToList()));
-		Assert.Empty(Enumerable<int>.Empty.ToList());
+		Assert.Empty(Array<int>.Empty.ToList());
 		Assert.Empty((null as IEnumerable<int>).ToList());
 	}
 
@@ -633,7 +631,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(intArray, this.GetItems().ToQueue());
 		Assert.True(intArray.IsSequence(this.GetItems().ToQueue()));
-		Assert.Empty(Enumerable<int>.Empty.ToQueue());
+		Assert.Empty(Array<int>.Empty.ToQueue());
 		Assert.Empty((null as IEnumerable<int>).ToQueue());
 	}
 
@@ -668,7 +666,7 @@ public class EnumerableExtensions
 		intArray.Reverse();
 		Assert.Equal(intArray, this.GetItems().ToStack());
 		Assert.True(intArray.IsSequence(this.GetItems().ToStack()));
-		Assert.Empty(Enumerable<int>.Empty.ToStack());
+		Assert.Empty(Array<int>.Empty.ToStack());
 		Assert.Empty((null as IEnumerable<int>).ToStack());
 	}
 
@@ -680,8 +678,8 @@ public class EnumerableExtensions
 		Assert.True(intArray.IsSet(new[] { 1, 2 }.Union(new[] { 3, 4 }).Union(new[] { 5, 6 })));
 		Assert.True(intArray.IsSet(intArray.Union(Array<int>.Empty)));
 		Assert.True(intArray.IsSet(intArray.Union(null)));
-		Assert.Empty(Enumerable<string>.Empty.Union(Enumerable<string>.Empty));
-		Assert.Empty((null as IEnumerable<string>).Union(Enumerable<string>.Empty));
+		Assert.Empty(Array<string>.Empty.Union(Array<string>.Empty));
+		Assert.Empty((null as IEnumerable<string>).Union(Array<string>.Empty));
 	}
 
 	[Fact]
@@ -693,7 +691,7 @@ public class EnumerableExtensions
 		Assert.True(intArray.IsSet(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }.Without(new[] { 7, 8, 9, 0 })));
 		Assert.True(intArray.IsSet(intArray.Without(Array<int>.Empty)));
 		Assert.True(intArray.IsSet(intArray.Without(null)));
-		Assert.Empty(Enumerable<string>.Empty.Without(Enumerable<string>.Empty));
-		Assert.Empty((null as IEnumerable<string>).Without(Enumerable<string>.Empty));
+		Assert.Empty(Array<string>.Empty.Without(Array<string>.Empty));
+		Assert.Empty((null as IEnumerable<string>).Without(Array<string>.Empty));
 	}
 }

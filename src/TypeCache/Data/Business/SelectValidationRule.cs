@@ -1,34 +1,46 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Requests;
+using TypeCache.Data.Domain;
 using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Business;
 
-internal class SelectValidationRule : IValidationRule<SelectRequest>
+internal class SelectValidationRule : IValidationRule<SelectCommand>
 {
-	private readonly ISqlApi _SqlApi;
+	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
 
-	public SelectValidationRule(ISqlApi sqlApi)
+	public SelectValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SqlApi = sqlApi;
+		this._SchemaRule = rule;
 	}
 
-	public async ValueTask ValidateAsync(SelectRequest request, CancellationToken cancellationToken)
+	public IEnumerable<string> Validate(SelectCommand request)
 	{
-		var schema = this._SqlApi.GetObjectSchema(request.DataSource, request.From);
-		if (schema.Type != ObjectType.Table && schema.Type != ObjectType.View && schema.Type != ObjectType.Function)
-			throw new ArgumentOutOfRangeException(nameof(SelectRequest.From), $"Cannot SELECT from a {schema.Type.Name()}.");
+		var validator = new Validator();
+		validator.AssertNotNull(request);
+		if (validator.Success)
+		{
+			validator.AssertNotBlank(request.DataSource);
+			validator.AssertNotBlank(request.From);
+		}
 
-		request.From = schema.Name;
-		request.Select = schema.Columns.Map(column => column.Name).If(name => request.Select.Has(name, StringComparison.OrdinalIgnoreCase)).ToArray();
+		if (validator.Success)
+		{
+			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.From)).Result;
+			validator.AssertEquals(schema.Type is ObjectType.Table || schema.Type is ObjectType.View || schema.Type is ObjectType.Function, true);
 
-		await ValueTask.CompletedTask;
+			if (validator.Success)
+			{
+				request.From = schema.Name;
+				request.Select = schema.Columns.Map(column => column.Name).If(name => request.Select.Has(name, StringComparison.OrdinalIgnoreCase)).ToArray();
+			}
+		}
+
+		return validator.Fails;
 	}
 }

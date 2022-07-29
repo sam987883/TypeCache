@@ -2,7 +2,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
@@ -29,6 +31,14 @@ public class TokenMember<T> : Member, IEquatable<TokenMember<T>>
 
 	public T Value { get; }
 
-	public bool Equals(TokenMember<T>? other)
+	public bool Equals([NotNullWhen(true)] TokenMember<T>? other)
 		=> other is not null && this.Type.Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, NAME_STRING_COMPARISON);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override bool Equals([NotNullWhen(true)] object? item)
+		=> this.Equals(item as TokenMember<T>);
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Value.GetHashCode();
 }

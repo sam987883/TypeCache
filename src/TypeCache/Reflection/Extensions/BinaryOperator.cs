@@ -1,51 +1,75 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq.Expressions;
+
 namespace TypeCache.Reflection.Extensions;
 
 public enum BinaryOperator
 {
-	/// <summary><c>a + b</c></summary>
+	/// <inheritdoc cref="Expression.Add(Expression, Expression)"/>
+	/// <remarks><c>a + b</c></remarks>
 	Add,
-	/// <summary><c><see langword="checked"/>(a + b)</c></summary>
+	/// <inheritdoc cref="Expression.AddChecked(Expression, Expression)"/>
+	/// <remarks><c><see langword="checked"/>(a + b)</c></remarks>
 	AddChecked,
-	/// <summary><c>a / b</c></summary>
+	/// <inheritdoc cref="Expression.Divide(Expression, Expression)"/>
+	/// <remarks><c>a / b</c></remarks>
 	Divide,
-	/// <summary><c>a % 6</c></summary>
+	/// <inheritdoc cref="Expression.Modulo(Expression, Expression)"/>
+	/// <remarks><c>a % 6</c></remarks>
 	Modulus,
-	/// <summary><c>a * b</c></summary>
+	/// <inheritdoc cref="Expression.Multiply(Expression, Expression)"/>
+	/// <remarks><c>a * b</c></remarks>
 	Multiply,
-	/// <summary><c><see langword="checked"/>(a * b)</c></summary>
+	/// <inheritdoc cref="Expression.MultiplyChecked(Expression, Expression)"/>
+	/// <remarks><c><see langword="checked"/>(a * b)</c></remarks>
 	MultiplyChecked,
-	/// <summary><c>a ^ b</c></summary>
+	/// <inheritdoc cref="Expression.Power(Expression, Expression)"/>
+	/// <remarks><c>a ^ b</c></remarks>
 	Power,
-	/// <summary><c>a - b</c></summary>
+	/// <inheritdoc cref="Expression.Subtract(Expression, Expression)"/>
+	/// <remarks><c>a - b</c></remarks>
 	Subtract,
-	/// <summary><c><see langword="checked"/>(a - b)</c></summary>
+	/// <inheritdoc cref="Expression.SubtractChecked(Expression, Expression)"/>
+	/// <remarks><c><see langword="checked"/>(a - b)</c></remarks>
 	SubtractChecked,
-	/// <summary><c>a &amp; b</c></summary>
+	/// <inheritdoc cref="Expression.And(Expression, Expression)"/>
+	/// <remarks><c>a &amp; b</c></remarks>
 	And,
-	/// <summary><c>a | b</c></summary>
+	/// <inheritdoc cref="Expression.Or(Expression, Expression)"/>
+	/// <remarks><c>a | b</c></remarks>
 	Or,
-	/// <summary><c>a ^ b</c></summary>
+	/// <inheritdoc cref="Expression.ExclusiveOr(Expression, Expression)"/>
+	/// <remarks><c>a ^ b</c></remarks>
 	ExclusiveOr,
-	/// <summary><c>a &lt;&lt; 6</c></summary>
+	/// <inheritdoc cref="Expression.LeftShift(Expression, Expression)"/>
+	/// <remarks><c>a &lt;&lt; 6</c></remarks>
 	LeftShift,
-	/// <summary><c>a &gt;&gt; 6</c></summary>
+	/// <inheritdoc cref="Expression.RightShift(Expression, Expression)"/>
+	/// <remarks><c>a &gt;&gt; 6</c></remarks>
 	RightShift,
-	/// <summary><c>a == b</c></summary>
+	/// <inheritdoc cref="Expression.Equal(Expression, Expression)"/>
+	/// <remarks><c>a == b</c></remarks>
 	EqualTo,
-	/// <summary><c>a === b</c></summary>
+	/// <inheritdoc cref="Expression.ReferenceEqual(Expression, Expression)"/>
+	/// <remarks><c>a === b</c></remarks>
 	ReferenceEqualTo,
-	/// <summary><c>a != b</c></summary>
+	/// <inheritdoc cref="Expression.NotEqual(Expression, Expression)"/>
+	/// <remarks><c>a != b</c></remarks>
 	NotEqualTo,
-	/// <summary><c>a !== b</c></summary>
+	/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
+	/// <remarks><c>a !== b</c></remarks>
 	ReferenceNotEqualTo,
-	/// <summary><c>a &gt; b</c></summary>
+	/// <inheritdoc cref="Expression.GreaterThan(Expression, Expression)"/>
+	/// <remarks><c>a &gt; b</c></remarks>
 	GreaterThan,
-	/// <summary><c>a &gt;= b</c></summary>
+	/// <inheritdoc cref="Expression.GreaterThanOrEqual(Expression, Expression)"/>
+	/// <remarks><c>a &gt;= b</c></remarks>
 	GreaterThanOrEqualTo,
-	/// <summary><c>a &lt; b</c></summary>
+	/// <inheritdoc cref="Expression.LessThan(Expression, Expression)"/>
+	/// <remarks><c>a &lt; b</c></remarks>
 	LessThan,
-	/// <summary><c>a &lt;= b</c></summary>
+	/// <inheritdoc cref="Expression.LessThanOrEqual(Expression, Expression)"/>
+	/// <remarks><c>a &lt;= b</c></remarks>
 	LessThanOrEqualTo,
 }

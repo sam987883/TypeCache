@@ -1,20 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
+using System;
 
 namespace TypeCache.Security;
 
-public interface IHashMaker
+public interface IHashMaker : IDisposable
 {
 	byte[] Decrypt(byte[] data);
 
 	long Decrypt(string hashId);
 
-	long[] Decrypt(IEnumerable<string> hashIds);
-
 	byte[] Encrypt(byte[] data);
 
 	string Encrypt(long id);
-
-	string[] Encrypt(IEnumerable<long> ids);
 }

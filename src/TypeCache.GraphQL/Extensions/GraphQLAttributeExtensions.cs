@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
@@ -21,7 +22,7 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLAttributeExtensions
 {
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLDeprecationReason(this Member @this)
 		=> @this.Attributes.First<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
@@ -33,19 +34,19 @@ public static class GraphQLAttributeExtensions
 			var description => description
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLDescription(this MethodParameter @this)
 		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool GraphQLIgnore(this Member @this)
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool GraphQLIgnore(this MethodParameter @this)
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLKey(this Member @this)
 		=> @this.Attributes.First<GraphQLKeyAttribute>()?.Name;
 
@@ -65,7 +66,7 @@ public static class GraphQLAttributeExtensions
 			_ => @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string GraphQLName(this MethodMember @this)
 		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
 
@@ -78,7 +79,7 @@ public static class GraphQLAttributeExtensions
 			var name => name
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string GraphQLName(this MethodParameter @this)
 		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name;
 

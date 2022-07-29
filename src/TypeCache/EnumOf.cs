@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Reflection;
@@ -12,7 +13,7 @@ namespace TypeCache;
 public static class EnumOf<T>
 	where T : struct, Enum
 {
-	private static readonly EnumMember<T> Member = new EnumMember<T>();
+	public static EnumMember<T> Member { get; } = new EnumMember<T>();
 
 	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
@@ -28,27 +29,15 @@ public static class EnumOf<T>
 
 	public static bool Public => Member.Public;
 
-	public static IReadOnlyDictionary<T, TokenMember<T>> Tokens => Member.Tokens;
+	public static IReadOnlyCollection<TokenMember<T>> Tokens => Member.Tokens;
 
 	public static TypeMember UnderlyingType => Member.UnderlyingType;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool IsValid(T value)
-		=> Member.IsValid(value);
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool IsDefined(T value)
+		=> Member.IsDefined(value);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string Parse(T value)
 		=> Member.Parse(value);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static T? Parse(string text, StringComparison comparison = STRING_COMPARISON)
-		=> Member.Parse(text, comparison);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryParse(T value, out string text)
-		=> Member.TryParse(value, out text);
-
-	[MethodImpl(METHOD_IMPL_OPTIONS)]
-	public static bool TryParse(string text, out T value, StringComparison comparison = STRING_COMPARISON)
-		=> Member.TryParse(text, out value, comparison);
 }
