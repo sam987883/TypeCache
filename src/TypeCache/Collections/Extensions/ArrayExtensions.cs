@@ -177,11 +177,10 @@ public static class ArrayExtensions
 			yield return edit(@this[i], i);
 	}
 
-	/// <exception cref="IndexOutOfRangeException" />
 	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
 		range = range.Normalize(@this.Length);
-		if (!range.Any())
+		if (range.Any() is not true)
 			return Array<T>.Empty;
 
 		var reverse = range.IsReverse() is true;

@@ -56,10 +56,10 @@ public class ListExtensions
 		var list = new List<int>() { 1, 2, 3, 4, 5, 6 };
 
 		Assert.Equal(new[] { 3, 4 }, list.Get(2..4));
-		Assert.Equal(new[] { 4, 3 }, list.Get(3..1));
+		Assert.Equal(new[] { 4, 3 }, list.Get(4..2));
 		Assert.Empty(list.Get(2..2));
 		Assert.Equal(new[] { 3, 4, 5 }, list.Get(2..^1));
-		Assert.Throws<ArgumentOutOfRangeException>(() => list.Get(^0..0).ToArray());
+		Assert.Equal(new List<int>(6) { 6, 5, 4, 3, 2, 1 }, list.Get(^0..0).ToArray());
 		Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, list.Get(0..^0));
 	}
 

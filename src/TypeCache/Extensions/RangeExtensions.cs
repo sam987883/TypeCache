@@ -13,11 +13,12 @@ public static class RangeExtensions
 {
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Start.IsFromEnd == @<paramref name="this"/>.End.IsFromEnd
-	/// &amp;&amp; !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End);</c>
+	/// ? !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End)
+	/// : <see langword="null"/>;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Any(this Range @this)
-		=> @this.Start.IsFromEnd == @this.End.IsFromEnd && !@this.Start.Equals(@this.End);
+	public static bool? Any(this Range @this)
+		=> @this.Start.IsFromEnd == @this.End.IsFromEnd ? !@this.Start.Equals(@this.End) : null;
 
 	/// <summary>
 	/// <code>
@@ -70,6 +71,7 @@ public static class RangeExtensions
 	/// <code>
 	/// =&gt; (@<paramref name="this"/>.IsReverse(), <paramref name="other"/>.IsReverse()) <see langword="switch"/><br/>
 	/// {<br/>
+	///	<see langword="    "/>_ <see langword="when"/> @this.Any() <see langword="is not true"/> &amp;&amp; other.Any() <see langword="is not true"/> =&gt; <see langword="false"/>,<br/>
 	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; <paramref name="other"/>.Start.Value &lt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &gt;= @<paramref name="this"/>.End.Value,<br/>
 	///	<see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; <paramref name="other"/>.Start.Value &lt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &gt; @<paramref name="this"/>.End.Value,<br/>
 	///	<see langword="    "/>(<see langword="false"/>, <see langword="true"/>) =&gt; <paramref name="other"/>.Start.Value &gt; @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &lt;= @<paramref name="this"/>.End.Value,<br/>
@@ -81,6 +83,7 @@ public static class RangeExtensions
 	public static bool Has(this Range @this, Range other)
 		=> (@this.IsReverse(), other.IsReverse()) switch
 		{
+			_ when @this.Any() is not true && other.Any() is not true => false,
 			(true, true) => other.Start.Value <= @this.Start.Value && other.End.Value >= @this.End.Value,
 			(true, false) => other.End.Value <= @this.Start.Value && other.Start.Value > @this.End.Value,
 			(false, true) => other.Start.Value > @this.End.Value && other.End.Value <= @this.Start.Value,
@@ -145,7 +148,6 @@ public static class RangeExtensions
 	/// <code>
 	/// =&gt; (@<paramref name="this"/>.Start.IsFromEnd, @<paramref name="this"/>.End.IsFromEnd) <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End) =&gt; <see langword="null"/>,<br/>
 	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value,<br/>
 	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value,<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
@@ -156,7 +158,6 @@ public static class RangeExtensions
 	public static bool? IsReverse(this Range @this)
 		=> (@this.Start.IsFromEnd, @this.End.IsFromEnd) switch
 		{
-			_ when !@this.Any() => false,
 			(true, true) => @this.Start.Value < @this.End.Value,
 			(false, false) => @this.Start.Value > @this.End.Value,
 			_ => null
@@ -192,18 +193,22 @@ public static class RangeExtensions
 		if (!reverse.HasValue)
 			yield break;
 
+		var start = @this.Start.Value;
 		var end = @this.End.Value;
-		var increment = reverse.Value ? -1 : 1;
-		for (var i = @this.Start.Value; i != end; i += increment)
-			yield return map(i);
+		if (reverse.Value)
+			for (var i = start - 1; i >= end; --i)
+				yield return map(i);
+		else
+			for (var i = start; i < end; ++i)
+				yield return map(i);
 	}
 
 	/// <summary>
 	/// <code>
 	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    true"/> =&gt; @<paramref name="this"/>.Start,<br/>
-	///	<see langword="    false"/> =&gt; @<paramref name="this"/>.End.Previous(),<br/>
+	///	<see langword="    true when"/> @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.Start,<br/>
+	///	<see langword="    false when"/> @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.End.Previous(),<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	///	};
 	///	</code>
@@ -211,8 +216,8 @@ public static class RangeExtensions
 	public static Index? Maximum(this Range @this)
 		=> @this.IsReverse() switch
 		{
-			true => @this.Start,
-			false => @this.End.Previous(),
+			true when @this.Start.Value > @this.End.Value => @this.Start,
+			false when @this.Start.Value < @this.End.Value => @this.End.Previous(),
 			_ => null
 		};
 
@@ -220,8 +225,8 @@ public static class RangeExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    true"/> =&gt; @<paramref name="this"/>.End.Next(),<br/>
-	///	<see langword="    false"/> =&gt; @<paramref name="this"/>.Start,<br/>
+	///	<see langword="    true when"/> @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.End.Next(),<br/>
+	///	<see langword="    false when"/> @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.Start,<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	///	};
 	///	</code>
@@ -229,8 +234,8 @@ public static class RangeExtensions
 	public static Index? Minimum(this Range @this)
 		=> @this.IsReverse() switch
 		{
-			true => @this.End.Next(),
-			false => @this.Start,
+			true when @this.Start.Value > @this.End.Value => @this.End.Next(),
+			false when @this.Start.Value < @this.End.Value => @this.Start,
 			_ => null
 		};
 
@@ -261,22 +266,10 @@ public static class RangeExtensions
 		};
 
 	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    false"/> =&gt; @<paramref name="this"/>.End.Previous()..@<paramref name="this"/>.Start.Previous(),<br/>
-	/// <see langword="    true"/> =&gt; @<paramref name="this"/>.End.Next()..@<paramref name="this"/>.Start.Next(),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.End..@<paramref name="this"/>.Start<br/>
-	/// };
-	/// </code>
+	/// <c>=&gt; <see langword="new"/> <see cref="Range"/>(@<paramref name="this"/>.End, @<paramref name="this"/>.Start);</c>
 	/// </summary>
 	public static Range Reverse(this Range @this)
-		=> @this.IsReverse() switch
-		{
-			false => @this.End.Previous()..@this.Start.Previous(),
-			true => @this.End.Next()..@this.Start.Next(),
-			_ => @this.End..@this.Start
-		};
+		=> new Range(@this.End, @this.Start);
 
 	/// <summary>
 	/// <code>

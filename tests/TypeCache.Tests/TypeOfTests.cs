@@ -61,7 +61,7 @@ public class TypeOfTests
 		Assert.Empty(member.InterfaceTypes);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Class, member.Kind);
-		Assert.Equal(7, member.Methods.Count);
+		Assert.Equal(8, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
@@ -82,7 +82,7 @@ public class TypeOfTests
 		Assert.Equal(7, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Class, member.Kind);
-		Assert.Equal(94, member.Methods.Count);
+		Assert.Equal(200, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Equal(2, member.Properties.Count);
 		Assert.True(member.Public);
@@ -129,7 +129,7 @@ public class TypeOfTests
 		Assert.False(member.Internal);
 		Assert.True(member.SystemType.IsCollection());
 		Assert.True(member.SystemType.IsImmutable());
-		Assert.Equal(61, member.Methods.Count);
+		Assert.Equal(83, member.Methods.Count);
 		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(18, member.Properties.Count);
 		Assert.True(member.Public);
@@ -201,7 +201,7 @@ public class TypeOfTests
 		Assert.Equal(3, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Enum, member.Kind);
-		Assert.Equal(25, member.Methods.Count);
+		Assert.Equal(28, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
@@ -318,7 +318,7 @@ public class TypeOfTests
 		Assert.Equal(28, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Struct, member.Kind);
-		Assert.Equal(64, member.Methods.Count);
+		Assert.Equal(72, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
@@ -338,7 +338,7 @@ public class TypeOfTests
 		Assert.Equal(4, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Struct, member.Kind);
-		Assert.Equal(24, member.Methods.Count);
+		Assert.Equal(27, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
@@ -359,7 +359,7 @@ public class TypeOfTests
 		Assert.Empty(member.InterfaceTypes);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Struct, member.Kind);
-		Assert.Equal(7, member.Methods.Count);
+		Assert.Equal(8, member.Methods.Count);
 		Assert.Contains(member.Name, type.Name);
 		Assert.Equal(2, member.Properties.Count);
 		Assert.True(member.Public);
@@ -369,8 +369,8 @@ public class TypeOfTests
 		member = TypeOf<ColumnSchema>.Member;
 		type = typeof(ColumnSchema);
 
-		Assert.Equal(3, member.Attributes.Count);
-		Assert.Equal(typeof(ValueType), member.BaseType);
+		Assert.Equal(2, member.Attributes.Count);
+		Assert.Equal(typeof(object), member.BaseType);
 		Assert.Equal(1, member.Constructors.Count);
 		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
@@ -379,8 +379,8 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.Handle);
 		Assert.Empty(member.InterfaceTypes);
 		Assert.False(member.Internal);
-		Assert.Equal(Kind.Struct, member.Kind);
-		Assert.Equal(TypeOf<object>.Methods.Count - 1, member.Methods.Count);
+		Assert.Equal(Kind.Class, member.Kind);
+		Assert.Equal(6, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
 		Assert.Equal(10, member.Properties.Count);
 		Assert.True(member.Public);

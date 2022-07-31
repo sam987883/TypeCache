@@ -78,8 +78,8 @@ public class RangeExtensions
 	public void IsReverse()
 	{
 		Assert.True((20..3).IsReverse());
-		Assert.Null((6..6).IsReverse());
-		Assert.Null((0..0).IsReverse());
+		Assert.False((6..6).IsReverse());
+		Assert.False((0..0).IsReverse());
 		Assert.False((3..20).IsReverse());
 	}
 
@@ -87,8 +87,8 @@ public class RangeExtensions
 	public void Maximum()
 	{
 		Assert.Equal(20, (20..3).Maximum());
-		Assert.Null((6..6).Maximum());
-		Assert.Null((0..0).Maximum());
+		Assert.Equal(null, (7..7).Maximum());
+		Assert.Equal(null, (0..0).Maximum());
 		Assert.Equal(9, (3..10).Maximum());
 	}
 
@@ -96,8 +96,8 @@ public class RangeExtensions
 	public void Minimum()
 	{
 		Assert.Equal(4, (20..3).Minimum());
-		Assert.Null((6..6).Minimum());
-		Assert.Null((0..0).Minimum());
+		Assert.Equal(null, (7..7).Minimum());
+		Assert.Equal(null, (0..0).Minimum());
 		Assert.Equal(3, (3..10).Minimum());
 	}
 

@@ -267,10 +267,10 @@ public class EnumerableExtensions
 		Assert.Equal(new[] { 3, 4 }, immutableArray.Get(2..4));
 		Assert.Equal(new[] { 3, 4 }, list.Get(2..4));
 		Assert.Equal(new[] { 3, 4 }, enumerable.Get(2..4));
-		Assert.Equal(new[] { 4, 3 }, array.Get(3..1));
-		Assert.Equal(new[] { 4, 3 }, immutableArray.Get(3..1));
-		Assert.Equal(new[] { 4, 3 }, list.Get(3..1));
-		Assert.Equal(new[] { 4, 3 }, enumerable.Get(3..1));
+		Assert.Equal(new[] { 3, 2 }, array.Get(3..1));
+		Assert.Equal(new[] { 3, 2 }, immutableArray.Get(3..1));
+		Assert.Equal(new[] { 3, 2 }, list.Get(3..1).ToArray());
+		Assert.Equal(new[] { 3, 2 }, enumerable.Get(3..1));
 		Assert.Equal(Array<int>.Empty, array.Get(2..2));
 		Assert.Equal(Array<int>.Empty, immutableArray.Get(2..2));
 		Assert.Equal(Array<int>.Empty, list.Get(2..2));
@@ -279,10 +279,10 @@ public class EnumerableExtensions
 		Assert.Equal(new[] { 3, 4, 5 }, immutableArray.Get(2..^1));
 		Assert.Equal(new[] { 3, 4, 5 }, list.Get(2..^1));
 		Assert.Equal(new[] { 3, 4, 5 }, enumerable.Get(2..^1));
-		Assert.Throws<ArgumentOutOfRangeException>(() => array.Get(^0..0).ToArray());
-		Assert.Throws<ArgumentOutOfRangeException>(() => immutableArray.Get(^0..0).ToArray());
-		Assert.Throws<ArgumentOutOfRangeException>(() => list.Get(^0..0).ToArray());
-		Assert.Throws<ArgumentOutOfRangeException>(() => enumerable.Get(^0..0).ToArray());
+		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, array.Get(^0..0).ToArray());
+		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, immutableArray.Get(^0..0).ToArray());
+		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, list.Get(^0..0).ToArray());
+		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, enumerable.Get(^0..0).ToArray());
 		Assert.Equal(array, array.Get(0..^0));
 		Assert.Equal(array, immutableArray.Get(0..^0));
 		Assert.Equal(array, list.Get(0..^0));
@@ -454,7 +454,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 3, 4, 5, 6 }, intArray.Skip(2));
 		Assert.Equal(Array<int>.Empty, intArray.Skip(6));
-		Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.Skip(3).ToArray());
+		Assert.Equal(Array<int>.Empty, Array<int>.Empty.Skip(3).ToArray());
 	}
 
 	[Fact]
@@ -473,7 +473,7 @@ public class EnumerableExtensions
 
 		Assert.Equal(new[] { 1, 2 }, intArray.Take(2));
 		Assert.Equal(intArray, intArray.Take(6));
-		Assert.Throws<ArgumentOutOfRangeException>(() => Array<int>.Empty.Take(3).ToArray());
+		Assert.Equal(Array<int>.Empty, Array<int>.Empty.Take(3).ToArray());
 	}
 
 	[Fact]

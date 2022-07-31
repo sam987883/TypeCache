@@ -851,33 +851,36 @@ public static class EnumerableExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (@<paramref name="this"/>.IfCount(<see langword="out var"/> count))<br/>
-	/// <see langword="    "/>range = range.Normalize(count);<br/>
-	/// <br/>
-	/// <see langword="var"/> reverse = range.IsReverse();<br/>
-	/// <br/>
-	/// <see langword="return"/> @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    null"/> =&gt; <see cref="Array{T}.Empty"/>,<br/>
-	///	<see langword="    "/><typeparamref name="T"/>[] array =&gt; range.Map(i =&gt; array[i]),<br/>
-	///	<see langword="    "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; range.Map(i =&gt; immutableArray[i]),<br/>
-	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; range.Map(i =&gt; list[i]),<br/>
-	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> readOnlyList =&gt; range.Map(i =&gt; readOnlyList[i]),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> reverse <see langword="is false"/> =&gt; getRange(@<paramref name="this"/>, range.Start.Value, range.Length()),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> reverse <see langword="is true"/> =&gt; new <see cref="Stack{T}"/>(getRange(@<paramref name="this"/>, range.End.Value, range.Length())),<br/>
-	///	<see langword="    "/>_ =&gt; <see cref="Array{T}.Empty"/><br/>
-	/// };<br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Count();<br/>
+	/// <see langword="    if"/> (count == 0)<br/>
+	/// <see langword="        return"/> <see cref="Array{T}.Empty"/>;<br/>
 	/// <br/>
-	/// <see langword="static"/> <see cref="IEnumerable{T}"/> getRange(<see cref="IEnumerable{T}"/> enumerable, <see cref="int"/> skip, <see cref="int"/> count)<br/>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = enumerable.GetEnumerator();<br/>
-	/// <see langword="    if"/> (!enumerator.Move(skip))<br/>
-	/// <see langword="        yield break"/>;<br/>
+	/// <see langword="    "/><paramref name="range"/> = <paramref name="range"/>.Normalize(count);<br/>
+	/// <see langword="    var"/> length = <paramref name="range"/>.Length();<br/>
 	/// <br/>
-	/// <see langword="    while"/> (count &gt; 0 &amp;&amp; enumerator.MoveNext())<br/>
+	/// <see langword="    return"/> @<paramref name="this"/> <see langword="switch"/><br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        yield return"/> enumerator.Current;<br/>
-	/// <see langword="        "/>--count;<br/>
+	///	<see langword="        null"/> =&gt; <see cref="Array{T}.Empty"/>,<br/>
+	///	<see langword="        "/><typeparamref name="T"/>[] array =&gt; <paramref name="range"/>.Map(i =&gt; array[i]),<br/>
+	///	<see langword="        "/><see cref="ImmutableArray{T}"/> immutableArray =&gt; <paramref name="range"/>.Map(i =&gt; immutableArray[i]),<br/>
+	///	<see langword="        "/><see cref="IList{T}"/> list =&gt; <paramref name="range"/>.Map(i =&gt; list[i]),<br/>
+	///	<see langword="        "/><see cref="IReadOnlyList{T}"/> readOnlyList =&gt; <paramref name="range"/>.Map(i =&gt; readOnlyList[i]),<br/>
+	///	<see langword="        "/>_ <see langword="when"/> reverse <see langword="is true"/> =&gt; new <see cref="Stack{T}"/>(getRange(@<paramref name="this"/>, <paramref name="range"/>.End.Value, length)),<br/>
+	///	<see langword="        "/>_ =&gt; getRange(@<paramref name="this"/>, <paramref name="range"/>.Start.Value, length)<br/>
+	/// <see langword="    "/>};<br/>
+	/// <br/>
+	/// <see langword="    static"/> <see cref="IEnumerable{T}"/> getRange(<see cref="IEnumerable{T}"/> enumerable, <see cref="int"/> skip, <see cref="int"/> count)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        using var"/> enumerator = enumerable.GetEnumerator();<br/>
+	/// <see langword="        if"/> (!enumerator.Move(skip))<br/>
+	/// <see langword="            yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="        while"/> (count &gt; 0 &amp;&amp; enumerator.MoveNext())<br/>
+	/// <see langword="        "/>{<br/>
+	/// <see langword="            yield return"/> enumerator.Current;<br/>
+	/// <see langword="            "/>--count;<br/>
+	/// <see langword="        "/>}<br/>
 	/// <see langword="    "/>}<br/>
 	/// }
 	/// </code>
@@ -886,21 +889,23 @@ public static class EnumerableExtensions
 	/// <exception cref="IndexOutOfRangeException" />
 	public static IEnumerable<T> Get<T>(this IEnumerable<T>? @this, Range range)
 	{
-		if (@this.IfCount(out var count))
-			range = range.Normalize(count);
+		var count = @this.Count();
+		if (count == 0)
+			return Array<T>.Empty;
 
-		var reverse = range.IsReverse();
+		range = range.Normalize(count);
+		var length = range.Length();
 
 		return @this switch
 		{
 			null => Array<T>.Empty,
+			_ when length == 0 => Array<T>.Empty,
 			T[] array => range.Map(i => array[i]),
 			ImmutableArray<T> immutableArray => range.Map(i => immutableArray[i]),
 			IList<T> list => range.Map(i => list[i]),
 			IReadOnlyList<T> readOnlyList => range.Map(i => readOnlyList[i]),
-			_ when reverse is false => getRange(@this, range.Start.Value, range.Length()),
-			_ when reverse is true => new Stack<T>(getRange(@this, range.End.Value, range.Length())),
-			_ => Array<T>.Empty,
+			_ when range.IsReverse() is true => new Stack<T>(getRange(@this, range.End.Value, length)),
+			_ => getRange(@this, range.Start.Value, length),
 		};
 
 		static IEnumerable<T> getRange(IEnumerable<T> enumerable, int skip, int count)

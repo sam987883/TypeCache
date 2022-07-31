@@ -371,7 +371,7 @@ public static class EnumerableOfStringExtensions
 			null => string.Empty,
 			_ when !@this.Any() => string.Empty,
 			_ when escape => @this.Map(text => text.IsNotBlank() ? (text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"")) : string.Empty).Join(','),
-			_ => @this.Join(',')
+			_ => @this.Join(", ")
 		};
 
 	/// <summary>

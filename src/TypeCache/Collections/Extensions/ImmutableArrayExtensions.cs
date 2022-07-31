@@ -56,7 +56,6 @@ public static class ImmutableArrayExtensions
 			yield return edit(@this[i], i);
 	}
 
-	/// <exception cref="IndexOutOfRangeException" />
 	public static IEnumerable<T> Get<T>(this ImmutableArray<T> @this, Range range)
 		=> @this.AsSpan().ToArray().Get(range);
 

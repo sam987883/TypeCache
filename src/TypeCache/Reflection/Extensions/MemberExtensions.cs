@@ -41,18 +41,22 @@ public static class MemberExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
+	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
+	///	<see langword="    "/><see cref="Member"/> member =&gt; member.Type,<br/>
 	///	<see langword="    "/><see cref="Type"/> type =&gt; type.TypeHandle.GetTypeMember(),<br/>
 	///	<see langword="    "/><see cref="MemberInfo"/> memberInfo =&gt; memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),<br/>
-	///	<see langword="    "/>_ =&gt; <see cref="TypeOf{T}.Member"/><br/>
+	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetType().TypeHandle.GetTypeMember()<br/>
 	/// };<br/>
 	/// </code>
 	/// </summary>
-	public static TypeMember GetTypeMember<T>(this T @this)
+	public static TypeMember? GetTypeMember(this object @this)
 		=> @this switch
 		{
+			null => null,
+			Member member => member.Type,
 			Type type => type.TypeHandle.GetTypeMember(),
 			MemberInfo memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),
-			_ => TypeOf<T>.Member,
+			_ => @this.GetType().TypeHandle.GetTypeMember()
 		};
 
 	/// <summary>

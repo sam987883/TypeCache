@@ -100,6 +100,17 @@ public class EnumeratorExtensions
 	}
 
 	[Fact]
+	public void Move()
+	{
+		var enumerator = this.GetInts().GetEnumerator();
+
+		Assert.True(enumerator.Move(4));
+		Assert.Equal(new[] { 5, 6, 7 }, enumerator.Rest().ToArray());
+		Assert.False(enumerator.Move(1));
+		Assert.True(enumerator.Move(0));
+	}
+
+	[Fact]
 	public void Next()
 	{
 		var enumerator = this.GetStrings().GetEnumerator();
@@ -127,22 +138,9 @@ public class EnumeratorExtensions
 	public void Rest()
 	{
 		var enumerator = (1..7).Values().GetEnumerator();
-		var i = 0;
-		while (++i < 4)
-			enumerator.MoveNext();
 
+		Assert.True(enumerator.Move(4));
 		Assert.Equal(new[] { 5, 6, 7 }, enumerator.Rest().ToArray());
 		Assert.Empty(enumerator.Rest());
-	}
-
-	[Fact]
-	public void Skip()
-	{
-		var enumerator = this.GetInts().GetEnumerator();
-		enumerator.Move(4);
-
-		Assert.Equal(new[] { 6, 7 }, enumerator.Rest().ToArray());
-		Assert.False(enumerator.Move(1));
-		Assert.True(enumerator.Move(0));
 	}
 }
