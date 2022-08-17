@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using GraphQL.Utilities;
@@ -135,4 +136,6 @@ public abstract class GraphQLComplexType : IComplexGraphType
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override string ToString()
 		=> this.Name;
+
+	public abstract void Initialize(ISchema schema);
 }

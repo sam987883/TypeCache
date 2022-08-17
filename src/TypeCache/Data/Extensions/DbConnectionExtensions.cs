@@ -75,6 +75,7 @@ public static class DbConnectionExtensions
 	public static async Task<object> ExecuteAsync(this DbConnection @this, Command sqlCommand, Func<DbDataReader, CancellationToken, ValueTask<object>> readData, CancellationToken token = default)
 	{
 		readData.AssertNotNull();
+
 		await using var command = @this.CreateCommand(sqlCommand);
 		return await command.ExecuteReaderAsync<object>(readData, token);
 	}
@@ -85,8 +86,11 @@ public static class DbConnectionExtensions
 	/// <see langword="await"/> reader.GetRowSet&lt;<typeparamref name="T"/>&gt;(<paramref name="count"/>, <paramref name="token"/>);
 	/// </code>
 	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
 	public static async Task<RowSetResponse<T>> GetRowSetAsync<T>(this DbConnection @this, Command sqlCommand, int count, CancellationToken token = default)
 	{
+		sqlCommand.AssertNotNull();
+
 		await using var command = @this.CreateCommand(sqlCommand);
 		return await command.GetRowSetAsync<T>(count, token);
 	}
@@ -97,8 +101,11 @@ public static class DbConnectionExtensions
 	/// <see langword="return await"/> command.ExecuteScalarAsync(<paramref name="token"/>);
 	/// </code>
 	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
 	public static async Task<T?> GetValueAsync<T>(this DbConnection @this, Command sqlCommand, CancellationToken token = default)
 	{
+		sqlCommand.AssertNotNull();
+
 		await using var command = @this.CreateCommand(sqlCommand);
 		return await command.GetValueAsync<T>(token);
 	}
@@ -265,8 +272,12 @@ SELECT OBJECT_ID(@{nameof(name)});
 		}
 		else
 		{
-			var count = (int)await @this.CountAsync(sqlCommand.ToCountCommand());
-			return await command.GetRowSetAsync<T>(count, token);
+			var count = (uint)await @this.CountAsync(sqlCommand.ToCountCommand());
+			if (sqlCommand.Top > 0 && sqlCommand.Top < count)
+				count = sqlCommand.Top;
+			var data = await command.GetRowSetAsync<T>((int)count, token);
+			data.Count = count;
+			return data;
 		}
 	}
 
@@ -302,16 +313,16 @@ SELECT OBJECT_ID(@{nameof(name)});
 		{
 			await using var countCommand = @this.CreateCommand(sqlCommand.ToCountCommand());
 			var count = (int)await countCommand.GetValueAsync<long>();
-			var anyDeleted = sqlCommand.Columns.AnyLeft("DELETED.");
-			var anyInserted = sqlCommand.Columns.AnyLeft("INSERTED.");
+			var anyDeleted = sqlCommand.Output.AnyLeft("DELETED.");
+			var anyInserted = sqlCommand.Output.AnyLeft("INSERTED.");
 			if (anyDeleted && anyInserted)
 			{
 				var rowSet = await command.GetRowSetAsync<object[]>(count, token);
 
 				var propertyMap = TypeOf<T>.Properties.ToDictionary(property => property.Name, property => property);
-				var deletedColumns = new List<(PropertyMember Property, int Index)>(sqlCommand.Columns.Length);
-				var insertedColumns = new List<(PropertyMember Property, int Index)>(sqlCommand.Columns.Length);
-				sqlCommand.Columns.Do((column, i) =>
+				var deletedColumns = new List<(PropertyMember Property, int Index)>(sqlCommand.Output.Length);
+				var insertedColumns = new List<(PropertyMember Property, int Index)>(sqlCommand.Output.Length);
+				sqlCommand.Output.Do((column, i) =>
 				{
 					if (column.StartsWith("DELETED."))
 						deletedColumns.Add((propertyMap[column.TrimStart("DELETED.")], i));
@@ -321,13 +332,13 @@ SELECT OBJECT_ID(@{nameof(name)});
 
 				var deleted = rowSet.Rows.Map(row =>
 				{
-					var item = TypeOf<T>.Create();
+					var item = TypeOf<T>.Create()!;
 					deletedColumns.Do(column => column.Property.SetValue(item, row[column.Index]));
 					return item;
 				}).ToArray();
 				var inserted = rowSet.Rows.Map(row =>
 				{
-					var item = TypeOf<T>.Create();
+					var item = TypeOf<T>.Create()!;
 					insertedColumns.Do(column => column.Property.SetValue(item, row[column.Index]));
 					return item;
 				}).ToArray();
@@ -393,13 +404,13 @@ SELECT OBJECT_ID(@{nameof(name)});
 
 				var deleted = rowSet.Rows.Map(row =>
 				{
-					var item = TypeOf<T>.Create();
+					var item = TypeOf<T>.Create()!;
 					deletedColumns.Do(column => column.Property.SetValue(item, row[column.Index]));
 					return item;
 				}).ToArray();
 				var inserted = rowSet.Rows.Map(row =>
 				{
-					var item = TypeOf<T>.Create();
+					var item = TypeOf<T>.Create()!;
 					insertedColumns.Do(column => column.Property.SetValue(item, row[column.Index]));
 					return item;
 				}).ToArray();

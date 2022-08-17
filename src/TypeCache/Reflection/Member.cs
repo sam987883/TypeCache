@@ -35,7 +35,6 @@ public abstract class Member
 			EventInfo eventInfo => eventInfo.AddMethod!.IsPublic,
 			_ => default
 		};
-		this.Type = memberInfo.DeclaringType?.GetTypeMember()!;
 	}
 
 	/// <summary>
@@ -53,9 +52,4 @@ public abstract class Member
 
 	/// <inheritdoc cref="Type.IsPublic"/>
 	public bool Public { get; }
-
-	/// <summary>
-	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
-	/// </summary>
-	public TypeMember Type { get; }
 }

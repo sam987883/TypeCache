@@ -129,7 +129,7 @@ public static class DbCommandExtensions
 	{
 		await using var reader = await @this.ExecuteReaderAsync(token);
 		var columns = reader.GetColumns();
-		var rows = await reader.ReadRowsAsync<T>(token).ToArrayAsync(count);
+		var rows = await reader.ReadRowsAsync<T>(count, token);
 		await reader.CloseAsync();
 		return new()
 		{
@@ -140,18 +140,8 @@ public static class DbCommandExtensions
 	}
 
 	/// <summary>
-	/// <code>
-	/// =&gt; <see langword="await"/> @<paramref name="this"/>.ExecuteScalarAsync(<paramref name="token"/>) <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/><typeparamref name="T"/> value =&gt; value,<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="default"/><br/>
-	/// };
-	/// </code>
+	/// <c>=&gt; <see langword="await"/> @<paramref name="this"/>.ExecuteScalarAsync(<paramref name="token"/>) <see langword="is"/> <typeparamref name="T"/> value ? value : <see langword="default"/>;</c>
 	/// </summary>
 	public static async Task<T?> GetValueAsync<T>(this DbCommand @this, CancellationToken token = default)
-		=> await @this.ExecuteScalarAsync(token) switch
-		{
-			T value => value,
-			_ => default
-		};
+		=> await @this.ExecuteScalarAsync(token) is T value ? value : default;
 }

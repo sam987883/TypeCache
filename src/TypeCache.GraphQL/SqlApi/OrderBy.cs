@@ -3,7 +3,7 @@
 using TypeCache.Data;
 using TypeCache.GraphQL.Attributes;
 
-namespace TypeCache.GraphQL.SQL;
+namespace TypeCache.GraphQL.SqlApi;
 
 public class OrderBy<T>
 {

@@ -15,19 +15,19 @@ internal class SchemaValidationRule : IValidationRule<SchemaRequest>
 		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	public IEnumerable<string> Validate(SchemaRequest request)
+	public IEnumerable<string> Validate(SchemaRequest command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 
 		if (validator.Success)
-			validator.AssertNotNull(request.DataSource);
+			validator.AssertNotNull(command.DataSource);
 
 		if (validator.Success)
-			validator.AssertEquals(this._DataSourceAccessor.Has(request.DataSource), true);
+			validator.AssertEquals(this._DataSourceAccessor.Has(command.DataSource), true);
 
 		if (validator.Success)
-			validator.AssertNotNull(this._DataSourceAccessor[request.DataSource]);
+			validator.AssertNotNull(this._DataSourceAccessor[command.DataSource]);
 
 		return validator.Fails;
 	}

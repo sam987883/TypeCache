@@ -15,7 +15,7 @@ public class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
 	{
 		if (reader.TokenType == JsonTokenType.StartObject)
 		{
-			var output = TypeOf<T>.Create();
+			var output = TypeOf<T>.Create()!;
 			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();

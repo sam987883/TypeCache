@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data.Domain;
@@ -11,32 +12,33 @@ namespace TypeCache.Data.Business;
 
 internal class InsertDataValidationRule<T> : IValidationRule<InsertDataCommand<T>>
 {
-	private readonly IRule<SchemaRequest, ObjectSchema> _SchemaRule;
+	private readonly IMediator _Mediator;
 
-	public InsertDataValidationRule(IRule<SchemaRequest, ObjectSchema> rule)
+	public InsertDataValidationRule(IMediator mediator, IRule<SchemaRequest, ObjectSchema> rule)
 	{
-		this._SchemaRule = rule;
+		this._Mediator = mediator;
 	}
 
-	public IEnumerable<string> Validate(InsertDataCommand<T> request)
+	public IEnumerable<string> Validate(InsertDataCommand<T> command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.Table);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.Table);
 		}
 
 		if (validator.Success)
 		{
-			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
-			validator.AssertEquals(schema.Type, ObjectType.Table);
-			validator.AssertEquals(request.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).Any(), false);
-
-			if (validator.Success)
-				request.Table = schema.Name;
+			this._Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(command.DataSource, command.Table), schema =>
+			{
+				validator.AssertEquals(schema.Type, ObjectType.Table);
+				validator.AssertEquals(command.Columns.Without(schema.Columns.If(column => !column.Identity && !column.ReadOnly).Map(column => column.Name)).Any(), false);
+				if (validator.Success)
+					command.Table = schema.Name;
+			}, validator.IncludeError).GetAwaiter().GetResult();
 		}
 
 		return validator.Fails;

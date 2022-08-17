@@ -4,7 +4,7 @@ using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.SQL;
+using TypeCache.GraphQL.SqlApi;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;

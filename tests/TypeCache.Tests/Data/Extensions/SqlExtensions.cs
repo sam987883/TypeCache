@@ -54,7 +54,7 @@ public class SqlExtensions
 	}
 
 	[Fact]
-	public void ToSQL_CountRequest()
+	public void ToSQL_CountCommand()
 	{
 		var command = new CountCommand
 		{
@@ -71,7 +71,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	}
 
 	[Fact]
-	public void ToSQL_DeleteDataRequest()
+	public void ToSQL_DeleteDataCommand()
 	{
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
@@ -102,7 +102,7 @@ ON pk.[ID] = _.[ID];
 	}
 
 	[Fact]
-	public void ToSQL_DeleteRequest()
+	public void ToSQL_DeleteCommand()
 	{
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
@@ -125,7 +125,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	}
 
 	[Fact]
-	public void ToSQL_InsertDataRequest()
+	public void ToSQL_InsertDataCommand()
 	{
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
@@ -157,7 +157,7 @@ VALUES (N'FirstName1', N'LastName1', 1)
 	}
 
 	[Fact]
-	public void ToSQL_InsertRequest()
+	public void ToSQL_InsertCommand()
 	{
 		var command = new InsertCommand
 		{
@@ -168,6 +168,7 @@ VALUES (N'FirstName1', N'LastName1', 1)
 			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
 			Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
+			TableHints = "WITH(NOLOCK)",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
 		};
 
@@ -192,7 +193,7 @@ ORDER BY [First Name] ASC
 	}
 
 	[Fact]
-	public void ToSQL_SelectRequest()
+	public void ToSQL_SelectCommand()
 	{
 		var command = new SelectCommand
 		{
@@ -201,7 +202,8 @@ ORDER BY [First Name] ASC
 			Having = "MAX([Age]) > 40",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
 			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
-			Pager = new() { After = 0, First = 100 }
+			Pager = new() { After = 0, First = 100 },
+			TableHints = "WITH(NOLOCK)"
 		};
 
 		var expected = Invariant($@"SELECT ID
@@ -226,7 +228,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	}
 
 	[Fact]
-	public void ToSQL_UpdateDataRequest()
+	public void ToSQL_UpdateDataCommand()
 	{
 		var date = DateTime.UtcNow;
 		var id = Guid.NewGuid();
@@ -267,15 +269,16 @@ ON data.[ID1] = _.[ID1] AND data.[[ID2]]] = _.[[ID2]]];
 	}
 
 	[Fact]
-	public void ToSQL_UpdateRequest()
+	public void ToSQL_UpdateCommand()
 	{
 		var id = Guid.NewGuid();
 
 		var command = new UpdateCommand
 		{
 			Table = "Customers",
-			Columns = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+			Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
 			Output = new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.[ID] AS [ID]" },
+			TableHints = "WITH(UPDLOCK)",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'"
 		};
 

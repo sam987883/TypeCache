@@ -1,5 +1,6 @@
 ﻿using System;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Business;
 

@@ -44,7 +44,7 @@ public class ItemLoaderFieldResolver<T> : IFieldResolver
 	{
 		context.Source.AssertNotNull();
 
-		var loaderKey = Invariant($"{context.Source!.GetTypeMember().GraphQLName()}.{this._Method.GraphQLName()}");
+		var loaderKey = Invariant($"{context.Source!.GetTypeMember()!.GraphQLName()}.{this._Method.GraphQLName()}");
 		var dataLoader = this._DataLoader.Context!.GetOrAddLoader<T>(loaderKey, async () =>
 		{
 			var arguments = context.GetArguments<T>(this._Method).ToArray();

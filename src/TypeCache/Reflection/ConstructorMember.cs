@@ -16,29 +16,39 @@ namespace TypeCache.Reflection;
 [DebuggerDisplay("{Type,nq}.ctor", Name = "{Name}")]
 public class ConstructorMember : Member, IEquatable<ConstructorMember>
 {
-	private readonly CreateType _Create;
+	private readonly Lazy<Func<object?[]?, object?>> _Invoke;
+	private readonly Lazy<Delegate> _Method;
 
 	internal ConstructorMember(ConstructorInfo constructorInfo, TypeMember type) : base(constructorInfo)
 	{
 		this.Handle = constructorInfo.MethodHandle;
-		this.Method = constructorInfo.Lambda().Compile();
 		this.Parameters = constructorInfo.GetParameters().Map(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
-
-		this._Create = constructorInfo.LambdaCreateType().Compile();
+		this.Type = type;
+		this._Invoke = Lazy.Create(() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).LambdaInvoke().Compile());
+		this._Method = Lazy.Create(() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).Lambda().Compile());
 	}
 
 	public RuntimeMethodHandle Handle { get; }
 
-	public Delegate? Method { get; }
+	public Delegate? Method => this._Method.Value;
 
 	public IReadOnlyList<MethodParameter> Parameters { get; }
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>._Create(<paramref name="arguments"/>);</c>
+	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
+	/// </summary>
+	public TypeMember Type { get; }
+
+	private Delegate CreateDelegate() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).Lambda().Compile();
+
+	private Func<object?[]?, object?> CreateInvoke() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).LambdaInvoke().Compile();
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>._Invoke.Value(<paramref name="arguments"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object Create(params object?[]? arguments)
-		=> this._Create(arguments);
+		=> this._Invoke.Value(arguments)!;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(ConstructorMember? other)

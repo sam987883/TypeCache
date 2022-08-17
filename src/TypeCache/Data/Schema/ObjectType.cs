@@ -7,7 +7,7 @@ namespace TypeCache.Data.Schema;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ObjectType
 {
-	Table,
+	Table = 1,
 	View,
 	Function,
 	StoredProcedure,

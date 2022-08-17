@@ -21,6 +21,8 @@ internal class UpdateDataRule<T> : IRule<UpdateDataCommand<T>, UpdateRowSetRespo
 	async ValueTask<UpdateRowSetResponse<T>> IRule<UpdateDataCommand<T>, UpdateRowSetResponse<T>>.ApplyAsync(UpdateDataCommand<T> request, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.UpdateDataAsync(request, token);
 	}
 

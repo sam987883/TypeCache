@@ -22,6 +22,7 @@ internal class InsertDataRule<T> : IRule<InsertDataCommand<T>, RowSetResponse<T>
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
 		await connection.OpenAsync(token);
+
 		return await connection.InsertDataAsync(request, token);
 	}
 

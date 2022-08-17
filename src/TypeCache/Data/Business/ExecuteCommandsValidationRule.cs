@@ -15,16 +15,16 @@ internal class ExecuteCommandsValidationRule : IValidationRule<ExecuteCommands>
 		this._DataSourceAccessor = dataSourceAccessor;
 	}
 
-	public IEnumerable<string> Validate(ExecuteCommands request)
+	public IEnumerable<string> Validate(ExecuteCommands commands)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(commands);
 
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotNull(request.Execute);
-			validator.AssertEquals(this._DataSourceAccessor.Has(request.DataSource), true);
+			validator.AssertNotBlank(commands.DataSource);
+			validator.AssertNotNull(commands.Execute);
+			validator.AssertEquals(this._DataSourceAccessor.Has(commands.DataSource), true);
 		}
 
 		return validator.Fails;

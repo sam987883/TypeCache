@@ -33,14 +33,14 @@ public class TypeOfTests
 		var method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
 		Assert.NotEqual(default, method);
 
-		var value = method.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
+		var value = method.InvokeGeneric(new[] { typeof(int), typeof(string), typeof(DateTime) }, tester, "param1", DateTime.Now);
 		Assert.Equal(0, value);
 
 		// Test pulling it out of cache
 		method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
 		Assert.NotEqual(default, method);
 
-		value = method.InvokeGeneric(tester, new[] { typeof(int), typeof(string), typeof(DateTime) }, "param1", DateTime.Now);
+		value = method.InvokeGeneric(new[] { typeof(int), typeof(string), typeof(DateTime) }, tester, "param1", DateTime.Now);
 		Assert.Equal(0, value);
 	}
 

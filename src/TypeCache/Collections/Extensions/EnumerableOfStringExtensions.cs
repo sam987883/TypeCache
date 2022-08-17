@@ -14,7 +14,6 @@ namespace TypeCache.Collections.Extensions;
 
 public static class EnumerableOfStringExtensions
 {
-
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Any(value =&gt; value.Contains(<paramref name="character"/>, <paramref name="comparison"/>));</c>
 	/// </summary>
@@ -355,26 +354,6 @@ public static class EnumerableOfStringExtensions
 		=> @this.Sort(comparison.ToStringComparer());
 
 	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    null"/> =&gt; <see cref="string.Empty"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> !@<paramref name="this"/>.Any() =&gt; <see cref="string.Empty"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <paramref name="escape"/> =&gt; @<paramref name="this"/>.To(text =&gt; text.IsNotBlank() ? (text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"")) : <see cref="string.Empty"/>).Join(','),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Join(", ")<br/>
-	/// };
-	/// </code>
-	/// </summary>
-	public static string ToCSV(this IEnumerable<string>? @this, bool escape = false)
-		=> @this switch
-		{
-			null => string.Empty,
-			_ when !@this.Any() => string.Empty,
-			_ when escape => @this.Map(text => text.IsNotBlank() ? (text.Contains(',') ? $"\"{text.Replace("\"", "\"\"")}\"" : text.Replace("\"", "\"\"")) : string.Empty).Join(','),
-			_ => @this.Join(", ")
-		};
-
-	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
@@ -491,84 +470,84 @@ public static class EnumerableOfStringExtensions
 		=> @this.ToIndex(value, comparison.ToStringComparer());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Length);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Length);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<int> ToLength(this IEnumerable<string>? @this)
 		=> @this.Map(value => value.Length);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToRegexSplit(this IEnumerable<string>? @this, string pattern)
 		=> @this.Map(value => RegexOf.SinglelinePattern(pattern).Split(value));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value, <paramref name="count"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value, <paramref name="count"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToRegexSplit(this IEnumerable<string>? @this, string pattern, int count)
 		=> @this.Map(value => RegexOf.SinglelinePattern(pattern).Split(value, count));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value, <paramref name="count"/>, <paramref name="start"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; <see cref="RegexOf"/>.Pattern(<paramref name="pattern"/>).Split(value, <paramref name="count"/>, <paramref name="start"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToRegexSplit(this IEnumerable<string>? @this, string pattern, int count, int start)
 		=> @this.Map(value => RegexOf.SinglelinePattern(pattern).Split(value, count, start));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, char separator, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separator, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, char[] separators, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separators, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, string separator, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separator, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, string[] separators, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separators, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, int count, char separator, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separator, count, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, int count, char[] separators, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separators, count, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separator"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, int count, string separator, StringSplitOptions options = StringSplitOptions.None)
 		=> @this.Map(value => value.Split(separator, count, options));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(value =&gt; value.Split(<paramref name="separators"/>, <paramref name="count"/>, <paramref name="options"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<string[]> ToSplit(this IEnumerable<string>? @this, int count, string[] separators, StringSplitOptions options = StringSplitOptions.None)

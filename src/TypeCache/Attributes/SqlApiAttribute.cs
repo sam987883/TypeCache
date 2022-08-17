@@ -4,7 +4,8 @@ using System;
 
 namespace TypeCache.Attributes;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public class SqlApiAttribute : Attribute
 {
+	public SqlApiAction Actions { get; } = SqlApiAction.All;
 }

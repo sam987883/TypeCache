@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
@@ -20,7 +21,7 @@ public static class MemberExtensions
 	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
 	///	<see langword="    "/><see cref="SystemType.Array"/> =&gt; @<paramref name="this"/>.ElementType,<br/>
 	///	<see langword="    "/><see cref="SystemType.Dictionary"/> <see langword="or"/> <see cref="SystemType.SortedDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableSortedDictionary"/><br/>
-	///	<see langword="        "/>=&gt; <see langword="typeof"/>(<see cref="KeyValuePair"/>&lt;,&gt;).MakeGenericType(@<paramref name="this"/>.GenericTypes.To(_ =&gt; (<see cref="Type"/>)_).ToArray()).GetTypeMember(),<br/>
+	///	<see langword="        "/>=&gt; <see langword="typeof"/>(<see cref="KeyValuePair"/>&lt;,&gt;).MakeGenericType(@<paramref name="this"/>.GenericTypes.Map(_ =&gt; (<see cref="Type"/>)_).ToArray()).GetTypeMember(),<br/>
 	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.SystemType.IsCollection() =&gt; @<paramref name="this"/>.GenericTypes.First()<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// };<br/>
@@ -49,11 +50,15 @@ public static class MemberExtensions
 	/// };<br/>
 	/// </code>
 	/// </summary>
-	public static TypeMember? GetTypeMember(this object @this)
+	public static TypeMember? GetTypeMember([NotNullIfNotNull("this")] this object @this)
 		=> @this switch
 		{
 			null => null,
-			Member member => member.Type,
+			ConstructorMember member => member.Type,
+			EventMember member => member.Type,
+			FieldMember member => member.Type,
+			MethodMember member => member.Type,
+			PropertyMember member => member.Type,
 			Type type => type.TypeHandle.GetTypeMember(),
 			MemberInfo memberInfo => memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),
 			_ => @this.GetType().TypeHandle.GetTypeMember()

@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Data.Common;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -100,51 +99,64 @@ public static class ServiceCollectionExtensions
 			.AddSingleton<IRule<CountCommand, long>, CountRule>()
 			.AddSingleton<IRule<CountCommand, string>, CountRule>()
 			.AddSingleton<IRule<ExecuteCommands, object>, ExecuteCommandsRule>()
-			.AddSingleton<IRule<SqlCommand, object>, ExecuteSqlRule>();
+			.AddSingleton<IRule<SqlCommand, object>, ExecuteSqlRule>()
+			.AddSingleton<IValidationRule<DeleteCommand>, DeleteValidationRule>()
+			.AddSingleton<IValidationRule<InsertCommand>, InsertValidationRule>()
+			.AddSingleton<IValidationRule<SelectCommand>, SelectValidationRule>()
+			.AddSingleton<IValidationRule<UpdateCommand>, UpdateValidationRule>();
 
-		if (typeAssembly is not null)
+		typeAssembly?.DefinedTypes.If(type => type.IsDefined(typeof(SqlApiAttribute), false)).Do(type =>
 		{
-			@this.AddSingleton<IValidationRule<DeleteCommand>, DeleteValidationRule>()
-				.AddSingleton<IValidationRule<InsertCommand>, InsertValidationRule>()
-				.AddSingleton<IValidationRule<SelectCommand>, SelectValidationRule>()
-				.AddSingleton<IValidationRule<UpdateCommand>, UpdateValidationRule>();
-
-			typeAssembly.DefinedTypes.If(type => type.IsDefined(typeof(SqlApiAttribute), false)).Do(type =>
+			var sqlApiAttribute = type.GetCustomAttribute<SqlApiAttribute>()!;
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Select) || sqlApiAttribute.Actions.HasFlag(SqlApiAction.Page))
 			{
-				var deleteDataCommandType = typeof(DeleteDataCommand<>).MakeGenericType(type);
-				var insertDataCommandType = typeof(InsertDataCommand<>).MakeGenericType(type);
-				var updateDataCommandType = typeof(UpdateDataCommand<>).MakeGenericType(type);
-
-				var rowSetResponseType = typeof(RowSetResponse<>).MakeGenericType(type);
-				var updateRowSetResponseType = typeof(UpdateRowSetResponse<>).MakeGenericType(type);
-
-				var deleteDataRuleType = typeof(DeleteDataRule<>).MakeGenericType(type);
-				var deleteRuleType = typeof(DeleteRule<>).MakeGenericType(type);
-				var insertDataRuleType = typeof(InsertDataRule<>).MakeGenericType(type);
-				var insertRuleType = typeof(InsertRule<>).MakeGenericType(type);
 				var selectRuleType = typeof(SelectRule<>).MakeGenericType(type);
-				var updateDataRuleType = typeof(UpdateDataRule<>).MakeGenericType(type);
-				var updateRuleType = typeof(UpdateRule<>).MakeGenericType(type);
-
+				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(SelectCommand), typeof(RowSetResponse<>).MakeGenericType(type)), selectRuleType)
+					.AddSingleton(typeof(IRule<SelectCommand, string>), selectRuleType);
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Delete))
+			{
+				var deleteRuleType = typeof(DeleteRule<>).MakeGenericType(type);
+				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(DeleteCommand), typeof(RowSetResponse<>).MakeGenericType(type)), deleteRuleType)
+					.AddSingleton(typeof(IRule<DeleteCommand, string>), deleteRuleType);
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.DeleteData))
+			{
+				var deleteDataRuleType = typeof(DeleteDataRule<>).MakeGenericType(type);
+				var deleteDataCommandType = typeof(DeleteDataCommand<>).MakeGenericType(type);
 				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(deleteDataCommandType), typeof(DeleteDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IValidationRule<>).MakeGenericType(insertDataCommandType), typeof(InsertDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IValidationRule<>).MakeGenericType(updateDataCommandType), typeof(UpdateDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, rowSetResponseType), deleteDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(string)), deleteDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(DeleteCommand), rowSetResponseType), deleteRuleType)
-					.AddSingleton(typeof(IRule<DeleteCommand, string>), deleteRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, rowSetResponseType), insertDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(string)), insertDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(InsertCommand), rowSetResponseType), insertRuleType)
-					.AddSingleton(typeof(IRule<InsertCommand, string>), insertRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(SelectCommand), rowSetResponseType), selectRuleType)
-					.AddSingleton(typeof(IRule<SelectCommand, string>), selectRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, updateRowSetResponseType), updateDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(string)), updateDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(UpdateCommand), updateRowSetResponseType), updateRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(RowSetResponse<>).MakeGenericType(type)), deleteDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(string)), deleteDataRuleType);
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Insert))
+			{
+				var insertRuleType = typeof(InsertRule<>).MakeGenericType(type);
+				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(InsertCommand), typeof(RowSetResponse<>).MakeGenericType(type)), insertRuleType)
+					.AddSingleton(typeof(IRule<InsertCommand, string>), insertRuleType);
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.InsertData))
+			{
+				var insertDataRuleType = typeof(InsertDataRule<>).MakeGenericType(type);
+				var insertDataCommandType = typeof(InsertDataCommand<>).MakeGenericType(type);
+				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(insertDataCommandType), typeof(InsertDataValidationRule<>).MakeGenericType(type))
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(RowSetResponse<>).MakeGenericType(type)), insertDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(string)), insertDataRuleType);
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Update))
+			{
+				var updateRuleType = typeof(UpdateRule<>).MakeGenericType(type);
+				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(UpdateCommand), typeof(UpdateRowSetResponse<>).MakeGenericType(type)), updateRuleType)
 					.AddSingleton(typeof(IRule<UpdateCommand, string>), updateRuleType);
-			});
-		}
+			}
+			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.UpdateData))
+			{
+				var updateDataRuleType = typeof(UpdateDataRule<>).MakeGenericType(type);
+				var updateDataCommandType = typeof(UpdateDataCommand<>).MakeGenericType(type);
+				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(updateDataCommandType), typeof(UpdateDataValidationRule<>).MakeGenericType(type))
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(UpdateRowSetResponse<>).MakeGenericType(type)), updateDataRuleType)
+					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(string)), updateDataRuleType);
+			}
+		});
 
 		return @this;
 	}

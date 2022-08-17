@@ -44,7 +44,7 @@ public class UpdateEndpoint<T> : SqlApiEndpoint
 		{
 			DataSource = this.DataSource,
 			Output = output.IsNotBlank() ? output.Split(',') : Array<string>.Empty,
-			Columns = set.IsNotBlank() ? set.Split(',') : Array<string>.Empty,
+			Set = set.IsNotBlank() ? set.Split(',') : Array<string>.Empty,
 			Table = TypeOf<T>.Name,
 			Where = where
 		};

@@ -20,7 +20,7 @@ public static class DelegateOf<T>
 
 	public static bool Internal => Member.Internal;
 
-	public static Delegate Method => Member.Method!;
+	public static Delegate Method => Member.Method;
 
 	public static RuntimeMethodHandle MethodHandle => Member.MethodHandle;
 

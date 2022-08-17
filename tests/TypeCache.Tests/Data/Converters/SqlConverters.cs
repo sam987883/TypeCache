@@ -332,7 +332,7 @@ public class SqlConverters
 		{
 			DataSource = "LocalInstance",
 			Table = "[dbo].[NonCustomers]",
-			Columns = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
+			Set = new[] { "ID = 123456", "[First Name] = N'Sarah'", "Last_Name = N'Marshal'", "Account = @Param1" },
 			Output = new[] { "INSERTED.[First Name]", "DELETED.[Last_Name]", "INSERTED.ID" },
 			TableHints = "WITH(UPDLOCK)",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
@@ -341,7 +341,7 @@ public class SqlConverters
 
 		var expected = Invariant(@$"
 {{
-	""{nameof(UpdateCommand.Columns)}"":[""ID = 123456"",""[First Name] = N\u0027Sarah\u0027"",""Last_Name = N\u0027Marshal\u0027"",""Account = @Param1""],
+	""{nameof(UpdateCommand.Set)}"":[""ID = 123456"",""[First Name] = N\u0027Sarah\u0027"",""Last_Name = N\u0027Marshal\u0027"",""Account = @Param1""],
 	""{nameof(UpdateCommand.Output)}"":[""INSERTED.[First Name]"",""DELETED.[Last_Name]"",""INSERTED.ID""],
 	""{nameof(UpdateCommand.Table)}"":""[dbo].[NonCustomers]"",
 	""{nameof(UpdateCommand.TableHints)}"":""WITH(UPDLOCK)"",
@@ -357,7 +357,7 @@ public class SqlConverters
 
 		Assert.Equal(expectedRequest.DataSource, request.DataSource);
 		Assert.Equal(expectedRequest.Table, request.Table);
-		Assert.Equal(expectedRequest.Columns, request.Columns);
+		Assert.Equal(expectedRequest.Set, request.Set);
 		Assert.Equal(expectedRequest.Output, request.Output);
 		Assert.Equal(expectedRequest.Where, request.Where);
 		Assert.Equal(expectedRequest.InputParameters, request.InputParameters);

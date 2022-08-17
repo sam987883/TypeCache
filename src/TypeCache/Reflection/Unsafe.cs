@@ -19,7 +19,7 @@ public static class Unsafe
 		static Converter()
 		{
 			ParameterExpression value = nameof(value).Parameter<FROM>();
-			To = value.Convert<TO>().Lambda<Convert>(value).Compile();
+			To = value.Cast<TO>().Lambda<Convert>(value).Compile();
 		}
 
 		public static Convert To { get; }

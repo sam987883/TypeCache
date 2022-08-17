@@ -14,6 +14,7 @@ public class EventMember : Member, IEquatable<EventMember>
 {
 	public EventMember(EventInfo eventInfo, TypeMember type) : base(eventInfo)
 	{
+		this.Type = type;
 		this.EventHandlerType = eventInfo.EventHandlerType!.TypeHandle.GetTypeMember();
 		this.AddEventHandler = new MethodMember(eventInfo.AddMethod!, type);
 		this.RaiseEvent = eventInfo.RaiseMethod is not null ? new MethodMember(eventInfo.RaiseMethod, type) : null;
@@ -27,6 +28,11 @@ public class EventMember : Member, IEquatable<EventMember>
 	public MethodMember? RaiseEvent { get; }
 
 	public MethodMember RemoveEventHandler { get; }
+
+	/// <summary>
+	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
+	/// </summary>
+	public TypeMember Type { get; }
 
 	/// <param name="instance">Pass null if the event is static.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]

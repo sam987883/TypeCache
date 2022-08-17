@@ -20,6 +20,8 @@ internal class CountRule : IRule<CountCommand, long>, IRule<CountCommand, string
 	async ValueTask<long> IRule<CountCommand, long>.ApplyAsync(CountCommand command, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[command.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.CountAsync(command, token);
 	}
 

@@ -3,7 +3,6 @@
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
-using GraphQL.Server;
 using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
@@ -21,7 +20,6 @@ public static class ServiceCollectionExtensions
 	/// <list type="bullet">
 	/// <item><term><see cref="IDocumentExecuter"/></term> An instance of: <see cref="DocumentExecuter"/>.</item>
 	/// <item><term><see cref="IGraphQLSerializer"/></term> An instance of: <see cref="GraphQLSerializer"/>.</item>
-	/// <item><term><see cref="IGraphQLExecuter{TSchema}"/></term> An instance of: <see cref="BasicGraphQLExecuter{TSchema}"/>.</item>
 	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> An instance of: <see cref="DataLoaderContextAccessor"/>.</item>
 	/// <item><term><see cref="IDocumentExecutionListener"/></term> An instance of: <see cref="DataLoaderDocumentListener"/>.</item>
 	/// <item><term><see cref="GraphQLEnumType{T}"/></term> The GraphQL EnumerationGraphType.</item>
@@ -34,7 +32,6 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
 		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
 			.AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
-			.AddSingleton(typeof(IGraphQLExecuter<>), typeof(BasicGraphQLExecuter<>))
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
 			.AddSingleton(typeof(GraphQLEnumType<>))
@@ -48,7 +45,7 @@ public static class ServiceCollectionExtensions
 	/// <c>=&gt; @<paramref name="this"/>.UseMiddleware&lt;<see cref="GraphQLMiddleware{T}"/>&gt;(<see langword="new"/> <see cref="PathString"/>(<paramref name="route"/>));</c>
 	/// </summary>
 	/// <param name="route">The route to use for this <see cref="ISchema"/>.</param>
-	public static IApplicationBuilder UseGraphQLSchema<T>(this IApplicationBuilder @this, string route)
+	public static IApplicationBuilder UseGraphQLSchema<T>(this IApplicationBuilder @this, PathString route)
 		where T : ISchema
-		=> @this.UseMiddleware<GraphQLMiddleware<T>>(new PathString(route));
+		=> @this.UseMiddleware<GraphQLMiddleware<T>>(route);
 }

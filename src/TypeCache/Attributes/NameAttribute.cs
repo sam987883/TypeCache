@@ -7,7 +7,7 @@ using TypeCache.Reflection;
 namespace TypeCache.Attributes;
 
 /// <summary>
-/// Rename any cached <see cref="Member"/> within the TypeCache system.
+/// Rename any cached <see cref="Member"/> within the TypeCache.Reflection system.
 /// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = false)]
 public class NameAttribute : Attribute
@@ -18,5 +18,8 @@ public class NameAttribute : Attribute
 		this.Name = name;
 	}
 
+	/// <summary>
+	/// The new name of the <see cref="Member"/>.
+	/// </summary>
 	public string Name { get; }
 }

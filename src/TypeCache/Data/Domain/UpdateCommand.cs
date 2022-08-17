@@ -2,7 +2,9 @@
 
 using System.Text;
 using TypeCache.Collections;
+using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Data.Domain;
 
@@ -16,7 +18,7 @@ public class UpdateCommand : Command
 	/// JSON: <c>"Columns": { "[Column1] = ISNULL([Column2], N'')", "Column2 = 'aaa'", "[Column 3] = NULL" }</c><br/>
 	/// SQL: <c>SET [Column1] = ISNULL([Column2], N''), Column2 = 'aaa', [Column 3] = NULL</c>
 	/// </summary>
-	public string[] Columns { get; set; } = Array<string>.Empty;
+	public string[] Set { get; set; } = Array<string>.Empty;
 
 	/// <summary>
 	/// JSON: <c>"Output": [ "NULLIF([Column1], 22) AS [Alias 1]", "INSERTED.ColumnName [Alias 2]", "DELETED.ColumnName" ]</c><br/>
@@ -34,7 +36,7 @@ public class UpdateCommand : Command
 	/// JSON: <c>"WITH(UPDLOCK)"</c><br/>
 	/// SQL: <c>UPDATE [Database1]..[Table1] WITH(UPDLOCK)</c>
 	/// </summary>
-	public string TableHints { get; set; } = "WITH(UPDLOCK)";
+	public string TableHints { get; set; } = string.Empty;
 
 	/// <summary>
 	/// JSON: <code>
@@ -53,8 +55,8 @@ public class UpdateCommand : Command
 	/// <inheritdoc/>
 	public override string ToSQL()
 		=> new StringBuilder()
-			.AppendSQL("UPDATE", this.Table, this.TableHints ?? "WITH(UPDLOCK)")
-			.AppendSQL("SET", this.Columns)
+			.AppendSQL("UPDATE", this.Table, this.TableHints)
+			.AppendSQL("SET", this.Set)
 			.AppendSQL("OUTPUT", this.Output)
 			.AppendSQL("WHERE", this.Where)
 			.AppendStatementEndSQL()

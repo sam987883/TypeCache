@@ -19,34 +19,34 @@ internal class StoredProcedureValidationRule : IValidationRule<StoredProcedureCo
 		this._SchemaRule = rule;
 	}
 
-	public IEnumerable<string> Validate(StoredProcedureCommand request)
+	public IEnumerable<string> Validate(StoredProcedureCommand command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.Procedure);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.Procedure);
 		}
 
 		if (validator.Success)
 		{
-			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Procedure)).Result;
+			var schema = this._SchemaRule.ApplyAsync(new(command.DataSource, command.Procedure)).Result;
 			schema.Type.AssertEquals(ObjectType.StoredProcedure);
 
 			if (validator.Success)
 			{
-				request.Procedure = schema.Name;
+				command.Procedure = schema.Name;
 
 				var inputParameters = schema.Parameters
 					.If(parameter => parameter.Direction is ParameterDirection.Input || parameter.Direction is ParameterDirection.InputOutput)
 					.Map(parameter => parameter.Name);
-				validator.AssertEquals(inputParameters.Without(request.InputParameters.Keys).Any(), false);
+				validator.AssertEquals(inputParameters.Without(command.InputParameters.Keys).Any(), false);
 
 				var outputParameters = schema.Parameters
 					.If(parameter => parameter.Direction is ParameterDirection.Output || parameter.Direction is ParameterDirection.InputOutput)
 					.Map(parameter => parameter.Name);
-				validator.AssertEquals(outputParameters.Without(request.OutputParameters.Keys).Any(), false);
+				validator.AssertEquals(outputParameters.Without(command.OutputParameters.Keys).Any(), false);
 			}
 		}
 

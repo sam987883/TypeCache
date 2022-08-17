@@ -32,11 +32,11 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		@this.GetTypeMember().Fields
+		@this.GetTypeMember()!.Fields
 			.ToDictionary(_ => _.Name, _ => _, nameComparison)
 			.Match(source.ToDictionary(nameComparison))
-			.If(match => match.Value1.Setter is not null
-				&& match.Value1.FieldType.Supports(match.Value2.GetTypeMember()))
+			.If(match => match.Value1.SetMethod is not null
+				&& match.Value1.FieldType.Supports(match.Value2!.GetTypeMember()!))
 			.Do(match =>
 			{
 				if (match.Value2 is not null || match.Value1.FieldType.Nullable)
@@ -52,15 +52,15 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
-		var targetFieldMap = @this.GetTypeMember().Fields
+		var targetFieldMap = @this.GetTypeMember()!.Fields
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourceFieldMap = source.GetTypeMember().Fields
+		var sourceFieldMap = source.GetTypeMember()!.Fields
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
 
 		targetFieldMap
 			.Match(sourceFieldMap)
-			.If(match => match.Value1.Setter is not null
-				&& match.Value2.Getter is not null
+			.If(match => match.Value1.SetMethod is not null
+				&& match.Value2.GetMethod is not null
 				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
 			.Do(match =>
 			{
@@ -78,17 +78,17 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
-		var targetFieldMap = @this.GetTypeMember().Fields
+		var targetFieldMap = @this.GetTypeMember()!.Fields
 			.If(_ => fields.Has(_.Name, nameComparison))
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourceFieldMap = source.GetTypeMember().Fields
+		var sourceFieldMap = source.GetTypeMember()!.Fields
 			.If(_ => fields.Has(_.Name, nameComparison))
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
 
 		targetFieldMap
 			.Match(sourceFieldMap)
-			.If(match => match.Value1.Setter is not null
-				&& match.Value2.Getter is not null
+			.If(match => match.Value1.SetMethod is not null
+				&& match.Value2.GetMethod is not null
 				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
 			.Do(match =>
 			{
@@ -105,11 +105,11 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		@this.GetTypeMember().Properties
+		@this.GetTypeMember()!.Properties
 			.ToDictionary(_ => _.Name, _ => _, nameComparison)
 			.Match(source.ToDictionary(nameComparison))
 			.If(match => match.Value1.Setter is not null
-				&& match.Value1.PropertyType.Supports(match.Value2.GetTypeMember()))
+				&& match.Value1.PropertyType.Supports(match.Value2!.GetTypeMember()!))
 			.Do(match =>
 			{
 				if (match.Value2 is not null || match.Value1.PropertyType.Nullable)
@@ -125,9 +125,9 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
-		var targetPropertyMap = @this.GetTypeMember().Properties
+		var targetPropertyMap = @this.GetTypeMember()!.Properties
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourcePropertyMap = source.GetTypeMember().Properties
+		var sourcePropertyMap = source.GetTypeMember()!.Properties
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
 
 		targetPropertyMap
@@ -151,10 +151,10 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
-		var targetPropertyMap = @this.GetTypeMember().Properties
+		var targetPropertyMap = @this.GetTypeMember()!.Properties
 			.If(_ => properties.Has(_.Name, nameComparison))
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourcePropertyMap = source.GetTypeMember().Properties
+		var sourcePropertyMap = source.GetTypeMember()!.Properties
 			.If(_ => properties.Has(_.Name, nameComparison))
 			.ToDictionary(_ => _.Name, _ => _, nameComparison);
 

@@ -25,7 +25,7 @@ builder.Services.RegisterMediator()
 var app = builder.Build();
 app.UseRouting()
 	.UseGraphQLSchema<TestGraphQLSchema>("/graphql")
-	.UseGraphQLPlayground(new()
+	.UseGraphQLPlayground("/playground", new()
 	{
 		BetaUpdates = true,
 		EditorCursorShape = EditorCursorShape.Line,
@@ -37,5 +37,5 @@ app.UseRouting()
 		PrettierTabWidth = 2,
 		SchemaPollingEnabled = true,
 		SchemaPollingInterval = 10000
-	}, "/playground");
+	});
 app.Run();

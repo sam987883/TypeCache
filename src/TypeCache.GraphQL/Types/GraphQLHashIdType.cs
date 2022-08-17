@@ -34,10 +34,10 @@ public class GraphQLHashIdType : ScalarGraphType
 	}
 
 	public override bool CanParseLiteral(GraphQLValue value)
-		=> value is GraphQLNullValue || value is GraphQLIntValue || value is GraphQLStringValue;
+		=> value is GraphQLNullValue || value is GraphQLStringValue;
 
 	public override bool CanParseValue(object? value)
-		=> value is null || value is int || value is long || value is Guid || value is string;
+		=> value is null || value is Guid || value is string;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override object? ParseLiteral(GraphQLValue value)
@@ -46,8 +46,8 @@ public class GraphQLHashIdType : ScalarGraphType
 	public override object? ParseValue(object? value)
 		=> value switch
 		{
-			Guid hashId => this._HashMaker.Decrypt(hashId.ToByteArray()),
-			string hashId => this._HashMaker.Decrypt(hashId),
+			GraphQLNullValue => null,
+			GraphQLStringValue text => this._HashMaker.Decrypt((string)text.Value),
 			_ => value
 		};
 

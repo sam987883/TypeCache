@@ -21,6 +21,8 @@ internal class DeleteRule<T> : IRule<DeleteCommand, RowSetResponse<T>>, IRule<De
 	async ValueTask<RowSetResponse<T>> IRule<DeleteCommand, RowSetResponse<T>>.ApplyAsync(DeleteCommand command, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[command.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.DeleteAsync<T>(command, token);
 	}
 

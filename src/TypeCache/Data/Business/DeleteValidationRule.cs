@@ -16,23 +16,23 @@ internal class DeleteValidationRule : IValidationRule<DeleteCommand>
 		this._SchemaRule = rule;
 	}
 
-	public IEnumerable<string> Validate(DeleteCommand request)
+	public IEnumerable<string> Validate(DeleteCommand command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.Table);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.Table);
 		}
 
 		if (validator.Success)
 		{
-			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			var schema = this._SchemaRule.ApplyAsync(new(command.DataSource, command.Table)).Result;
 			validator.AssertEquals(schema.Type, ObjectType.Table);
 			if (validator.Success)
-				request.Table = schema.Name;
+				command.Table = schema.Name;
 		}
 
 		return validator.Fails;

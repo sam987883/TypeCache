@@ -20,6 +20,8 @@ internal class UpdateRule<T> : IRule<UpdateCommand, UpdateRowSetResponse<T>>, IR
 	async ValueTask<UpdateRowSetResponse<T>> IRule<UpdateCommand, UpdateRowSetResponse<T>>.ApplyAsync(UpdateCommand request, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.UpdateAsync<T>(request, token);
 	}
 

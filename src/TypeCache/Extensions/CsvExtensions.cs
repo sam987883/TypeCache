@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using static System.FormattableString;
@@ -45,23 +46,43 @@ public static class CsvExtensions
 			_ => @this.ToString()!.EscapeCSV()
 		};
 
-	public static string[] ToCSV<T>(this T[] @this, CsvOptions options = default)
+	/// <summary>
+	/// <code>
+	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; <see cref="string.Empty"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <paramref name="escape"/> =&gt; @<paramref name="this"/>.Map(text =&gt; text.IsNotBlank() ? (text.Contains(',') ? Invariant($"\"{text.Replace("\"", "\"\"")}\"") : text.Replace("\"", "\"\"")) : <see cref="string.Empty"/>).Join(','),<br/>
+	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Join(", ")<br/>
+	/// };
+	/// </code>
+	/// </summary>
+	public static string ToCSV(this IEnumerable<string>? @this, bool escape = false)
+		=> @this switch
+		{
+			null => string.Empty,
+			_ when escape => @this.Map(text => text.IsNotBlank() ? (text.Contains(',') ? Invariant($"\"{text.Replace("\"", "\"\"")}\"") : text.Replace("\"", "\"\"")) : string.Empty).Join(','),
+			_ => @this.Join(", ")
+		};
+
+	public static string[] ToCSV<T>(this IEnumerable<T>? @this, CsvOptions options = default)
 	{
-		if (options.MemberNames.Any())
+		if (@this is null)
+			return Array<string>.Empty;
+		else if (options.MemberNames.Any())
 		{
 			var propertyMap = TypeOf<T>.Properties.ToDictionary(_ => _.Name, _ => _, options.MemberNameComparison);
 			var fieldMap = TypeOf<T>.Fields.ToDictionary(_ => _.Name, _ => _, options.MemberNameComparison);
 
 			var headerRow = string.Join(',', options.MemberNames.If(name => propertyMap.ContainsKey(name) || fieldMap.ContainsKey(name)));
 			var dataRows = @this.Map(row => string.Join(',', options.MemberNames.Map(name => propertyMap.TryGetValue(name, out var propertyMember)
-				? propertyMember.GetValue(row).EscapeCSV(options) : fieldMap[name].GetValue(row).EscapeCSV(options))));
+				? propertyMember.GetValue(row!).EscapeCSV(options) : fieldMap[name].GetValue(row).EscapeCSV(options))));
 
 			return new[] { headerRow }.Append(dataRows).ToArray();
 		}
 		else if (TypeOf<T>.Properties.Any())
 		{
 			var headerRow = string.Join(',', TypeOf<T>.Properties.Map(property => property.Name));
-			var dataRows = @this.Map(row => string.Join(',', TypeOf<T>.Properties.Map(property => property.GetValue(row).EscapeCSV(options))));
+			var dataRows = @this.Map(row => string.Join(',', TypeOf<T>.Properties.Map(property => property.GetValue(row!).EscapeCSV(options))));
 
 			return new[] { headerRow }.Append(dataRows).ToArray();
 		}

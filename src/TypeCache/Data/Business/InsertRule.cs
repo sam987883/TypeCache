@@ -21,6 +21,8 @@ internal class InsertRule<T> : IRule<InsertCommand, RowSetResponse<T>>, IRule<In
 	async ValueTask<RowSetResponse<T>> IRule<InsertCommand, RowSetResponse<T>>.ApplyAsync(InsertCommand request, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.InsertAsync<T>(request, token);
 	}
 

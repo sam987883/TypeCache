@@ -19,25 +19,25 @@ internal class SelectValidationRule : IValidationRule<SelectCommand>
 		this._SchemaRule = rule;
 	}
 
-	public IEnumerable<string> Validate(SelectCommand request)
+	public IEnumerable<string> Validate(SelectCommand command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.From);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.From);
 		}
 
 		if (validator.Success)
 		{
-			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.From)).Result;
+			var schema = this._SchemaRule.ApplyAsync(new(command.DataSource, command.From)).Result;
 			validator.AssertEquals(schema.Type is ObjectType.Table || schema.Type is ObjectType.View || schema.Type is ObjectType.Function, true);
 
 			if (validator.Success)
 			{
-				request.From = schema.Name;
-				request.Select = schema.Columns.Map(column => column.Name).If(name => request.Select.Has(name, StringComparison.OrdinalIgnoreCase)).ToArray();
+				command.From = schema.Name;
+				command.Select = schema.Columns.Map(column => column.Name).If(name => command.Select.Has(name, StringComparison.OrdinalIgnoreCase)).ToArray();
 			}
 		}
 

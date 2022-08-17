@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -27,39 +28,25 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	internal TypeMember(Type type) : base(type)
 	{
 		this.GenericHandle = type.IsGenericType && !type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().TypeHandle : null;
+		this.GenericTypeHandles = type.GenericTypeArguments.Any() ? type.GenericTypeArguments.Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
+		this.InterfaceTypeHandles = type.GetInterfaces().Any() ? type.GetInterfaces().Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
+		this.BaseTypeHandle = type.BaseType?.TypeHandle;
+		this.ElementTypeHandle = type.HasElementType ? type.GetElementType()?.TypeHandle : null;
 		this.Handle = type.TypeHandle;
 		this.Kind = type.GetKind();
 		this.Namespace = type.Namespace!;
 		this.SystemType = type.GetSystemType();
 		this.Nullable = this.SystemType is SystemType.Nullable || this.Kind is not Kind.Struct;
 		this.Ref = type.IsByRef || type.IsByRefLike;
-
-#nullable disable
-		this._BaseType = type.BaseType is not null ? Lazy.Create(() => this.Handle.ToType().BaseType.GetTypeMember()) : Lazy.Null<TypeMember>();
-		this._ElementType = type.HasElementType ? Lazy.Create(() => this.Handle.ToType().GetElementType()!.GetTypeMember()) : Lazy.Null<TypeMember>();
-#nullable enable
-
-		if (type.GenericTypeArguments.Any())
-			this._GenericTypes = Lazy.Create<IReadOnlyList<TypeMember>>(() =>
-				this.Handle.ToType().GenericTypeArguments.Map(_ => _.GetTypeMember()).ToImmutableArray());
-		else
-			this._GenericTypes = Lazy.Value<IReadOnlyList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
  
-		if (type.GetInterfaces().Any())
-			this._InterfaceTypes = Lazy.Create<IReadOnlyList<TypeMember>>(() =>
-				this.Handle.ToType().GetInterfaces().Map(_ => _.GetTypeMember()).ToImmutableArray());
-		else
-			this._InterfaceTypes = Lazy.Value<IReadOnlyList<TypeMember>>(ImmutableArray<TypeMember>.Empty);
-
 		var anyConstructors = type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable());
 		if (anyConstructors)
-			this._Constructors = Lazy.Create<IReadOnlyList<ConstructorMember>>(() =>
-				this.Handle.ToType().GetConstructors(INSTANCE_BINDING_FLAGS)
-					.If(constructorInfo => constructorInfo.IsInvokable())
-					.Map(constructorInfo => new ConstructorMember(constructorInfo, this))
-					.ToImmutableArray());
+			this.Constructors = type.GetConstructors(INSTANCE_BINDING_FLAGS)
+				.If(constructorInfo => constructorInfo.IsInvokable())
+				.Map(constructorInfo => new ConstructorMember(constructorInfo, this))
+				.ToImmutableArray();
 		else
-			this._Constructors = Lazy.Value<IReadOnlyList<ConstructorMember>>(ImmutableArray<ConstructorMember>.Empty);
+			this.Constructors = ImmutableArray<ConstructorMember>.Empty;
 
 		if (!anyConstructors && this.Kind is Kind.Struct && this.SystemType is not SystemType.Void)
 			this._CreateValueType = type.New().As<object>().Lambda<Func<object>>().Compile();
@@ -67,85 +54,71 @@ public class TypeMember : Member, IEquatable<TypeMember>
 			this._CreateValueType = null;
 
 		if (type.GetEvents(BINDING_FLAGS).Any())
-			this._Events = Lazy.Create<IReadOnlyList<EventMember>>(() =>
-				this.Handle.ToType().GetEvents(BINDING_FLAGS)
-					.Map(eventInfo => new EventMember(eventInfo, this))
-					.ToImmutableArray());
+			this.Events = type.GetEvents(BINDING_FLAGS)
+				.Map(eventInfo => new EventMember(eventInfo, this))
+				.ToImmutableArray();
 		else
-			this._Events = Lazy.Value<IReadOnlyList<EventMember>>(ImmutableArray<EventMember>.Empty);
+			this.Events = ImmutableArray<EventMember>.Empty;
 
-		this._Fields = this.Kind switch
+		this.Fields = this.Kind switch
 		{
-			Kind.Delegate => Lazy.Value<IReadOnlyList<FieldMember>>(ImmutableArray<FieldMember>.Empty),
+			Kind.Delegate => ImmutableArray<FieldMember>.Empty,
 			_ when type.GetFields(BINDING_FLAGS).Any(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike) =>
-				Lazy.Create<IReadOnlyList<FieldMember>>(() =>
-					this.Handle.ToType().GetFields(BINDING_FLAGS)
-						.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
-						.Map(fieldInfo => new FieldMember(fieldInfo, this))
-						.ToImmutableArray()),
-			_ => Lazy.Value<IReadOnlyList<FieldMember>>(ImmutableArray<FieldMember>.Empty)
+				type.GetFields(BINDING_FLAGS)
+					.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
+					.Map(fieldInfo => new FieldMember(fieldInfo, this))
+					.ToImmutableArray(),
+			_ => ImmutableArray<FieldMember>.Empty
 		};
 
-		if (this.Handle.ToType().GetMethods(BINDING_FLAGS).Any(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable()))
-			this._Methods = Lazy.Create<IReadOnlyList<MethodMember>>(() =>
-				this.Handle.ToType().GetMethods(BINDING_FLAGS)
-					.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
-					.Map(methodInfo => new MethodMember(methodInfo, this))
-					.ToImmutableArray());
+		if (type.GetMethods(BINDING_FLAGS).Any(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable()))
+			this.Methods = type.GetMethods(BINDING_FLAGS)
+				.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
+				.Map(methodInfo => new MethodMember(methodInfo, this))
+				.ToImmutableArray();
 		else
-			this._Methods = Lazy.Value<IReadOnlyList<MethodMember>>(ImmutableArray<MethodMember>.Empty);
+			this.Methods = ImmutableArray<MethodMember>.Empty;
 
-		if (this.Handle.ToType().GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
-			this._Properties = Lazy.Create<IReadOnlyList<PropertyMember>>(() =>
-				this.Handle.ToType().GetProperties(BINDING_FLAGS)
-					.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
-					.Map(propertyInfo => new PropertyMember(propertyInfo, this))
-					.ToImmutableArray());
+		if (type.GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
+			this.Properties = type.GetProperties(BINDING_FLAGS)
+				.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
+				.Map(propertyInfo => new PropertyMember(propertyInfo, this))
+				.ToImmutableArray();
 		else
-			this._Properties = Lazy.Value<IReadOnlyList<PropertyMember>>(ImmutableArray<PropertyMember>.Empty);
+			this.Properties = ImmutableArray<PropertyMember>.Empty;
 	}
-
-	private readonly Lazy<TypeMember?> _BaseType;
 
 	private readonly Func<object>? _CreateValueType;
 
-	private readonly Lazy<TypeMember?> _ElementType;
+	public IReadOnlyList<ConstructorMember> Constructors { get; }
 
-	private readonly Lazy<IReadOnlyList<TypeMember>> _GenericTypes;
+	public IReadOnlyList<EventMember> Events { get; }
 
-	private readonly Lazy<IReadOnlyList<TypeMember>> _InterfaceTypes;
+	public IReadOnlyList<FieldMember> Fields { get; }
 
-	private readonly Lazy<IReadOnlyList<ConstructorMember>> _Constructors;
+	public IReadOnlyList<MethodMember> Methods { get; }
 
-	private readonly Lazy<IReadOnlyList<EventMember>> _Events;
+	public IReadOnlyList<PropertyMember> Properties { get; }
 
-	private readonly Lazy<IReadOnlyList<FieldMember>> _Fields;
+	public TypeMember? BaseType => this.BaseTypeHandle.HasValue ? this.BaseTypeHandle.Value.GetTypeMember() : null;
 
-	private readonly Lazy<IReadOnlyList<MethodMember>> _Methods;
+	public RuntimeTypeHandle? BaseTypeHandle { get; }
 
-	private readonly Lazy<IReadOnlyList<PropertyMember>> _Properties;
+	public TypeMember? ElementType => this.ElementTypeHandle.HasValue ? this.ElementTypeHandle.Value.GetTypeMember() : null;
 
-	public IReadOnlyList<ConstructorMember> Constructors => this._Constructors.Value;
-
-	public IReadOnlyList<EventMember> Events => this._Events.Value;
-
-	public IReadOnlyList<FieldMember> Fields => this._Fields.Value;
-
-	public IReadOnlyList<MethodMember> Methods => this._Methods.Value;
-
-	public IReadOnlyList<PropertyMember> Properties => this._Properties.Value;
-
-	public TypeMember? BaseType => this._BaseType.Value;
-
-	public TypeMember? ElementType => this._ElementType.Value;
+	public RuntimeTypeHandle? ElementTypeHandle { get; }
 
 	public RuntimeTypeHandle? GenericHandle { get; }
 
-	public IReadOnlyList<TypeMember> GenericTypes => this._GenericTypes.Value;
+	public IReadOnlyList<RuntimeTypeHandle> GenericTypeHandles { get; }
+
+	public IReadOnlyList<TypeMember> GenericTypes => this.GenericTypeHandles.Map(handle => handle.GetTypeMember());
 
 	public RuntimeTypeHandle Handle { get; }
 
-	public IReadOnlyList<TypeMember> InterfaceTypes => this._InterfaceTypes.Value;
+	public IReadOnlyList<RuntimeTypeHandle> InterfaceTypeHandles { get; }
+
+	public IReadOnlyList<TypeMember> InterfaceTypes => this.InterfaceTypeHandles.Map(handle => handle.GetTypeMember());
 
 	public Kind Kind { get; }
 
@@ -159,25 +132,25 @@ public class TypeMember : Member, IEquatable<TypeMember>
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (<see langword="this"/>.Constructors.IfFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor))<br/>
-	/// <see langword="    return"/> constructor.Create(<paramref name="parameters"/>);<br/>
-	/// <see langword="else if"/> (<see langword="this"/>.Kind <see langword="is"/> <see cref="Kind.Struct"/> &amp;&amp; <see langword="this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; !<paramref name="parameters"/>.Any())<br/>
-	/// <see langword="    return"/> <see langword="this"/>._CreateValueType();<br/>
-	/// <see langword="return null"/>;<br/>
+	/// =&gt; <see langword="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <see langword="this"/>.Constructors.IfFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
+	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when"/> <see langword="this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; !<paramref name="parameters"/>.Any() =&gt; <see langword="this"/>._CreateValueType(),<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// }
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
 	public object? Create(params object?[]? parameters)
-	{
-		if (this.Constructors.IfFirst(constructor => constructor.Parameters.IsCallableWith(parameters), out var constructor))
-			return constructor.Create(parameters);
-		else if (this.Kind is Kind.Struct && this._CreateValueType is not null && !parameters.Any())
-			return this._CreateValueType();
-		return null;
-	}
+		=> this switch
+		{
+			_ when this.Constructors.IfFirst(constructor => constructor.Parameters.IsCallableWith(parameters), out var constructor) => constructor.Create(parameters),
+			{ Kind: Kind.Struct } when this._CreateValueType is not null && !parameters.Any() => this._CreateValueType(),
+			_ => null
+		};
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Constructors.To(constructor =&gt; constructor.Method).First&lt;<typeparamref name="D"/>&gt;();</c>
+	/// <c>=&gt; <see langword="this"/>.Constructors.Map(constructor =&gt; constructor.Method).First&lt;<typeparamref name="D"/>&gt;();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public D? GetConstructor<D>()
@@ -199,7 +172,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 		=> this.Fields.First(field => field.Name.Is(name, comparison));
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.Get(<paramref name="name"/>).IfFirst(<see langword="out var"/> methods) ? methods.If(method =&gt; method.Static == <paramref name="isStatic"/>).To(method =&gt; method!.Method).First&lt;<typeparamref name="D"/>&gt;() : <see langword="null"/>;</c>
+	/// <c>=&gt; <see langword="this"/>.Methods.Get(<paramref name="name"/>).IfFirst(<see langword="out var"/> methods) ? methods.If(method =&gt; method.Static == <paramref name="isStatic"/>).Map(method =&gt; method!.Method).First&lt;<typeparamref name="D"/>&gt;() : <see langword="null"/>;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public D? GetMethod<D>(string name, bool isStatic = false, StringComparison comparison = StringComparison.Ordinal)
@@ -223,43 +196,23 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    var"/> method = <see langword="this"/>.Methods<br/>
-	/// <see langword="        "/>.If(method =&gt; !method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method!.Parameters.IsCallableWith(parameters))<br/>
+	/// <see langword="    var"/> foundMethodToInvoke = <see langword="this"/>.Methods<br/>
+	/// <see langword="        "/>.If(method =&gt; !method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method.Parameters.IsCallableWith(parameters))<br/>
 	/// <see langword="        "/>.First();<br/>
-	/// <see langword="    "/>method.AssertNotNull();<br/>
-	/// <see langword="    return"/> method.Invoke(<paramref name="instance"/>, <paramref name="parameters"/>);<br/>
+	/// <see langword="    "/>foundMethodToInvoke.AssertNotNull();<br/>
+	/// <see langword="    return"/> foundMethodToInvoke.Invoke(<paramref name="arguments"/>);<br/>
 	/// }
 	/// </code>
 	/// </summary>
+	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <exception cref="ArgumentException"></exception>
-	public object? InvokeMethod(string name, object instance, object?[]? parameters, StringComparison comparison = StringComparison.Ordinal)
+	public object? InvokeMethod(string name, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
 	{
-		var method = this.Methods
-			.If(method => !method.Static && method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(parameters))
+		var foundMethodToInvoke = this.Methods
+			.If(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(!method.Static ? arguments.Skip(1).ToArray() : arguments))
 			.First();
-		method.AssertNotNull();
-		return method.Invoke(instance, parameters);
-	}
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> staticMethod = <see langword="this"/>.Methods<br/>
-	/// <see langword="        "/>.If(staticMethod =&gt; method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method!.Parameters.IsCallableWith(parameters))<br/>
-	/// <see langword="        "/>.First();<br/>
-	/// <see langword="    "/>staticMethod.AssertNotNull();<br/>
-	/// <see langword="    return"/> staticMethod.Invoke(<paramref name="parameters"/>);<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentException"></exception>
-	public object? InvokeStaticMethod(string name, object?[]? parameters, StringComparison comparison = StringComparison.Ordinal)
-	{
-		var staticMethod = this.Methods
-			.If(method => method.Static && method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(parameters))
-			.First();
-		staticMethod.AssertNotNull();
-		return staticMethod.Invoke(parameters);
+		foundMethodToInvoke.AssertNotNull();
+		return foundMethodToInvoke.Invoke(arguments);
 	}
 
 	/// <summary>
@@ -269,36 +222,19 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// <see langword="        "/>.If(genericMethod =&gt; !method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method!.Parameters.IsCallableWith(parameters))<br/>
 	/// <see langword="        "/>.First();<br/>
 	/// <see langword="    "/>genericMethod.AssertNotNull();<br/>
-	/// <see langword="    return"/> genericMethod.Invoke(<paramref name="instance"/>, <paramref name="genericTypes"/>, <paramref name="parameters"/>);<br/>
+	/// <see langword="    return"/> genericMethod.Invoke(<paramref name="genericTypes"/>, <paramref name="arguments"/>);<br/>
 	/// }
 	/// </code>
 	/// </summary>
+	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <exception cref="ArgumentException"></exception>
-	public object? InvokeGenericMethod(string name, Type[] genericTypes, object instance, object?[]? parameters, StringComparison comparison = StringComparison.Ordinal)
+	public object? InvokeGenericMethod(string name, Type[] genericTypes, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
 	{
 		var genericMethod = this.Methods
-			.If(method => !method.Static && method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(parameters))
+			.If(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(!method.Static ? arguments.Skip(1).ToArray() : arguments))
 			.First();
 		genericMethod.AssertNotNull();
-		return genericMethod.Invoke(instance, genericTypes, parameters);
-	}
-
-	/// <summary>
-	/// <code>
-	/// <see langword="if"/> (<see langword="this"/>.Methods.Get(<paramref name="name"/>).IfFirst(<see langword="out var"/> methods)<br/>
-	/// <see langword="    "/>&amp;&amp; methods.IfFirst(method =&gt; method.IsStatic &amp;&amp; method.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> method))<br/>
-	/// <see langword="    return"/> method.InvokeGeneric(<see langword="null"/>, <paramref name="genericTypes"/>, <paramref name="parameters"/>);<br/>
-	/// <see langword="throw new"/> <see cref="ArgumentException"/>($"{<see langword="this"/>.Name}.{<see langword="nameof"/>(<see cref="InvokeGenericStaticMethod"/>)}(...): no method found that takes the {<paramref name="parameters"/>?.Length ?? 0} provided {<see langword="nameof"/>(<paramref name="parameters"/>)}.");
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentException"></exception>
-	public object? InvokeGenericStaticMethod(string name, Type[] genericTypes, object?[]? parameters, StringComparison comparison = StringComparison.Ordinal)
-	{
-		var genericStaticMethod = this.Methods
-			.If(method => method.Static && method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(parameters))
-			.First();
-		genericStaticMethod.AssertNotNull();
-		return genericStaticMethod.Invoke(genericTypes, parameters);
+		return genericMethod.Invoke(genericTypes, arguments);
 	}
 
 	/// <summary>

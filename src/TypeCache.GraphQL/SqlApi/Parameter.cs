@@ -2,7 +2,7 @@
 
 using TypeCache.GraphQL.Attributes;
 
-namespace TypeCache.GraphQL.SQL;
+namespace TypeCache.GraphQL.SqlApi;
 
 public class Parameter
 {

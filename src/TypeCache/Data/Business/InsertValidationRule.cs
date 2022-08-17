@@ -18,35 +18,35 @@ internal class InsertValidationRule : IValidationRule<InsertCommand>
 		this._SchemaRule = rule;
 	}
 
-	public IEnumerable<string> Validate(InsertCommand request)
+	public IEnumerable<string> Validate(InsertCommand command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.Table);
-			validator.AssertNotEmpty(request.Columns);
-			validator.AssertNotEmpty(request.Select);
-			validator.AssertEquals(request.Columns.Length, request.Select.Length);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.Table);
+			validator.AssertNotEmpty(command.Columns);
+			validator.AssertNotEmpty(command.Select);
+			validator.AssertEquals(command.Columns.Length, command.Select.Length);
 		}
 
 		if (validator.Success)
 		{
-			var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+			var schema = this._SchemaRule.ApplyAsync(new(command.DataSource, command.Table)).Result;
 			schema.Type.AssertEquals(ObjectType.Table);
 			if (validator.Success)
 			{
 				var schemaColumns = schema.Columns.Map(column => column.Name).ToArray();
-				validator.AssertEmpty(request.Columns.Without(schemaColumns));
+				validator.AssertEmpty(command.Columns.Without(schemaColumns));
 			}
 
 			if (validator.Success)
 			{
-				request.Table = schema.Name;
-				request.From = this._SchemaRule.ApplyAsync(new(request.DataSource, request.From)).Result.Name;
-				request.Columns = schema.Columns.If(column => request.Columns.Has(column.Name)).Map(column => column.Name).ToArray();
+				command.Table = schema.Name;
+				command.From = this._SchemaRule.ApplyAsync(new(command.DataSource, command.From)).Result.Name;
+				command.Columns = schema.Columns.If(column => command.Columns.Has(column.Name)).Map(column => column.Name).ToArray();
 			}
 		}
 

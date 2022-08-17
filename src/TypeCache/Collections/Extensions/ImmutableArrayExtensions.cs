@@ -108,7 +108,7 @@ public static class ImmutableArrayExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this ImmutableArray<T> @this, Func<T, V> map)
+	public static V[] Map<T, V>(this ImmutableArray<T> @this, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
@@ -116,12 +116,11 @@ public static class ImmutableArrayExtensions
 		var array = new V[count];
 		for (var i = 0; i < count; ++i)
 			array[i] = map(@this[i]);
-
 		return array;
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this ImmutableArray<T> @this, Func<T, int, V> map)
+	public static V[] Map<T, V>(this ImmutableArray<T> @this, Func<T, int, V> map)
 	{
 		map.AssertNotNull();
 
@@ -129,7 +128,6 @@ public static class ImmutableArrayExtensions
 		var array = new V[count];
 		for (var i = 0; i < count; ++i)
 			array[i] = map(@this[i], i);
-
 		return array;
 	}
 }

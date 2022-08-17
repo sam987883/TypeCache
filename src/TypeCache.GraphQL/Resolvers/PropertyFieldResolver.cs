@@ -7,7 +7,6 @@ using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 
@@ -31,16 +30,21 @@ public class PropertyFieldResolver<T> : IFieldResolver
 			ValueTask<T> task => await task,
 			_ => context.Source
 		};
-		//if (context.Source!.GetType().Is(typeof(Task<>)) || context.Source.GetType().Is(typeof(ValueTask<>)))
-		//	source = context.Source?.GetTypeMember().Properties["Result"].GetValue(context.Source);
 
-		var value = this._PropertyMember.GetValue(source);
+		var value = this._PropertyMember.GetValue(source!);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 
 		await Task.CompletedTask;
 
 		var format = context.GetArgument<string>("format");
+
+		//value = value switch
+		//{
+		//	true => context.GetArgument<string>("true"),
+		//	false => context.GetArgument<string>("false"),
+		//	_ => value
+		//};
 
 		if (value is DateTime dateTime)
 		{

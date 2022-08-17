@@ -566,7 +566,7 @@ public static class EnumerableExtensions
 	/// <paramref name="action"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="if"/> (@<paramref name="this"/>.Any())<br/>
-	///	<see langword="    "/><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(<paramref name="action"/>).ToArray(), <paramref name="token"/>);
+	///	<see langword="    "/><see cref="Task"/>.WaitAll(@<paramref name="this"/>.Map(<paramref name="action"/>).ToArray(), <paramref name="token"/>);
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -583,7 +583,7 @@ public static class EnumerableExtensions
 	/// <paramref name="action"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="if"/> (@<paramref name="this"/>.Any())<br/>
-	///	<see langword="    "/><see cref="Task"/>.WaitAll(@<paramref name="this"/>.To(item =&gt; <paramref name="action"/>>(item, <paramref name="token"/>)).ToArray(), <paramref name="token"/>);
+	///	<see langword="    "/><see cref="Task"/>.WaitAll(@<paramref name="this"/>.Map(item =&gt; <paramref name="action"/>>(item, <paramref name="token"/>)).ToArray(), <paramref name="token"/>);
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -600,7 +600,7 @@ public static class EnumerableExtensions
 	/// <paramref name="action"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="if"/> (@<paramref name="this"/>.Any())<br/>
-	///	<see langword="    "/>@<paramref name="this"/>.To(item =&gt; <paramref name="action"/>(item, <paramref name="token"/>)).AllAsync&gt;<typeparamref name="T"/>&lt;();
+	///	<see langword="    "/>@<paramref name="this"/>.Map(item =&gt; <paramref name="action"/>(item, <paramref name="token"/>)).AllAsync&gt;<typeparamref name="T"/>&lt;();
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -617,7 +617,7 @@ public static class EnumerableExtensions
 	/// <paramref name="action"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="if"/> (@<paramref name="this"/>.Any())<br/>
-	///	<see langword="    "/>@<paramref name="this"/>.To(<paramref name="action"/>).AllAsync&gt;<typeparamref name="T"/>&lt;();
+	///	<see langword="    "/>@<paramref name="this"/>.Map(<paramref name="action"/>).AllAsync&gt;<typeparamref name="T"/>&lt;();
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -926,9 +926,9 @@ public static class EnumerableExtensions
 	/// <code>
 	/// <paramref name="keyFactory"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// (<typeparamref name="K"/> Key, <typeparamref name="V"/> Value)[] items = @<paramref name="this"/>.To(item =&gt; (<paramref name="keyFactory"/>(item), item)).ToArray();<br/>
-	/// <see langword="var"/> keys = items.To(_ =&gt; _.Key).ToHashSet(<paramref name="comparer"/>);<br/>
-	/// <see langword="return"/> keys.ToDictionary(key => items.If(_ =&gt; keys.Comparer.Equals(_.Key, key)).To(_ =&gt; _.Value));
+	/// (<typeparamref name="K"/> Key, <typeparamref name="V"/> Value)[] items = @<paramref name="this"/>.Map(item =&gt; (<paramref name="keyFactory"/>(item), item)).ToArray();<br/>
+	/// <see langword="var"/> keys = items.Map(_ =&gt; _.Key).ToHashSet(<paramref name="comparer"/>);<br/>
+	/// <see langword="return"/> keys.ToDictionary(key => items.If(_ =&gt; keys.Comparer.Equals(_.Key, key)).Map(_ =&gt; _.Value));
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -939,7 +939,7 @@ public static class EnumerableExtensions
 
 		(K Key, V Value)[] items = @this.Map(item => (keyFactory(item), item)).ToArray();
 		var keys = items.Map(_ => _.Key).ToHashSet(comparer);
-		return keys.ToDictionary(key => items.If(_ => keys.Comparer.Equals(_.Key, key)).Map(_ => _.Value));
+		return keys.ToDictionary(key => items.If(_ => keys.Comparer.Equals(_.Key, key)).Map(_ => _.Value).AsEnumerable());
 	}
 
 	/// <summary>
@@ -1183,25 +1183,29 @@ public static class EnumerableExtensions
 
 	/// <summary>
 	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	///	<see langword="    null"/> =&gt; noGet(<see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/><see cref="IList{T}"/> list =&gt; list.IfGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/><see cref="IReadOnlyList{T}"/> readOnlyList =&gt; readOnlyList.IfGet(<paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="index"/>.IsFromEnd =&gt; <see cref="Enumerable{T}"/>.IfGet(@<paramref name="this"/>, <paramref name="index"/>.FromStart(@<paramref name="this"/>.Count()).Value, <see langword="out"/> <paramref name="item"/>),<br/>
-	///	<see langword="    "/>_ =&gt; ifGet(@<paramref name="this"/>, <paramref name="index"/>.Value, <see langword="out"/> <paramref name="item"/>)<br/>
-	/// };<br/>
+	/// <see langword="    return"/> @<paramref name="this"/> <see langword="switch"/><br/>
+	/// <see langword="    "/>{<br/>
+	///	<see langword="        null"/> =&gt; noGet(<see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="        "/><see cref="IList{T}"/> list <see langword="when"/> list.Count &gt; <paramref name="index"/>.Value =&gt; getListItem(list, <paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="        "/><see cref="IReadOnlyList{T}"/> readOnlyList <see langword="when"/> readOnlyList.Count &gt; <paramref name="index"/>.Value =&gt; getReadOnlyListItem(readOnlyList, <paramref name="index"/>, <see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="        "/><see cref="IList{T}"/> <see langword="or"/> <see cref="IReadOnlyList{T}"/> =&gt; noGet(<see langword="out"/> <paramref name="item"/>),<br/>
+	///	<see langword="        "/>_ =&gt; ifGet(@<paramref name="this"/>, <paramref name="index"/>, <see langword="out"/> <paramref name="item"/>)<br/>
+	/// <see langword="    "/>};<br/>
 	/// <br/>
-	/// <see langword="static bool"/> ifGet(<see cref="IEnumerable{T}"/> enumerable, <see cref="Index"/> index, <see langword="out"/> <typeparamref name="T"/>? item)<br/>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = enumerable.GetEnumerator();<br/>
-	/// <see langword="    return"/> enumerator.IfGet(index, <see langword="out"/> item);<br/>
-	/// }<br/>
+	/// <see langword="    static bool"/> ifGet(<see cref="IEnumerable{T}"/> enumerable, <see cref="Index"/> index, <see langword="out"/> <typeparamref name="T"/>? item)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (index.IsFromEnd)<br/>
+	/// <see langword="            "/>index = index.FromStart(enumerable.Count()).Value;<br/>
+	/// <see langword="        using var"/> enumerator = enumerable.GetEnumerator();<br/>
+	/// <see langword="        return"/> enumerator.IfGet(index, <see langword="out"/> item);<br/>
+	/// <see langword="    "/>}<br/>
 	/// <br/>
-	/// <see langword="static bool"/> noGet(<see langword="out"/> <typeparamref name="T"/>? item)<br/>
-	/// {<br/>
-	/// <see langword="    "/>item = <see langword="default"/>;<br/>
-	/// <see langword="    return false"/>;<br/>
+	/// <see langword="    static bool"/> noGet(<see langword="out"/> <typeparamref name="T"/>? item)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        "/>item = <see langword="default"/>;<br/>
+	/// <see langword="        return false"/>;<br/>
+	/// <see langword="    "/>}<br/>
 	/// }
 	/// </code>
 	/// </summary>
@@ -1212,14 +1216,28 @@ public static class EnumerableExtensions
 		return @this switch
 		{
 			null => noGet(out item),
-			IList<T> list => list.IfGet(index, out item),
-			IReadOnlyList<T> readOnlyList => readOnlyList.IfGet(index, out item),
-			_ when index.IsFromEnd => ifGet(@this, index.FromStart(@this.Count()).Value, out item),
-			_ => ifGet(@this, index.Value, out item)
+			IList<T> list when list.Count > index.Value => getListItem(list, index, out item),
+			IReadOnlyList<T> readOnlyList when readOnlyList.Count > index.Value => getReadOnlyListItem(readOnlyList, index, out item),
+			IList<T> or IReadOnlyList<T> => noGet(out item),
+			_ => ifGet(@this, index, out item)
 		};
+
+		static bool getListItem(IList<T> list, Index index, out T? item)
+		{
+			item = list[index];
+			return true;
+		}
+
+		static bool getReadOnlyListItem(IReadOnlyList<T> readOnlyList, Index index, out T? item)
+		{
+			item = readOnlyList[index];
+			return true;
+		}
 
 		static bool ifGet(IEnumerable<T> enumerable, Index index, out T? item)
 		{
+			if (index.IsFromEnd)
+				index = index.FromStart(enumerable.Count()).Value;
 			using var enumerator = enumerable.GetEnumerator();
 			return enumerator.IfGet(index.Value, out item);
 		}
@@ -1466,16 +1484,17 @@ public static class EnumerableExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
+	public static V[] Map<T, V>(this IEnumerable<T>? @this, Func<T, V> map)
 	{
+		map.AssertNotNull();
+
 		return @this switch
 		{
 			null => Array<V>.Empty,
-			T[] array => array.Map(map),
-			ImmutableArray<T> immutableArray => immutableArray.Map(map),
-			IList<T> list => list.Map(map),
-			IReadOnlyList<T> readOnlyList => readOnlyList.Map(map),
-			_ => each(@this, map)
+			T[] array when array.Length > 0 => array.Map(map),
+			ImmutableArray<T> immutableArray when immutableArray.Length > 0 => immutableArray.Map(map),
+			T[] or ImmutableArray<T> => Array<V>.Empty,
+			_ => each(@this, map).ToArray()
 		};
 
 		static IEnumerable<V> each(IEnumerable<T> enumerable, Func<T, V> map)
@@ -1506,16 +1525,17 @@ public static class EnumerableExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
+	public static V[] Map<T, V>(this IEnumerable<T>? @this, Func<T, int, V> map)
 	{
+		map.AssertNotNull();
+
 		return @this switch
 		{
 			null => Array<V>.Empty,
-			T[] array => array.Map(map),
-			ImmutableArray<T> immutableArray => immutableArray.Map(map),
-			IList<T> list => list.Map(map),
-			IReadOnlyList<T> readOnlyList => readOnlyList.Map(map),
-			_ => each(@this, map)
+			T[] array when array.Length > 0 => array.Map(map),
+			ImmutableArray<T> immutableArray when immutableArray.Length > 0 => immutableArray.Map(map),
+			T[] or ImmutableArray<T> => Array<V>.Empty,
+			_ => each(@this, map).ToArray()
 		};
 
 		static IEnumerable<V> each(IEnumerable<T> enumerable, Func<T, int, V> map)
@@ -1804,7 +1824,7 @@ public static class EnumerableExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Get(<paramref name="count"/>..^0));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IEnumerable<T> Skip<T>(this IEnumerable<T> @this, int count)
+	public static IEnumerable<T> Skip<T>(this IEnumerable<T>? @this, int count)
 		=> @this.Get(count..^0);
 
 	/// <summary>
@@ -1839,7 +1859,7 @@ public static class EnumerableExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IEnumerable<T> SkipWhile<T>(this IEnumerable<T> @this, Predicate<T> skip)
+	public static IEnumerable<T> SkipWhile<T>(this IEnumerable<T>? @this, Predicate<T> skip)
 	{
 		skip.AssertNotNull();
 
@@ -1918,7 +1938,7 @@ public static class EnumerableExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Get(0..<paramref name="count"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IEnumerable<T> Take<T>(this IEnumerable<T> @this, int count)
+	public static IEnumerable<T> Take<T>(this IEnumerable<T>? @this, int count)
 		=> @this.Get(0..count);
 
 	/// <summary>
@@ -2023,7 +2043,7 @@ public static class EnumerableExtensions
 	/// <code>
 	/// <paramref name="map"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="return"/> @<paramref name="this"/>.To(<paramref name="map"/>).ToCsv();
+	/// <see langword="return"/> @<paramref name="this"/>.Map(<paramref name="map"/>).ToCsv();
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -2077,7 +2097,7 @@ public static class EnumerableExtensions
 	/// <paramref name="valueFactory"/>.AssertNotNull();<br/>
 	/// <br/>
 	/// <see langword="var"/> dictionary = <see langword="new"/> Dictionary&lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt;(@<paramref name="this"/>.Count(), <paramref name="comparer"/>);<br/>
-	/// @<paramref name="this"/>?.Do(value =&gt; dictionary.Add(<paramref name="keyFactory"/>(value), <paramref name="valueFactory"/>(value)));<br/>
+	/// @<paramref name="this"/>.Do(value =&gt; dictionary.Add(<paramref name="keyFactory"/>(value), <paramref name="valueFactory"/>(value)));<br/>
 	/// <see langword="return"/> dictionary;
 	/// </code>
 	/// </summary>
@@ -2089,12 +2109,12 @@ public static class EnumerableExtensions
 		valueFactory.AssertNotNull();
 
 		var dictionary = new Dictionary<K, V>(@this.Count(), comparer);
-		@this?.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
+		@this.Do(value => dictionary.Add(keyFactory(value), valueFactory(value)));
 		return dictionary;
 	}
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(tuple =&gt; <see cref="KeyValuePair"/>.Create(tuple.Item1, tuple.Item2)).ToDictionary(<paramref name="comparer"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(tuple =&gt; <see cref="KeyValuePair"/>.Create(tuple.Item1, tuple.Item2)).ToDictionary(<paramref name="comparer"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IDictionary<K, V> ToDictionary<K, V>(this IEnumerable<Tuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
@@ -2102,7 +2122,7 @@ public static class EnumerableExtensions
 		=> @this.Map(tuple => KeyValuePair.Create(tuple.Item1, tuple.Item2)).ToDictionary(comparer);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(tuple =&gt; <see cref="KeyValuePair"/>.Create(tuple.Item1, tuple.Item2)).ToDictionary(<paramref name="comparer"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(tuple =&gt; <see cref="KeyValuePair"/>.Create(tuple.Item1, tuple.Item2)).ToDictionary(<paramref name="comparer"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IDictionary<K, V> ToDictionary<K, V>(this IEnumerable<ValueTuple<K, V>>? @this, IEqualityComparer<K>? comparer = null)
@@ -2270,7 +2290,7 @@ public static class EnumerableExtensions
 		=> new List<T>(@this ?? Array<T>.Empty);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(<paramref name="map"/>).Gather();</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(<paramref name="map"/>).Gather();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<V> ToMany<T, V>(this IEnumerable<T>? @this, Func<T, IEnumerable<V>> map)

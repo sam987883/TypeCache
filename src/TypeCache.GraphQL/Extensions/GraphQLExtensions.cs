@@ -12,7 +12,7 @@ using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
-using TypeCache.GraphQL.SQL;
+using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -31,7 +31,6 @@ public static class GraphQLExtensions
 	/// <param name="pager">The Pager used to retrieve the record set.</param>
 	/// <returns>The <see cref="Connection{T}"/>.</returns>
 	public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, Pager pager)
-		where T : class
 	{
 		var items = data.ToArray();
 		var start = pager.After + 1;
@@ -107,29 +106,43 @@ public static class GraphQLExtensions
 			Type = @this.Return.GraphQLType()
 		};
 
-	internal static FieldType ToFieldType<T>(this MethodMember @this, SqlApiController<T> controller, string table)
-		where T : class, new()
-		=> new()
-		{
-			Arguments = @this.Parameters.ToQueryArguments(),
-			Name = string.Format(@this.GraphQLName(), table),
-			Description = string.Format(@this.GraphQLDescription() ?? string.Empty, table),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = new MethodFieldResolver(@this, controller),
-			Type = @this.Return.GraphQLType()
-		};
-
 	public static FieldType ToFieldType<T>(this PropertyMember @this)
 	{
 		var type = @this.GraphQLType(false);
 		var arguments = new QueryArguments();
 
-		if (type.Implements<ScalarGraphType>())
+		if (type.Implements<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
+		{
 			arguments.Add(new QueryArgument(type)
 			{
 				Name = "null",
 				Description = "Return this value instead of null."
 			});
+		}
+
+		if (@this.PropertyType.Implements<IFormattable>())
+		{
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "format",
+				Description = "Use .NET format specifiers to format the data."
+			});
+		}
+
+		if (@this.PropertyType.SystemType is SystemType.Boolean
+			|| @this.PropertyType.Is<Nullable<bool>>())
+		{
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "true",
+				Description = "Return this value when property value is true."
+			});
+			arguments.Add(new QueryArgument<StringGraphType>()
+			{
+				Name = "false",
+				Description = "Return this value when property value is false."
+			});
+		}
 
 		if (type.Is<DateTimeGraphType>() || type.Is<NonNullGraphType<DateTimeGraphType>>())
 		{
@@ -139,6 +152,7 @@ public static class GraphQLExtensions
 				Description = "Converts the DateTime value to the specified time zone which must be supported by .Net's TimeZoneInfo class.  Use a comma to separate `from,to` time zones otherwise UTC will be assumed for the from value."
 			});
 		}
+
 		if (type.Is<DateTimeOffsetGraphType>() || type.Is<NonNullGraphType<DateTimeOffsetGraphType>>())
 		{
 			arguments.Add(new QueryArgument<StringGraphType>()
@@ -150,33 +164,11 @@ public static class GraphQLExtensions
 		else if (type.Is<StringGraphType>()
 			|| type.Is<NonNullGraphType<StringGraphType>>())
 		{
-			if (@this.PropertyType.SystemType is SystemType.Boolean
-				|| @this.PropertyType.Is<Nullable<bool>>())
-			{
-				arguments.Add(new QueryArgument<StringGraphType>()
-				{
-					Name = "true",
-					Description = "Return this value when property value is true."
-				});
-				arguments.Add(new QueryArgument<StringGraphType>()
-				{
-					Name = "false",
-					Description = "Return this value when property value is false."
-				});
-			}
-
 			arguments.Add(new QueryArgument<GraphQLEnumType<StringCase>>()
 			{
 				Name = "case",
 				Description = "Convert string value to upper or lower case."
 			});
-
-			if (@this.PropertyType.Implements<IFormattable>())
-				arguments.Add(new QueryArgument<NonNullGraphType<StringGraphType>>()
-				{
-					Name = "format",
-					Description = "Use .NET format specifiers to format the data."
-				});
 
 			arguments.Add(new QueryArgument<IntGraphType>()
 			{

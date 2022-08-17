@@ -10,7 +10,7 @@ using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.SQL;
+using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;

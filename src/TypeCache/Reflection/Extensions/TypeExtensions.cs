@@ -255,6 +255,13 @@ public static class TypeExtensions
 		};
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.TypeHandle.GetTypeMember();<br/></c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static TypeMember GetTypeMember(this Type @this)
+		=> @this.TypeHandle.GetTypeMember();
+
+	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]

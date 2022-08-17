@@ -11,14 +11,14 @@ namespace TypeCache.Collections.Extensions;
 public static class EnumerableOfValueTaskExtensions
 {
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(_ =&gt; _.AsTask());</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(_ =&gt; _.AsTask());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<Task> ToTasks(this IEnumerable<ValueTask> @this)
 		=> @this.Map(_ => _.AsTask());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.To(_ =&gt; _.AsTask());</c>
+	/// <c>=&gt; @<paramref name="this"/>.Map(_ =&gt; _.AsTask());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static IEnumerable<Task<T>> ToTasks<T>(this IEnumerable<ValueTask<T>> @this)

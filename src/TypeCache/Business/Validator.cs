@@ -14,22 +14,20 @@ public readonly struct Validator
 {
 	private const string NULL = "null";
 
-	private readonly List<string> _Fails;
-
 	public Validator()
 	{
-		this._Fails = new();
+		this.Fails = new();
 	}
 
-	public IReadOnlyCollection<string> Fails => this._Fails;
+	public List<string> Fails { get; }
 
-	public bool Success => !this._Fails.Any();
+	public bool Success => !this.Fails.Any();
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (<paramref name="items"/>.Any())<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is not empty.");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is not empty.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -38,14 +36,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (items.Any())
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is not empty."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is not empty."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (!<see cref="EqualityComparer{T}.Default"/>.Equals(<paramref name="value1"/>, <paramref name="value2"/>))<br/>
-	///	<see langword="        this"/>._Fails.Add(Invariant($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument1"/>} ({<paramref name="value1"/>}) &lt;&gt; {<paramref name="argument2"/>} ({<paramref name="value2"/>})."));<br/>
+	///	<see langword="        this"/>.Fails.Add(Invariant($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument1"/>} ({<paramref name="value1"/>}) &lt;&gt; {<paramref name="argument2"/>} ({<paramref name="value2"/>})."));<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -56,7 +54,7 @@ public readonly struct Validator
 		where T : struct
 	{
 		if (!EqualityComparer<T>.Default.Equals(value1, value2))
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument1} ({value1}) <> {argument2} ({value2})."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument1} ({value1}) <> {argument2} ({value2})."));
 	}
 
 	/// <summary>
@@ -69,7 +67,7 @@ public readonly struct Validator
 	/// <see langword="        "/>_ =&gt; <see langword="null"/><br/>
 	/// <see langword="    "/>};<br/>
 	/// <see langword="    if"/> (message <see langword="is not null"/>)<br/>
-	///	<see langword="        this"/>._Fails.Add(message);
+	///	<see langword="        this"/>.Fails.Add(message);
 	///	}
 	/// </code>
 	/// </summary>
@@ -86,14 +84,14 @@ public readonly struct Validator
 			_ => null
 		};
 		if (message is not null)
-			this._Fails.Add(message);
+			this.Fails.Add(message);
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (!<paramref name="comparison"/>.ToStringComparer().Equals(<paramref name="value1"/>, <paramref name="value2"/>))<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {caller} ({<paramref name="comparison"/>.Name()}) ---&gt; {<paramref name="argument1"/>} ({<paramref name="value1"/>?.ToString() ?? "null"}) &lt;&gt; {<paramref name="argument2"/>} ({<paramref name="value2"/>?.ToString() ?? "null"}).");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {caller} ({<paramref name="comparison"/>.Name()}) ---&gt; {<paramref name="argument1"/>} ({<paramref name="value1"/>?.ToString() ?? "null"}) &lt;&gt; {<paramref name="argument2"/>} ({<paramref name="value2"/>?.ToString() ?? "null"}).");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -104,14 +102,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (!comparison.ToStringComparer().Equals(value1, value2))
-			this._Fails.Add($"FAIL: {caller} ({comparison.Name()}) ---> {argument1} ({value1?.ToString() ?? NULL}) <> {argument2} ({value2?.ToString() ?? NULL}).");
+			this.Fails.Add($"FAIL: {caller} ({comparison.Name()}) ---> {argument1} ({value1?.ToString() ?? NULL}) <> {argument2} ({value2?.ToString() ?? NULL}).");
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (<paramref name="value"/>.IsBlank())<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is blank.");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is blank.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -120,14 +118,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (value.IsBlank())
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is blank."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is blank."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (!<paramref name="items"/>.Any())<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -136,14 +134,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (!items.Any())
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (!<paramref name="items"/>.Any())<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -152,14 +150,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (!items.Any())
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	///	<see langword="        this"/>._Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is null.");<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is null.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -168,14 +166,14 @@ public readonly struct Validator
 		, [CallerMemberName] string? caller = null)
 	{
 		if (value is null)
-			this._Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {NULL}."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {NULL}."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    if"/> (<see cref="object"/>.ReferenceEquals(<paramref name="value1"/>, <paramref name="value2"/>))<br/>
-	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="value1"/>?.ToString() ?? "null"}.{<see langword="nameof"/>(AssertNotSame)}({<paramref name="value2"/>?.ToString() ?? "null"})."));<br/>
+	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="value1"/>?.ToString() ?? NULL} == {<paramref name="value2"/>?.ToString() ?? NULL}.");<br/>
 	///	}
 	/// </code>
 	/// </summary>
@@ -184,6 +182,24 @@ public readonly struct Validator
 		[CallerMemberName] string? caller = null)
 	{
 		if (object.ReferenceEquals(value1, value2))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {value1?.ToString() ?? NULL}.{nameof(AssertNotSame)}({value2?.ToString() ?? NULL})."));
+			this.Fails.Add(Invariant($"FAIL: {caller} ---> {value1?.ToString() ?? NULL} == {value2?.ToString() ?? NULL}."));
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (<paramref name="error"/> <see langword="is"/> <see cref="ValidationException"/> validationException)<br/>
+	///	<see langword="        this"/>.Fails.AddRange(validationException.ValidationMessages);<br/>
+	/// <see langword="    else"/><br/>
+	///	<see langword="        this"/>.Fails.Add(<paramref name="error"/>.Message);<br/>
+	///	}
+	/// </code>
+	/// </summary>
+	public void IncludeError(Exception error)
+	{
+		if (error is ValidationException validationException)
+			this.Fails.AddRange(validationException.ValidationMessages);
+		else
+			this.Fails.Add(error.Message);
 	}
 }

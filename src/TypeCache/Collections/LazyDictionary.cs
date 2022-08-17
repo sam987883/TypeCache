@@ -52,7 +52,7 @@ public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
-		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
+		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).AsEnumerable().GetEnumerator();
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	IEnumerator IEnumerable.GetEnumerator()

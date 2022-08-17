@@ -21,17 +21,6 @@ public sealed class GraphQLObjectType<T> : GraphQLComplexType, IObjectGraphType
 		this._DataLoader = dataLoader;
 		this.Interfaces = new();
 		this.ResolvedInterfaces = new();
-
-		this.Description = TypeOf<T>.Member.GraphQLDescription();
-		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
-
-		TypeOf<T>.Properties
-			.If(property => property.Getter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property.ToFieldType<T>()));
-
-		TypeOf<T>.InterfaceTypes
-			.If(type => type.ElementType is null && !type.GenericHandle.HasValue)
-			.Do(type => this.Interfaces.Add(type));
 	}
 
 	public Func<object, bool>? IsTypeOf { get; set; }
@@ -47,5 +36,19 @@ public sealed class GraphQLObjectType<T> : GraphQLComplexType, IObjectGraphType
 
 		// this.ResolvedInterfaces.Add(graphType);
 		TypeOf<ResolvedInterfaces>.InvokeMethod("Add", this.ResolvedInterfaces, graphType);
+	}
+
+	public override void Initialize(ISchema schema)
+	{
+		this.Description = TypeOf<T>.Member.GraphQLDescription();
+		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
+
+		TypeOf<T>.Properties
+			.If(property => property.Getter is not null && !property.GraphQLIgnore())
+			.Do(property => this.AddField(property.ToFieldType<T>()));
+
+		TypeOf<T>.InterfaceTypes
+			.If(type => type.ElementType is null && !type.GenericHandle.HasValue)
+			.Do(type => this.Interfaces.Add(type));
 	}
 }

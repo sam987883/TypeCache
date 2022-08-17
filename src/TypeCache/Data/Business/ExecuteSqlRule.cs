@@ -20,6 +20,8 @@ internal class ExecuteSqlRule : IRule<SqlCommand, object>
 	public async ValueTask<object> ApplyAsync(SqlCommand request, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return request.ReadData is not null
 			? await connection.ExecuteAsync(request, request.ReadData, token)
 			: await connection.ExecuteAsync(request, token);

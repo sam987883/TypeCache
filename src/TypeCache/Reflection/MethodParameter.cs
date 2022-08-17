@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -28,10 +29,10 @@ public readonly struct MethodParameter : IEquatable<MethodParameter>
 		this.IsOptional = parameterInfo.IsOptional;
 		this.IsOut = parameterInfo.IsOut;
 		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? parameterInfo.Name ?? string.Empty;
-		this.Type = parameterInfo.ParameterType.GetTypeMember();
+		this.TypeHandle = parameterInfo.ParameterType.TypeHandle;
 	}
 
-	public IImmutableList<Attribute> Attributes { get; }
+	public IReadOnlyList<Attribute> Attributes { get; }
 
 	public object? DefaultValue { get; }
 
@@ -43,8 +44,11 @@ public readonly struct MethodParameter : IEquatable<MethodParameter>
 
 	public string Name { get; }
 
-	public TypeMember Type { get; }
+	public TypeMember Type => this.TypeHandle.GetTypeMember();
 
+	public RuntimeTypeHandle TypeHandle { get; }
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(MethodParameter other)
 		=> this._MethodHandle == other._MethodHandle && this.Name.Is(other.Name);
 

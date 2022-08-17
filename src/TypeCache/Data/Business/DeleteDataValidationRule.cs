@@ -23,41 +23,41 @@ internal class DeleteDataValidationRule<T> : IValidationRule<DeleteDataCommand<T
 		this._SchemaRule = rule;
 	}
 
-	public IEnumerable<string> Validate(DeleteDataCommand<T> request)
+	public IEnumerable<string> Validate(DeleteDataCommand<T> command)
 	{
 		var validator = new Validator();
-		validator.AssertNotNull(request);
+		validator.AssertNotNull(command);
 		if (validator.Success)
 		{
-			validator.AssertNotBlank(request.DataSource);
-			validator.AssertNotBlank(request.Table);
+			validator.AssertNotBlank(command.DataSource);
+			validator.AssertNotBlank(command.Table);
 		}
 
-		var schema = this._SchemaRule.ApplyAsync(new(request.DataSource, request.Table)).Result;
+		var schema = this._SchemaRule.ApplyAsync(new(command.DataSource, command.Table)).Result;
 		validator.AssertEquals(schema.Type, ObjectType.Table);
 		if (validator.Success)
 		{
-			validator.AssertNotEmpty(request.Input);
-			validator.AssertEquals(request.Input.Any(row => row is null), false);
+			validator.AssertNotEmpty(command.Input);
+			validator.AssertEquals(command.Input.Any(row => row is null), false);
 
-			request.Table = schema.Name;
-			request.PrimaryKeys = schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name).ToArray();
+			command.Table = schema.Name;
+			command.PrimaryKeys = schema.Columns.If(column => column.PrimaryKey).Map(column => column.Name).ToArray();
 		}
 
 		if (validator.Success)
 		{
 			var type = TypeOf<T>.Member;
 			if (type.SystemType is SystemType.Tuple || type.SystemType is SystemType.ValueTuple)
-				validator.AssertEquals(request.Input.All(row => ((ITuple)row!).Length == request.PrimaryKeys.Length), true);
+				validator.AssertEquals(command.Input.All(row => ((ITuple)row!).Length == command.PrimaryKeys.Length), true);
 			else if (type.SystemType is SystemType.IDictionary || type.SystemType is SystemType.Dictionary)
 			{
-				validator.AssertEquals(request.Input.If<IDictionary<string, object?>>().Count(), request.PrimaryKeys.Length);
-				validator.AssertEquals(request.Input.If<IDictionary<string, object?>>().All(row => request.PrimaryKeys.All(row.ContainsKey)), true);
+				validator.AssertEquals(command.Input.If<IDictionary<string, object?>>().Count(), command.PrimaryKeys.Length);
+				validator.AssertEquals(command.Input.If<IDictionary<string, object?>>().All(row => command.PrimaryKeys.All(row.ContainsKey)), true);
 			}
-			else if (!type.SystemType.IsSQLType() && request.PrimaryKeys.Length == 1)
-				validator.AssertEquals(type.Properties.Any(_ => _.Name.Is(request.PrimaryKeys[0])), true);
+			else if (!type.SystemType.IsSQLType() && command.PrimaryKeys.Length == 1)
+				validator.AssertEquals(type.Properties.Any(_ => _.Name.Is(command.PrimaryKeys[0])), true);
 			else
-				validator.AssertEquals(request.PrimaryKeys.All(primaryKey => type.Properties.Any(_ => _.Name.Is(primaryKey))), true);
+				validator.AssertEquals(command.PrimaryKeys.All(primaryKey => type.Properties.Any(_ => _.Name.Is(primaryKey))), true);
 		}
 
 		return validator.Fails;

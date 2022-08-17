@@ -74,7 +74,7 @@ public class SelectCommand : Command
 	/// JSON: <c>"WITH(NOLOCK)"</c><br/>
 	/// SQL: <c>FROM [Database1]..[Table1] WITH(NOLOCK)</c>
 	/// </summary>
-	public string TableHints { get; set; } = "WITH(NOLOCK)";
+	public string TableHints { get; set; } = string.Empty;
 
 	/// <summary>
 	/// SQL: <c>SELECT TOP (100)</c>
@@ -109,7 +109,7 @@ public class SelectCommand : Command
 		{
 			sqlBuilder
 				.AppendSQL("SELECT", "COUNT(*) AS [RowCount]")
-				.AppendSQL("FROM", this.From, this.TableHints ?? "WITH(NOLOCK)")
+				.AppendSQL("FROM", this.From, this.TableHints)
 				.AppendSQL("WHERE", this.Where)
 				.AppendStatementEndSQL()
 				.AppendLine();
@@ -130,7 +130,7 @@ public class SelectCommand : Command
 
 		sqlBuilder
 			.AppendSQL(string.Empty, this.Select.Any() ? this.Select : new[] { "*" })
-			.AppendSQL("FROM", this.From, this.TableHints ?? "WITH(NOLOCK)")
+			.AppendSQL("FROM", this.From, this.TableHints)
 			.AppendSQL("WHERE", this.Where)
 			.AppendSQL("GROUP BY", this.GroupBy)
 			.AppendSQL("HAVING", this.Having)
@@ -142,7 +142,7 @@ public class SelectCommand : Command
 		{
 			sqlBuilder.AppendLine()
 				.AppendSQL("SELECT", "@RowCount = COUNT_BIG(1)")
-				.AppendSQL("FROM", this.From, "WITH(NOLOCK)")
+				.AppendSQL("FROM", this.From, this.TableHints)
 				.AppendSQL("WHERE", this.Where)
 				.AppendStatementEndSQL();
 		}

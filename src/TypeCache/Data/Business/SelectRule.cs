@@ -21,6 +21,8 @@ internal class SelectRule<T> : IRule<SelectCommand, RowSetResponse<T>>, IRule<Se
 	async ValueTask<RowSetResponse<T>> IRule<SelectCommand, RowSetResponse<T>>.ApplyAsync(SelectCommand request, CancellationToken token)
 	{
 		await using var connection = this._DataSourceAccessor[request.DataSource].CreateDbConnection();
+		await connection.OpenAsync(token);
+
 		return await connection.SelectAsync<T>(request, token);
 	}
 

@@ -104,7 +104,7 @@ public static class JsonExtensions
 	{
 		if (value is not null)
 		{
-			switch (value.GetTypeMember().SystemType)
+			switch (value.GetTypeMember()!.SystemType)
 			{
 				case SystemType.DBNull:
 					@this.WriteNullValue();

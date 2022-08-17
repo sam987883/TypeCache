@@ -70,7 +70,7 @@ public class DataSource : IEquatable<DataSource>
 			DataSource = connection.DataSource,
 			ReadData = async (reader, token) =>
 			{
-				var objectSchemaModel = await reader.ReadRowsAsync<ObjectSchemaModel>().FirstAsync(token);
+				var objectSchemaModel = (await reader.ReadRowsAsync<ObjectSchemaModel>(1, token)).First();
 				if (objectSchemaModel is null)
 					return null!;
 
@@ -78,14 +78,14 @@ public class DataSource : IEquatable<DataSource>
 				{
 					var count = await reader.GetFieldValueAsync<int>(0, token);
 					if (await reader.NextResultAsync(token))
-						objectSchemaModel!.Columns = await reader.ReadRowsAsync<ColumnSchemaModel>().ToArrayAsync(count, token);
+						objectSchemaModel!.Columns = await reader.ReadRowsAsync<ColumnSchemaModel>(count, token);
 				}
 
 				if (await reader.NextResultAsync(token) && await reader.ReadAsync(token))
 				{
 					var count = await reader.GetFieldValueAsync<int>(0, token);
 					if (await reader.NextResultAsync(token))
-						objectSchemaModel!.Parameters = await reader.ReadRowsAsync<ParameterSchemaModel>().ToArrayAsync(count, token);
+						objectSchemaModel!.Parameters = await reader.ReadRowsAsync<ParameterSchemaModel>(count, token);
 				}
 
 				return objectSchemaModel!;

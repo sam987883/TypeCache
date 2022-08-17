@@ -1,18 +1,18 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.Types;
 
-namespace TypeCache.GraphQL.SQL;
+namespace TypeCache.GraphQL.SqlApi;
 
-[GraphQLDescription("Paged SQL response for an object of type `{0}`.")]
-public class SqlPagedResponse<T>
+[GraphQLDescription("SQL response for an object of type `{0}`.")]
+public class InsertResponse<T>
 {
-	public Connection<T>? Data { get; set; }
+	public long Count { get; set; }
 
 	public string DataSource { get; set; } = string.Empty;
+
+	public T[] Inserted { get; set; } = Array<T>.Empty;
 
 	public string Sql { get; set; } = string.Empty;
 

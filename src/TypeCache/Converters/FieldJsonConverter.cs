@@ -23,7 +23,7 @@ public class FieldJsonConverter<T> : JsonConverter<T?>
 				if (reader.Read())
 				{
 					var field = TypeOf<T>.Fields.If(_ => _.Name.Is(name)).First();
-					if (field is not null && !field.Static && field.Setter is not null)
+					if (field is not null && !field.Static && field.SetMethod is not null)
 						field.SetValue(output, reader.TokenType switch
 						{
 							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
@@ -43,7 +43,7 @@ public class FieldJsonConverter<T> : JsonConverter<T?>
 		if (input is not null)
 		{
 			writer.WriteStartObject();
-			TypeOf<T>.Fields.If(field => !field.Static && field!.Getter is not null).Do(field =>
+			TypeOf<T>.Fields.If(field => !field.Static && field!.GetMethod is not null).Do(field =>
 			{
 				writer.WritePropertyName(field!.Name);
 				var value = field.GetValue(input);

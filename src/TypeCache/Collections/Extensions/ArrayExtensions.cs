@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -50,6 +51,14 @@ public static class ArrayExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static async Task<Task<T>> AnyAsync<T>(this Task<T>[] @this)
 		=> await Task.WhenAny(@this);
+
+	/// <inheritdoc cref="Task.WhenAny{TResult}(Task{TResult}[])"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="IEnumerable{T}"/>;</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static IEnumerable<T> AsEnumerable<T>([NotNullIfNotNull("this")] this T[] @this)
+		=> @this as IEnumerable<T>;
 
 	/// <inheritdoc cref="Array.Clear(Array, int, int)"/>
 	/// <remarks>
@@ -299,7 +308,7 @@ public static class ArrayExtensions
 		=> @this.GetUpperBound(dimension) - @this.GetLowerBound(dimension);
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this T[]? @this, Func<T, int, V> map)
+	public static V[] Map<T, V>(this T[]? @this, Func<T, int, V> map)
 	{
 		map.AssertNotNull();
 
@@ -316,7 +325,7 @@ public static class ArrayExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<V> Map<T, V>(this T[]? @this, Func<T, V> map)
+	public static V[] Map<T, V>(this T[]? @this, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
@@ -330,24 +339,6 @@ public static class ArrayExtensions
 		}
 
 		return Array<V>.Empty;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<V> MapAsync<T, V>(this T[]? @this, Func<T, Task<V>> map, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		map.AssertNotNull();
-
-		if (@this?.Length > 0)
-		{
-			var count = @this.Length;
-			for (var i = 0; i < count; ++i)
-			{
-				if (token.IsCancellationRequested)
-					yield break;
-
-				yield return await map(@this![i]);
-			}
-		}
 	}
 
 	/// <inheritdoc cref="Array.Reverse{T}(T[])"/>

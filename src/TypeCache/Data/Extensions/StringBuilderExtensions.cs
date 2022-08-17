@@ -73,6 +73,6 @@ public static class StringBuilderExtensions
 			object[][] rows => rows.Map(row => Invariant($"({row.Map(value => value.ToSQL()).ToCSV()})")),
 			IDictionary<string, object?>[] rows => rows.Map(row => Invariant($"({columns.Map(column => row[column].ToSQL()).ToCSV()})")),
 			_ when input[0] is ITuple => ((ITuple[])(object)input).Map(row => Invariant($"({(0..row.Length).Map(i => row[i].ToSQL()).ToCSV()})")),
-			_ => input.Map(row => Invariant($"({columns.Map(column => TypeOf<T>.Properties.If(_ => _.Name.Is(column)).First()!.GetValue(row).ToSQL()).ToCSV()})"))
+			_ => input.Map(row => Invariant($"({columns.Map(column => TypeOf<T>.Properties.If(_ => _.Name.Is(column)).First()!.GetValue(row!).ToSQL()).ToCSV()})"))
 		});
 }

@@ -18,23 +18,22 @@ public readonly struct ReturnParameter : IEquatable<ReturnParameter>
 	{
 		this._MethodHandle = methodInfo.MethodHandle;
 		this.Attributes = methodInfo.ReturnParameter.GetCustomAttributes<Attribute>(true)?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
-		this.Type = methodInfo.ReturnType.GetTypeMember();
-		this.Void = this.Type.SystemType is SystemType.Void;
-		this.Task = this.Type.SystemType is SystemType.Task;
-		this.ValueTask = this.Type.SystemType is SystemType.ValueTask;
+		this.TypeHandle = methodInfo.ReturnType.TypeHandle;
 	}
 
 	private readonly RuntimeMethodHandle _MethodHandle;
 
 	public IImmutableList<Attribute> Attributes { get; }
 
-	public bool Task { get; }
+	public bool Task => this.Type.SystemType is SystemType.Task;
 
-	public TypeMember Type { get; }
+	public TypeMember Type => this.TypeHandle.GetTypeMember();
 
-	public bool ValueTask { get; }
+	public RuntimeTypeHandle TypeHandle { get; }
 
-	public bool Void { get; }
+	public bool ValueTask => this.Type.SystemType is SystemType.ValueTask;
+
+	public bool Void => this.Type.SystemType is SystemType.Void;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(ReturnParameter other)

@@ -19,17 +19,21 @@ public sealed class GraphQLInputType<T> : GraphQLComplexType, IInputObjectGraphT
 	public GraphQLInputType()
 		: base(TypeOf<T>.Member.GraphQLInputName())
 	{
+	}
+
+	public override void Initialize(ISchema schema)
+	{
 		this.Description = TypeOf<T>.Member.GraphQLDescription();
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
 		var properties = TypeOf<T>.Properties.If(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore());
 		properties.Do(property => this.AddField(new()
-			{
-				Type = property.GraphQLType(true),
-				Name = property.GraphQLName(),
-				Description = property.GraphQLDescription(),
-				DeprecationReason = property.GraphQLDeprecationReason(),
-			}));
+		{
+			Type = property.GraphQLType(true),
+			Name = property.GraphQLName(),
+			Description = property.GraphQLDescription(),
+			DeprecationReason = property.GraphQLDeprecationReason(),
+		}));
 	}
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
@@ -45,7 +49,7 @@ public sealed class GraphQLInputType<T> : GraphQLComplexType, IInputObjectGraphT
 			return value;
 
 		var item = TypeOf<T>.Create()!;
-		var mappedValues = value.ToDictionary(_ => TypeOf<T>.Properties.First(property => property.Name.Is(_.Key))!, _ => _.Value);
+		var mappedValues = value.ToDictionary(_ => TypeOf<T>.Properties.First(property => property.Name.Is(_.Key))!.Name, _ => _.Value);
 		item.MapProperties(mappedValues);
 		return item;
 	}

@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static System.FormattableString;
+using static System.Globalization.CultureInfo;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions;
@@ -274,34 +276,20 @@ public static class ExpressionExtensions
 	public static MethodCallExpression CallStatic(this Type @this, string method, Type[]? genericTypes, params Expression[]? arguments)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
+	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Cast(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Expression Cast<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Cast(typeof(T), overflowCheck);
 
+	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 	/// <remarks>
-	/// <c>=&gt; (@<paramref name="this"/>.Type.IsValueType, <paramref name="type"/>.IsValueType) <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>(<see langword="false"/>, <see langword="true"/>) =&gt; <see cref="Expression"/>.Unbox(@<paramref name="this"/>, <paramref name="type"/>),<br/>
-	/// <see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; <see cref="Expression"/>.TypeAs(@<paramref name="this"/>, <paramref name="type"/>),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Convert(<paramref name="type"/>, <paramref name="overflowCheck"/>)<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="type"/> == @<paramref name="this"/>.Type =&gt; @<paramref name="this"/>,<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="type"/>.Implements&lt;<see cref="IConvertible"/>&gt;() =&gt; <see langword="typeof"/>(<see cref="System.Convert"/>).CallStatic(<see langword="nameof"/>(<see cref="System.Convert"/>.ChangeType), <see cref="Type.EmptyTypes"/>, @<paramref name="this"/>, <paramref name="type"/>.Constant&lt;<see cref="Type"/>&gt;()).Cast(<paramref name="type"/>),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Cast(<paramref name="type"/>)<br/>
-	/// };</c>
+	/// <c>=&gt; <paramref name="overflowCheck"/> ? <see cref="Expression"/>.ConvertChecked(@<paramref name="this"/>, <paramref name="type"/>) : <see cref="Expression"/>.Convert(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	public static Expression Cast(this Expression @this, Type type, bool overflowCheck = false)
-		=> (@this.Type.IsValueType, type.IsValueType) switch
-		{
-			_ when @this.Type == type => @this,
-			(false, true) => Expression.Unbox(@this, type),
-			(true, true) when type.Implements<IConvertible>() => typeof(Convert).CallStatic(nameof(System.Convert.ChangeType), Type.EmptyTypes, @this.As<object>(), type.Constant<Type>()).Cast(type),
-			(true, true) when overflowCheck => Expression.ConvertChecked(@this, type),
-			(true, true) => Expression.Convert(@this, type),
-			_ => Expression.TypeAs(@this, type),
-		};
+	public static UnaryExpression Cast(this Expression @this, Type type, bool overflowCheck = false)
+		=> overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type);
 
 	/// <inheritdoc cref="Expression.Coalesce(Expression, Expression)"/>
 	/// <remarks>
@@ -336,7 +324,6 @@ public static class ExpressionExtensions
 	public static GotoExpression Continue(this LabelTarget @this, Type type)
 		=> Expression.Continue(@this, type);
 
-	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
 	/// </remarks>
@@ -344,12 +331,93 @@ public static class ExpressionExtensions
 	public static Expression Convert<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Convert(typeof(T), overflowCheck);
 
-	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 	/// <remarks>
-	/// <c>=&gt; <paramref name="overflowCheck"/> ? <see cref="Expression"/>.ConvertChecked(@<paramref name="this"/>, <paramref name="type"/>) : <see cref="Expression"/>.Convert(@<paramref name="this"/>, <paramref name="type"/>);</c>
+	/// <code>
+	/// =&gt; (@<paramref name="this"/>.Type.IsValueType, <paramref name="targetType"/>.IsValueType) <see langword="switch"/><br/>
+	/// {<br/>
+	///	<see langword="    "/>_ <see langword="when"/> <paramref name="targetType"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertToString", @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
+	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertToEnum", @@<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
+	/// <see langword="    "/>{ IsGenericType: <see langword="true"/> } <see langword="when"/> targetType.GetGenericTypeDefinition() == <see langword="typeof"/>(Nullable&lt;&gt;) =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertTo", <see langword="new"/>[] { <paramref name="targetType"/>.GenericTypeArguments[0] }, @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;(), <paramref name="targetType"/>.GenericTypeArguments[0].Constant(), <paramref name="overflowCheck"/>.Constant()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
+	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertTo", <see langword="new"/>[] { <paramref name="targetType"/> }, @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;(), <paramref name="targetType"/>.Constant(), <paramref name="overflowCheck"/>.Constant()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
+	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>)<br/>
+	/// };
+	/// </code>
 	/// </remarks>
-	public static UnaryExpression Convert(this Expression @this, Type type, bool overflowCheck = false)
-		=> overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type);
+	public static Expression Convert(this Expression @this, Type targetType, bool overflowCheck = false)
+		=> targetType switch
+		{
+			_ when targetType == typeof(string) => typeof(ExpressionExtensions).CallStatic(nameof(ExpressionExtensions.ConvertToString), @this.Cast<object>()).Cast(targetType, overflowCheck),
+			{ IsEnum: true } => typeof(ExpressionExtensions).CallStatic(nameof(ExpressionExtensions.ConvertToEnum), @this.Cast<object>(), targetType.Constant()).Cast(targetType, overflowCheck),
+			{ IsGenericType: true } when targetType.GetGenericTypeDefinition() == typeof(Nullable<>) => typeof(ExpressionExtensions).CallStatic(nameof(ExpressionExtensions.ConvertTo), new[] { targetType.GenericTypeArguments[0] }, @this.Cast<object>(), targetType.GenericTypeArguments[0].Constant(), overflowCheck.Constant()).Cast(targetType, overflowCheck),
+			{ IsValueType: true } => typeof(ExpressionExtensions).CallStatic(nameof(ExpressionExtensions.ConvertTo), new[] { targetType }, @this.Cast<object>(), targetType.Constant(), overflowCheck.Constant()).Cast(targetType, overflowCheck),
+			_ => @this.Cast(targetType, overflowCheck)
+		};
+
+	private static object? ConvertToSByte(object value, Type targetType, bool overflowCheck)
+		=> value switch
+		{
+			null or DBNull => null,
+			_ when targetType == value.GetType() => value,
+			Enum => ((IConvertible)value).ToSByte(InvariantCulture),
+			IConvertible convertible => System.Convert.ChangeType(value, targetType, InvariantCulture),
+			_ when overflowCheck => checked((sbyte)value),
+			_ => (sbyte)value,
+		};
+
+	private static object? ConvertTo<T>(object value, Type targetType, bool overflowCheck)
+		where T : struct
+		=> value switch
+		{
+			null or DBNull => null,
+			_ when targetType == value.GetType() => value,
+			Enum when targetType == typeof(sbyte) => ((IConvertible)value).ToSByte(InvariantCulture),
+			Enum when targetType == typeof(short) => ((IConvertible)value).ToInt16(InvariantCulture),
+			Enum when targetType == typeof(int) => ((IConvertible)value).ToInt32(InvariantCulture),
+			Enum when targetType == typeof(long) => ((IConvertible)value).ToInt64(InvariantCulture),
+			Enum when targetType == typeof(byte) => ((IConvertible)value).ToByte(InvariantCulture),
+			Enum when targetType == typeof(ushort) => ((IConvertible)value).ToUInt16(InvariantCulture),
+			Enum when targetType == typeof(uint) => ((IConvertible)value).ToUInt32(InvariantCulture),
+			Enum when targetType == typeof(ulong) => ((IConvertible)value).ToUInt64(InvariantCulture),
+			string text when targetType == typeof(DateTime) => DateTime.Parse(text, InvariantCulture),
+			IConvertible convertible when targetType.Implements<IConvertible>() => System.Convert.ChangeType(value, targetType, InvariantCulture),
+			string text when targetType == typeof(IntPtr) => IntPtr.Parse(text, InvariantCulture),
+			string text when targetType == typeof(UIntPtr) => UIntPtr.Parse(text, InvariantCulture),
+			string text when targetType == typeof(DateOnly) => DateOnly.Parse(text, InvariantCulture),
+			string text when targetType == typeof(DateTimeOffset) => DateTimeOffset.Parse(text, InvariantCulture),
+			string text when targetType == typeof(TimeOnly) => TimeOnly.Parse(text, InvariantCulture),
+			string text when targetType == typeof(TimeSpan) => TimeSpan.Parse(text, InvariantCulture),
+			string text when targetType == typeof(Guid) => Guid.Parse(text),
+			string text when targetType == typeof(Uri) => new Uri(text),
+			_ when overflowCheck => checked((T)value),
+			_ => (T)value,
+		};
+
+	private static object? ConvertToEnum(object value, Type targetType)
+		=> value switch
+		{
+			null or DBNull => null,
+			string text => Enum.Parse(targetType, text, true),
+			_ when value.GetType() == targetType => value,
+			_ when value.GetType() == Enum.GetUnderlyingType(targetType) => Enum.ToObject(targetType, value),
+			_ => throw new InvalidCastException(Invariant($"Type \"{value.GetType().Name}\" cannot be converted to {nameof(Enum)} type \"{targetType.Name}\".")),
+		};
+
+	private static object? ConvertToString(object value)
+		=> value switch
+		{
+			null or DBNull => null,
+			string => value,
+			Enum => Enum.GetName(value.GetType(), value),
+			Guid guid => guid.ToString("D", InvariantCulture),
+			DateOnly dateOnly => dateOnly.ToString("O", InvariantCulture),
+			DateTime dateTime => dateTime.ToString("O", InvariantCulture),
+			DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("O", InvariantCulture),
+			TimeOnly timeOnly => timeOnly.ToString("O", InvariantCulture),
+			TimeSpan timeSpan => timeSpan.ToString("O", InvariantCulture),
+			IFormattable formattable => formattable.ToString(null, InvariantCulture),
+			Uri uri => uri.ToString(),
+			_ => (string)value,
+		};
 
 	/// <inheritdoc cref="Expression.Default(Type)"/>
 	/// <remarks>
@@ -376,62 +444,46 @@ public static class ExpressionExtensions
 		=> Expression.Field(@this, name);
 
 	/// <remarks>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
+	/// <see langword="    var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
+	/// <see langword="    return"/> field.As&lt;<see cref="object"/>&gt;().Lambda&lt;<see cref="GetValue"/>&gt;(instance);<br/>
+	/// }
+	/// </code>
+	/// </remarks>
+	public static Expression<Func<object?, object?>> FieldGetInvoke(this FieldInfo @this)
+	{
+		ParameterExpression instance = nameof(instance).Parameter<object>();
+		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.StaticField();
+		return field.As<object>().Lambda<Func<object?, object?>>(instance);
+	}
+
+	/// <remarks>
 	/// <c>=&gt; !@<paramref name="this"/>.IsStatic
 	///	? LambdaFactory.Create(<see langword="new"/>[] { @<paramref name="this"/>.DeclaringType! }, parameters =&gt; parameters[0].Field(@<paramref name="this"/>))
 	///	: @<paramref name="this"/>.StaticField().Lambda();</c>
 	/// </remarks>
-	public static LambdaExpression FieldGetter(this FieldInfo @this)
+	public static LambdaExpression FieldGetMethod(this FieldInfo @this)
 		=> !@this.IsStatic
 			? LambdaFactory.Create(new[] { @this.DeclaringType! }, parameters => parameters[0].Field(@this))
 			: @this.StaticField().Lambda();
 
 	/// <remarks>
 	/// <code>
-	/// <see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <see langword="var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType!).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
-	/// <see langword="return"/> field.As&lt;<see cref="object"/>&gt;().Lambda&lt;<see cref="GetValue"/>&gt;(instance);
+	/// {<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.IsInitOnly.AssertEquals(<see langword="false"/>);<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.IsLiteral.AssertEquals(<see langword="false"/>);<br/>
+	/// <br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> value = <see langword="nameof"/>(value).Parameter&lt;<see cref="object"/>&gt;();<br/>
+	/// <br/>
+	/// <see langword="    var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
+	/// <see langword="    return"/> field.Assign(value.Convert(@<paramref name="this"/>.FieldType)).Lambda&lt;<see cref="SetValue"/>&gt;(instance, value);<br/>
+	/// }
 	/// </code>
 	/// </remarks>
-	public static Expression<GetValue> FieldGetValue(this FieldInfo @this)
-	{
-		ParameterExpression instance = nameof(instance).Parameter<object>();
-		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.StaticField();
-		return field.As<object>().Lambda<GetValue>(instance);
-	}
-
-	/// <remarks>
-	/// <code>
-	/// @<paramref name="this"/>.IsInitOnly.Assert(<see langword="false"/>);<br/>
-	/// @<paramref name="this"/>.IsLiteral.Assert(<see langword="false"/>);<br/>
-	/// <br/>
-	/// <see langword="return"/> !@<paramref name="this"/>.IsStatic<br/>
-	///	<see langword="    "/>? <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.DeclaringType!, @<paramref name="this"/>.FieldType }, parameters =&gt; parameters[0].Field(@<paramref name="this"/>).Assign(parameters[1]))<br/>
-	///	<see langword="    "/>: <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.FieldType }, parameters =&gt; @<paramref name="this"/>.StaticField().Assign(parameters[0]));<br/>
-	/// </code>
-	/// </remarks>
-	public static LambdaExpression FieldSetter(this FieldInfo @this)
-	{
-		@this.IsInitOnly.AssertEquals(false);
-		@this.IsLiteral.AssertEquals(false);
-
-		return !@this.IsStatic
-			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
-			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.StaticField().Assign(parameters[0]));
-	}
-
-	/// <remarks>
-	/// <code>
-	/// @<paramref name="this"/>.IsInitOnly.Assert(<see langword="false"/>);<br/>
-	/// @<paramref name="this"/>.IsLiteral.Assert(<see langword="false"/>);<br/>
-	/// <br/>
-	/// <see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <see cref="ParameterExpression"/> value = <see langword="nameof"/>(value).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <br/>
-	/// <see langword="var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType!).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
-	/// <see langword="return"/> field.Assign(value.SystemConvert(@<paramref name="this"/>.FieldType)).Lambda&lt;<see cref="SetValue"/>&gt;(instance, value);
-	/// </code>
-	/// </remarks>
-	public static Expression<SetValue> FieldSetValue(this FieldInfo @this)
+	public static Expression<Action<object?, object?>> FieldSetInvoke(this FieldInfo @this)
 	{
 		@this.IsInitOnly.AssertEquals(false);
 		@this.IsLiteral.AssertEquals(false);
@@ -439,8 +491,30 @@ public static class ExpressionExtensions
 		ParameterExpression instance = nameof(instance).Parameter<object>();
 		ParameterExpression value = nameof(value).Parameter<object>();
 
-		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.StaticField();
-		return field.Assign(value.Cast(@this.FieldType)).Lambda<SetValue>(instance, value);
+		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.StaticField();
+		return field.Assign(value.Convert(@this.FieldType)).Lambda<Action<object?, object?>>(instance, value);
+	}
+
+	/// <remarks>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.IsInitOnly.AssertEquals(<see langword="false"/>);<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.IsLiteral.AssertEquals(<see langword="false"/>);<br/>
+	/// <br/>
+	/// <see langword="    return"/> !@<paramref name="this"/>.IsStatic<br/>
+	///	<see langword="        "/>? <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.DeclaringType, @<paramref name="this"/>.FieldType }, parameters =&gt; parameters[0].Field(@<paramref name="this"/>).Assign(parameters[1]))<br/>
+	///	<see langword="        "/>: <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.FieldType }, parameters =&gt; @<paramref name="this"/>.StaticField().Assign(parameters[0]));<br/>
+	/// }
+	/// </code>
+	/// </remarks>
+	public static LambdaExpression FieldSetMethod(this FieldInfo @this)
+	{
+		@this.IsInitOnly.AssertEquals(false);
+		@this.IsLiteral.AssertEquals(false);
+
+		return !@this.IsStatic
+			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
+			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.StaticField().Assign(parameters[0]));
 	}
 
 	/// <inheritdoc cref="Expression.Goto(LabelTarget)"/>
@@ -608,7 +682,7 @@ public static class ExpressionExtensions
 	/// <see langword="if"/> (parameterInfos.Any())<br/>
 	/// <see langword="    "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
 	/// <br/>
-	/// <see langword="var"/> parameters = parameterInfos.To(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
+	/// <see langword="var"/> parameters = parameterInfos.Map(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
 	/// <see langword="return"/> @<paramref name="this"/>.New(parameters).Lambda(parameters);
 	/// </code>
 	/// </remarks>
@@ -624,15 +698,17 @@ public static class ExpressionExtensions
 
 	/// <remarks>
 	/// <code>
-	/// <see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter(@<paramref name="this"/>.DeclaringType!);<br/>
-	/// <see langword="var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="if"/> (parameterInfos.Any())<br/>
-	/// <see langword="    "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
+	/// {<br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter(@<paramref name="this"/>.DeclaringType!);<br/>
+	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
+	/// <see langword="    if"/> (parameterInfos.Any())<br/>
+	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
 	/// <br/>
-	/// <see langword="var"/> parameters = parameterInfos.To(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
-	/// <see langword="return"/> !@<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="    "/>? instance.Call(@<paramref name="this"/>, parameters).Lambda(<see langword="new"/>[] { instance }.And(parameters))<br/>
-	/// <see langword="    "/>: @<paramref name="this"/>.CallStatic(parameters).Lambda(parameters);
+	/// <see langword="    var"/> parameters = parameterInfos.Map(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
+	/// <see langword="    return"/> !@<paramref name="this"/>.IsStatic<br/>
+	/// <see langword="        "/>? instance.Call(@<paramref name="this"/>, parameters).Lambda(<see langword="new"/>[] { instance }.And(parameters))<br/>
+	/// <see langword="        "/>: @<paramref name="this"/>.CallStatic(parameters).Lambda(parameters);<br/>
+	/// }
 	/// </code>
 	/// </remarks>
 	public static LambdaExpression Lambda(this MethodInfo @this)
@@ -650,7 +726,7 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.To(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetActionType(parameters.Map(parameter => parameter.Type).ToArray()), @this, parameters);
@@ -664,18 +740,20 @@ public static class ExpressionExtensions
 
 	/// <remarks>
 	/// <code>
-	/// <see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
+	/// {<br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
 	/// <br/>
-	/// <see langword="var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="if"/> (parameterInfos.Any())<br/>
-	/// <see langword="    "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
+	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
+	/// <see langword="    if"/> (parameterInfos.Any())<br/>
+	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
 	/// <br/>
-	/// <see langword="var"/> constructorParameters = parameterInfos.To(parameterInfo => arguments.Array()[parameterInfo!.Position].SystemConvert(parameterInfo.ParameterType));<br/>
+	/// <see langword="    var"/> parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType));<br/>
 	/// <br/>
-	/// <see langword="return"/> @<paramref name="this"/>.New(constructorParameters).As&lt;<see cref="object"/>&gt;().Lambda&lt;<see cref="CreateType"/>&gt;(arguments);
+	/// <see langword="    return"/> @<paramref name="this"/>.New(parameters).As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments);<br/>
+	/// }
 	/// </code>
 	/// </remarks>
-	public static Expression<CreateType> LambdaCreateType(this ConstructorInfo @this)
+	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this ConstructorInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
 
@@ -683,75 +761,76 @@ public static class ExpressionExtensions
 		if (parameterInfos.Any())
 			parameterInfos.Sort(ParameterPositionComparer);
 
-		var constructorParameters = parameterInfos.Map(parameterInfo => arguments.Array()[parameterInfo!.Position].Cast(parameterInfo.ParameterType));
+		var parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType));
 
-		return @this.New(constructorParameters).As<object>().Lambda<CreateType>(arguments);
+		return @this.New(parameters).As<object>().Lambda<Func<object?[]?, object?>>(arguments);
 	}
 
 	/// <remarks>
 	/// <code>
-	/// <see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
-	/// <see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
+	/// {<br/>
+	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
 	/// <br/>
-	/// <see langword="var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="if"/> (parameterInfos.Any())<br/>
-	/// <see langword="    "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
+	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
+	/// <see langword="    if"/> (parameterInfos.Any())<br/>
+	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
 	/// <br/>
-	/// <see langword="var"/> methodParameters = parameterInfos.To(parameterInfo => arguments.Array()[parameterInfo!.Position].SystemConvert(parameterInfo.ParameterType));<br/>
+	/// <see langword="    var"/> offset = !@this.IsStatic ? 1 : 0;<br/>
+	/// <see langword="    var"/> parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i + offset].Convert(parameterInfo.ParameterType));<br/>
+	/// <see langword="    var"/> call = !@<paramref name="this"/>.IsStatic<br/>
+	/// <see langword="        "/>? parameters.First().Cast(@<paramref name="this"/>.DeclaringType!).Call(@<paramref name="this"/>, parameters.Skip(1))<br/>
+	/// <see langword="        "/>: @<paramref name="this"/>.CallStatic(parameters);<br/>
 	/// <br/>
-	/// <see langword="var"/> call = !@<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="    "/>? instance.Cast(@<paramref name="this"/>.DeclaringType!).Call(@<paramref name="this"/>, methodParameters)<br/>
-	/// <see langword="    "/>: @<paramref name="this"/>.CallStatic(methodParameters);<br/>
-	/// <br/>
-	/// <see langword="return"/> @<paramref name="this"/>.ReturnType != <see langword="typeof"/>(<see langword="void"/>)<br/>
-	///	<see langword="    "/>? call.As&lt;<see cref="object"/>&gt;().Lambda&lt;<see cref="InvokeType"/>&gt;(instance, arguments)<br/>
-	///	<see langword="    "/>: call.Block(<see cref="NullExpression"/>).Lambda&lt;<see cref="InvokeType"/>&gt;(instance, arguments);
+	/// <see langword="    return"/> @<paramref name="this"/>.ReturnType != <see langword="typeof"/>(<see langword="void"/>)<br/>
+	///	<see langword="        "/>? call.As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments)<br/>
+	///	<see langword="        "/>: call.Block(<see cref="NullExpression"/>).Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments);<br/>
+	/// }<br/>
 	/// </code>
 	/// </remarks>
-	public static Expression<InvokeType> LambdaInvokeType(this MethodInfo @this)
+	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this MethodInfo @this)
 	{
-		ParameterExpression instance = nameof(instance).Parameter<object>();
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
 
 		var parameterInfos = @this.GetParameters();
 		if (parameterInfos.Any())
 			parameterInfos.Sort(ParameterPositionComparer);
 
-		var methodParameters = parameterInfos.Map(parameterInfo => arguments.Array()[parameterInfo!.Position].Cast(parameterInfo.ParameterType));
-
-		var call = !@this.IsStatic
-			? instance.Cast(@this.DeclaringType!).Call(@this, methodParameters)
-			: @this.CallStatic(methodParameters);
+		var parameters = @this.IsStatic
+			? parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
+			: parameterInfos.Map((parameterInfo, i) => arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));
+		var call = @this.IsStatic
+			? @this.CallStatic(parameters)
+			: arguments.Array()[0].Cast(@this.DeclaringType!).Call(@this, parameters);
 
 		return @this.ReturnType != typeof(void)
-			? call.As<object>().Lambda<InvokeType>(instance, arguments)
-			: call.Block(NullExpression).Lambda<InvokeType>(instance, arguments);
+			? call.As<object>().Lambda<Func<object?[]?, object?>>(arguments)
+			: call.Block(NullExpression).Lambda<Func<object?[]?, object?>>(arguments);
 	}
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.To(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.To(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.To(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.To(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);

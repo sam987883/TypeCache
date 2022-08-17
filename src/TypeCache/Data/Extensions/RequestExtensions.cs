@@ -10,8 +10,8 @@ namespace TypeCache.Data.Extensions
 			=> new()
 			{
 				DataSource = @this.DataSource,
-				Table = @this.Table,
 				InputParameters = @this.InputParameters,
+				Table = @this.Table,
 				Where = @this.Where
 			};
 
@@ -19,8 +19,8 @@ namespace TypeCache.Data.Extensions
 			=> new()
 			{
 				DataSource = @this.DataSource,
-				Table = @this.From,
 				InputParameters = @this.InputParameters,
+				Table = @this.From,
 				Where = @this.Where
 			};
 
@@ -28,8 +28,8 @@ namespace TypeCache.Data.Extensions
 			=> new()
 			{
 				DataSource = @this.DataSource,
-				Table = @this.From,
 				InputParameters = @this.InputParameters,
+				Table = @this.From,
 				Where = @this.Where
 			};
 
@@ -37,8 +37,8 @@ namespace TypeCache.Data.Extensions
 			=> new()
 			{
 				DataSource = @this.DataSource,
-				Table = @this.Table,
 				InputParameters = @this.InputParameters,
+				Table = @this.Table,
 				Where = @this.Where
 			};
 	}
