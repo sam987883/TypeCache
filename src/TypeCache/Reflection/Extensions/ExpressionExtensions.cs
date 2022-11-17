@@ -42,11 +42,11 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.ToArray(index =&gt;
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Map(index =&gt;
 	///		(<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public static MethodCallExpression Array(this Expression @this, params int[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayIndex(@this, indexes.Map(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
@@ -58,11 +58,11 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.ToArray(index =&gt;
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Map(index =&gt;
 	///		(<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public static MethodCallExpression Array(this Expression @this, params long[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.ToArray(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayIndex(@this, indexes.Map(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
@@ -485,8 +485,8 @@ public static class ExpressionExtensions
 	/// </remarks>
 	public static Expression<Action<object?, object?>> FieldSetInvoke(this FieldInfo @this)
 	{
-		@this.IsInitOnly.AssertEquals(false);
-		@this.IsLiteral.AssertEquals(false);
+		@this.IsInitOnly.AssertFalse();
+		@this.IsLiteral.AssertFalse();
 
 		ParameterExpression instance = nameof(instance).Parameter<object>();
 		ParameterExpression value = nameof(value).Parameter<object>();
@@ -509,8 +509,8 @@ public static class ExpressionExtensions
 	/// </remarks>
 	public static LambdaExpression FieldSetMethod(this FieldInfo @this)
 	{
-		@this.IsInitOnly.AssertEquals(false);
-		@this.IsLiteral.AssertEquals(false);
+		@this.IsInitOnly.AssertFalse();
+		@this.IsLiteral.AssertFalse();
 
 		return !@this.IsStatic
 			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
@@ -733,10 +733,10 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.ToArray(parameter =&gt; parameter.Type)), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type)), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
-		=> Expression.Lambda(Expression.GetActionType(parameters.ToArray(parameter => parameter.Type)), @this, parameters);
+		=> Expression.Lambda(Expression.GetActionType(parameters.Map(parameter => parameter.Type)), @this, parameters);
 
 	/// <remarks>
 	/// <code>

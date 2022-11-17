@@ -9,7 +9,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Converters;
 
-public class FieldJsonConverter<T> : JsonConverter<T?>
+public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 	where T : class, new()
 {
 	public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -24,7 +24,7 @@ public class FieldJsonConverter<T> : JsonConverter<T?>
 				{
 					var field = TypeOf<T>.Fields.If(_ => _.Name.Is(name)).First();
 					if (field is not null && !field.Static && field.SetMethod is not null)
-						field.SetValue(output, reader.TokenType switch
+						field.SetValue!(output!, reader.TokenType switch
 						{
 							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
 							_ => reader.GetValue()
@@ -46,7 +46,7 @@ public class FieldJsonConverter<T> : JsonConverter<T?>
 			TypeOf<T>.Fields.If(field => !field.Static && field!.GetMethod is not null).Do(field =>
 			{
 				writer.WritePropertyName(field!.Name);
-				var value = field.GetValue(input);
+				var value = field.GetValue!(input);
 				writer.WriteValue(value, options);
 			});
 			writer.WriteEndObject();

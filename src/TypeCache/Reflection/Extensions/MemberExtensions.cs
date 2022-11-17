@@ -132,12 +132,12 @@ public static class MemberExtensions
 		}
 		else
 		{
-			if (type.IsInterface && @this.InterfaceTypes.Any(_ => _.Handle.Equals(handle)))
+			if (type.IsInterface && @this.InterfaceTypes.Any(_ => _.TypeHandle.Equals(handle)))
 				return true;
 
 			while (baseType is not null)
 			{
-				if (baseType.Handle.Equals(handle))
+				if (baseType.TypeHandle.Equals(handle))
 					return true;
 				baseType = baseType.BaseType;
 			}
@@ -150,7 +150,7 @@ public static class MemberExtensions
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is<V>(this TypeMember? @this)
-		=> @this is not null && @this.Handle.Equals(typeof(V).TypeHandle);
+		=> @this is not null && @this.TypeHandle.Equals(typeof(V).TypeHandle);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> &amp;&amp;
@@ -159,7 +159,7 @@ public static class MemberExtensions
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is(this TypeMember? @this, Type type)
-		=> @this is not null && (@this.Handle.Equals(type.TypeHandle) || @this.GenericHandle.Equals(type.TypeHandle));
+		=> @this is not null && (@this.TypeHandle.Equals(type.TypeHandle) || @this.GenericHandle.Equals(type.TypeHandle));
 
 	/// <summary>
 	/// <code>
@@ -211,5 +211,5 @@ public static class MemberExtensions
 	/// || (@<paramref name="this"/>.IsConvertible() &amp;&amp; <paramref name="typeMember"/>.IsConvertible());</c>
 	/// </summary>
 	public static bool Supports(this TypeMember @this, TypeMember typeMember)
-		=> @this.Handle.Equals(typeMember.Handle) || typeMember.IsSubclassOf(@this) || (@this.IsConvertible() && typeMember.IsConvertible());
+		=> @this.TypeHandle.Equals(typeMember.TypeHandle) || typeMember.IsSubclassOf(@this) || (@this.IsConvertible() && typeMember.IsConvertible());
 }

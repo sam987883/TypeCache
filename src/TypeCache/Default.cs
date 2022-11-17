@@ -13,13 +13,13 @@ namespace TypeCache;
 
 public static class Default
 {
-	public const BindingFlags BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+	public const BindingFlags BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
 	public const string DATASOURCE = "Default";
 
 	public const char GENERIC_TICKMARK = '`';
 
-	public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+	public const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
 	public const MethodImplOptions METHOD_IMPL_OPTIONS = MethodImplOptions.AggressiveInlining;
 
@@ -29,7 +29,7 @@ public static class Default
 
 	public const StringComparison SORT_STRING_COMPARISON = StringComparison.Ordinal;
 
-	public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+	public const BindingFlags STATIC_BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
 
 	public const StringComparison STRING_COMPARISON = StringComparison.OrdinalIgnoreCase;
 

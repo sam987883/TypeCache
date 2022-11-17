@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using TypeCache.Collections;
@@ -19,11 +20,11 @@ namespace TypeCache
 			new Regex(pattern, REGEX_OPTIONS | RegexOptions.Singleline, RegexTimeout), comparer: StringComparer.Ordinal);
 
 		[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-		public static Regex MultilinePattern(this string @this)
+		public static Regex MultilinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
 			=> MultilineRegex[@this];
 
 		[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-		public static Regex SinglelinePattern(this string @this)
+		public static Regex SinglelinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
 			=> SinglelineRegex[@this];
 	}
 }

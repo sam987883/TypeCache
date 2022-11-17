@@ -12,7 +12,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// </summary>
 /// <remarks>The tagged endpoint must return an IEnumerable&lt;&gt; type.</remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphQLSubqueryCollectionAttribute : Attribute
+public sealed class GraphQLSubqueryCollectionAttribute : Attribute
 {
 	public GraphQLSubqueryCollectionAttribute(Type parentType, string key)
 	{

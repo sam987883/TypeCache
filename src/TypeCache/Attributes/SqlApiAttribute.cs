@@ -5,7 +5,7 @@ using System;
 namespace TypeCache.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
-public class SqlApiAttribute : Attribute
+public sealed class SqlApiAttribute : Attribute
 {
 	public SqlApiAction Actions { get; } = SqlApiAction.All;
 }

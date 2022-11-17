@@ -1,52 +1,93 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
 [DebuggerDisplay("{Type}.{Name,nq}", Name = "{Name}")]
-public class PropertyMember	: Member, IEquatable<PropertyMember>
+public sealed class PropertyMember	: IMember, IEquatable<PropertyMember>
 {
-	internal PropertyMember(PropertyInfo propertyInfo, TypeMember type) : base(propertyInfo)
+	internal PropertyMember(PropertyInfo propertyInfo, TypeMember type)
 	{
-		this.PropertyTypeHandle = propertyInfo.PropertyType.TypeHandle;
-		this.Indexer = propertyInfo.GetIndexParameters().Any();
-		this.Type = type;
+		this.Attributes = propertyInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 		this.Getter = propertyInfo.GetMethod is not null ? new MethodMember(propertyInfo.GetMethod, type) : null;
+		this.Indexer = propertyInfo.GetIndexParameters().Any();
+		var accessors = propertyInfo.GetAccessors(true);
+		this.Internal = accessors.Any(_ => _.IsAssembly);
+		this.Name = propertyInfo.Name();
+		this.PropertyTypeHandle = propertyInfo.PropertyType.TypeHandle;
+		this.Public = accessors.Any(_ => _.IsPublic);
 		this.Setter = propertyInfo.SetMethod is not null ? new MethodMember(propertyInfo.SetMethod, type) : null;
+		this.Type = type;
 	}
 
+	/// <inheritdoc/>
+	public IReadOnlyList<Attribute> Attributes { get; }
+
+	public MethodMember? Getter { get; }
+
 	public bool Indexer { get; }
+
+	/// <inheritdoc/>
+	public bool Internal { get; }
+
+	/// <inheritdoc/>
+	public string Name { get; }
 
 	public TypeMember PropertyType => this.PropertyTypeHandle.GetTypeMember();
 
 	public RuntimeTypeHandle PropertyTypeHandle { get; }
 
-	public MethodMember? Getter { get; }
+	/// <inheritdoc/>
+	public bool Public { get; }
 
 	public MethodMember? Setter { get; }
 
 	/// <summary>
-	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
+	/// The <see cref="TypeMember"/> that owns this property.
 	/// </summary>
 	public TypeMember Type { get; }
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (<see langword="this"/>.Getter <see langword="is null"/>)<br/>
+	/// <see langword="        return null"/>;<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!<see langword="this"/>.Getter.Static)<br/>
+	/// <see langword="        "/><paramref name="instance"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    return"/> <paramref name="instance"/> <see langword="switch"/><br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        not null when"/> <paramref name="indexers"/>.Any() =&gt; <see langword="this"/>.Getter.Invoke(<see langword="new"/>[] { <paramref name="instance"/> }.Append(<paramref name="indexers"/>).ToArray()),<br/>
+	/// <see langword="        not null"/> =&gt; <see langword="this"/>.Getter.Invoke(<paramref name="instance"/>),<br/>
+	/// <see langword="        "/>_ <see langword="when"/> <paramref name="indexers"/>.Any() =&gt; <see langword="this"/>.Getter.Invoke(<paramref name="indexers"/>),<br/>
+	/// <see langword="        "/>_ =&gt; <see langword="this"/>.Getter.Invoke()<br/>
+	/// <see langword="    "/>};<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <param name="instance">Pass null if the property getter is static.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	/// <exception cref="ArgumentNullException"/>
 	public object? GetValue(object instance, params object?[]? indexers)
 	{
 		if (this.Getter is null)
 			return null;
+
+		if (!this.Getter.Static)
+			instance.AssertNotNull();
 
 		return instance switch
 		{
@@ -57,14 +98,37 @@ public class PropertyMember	: Member, IEquatable<PropertyMember>
 		};
 	}
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (<see langword="this"/>.Setter <see langword="is null"/>)<br/>
+	/// <see langword="        return null"/>;<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!<see langword="this"/>.Setter.Static)<br/>
+	/// <see langword="        "/><paramref name="instance"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    var"/> arguments = <paramref name="instance"/> <see langword="switch"/><br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        not null when"/> <paramref name="indexers"/>.Any() =&gt; <see langword="this"/>.Setter.Invoke(<see langword="new"/>[] { <paramref name="instance"/> }.Append(<paramref name="indexers"/>).ToArray()),<br/>
+	/// <see langword="        not null"/> =&gt; <see langword="this"/>.Setter.Invoke(<paramref name="instance"/>),<br/>
+	/// <see langword="        "/>_ <see langword="when"/> <paramref name="indexers"/>.Any() =&gt; <see langword="this"/>.Setter.Invoke(<paramref name="indexers"/>),<br/>
+	/// <see langword="        "/>_ =&gt; <see langword="this"/>.Setter.Invoke()<br/>
+	/// <see langword="    "/>};<br/>
+	/// <see langword="    this"/>.Setter.Invoke(arguments)<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
-	/// <param name="value">The value to set the property to.</param>
+	/// <param name="instance">Pass null if the property getter is static.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	/// <exception cref="ArgumentNullException"/>
 	public void SetValue(object instance, object? value, params object?[]? indexers)
 	{
 		if (this.Setter is null)
 			return;
+
+		if (!this.Setter.Static)
+			instance.AssertNotNull();
 
 		var arguments = instance switch
 		{

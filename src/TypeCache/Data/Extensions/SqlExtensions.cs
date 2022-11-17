@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -17,22 +18,17 @@ namespace TypeCache.Data.Extensions;
 public static class SqlExtensions
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static string EscapeIdentifier([NotNull] this string @this)
-		=> Invariant($"[{@this.EscapeValue().Replace("]", "]]")}]");
-
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static string EscapeLikeValue([NotNull] this string @this)
-		=> @this.EscapeValue().Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
-
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string EscapeValue([NotNull] this string @this)
 		=> @this.Replace("'", "''");
 
 	public static string ToSQL(this object? @this) => @this switch
 	{
 		null or DBNull => "NULL",
-		bool boolean => boolean ? "1" : "0",
-		char text => text.Equals('\'') ? "N''''" : Invariant($"N'{text}'"),
+		true => "1",
+		false => "0",
+		SqlCommand command => command.SQL,
+		'\'' => "N''''",
+		char text => Invariant($"N'{text}'"),
 		string text => Invariant($"N'{text.EscapeValue()}'"),
 		DateTime dateTime => Invariant($"'{dateTime:o}'"),
 		DateTimeOffset dateTimeOffset => Invariant($"'{dateTimeOffset:o}'"),
@@ -46,9 +42,9 @@ public static class SqlExtensions
 		Sort _ => string.Empty,
 		Enum token => token.ToString("D"),
 		Index index => index.Value.ToString(),
-		JsonArray json => json.ToJsonString().EscapeValue(),
-		JsonObject json => json.ToJsonString().EscapeValue(),
-		JsonNode json => json.ToString().Replace("\"", string.Empty).EscapeValue(),
+		Range range => Invariant($"'{range}'"),
+		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
+		byte[] binary => Invariant($"0x{binary.ToHex()}"),
 		JsonElement json => json.ValueKind switch
 		{
 			JsonValueKind.String => Invariant($"N'{json.GetString()!.EscapeValue()}'"),
@@ -58,10 +54,14 @@ public static class SqlExtensions
 			JsonValueKind.Null => "NULL",
 			_ => Invariant($"N'{json.ToString()!.EscapeValue()}'")
 		},
-		Range range => Invariant($"'{range}'"),
-		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
-		byte[] binary => Invariant($"0x{binary.ToHex()}"),
-		IEnumerable enumerable => Invariant($"({enumerable.As<object>().Map(_ => _.ToSQL()).Join(", ")})"),
+		JsonArray jsonArray when jsonArray[0] is JsonObject jsonObject => jsonArray.Map(item => jsonObject.Map(pair => item!.AsObject()[pair.Key]!.AsValue().GetValue<object>()).ToSQL()).Join("\r\t, "),
+		JsonArray jsonArray when jsonArray[0] is JsonValue => jsonArray.Map(item => new[] { item!.AsValue().GetValue<object>() }.ToSQL()).ToCSV(),
+		JsonObject jsonObject => jsonObject.ToJsonString().EscapeValue(),
+		JsonValue jsonValue => jsonValue.GetValue<object>().ToSQL(),
+		JsonNode jsonNode => jsonNode.ToString().Replace("\"", string.Empty).EscapeValue(),
+		DataRow row => row.ItemArray.ToSQL(),
+		DataTable table => table.Rows.If<DataRow>().Map(row => row.ToSQL()).Join("\r\t, "),
+		IEnumerable enumerable => Invariant($"({enumerable.As<object>().Map(_ => _.ToSQL()).ToCSV()})"),
 		_ => @this.ToString() ?? "NULL"
 	};
 }

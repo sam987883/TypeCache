@@ -14,34 +14,47 @@ using static TypeCache.Default;
 namespace TypeCache.Reflection;
 
 [DebuggerDisplay("{Type,nq}.ctor", Name = "{Name}")]
-public class ConstructorMember : Member, IEquatable<ConstructorMember>
+public sealed class ConstructorMember : IMember, IEquatable<ConstructorMember>
 {
 	private readonly Lazy<Func<object?[]?, object?>> _Invoke;
 	private readonly Lazy<Delegate> _Method;
 
-	internal ConstructorMember(ConstructorInfo constructorInfo, TypeMember type) : base(constructorInfo)
+	internal ConstructorMember(ConstructorInfo constructorInfo, TypeMember type)
 	{
-		this.Handle = constructorInfo.MethodHandle;
+		this.Attributes = constructorInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+		this.Internal = constructorInfo.IsAssembly;
+		this.MethodHandle = constructorInfo.MethodHandle;
+		this.Name = constructorInfo.Name();
 		this.Parameters = constructorInfo.GetParameters().Map(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Public = constructorInfo.IsPublic;
 		this.Type = type;
-		this._Invoke = Lazy.Create(() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).LambdaInvoke().Compile());
-		this._Method = Lazy.Create(() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).Lambda().Compile());
+		this._Invoke = Lazy.Create(() => ((ConstructorInfo)this.MethodHandle.ToMethodBase(this.Type.TypeHandle)!).LambdaInvoke().Compile());
+		this._Method = Lazy.Create(() => ((ConstructorInfo)this.MethodHandle.ToMethodBase(this.Type.TypeHandle)!).Lambda().Compile());
 	}
 
-	public RuntimeMethodHandle Handle { get; }
+	/// <inheritdoc/>
+	public IReadOnlyList<Attribute> Attributes { get; }
+
+	/// <inheritdoc cref="MethodBase.MethodHandle"/>
+	public RuntimeMethodHandle MethodHandle { get; }
+
+	/// <inheritdoc cref="MethodBase.IsAssembly"/>
+	public bool Internal { get; }
 
 	public Delegate? Method => this._Method.Value;
 
+	/// <inheritdoc/>
+	public string Name { get; }
+
 	public IReadOnlyList<MethodParameter> Parameters { get; }
 
+	/// <inheritdoc cref="MethodBase.IsPublic"/>
+	public bool Public { get; }
+
 	/// <summary>
-	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
+	/// The <see cref="TypeMember"/> that owns this constructor.
 	/// </summary>
 	public TypeMember Type { get; }
-
-	private Delegate CreateDelegate() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).Lambda().Compile();
-
-	private Func<object?[]?, object?> CreateInvoke() => ((ConstructorInfo)this.Handle.ToMethodBase(this.Type.Handle)!).LambdaInvoke().Compile();
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Invoke.Value(<paramref name="arguments"/>);</c>
@@ -52,7 +65,7 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(ConstructorMember? other)
-		=> this.Handle == other?.Handle;
+		=> this.MethodHandle == other?.MethodHandle;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
@@ -60,12 +73,12 @@ public class ConstructorMember : Member, IEquatable<ConstructorMember>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+		=> this.MethodHandle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; (<see cref="ConstructorInfo"/>)<paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static implicit operator ConstructorInfo(ConstructorMember member)
-		=> (ConstructorInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
+		=> (ConstructorInfo)member.MethodHandle.ToMethodBase(member.Type!.TypeHandle)!;
 }

@@ -14,7 +14,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class ItemLoaderFieldResolver<T> : IFieldResolver
+public sealed class ItemLoaderFieldResolver<T> : IFieldResolver
 {
 	private readonly MethodMember _Method;
 	private readonly object? _Controller;

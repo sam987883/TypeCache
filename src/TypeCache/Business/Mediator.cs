@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using static TypeCache.Business.RuleResponseStatus;
 using static TypeCache.Default;
 
 namespace TypeCache.Business;
@@ -24,8 +25,8 @@ internal sealed class Mediator : IMediator
 		var result = await this.GetRuleIntermediary<REQUEST, RESPONSE>().GetAsync(request, token);
 		return result.Status switch
 		{
-			RuleResponseStatus.Success => result.Response!,
-			RuleResponseStatus.FailValidation => throw new ValidationException(result.FailedValidation),
+			Success => result.Response!,
+			FailValidation => throw new ValidationException(result.FailedValidation),
 			_ => throw result.Error!
 		};
 	}

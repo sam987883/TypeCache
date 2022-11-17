@@ -9,7 +9,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection.Converters;
 
-public class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
+public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class, new()
 {
 	public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{

@@ -1,10 +1,12 @@
-﻿using System;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Business;
 
-public class ValidationException : Exception
+public sealed class ValidationException : Exception
 {
 	public string[] ValidationMessages { get; }
 

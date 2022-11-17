@@ -28,48 +28,6 @@ public static class EnumeratorExtensions
 	}
 
 	/// <summary>
-	/// <code>
-	/// <paramref name="first"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="rest"/> = @<paramref name="this"/>.Rest();
-	/// </code>
-	/// </summary>
-	public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out IEnumerable<T> rest)
-	{
-		first = @this.Next();
-		rest = @this.Rest();
-	}
-
-	/// <summary>
-	/// <code>
-	/// <paramref name="first"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="second"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="rest"/> = @<paramref name="this"/>.Rest();
-	/// </code>
-	/// </summary>
-	public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
-	{
-		first = @this.Next();
-		second = @this.Next();
-		rest = @this.Rest();
-	}
-
-	/// <summary>
-	/// <code>
-	/// <paramref name="first"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="second"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="third"/> = @<paramref name="this"/>.Next();<br/>
-	/// <paramref name="rest"/> = @<paramref name="this"/>.Rest();
-	/// </code>
-	/// </summary>
-	public static void Deconstruct<T>(this IEnumerator<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
-	{
-		first = @this.Next();
-		second = @this.Next();
-		third = @this.Next();
-		rest = @this.Rest();
-	}
-
-	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Move(<paramref name="index"/> + 1) ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]

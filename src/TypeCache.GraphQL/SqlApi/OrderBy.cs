@@ -1,14 +1,15 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Data;
-using TypeCache.GraphQL.Attributes;
+using TypeCache.Data.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SqlApi;
 
-public class OrderBy<T>
+public readonly record struct OrderBy(string Expression, Sort Sort)
 {
-	[GraphQLType(ScalarType.NotNullString)]
-	public string Expression { get; set; } = string.Empty;
+	public string Display { get; } = Invariant($"{Expression}_{Sort.ToSQL()}");
 
-	public Sort Sort { get; set; }
+	public override string ToString()
+		=> Invariant($"{this.Expression} {this.Sort.ToSQL()}");
 }

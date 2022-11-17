@@ -19,7 +19,7 @@ namespace TypeCache.GraphQL.Types;
 /// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterHashMaker(IServiceCollection, decimal, decimal)"/></item>
 /// </list>
 /// </summary>
-public class GraphQLHashIdType : ScalarGraphType
+public sealed class GraphQLHashIdType : ScalarGraphType
 {
 	private readonly IHashMaker _HashMaker;
 

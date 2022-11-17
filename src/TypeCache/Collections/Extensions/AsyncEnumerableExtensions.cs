@@ -96,9 +96,33 @@ public static class AsyncEnumerableExtensions
 		return await enumerator.CountAsync();
 	}
 
-	public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action? between = null, CancellationToken token = default)
+	public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, CancellationToken token = default)
 	{
 		action.AssertNotNull();
+
+		if (@this is null)
+			return;
+
+		await foreach (var item in @this)
+			action(item);
+	}
+
+	public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, CancellationToken token = default)
+	{
+		action.AssertNotNull();
+
+		if (@this is null)
+			return;
+
+		var i = -1;
+		await foreach (var item in @this)
+			action(item, ++i);
+	}
+
+	public static async ValueTask DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T> action, Action between, CancellationToken token = default)
+	{
+		action.AssertNotNull();
+		between.AssertNotNull();
 
 		if (@this is null)
 			return;
@@ -107,23 +131,15 @@ public static class AsyncEnumerableExtensions
 		if (await enumerator.MoveNextAsync())
 		{
 			action(enumerator.Current);
-			if (between is not null)
+			while (await enumerator.MoveNextAsync())
 			{
-				while (await enumerator.MoveNextAsync())
-				{
-					between();
-					action(enumerator.Current);
-				}
-			}
-			else
-			{
-				while (await enumerator.MoveNextAsync())
-					action(enumerator.Current);
+				between();
+				action(enumerator.Current);
 			}
 		}
 	}
 
-	public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action? between = null, CancellationToken token = default)
+	public static async Task DoAsync<T>(this IAsyncEnumerable<T>? @this, Action<T, int> action, Action between, CancellationToken token = default)
 	{
 		action.AssertNotNull();
 
@@ -135,18 +151,10 @@ public static class AsyncEnumerableExtensions
 		{
 			var i = 0;
 			action(enumerator.Current, i);
-			if (between is not null)
+			while (await enumerator.MoveNextAsync())
 			{
-				while (await enumerator.MoveNextAsync())
-				{
-					between();
-					action(enumerator.Current, ++i);
-				}
-			}
-			else
-			{
-				while (await enumerator.MoveNextAsync())
-					action(enumerator.Current, ++i);
+				between();
+				action(enumerator.Current, ++i);
 			}
 		}
 	}
@@ -309,10 +317,8 @@ public static class AsyncEnumerableExtensions
 			yield break;
 
 		await foreach (var item in @this)
-		{
 			if (item is R value)
 				yield return value;
-		}
 	}
 
 	public static async IAsyncEnumerable<T> IfNotNullAsync<T>(this IAsyncEnumerable<T?>? @this, [EnumeratorCancellation] CancellationToken _ = default) where T : class
@@ -390,16 +396,13 @@ public static class AsyncEnumerableExtensions
 		return await @this.AggregateAsync(default, comparer!.Minimum);
 	}
 
-	public static async ValueTask<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T>? @this, int capacity, CancellationToken token = default)
+	public static async ValueTask<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T>? @this, CancellationToken token = default)
 	{
 		if (@this is null)
 			return Array<T>.Empty;
 
-		var array = new T[capacity];
-		var i = -1;
-		await using var enumerator = @this.GetAsyncEnumerator(token);
-		while (await enumerator.MoveNextAsync() && ++i < capacity)
-			array[i] = enumerator.Current;
+		var array = new T[await @this.CountAsync()];
+		await @this.DoAsync((item, i) => array[i] = item, token);
 		return array;
 	}
 
@@ -409,7 +412,7 @@ public static class AsyncEnumerableExtensions
 		valueFactory.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
+		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token);
 		return dictionary;
 	}
 
@@ -420,7 +423,7 @@ public static class AsyncEnumerableExtensions
 		comparer.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token: token);
+		await @this.DoAsync(key => dictionary.TryAdd(key, valueFactory(key)), token);
 		return dictionary;
 	}
 
@@ -431,7 +434,7 @@ public static class AsyncEnumerableExtensions
 		valueFactory.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token));
-		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
+		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token);
 		return dictionary;
 	}
 
@@ -443,14 +446,14 @@ public static class AsyncEnumerableExtensions
 		comparer.AssertNotNull();
 
 		var dictionary = new ConcurrentDictionary<K, V>(concurrencyLevel, await @this.CountAsync(token), comparer);
-		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token: token);
+		await @this.DoAsync(value => dictionary.TryAdd(keyFactory(value), valueFactory(value)), token);
 		return dictionary;
 	}
 
 	public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T>? @this, int capacity = 0, CancellationToken token = default)
 	{
-		var list = new List<T>(capacity);
-		await @this.DoAsync(list.Add, token: token);
+		var list = new List<T>(await @this.CountAsync());
+		await @this.DoAsync(list.Add, token);
 		return list;
 	}
 }

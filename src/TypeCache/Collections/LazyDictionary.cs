@@ -15,7 +15,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Collections;
 
-public class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
+public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 	where K : notnull
 {
 	private readonly ConcurrentDictionary<K, Lazy<V>> _Dictionary;

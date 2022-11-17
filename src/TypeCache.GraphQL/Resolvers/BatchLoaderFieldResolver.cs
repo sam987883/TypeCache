@@ -16,7 +16,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
+public sealed class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
 {
 	private readonly MethodMember _Method;
 	private readonly object? _Controller;

@@ -160,7 +160,7 @@ public static class CharExtensions
 	/// <c>=&gt; <see cref="char"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static Char ToLowerCase(this char @this)
+	public static char ToLowerCase(this char @this)
 		=> char.ToLowerInvariant(@this);
 
 	/// <inheritdoc cref="char.ToLower(char)"/>

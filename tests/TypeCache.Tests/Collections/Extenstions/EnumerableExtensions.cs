@@ -102,7 +102,7 @@ public class EnumerableExtensions
 		Assert.NotNull((null as IEnumerable).As<int>());
 		Assert.IsType<int[]>(((IEnumerable)new[] { 1, 2, 3 }).As<int>());
 		Assert.NotNull(this.GetItems().As<int>());
-		Assert.Equal(new string[] { null, null, null, null, null, null }, this.GetItems().As<string>());
+		Assert.Equal(Array<string>.Empty, this.GetItems().As<string>());
 	}
 
 	[Fact]
@@ -347,10 +347,10 @@ public class EnumerableExtensions
 	[Fact]
 	public async Task IfAsync()
 	{
-		Assert.Equal(new[] { 1, 3, 5 }, await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync(3));
-		Assert.Empty(await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync(0));
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, Task<bool>>).ToArrayAsync(5));
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync(6));
+		Assert.Equal(new[] { 1, 3, 5 }, await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync());
+		Assert.Empty(await this.GetItems().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, Task<bool>>).ToArrayAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await this.GetItems().IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync());
 
 		await Task.CompletedTask;
 	}
@@ -533,15 +533,9 @@ public class EnumerableExtensions
 		Assert.Equal(intArray.Length, intArray.Map(i => KeyValuePair.Create(i, i.ToString())).ToDictionary().Count);
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
 
-		Assert.Equal(intArray.Length, intArray.Map(i => Tuple.Create(i, i.ToString())).ToDictionary().Count);
-		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
-
-		Assert.Equal(intArray.Length, intArray.Map(i => (i, i.ToString())).ToDictionary().Count);
-		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
-
-		Assert.Equal(intArray.Length, this.GetItems().ToDictionary(i => i.ToString()).Count);
-		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary(i => i.ToString()));
-		Assert.Throws<ArgumentNullException>(() => this.GetItems().ToDictionary<int, string>(null));
+		Assert.Equal(intArray.Length, this.GetItems().ToDictionaryByValue(i => i.ToString()).Count);
+		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionaryByValue(i => i.ToString()));
+		Assert.Throws<ArgumentNullException>(() => this.GetItems().ToDictionaryByValue<int, string>(null));
 
 		Assert.Equal(intArray.Length, this.GetItems().ToDictionary(i => i, i => i.ToString()).Count);
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary(i => i, i => i.ToString()));

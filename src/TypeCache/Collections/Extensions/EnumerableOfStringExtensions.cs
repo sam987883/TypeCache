@@ -189,11 +189,7 @@ public static class EnumerableOfStringExtensions
 		=> @this.Has(values, comparison.ToStringComparer());
 
 	/// <summary>
-	/// <code>
-	/// <paramref name="comparer"/> ??= <see cref="EqualityComparer{T}.Default"/>;<br/>
-	/// <br/>
-	/// <see langword="return"/> <paramref name="values"/>.Any(value =&gt; @<paramref name="this"/>.Has(value, <paramref name="comparer"/>));
-	/// </code>
+	/// <c>=&gt;@<paramref name="this"/>.HasAny(<paramref name="values"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool HasAny([NotNullWhen(true)] this IEnumerable<string>? @this, IEnumerable<string>? values, StringComparison comparison = STRING_COMPARISON)
@@ -361,25 +357,18 @@ public static class EnumerableOfStringExtensions
 		=> @this.ToDictionary(comparison.ToStringComparer());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="comparison"/>.ToStringComparer());</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionaryByKey(<paramref name="keyFactory"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IDictionary<string, V> ToDictionary<V>(this IEnumerable<Tuple<string, V>>? @this, StringComparison comparison = STRING_COMPARISON)
-		=> @this.ToDictionary(comparison.ToStringComparer());
+	public static IDictionary<string, V> ToDictionaryByKey<V>(this IEnumerable<V>? @this, Func<V, string> keyFactory, StringComparison comparison = STRING_COMPARISON)
+		=> @this.ToDictionaryByKey(keyFactory, comparison.ToStringComparer());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="comparison"/>.ToStringComparer());</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionaryByValue(<paramref name="valueFactory"/>, <paramref name="comparison"/>.ToStringComparer());</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IDictionary<string, V> ToDictionary<V>(this IEnumerable<ValueTuple<string, V>>? @this, StringComparison comparison = STRING_COMPARISON)
-		=> @this.ToDictionary(comparison.ToStringComparer());
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="valueFactory"/>, <paramref name="comparison"/>.ToStringComparer());</c>
-	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IDictionary<string, V> ToDictionary<V>(this IEnumerable<string>? @this, Func<string, V> valueFactory, StringComparison comparison = STRING_COMPARISON)
-		=> @this.ToDictionary(valueFactory, comparison.ToStringComparer());
+	public static IDictionary<string, V> ToDictionaryByValue<V>(this IEnumerable<string>? @this, Func<string, V> valueFactory, StringComparison comparison = STRING_COMPARISON)
+		=> @this.ToDictionaryByValue(valueFactory, comparison.ToStringComparer());
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="keyFactory"/>, <paramref name="valueFactory"/>, <paramref name="comparison"/>.ToStringComparer());</c>

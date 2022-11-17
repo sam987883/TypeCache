@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
@@ -14,7 +16,7 @@ using static TypeCache.Default;
 namespace TypeCache.Reflection;
 
 [DebuggerDisplay("Enum {Name,nq}", Name = "{Name}")]
-public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
+public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 	where T : struct, Enum
 {
 	private static Comparison<T> CreateCompare(Type underlyingType)
@@ -28,7 +30,7 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 
 	private readonly Lazy<TypeMember> _UnderlyingType;
 
-	internal EnumMember() : base(typeof(T))
+	internal EnumMember()
 	{
 		var type = typeof(T);
 		var underlyingType = type.GetEnumUnderlyingType();
@@ -36,11 +38,16 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 		var equals = CreateEquals(underlyingType);
 		var getHashCode = CreateGetHashCode(underlyingType);
 
-		this._UnderlyingType = Lazy.Create(() => this.Handle.ToType().GetEnumUnderlyingType().GetTypeMember());
+		this._UnderlyingType = Lazy.Create(() => this.TypeHandle.ToType().GetEnumUnderlyingType().GetTypeMember());
+		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 		this.Comparer = new CustomComparer<T>(compare, equals, getHashCode);
-		this.Handle = type.TypeHandle;
+		this.Internal = !type.IsVisible;
+		this.Name = type.Name();
+		this.Public = type.IsPublic;
+		this.TypeHandle = type.TypeHandle;
 		this.Flags = this.Attributes.Any<FlagsAttribute>();
-		this.Tokens = type.GetFields(STATIC_BINDING_FLAGS)
+		this.Tokens = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+			.If(fieldInfo => type.IsAssignableFrom(fieldInfo.FieldType))
 			.Map(fieldInfo => new TokenMember<T>(fieldInfo, this))
 			.ToArray();
 	}
@@ -51,14 +58,27 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 	public TokenMember<T>? this[string text, StringComparison comparison = STRING_COMPARISON]
 		=> this.Tokens.First(token => token.Name.Is(text, comparison));
 
+	/// <inheritdoc/>
+	public IReadOnlyList<Attribute> Attributes { get; }
+
 	public CustomComparer<T> Comparer { get; }
 
 	public bool Flags { get; }
 
-	public RuntimeTypeHandle Handle { get; }
+	public RuntimeTypeHandle TypeHandle { get; }
+
+	/// <inheritdoc cref="Type.IsVisible"/>
+	public bool Internal { get; }
+
+	/// <inheritdoc/>
+	public string Name { get; }
+
+	/// <inheritdoc cref="Type.IsPublic"/>
+	public bool Public { get; }
 
 	public IReadOnlyCollection<TokenMember<T>> Tokens { get; }
 
+	/// <inheritdoc cref="Type.GetEnumUnderlyingType"/>
 	public TypeMember UnderlyingType => this._UnderlyingType.Value;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
@@ -71,7 +91,7 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] EnumMember<T>? other)
-		=> other?.Handle.Equals(this.Handle) is true;
+		=> this.TypeHandle == other?.TypeHandle;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
@@ -79,5 +99,5 @@ public class EnumMember<T> : Member, IEquatable<EnumMember<T>>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+		=> this.TypeHandle.GetHashCode();
 }

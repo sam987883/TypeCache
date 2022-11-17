@@ -112,7 +112,7 @@ public static class MathExtensions
 	/// </remarks>
 	public static ulong Factorial(this int @this)
 	{
-		(@this >= 0).AssertEquals(true);
+		(@this >= 0).AssertTrue();
 
 		var result = 1UL;
 		while (@this > 0)

@@ -1,15 +1,18 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Business;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Business;
-using TypeCache.Data.Domain;
-using TypeCache.Data.Schema;
+using TypeCache.GraphQL.Extensions;
+using TypeCache.Reflection.Extensions;
 using TypeCache.Security;
 
 namespace TypeCache.Extensions;
@@ -17,20 +20,18 @@ namespace TypeCache.Extensions;
 public static class ServiceCollectionExtensions
 {
 	/// <summary>
-	/// Registers singleton <c><see cref="DataSource"/></c> to be available via: <c>IAccessor&lt;<see cref="DataSource"/>&gt;</c><br/>
-	/// <i><b>Requires call to:</b></i>
-	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
+	/// Registers singleton <c><see cref="IDataSource"/></c> to be available via: <c>IAccessor&lt;<see cref="IDataSource"/>&gt;</c><br/>
 	/// </summary>
-	public static IServiceCollection RegisterDataSource(this IServiceCollection @this, string name, string databaseProvider, string connectionString)
-		=> @this.AddSingleton<DataSource>(new DataSource(name, databaseProvider, connectionString));
+	public static IServiceCollection RegisterDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
+		=> @this.AddSingleton<IDataSource>(new DataSource(name, dbProviderFactory, connectionString, type));
 
 	/// <summary>
-	/// Provides data source related information: <c>IAccessor&lt;<see cref="DataSource"/>&gt;</c><br/>
+	/// Provides data source related information: <c>IAccessor&lt;<see cref="IDataSource"/>&gt;</c><br/>
 	/// <i><b>Requires call to:</b></i>
 	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
 	/// </summary>
 	public static IServiceCollection RegisterDataSourceAccessor(this IServiceCollection @this)
-		=> @this.AddSingleton<IAccessor<DataSource>>(provider => new DataSourceAccessor(provider.GetServices<DataSource>().ToArray()));
+		=> @this.AddSingleton<IAccessor<IDataSource>, Accessor<IDataSource>>();
 
 	/// <summary>
 	/// Registers Singletons:
@@ -68,96 +69,65 @@ public static class ServiceCollectionExtensions
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 	/// <summary>
-	/// Registers Singleton Rules and RuleHandlers for the SQL API Commands.<br/>
-	/// You can implement the following validation rules to validate the request before the database call is made:
-	/// <c>
-	/// <list type="table">
-	/// <item>IValidationRule&lt;<see cref="StoredProcedureCommand" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="DeleteDataCommand{T}" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="DeleteCommand" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="InsertDataCommand{T}" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="InsertCommand" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="SelectCommand" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="UpdateDataCommand{T}" />&gt;</item>
-	/// <item>IValidationRule&lt;<see cref="UpdateCommand" />&gt;</item>
-	/// </list>
-	/// </c>
+	/// Registers Singleton Rules for the generic SQL API Commands.<br/>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/>typeAssembly?.DefinedTypes<br/>
+	/// <see langword="        "/>.If(type =&gt; type.IsDefined(<see langword="typeof"/>(<see cref="SqlApiAttribute"/>), <see langword="false"/>))<br/>
+	/// <see langword="        "/>.Do(type =&gt; @this.AddSingleton(<br/>
+	/// <see langword="            "/><see langword="typeof"/>(IRule&lt;,&gt;).MakeGenericType(<see langword="typeof"/>(<see cref="SqlCommand"/>), typeof(IList&lt;&gt;).MakeGenericType(type)),<br/>
+	/// <see langword="            "/><see langword="typeof"/>(SqlCommandModelsRule&lt;&gt;).MakeGenericType(type)));<br/>
+	/// <br/>
+	/// <see langword="    return"/> @<paramref name="this"/>;<br/>
+	/// }
+	/// </code>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
 	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
-	/// <see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/>
+	/// <see cref="RegisterSqlCommandRules(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
 	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this, Assembly? typeAssembly)
 	{
-		@this.AddSingleton<IValidationRule<SchemaRequest>, SchemaValidationRule>()
-			.AddSingleton<IValidationRule<CountCommand>, CountValidationRule>()
-			.AddSingleton<IValidationRule<StoredProcedureCommand>, StoredProcedureValidationRule>()
-			.AddSingleton<IRule<SchemaRequest, ObjectSchema>, SchemaRule>()
-			.AddSingleton<IRule<SchemaRequest, string>, SchemaRule>()
-			.AddSingleton<IRule<StoredProcedureCommand, object>, StoredProcedureRule>()
-			.AddSingleton<IRule<CountCommand, long>, CountRule>()
-			.AddSingleton<IRule<CountCommand, string>, CountRule>()
-			.AddSingleton<IRule<ExecuteCommands, object>, ExecuteCommandsRule>()
-			.AddSingleton<IRule<SqlCommand, object>, ExecuteSqlRule>()
-			.AddSingleton<IValidationRule<DeleteCommand>, DeleteValidationRule>()
-			.AddSingleton<IValidationRule<InsertCommand>, InsertValidationRule>()
-			.AddSingleton<IValidationRule<SelectCommand>, SelectValidationRule>()
-			.AddSingleton<IValidationRule<UpdateCommand>, UpdateValidationRule>();
-
-		typeAssembly?.DefinedTypes.If(type => type.IsDefined(typeof(SqlApiAttribute), false)).Do(type =>
-		{
-			var sqlApiAttribute = type.GetCustomAttribute<SqlApiAttribute>()!;
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Select) || sqlApiAttribute.Actions.HasFlag(SqlApiAction.Page))
-			{
-				var selectRuleType = typeof(SelectRule<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(SelectCommand), typeof(RowSetResponse<>).MakeGenericType(type)), selectRuleType)
-					.AddSingleton(typeof(IRule<SelectCommand, string>), selectRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Delete))
-			{
-				var deleteRuleType = typeof(DeleteRule<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(DeleteCommand), typeof(RowSetResponse<>).MakeGenericType(type)), deleteRuleType)
-					.AddSingleton(typeof(IRule<DeleteCommand, string>), deleteRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.DeleteData))
-			{
-				var deleteDataRuleType = typeof(DeleteDataRule<>).MakeGenericType(type);
-				var deleteDataCommandType = typeof(DeleteDataCommand<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(deleteDataCommandType), typeof(DeleteDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(RowSetResponse<>).MakeGenericType(type)), deleteDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(deleteDataCommandType, typeof(string)), deleteDataRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Insert))
-			{
-				var insertRuleType = typeof(InsertRule<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(InsertCommand), typeof(RowSetResponse<>).MakeGenericType(type)), insertRuleType)
-					.AddSingleton(typeof(IRule<InsertCommand, string>), insertRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.InsertData))
-			{
-				var insertDataRuleType = typeof(InsertDataRule<>).MakeGenericType(type);
-				var insertDataCommandType = typeof(InsertDataCommand<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(insertDataCommandType), typeof(InsertDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(RowSetResponse<>).MakeGenericType(type)), insertDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(insertDataCommandType, typeof(string)), insertDataRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.Update))
-			{
-				var updateRuleType = typeof(UpdateRule<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IRule<,>).MakeGenericType(typeof(UpdateCommand), typeof(UpdateRowSetResponse<>).MakeGenericType(type)), updateRuleType)
-					.AddSingleton(typeof(IRule<UpdateCommand, string>), updateRuleType);
-			}
-			if (sqlApiAttribute.Actions.HasFlag(SqlApiAction.UpdateData))
-			{
-				var updateDataRuleType = typeof(UpdateDataRule<>).MakeGenericType(type);
-				var updateDataCommandType = typeof(UpdateDataCommand<>).MakeGenericType(type);
-				@this.AddSingleton(typeof(IValidationRule<>).MakeGenericType(updateDataCommandType), typeof(UpdateDataValidationRule<>).MakeGenericType(type))
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(UpdateRowSetResponse<>).MakeGenericType(type)), updateDataRuleType)
-					.AddSingleton(typeof(IRule<,>).MakeGenericType(updateDataCommandType, typeof(string)), updateDataRuleType);
-			}
-		});
+		typeAssembly?.DefinedTypes
+			.If(type => type.IsDefined(typeof(SqlApiAttribute), false))
+			.Do(type => @this.AddSingleton(
+				typeof(IRule<,>).MakeGenericType(typeof(SqlCommand), typeof(IList<>).MakeGenericType(type)),
+				typeof(SqlCommandModelsRule<>).MakeGenericType(type)));
 
 		return @this;
 	}
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="IList{T}"/>&gt;, <see cref="SqlCommandModelsRule{T}"/>&gt;();</c>
+	/// <i><b>Requires calls to:</b></i>
+	/// <code>
+	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
+	/// <see cref="RegisterSqlCommandRules(IServiceCollection)"/><br/>
+	/// </code>
+	/// </summary>
+	public static void RegisterSqlCommandRule<T>(this IServiceCollection @this)
+		where T : new()
+		=> @this.AddSingleton<IRule<SqlCommand, IList<T>>, SqlCommandModelsRule<T>>();
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IValidationRule&lt;<see cref="SqlCommand"/>, <see cref="SqlCommandValidationRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="DataSet"/>&gt;, <see cref="SqlCommandDataSetRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="DataTable"/>&gt;, <see cref="SqlCommandDataTableRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlCommandJsonArrayRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IProcess&lt;<see cref="SqlCommand"/>, <see cref="SqlCommandProcess"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="object"/>&gt;, <see cref="SqlCommandScalarRule"/>&gt;()<br/>
+	/// </c>
+	/// <i><b>Requires calls to:</b></i>
+	/// <code>
+	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
+	/// </code>
+	/// </summary>
+	public static IServiceCollection RegisterSqlCommandRules(this IServiceCollection @this)
+		=> @this.AddSingleton<IValidationRule<SqlCommand>, SqlCommandValidationRule>()
+			.AddSingleton<IRule<SqlCommand, DataSet>, SqlCommandDataSetRule>()
+			.AddSingleton<IRule<SqlCommand, DataTable>, SqlCommandDataTableRule>()
+			.AddSingleton<IRule<SqlCommand, JsonArray>, SqlCommandJsonArrayRule>()
+			.AddSingleton<IProcess<SqlCommand>, SqlCommandProcess>()
+			.AddSingleton<IRule<SqlCommand, object?>, SqlCommandScalarRule>();
 }

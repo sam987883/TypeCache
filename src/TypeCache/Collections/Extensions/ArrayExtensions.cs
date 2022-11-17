@@ -72,47 +72,61 @@ public static class ArrayExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/>)<br/>
-	/// <see langword="    yield break"/>;<br/>
+	/// {<br/>
+	/// <see langword="    if"/> (<paramref name="tuple"/>.A <see langword="is null"/> || <paramref name="tuple"/>.B <see langword="is null"/>)<br/>
+	/// <see langword="        yield break"/>;<br/>
 	/// <br/>
-	/// <see langword="var"/> count = (<paramref name="tuple"/>.Item1.Length, <paramref name="tuple"/>.Item2.Length).Minimum();<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    yield return"/> (<paramref name="tuple"/>.Item1[i], <paramref name="tuple"/>.Item2[i]);<br/>
+	/// <see langword="    var"/> count = (<paramref name="tuple"/>.A.Length, <paramref name="tuple"/>.B.Length).Minimum();<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        yield return"/> (<paramref name="tuple"/>.A[i], <paramref name="tuple"/>.B[i]);<br/>
+	/// }
 	/// </code>
 	/// </summary>
-	public static IEnumerable<(A, B)> Combine<A, B>((A[], B[]) tuple)
+	public static IEnumerable<(A, B)> Combine<A, B>((A[] A, B[] B) tuple)
 	{
-		if (tuple.Item1 is null || tuple.Item2 is null)
+		if (tuple.A is null || tuple.B is null)
 			yield break;
 
-		var count = (tuple.Item1.Length, tuple.Item2.Length).Minimum();
+		var count = (tuple.A.Length, tuple.B.Length).Minimum();
 		for (var i = 0; i < count; ++i)
-			yield return (tuple.Item1[i], tuple.Item2[i]);
+			yield return (tuple.A[i], tuple.B[i]);
 	}
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (<paramref name="tuple"/>.Item1 <see langword="is null"/> || tuple.Item2 <see langword="is null"/> || tuple.Item3 <see langword="is null"/>)<br/>
-	/// <see langword="    yield break"/>;<br/>
+	/// {<br/>
+	/// <see langword="    if"/> (<paramref name="tuple"/>.A <see langword="is null"/> || <paramref name="tuple"/>.B <see langword="is null"/> || <paramref name="tuple"/>.C <see langword="is null"/>)<br/>
+	/// <see langword="        yield break"/>;<br/>
 	/// <br/>
-	/// <see langword="var"/> count = ((<paramref name="tuple"/>.Item1.Length, <paramref name="tuple"/>.Item2.Length).Minimum(), <paramref name="tuple"/>.Item3.Length).Minimum();<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    yield return"/> (<paramref name="tuple"/>.Item1[i], <paramref name="tuple"/>.Item2[i], <paramref name="tuple"/>.Item3[i]);<br/>
+	/// <see langword="    var"/> count = ((<paramref name="tuple"/>.A.Length, <paramref name="tuple"/>.B.Length).Minimum(), <paramref name="tuple"/>.C.Length).Minimum();<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        yield return"/> (<paramref name="tuple"/>.A[i], <paramref name="tuple"/>.B[i], <paramref name="tuple"/>.C[i]);<br/>
+	/// }
 	/// </code>
 	/// </summary>
-	public static IEnumerable<(A, B, C)> Combine<A, B, C>((A[], B[], C[]) tuple)
+	public static IEnumerable<(A, B, C)> Combine<A, B, C>((A[] A, B[] B, C[] C) tuple)
 	{
-		if (tuple.Item1 is null || tuple.Item2 is null || tuple.Item3 is null)
+		if (tuple.A is null || tuple.B is null || tuple.C is null)
 			yield break;
 
-		var count = ((tuple.Item1.Length, tuple.Item2.Length).Minimum(), tuple.Item3.Length).Minimum();
+		var count = ((tuple.A.Length, tuple.B.Length).Minimum(), tuple.C.Length).Minimum();
 		for (var i = 0; i < count; ++i)
-			yield return (tuple.Item1[i], tuple.Item2[i], tuple.Item3[i]);
+			yield return (tuple.A[i], tuple.B[i], tuple.C[i]);
 	}
 
 	/// <summary>
-	/// Can modify the items in the array.
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="action"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>?.Length ?? 0;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/><paramref name="action"/>(<see langword="ref"/> @<paramref name="this"/>[i]);<br/>
+	/// }
+	/// </code>
 	/// </summary>
+	/// <remarks>Can modify the items in the array.</remarks>
+	/// <exception cref="ArgumentNullException"/>
 	public static void Do<T>(this T[]? @this, ActionRef<T> action)
 	{
 		action.AssertNotNull();
@@ -123,29 +137,42 @@ public static class ArrayExtensions
 	}
 
 	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="action"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>?.Length ?? 0;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/><paramref name="action"/>(<see langword="ref"/> @<paramref name="this"/>[i], <see langword="ref"/> i);<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <remarks>
 	/// Can modify the contents of the array and the looping index.<br/>
 	/// index = 0 restarts the loop, --index repeats the current item and ++index skips the next item.
-	/// </summary>
+	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static void Do<T>(this T[]? @this, ActionRef<T, int> action)
 	{
 		action.AssertNotNull();
 
 		var count = @this?.Length ?? 0;
-		for (var index = 0; index < count; ++index)
-			action(ref @this![index], ref index);
+		for (var i = 0; i < count; ++i)
+			action(ref @this![i], ref i);
 	}
 
 	/// <remarks>
 	/// <code>
-	/// <paramref name="edit"/>.AssertNotNull();<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="edit"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
-	/// <see langword="    yield break"/>;<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/>.IsEmpty)<br/>
+	/// <see langword="        yield break"/>;<br/>
 	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/><paramref name="each"/>(@<paramref name="this"/>[i]);
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/><paramref name="each"/>(@<paramref name="this"/>[i]);<br/>
+	/// }
 	/// </code>
 	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
@@ -161,18 +188,20 @@ public static class ArrayExtensions
 			yield return edit(@this[i]);
 	}
 
-	/// <remarks>
+	/// <summary>
 	/// <code>
-	/// <paramref name="edit"/>.AssertNotNull();<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="edit"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
-	/// <see langword="    yield break"/>;<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
+	/// <see langword="        yield break"/>;<br/>
 	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/><paramref name="each"/>(@<paramref name="this"/>[i], i);
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        "/><paramref name="each"/>(@<paramref name="this"/>[i], i);<br/>
+	/// }
 	/// </code>
-	/// </remarks>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> Each<T>(this T[]? @this, Func<T, int, T> edit)
 	{
@@ -186,7 +215,29 @@ public static class ArrayExtensions
 			yield return edit(@this[i], i);
 	}
 
-	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
+    /// <summary>
+    /// <code>
+    /// {<br/>
+    /// <see langword="    "/><paramref name="range"/> = <paramref name="range"/>.Normalize(@<paramref name="this"/>.Length);<br/>
+    /// <see langword="    if"/> (<paramref name="range"/>.Any() <see langword="is not true"/>)<br/>
+    /// <see langword="        return"/> <see cref="Array{T}.Empty"/>;<br/>
+    /// <br/>
+    /// <see langword="    var"/> reverse = <paramref name="range"/>.IsReverse() <see langword="is true"/>;<br/>
+    /// <see langword="    if"/> (reverse)<br/>
+    /// <see langword="        "/><paramref name="range"/> = <paramref name="range"/>.Reverse();<br/>
+    /// <br/>
+    /// <see langword="    var"/> span = @<paramref name="this"/>.AsSpan(<paramref name="range"/>);<br/>
+    /// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[span.Length];<br/>
+    /// <see langword="    var"/> copySpan = copy.AsSpan();<br/>
+    /// <see langword="    "/>span.CopyTo(copySpan);<br/>
+    /// <see langword="    if"/> (reverse)<br/>
+    /// <see langword="        "/>copySpan.Reverse();<br/>
+    /// <br/>
+    /// <see langword="    return"/> copy;<br/>
+    /// }
+    /// </code>
+    /// </summary>
+    public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
 		range = range.Normalize(@this.Length);
 		if (range.Any() is not true)
@@ -197,90 +248,147 @@ public static class ArrayExtensions
 			range = range.Reverse();
 
 		var span = @this.AsSpan(range);
-		var copy = new T[span.Length].AsSpan();
-		span.CopyTo(copy);
+		var copy = new T[span.Length];
+		var copySpan = copy.AsSpan();
+		span.CopyTo(copySpan);
 		if (reverse)
-			copy.Reverse();
+			copySpan.Reverse();
 
-		return copy.ToArray();
+		return copy;
 	}
 
-	/// <summary>
-	/// <code>
-	/// <see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="    return"/> <see cref="Array{T}.Empty"/><br/>
-	/// <br/>
-	/// <see langword="var"/> copy = <see langword="new"/> <typeparamref name="T"/>[@<paramref name="this"/>.Length];<br/>
-	/// @<paramref name="this"/>.AsSpan().CopyTo(copy.AsSpan());<br/>
-	/// <see langword="return"/> copy;
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="IndexOutOfRangeException"/>
-	public static T[] GetCopy<T>(this T[] @this)
+    /// <summary>
+    /// <code>
+    /// {<br/>
+    /// <see langword="    "/><see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
+    /// <see langword="        return"/> <see cref="Array{T}.Empty"/><br/>
+    /// <br/>
+    /// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[@<paramref name="this"/>.Length];<br/>
+    /// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(copy);<br/>
+    /// <see langword="    return"/> copy;<br/>
+    /// }
+    /// </code>
+    /// </summary>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
+    public static T[] GetCopy<T>(this T[] @this)
 	{
 		if (!@this.Any())
 			return Array<T>.Empty;
 
 		var copy = new T[@this.Length];
-		@this.AsSpan().CopyTo(copy.AsSpan());
+		@this.AsSpan().CopyTo(copy);
 		return copy;
 	}
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
+	/// <see langword="        if "/>(<paramref name="filter"/>(item))<br/>
+	/// <see langword="            yield return"/> item;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> If<T>(this T[]? @this, Predicate<T> filter)
 	{
 		filter.AssertNotNull();
 
-		if (@this?.Length > 0)
+		if (!@this.Any())
+			yield break;
+
+		var count = @this.Length;
+		for (var i = 0; i < count; ++i)
 		{
-			var count = @this.Length;
-			for (var i = 0; i < count; ++i)
-			{
-				var item = @this[i];
-				if (filter(item))
-					yield return item;
-			}
+			var item = @this[i];
+			if (filter(item))
+				yield return item;
 		}
 	}
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
+	/// <see langword="        if "/>(<see langword="await"/> <paramref name="filter"/>(item))<br/>
+	/// <see langword="            yield return"/> item;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, Func<T, Task<bool>> filter, [EnumeratorCancellation] CancellationToken token = default)
 	{
 		filter.AssertNotNull();
 
-		if (@this?.Length > 0)
-		{
-			var count = @this.Length;
-			for (var i = 0; i < count; ++i)
-			{
-				if (token.IsCancellationRequested)
-					yield break;
+		if (!@this.Any())
+			yield break;
 
-				var item = @this[i];
-				if (await filter(item))
-					yield return item;
-			}
+		var count = @this.Length;
+		for (var i = 0; i < count; ++i)
+		{
+			if (token.IsCancellationRequested)
+				yield break;
+
+			var item = @this[i];
+			if (await filter(item))
+				yield return item;
 		}
 	}
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
+	/// <see langword="        if "/>(<see langword="await"/> <paramref name="filter"/>(item, <paramref name="token"/>))<br/>
+	/// <see langword="            yield return"/> item;<br/>
+	/// <see langword="    "/>}<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, Func<T, CancellationToken, Task<bool>> filter, [EnumeratorCancellation] CancellationToken token = default)
 	{
 		filter.AssertNotNull();
 
-		if (@this?.Length > 0)
-		{
-			var count = @this.Length;
-			for (var i = 0; i < count; ++i)
-			{
-				if (token.IsCancellationRequested)
-					yield break;
+		if (!@this.Any())
+			yield break;
 
-				var item = @this[i];
-				if (await filter(item, token))
-					yield return item;
-			}
+		var count = @this.Length;
+		for (var i = 0; i < count; ++i)
+		{
+			if (token.IsCancellationRequested)
+				yield break;
+
+			var item = @this[i];
+			if (await filter(item, token))
+				yield return item;
 		}
 	}
 
@@ -307,38 +415,58 @@ public static class ArrayExtensions
 	public static int Length<T>(this T[,] @this, int dimension)
 		=> @this.GetUpperBound(dimension) - @this.GetLowerBound(dimension);
 
-	/// <exception cref="ArgumentNullException"/>
-	public static V[] Map<T, V>(this T[]? @this, Func<T, int, V> map)
-	{
-		map.AssertNotNull();
-
-		if (@this?.Length > 0)
-		{
-			var count = @this.Length;
-			var array = new V[count];
-			for (var i = 0; i < count; ++i)
-				array[i] = map(@this[i], i);
-			return array;
-		}
-
-		return Array<V>.Empty;
-	}
-
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="map"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        return"/> Array&lt;<typeparamref name="V"/>&gt;.Empty;<br/>
+	/// <br/>
+	/// <see langword="    var"/> array = <see langword="new"/> <typeparamref name="V"/>[@<paramref name="this"/>.Length];<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.Do((item, i) =&gt; array[i] = <paramref name="map"/>(item));<br/>
+	/// <see langword="    return"/> array;<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static V[] Map<T, V>(this T[]? @this, Func<T, V> map)
 	{
 		map.AssertNotNull();
 
-		if (@this?.Length > 0)
-		{
-			var count = @this.Length;
-			var array = new V[count];
-			for (var i = 0; i < count; ++i)
-				array[i] = map(@this![i]);
-			return array;
-		}
+		if (!@this.Any())
+			return Array<V>.Empty;
 
-		return Array<V>.Empty;
+		var array = new V[@this.Length];
+		@this.Do((item, i) => array[i] = map(item));
+		return array;
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="map"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        return"/> Array&lt;<typeparamref name="V"/>&gt;.Empty;<br/>
+	/// <br/>
+	/// <see langword="    var"/> array = <see langword="new"/> <typeparamref name="V"/>[@<paramref name="this"/>.Length];<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.Do((item, i) =&gt; array[i] = <paramref name="map"/>(item, i));<br/>
+	/// <see langword="    return"/> array;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static V[] Map<T, V>(this T[]? @this, Func<T, int, V> map)
+	{
+		map.AssertNotNull();
+
+		if (!@this.Any())
+			return Array<V>.Empty;
+
+		var array = new V[@this.Length];
+		@this.Do((item, i) => array[i] = map(item, i));
+		return array;
 	}
 
 	/// <inheritdoc cref="Array.Reverse{T}(T[])"/>
@@ -394,6 +522,19 @@ public static class ArrayExtensions
 		=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 
 	/// <inheritdoc cref="Array.Copy(Array, int, Array, int, int)"/>
+	/// <remarks>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (<paramref name="sourceIndex"/> + <paramref name="length"/> &gt; @<paramref name="this"/>.Length)<br/>
+	/// <see langword="        throw new"/> IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");<br/>
+	/// <br/>
+	/// <see langword="    var"/> array = <see langword="new"/> <typeparamref name="T"/>[length &gt; 0 ? <paramref name="length"/> : (@<paramref name="this"/>.Length - <paramref name="sourceIndex"/>)];<br/>
+	/// <see langword="    "/>Array.Copy(@this, sourceIndex, array, 0, array.Length);<br/>
+	/// <see langword="    return"/> array;<br/>
+	/// }
+	/// </code>
+	/// </remarks>
+	/// <exception cref="IndexOutOfRangeException"/>
 	public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
 	{
 		if (sourceIndex + length > @this.Length)
@@ -401,16 +542,6 @@ public static class ArrayExtensions
 
 		var array = new T[length > 0 ? length : (@this.Length - sourceIndex)];
 		Array.Copy(@this, sourceIndex, array, 0, array.Length);
-		return array;
-	}
-
-	public static V[] ToArray<T, V>(this T[]? @this, Func<T, V> map)
-	{
-		if (!@this.Any())
-			return Array<V>.Empty;
-
-		var array = new V[@this.Length];
-		@this.Do((item, index) => array[index] = map(item));
 		return array;
 	}
 

@@ -21,7 +21,7 @@ public static class EnumOf<T>
 
 	public static bool Flags => Member.Flags;
 
-	public static RuntimeTypeHandle Handle => Member.Handle;
+	public static RuntimeTypeHandle Handle => Member.TypeHandle;
 
 	public static bool Internal => Member.Internal;
 

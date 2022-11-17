@@ -18,10 +18,10 @@ public static class HandleExtensions
 		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable()) &amp;&amp; !@<paramref name="this"/>.ReturnType.IsByRef &amp;&amp; !@<paramref name="this"/>.ReturnType.IsByRefLike;</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable()) &amp;&amp; @<paramref name="this"/>.IsInvokable();</c>
 	/// </remarks>
 	internal static bool IsInvokable(this MethodInfo @this)
-		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable()) && !@this.ReturnType.IsByRef && !@this.ReturnType.IsByRefLike;
+		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable()) && @this.ReturnType.IsInvokable();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
@@ -52,6 +52,14 @@ public static class HandleExtensions
 	public static bool Is(this RuntimeTypeHandle @this, Type type)
 		=> @this.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && @this.ToGenericType() == type);
 
+	/// <inheritdoc cref="Type.MakeArrayType(int)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeArrayType(<paramref name="rank"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Type? ToArrayTypeOf(this RuntimeTypeHandle @this, int rank = 1)
+		=> @this.ToType().MakeArrayType(rank);
+
 	/// <inheritdoc cref="FieldInfo.GetFieldFromHandle(RuntimeFieldHandle)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="FieldInfo"/>.GetFieldFromHandle(@<paramref name="this"/>);</c>
@@ -81,6 +89,14 @@ public static class HandleExtensions
 		return type?.IsGenericType is true ? type.GetGenericTypeDefinition() : null;
 	}
 
+	/// <inheritdoc cref="Type.MakeGenericType(Type[])"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeGenericType(<paramref name="typeArguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Type? ToGenericTypeOf(this RuntimeTypeHandle @this, params Type[] typeArguments)
+		=> @this.ToType().MakeGenericType(typeArguments);
+
 	/// <inheritdoc cref="MethodBase.GetMethodFromHandle(RuntimeMethodHandle)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>);</c>
@@ -104,5 +120,5 @@ public static class HandleExtensions
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToType(this RuntimeTypeHandle @this)
-		=> Type.GetTypeFromHandle(@this);
+		=> Type.GetTypeFromHandle(@this)!;
 }

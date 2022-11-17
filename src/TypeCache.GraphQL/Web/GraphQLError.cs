@@ -2,12 +2,11 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using GraphQL;
 using GraphQL.Execution;
 
 namespace TypeCache.GraphQL.Web;
 
-public class GraphQLError
+public sealed class GraphQLError
 {
 	public string? Message { set; get; }
 

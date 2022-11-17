@@ -8,7 +8,7 @@ using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types;
 
-public class GraphQLInterfaceType<T> : InterfaceGraphType<T>
+public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 	where T : class
 {
 	public GraphQLInterfaceType()

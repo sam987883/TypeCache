@@ -6,25 +6,26 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Types;
+using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.GraphQL.Web;
 
-public class GraphQLMiddleware<T>
-	where T : ISchema
+public sealed class GraphQLMiddleware
 {
 	private readonly RequestDelegate _Next;
+	private readonly string _GraphQLSchemaName;
 	private readonly PathString _Route;
 	private readonly JsonSerializerOptions _JsonSerializerOptions;
 
-	public GraphQLMiddleware(RequestDelegate next, PathString route)
+	public GraphQLMiddleware(RequestDelegate next, string graphQLSchemaName, PathString route)
 	{
+		this._GraphQLSchemaName = graphQLSchemaName;
 		this._Next = next;
 		this._Route = route;
 		this._JsonSerializerOptions = new JsonSerializerOptions
@@ -34,7 +35,11 @@ public class GraphQLMiddleware<T>
 		};
 	}
 
-	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer)
+	public async Task Invoke(HttpContext httpContext
+		, IServiceProvider provider
+		, IDocumentExecuter executer
+		, IGraphQLSerializer graphQLSerializer
+		, IAccessor<GraphQLSchema> graphQLSchemaAccessor)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -57,6 +62,9 @@ public class GraphQLMiddleware<T>
 			{ "RequestTime", requestTime },
 			{ nameof(httpContext.User), httpContext.User }
 		};
+		var graphQLSchema = graphQLSchemaAccessor[this._GraphQLSchemaName];
+		graphQLSchema.AssertNotNull();
+        graphQLSchema.Description = Invariant($"GraphQL schema `{this._GraphQLSchemaName}` route: {this._Route}");
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
@@ -64,7 +72,7 @@ public class GraphQLMiddleware<T>
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
-			Schema = provider.GetRequiredService<T>(),
+			Schema = graphQLSchema,
 			UserContext = userContext,
 			ValidationRules = DocumentValidator.CoreRules
 		};

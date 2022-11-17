@@ -9,6 +9,6 @@ namespace TypeCache.GraphQL.Attributes;
 /// Ignore a parameter, enum field or property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
-public class GraphQLIgnoreAttribute : Attribute
+public sealed class GraphQLIgnoreAttribute : Attribute
 {
 }

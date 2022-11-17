@@ -8,6 +8,7 @@ using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
+using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
@@ -22,18 +23,25 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLExtensions
 {
+	public static void AddOrderBy(this EnumerationGraphType @this, OrderBy orderBy, string? deprecationReason = null)
+		=> @this.Add(new(orderBy.Display, orderBy.ToString())
+		{
+			Description = orderBy.ToString(),
+			DeprecationReason = deprecationReason
+		});
+
 	/// <summary>
 	/// Use this to create a Graph QL Connection object to return in your endpoint to support paging.
 	/// </summary>
 	/// <typeparam name="T">.</typeparam>
 	/// <param name="data">The data<see cref="IEnumerable{T}"/>.</param>
 	/// <param name="totalCount">The total record count of the record set being paged.</param>
-	/// <param name="pager">The Pager used to retrieve the record set.</param>
+	/// <param name="offset">The number of records to skip.</param>
 	/// <returns>The <see cref="Connection{T}"/>.</returns>
-	public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, Pager pager)
+	public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, uint offset)
 	{
 		var items = data.ToArray();
-		var start = pager.After + 1;
+		var start = offset + 1;
 		var end = start + items.Length;
 		var connection = new Connection<T>
 		{
@@ -47,7 +55,7 @@ public static class GraphQLExtensions
 				StartCursor = start.ToString(),
 				EndCursor = end.ToString(),
 				HasNextPage = end < totalCount,
-				HasPreviousPage = pager.After > 0
+				HasPreviousPage = offset > 0
 			},
 			TotalCount = totalCount
 		};
@@ -129,27 +137,12 @@ public static class GraphQLExtensions
 			});
 		}
 
-		if (@this.PropertyType.SystemType is SystemType.Boolean
-			|| @this.PropertyType.Is<Nullable<bool>>())
-		{
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "true",
-				Description = "Return this value when property value is true."
-			});
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "false",
-				Description = "Return this value when property value is false."
-			});
-		}
-
 		if (type.Is<DateTimeGraphType>() || type.Is<NonNullGraphType<DateTimeGraphType>>())
 		{
 			arguments.Add(new QueryArgument<StringGraphType>()
 			{
 				Name = "timeZone",
-				Description = "Converts the DateTime value to the specified time zone which must be supported by .Net's TimeZoneInfo class.  Use a comma to separate `from,to` time zones otherwise UTC will be assumed for the from value."
+				Description = "Converts the DateTime value to the specified time zone which must be supported by `System.TimeZoneInfo`.  Use a comma to separate `from,to` time zones otherwise UTC will be assumed for the from value."
 			});
 		}
 
@@ -158,7 +151,7 @@ public static class GraphQLExtensions
 			arguments.Add(new QueryArgument<StringGraphType>()
 			{
 				Name = "timeZone",
-				Description = "Converts the DateTimeOffset value to the specified time zone which must be supported by .Net's TimeZoneInfo class."
+				Description = "Converts the DateTimeOffset value to the specified time zone which must be supported by `System.TimeZoneInfo`."
 			});
 		}
 		else if (type.Is<StringGraphType>()
@@ -212,9 +205,18 @@ public static class GraphQLExtensions
 		};
 	}
 
+	public static IEnumerable<OrderBy> ToOrderBy(this string[] @this)
+	{
+		var ascending = @this.Map(column => new OrderBy(column, Sort.Ascending));
+		var descending = @this.Map(column => new OrderBy(column, Sort.Descending));
+		var tokens = ascending.Union(descending).ToArray();
+		tokens.Sort(new CustomComparer<OrderBy>((orderBy1, orderBy2) => StringComparer.Ordinal.Compare(orderBy1.Display, orderBy2.Display)));
+		return tokens;
+	}
+
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 		=> new QueryArguments(@this
-			.If(parameter => !parameter.GraphQLIgnore() && !parameter.Type.Handle.Is<IResolveFieldContext>())
+			.If(parameter => !parameter.GraphQLIgnore() && !parameter.Type.TypeHandle.Is<IResolveFieldContext>())
 			.Map(parameter => new QueryArgument(parameter.GraphQLType())
 			{
 				Name = parameter.GraphQLName(),

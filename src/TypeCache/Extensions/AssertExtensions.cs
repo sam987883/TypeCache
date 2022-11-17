@@ -16,8 +16,10 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<see cref="EqualityComparer{T}.Default"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>)<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>}.{<see langword="nameof"/>(AssertEquals)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt;({<paramref name="value"/>})."));
+	/// {<br/>
+	/// <see langword="    if"/> (!<see cref="EqualityComparer{T}.Default"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>)<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>}.{<see langword="nameof"/>(AssertEquals)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt;({<paramref name="value"/>})."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -32,10 +34,12 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <paramref name="comparer"/>.AssertNotNull();<br/>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="comparer"/>.AssertNotNull();<br/>
 	/// <br/>
-	/// <see langword="if"/> (!<paramref name="comparer"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>)<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>?.ToString() ?? "null"}.{<see langword="nameof"/>(AssertEquals)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt;({<paramref name="value"/>?.ToString() ?? "null"})."));
+	/// <see langword="    if"/> (!<paramref name="comparer"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>)<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>?.ToString() ?? "null"}.{<see langword="nameof"/>(AssertEquals)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt;({<paramref name="value"/>?.ToString() ?? "null"})."));
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -62,8 +66,27 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>, <paramref name="value"/>))<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotSame)}()."));
+	/// {<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/>)<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<see langword="nameof"/>(AssertFalse)}({<paramref name="argument"/>})."));<br/>
+	///	}
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void AssertFalse(this bool @this,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+	{
+		if (@this)
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {nameof(AssertFalse)}({argument})."));
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (!<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>, <paramref name="value"/>))<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotSame)}()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -78,10 +101,12 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
+	/// {<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsBlank())<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotBlank)}()."));
+	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotBlank)}()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -98,10 +123,12 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
+	/// {<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsBlank())<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotEmpty)}&lt;IEnumerable&lt;{<see cref="TypeOf{T}.Name"/>}&gt;&gt;()."));
+	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotEmpty)}&lt;IEnumerable&lt;{<see cref="TypeOf{T}.Name"/>}&gt;&gt;()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -118,10 +145,12 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// @<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
+	/// {<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AssertNotNull(<paramref name="argument"/>, <paramref name="caller"/>);<br/>
 	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsBlank())<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotEmpty)}&lt;{<see cref="TypeOf{T}.Name"/>[]}&gt;()."));
+	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotEmpty)}&lt;{<see cref="TypeOf{T}.Name"/>[]}&gt;()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -138,8 +167,10 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentNullException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotNull)}()."));
+	/// {<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentNullException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotNull)}()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -153,8 +184,10 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2))<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>.Item1?.ToString() ?? "null"}.{<see langword="nameof"/>(AssertNotSame)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt({@<paramref name="this"/>.Item2?.ToString() ?? "null"})"));
+	/// {<br/>
+	/// <see langword="    if"/> (<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2))<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {@<paramref name="this"/>.Item1?.ToString() ?? "null"}.{<see langword="nameof"/>(AssertNotSame)}&lt;{<see cref="TypeOf{T}.Name"/>}&gt;({@<paramref name="this"/>.Item2?.ToString() ?? "null"})"));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -168,8 +201,10 @@ public static class AssertExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>, <paramref name="value"/>))<br/>
-	///	<see langword="    throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotSame)}()."));
+	/// {<br/>
+	/// <see langword="    if"/> (!<see cref="object"/>.ReferenceEquals(@<paramref name="this"/>, <paramref name="value"/>))<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<paramref name="argument"/>}.{<see langword="nameof"/>(AssertNotSame)}()."));<br/>
+	///	}
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -180,5 +215,22 @@ public static class AssertExtensions
 	{
 		if (object.ReferenceEquals(@this, value))
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertNotSame)}({value?.ToString() ?? NULL})."));
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (!@<paramref name="this"/>)<br/>
+	///	<see langword="        throw new"/> <see cref="ArgumentOutOfRangeException"/>(<paramref name="argument"/>, Invariant($"{<paramref name="caller"/>}: {<see langword="nameof"/>(AssertTrue)}({<paramref name="argument"/>})."));<br/>
+	///	}
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void AssertTrue(this bool @this,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+	{
+		if (!@this)
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {nameof(AssertTrue)}({argument})."));
 	}
 }

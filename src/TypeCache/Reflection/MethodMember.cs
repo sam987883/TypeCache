@@ -15,18 +15,22 @@ using static TypeCache.Default;
 namespace TypeCache.Reflection;
 
 [DebuggerDisplay("{Type,nq}.{Name,nq}(,,,)", Name = "{Name}")]
-public class MethodMember : Member, IEquatable<MethodMember>
+public sealed class MethodMember : IMember, IEquatable<MethodMember>
 {
 	private readonly IReadOnlyDictionary<RuntimeTypeHandle[], Func<object?[]?, object>> _GenericInvokeCache;
 	private readonly Lazy<Func<object?[]?, object?>> _Invoke;
 	private readonly Lazy<Delegate> _Method;
 
-	internal MethodMember(MethodInfo methodInfo, TypeMember type) : base(methodInfo)
+	internal MethodMember(MethodInfo methodInfo, TypeMember type)
 	{
 		this.Abstract = methodInfo.IsAbstract;
+		this.Attributes = methodInfo.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 		this.GenericTypeCount = methodInfo.GetGenericArguments().Length;
 		this.Handle = methodInfo.MethodHandle;
+		this.Internal = methodInfo.IsAssembly;
+		this.Name = methodInfo.Name();
 		this.Parameters = methodInfo.GetParameters().Map(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Public = methodInfo.IsPublic;
 		this.Return = new ReturnParameter(methodInfo);
 		this.Static = methodInfo.IsStatic;
 		this.Type = type;
@@ -34,8 +38,8 @@ public class MethodMember : Member, IEquatable<MethodMember>
 		this._GenericInvokeCache = methodInfo.ContainsGenericParameters
 			? new LazyDictionary<RuntimeTypeHandle[], Func<object?[]?, object>>(createGenericInvoke, comparer: RuntimeTypeHandleArrayComparer)
 			: ImmutableDictionary<RuntimeTypeHandle[], Func<object?[]?, object>>.Empty;
-		this._Invoke = Lazy.Create(() => ((MethodInfo)this.Handle.ToMethodBase(this.Type.Handle)!).LambdaInvoke().Compile());
-		this._Method = Lazy.Create(() => ((MethodInfo)this.Handle.ToMethodBase(this.Type.Handle)!).Lambda().Compile());
+		this._Invoke = Lazy.Create(() => ((MethodInfo)this).LambdaInvoke().Compile());
+		this._Method = Lazy.Create(() => ((MethodInfo)this).Lambda().Compile());
 
 		Func<object?[]?, object> createGenericInvoke(params RuntimeTypeHandle[] handles)
 		{
@@ -47,14 +51,26 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// <inheritdoc cref="MethodBase.IsAbstract"/>
 	public bool Abstract { get; }
 
+	/// <inheritdoc/>
+	public IReadOnlyList<Attribute> Attributes { get; }
+
 	public int GenericTypeCount { get; }
 
 	/// <inheritdoc cref="MethodBase.MethodHandle"/>
 	public RuntimeMethodHandle Handle { get; }
 
+	/// <inheritdoc cref="MethodBase.IsAssembly"/>
+	public bool Internal { get; }
+
 	public Delegate? Method => this._Method.Value;
 
+	/// <inheritdoc/>
+	public string Name { get; }
+
 	public IReadOnlyList<MethodParameter> Parameters { get; }
+
+	/// <inheritdoc cref="MethodBase.IsPublic"/>
+	public bool Public { get; }
 
 	public ReturnParameter Return { get; }
 
@@ -62,7 +78,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	public bool Static { get; }
 
 	/// <summary>
-	/// The <see cref="TypeMember"/> that owns this <see cref="Member"/>.
+	/// The <see cref="TypeMember"/> that owns this method.
 	/// </summary>
 	public TypeMember Type { get; }
 
@@ -71,7 +87,7 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(MethodMember? other)
-		=> other is not null && this.Handle.Equals(other.Handle) && this.Type!.Equals(other.Type);
+		=> this.Handle == other?.Handle;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
@@ -102,5 +118,5 @@ public class MethodMember : Member, IEquatable<MethodMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static implicit operator MethodInfo(MethodMember member)
-		=> (MethodInfo)member.Handle.ToMethodBase(member.Type!.Handle)!;
+		=> (MethodInfo)member.Handle.ToMethodBase(member.Type.TypeHandle)!;
 }

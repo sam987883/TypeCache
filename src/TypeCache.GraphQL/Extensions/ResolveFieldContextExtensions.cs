@@ -2,10 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using GraphQL;
 using GraphQL.Types.Relay.DataObjects;
 using GraphQLParser.AST;
 using TypeCache.Collections.Extensions;
+using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -15,6 +17,27 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class ResolveFieldContextExtensions
 {
+	public static DataTable GetArgumentAsDataTable(this IResolveFieldContext @this, string name, ObjectSchema objectSchema)
+	{
+		name.AssertNotBlank();
+
+		var table = objectSchema.CreateDataTable();
+		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name);
+		if (arguments is null)
+			return table;
+
+		table.BeginLoadData();
+		arguments.Do(argument =>
+		{
+			var row = table.NewRow();
+			argument.Do(pair => row[pair.Key] = pair.Value ?? DBNull.Value);
+			table.Rows.Add(row);
+		});
+		table.EndLoadData();
+
+		return table;
+	}
+
 	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, object? overrideValue = null)
 	{
 		foreach (var parameter in method.Parameters)
@@ -60,48 +83,9 @@ public static class ResolveFieldContextExtensions
 		if (!@this.Operation.SelectionSet.Selections.IfFirst<GraphQLField>(out var root) || !root.Arguments.Any())
 			return dictionary;
 
-		foreach (var argument in root.Arguments)
-		{
-			dictionary.AddInputs(argument.Name.StringValue, argument.Value);
-		}
+		root.Arguments.Do(argument => dictionary.AddInputs(argument.Name.StringValue, argument.Value));
 
 		return dictionary;
-	}
-
-	/// <summary>
-	/// Gets the query selections for the Connection GraphQL Relay type including nested selections and fragments.
-	/// </summary>
-	public static ConnectionSelections GetConnectionSelections(this IResolveFieldContext @this)
-	{
-		var selections = new ConnectionSelections
-		{
-			TotalCount = @this.SubFields!.ContainsKey("totalCount")
-		};
-
-		if (@this.SubFields.TryGetValue("pageInfo", out var pageInfo))
-		{
-			var fields = pageInfo.Field.SelectionSet!.Selections.If<GraphQLField>().ToArray();
-			var name = pageInfo.Field.Name.StringValue;
-			selections.HasNextPage = fields.Any(field => name.Is(nameof(PageInfo.HasNextPage)));
-			selections.HasPreviousPage = fields.Any(field => name.Is(nameof(PageInfo.HasPreviousPage)));
-			selections.StartCursor = fields.Any(field => name.Is(nameof(PageInfo.StartCursor)));
-			selections.EndCursor = fields.Any(field => name.Is(nameof(PageInfo.EndCursor)));
-		}
-
-		var fragments = @this.Document.Definitions.If<GraphQLFragmentDefinition>();
-		if (@this.SubFields.TryGetValue("edges", out var edges))
-		{
-			selections.Cursor = edges.Field.SelectionSet!.Selections.If<GraphQLField>().Any(field => field.Name.StringValue.Is("cursor"));
-			var node = edges.Field.SelectionSet.Selections.First(selection => selection is INamedNode name && name.Name.StringValue.Is("node"));
-
-			if (node is IHasSelectionSetNode selectionSet && selectionSet.SelectionSet is not null)
-				selections.EdgeNodeFields = selectionSet.SelectionSet.GetSelections(fragments, string.Empty).ToArray();
-		}
-
-		if (@this.SubFields.TryGetValue("items", out var items) && items.Field.SelectionSet?.Selections.Any() is true)
-			selections.ItemFields = items.Field.SelectionSet.GetSelections(fragments, string.Empty).ToArray();
-
-		return selections;
 	}
 
 	/// <summary>

@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.Business;
 
-public class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermediary<REQUEST, RESPONSE>
+public sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermediary<REQUEST, RESPONSE>
 {
 	private readonly IRule<REQUEST, RESPONSE> _Rule;
 	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;

@@ -12,12 +12,15 @@ public static class DictionaryExtensions
 {
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<paramref name="keys"/>.Any())<br/>
-	/// <see langword="    yield break;"/> value;<br/>
+	/// {<br/>
+	/// <see langword="    if"/> (!<paramref name="keys"/>.Any())<br/>
+	/// <see langword="        yield break;"/> value;<br/>
 	/// <br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; <paramref name="keys"/>.Length; ++i)<br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>.TryGetValue(<paramref name="keys"/>[i], <see langword="out var"/> value))<br/>
-	/// <see langword="        yield return"/> value;
+	/// <see langword="    var"/> count = <paramref name="keys"/>.Length;<br/>
+	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
+	/// <see langword="        if"/> (@<paramref name="this"/>.TryGetValue(<paramref name="keys"/>[i], <see langword="out var"/> value))<br/>
+	/// <see langword="            yield return"/> value;<br/>
+	/// }
 	/// </code>
 	/// </summary>
 	public static IEnumerable<V> Get<K, V>(this IDictionary<K, V> @this, params K[] keys)
@@ -26,19 +29,22 @@ public static class DictionaryExtensions
 		if (!keys.Any())
 			yield break;
 
-		for (var i = 0; i < keys.Length; ++i)
+		var count = keys.Length;
+		for (var i = 0; i < count; ++i)
 			if (@this.TryGetValue(keys[i], out var value))
 				yield return value;
 	}
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<paramref name="keys"/>.Any())<br/>
-	/// <see langword="    yield break;"/> value;<br/>
+	/// {<br/>
+	/// <see langword="    if"/> (!<paramref name="keys"/>.Any())<br/>
+	/// <see langword="        yield break;"/> value;<br/>
 	/// <br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; <paramref name="keys"/>.Length; ++i)<br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>.TryGetValue(<paramref name="keys"/>[i], <see langword="out var"/> value))<br/>
-	/// <see langword="        yield return"/> value;
+	/// <see langword="    foreach"/> (<see langword="var"/> key <see langword="in"/> <paramref name="keys"/>)<br/>
+	/// <see langword="        if"/> (@<paramref name="this"/>.TryGetValue(key, <see langword="out var"/> value))<br/>
+	/// <see langword="            yield return"/> value;
+	/// }
 	/// </code>
 	/// </summary>
 	public static IEnumerable<V> Get<K, V>(this IDictionary<K, V> @this, IEnumerable<K> keys)
@@ -54,9 +60,11 @@ public static class DictionaryExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="foreach"/> (<see langword="var"/> pair <see langword="in"/> <paramref name="pairs"/>)<br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>.TryGetValue(pair.Key, <see langword="out var"/> value))<br/>
-	/// <see langword="        yield return"/> (pair.Key, value, pair.Value);
+	/// {<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> pair <see langword="in"/> <paramref name="pairs"/>)<br/>
+	/// <see langword="        if"/> (@<paramref name="this"/>.TryGetValue(pair.Key, <see langword="out var"/> value))<br/>
+	/// <see langword="            yield return"/> (pair.Key, value, pair.Value);<br/>
+	/// }
 	/// </code>
 	/// </summary>
 	public static IEnumerable<(K Key, V1 Value1, V2 Value2)> Match<K, V1, V2>(this IDictionary<K, V1> @this, IEnumerable<KeyValuePair<K, V2>> pairs)

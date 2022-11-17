@@ -23,7 +23,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// Instead it will be injected with the instance of <see cref="IResolveFieldContext"/> or <see cref="IResolveFieldContext{TSource}"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, AllowMultiple = false)]
-public class GraphQLTypeAttribute : Attribute
+public sealed class GraphQLTypeAttribute : Attribute
 {
 	private static readonly IReadOnlyDictionary<ScalarType, RuntimeTypeHandle> ScalarGraphTypeHandles =
 		new Dictionary<ScalarType, RuntimeTypeHandle>(EnumOf<ScalarType>.Tokens.Count, EnumOf<ScalarType>.Comparer)

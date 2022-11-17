@@ -9,6 +9,6 @@ namespace TypeCache.GraphQL.Attributes;
 /// Marks a method to be used as a root level Query endpoint.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphQLQueryAttribute : Attribute
+public sealed class GraphQLQueryAttribute : Attribute
 {
 }

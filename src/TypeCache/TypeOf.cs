@@ -25,7 +25,7 @@ public static class TypeOf<T>
 	public static IReadOnlyList<TypeMember> GenericTypes => Member.GenericTypes;
 
 	/// <inheritdoc cref="Type.TypeHandle"/>
-	public static RuntimeTypeHandle Handle => Member.Handle;
+	public static RuntimeTypeHandle Handle => Member.TypeHandle;
 
 	public static IReadOnlyList<TypeMember> InterfaceTypes => Member.InterfaceTypes;
 

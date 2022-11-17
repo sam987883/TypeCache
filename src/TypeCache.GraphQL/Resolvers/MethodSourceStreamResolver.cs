@@ -12,7 +12,7 @@ using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class MethodSourceStreamResolver : ISourceStreamResolver
+public sealed class MethodSourceStreamResolver : ISourceStreamResolver
 {
 	private readonly object? _Controller;
 	private readonly MethodMember _Method;

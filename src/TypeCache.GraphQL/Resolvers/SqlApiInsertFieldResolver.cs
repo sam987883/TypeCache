@@ -1,0 +1,128 @@
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System.Collections.Generic;
+using System.Data;
+using System.Threading.Tasks;
+using GraphQL;
+using Microsoft.Extensions.DependencyInjection;
+using TypeCache.Business;
+using TypeCache.Collections;
+using TypeCache.Collections.Extensions;
+using TypeCache.Data;
+using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.SqlApi;
+using static System.FormattableString;
+using static TypeCache.Data.DataSourceType;
+
+namespace TypeCache.GraphQL.Resolvers;
+
+public class SqlApiInsertFieldResolver : FieldResolver<OutputResponse<DataRow>>
+{
+	protected override async ValueTask<OutputResponse<DataRow>?> ResolveAsync(IResolveFieldContext context)
+	{
+		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
+		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
+		var selections = context.GetSelections().ToArray();
+		var select = context.GetArgument<string[]>(nameof(SelectQuery.Select));
+		var output = selections
+			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}")))
+			.Each(column => objectSchema.DataSource.Type switch
+			{
+				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
+				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
+			})
+			.ToArray();
+		var columns = context.GetArgument<string[]>("columns");
+		var data = context.GetArgumentAsDataTable("data", objectSchema);
+		var sql = data.Rows.Any<DataRow>()
+			? objectSchema.CreateInsertSQL(data, output)
+			: objectSchema.CreateInsertSQL(columns, new SelectQuery
+			{
+				Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
+				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
+				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
+				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
+				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+				Select = objectSchema.Columns
+					.If(column => select.AnyRight(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}")))
+					.Map(column => column.Name),
+				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
+			}, output);
+		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
+
+		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+
+		var result = Array<DataRow>.Empty;
+		if (output.Any())
+			result = (await mediator.ApplyRuleAsync<SqlCommand, DataTable>(sqlCommand, context.CancellationToken)).Select();
+		else
+			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+
+		return new()
+		{
+			TotalCount = sqlCommand.RecordsAffected,
+			DataSource = objectSchema.DataSource.Name,
+			Output = result,
+			Sql = sql,
+			Table = objectSchema.Name
+		};
+	}
+}
+
+public class SqlApiInsertFieldResolver<T> : FieldResolver<OutputResponse<T>>
+	where T : new()
+{
+	protected override async ValueTask<OutputResponse<T>?> ResolveAsync(IResolveFieldContext context)
+	{
+		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
+		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
+		var selections = context.GetSelections().ToArray();
+		var select = context.GetArgument<string[]>(nameof(SelectQuery.Select));
+		var output = selections
+			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}")))
+			.Each(column => objectSchema.DataSource.Type switch
+			{
+				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
+				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
+			})
+			.ToArray();
+		var columns = context.GetArgument<string[]>("columns");
+		var data = context.GetArgument<T[]>("data");
+		var sql = data.Any()
+			? objectSchema.CreateInsertSQL(columns, data, output)
+			: objectSchema.CreateInsertSQL(columns, new SelectQuery
+			{
+				Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
+				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
+				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
+				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
+				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+				Select = objectSchema.Columns
+					.If(column => select.AnyRight(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}")))
+					.Map(column => column.Name),
+				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
+			}, output);
+		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
+
+		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+
+		var result = (IList<T>)Array<T>.Empty;
+		if (output.Any())
+			result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
+		else
+			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+
+		return new()
+		{
+			TotalCount = sqlCommand.RecordsAffected,
+			DataSource = objectSchema.DataSource.Name,
+			Output = result,
+			Sql = sql,
+			Table = objectSchema.Name
+		};
+	}
+}

@@ -10,7 +10,7 @@ namespace TypeCache.Attributes;
 /// Rename any cached <see cref="Member"/> within the TypeCache.Reflection system.
 /// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = false)]
-public class NameAttribute : Attribute
+public sealed class NameAttribute : Attribute
 {
 	public NameAttribute(string name)
 	{

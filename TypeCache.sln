@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2BAE05AE-EA32-46C0-B8FD-58E253C62DF5}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
 		TypeCash.png = TypeCash.png
@@ -20,6 +21,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache.Tests", "tests\TypeCache.Tests\TypeCache.Tests.csproj", "{FFD196D4-F0D2-4841-9FC9-92E80B564B8A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeCache.GraphQL.TestApp", "tests\TypeCache.GraphQL.TestApp\TypeCache.GraphQL.TestApp.csproj", "{4CA1F5A7-C766-46C0-AC8B-3EA3DF70F013}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{4E2BA105-60BD-4BC8-91DA-D440A69CAC30}"
+	ProjectSection(SolutionItems) = preProject
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{C365734A-FDF3-43C2-AA3F-FBE7B7D8D5F7}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +61,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4E2BA105-60BD-4BC8-91DA-D440A69CAC30} = {2BAE05AE-EA32-46C0-B8FD-58E253C62DF5}
+		{C365734A-FDF3-43C2-AA3F-FBE7B7D8D5F7} = {4E2BA105-60BD-4BC8-91DA-D440A69CAC30}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C45D4B27-7124-4A8E-9DDA-3A8CB31FA1A3}

@@ -39,53 +39,6 @@ public class EnumeratorExtensions
 	}
 
 	[Fact]
-	public void Deconstruct()
-	{
-		{
-			var (value1, _) = this.GetInts().GetEnumerator();
-			Assert.Equal(1, value1);
-		}
-		{
-			var (value1, value2, _) = this.GetInts().GetEnumerator();
-			Assert.Equal(1, value1);
-			Assert.Equal(2, value2);
-		}
-		{
-			var (value1, value2, value3, _) = this.GetInts().GetEnumerator();
-			Assert.Equal(1, value1);
-			Assert.Equal(2, value2);
-			Assert.Equal(3, value3);
-		}
-		{
-			var (value1, value2, value3, _) = ((IEnumerable<int>)new[] { 1, 2 }).GetEnumerator();
-			Assert.Equal(1, value1);
-			Assert.Equal(2, value2);
-			Assert.Equal(default, value3);
-		}
-		{
-			var (item1, _) = this.GetStrings().GetEnumerator();
-			Assert.Equal("aaa", item1);
-		}
-		{
-			var (item1, item2, _) = this.GetStrings().GetEnumerator();
-			Assert.Equal("aaa", item1);
-			Assert.Equal(string.Empty, item2);
-		}
-		{
-			var (item1, item2, item3, _) = this.GetStrings().GetEnumerator();
-			Assert.Equal("aaa", item1);
-			Assert.Equal(string.Empty, item2);
-			Assert.Equal(null, item3);
-		}
-		{
-			var (item1, item2, item3, _) = ((IEnumerable<string>)new[] { "aaa" }).GetEnumerator();
-			Assert.Equal("aaa", item1);
-			Assert.Null(item2);
-			Assert.Null(item3);
-		}
-	}
-
-	[Fact]
 	public void Get()
 	{
 		Assert.Equal("Aaa", this.GetStrings().GetEnumerator().Get(4));

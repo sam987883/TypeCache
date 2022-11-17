@@ -8,7 +8,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Net.Business;
 
-internal class HttpClientRule : IRule<HttpRequestMessage, HttpResponseMessage>, IRule<(HttpRequestMessage HttpRequest, string HttpClientName), HttpResponseMessage>
+internal sealed class HttpClientRule : IRule<HttpRequestMessage, HttpResponseMessage>, IRule<(HttpRequestMessage HttpRequest, string HttpClientName), HttpResponseMessage>
 {
 	private readonly IHttpClientFactory _Factory;
 
@@ -21,7 +21,7 @@ internal class HttpClientRule : IRule<HttpRequestMessage, HttpResponseMessage>, 
 	{
 		request.AssertNotNull();
 
-		using var httpClient = this._Factory.CreateClient();
+		var httpClient = this._Factory.CreateClient();
 		using var httpResponse = await httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead, token);
 		await httpResponse.Content.LoadIntoBufferAsync();
 		return httpResponse;
@@ -32,7 +32,7 @@ internal class HttpClientRule : IRule<HttpRequestMessage, HttpResponseMessage>, 
 		request.AssertNotNull();
 		request.HttpClientName.AssertNotBlank();
 
-		using var httpClient = this._Factory.CreateClient(request.HttpClientName);
+		var httpClient = this._Factory.CreateClient(request.HttpClientName);
 		using var httpResponse = await httpClient.SendAsync(request.HttpRequest, HttpCompletionOption.ResponseContentRead, token);
 		await httpResponse.Content.LoadIntoBufferAsync();
 		return httpResponse;

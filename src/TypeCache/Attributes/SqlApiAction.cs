@@ -9,12 +9,13 @@ public enum SqlApiAction
 {
 	None,
 	Select = 1,
-	Page = 2,
-	Delete = 4,
-	DeleteData = 8,
-	Insert = 16,
-	InsertData = 32,
-	Update = 64,
-	UpdateData = 128,
-	All = Select | Page | Delete | DeleteData | Insert | InsertData | Update | UpdateData
+	Delete = 2,
+	DeleteData = 4,
+	Insert = 8,
+	InsertData = 16,
+	Update = 32,
+	UpdateData = 64,
+	CRUD = Select | Delete | DeleteData | Insert | InsertData | Update | UpdateData,
+	Truncate = 128,
+	All = Select | Delete | DeleteData | Insert | InsertData | Update | UpdateData | Truncate
 }

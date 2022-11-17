@@ -16,7 +16,7 @@ using static TypeCache.Default;
 namespace TypeCache.Reflection;
 
 [DebuggerDisplay("TypeOf<{Name,nq}>", Name = "TypeOf<{Name,nq}>")]
-public class TypeMember : Member, IEquatable<TypeMember>
+public sealed class TypeMember : IMember, IEquatable<TypeMember>
 {
 	static TypeMember()
 	{
@@ -25,19 +25,23 @@ public class TypeMember : Member, IEquatable<TypeMember>
 
 	internal static IReadOnlyDictionary<RuntimeTypeHandle, TypeMember> Cache { get; }
 
-	internal TypeMember(Type type) : base(type)
+	internal TypeMember(Type type)
 	{
+		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
+		this.BaseTypeHandle = type.BaseType?.TypeHandle;
+		this.ElementTypeHandle = type.HasElementType ? type.GetElementType()?.TypeHandle : null;
 		this.GenericHandle = type.IsGenericType && !type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().TypeHandle : null;
 		this.GenericTypeHandles = type.GenericTypeArguments.Any() ? type.GenericTypeArguments.Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
 		this.InterfaceTypeHandles = type.GetInterfaces().Any() ? type.GetInterfaces().Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
-		this.BaseTypeHandle = type.BaseType?.TypeHandle;
-		this.ElementTypeHandle = type.HasElementType ? type.GetElementType()?.TypeHandle : null;
-		this.Handle = type.TypeHandle;
+		this.Internal = !type.IsVisible;
 		this.Kind = type.GetKind();
+		this.Name = type.Name();
 		this.Namespace = type.Namespace!;
 		this.SystemType = type.GetSystemType();
 		this.Nullable = this.SystemType is SystemType.Nullable || this.Kind is not Kind.Struct;
+		this.Public = type.IsPublic;
 		this.Ref = type.IsByRef || type.IsByRefLike;
+		this.TypeHandle = type.TypeHandle;
  
 		var anyConstructors = type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable());
 		if (anyConstructors)
@@ -90,23 +94,22 @@ public class TypeMember : Member, IEquatable<TypeMember>
 
 	private readonly Func<object>? _CreateValueType;
 
-	public IReadOnlyList<ConstructorMember> Constructors { get; }
-
-	public IReadOnlyList<EventMember> Events { get; }
-
-	public IReadOnlyList<FieldMember> Fields { get; }
-
-	public IReadOnlyList<MethodMember> Methods { get; }
-
-	public IReadOnlyList<PropertyMember> Properties { get; }
+	/// <inheritdoc/>
+	public IReadOnlyList<Attribute> Attributes { get; }
 
 	public TypeMember? BaseType => this.BaseTypeHandle.HasValue ? this.BaseTypeHandle.Value.GetTypeMember() : null;
 
 	public RuntimeTypeHandle? BaseTypeHandle { get; }
 
+	public IReadOnlyList<ConstructorMember> Constructors { get; }
+
 	public TypeMember? ElementType => this.ElementTypeHandle.HasValue ? this.ElementTypeHandle.Value.GetTypeMember() : null;
 
 	public RuntimeTypeHandle? ElementTypeHandle { get; }
+
+	public IReadOnlyList<EventMember> Events { get; }
+
+	public IReadOnlyList<FieldMember> Fields { get; }
 
 	public RuntimeTypeHandle? GenericHandle { get; }
 
@@ -114,28 +117,41 @@ public class TypeMember : Member, IEquatable<TypeMember>
 
 	public IReadOnlyList<TypeMember> GenericTypes => this.GenericTypeHandles.Map(handle => handle.GetTypeMember());
 
-	public RuntimeTypeHandle Handle { get; }
-
 	public IReadOnlyList<RuntimeTypeHandle> InterfaceTypeHandles { get; }
 
 	public IReadOnlyList<TypeMember> InterfaceTypes => this.InterfaceTypeHandles.Map(handle => handle.GetTypeMember());
 
+	/// <inheritdoc cref="Type.IsVisible"/>
+	public bool Internal { get; }
+
 	public Kind Kind { get; }
+
+	public IReadOnlyList<MethodMember> Methods { get; }
+
+	/// <inheritdoc/>
+	public string Name { get; }
 
 	public string Namespace { get; }
 
 	public bool Nullable { get; }
 
+	public IReadOnlyList<PropertyMember> Properties { get; }
+
+	/// <inheritdoc cref="Type.IsPublic"/>
+	public bool Public { get; }
+
 	public bool Ref { get; }
 
 	public SystemType SystemType { get; }
+
+	public RuntimeTypeHandle TypeHandle { get; }
 
 	/// <summary>
 	/// <code>
 	/// =&gt; <see langword="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see langword="this"/>.Constructors.IfFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
-	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when"/> <see langword="this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; !<paramref name="parameters"/>.Any() =&gt; <see langword="this"/>._CreateValueType(),<br/>
+	/// <see langword="    "/>_ <see langword="when this"/>.Constructors.IfFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
+	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; !<paramref name="parameters"/>.Any() =&gt; <see langword="this"/>._CreateValueType(),<br/>
 	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// }
 	/// </code>
@@ -162,7 +178,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public ConstructorMember? GetConstructor(RuntimeMethodHandle handle)
-		=> this.Constructors.First(constructor => constructor.Handle == handle);
+		=> this.Constructors.First(constructor => constructor.MethodHandle == handle);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Fields.First(field =&gt; field.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
@@ -242,7 +258,7 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool Equals(TypeMember? other)
-		=> this.Handle == other?.Handle;
+		=> this.TypeHandle == other?.TypeHandle;
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Equals(<paramref name="item"/> <see langword="as"/> <see cref="TypeMember"/>);</c>
@@ -256,12 +272,12 @@ public class TypeMember : Member, IEquatable<TypeMember>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override int GetHashCode()
-		=> this.Handle.GetHashCode();
+		=> this.TypeHandle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToType();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static implicit operator Type(TypeMember member)
-		=> member.Handle.ToType();
+		=> member.TypeHandle.ToType();
 }

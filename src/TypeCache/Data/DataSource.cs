@@ -1,53 +1,208 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
-using TypeCache.Data.Domain;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Schema;
 using TypeCache.Extensions;
+using static System.FormattableString;
+using static System.StringSplitOptions;
+using static TypeCache.Data.DataSourceType;
 using static TypeCache.Default;
 
 namespace TypeCache.Data;
 
-public class DataSource : IEquatable<DataSource>
+internal sealed class DataSource : IDataSource
 {
-	private readonly DbProviderFactory _DbProviderFactory;
+	private const string collectionName = nameof(collectionName);
+	private const string column_name = nameof(column_name);
+	private const string database_name = nameof(database_name);
+	private const string index_name = nameof(index_name);
+	private const string is_nullable = nameof(is_nullable);
+	private const string ordinal_position = nameof(ordinal_position);
+	private const string parameter_mode = nameof(parameter_mode);
+	private const string parameter_name = nameof(parameter_name);
+	private const string routine_name = nameof(routine_name);
+	private const string routine_schema = nameof(routine_schema);
+	private const string routine_type = nameof(routine_type);
+	private const string specific_name = nameof(specific_name);
+	private const string specific_schema = nameof(specific_schema);
+	private const string table_name = nameof(table_name);
+	private const string table_schema = nameof(table_schema);
+	private const string table_type = nameof(table_type);
+	private const string type_desc = nameof(type_desc);
 
-	internal DataSource(string name, string databaseProvider, string connectionString)
+	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
 	{
+		this.Factory = dbProviderFactory;
 		this.Name = name;
-		this.DatabaseProvider = databaseProvider;
 		this.ConnectionString = connectionString;
-		this._DbProviderFactory = DbProviderFactories.GetFactory(databaseProvider);
-		this.ObjectSchemas = new(name => this._GetObjectSchema(name).GetAwaiter().GetResult(), comparer: STRING_COMPARISON.ToStringComparer());
+		this.Type = type;
+
+		using var connection = this.CreateDbConnection();
+		connection.Open();
+		this.DefaultDatabase = connection.Database;
+		this.DefaultSchema = type switch
+		{
+			SqlServer => "dbo",
+			PostgreSql => "public",
+			_ => string.Empty
+		};
+
+		this.Databases = this.GetDatabases().ToImmutableArray();
+		this.ObjectSchemas = this.GetObjectSchemas();
 	}
+
+	public ObjectSchema? this[string objectName]
+		=> this.ObjectSchemas.TryGetValue(this.CreateName(objectName), out var objectSchema) ? objectSchema : null;
 
 	public string ConnectionString { get; }
 
-	public string DatabaseProvider { get; }
+	public IReadOnlyList<string> Databases { get; }
+
+	public string DefaultDatabase { get; }
+
+	public string DefaultSchema { get; }
+
+	public DbProviderFactory Factory { get; }
 
 	public string Name { get; }
 
-	public LazyDictionary<string, ObjectSchema> ObjectSchemas { get; }
+	public DataSourceType Type { get; }
+
+	public IReadOnlyDictionary<DatabaseObject, ObjectSchema> ObjectSchemas { get; }
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public DbConnection CreateDbConnection()
-		=> this._DbProviderFactory.CreateConnection(this.ConnectionString);
+		=> this.Factory.CreateConnection(this.ConnectionString);
+
+	public DatabaseObject CreateName(string databaseObject)
+	{
+		databaseObject.AssertNotNull();
+
+		var items = databaseObject.Split('.', RemoveEmptyEntries);
+		if (items.Length > 3)
+			throw new ArgumentException(Invariant($"{nameof(DataSource)}.{nameof(CreateName)}: Invalid name: {databaseObject}"), nameof(databaseObject));
+
+		items = items.Each(item => this.Type switch
+		{
+			PostgreSql => item.Trim('"'),
+			_ => item.TrimStart('[').TrimEnd(']')
+		}).ToArray();
+
+		return this.Type switch
+		{
+			SqlServer or PostgreSql => items.Length switch
+			{
+				1 => this.CreateName(this.DefaultSchema, items[0]),
+				2 when databaseObject.Contains("..") => this.CreateName(items[0], this.DefaultSchema, items[1]),
+				2 => this.CreateName(items[0], items[1]),
+				_ => this.CreateName(items[0], items[1], items[2])
+			},
+			_ => new(databaseObject)
+		};
+	}
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public bool Equals(DataSource? other)
+	public DatabaseObject CreateName(string schema, string objectName)
+		=> new(Invariant($"{this.EscapeIdentifier(this.DefaultDatabase)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"));
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public DatabaseObject CreateName(string database, string schema, string objectName)
+		=> new(Invariant($"{this.EscapeIdentifier(database)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"));
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public SqlCommand CreateSqlCommand(string sql)
+		=> new SqlCommand(this, sql);
+
+	[DebuggerHidden]
+	public string EscapeIdentifier([NotNull] string identifier)
+		=> this.Type switch
+		{
+			PostgreSql => Invariant($"\"{identifier}\""),
+			_ => Invariant($"[{identifier.Replace("]", "]]")}]")
+		};
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public string EscapeLikeValue([NotNull] string text)
+		=> text.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public string EscapeValue([NotNull] string text)
+		=> text.Replace("'", "''");
+
+	public async ValueTask<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default)
+	{
+		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name());
+
+		await using var connection = this.CreateDbConnection();
+		await connection.OpenAsync(token);
+
+		if (database is not null)
+			await connection.ChangeDatabaseAsync(database, token);
+
+		var table = await connection.GetSchemaAsync(schemaSet.DataSetName, token);
+		table.Select().Do(async row =>
+			schemaSet.Tables.Add(await connection.GetSchemaAsync(row[collectionName].ToString()!, token)));
+
+		return schemaSet;
+	}
+
+	public async ValueTask<DataTable> GetDatabaseSchemaAsync(SchemaCollection collection, string? database = null, CancellationToken token = default)
+	{
+		await using var connection = this.CreateDbConnection();
+		await connection.OpenAsync(token);
+
+		if (database is not null)
+			await connection.ChangeDatabaseAsync(database, token);
+
+		return await connection.GetSchemaAsync(collection.Name(), token);
+	}
+
+	public DataSet GetDatabaseSchema(string? database = null)
+	{
+		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name());
+
+		using var connection = this.CreateDbConnection();
+		connection.Open();
+
+		if (database is not null)
+			connection.ChangeDatabase(database);
+
+		var table = connection.GetSchema(schemaSet.DataSetName);
+		table.Select().Do(row =>
+			schemaSet.Tables.Add(connection.GetSchema(row[collectionName].ToString()!)));
+
+		return schemaSet;
+	}
+
+	public DataTable GetDatabaseSchema(SchemaCollection collection, string? database = null)
+	{
+		using var connection = this.CreateDbConnection();
+		connection.Open();
+
+		if (database is not null)
+			connection.ChangeDatabaseAsync(database);
+
+		return connection.GetSchema(collection.Name());
+	}
+
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public bool Equals(IDataSource? other)
 		=> this.Name.Is(other?.Name);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
-		=> item is var dataSource && this.Equals(dataSource);
+		=> this.Equals(item as DataSource);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override int GetHashCode()
@@ -57,53 +212,118 @@ public class DataSource : IEquatable<DataSource>
 	public override string ToString()
 		=> this.Name;
 
-	private async Task<ObjectSchema> _GetObjectSchema(string name)
+	private string[] GetDatabases()
 	{
-		await using var connection = this.CreateDbConnection();
-		await connection.OpenAsync();
-
-		var objectId = await connection.GetObjectId(name);
-		objectId.AssertNotNull();
-
-		var command = new SqlCommand
+		var table = this.GetDatabaseSchema(SchemaCollection.Databases, null);
+		var rows = this.Type switch
 		{
-			DataSource = connection.DataSource,
-			ReadData = async (reader, token) =>
-			{
-				var objectSchemaModel = (await reader.ReadRowsAsync<ObjectSchemaModel>(1, token)).First();
-				if (objectSchemaModel is null)
-					return null!;
-
-				if (await reader.NextResultAsync(token) && await reader.ReadAsync(token))
-				{
-					var count = await reader.GetFieldValueAsync<int>(0, token);
-					if (await reader.NextResultAsync(token))
-						objectSchemaModel!.Columns = await reader.ReadRowsAsync<ColumnSchemaModel>(count, token);
-				}
-
-				if (await reader.NextResultAsync(token) && await reader.ReadAsync(token))
-				{
-					var count = await reader.GetFieldValueAsync<int>(0, token);
-					if (await reader.NextResultAsync(token))
-						objectSchemaModel!.Parameters = await reader.ReadRowsAsync<ParameterSchemaModel>(count, token);
-				}
-
-				return objectSchemaModel!;
-			},
-			SQL = @$"
-SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-SET NOCOUNT ON;
-
-{ObjectSchema.SQL}
-{ColumnSchema.SQL}
-{ParameterSchema.SQL}"
+			SqlServer => table?.Select(Invariant($"{database_name} NOT IN ('master', 'tempdb', 'model', 'msdb')")),
+			_ => table?.Select()
 		};
-		command.InputParameters.Add(nameof(objectId), objectId.Value);
 
-		var objectSchemaModel = (ObjectSchemaModel?)await connection.ExecuteAsync(command, command.ReadData);
-		await connection.CloseAsync();
+		return rows?.Map(row => row[database_name].ToString()!) ?? Array<string>.Empty;
+	}
 
-		objectSchemaModel.AssertNotNull();
-		return new ObjectSchema(connection.DataSource, objectSchemaModel);
+	private IReadOnlyDictionary<DatabaseObject, ObjectSchema> GetObjectSchemas()
+	{
+		var objectSchemas = new Dictionary<DatabaseObject, ObjectSchema>();
+
+		using var connection = this.CreateDbConnection();
+		connection.Open();
+
+		using var command = connection.CreateCommand();
+		command.Connection = connection;
+		command.CommandType = CommandType.Text;
+
+		using var adapter = this.Factory.CreateDataAdapter()!;
+		adapter.SelectCommand = command;
+		adapter.MissingMappingAction = MissingMappingAction.Passthrough;
+		adapter.MissingSchemaAction = MissingSchemaAction.Add;
+
+		this.Databases.Do(databaseName =>
+		{
+			connection.ChangeDatabase(databaseName);
+
+			var tables = connection.GetSchema(SchemaCollection.Tables.Name());
+			var tablesRows = tables.Select(Invariant($"{table_type} = 'BASE TABLE'"), Invariant($"{table_name} ASC"));
+			tablesRows.Do(tablesRow =>
+			{
+				var tableName = tablesRow[table_name].ToString()!;
+				var tableSchema = tablesRow[table_schema].ToString()!;
+				var name = this.CreateName(databaseName, tableSchema, tableName);
+
+				command.CommandText = Invariant($"SELECT TOP 1 * FROM {name};");
+				var table = new DataTable();
+
+				try
+				{
+					adapter.FillSchema(table, SchemaType.Source);
+
+					var columns = table.Columns.As<DataColumn>()
+						.Map(column => new ColumnSchema(
+							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Has(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
+
+					var objectSchema = new ObjectSchema(this, ObjectType.Table, name, databaseName, tableSchema, tableName, columns);
+					objectSchemas.Add(name, objectSchema);
+				}
+				catch (Exception) { }
+			});
+
+			var views = connection.GetSchema(SchemaCollection.Views.Name());
+			var viewsRows = views?.Select(null, Invariant($"{table_name} ASC"));
+			viewsRows.Do(viewsRow =>
+			{
+				var tableName = viewsRow[table_name].ToString()!;
+				var tableSchema = viewsRow[table_schema].ToString()!;
+				var name = this.CreateName(databaseName, tableSchema, tableName);
+
+				command.CommandText = Invariant($"SELECT * FROM {name} WHERE 0 = 1;");
+				var table = new DataTable();
+
+				try
+				{
+					adapter.FillSchema(table, SchemaType.Source);
+
+					var columns = table.Columns.As<DataColumn>()
+						.Map(column => new ColumnSchema(
+							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Has(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
+
+					var objectSchema = new ObjectSchema(this, ObjectType.View, name, databaseName, tableSchema, tableName, columns);
+					objectSchemas.Add(name, objectSchema);
+				}
+				catch (Exception) { }
+			});
+
+			var procedures = connection.GetSchema(SchemaCollection.Procedures.Name());
+			var procedureParameters = connection.GetSchema(SchemaCollection.ProcedureParameters.Name());
+			var proceduresRows = procedures?.Select(null, Invariant($"{routine_name} ASC"));
+			proceduresRows.Do(proceduresRow =>
+			{
+				var routineName = proceduresRow[routine_name].ToString()!;
+				var routineSchema = proceduresRow[routine_schema].ToString()!;
+				var routineType = proceduresRow[routine_type].ToString()!;
+
+				var procedureParametersRows = procedureParameters?.Select(
+					Invariant($"{specific_schema} = '{routineSchema}' AND {specific_name} = '{routineName}'")
+					, Invariant($"{ordinal_position} ASC"));
+				var parameters = procedureParametersRows.Map(row => new ParameterSchema(row[parameter_name].ToString()!, row[parameter_mode].ToString() switch
+				{
+					string value when value.Is("OUT") => ParameterDirection.Output,
+					string value when value.Is("INOUT") => ParameterDirection.InputOutput,
+					_ => ParameterDirection.Input
+				}));
+
+				var name = this.CreateName(databaseName, routineSchema, routineName);
+				var objectType = routineType switch
+				{
+					_ when routineType.Is("FUNCTION") => ObjectType.Function,
+					_ => ObjectType.StoredProcedure
+				};
+				var objectSchema = new ObjectSchema(this, objectType, name, databaseName, routineSchema, routineName, parameters);
+				objectSchemas.Add(name, objectSchema);
+			});
+		});
+
+		return objectSchemas.ToImmutableDictionary();
 	}
 }

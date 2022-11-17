@@ -11,6 +11,6 @@ public static class ApplicationBuilderExtensions
 	/// Registers <see cref="SqlApiErrorHandlerMiddleware"/>.
 	/// </summary>
 	/// <remarks>Must be called before any other UseSqlApi middelware registration.</remarks>
-	public static IApplicationBuilder UseSqlApiErrorHanler(this IApplicationBuilder @this)
+	public static IApplicationBuilder UseSqlApi(this IApplicationBuilder @this)
 		=> @this.UseMiddleware<SqlApiErrorHandlerMiddleware>();
 }

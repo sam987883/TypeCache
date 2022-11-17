@@ -78,10 +78,10 @@ public class ImmutableArrayExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(new[] { 1, 3, 5 }, await intArray.ToImmutableArray().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync(3));
-		Assert.Empty(await intArray.ToImmutableArray().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync(0));
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, Task<bool>>).ToArrayAsync(8));
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync(10));
+		Assert.Equal(new[] { 1, 3, 5 }, await intArray.ToImmutableArray().IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync());
+		Assert.Empty(await intArray.ToImmutableArray().IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, Task<bool>>).ToArrayAsync());
+		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync());
 
 		await Task.CompletedTask;
 	}
@@ -102,6 +102,6 @@ public class ImmutableArrayExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 }.ToImmutableArray();
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" }.ToImmutableArray();
 
-		Assert.Equal(await stringArray.ToAsync().ToArrayAsync(10), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToArrayAsync(10));
+		Assert.Equal(await stringArray.ToAsync().ToArrayAsync(), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToArrayAsync());
 	}
 }

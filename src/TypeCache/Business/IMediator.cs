@@ -17,4 +17,6 @@ public interface IMediator
 	ValueTask<RESULT> ApplyRuleAsync<REQUEST, RESPONSE, RESULT>(REQUEST request, Func<RESPONSE, RESULT> onSuccess, CancellationToken token = default);
 
 	ValueTask<RESULT> ApplyRuleAsync<REQUEST, RESPONSE, RESULT>(REQUEST request, Func<RESPONSE, RESULT> onSuccess, Func<Exception, RESULT> onError, CancellationToken token = default);
+
+	ValueTask RunProcessAsync<REQUEST>(REQUEST request, CancellationToken token = default);
 }

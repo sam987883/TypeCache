@@ -3,7 +3,6 @@
 using System;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.Resolvers;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
@@ -12,7 +11,7 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class PropertyFieldResolver<T> : IFieldResolver
+public sealed class PropertyFieldResolver<T> : FieldResolver<object>
 {
 	private readonly PropertyMember _PropertyMember;
 
@@ -21,7 +20,7 @@ public class PropertyFieldResolver<T> : IFieldResolver
 		this._PropertyMember = propertyMember;
 	}
 
-	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var source = context.Source switch
 		{

@@ -6,7 +6,7 @@ using TypeCache.Business;
 
 namespace TypeCache.Net.Business;
 
-internal class HttpClientValidationRule
+internal sealed class HttpClientValidationRule
 	: IValidationRule<HttpRequestMessage>
 	, IValidationRule<(HttpRequestMessage HttpRequest, string HttpClientName)>
 {

@@ -10,19 +10,22 @@ namespace TypeCache.Extensions;
 public static partial class MapExtensions
 {
 	/// <exception cref="ArgumentNullException"/>
-	private static void Map<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source, MapBehavior behavior)
+	private static void Map<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source)
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		var pairs = behavior switch
-		{
-			MapBehavior.Matched => source.If(pair => @this.ContainsKey(pair.Key)),
-			MapBehavior.Unmatched => source.If(pair => !@this.ContainsKey(pair.Key)),
-			_ => source
-		};
+		source.Do(pair => @this[pair.Key] = pair.Value);
+	}
 
-		pairs.Do(pair => @this[pair.Key] = pair.Value);
+	/// <exception cref="ArgumentNullException"/>
+	private static void MapBy<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source, bool match = true)
+	{
+		@this.AssertNotNull();
+		source.AssertNotNull();
+
+		source.If(pair => @this.ContainsKey(pair.Key) == match)
+			.Do(pair => @this[pair.Key] = pair.Value);
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -40,7 +43,7 @@ public static partial class MapExtensions
 			.Do(match =>
 			{
 				if (match.Value2 is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue(@this, match.Value2);
+					match.Value1.SetValue!(@this, match.Value2);
 			});
 	}
 
@@ -64,9 +67,9 @@ public static partial class MapExtensions
 				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
 			.Do(match =>
 			{
-				var value = match.Value2.GetValue(source);
+				var value = match.Value2.GetValue!(source);
 				if (value is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue(@this, value);
+					match.Value1.SetValue!(@this, value);
 			});
 	}
 
@@ -92,9 +95,9 @@ public static partial class MapExtensions
 				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
 			.Do(match =>
 			{
-				var value = match.Value2.GetValue(source);
+				var value = match.Value2.GetValue!(source);
 				if (value is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue(@this, value);
+					match.Value1.SetValue!(@this, value);
 			});
 	}
 

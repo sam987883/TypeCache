@@ -11,7 +11,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// Establishes a parent-child relationship based on key which is matched against the GraphKey of the parent and child models.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphQLSubqueryBatchAttribute : Attribute
+public sealed class GraphQLSubqueryBatchAttribute : Attribute
 {
 	public GraphQLSubqueryBatchAttribute(Type parentType, string key)
 	{

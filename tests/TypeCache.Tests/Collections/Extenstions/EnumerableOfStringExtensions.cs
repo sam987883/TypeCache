@@ -128,15 +128,6 @@ public class EnumerableOfStringExtensions
 		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => KeyValuePair.Create(_, _)).ToDictionary());
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary());
 
-		Assert.Equal(array.Length - 1, array.IfNotNull().Map(_ => Tuple.Create(_, _)).ToDictionary(StringComparison.Ordinal).Count);
-		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => Tuple.Create(_, _)).ToDictionary());
-		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
-
-		Assert.Equal(array.Length - 1, array.IfNotNull().Map(_ => (_, _)).ToDictionary(StringComparison.Ordinal).Count);
-		Assert.Throws<ArgumentException>(() => array.IfNotNull().Map(_ => (_, _)).ToDictionary());
-		Assert.Empty((null as IEnumerable<(string, int)>).ToDictionary());
-
-		Assert.Equal(array.Length - 1, this.GetStrings().IfNotNull().ToDictionary(_ => _, StringComparison.Ordinal).Count);
 		Assert.Empty((null as IEnumerable<KeyValuePair<string, int>>).ToDictionary(StringComparison.Ordinal));
 
 		Assert.Equal(array.Length - 1, this.GetStrings().IfNotNull().ToDictionary(_ => _, _ => _, StringComparison.Ordinal).Count);

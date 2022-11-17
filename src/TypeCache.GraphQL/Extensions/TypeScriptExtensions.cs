@@ -4,6 +4,7 @@ using System.Text;
 using GraphQL.Types;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -24,7 +25,7 @@ public static class TypeScriptExtensions
 			UIntGraphType or LongGraphType or ULongGraphType or BigIntGraphType => "bigint",
 			StringGraphType or IdGraphType or GuidGraphType or DateGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType when list => "string[]",
 			StringGraphType or IdGraphType or GuidGraphType or DateGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType => "string",
-			_ when list => $"{@this.Name}[]",
+			_ when list => Invariant($"{@this.Name}[]"),
 			_ => @this.Name
 		};
 
@@ -32,7 +33,7 @@ public static class TypeScriptExtensions
 	{
 		var builder = new StringBuilder();
 		if (@this.Description.IsNotBlank())
-			builder.AppendLine("/*").AppendLine(@this.Description).AppendLine("*/");
+			builder.AppendLine(Invariant($"/* {@this.Description} */"));
 		builder.Append("export enum ").AppendLine(@this.Name).Append('{');
 		@this.Values.Do(value =>
 		{
@@ -47,9 +48,9 @@ public static class TypeScriptExtensions
 	{
 		var builder = new StringBuilder();
 		if (@this.Description.IsNotBlank())
-			builder.AppendLine("/*").AppendLine(@this.Description).AppendLine("*/");
+			builder.AppendLine(Invariant($"/* {@this.Description} */"));
 		builder.AppendLine($"export type {@this.Name} = {{");
-		@this.Fields.Do(field => builder.AppendLine($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};"));
+		@this.Fields.Do(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
 		return builder.Append('}').AppendLine().ToString();
 	}
 }

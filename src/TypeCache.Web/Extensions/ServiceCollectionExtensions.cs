@@ -1,14 +1,18 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using TypeCache.Converters;
 
 namespace TypeCache.Web.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddSqlApiControllers(this IServiceCollection @this)
-		=> @this;
+	public static IServiceCollection ConfigureSqlApi(this IServiceCollection @this)
+		=> @this.Configure<JsonOptions>(options =>
+		{
+			options.SerializerOptions.Converters.Add(new DataRowsJsonConverter());
+			options.SerializerOptions.Converters.Add(new DataTableJsonConverter());
+			options.SerializerOptions.Converters.Add(new DataSetJsonConverter());
+		});
 }

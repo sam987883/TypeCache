@@ -10,7 +10,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Converters;
 
-public class ObjectJsonConverter : JsonConverter<object?>
+public sealed class ObjectJsonConverter : JsonConverter<object?>
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

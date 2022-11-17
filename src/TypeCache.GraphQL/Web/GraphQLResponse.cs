@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace TypeCache.GraphQL.Web;
 
-public class GraphQLResponse
+public sealed class GraphQLResponse
 {
 	public object? Data { set; get; }
 

@@ -16,7 +16,7 @@ public static class DelegateOf<T>
 
 	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
-	public static RuntimeTypeHandle Handle => Member.Handle;
+	public static RuntimeTypeHandle Handle => Member.TypeHandle;
 
 	public static bool Internal => Member.Internal;
 

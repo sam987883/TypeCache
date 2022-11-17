@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TypeCache.GraphQL.Web;
 
-public class GraphQLRequest
+public sealed class GraphQLRequest
 {
 	public string OperationName { get; set; } = string.Empty;
 

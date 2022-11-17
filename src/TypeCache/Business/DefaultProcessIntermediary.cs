@@ -8,7 +8,7 @@ using TypeCache.Collections.Extensions;
 
 namespace TypeCache.Business;
 
-public class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary<REQUEST>
+public sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary<REQUEST>
 {
 	private readonly IProcess<REQUEST> _Process;
 	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;

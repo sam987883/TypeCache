@@ -9,7 +9,7 @@ namespace TypeCache.GraphQL.Types;
 /// <summary>
 /// <see cref="GraphQLUnionType"/> works with 2 or more types.
 /// </summary>
-public class GraphQLUnionType : UnionGraphType
+public sealed class GraphQLUnionType : UnionGraphType
 {
 	public GraphQLUnionType(Type[] types)
 	{

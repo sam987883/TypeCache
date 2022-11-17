@@ -94,8 +94,10 @@ public static class StringExtensions
 
 	/// <remarks>
 	/// <code>
-	/// Span&lt;<see cref="byte"/>&gt; span = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length * 4];<br/>
-	/// <see langword="return"/> <see cref="Convert"/>.TryFromBase64String(@<paramref name="this"/>, span, <see langword="out var"/> count) ? <paramref name="encoding"/>.GetString(span.Slice(0, count)) : @<paramref name="this"/>;
+	/// {<br/>
+	/// <see langword="    "/>Span&lt;<see cref="byte"/>&gt; span = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length * 4];<br/>
+	/// <see langword="    return"/> <see cref="Convert"/>.TryFromBase64String(@<paramref name="this"/>, span, <see langword="out var"/> count) ? <paramref name="encoding"/>.GetString(span.Slice(0, count)) : @<paramref name="this"/>;<br/>
+	/// }
 	/// </code>
 	/// </remarks>
 	public static string FromBase64(this string @this, Encoding encoding)
@@ -188,6 +190,24 @@ public static class StringExtensions
 	public static bool Left(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> @this.StartsWith(text, comparison);
 
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
+	/// <see langword="        return"/> <see cref="string.Empty"/>;<br/>
+	/// <br/>
+	/// <see langword="    var"/> span = @<paramref name="this"/>.ToSpan();<br/>
+	/// <see langword="    var"/> i = -1;<br/>
+	/// <see langword="    while"/> (++i &lt; span.Length)<br/>
+	/// <see langword="    {"/><br/>
+	/// <see langword="        if"/> (span[i].IsLetterOrDigit())<br/>
+	/// <see langword="            "/>span[i] = mask;<br/>
+	/// <see langword="    }"/><br/>
+	/// <br/>
+	/// <see langword="    new"/> <see cref="string"/>(span);<br/>
+	/// }
+	/// </code>
+	/// </summary>
 	public static string Mask(this string @this, char mask = '*')
 	{
 		if (@this.IsBlank())

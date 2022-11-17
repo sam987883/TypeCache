@@ -2,25 +2,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics.Metrics;
-using System.Threading;
+using System.Data;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using GraphQL.Types;
-using GraphQL.Types.Relay.DataObjects;
-using GraphQLParser;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Business;
 using TypeCache.Collections;
 using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Data.Domain;
-using TypeCache.Data.Extensions;
-using TypeCache.Data.Schema;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
@@ -32,18 +25,37 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
-public abstract class GraphQLSchema : Schema
+public sealed class GraphQLSchema : Schema, IName
 {
-	protected IDataLoaderContextAccessor DataLoader { get; }
+	private IDataLoaderContextAccessor DataLoader { get; }
 
-	protected IMediator Mediator { get; }
+	private IAccessor<IDataSource> DataSourceAccessor { get; }
 
-	public GraphQLSchema(IServiceProvider provider) : base(provider)
+	private IMediator Mediator { get; }
+
+	public string Name { get; }
+
+	public GraphQLSchema(IServiceProvider provider, string name, Action<GraphQLSchema> initializeSchema) : base(provider)
 	{
-		this.Description = this.GetType().Name;
+		this.Name = name;
+		this.Description = nameof(GraphQLSchema);
 
 		this.DataLoader = this.GetRequiredService<IDataLoaderContextAccessor>();
+		this.DataSourceAccessor = this.GetRequiredService<IAccessor<IDataSource>>();
 		this.Mediator = this.GetRequiredService<IMediator>();
+
+		this.Query = new ObjectGraphType { Name = nameof(this.Query) };
+		this.Mutation = new ObjectGraphType { Name = nameof(this.Mutation) };
+		this.Subscription = new ObjectGraphType { Name = nameof(this.Subscription) };
+
+		if (initializeSchema is not null)
+			initializeSchema(this);
+
+		if (!this.Mutation.Fields.Any())
+			this.Mutation = null;
+
+		if (!this.Subscription.Fields.Any())
+			this.Subscription = null;
 	}
 
 	/// <summary>
@@ -55,10 +67,371 @@ public abstract class GraphQLSchema : Schema
 		{
 			Name = "Version",
 			DefaultValue = "0",
-			Description = Invariant($"The version number of this {this.Description}."),
+			Description = Invariant($"The version of `{this.Name}` GraphQL Schema: {version}."),
 			Resolver = new FuncFieldResolver<string>(context => version),
 			Type = typeof(NonNullGraphType<StringGraphType>)
 		});
+
+	/// <summary>
+	/// Adds all of the queries for all of the database schema data made available by the data provider.
+	/// </summary>
+	/// <param name="dataSourceName">The name of the <see cref="DataSource"/></param>
+	/// <exception cref="ArgumentNullException"/>
+	public FieldType[] AddDatabaseSchemaQueries(string dataSourceName)
+	{
+		dataSourceName.AssertNotBlank();
+
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var table = dataSource.GetDatabaseSchema(SchemaCollection.MetaDataCollections);
+		return table.Rows.If<DataRow>().Map(row => this.AddDatabaseSchemaQuery(dataSourceName, row["CollectionName"].ToString().ToEnum<SchemaCollection>()!.Value));
+	}
+
+	/// <summary>
+	/// Adds a query for the specified collection of database schema data made available by the data provider.
+	/// </summary>
+	/// <param name="dataSourceName">The name of the <see cref="DataSource"/></param>
+	/// <exception cref="ArgumentNullException"/>
+	public FieldType AddDatabaseSchemaQuery(string dataSourceName, SchemaCollection collection)
+	{
+		const string ColumnName = nameof(ColumnName);
+		const string ColumnType = nameof(ColumnType);
+
+		dataSourceName.AssertNotBlank();
+
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var table = dataSource.GetDatabaseSchema(collection);
+		var columns = table.Columns.As<DataColumn>().Map(column => column.ColumnName);
+		var graphDatabasesEnum = new EnumerationGraphType
+		{
+			Name = Invariant($"{dataSource.Name.ToPascalCase()}Database"),
+			Description = Invariant($"`{dataSource}` databases."),
+		};
+		dataSource.Databases.Do(database => graphDatabasesEnum.Add(new(database, database)));
+		var graphOrderByEnum = new EnumerationGraphType
+		{
+			Name = Invariant($"{table.TableName.ToPascalCase()}Column"),
+			Description = Invariant($"`{table.TableName}` columns.")
+		};
+		table.Columns.As<DataColumn>().Do(column =>
+		{
+			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Ascending));
+			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Descending));
+		});
+		var resolvedType = new ObjectGraphType
+		{
+			Name = table.TableName,
+			Description = Invariant($"Database Schema Collection: `{table.TableName}`")
+		};
+		table.Columns.As<DataColumn>().Do(column =>
+		{
+			var field = resolvedType.AddField(new()
+			{
+				Name = FixName(column!.ColumnName),
+				Description = Invariant($"`{column.ColumnName}`"),
+				Resolver = new FuncFieldResolver<DataRow, object?>(static context =>
+				{
+					var columnName = context.FieldDefinition.Metadata[ColumnName]!.ToString()!;
+					var columnType = ((RuntimeTypeHandle)context.FieldDefinition.Metadata[ColumnType]!).ToType();
+					var fieldType = context.FieldDefinition.Type;
+					var value = context.Source[columnName];
+					return value switch
+					{
+						DBNull => null,
+						byte[] bytes when fieldType == typeof(StringGraphType) => bytes.ToBase64(),
+						_ when fieldType == typeof(StringGraphType) => value.ToString(),
+						_ => value
+					};
+				}),
+				Type = column.DataType switch
+				{
+					_ when column.DataType == typeof(object) => typeof(StringGraphType),
+					_ => column.DataType.GetTypeMember().NullableGraphQLType()
+				}
+			});
+			field.Metadata.Add(ColumnName, column.ColumnName);
+			field.Metadata.Add(ColumnType, column.DataType.TypeHandle);
+		});
+
+		var fieldType = this.Query.AddField(new()
+		{
+			Name = table.TableName,
+			Description = Invariant($"Database Schema: {table.TableName}"),
+			Arguments = new QueryArguments(
+				new QueryArgument(graphDatabasesEnum) { Name = "database" },
+				new QueryArgument<StringGraphType> { Name = "where" },
+				new QueryArgument(new ListGraphType(new NonNullGraphType(graphOrderByEnum))) { Name = "orderBy" }
+			),
+			ResolvedType = new ListGraphType(resolvedType),
+			Resolver = new DatabaseSchemaFieldResolver()
+		});
+		fieldType.Metadata.Add(nameof(IDataSource), dataSource);
+		fieldType.Metadata.Add(nameof(SchemaCollection), table.TableName.ToEnum<SchemaCollection>());
+
+		return fieldType;
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public void AddDatabaseEndpoints(string dataSourceName, SqlApiAction actions, string? database = null, string? schema = null)
+	{
+		const string ColumnName = nameof(ColumnName);
+		const string ColumnType = nameof(ColumnType);
+
+		dataSourceName.AssertNotBlank();
+
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		database ??= dataSource.DefaultDatabase;
+		var objectSchemas = dataSource.ObjectSchemas.Values.ToArray();
+		if (schema.IsNotBlank())
+			objectSchemas = objectSchemas.If(_ => _.DatabaseName.Is(database) && _.SchemaName.Is(schema)).ToArray();
+		else if (database.IsNotBlank())
+			objectSchemas = objectSchemas.If(_ => _.DatabaseName.Is(database)).ToArray();
+
+		objectSchemas.Do(objectSchema =>
+		{
+			var table = objectSchema.ObjectName.ToPascalCase();
+			var dataInputType = new InputObjectGraphType
+			{
+				Name = Invariant($"{objectSchema.ObjectName}Input"),
+				Description = Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`")
+			};
+			objectSchema.Columns.Do(column =>
+			{
+				var columnDataType = column.DataTypeHandle.ToType();
+				var field = dataInputType.AddField(new()
+				{
+					Name = column.Name,
+					Description = Invariant($"`{column.Name}`"),
+					Type = column.DataTypeHandle switch
+					{
+						_ when columnDataType == typeof(object) => typeof(StringGraphType),
+						_ => columnDataType.GetTypeMember().NullableGraphQLType()
+					}
+				});
+			});
+			var graphOrderByEnum = new EnumerationGraphType
+			{
+				Name = Invariant($"{table}OrderBy")
+			};
+			objectSchema.Columns.Do(column =>
+			{
+				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Ascending));
+				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
+			});
+			var resolvedType = new ObjectGraphType
+			{
+				Name = objectSchema.ObjectName,
+				Description = Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`")
+			};
+			objectSchema.Columns.Do(column =>
+			{
+				var columnDataType = column.DataTypeHandle.ToType();
+				var field = resolvedType.AddField(new()
+				{
+					Name = FixName(column.Name),
+					Description = Invariant($"{(column.PrimaryKey ? "Primary Key: " : string.Empty)}`{column.Name}`"),
+					Resolver = new FuncFieldResolver<DataRow, object?>(static context =>
+					{
+						var columnName = context.FieldDefinition.Metadata[ColumnName]!.ToString()!;
+						var columnType = ((RuntimeTypeHandle)context.FieldDefinition.Metadata[ColumnType]!).ToType();
+						var fieldType = context.FieldDefinition.Type;
+						var value = context.Source[columnName];
+						return value switch
+						{
+							DBNull => null,
+							byte[] bytes when fieldType == typeof(StringGraphType) => bytes.ToBase64(),
+							_ when fieldType == typeof(StringGraphType) => value.ToString(),
+							_ => value
+						};
+					}),
+					Type = column.DataTypeHandle switch
+					{
+						_ when columnDataType == typeof(object) => typeof(StringGraphType),
+						_ => columnDataType.GetTypeMember().NullableGraphQLType()
+					}
+				});
+				field.Metadata.Add(ColumnName, column.Name);
+				field.Metadata.Add(ColumnType, column.DataTypeHandle);
+			});
+
+			if (objectSchema.Type.IsAny(ObjectType.Table, ObjectType.View)
+				&& actions.HasFlag(SqlApiAction.Select))
+			{
+				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
+				var arguments = new QueryArguments();
+				arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+				if (dataSource.Type is DataSourceType.SqlServer)
+					arguments.Add<StringGraphType>(nameof(SelectQuery.Top));
+
+				arguments.Add<BooleanGraphType>(nameof(SelectQuery.Distinct), false);
+				arguments.Add<StringGraphType>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+				arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
+				arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
+				arguments.Add<TimeSpanSecondsGraphType>("timeout", null);
+
+				var fieldType = new FieldType
+				{
+					Arguments = arguments,
+					Name = Invariant($"select{table}"),
+					Description = Invariant($"SELECT ... FROM {objectSchema.Name} WHERE ... ORDER BY ..."),
+					Resolver = new SqlApiSelectFieldResolver(),
+					ResolvedType = selectResponseType
+				};
+				fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+				this.Query!.AddField(fieldType);
+			}
+
+			if (objectSchema.Type is ObjectType.Table)
+			{
+				var outputResponseType = OutputResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
+
+				if (actions.HasFlag(SqlApiAction.Delete))
+				{
+					var fieldType = new FieldType
+					{
+						Arguments = new(new QueryArgument(new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))))
+						{
+							Name = "data",
+							DefaultValue = Array<DataRow>.Empty,
+							Description = "The data to be deleted."
+						},
+						new QueryArgument<TimeSpanSecondsGraphType>
+						{
+							Name = "timeout",
+							Description = "The SQL command timeout in seconds."
+						}),
+						Name = Invariant($"delete{table}"),
+						Description = Invariant($"DELETE ... OUTPUT ... FROM {objectSchema.Name} ... VALUES ..."),
+						Resolver = new SqlApiDeleteFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+
+				if (actions.HasFlag(SqlApiAction.DeleteData))
+				{
+					var fieldType = new FieldType
+					{
+						Arguments = new(
+							new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>>
+							{
+								Name = "parameters",
+								Description = "Used to reference user input values from the where clause."
+							},
+							new QueryArgument<StringGraphType>
+							{
+								Name = "where",
+								Description = "If `where` is omitted, all records will be deleted!"
+							},
+							new QueryArgument<TimeSpanSecondsGraphType>
+							{
+								Name = "timeout",
+								Description = "The SQL command timeout in seconds."
+							}),
+						Name = Invariant($"delete{table}Data"),
+						Description = Invariant($"DELETE ... OUTPUT ... FROM {objectSchema.Name} ... VALUES ..."),
+						Resolver = new SqlApiDeleteFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+
+				if (actions.HasFlag(SqlApiAction.Insert))
+				{
+					var arguments = new QueryArguments();
+					arguments.Add<ListGraphType<GraphQLInputType<Parameter>>>("parameters", null, "Used to reference user input values from the where clause.");
+					if (dataSource.Type is DataSourceType.SqlServer)
+						arguments.Add<StringGraphType>(nameof(SelectQuery.Top));
+
+					arguments.Add<BooleanGraphType>(nameof(SelectQuery.Distinct), false);
+					arguments.Add<StringGraphType>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+					arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
+					arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
+					arguments.Add<TimeSpanSecondsGraphType>("timeout", null);
+
+					var fieldType = new FieldType
+					{
+						Arguments = arguments,
+						Name = Invariant($"insert{table}"),
+						Description = Invariant($"INSERT INTO {objectSchema.Name} SELECT ... FROM ... WHERE ... ORDER BY ..."),
+						Resolver = new SqlApiInsertFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+
+				if (actions.HasFlag(SqlApiAction.InsertData))
+				{
+					var arguments = new QueryArguments();
+					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("columns", null, "The columns to insert data into.");
+					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), null, "The data to be inserted.");
+
+					var fieldType = new FieldType
+					{
+						Arguments = arguments,
+						Name = Invariant($"insert{table}Data"),
+						Description = Invariant($"INSERT INTO {objectSchema.Name} ... VALUES ..."),
+						Resolver = new SqlApiInsertFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+
+				if (actions.HasFlag(SqlApiAction.Update))
+				{
+					var arguments = new QueryArguments();
+					arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("set", null, "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
+					arguments.Add<StringGraphType>("where", null, "If `where` is omitted, all records will be updated.");
+
+					var fieldType = new FieldType
+					{
+						Arguments = arguments,
+						Name = Invariant($"update{table}"),
+						Description = Invariant($"UPDATE {objectSchema.Name} SET ... OUTPUT ... WHERE ..."),
+						Resolver = new SqlApiUpdateFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+
+				if (actions.HasFlag(SqlApiAction.UpdateData))
+				{
+					var arguments = new QueryArguments();
+					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("columns", null, "The columns to be updated.");
+					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), null, "The data to be inserted.");
+
+					var fieldType = new FieldType
+					{
+						Arguments = new(
+							new QueryArgument(new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))))
+							{
+								Name = "set",
+								Description = "The columns and data to be updated."
+							}),
+						Name = Invariant($"update{table}Data"),
+						Description = Invariant($"UPDATE {objectSchema.Name} SET ... OUTPUT ..."),
+						Resolver = new SqlApiUpdateFieldResolver(),
+						ResolvedType = outputResponseType
+					};
+					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					this.Mutation!.AddField(fieldType);
+				}
+			}
+		});
+	}
 
 	/// <summary>
 	/// Adds GraphQL endpoints based on class methods decorated with the following attributes:
@@ -345,57 +718,45 @@ public abstract class GraphQLSchema : Schema
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
 	/// <list type="table">
-	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
-	/// <item><term>Mutation: Insert{Table}Data</term> Inserts a batch of records.</item>
-	/// <item><term>Query: Page{Table}</term> Pages records based on a <c>WHERE</c> clause and <c>pager</c>.</item>
-	/// <item><term>Query: Select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Update{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
-	/// <item><term>Mutation: Update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
+	/// <item><term>Mutation: delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: delete{Table}Data</term> Deletes a batch of records based on a table's <c>Primary Key</c>.</item>
+	/// <item><term>Mutation: insert{Table}</term> Inserts records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
+	/// <item><term>Query: page{Table}</term> Pages records based on a <c>WHERE</c> clause and <c>FETCH</c> &amp; <c>OFFSET</c>.</item>
+	/// <item><term>Query: select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: update{Table}</term> Updates records based on a <c>WHERE</c> clause.</item>
+	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
 	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiEndpoints<T>(string dataSource, string table)
-		where T : class, new()
+	public void AddSqlApiEndpoints<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
-		table.AssertNotBlank();
+		var action = TypeOf<T>.Attributes.First<SqlApiAttribute>()?.Actions ?? SqlApiAction.CRUD;
 
-		var action = TypeOf<T>.Attributes.First<SqlApiAttribute>()?.Actions ?? SqlApiAction.All;
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).Result;
+		if (action.HasFlag(SqlApiAction.DeleteData))
+			this.AddSqlApiDeleteDataEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"delete{graphQlName}") : null);
 
-		if (this.Mutation is not null && (action is SqlApiAction.All || schema.Type is ObjectType.Table))
-		{
-			if (action.HasFlag(SqlApiAction.DeleteData))
-				this.AddSqlApiDeleteDataEndpoint<T>(dataSource, table);
+		if (action.HasFlag(SqlApiAction.Delete))
+			this.AddSqlApiDeleteEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"delete{graphQlName}") : null);
 
-			if (action.HasFlag(SqlApiAction.Delete))
-				this.AddSqlApiDeleteEndpoint<T>(dataSource, table);
+		if (action.HasFlag(SqlApiAction.InsertData))
+			this.AddSqlApiInsertDataEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"insert{graphQlName}") : null);
 
-			if (action.HasFlag(SqlApiAction.InsertData))
-				this.AddSqlApiInsertDataEndpoint<T>(dataSource, table);
+		if (action.HasFlag(SqlApiAction.Insert))
+			this.AddSqlApiInsertEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"insert{graphQlName}") : null);
 
-			if (action.HasFlag(SqlApiAction.Insert))
-				this.AddSqlApiInsertEndpoint<T>(dataSource, table);
+		if (action.HasFlag(SqlApiAction.UpdateData))
+			this.AddSqlApiUpdateDataEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"update{graphQlName}") : null);
 
-			if (action.HasFlag(SqlApiAction.UpdateData))
-				this.AddSqlApiUpdateDataEndpoint<T>(dataSource, table);
+		if (action.HasFlag(SqlApiAction.Update))
+			this.AddSqlApiUpdateEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"update{graphQlName}") : null);
 
-			if (action.HasFlag(SqlApiAction.Update))
-				this.AddSqlApiUpdateEndpoint<T>(dataSource, table);
-		}
-
-		if (this.Query is not null)
-		{
-			if (action.HasFlag(SqlApiAction.Page))
-				this.AddSqlApiPageEndpoint<T>(dataSource, table);
-
-			if (action.HasFlag(SqlApiAction.Select))
-				this.AddSqlApiSelectEndpoint<T>(dataSource, table);
-		}
+		if (action.HasFlag(SqlApiAction.Select))
+			this.AddSqlApiSelectEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"select{graphQlName}") : null);
 	}
 
 	/// <summary>
@@ -408,61 +769,74 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiCallProcedureEndpoint<T>(string dataSource, string procedure, Func<DbDataReader, CancellationToken, ValueTask<object>> readData)
+	public FieldType AddSqlApiCallProcedureEndpoint<T>(string dataSourceName, string procedure, bool mutation, string? graphQlName = null, IGraphType? graphQlType = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		procedure.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, procedure)).Result;
-		var arguments = schema.Parameters.ToDictionary(parameter => parameter.Name, parameter =>
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(procedure);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var parameters = objectSchema.Parameters.If(_ => _.Direction is ParameterDirection.Input || _.Direction is ParameterDirection.InputOutput)
+			.Map(parameter => parameter.Name)
+			.ToArray();
+		var fieldType = new FieldType
 		{
-			var type = parameter.Type.ToType();
-			return type.IsValueType ? typeof(Nullable<>).MakeGenericType(type).TypeHandle : type.TypeHandle;
-		}, StringComparer.OrdinalIgnoreCase);
-		this.Query.AddField(new()
-		{
-			Arguments = new QueryArguments(arguments.Map(_ => new QueryArgument(_.Value.GetTypeMember().GraphQLType(true)) { Name = _.Key })),
-			Name = Invariant($"Call{schema.ObjectName}"),
-			Description = Invariant($"Calls stored procedure: {schema.Name}."),
-			Resolver = new StoredProcedureFieldResolver(schema, readData, this.Mediator),
-			Type = TypeOf<T>.Member.GraphQLType(false).ToNonNullGraphType()
-		});
+			Arguments = new QueryArguments(parameters.Map(parameter => new QueryArgument(typeof(StringGraphType)) { Name = parameter })),
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"call{objectSchema.ObjectName.ToPascalCase()}"),
+			Description = Invariant($"Calls stored procedure: {name}."),
+			Resolver = new SqlApiCallFieldResolver<T>()
+		};
+
+		if (graphQlType is not null)
+			fieldType.ResolvedType = graphQlType;
+		else
+			fieldType.Type = TypeOf<T>.Member.GraphQLType(false).ToNonNullGraphType();
+
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+
+		return mutation ? this.Mutation!.AddField(fieldType) : this.Query!.AddField(fieldType);
 	}
 
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
 	/// <list type="table">
-	/// <item><term>Mutation: Delete{Table}Data</term> Deletes records passed in based on primary key value(s).</item>
+	/// <item><term>Mutation: delete{Table}Data</term> Deletes records passed in based on primary key value(s).</item>
 	/// </list>
 	/// <i>Requires call to:</i>
 	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiDeleteDataEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiDeleteDataEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).Result;
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var arguments = new QueryArguments();
+		arguments.Add<ListGraphType<GraphQLInputType<T>>>("data", null, "The data to be deleted.");
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+
 		var fieldType = new FieldType
 		{
-			Arguments = new(new QueryArgument(typeof(ListGraphType<GraphQLInputType<T>>)) { Name = "Data", Description = "The data to be deleted." }),
-			Name = string.Format("delete{0}Data", schema.ObjectName),
-			Description = string.Format("DELETE ... OUTPUT ... FROM {0} ... VALUES ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiDeleteData<T>),
-			Type = typeof(GraphQLObjectType<DeleteResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}Data"),
+			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} ... VALUES ..."),
+			Resolver = new SqlApiDeleteFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Mutation!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -475,33 +849,33 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiDeleteEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiDeleteEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).Result;
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var arguments = new QueryArguments();
+		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		arguments.Add<StringGraphType>("where", null, "If `where` is omitted, all records will be deleted!");
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>> { Name = "Parameters", DefaultValue = Array<Parameter>.Empty },
-				new QueryArgument<StringGraphType> { Name = nameof(DeleteCommand.Where), DefaultValue = string.Empty, Description = "If `where` is omitted, all records will be deleted!" }
-			),
-			Name = string.Format("delete{0}", schema.ObjectName),
-			Description = string.Format("DELETE ... OUTPUT ... FROM {0} WHERE ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiDelete<T>),
-			Type = typeof(GraphQLObjectType<DeleteResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}"),
+			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} WHERE ..."),
+			Resolver = new SqlApiDeleteFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Mutation!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -514,41 +888,33 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiInsertDataEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiInsertDataEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var arguments = new QueryArguments();
+		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("columns", null, "The columns to insert data into.");
+		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("data", null, "The data to be inserted.");
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>
-				{
-					Name = nameof(InsertDataCommand<T>.Columns),
-					Description = "The columns to be inserted into."
-				},
-				new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>
-				{
-					Name = "Data",
-					Description = "The data to be inserted."
-				}
-			),
-			Name = string.Format("insert{0}Data", schema.ObjectName),
-			Description = string.Format("INSERT INTO {0} ... VALUES ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiInsertData<T>),
-			Type = typeof(GraphQLObjectType<InsertResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}Data"),
+			Description = Invariant($"INSERT INTO {name} ... VALUES ..."),
+			Resolver = new SqlApiInsertFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Mutation!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -561,88 +927,56 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiInsertEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiInsertEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
-		var fieldType = new FieldType
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var graphOrderByEnum = new EnumerationGraphType
 		{
-			Arguments = new(
-				new QueryArgument<BooleanGraphType> { Name = nameof(InsertCommand.Distinct), DefaultValue = false },
-				new QueryArgument<ListGraphType<GraphQLOrderByType<T>>> { Name = nameof(InsertCommand.OrderBy), DefaultValue = Array<OrderBy<T>>.Empty },
-				new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>> { Name = "Parameters", DefaultValue = Array<Parameter>.Empty },
-				new QueryArgument<BooleanGraphType> { Name = nameof(InsertCommand.Percent), DefaultValue = false },
-				new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>> { Name = "SourceColumns" },
-				new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "SourceTable" },
-				new QueryArgument<StringGraphType> { Name = nameof(UpdateCommand.TableHints), DefaultValue = string.Empty },
-				new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>> { Name = "TargetColumns" },
-				new QueryArgument<UIntGraphType> { Name = nameof(InsertCommand.Top), DefaultValue = 0U },
-				new QueryArgument<StringGraphType> { Name = nameof(InsertCommand.Where), DefaultValue = string.Empty },
-				new QueryArgument<BooleanGraphType> { Name = nameof(InsertCommand.WithTies), DefaultValue = false }
-			),
-			Name = string.Format("insert{0}", schema.ObjectName),
-			Description = string.Format("INSERT INTO {0} SELECT ... FROM ... WHERE ... ORDER BY ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiInsert<T>),
-			Type = typeof(GraphQLObjectType<SelectResponse<T>>)
+			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		TypeOf<T>.Member.Properties
+			.If(property => !property.GraphQLIgnore())
+			.Do(property =>
+			{
+				var propertyName = property.GraphQLName();
+				var propertyDeprecationReason = property.GraphQLDeprecationReason();
 
-		this.Mutation!.AddField(fieldType);
-	}
+				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
+				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+			});
 
-	/// <summary>
-	/// Creates the following GraphQL endpoint:
-	/// <list type="table">
-	/// <item><term>Query: page{Table}</term> Selects records in pages (batches) based on a <c>WHERE</c> clause.</item>
-	/// </list>
-	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiPageEndpoint<T>(string dataSource, string table)
-		where T : class, new()
-	{
-		dataSource.AssertNotBlank();
-		table.AssertNotBlank();
+		var arguments = new QueryArguments();
+		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		if (dataSource.Type is DataSourceType.SqlServer)
+			arguments.Add<StringGraphType>(nameof(SelectQuery.Top));
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
-		schema.AssertNotNull();
+		arguments.Add<BooleanGraphType>(nameof(SelectQuery.Distinct), false);
+		arguments.Add<NonNullGraphType<StringGraphType>>(nameof(SelectQuery.From), null, "The table or view to pull the data from to insert.");
+		arguments.Add<StringGraphType>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+		arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
+		arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument<UIntGraphType> { Name = nameof(Pager.After), DefaultValue = 0U },
-				new QueryArgument<BooleanGraphType> { Name = nameof(SelectCommand.Distinct), DefaultValue = false },
-				new QueryArgument<UIntGraphType> { Name = nameof(Pager.First), DefaultValue = 0U },
-				new QueryArgument<ListGraphType<GraphQLOrderByType<T>>> { Name = nameof(SelectCommand.OrderBy), DefaultValue = Array<OrderBy<T>>.Empty },
-				new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>> { Name = "Parameters", DefaultValue = Array<Parameter>.Empty },
-				new QueryArgument<StringGraphType> { Name = nameof(SelectCommand.TableHints), DefaultValue = string.Empty },
-				new QueryArgument<StringGraphType> { Name = nameof(SelectCommand.Where), DefaultValue = string.Empty }
-			),
-			Name = string.Format("page{0}", schema.ObjectName),
-			Description = string.Format("SELECT ... FROM {0} WHERE ... ORDER BY ... OFFSET ... FETCH ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiPage<T>),
-			Type = typeof(GraphQLObjectType<PageResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}"),
+			Description = Invariant($"INSERT INTO {name} SELECT ... FROM ... WHERE ... ORDER BY ..."),
+			Resolver = new SqlApiInsertFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Query!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -655,41 +989,56 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiSelectEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiSelectEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
+		this.DataSourceAccessor.Has(dataSourceName).AssertEquals(true);
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
-		schema.AssertNotNull();
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var graphOrderByEnum = new EnumerationGraphType
+		{
+			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
+		};
+		TypeOf<T>.Member.Properties
+			.If(property => !property.GraphQLIgnore())
+			.Do(property =>
+			{
+				var propertyName = property.GraphQLName();
+				var propertyDeprecationReason = property.GraphQLDeprecationReason();
+
+				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
+				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+			});
+
+		var arguments = new QueryArguments();
+		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		if (dataSource.Type is DataSourceType.SqlServer)
+			arguments.Add<StringGraphType>(nameof(SelectQuery.Top));
+
+		arguments.Add<BooleanGraphType>(nameof(SelectQuery.Distinct), false);
+		arguments.Add<StringGraphType>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+		arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
+		arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument<BooleanGraphType> { Name = nameof(SelectCommand.Distinct), DefaultValue = false },
-				new QueryArgument<ListGraphType<GraphQLOrderByType<T>>> { Name = nameof(SelectCommand.OrderBy), DefaultValue = Array<OrderBy<T>>.Empty },
-				new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>> { Name = "Parameters", DefaultValue = Array<Parameter>.Empty },
-				new QueryArgument<BooleanGraphType> { Name = nameof(SelectCommand.Percent), DefaultValue = false },
-				new QueryArgument<StringGraphType> { Name = nameof(SelectCommand.TableHints), DefaultValue = string.Empty },
-				new QueryArgument<UIntGraphType> { Name = nameof(SelectCommand.Top), DefaultValue = 0U },
-				new QueryArgument<StringGraphType> { Name = nameof(SelectCommand.Where), DefaultValue = string.Empty, Description = "If `where` is omitted, all records will be returned." },
-				new QueryArgument<BooleanGraphType> { Name = nameof(SelectCommand.WithTies), DefaultValue = false }
-			),
-			Name = string.Format("select{0}", schema.ObjectName),
-			Description = string.Format("SELECT ... FROM {0} WHERE ... ORDER BY ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiSelect<T>),
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"select{objectSchema.ObjectName.ToPascalCase()}"),
+			Description = Invariant($"SELECT ... FROM {name} WHERE ... ORDER BY ..."),
+			Resolver = new SqlApiSelectFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<SelectResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Query!.AddField(fieldType);
+		return this.Query!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -702,33 +1051,32 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiUpdateDataEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiUpdateDataEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var arguments = new QueryArguments();
+		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("set", null, "The columns to be updated.");
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument(typeof(NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>)) { Name = "Set", Description = "The data to be updated." },
-				new QueryArgument<StringGraphType> { Name = nameof(UpdateCommand.TableHints), DefaultValue = string.Empty }
-			),
-			Name = string.Format("update{0}Data", schema.ObjectName),
-			Description = string.Format("UPDATE {0} SET ... OUTPUT ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiUpdateData<T>),
-			Type = typeof(GraphQLObjectType<UpdateResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName?.ToCamelCase() ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}Data"),
+			Description = Invariant($"UPDATE {name} SET ... OUTPUT ..."),
+			Resolver = new SqlApiUpdateFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Mutation!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
 	/// <summary>
@@ -741,412 +1089,43 @@ public abstract class GraphQLSchema : Schema
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public void AddSqlApiUpdateEndpoint<T>(string dataSource, string table)
-		where T : class, new()
+	public FieldType AddSqlApiUpdateEndpoint<T>(string dataSourceName, string table, string? graphQlName = null)
+		where T : new()
 	{
-		dataSource.AssertNotBlank();
+		dataSourceName.AssertNotBlank();
 		table.AssertNotBlank();
 
-		var schema = this.Mediator.ApplyRuleAsync<SchemaRequest, ObjectSchema>(new(dataSource, table)).GetAwaiter().GetResult();
+		var dataSource = this.DataSourceAccessor[dataSourceName];
+		dataSource.AssertNotNull();
+
+		var name = dataSource.CreateName(table);
+		var objectSchema = dataSource.ObjectSchemas[name];
+		var arguments = new QueryArguments();
+		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("set", null, "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
+		arguments.Add<StringGraphType>("where", null, "If `where` is omitted, all records will be updated.");
+		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+
 		var fieldType = new FieldType
 		{
-			Arguments = new(
-				new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>> { Name = "Parameters", DefaultValue = Array<Parameter>.Empty },
-				new QueryArgument<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>> { Name = nameof(UpdateCommand.Set), DefaultValue = Array<string>.Empty, Description = "[Column] = {Value}" },
-				new QueryArgument<StringGraphType> { Name = nameof(UpdateCommand.TableHints), DefaultValue = string.Empty },
-				new QueryArgument<StringGraphType> { Name = nameof(InsertCommand.Where), DefaultValue = string.Empty, Description = "If `where` is omitted, all records will be updated." }
-			),
-			Name = string.Format("update{0}", schema.ObjectName),
-			Description = string.Format("UPDATE {0} SET ... OUTPUT ... WHERE ...", schema.Name),
-			Resolver = CreateFieldResolver(ResolveSqlApiUpdate<T>),
-			Type = typeof(GraphQLObjectType<SelectResponse<T>>)
+			Arguments = arguments,
+			Name = graphQlName ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}"),
+			Description = Invariant($"UPDATE {name} SET ... OUTPUT ... WHERE ..."),
+			Resolver = new SqlApiUpdateFieldResolver<T>(),
+			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(SqlApiMetadata)] = new SqlApiMetadata
-		{
-			Columns = TypeOf<T>.Properties.Map(_ => _.Name).ToArray(),
-			DataSource = dataSource,
-			Mediator = this.Mediator,
-			Table = schema.Name
-		};
+		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		this.Mutation!.AddField(fieldType);
+		return this.Mutation!.AddField(fieldType);
 	}
 
-	private static FuncFieldResolver<T?> CreateFieldResolver<T>(Func<IResolveFieldContext, Task<T>> resolve)
-		=> new FuncFieldResolver<T?>(async context =>
-		{
-			try
-			{
-				return await resolve(context);
-			}
-			catch (Exception error)
-			{
-				HandleError(context, error);
-				return default;
-			}
-		});
-
-	private static async Task<DeleteResponse<T>?> ResolveSqlApiDelete<T>(IResolveFieldContext context)
+	private static string FixName(string name)
 	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
+		if (!name.Contains('_'))
+			return name;
 
-		var command = new DeleteCommand
-		{
-			DataSource = metadata.DataSource,
-			Output = selections
-				.If(column => selections.AnyLeft(Invariant($"{nameof(DeleteResponse<T>.Deleted)}.{column}")))
-				.Each(column => Invariant($"DELETED.[{column}]"))
-				.ToArray(),
-			Table = metadata.Table,
-			Where = context.GetArgument<string>(nameof(InsertCommand.Where))
-		};
-		context.GetArgument<Parameter[]>("Parameters")?.Do(parameter => command.InputParameters[parameter.Name] = parameter.Value);
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<DeleteCommand, RowSetResponse<T>>(command, context.CancellationToken);
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(DeleteResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<DeleteCommand, string>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Deleted = rowSet.Rows,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<DeleteResponse<T>?> ResolveSqlApiDeleteData<T>(IResolveFieldContext context)
-	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new DeleteDataCommand<T>
-		{
-			DataSource = metadata.DataSource,
-			Input = context.GetArgument<T[]>("Data"),
-			Output = selections
-				.If(column => selections.AnyLeft(Invariant($"{nameof(DeleteResponse<T>.Deleted)}.{column}")))
-				.Each(column => Invariant($"DELETED.[{column}]"))
-				.ToArray(),
-			Table = metadata.Table
-		};
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<DeleteDataCommand<T>, RowSetResponse<T>>(command, context.CancellationToken);
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(DeleteResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<DeleteDataCommand<T>, string>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Deleted = rowSet.Rows,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<InsertResponse<T>?> ResolveSqlApiInsert<T>(IResolveFieldContext context)
-	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-		var sourceColumns = context.GetArgument<string[]>("SourceColumns");
-
-		var command = new InsertCommand
-		{
-			Columns = context.GetArgument<string[]>("TargetColumns"),
-			DataSource = metadata.DataSource,
-			Distinct = context.GetArgument<bool>(nameof(InsertCommand.Distinct)),
-			From = context.GetArgument<string>("SourceTable"),
-			OrderBy = context.GetArgument<OrderBy<T>[]>(nameof(InsertCommand.OrderBy))
-				.ToArray(_ => Invariant($"{_.Expression} {_.Sort.ToSQL()}")),
-			Output = selections
-				.If(column => selections.AnyLeft(Invariant($"{nameof(InsertResponse<T>.Inserted)}.{column}")))
-				.Each(column => Invariant($"INSERTED.[{column}]"))
-				.ToArray(),
-			Select = metadata.Columns
-				.If(column => sourceColumns.AnyRight(Invariant($"SourceColumns.{column}")))
-				.ToArray(),
-			Table = metadata.Table,
-			TableHints = context.GetArgument<string>(nameof(InsertCommand.TableHints)),
-			Top = context.GetArgument<uint>(nameof(InsertCommand.Top)),
-			Percent = context.GetArgument<bool>(nameof(InsertCommand.Percent)),
-			Where = context.GetArgument<string>(nameof(InsertCommand.Where)),
-			WithTies = context.GetArgument<bool>(nameof(InsertCommand.WithTies))
-		};
-		context.GetArgument<Parameter[]>("Parameters")?.Do(parameter => command.InputParameters[parameter.Name] = parameter.Value);
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<InsertCommand, RowSetResponse<T>>(command, context.CancellationToken);
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(InsertResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<InsertCommand, string>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Inserted = rowSet.Rows,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<InsertResponse<T>?> ResolveSqlApiInsertData<T>(IResolveFieldContext context)
-	{
-		var inputs = context.GetInputs().Keys.ToArray();
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new InsertDataCommand<T>
-		{
-			Columns = context.GetArgument<string[]>(nameof(InsertDataCommand<T>.Columns)),
-			DataSource = metadata.DataSource,
-			Input = context.GetArgument<T[]>("Data"),
-			Output = metadata.Columns
-				.If(column => selections.AnyRight(Invariant($"{nameof(InsertResponse<T>.Inserted)}.{column}")))
-				.Each(column => Invariant($"INSERTED.[{column}]"))
-				.ToArray(),
-			Table = metadata.Table
-		};
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(SelectResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<InsertDataCommand<T>, string>(command, context.CancellationToken);
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<InsertDataCommand<T>, RowSetResponse<T>>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Inserted = rowSet.Rows,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<PageResponse<T>?> ResolveSqlApiPage<T>(IResolveFieldContext context)
-	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new SelectCommand
-		{
-			DataSource = metadata.DataSource,
-			Distinct = context.GetArgument<bool>(nameof(SelectCommand.Distinct)),
-			From = metadata.Table,
-			OrderBy = context.GetArgument<OrderBy<T>[]>(nameof(SelectCommand.OrderBy))
-				.ToArray(_ => Invariant($"{_.Expression} {_.Sort.ToSQL()}")),
-			Select = metadata.Columns
-				.If(column => selections.AnyRight(Invariant($"{nameof(PageResponse<T>.Select)}.{column}")))
-				.ToArray(),
-			Pager = new(context.GetArgument<uint>(nameof(Pager.First)), context.GetArgument<uint>(nameof(Pager.After))),
-			TableHints = context.GetArgument<string>(nameof(SelectCommand.TableHints)),
-			Where = context.GetArgument<string>(nameof(SelectCommand.Where)),
-		};
-		context.GetArgument<Parameter[]>("Parameters")?.Do(parameter => command.InputParameters[parameter.Name] = parameter.Value);
-
-		Connection<T>? data = null;
-		var sql = string.Empty;
-		if (selections.AnyLeft(Invariant($"{nameof(PageResponse<T>.Select)}.{nameof(Connection<T>.Items)}."))
-			|| selections.AnyLeft(Invariant($"{nameof(PageResponse<T>.Select)}.{nameof(Connection<T>.Edges)}.")))
-		{
-			await metadata.Mediator.ApplyRuleAsync<SelectCommand, RowSetResponse<T>>(command
-				, output => data = output.Rows.ToConnection((int)output.Count, command.Pager.Value)
-				, error => HandleError(context, error)
-				, context.CancellationToken);
-
-			if (selections.Has(nameof(SelectResponse<T>.Sql)))
-				await metadata.Mediator.ApplyRuleAsync<SelectCommand, string>(command
-					, result => sql = result
-					, error => HandleError(context, error)
-					, context.CancellationToken);
-		}
-		else if (selections.Has(Invariant($"{nameof(PageResponse<T>.Select)}.{nameof(Connection<T>.TotalCount)}")))
-		{
-			var countCommand = new CountCommand
-			{
-				DataSource = metadata.DataSource,
-				Table = metadata.Table,
-				Where = command.Where
-			};
-			await metadata.Mediator.ApplyRuleAsync<CountCommand, long>(countCommand
-				, count => data = new() { TotalCount = (int?)count }
-				, error => HandleError(context, error)
-				, context.CancellationToken);
-
-			if (selections.Has(nameof(PageResponse<T>.Sql)))
-				await metadata.Mediator.ApplyRuleAsync<CountCommand, string>(countCommand
-					, result => sql = result
-					, error => HandleError(context, error)
-					, context.CancellationToken);
-		}
-
-		return new()
-		{
-			Select = data,
-			DataSource = metadata.DataSource,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<SelectResponse<T>?> ResolveSqlApiSelect<T>(IResolveFieldContext context)
-	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new SelectCommand
-		{
-			DataSource = metadata.DataSource,
-			Distinct = context.GetArgument<bool>(nameof(SelectCommand.Distinct)),
-			From = metadata.Table,
-			OrderBy = context.GetArgument<OrderBy<T>[]>(nameof(SelectCommand.OrderBy))
-				.ToArray(_ => Invariant($"{_.Expression} {_.Sort.ToSQL()}")),
-			Select = metadata.Columns
-				.If(column => selections.AnyRight(Invariant($"{nameof(SelectResponse<T>.Select)}.{column}")))
-				.ToArray(),
-			TableHints = context.GetArgument<string>(nameof(SelectCommand.TableHints)),
-			Top = context.GetArgument<uint>(nameof(SelectCommand.Top)),
-			Percent = context.GetArgument<bool>(nameof(SelectCommand.Percent)),
-			Where = context.GetArgument<string>(nameof(SelectCommand.Where)),
-			WithTies = context.GetArgument<bool>(nameof(SelectCommand.WithTies))
-		};
-		context.GetArgument<Parameter[]>("Parameters")?.Do(parameter => command.InputParameters[parameter.Name] = parameter.Value);
-
-		var response = new SelectResponse<T>
-		{
-			DataSource = metadata.DataSource,
-			Table = metadata.Table
-		};
-
-		if (selections.AnyLeft(Invariant($"{nameof(SelectResponse<T>.Select)}.")))
-		{
-			await metadata.Mediator.ApplyRuleAsync<SelectCommand, RowSetResponse<T>>(command, output =>
-			{
-				response.Select = output.Rows;
-				response.Count = output.Count;
-			}, context.CancellationToken);
-
-			if (selections.Has(nameof(SelectResponse<T>.Sql)))
-				await metadata.Mediator.ApplyRuleAsync<SelectCommand, string>(command
-					, sql => response.Sql = sql
-					, error => HandleError(context, error)
-					, context.CancellationToken);
-		}
-		else if (selections.Has(nameof(SelectResponse<T>.Count)))
-		{
-			var countCommand = new CountCommand
-			{
-				DataSource = metadata.DataSource,
-				Table = metadata.Table,
-				Where = command.Where
-			};
-			await metadata.Mediator.ApplyRuleAsync<CountCommand, long>(countCommand
-				, count => response.Count = count
-				, error => HandleError(context, error)
-				, context.CancellationToken);
-
-			if (selections.Has(nameof(SelectResponse<T>.Sql)))
-				await metadata.Mediator.ApplyRuleAsync<CountCommand, string>(countCommand
-					, sql => response.Sql = sql
-					, error => HandleError(context, error)
-					, context.CancellationToken);
-		}
-
-		return response;
-	}
-
-	private static async Task<UpdateResponse<T>?> ResolveSqlApiUpdate<T>(IResolveFieldContext context)
-	{
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new UpdateCommand
-		{
-			Set = context.GetArgument<string[]>(nameof(UpdateCommand.Set)),
-			DataSource = metadata.DataSource,
-			Output = selections
-				.If(column => selections.AnyLeft(Invariant($"{nameof(UpdateResponse<T>.Deleted)}.{column}")))
-				.Each(column => Invariant($"DELETED.[{column}]"))
-				.Union(selections
-					.If(column => selections.AnyLeft(Invariant($"{nameof(UpdateResponse<T>.Inserted)}.{column}")))
-					.Each(column => Invariant($"INSERTED.[{column}]"))
-				).ToArray(),
-			Table = metadata.Table,
-			TableHints = context.GetArgument<string>(nameof(UpdateCommand.TableHints)),
-			Where = context.GetArgument<string>(nameof(UpdateCommand.Where)),
-		};
-		context.GetArgument<Parameter[]>("Parameters")?.Do(parameter => command.InputParameters[parameter.Name] = parameter.Value);
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<UpdateCommand, UpdateRowSetResponse<T>>(command, context.CancellationToken);
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(InsertResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<UpdateCommand, string>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Deleted = rowSet.Deleted,
-			Inserted = rowSet.Inserted,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static async Task<UpdateResponse<T>?> ResolveSqlApiUpdateData<T>(IResolveFieldContext context)
-	{
-		var inputs = context.GetInputs().Keys.ToArray();
-		var selections = context.GetSelections().ToArray();
-		var metadata = context.FieldDefinition.GetMetadata<SqlApiMetadata>(nameof(SqlApiMetadata));
-
-		var command = new UpdateDataCommand<T>
-		{
-			Columns = metadata.Columns
-				.If(column => inputs.AnyRight(Invariant($"Data.{column}")))
-				.ToArray(),
-			DataSource = metadata.DataSource,
-			Input = context.GetArgument<T[]>("Data"),
-			Output = selections
-				.If(column => selections.AnyLeft(Invariant($"{nameof(UpdateResponse<T>.Deleted)}.{column}")))
-				.Each(column => Invariant($"DELETED.[{column}]"))
-				.Union(selections
-					.If(column => selections.AnyLeft(Invariant($"{nameof(UpdateResponse<T>.Inserted)}.{column}")))
-					.Each(column => Invariant($"INSERTED.[{column}]"))
-				).ToArray(),
-			Table = metadata.Table
-		};
-
-		var sql = string.Empty;
-		if (selections.Has(nameof(SelectResponse<T>.Sql)))
-			sql = await metadata.Mediator.ApplyRuleAsync<UpdateDataCommand<T>, string>(command, context.CancellationToken);
-
-		var rowSet = await metadata.Mediator.ApplyRuleAsync<UpdateDataCommand<T>, UpdateRowSetResponse<T>>(command, context.CancellationToken);
-
-		return new()
-		{
-			Count = rowSet.Count,
-			DataSource = metadata.DataSource,
-			Deleted = rowSet.Deleted,
-			Inserted = rowSet.Inserted,
-			Sql = sql,
-			Table = metadata.Table
-		};
-	}
-
-	private static void HandleError(IResolveFieldContext context, Exception error)
-	{
-		if (error is ValidationException exception)
-			exception.ValidationMessages.Do(message => context.Errors.Add(new ExecutionError(message)));
-		else
-			context.Errors.Add(new ExecutionError(error.Message, error));
+		var chars = name.ToLowerInvariant().ToCharArray();
+		chars.ToIndex('_').Do(i => chars[i + 1] = chars[i + 1].ToUpperCase());
+		return new string(chars.If(c => c != '_').ToArray());
 	}
 }

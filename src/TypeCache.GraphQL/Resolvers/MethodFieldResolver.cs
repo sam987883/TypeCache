@@ -10,7 +10,7 @@ using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public class MethodFieldResolver : IFieldResolver
+public sealed class MethodFieldResolver : IFieldResolver
 {
 	private readonly object? _Controller;
 	private readonly MethodMember _Method;

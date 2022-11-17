@@ -10,7 +10,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Converters;
 
-public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?>>
+public sealed class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?>>
 {
 	public override IDictionary<string, object?> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
@@ -18,7 +18,7 @@ public class DictionaryJsonConverter : JsonConverter<IDictionary<string, object?
 
 		if (reader.TokenType == JsonTokenType.StartObject)
 		{
-			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString()!;
 				if (reader.Read())
@@ -55,7 +55,7 @@ public class DictionaryJsonConverter<T> : JsonConverter<IDictionary<string, T>>
 
 		if (reader.TokenType == JsonTokenType.StartObject)
 		{
-			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString()!;
 				if (reader.Read())

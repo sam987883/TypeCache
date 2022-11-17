@@ -26,7 +26,7 @@ public class SqlApiErrorHandlerMiddleware : WebMiddleware
 		catch (AggregateException aggregateException)
 		{
 			context.Response.ContentType = Application.Json;
-			context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 			var exception = aggregateException.InnerException ?? aggregateException;
 			await JsonSerializer.SerializeAsync(context.Response.Body, new
 			{
@@ -38,7 +38,7 @@ public class SqlApiErrorHandlerMiddleware : WebMiddleware
 		catch (Exception exception)
 		{
 			context.Response.ContentType = Application.Json;
-			context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 			await JsonSerializer.SerializeAsync(context.Response.Body, new
 			{
 				ErrorType = exception.GetType().Name,

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TypeCache.IO;
 
-public class CustomStringWriter : StringWriter
+public sealed class CustomStringWriter : StringWriter
 {
 	public override Encoding Encoding { get; }
 

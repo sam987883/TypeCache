@@ -9,6 +9,6 @@ namespace TypeCache.GraphQL.Attributes;
 /// Marks a method to be used as a Subscriber endpoint.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public class GraphQLSubscriptionAttribute : Attribute
+public sealed class GraphQLSubscriptionAttribute : Attribute
 {
 }

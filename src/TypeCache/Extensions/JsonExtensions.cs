@@ -62,6 +62,7 @@ public static class JsonExtensions
 			JsonValueKind.Number when @this.TryGetInt32(out var value) => value,
 			JsonValueKind.Number when @this.TryGetInt64(out var value) => value,
 			JsonValueKind.Number => @this.GetDecimal(),
+			JsonValueKind.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonValueKind.String when @this.TryGetDateTime(out var value) => value,
 			JsonValueKind.String when @this.TryGetGuid(out var value) => value,
 			JsonValueKind.String => @this.GetString()!,
@@ -78,6 +79,7 @@ public static class JsonExtensions
 			JsonTokenType.Number when @this.TryGetInt32(out var value) => value,
 			JsonTokenType.Number when @this.TryGetInt64(out var value) => value,
 			JsonTokenType.Number => @this.GetDecimal(),
+			JsonTokenType.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonTokenType.String when @this.TryGetDateTime(out var value) => value,
 			JsonTokenType.String when @this.TryGetGuid(out var value) => value,
 			JsonTokenType.String => @this.GetString(),
@@ -102,79 +104,60 @@ public static class JsonExtensions
 
 	public static void WriteValue(this Utf8JsonWriter @this, object? value, JsonSerializerOptions options)
 	{
-		if (value is not null)
+		switch (value)
 		{
-			switch (value.GetTypeMember()!.SystemType)
-			{
-				case SystemType.DBNull:
-					@this.WriteNullValue();
-					break;
-				case SystemType.Boolean:
-					@this.WriteBooleanValue((bool)value);
-					break;
-				case SystemType.SByte:
-					@this.WriteNumberValue((sbyte)value);
-					break;
-				case SystemType.Byte:
-					@this.WriteNumberValue((byte)value);
-					break;
-				case SystemType.Int16:
-					@this.WriteNumberValue((short)value);
-					break;
-				case SystemType.UInt16:
-					@this.WriteNumberValue((ushort)value);
-					break;
-				case SystemType.Int32:
-					@this.WriteNumberValue((int)value);
-					break;
-				case SystemType.UInt32:
-					@this.WriteNumberValue((uint)value);
-					break;
-				case SystemType.Int64:
-				case SystemType.IntPtr:
-					@this.WriteNumberValue((long)value);
-					break;
-				case SystemType.UInt64:
-				case SystemType.UIntPtr:
-					@this.WriteNumberValue((ulong)value);
-					break;
-				case SystemType.Single:
-					@this.WriteNumberValue((float)value);
-					break;
-				case SystemType.Double:
-					@this.WriteNumberValue((double)value);
-					break;
-				case SystemType.Decimal:
-					@this.WriteNumberValue((decimal)value);
-					break;
-				case SystemType.DateTime:
-					@this.WriteStringValue((DateTime)value);
-					break;
-				case SystemType.DateTimeOffset:
-					@this.WriteStringValue((DateTimeOffset)value);
-					break;
-				case SystemType.TimeSpan:
-					@this.WriteStringValue(((TimeSpan)value).ToString("c"));
-					break;
-				case SystemType.Guid:
-					@this.WriteStringValue((Guid)value);
-					break;
-				case SystemType.Char:
-				case SystemType.Index:
-				case SystemType.Range:
-				case SystemType.Uri:
-					@this.WriteStringValue(value.ToString());
-					break;
-				case SystemType.String:
-					@this.WriteStringValue((string)value);
-					break;
-				default:
-					JsonSerializer.Serialize(@this, value, options);
-					break;
-			}
+			case null or DBNull:
+				@this.WriteNullValue();
+				break;
+			case bool success:
+				@this.WriteBooleanValue(success);
+				break;
+			case sbyte or byte or short or ushort or int or IntPtr:
+				@this.WriteNumberValue(Convert.ToInt32(value));
+				break;
+			case byte or ushort or uint:
+				@this.WriteNumberValue(Convert.ToUInt32(value));
+				break;
+			case long number:
+				@this.WriteNumberValue(number);
+				break;
+			case ulong number:
+				@this.WriteNumberValue(number);
+				break;
+			case float or Half or double:
+				@this.WriteNumberValue(Convert.ToDouble(value));
+				break;
+			case decimal number:
+				@this.WriteNumberValue(number);
+				break;
+			case DateOnly date:
+				@this.WriteStringValue(date.ToShortDateString());
+				break;
+			case DateTime dateTime:
+				@this.WriteStringValue(dateTime);
+				break;
+			case DateTimeOffset dateTimeOffset:
+				@this.WriteStringValue(dateTimeOffset);
+				break;
+			case TimeOnly time:
+				@this.WriteStringValue(time.ToShortTimeString());
+				break;
+			case TimeSpan timeSpan:
+				@this.WriteStringValue(timeSpan.ToString("c"));
+				break;
+			case Guid id:
+				@this.WriteStringValue(id);
+				break;
+			case char or Index or Range or Uri:
+				@this.WriteStringValue(value.ToString());
+				break;
+			case string text:
+				@this.WriteStringValue(text);
+				break;
+			default:
+				JsonSerializer.Serialize(@this, value, options);
+				break;
 		}
-		else
-			@this.WriteNullValue();
 	}
 
 	private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)

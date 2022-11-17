@@ -2,56 +2,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
+using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data.Extensions;
 
 public static class StringBuilderExtensions
 {
-	public static StringBuilder AppendColumnsSQL(this StringBuilder @this, string[] columns)
-		=> @this.Append('(')
-			.AppendJoin(", ", columns.Map(column => column.EscapeIdentifier()))
-			.Append(')').AppendLine();
-
-	public static StringBuilder AppendSQL(this StringBuilder @this, ReadOnlySpan<char> keyword, string? clause)
-		=> clause.IsNotBlank() ? @this.Append(keyword).Append(' ').AppendLine(clause) : @this;
-
-	public static StringBuilder AppendSQL(this StringBuilder @this, ReadOnlySpan<char> keyword, ReadOnlySpan<char> clause1, ReadOnlySpan<char> clause2)
-		=> @this.Append(keyword).Append(' ').Append(clause1).Append(' ').Append(clause2).AppendLine();
-
-	public static StringBuilder AppendSQL(this StringBuilder @this, ReadOnlySpan<char> keyword, IEnumerable<string>? parts)
-	{
-		if (!parts.Any())
-			return @this;
-
-		var separator = new[] { '\t', ',', ' ' };
-		@this.Append(keyword).Append(' ');
-		parts.Do(part => @this.Append(part), () => @this.AppendLine().Append(separator.AsSpan()));
-		return @this.AppendLine();
-	}
-
-	public static StringBuilder AppendInsertSQL(this StringBuilder @this, string into, string[] columns)
-	{
-		into.AssertNotBlank();
-		columns.AssertNotEmpty();
-
-		return @this.AppendSQL("INSERT INTO", into).AppendColumnsSQL(columns);
-	}
-
-	public static StringBuilder AppendPagerSQL(this StringBuilder @this, Pager? pager)
-	{
-		if (pager is null)
-			return @this;
-
-		@this.AppendSQL("OFFSET", Invariant($"{pager.Value.After} ROWS"));
-		return pager.Value.First > 0 ? @this.AppendSQL("FETCH NEXT", Invariant($"{pager.Value.First} ROWS ONLY")) : @this;
-	}
-
+	public static StringBuilder AppendOutputSQL(this StringBuilder @this, DataSourceType dataSourceType, StringValues output)
+		=> @this.AppendLine(dataSourceType switch
+		{
+			PostgreSql => Invariant($"RETURNING {output.ToCSV()}"),
+			_ => Invariant($"OUTPUT {output.ToCSV()}")
+		});
 
 	public static StringBuilder AppendStatementEndSQL(this StringBuilder @this)
 	{
@@ -61,18 +31,11 @@ public static class StringBuilderExtensions
 		return @this.Append(';').AppendLine();
 	}
 
-	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, string[] columns, T[] input)
-		=> @this.AppendSQL("VALUES", input switch
-		{
-			bool[] or sbyte[] or byte[] or short[] or ushort[] or int[] or uint[] or long[] or ulong[]
-			or bool?[] or sbyte?[] or byte?[] or short?[] or ushort?[] or int?[] or uint?[] or long?[] or ulong?[]
-			or float[] or Half[] or double[] or decimal[] or float?[] or Half?[] or double?[] or decimal?[]
-			or DateOnly[] or DateTime[] or DateTimeOffset[] or DateOnly?[] or DateTime?[] or DateTimeOffset?[]
-			or TimeOnly[] or TimeSpan[] or TimeOnly?[] or TimeSpan?[]
-			or Guid[] or Guid?[] or string[] => input.Map(value => Invariant($"({value.ToSQL()})")),
-			object[][] rows => rows.Map(row => Invariant($"({row.Map(value => value.ToSQL()).ToCSV()})")),
-			IDictionary<string, object?>[] rows => rows.Map(row => Invariant($"({columns.Map(column => row[column].ToSQL()).ToCSV()})")),
-			_ when input[0] is ITuple => ((ITuple[])(object)input).Map(row => Invariant($"({(0..row.Length).Map(i => row[i].ToSQL()).ToCSV()})")),
-			_ => input.Map(row => Invariant($"({columns.Map(column => TypeOf<T>.Properties.If(_ => _.Name.Is(column)).First()!.GetValue(row!).ToSQL()).ToCSV()})"))
-		});
+	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, T[] input, StringValues columns)
+	{ 
+		var values = input.Map(row => Invariant($"({columns.Map(column => (TypeOf<T>.Properties.If(_ => _.Name.Is(column)).First()?.GetValue(row!)).ToSQL()).ToCSV()})"));
+		@this.Append("VALUES ");
+		values.Do(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
+		return @this.AppendLine();
+	}
 }
