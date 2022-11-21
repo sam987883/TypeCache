@@ -4,12 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 
 namespace TypeCache.Data.Extensions;
 
@@ -91,15 +90,25 @@ public static class DbCommandExtensions
 
 	/// <summary>
 	/// <code>
-	/// =&gt; @<paramref name="this"/>.Parameters.If&lt;<see cref="DbParameter"/>&gt;()<br/>
-	/// <see langword="    "/>.If(parameter =&gt; parameter.Direction <see langword="is"/> <see cref="ParameterDirection.Output"/> || parameter.Direction <see langword="is"/> <see cref="ParameterDirection.InputOutput"/>)<br/>
-	/// <see langword="    "/>.Do(parameter => <paramref name="sqlCommand"/>.Parameters[parameter.ParameterName] = parameter.Value);
+	/// {<br/>
+	/// <see langword="    var"/> parameters = @<paramref name="this"/>.Parameters<br/>
+	/// <see langword="        "/>.OfType&lt;<see cref="DbParameter"/>&gt;()<br/>
+	/// <see langword="        "/>.Where(parameter =&gt; parameter.Direction <see langword="is"/> <see cref="ParameterDirection.InputOutput"/> || parameter.Direction <see langword="is"/> <see cref="ParameterDirection.Output"/>);<br/>
+	/// <br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> parameter <see langword="in"/> parameters)<br/>
+	/// <see langword="        "/><paramref name="sqlCommand"/>.Parameters[parameter.ParameterName] = parameter.Value;<br/>
+	/// }
 	/// </code>
 	/// </summary>
 	public static void CopyOutputParameters(this DbCommand @this, SqlCommand sqlCommand)
-		=> @this.Parameters.If<DbParameter>()
-			.If(parameter => parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output)
-			.Do(parameter => sqlCommand.Parameters[parameter.ParameterName] = parameter.Value);
+	{
+		var parameters = @this.Parameters
+			.OfType<DbParameter>()
+			.Where(parameter => parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output);
+
+		foreach (var parameter in parameters)
+			sqlCommand.Parameters[parameter.ParameterName] = parameter.Value;
+	}
 
 	/// <summary>
 	/// <code>

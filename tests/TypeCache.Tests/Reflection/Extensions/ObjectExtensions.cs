@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using TypeCache.Collections.Extensions;
+using System.Linq;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using Xunit;

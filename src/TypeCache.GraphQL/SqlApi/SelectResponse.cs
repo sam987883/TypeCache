@@ -1,10 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Generic;
+using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Types;
 using static System.FormattableString;
@@ -22,11 +23,11 @@ public class SelectResponse<T>
 	{
 		var start = offset + 1;
 		var end = start + items.Length;
-		this.Edges = items.Map((item, i) => new Edge<T>
+		this.Edges = items.Select((item, i) => new Edge<T>
 		{
 			Cursor = (start + i).ToString(),
 			Node = item
-		});
+		}).ToArray();
 		this.PageInfo = new()
 		{
 			StartCursor = start.ToString(),

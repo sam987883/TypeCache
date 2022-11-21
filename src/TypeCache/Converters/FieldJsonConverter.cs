@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
@@ -14,15 +14,15 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 {
 	public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		if (reader.TokenType == JsonTokenType.StartObject)
+		if (reader.TokenType is JsonTokenType.StartObject)
 		{
 			var output = TypeOf<T>.Create();
-			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString()!;
 				if (reader.Read())
 				{
-					var field = TypeOf<T>.Fields.If(_ => _.Name.Is(name)).First();
+					var field = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name.Is(name));
 					if (field is not null && !field.Static && field.SetMethod is not null)
 						field.SetValue!(output!, reader.TokenType switch
 						{
@@ -43,12 +43,12 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 		if (input is not null)
 		{
 			writer.WriteStartObject();
-			TypeOf<T>.Fields.If(field => !field.Static && field!.GetMethod is not null).Do(field =>
+			foreach (var field in TypeOf<T>.Fields.Where(field => !field.Static && field!.GetMethod is not null))
 			{
 				writer.WritePropertyName(field!.Name);
 				var value = field.GetValue!(input);
 				writer.WriteValue(value, options);
-			});
+			}
 			writer.WriteEndObject();
 		}
 		else

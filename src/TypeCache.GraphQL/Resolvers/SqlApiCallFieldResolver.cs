@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.SqlApi;
 
 namespace TypeCache.GraphQL.Resolvers;
@@ -19,7 +19,7 @@ public sealed class SqlApiCallFieldResolver<T> : FieldResolver<OutputResponse<T>
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(objectSchema.Name);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
 

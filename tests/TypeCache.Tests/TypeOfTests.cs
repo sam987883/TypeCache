@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using TypeCache.Collections.Extensions;
+using System.Linq;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
@@ -28,14 +28,14 @@ public class TypeOfTests
 	{
 		var tester = new Tester1();
 
-		var method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
+		var method = TypeOf<Tester1>.Methods.Where(_ => _.Name.Is(nameof(Tester1.GenericMethod))).FirstOrDefault();
 		Assert.NotEqual(default, method);
 
 		var value = method.InvokeGeneric(new[] { typeof(int), typeof(string), typeof(DateTime) }, tester, "param1", DateTime.Now);
 		Assert.Equal(0, value);
 
 		// Test pulling it out of cache
-		method = TypeOf<Tester1>.Methods.If(_ => _.Name.Is(nameof(Tester1.GenericMethod))).First()!;
+		method = TypeOf<Tester1>.Methods.Where(_ => _.Name.Is(nameof(Tester1.GenericMethod))).FirstOrDefault();
 		Assert.NotEqual(default, method);
 
 		value = method.InvokeGeneric(new[] { typeof(int), typeof(string), typeof(DateTime) }, tester, "param1", DateTime.Now);

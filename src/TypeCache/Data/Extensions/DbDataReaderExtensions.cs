@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -18,10 +18,10 @@ namespace TypeCache.Data.Extensions;
 public static class DbDataReaderExtensions
 {
 	/// <summary>
-	/// <c>=&gt; (0..@<paramref name="this"/>.VisibleFieldCount).Map(@<paramref name="this"/>.GetName).ToArray();</c>
+	/// <c>=&gt; (0..@<paramref name="this"/>.VisibleFieldCount).Select(@<paramref name="this"/>.GetName).ToArray();</c>
 	/// </summary>
 	public static string[] GetColumns(this DbDataReader @this)
-		=> (0..@this.VisibleFieldCount).Map(@this.GetName).ToArray();
+		=> (0..@this.VisibleFieldCount).Select(@this.GetName).ToArray();
 
 	/// <summary>
 	/// <inheritdoc cref="DataTable.Load(IDataReader)"/>
@@ -49,7 +49,7 @@ public static class DbDataReaderExtensions
 	/// {<br/>
 	/// <see langword="    var"/> rows = <see langword="new"/> <see cref="List{T}"/>(<paramref name="initialCapacity"/>);<br/>
 	/// <see langword="    "/>propertyMap = <see cref="TypeOf{T}.Properties"/>.ToDictionary(property =&gt; property.Name, property =&gt; property);<br/>
-	/// <see langword="    "/>properties = @<paramref name="this"/>.GetColumns().Map(column =&gt; propertyMap[column]);<br/>
+	/// <see langword="    "/>properties = @<paramref name="this"/>.GetColumns().Select(column =&gt; propertyMap[column]).ToArray();<br/>
 	/// <see langword="    "/>values = <see langword="new"/> <see cref="object"/>[@<paramref name="this"/>.VisibleFieldCount];<br/>
 	/// <see langword="    while"/> (<see langword="await"/> @<paramref name="this"/>.ReadAsync(<paramref name="token"/>))<br/>
 	/// <see langword="    "/>{<br/>
@@ -67,13 +67,13 @@ public static class DbDataReaderExtensions
 	{
 		var rows = new List<T>(initialCapacity);
 		var propertyMap = TypeOf<T>.Properties.ToDictionary(property => property.Name, property => property);
-		var properties = @this.GetColumns().Map(column => propertyMap[column]);
+		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 		var values = new object[@this.VisibleFieldCount];
 		while (await @this.ReadAsync(token))
 		{
 			var model = TypeOf<T>.Create()!;
 			@this.GetValues(values);
-			properties.Do((property, columnIndex) => property.SetValue(model, values[columnIndex]));
+			properties.ForEach((property, columnIndex) => property.SetValue(model, values[columnIndex]));
 			rows.Add(model);
 		}
 		return rows;
@@ -115,7 +115,7 @@ public static class DbDataReaderExtensions
 		{
 			var jsonObject = new JsonObject(options);
 			@this.GetValues(values);
-			range.Do(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], options)));
+			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], options)));
 			jsonArray.Add(jsonObject);
 		}
 		return jsonArray;
@@ -132,7 +132,7 @@ public static class DbDataReaderExtensions
 		{
 			writer.WriteStartObject();
 			@this.GetValues(values);
-			range.Do(i =>
+			range.ForEach(i =>
 			{
 				writer.WritePropertyName(columns[i]);
 				writer.WriteValue(values[i] switch { DBNull => null, object value => value }, options);
@@ -151,7 +151,7 @@ public static class DbDataReaderExtensions
 		{
 			var values = new object[columnCount];
 			var tupleType = typeof(Tuple).GetTypeMember();
-			var genericTypes = type.GenericTypes.As<Type>().ToArray();
+			var genericTypes = type.GenericTypes.OfType<Type>().ToArray();
 			while (await @this.ReadAsync(token))
 			{
 				@this.GetValues(values);
@@ -162,7 +162,7 @@ public static class DbDataReaderExtensions
 		{
 			var values = new object[columnCount];
 			var valueTupleType = typeof(ValueTuple).GetTypeMember();
-			var genericTypes = type.GenericTypes.As<Type>().ToArray();
+			var genericTypes = type.GenericTypes.OfType<Type>().ToArray();
 			while (await @this.ReadAsync(token))
 			{
 				@this.GetValues(values);
@@ -202,20 +202,20 @@ public static class DbDataReaderExtensions
 			{
 				@this.GetValues(values);
 				var dictionary = new Dictionary<string, object>(columnCount, StringComparer.OrdinalIgnoreCase);
-				columns.Do((column, c) => dictionary.Add(column, values[c]));
+				columns.ForEach((column, i) => dictionary.Add(column, values[i]));
 				rows.Add((T)(object)dictionary);
 			}
 		}
 		else
 		{
 			var propertyMap = TypeOf<T>.Member.Properties.ToDictionary(property => property.Name, property => property);
-			var properties = @this.GetColumns().Map(column => propertyMap[column]).ToArray();
+			var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 			var values = new object[columnCount];
 			while (await @this.ReadAsync(token))
 			{
 				var model = TypeOf<T>.Create()!;
 				@this.GetValues(values);
-				properties.Do((property, c) => property.SetValue(model, values[c]));
+				properties.ForEach((property, i) => property.SetValue(model, values[i]));
 				rows.Add(model);
 			}
 		}

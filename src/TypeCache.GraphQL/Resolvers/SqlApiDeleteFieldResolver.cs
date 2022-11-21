@@ -2,13 +2,14 @@
 
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using static System.FormattableString;
@@ -24,8 +25,8 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver<OutputResponse<Dat
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
 		var output = selections
-			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}")))
-			.Each(column => objectSchema.DataSource.Type switch
+			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}"))))
+			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
 				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column)}")
@@ -36,7 +37,7 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver<OutputResponse<Dat
 		var sql = data.Rows.Any<DataRow>() ? objectSchema.CreateDeleteSQL(data, output) : objectSchema.CreateDeleteSQL(where, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
@@ -64,8 +65,8 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver<OutputResponse<
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
 		var output = selections
-			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}")))
-			.Each(column => objectSchema.DataSource.Type switch
+			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}"))))
+			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
 				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column)}")
@@ -76,7 +77,7 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver<OutputResponse<
 		var sql = data.Any() ? objectSchema.CreateDeleteSQL(data, output) : objectSchema.CreateDeleteSQL(where, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = (IList<T>)Array<T>.Empty;
 		if (output.Any())

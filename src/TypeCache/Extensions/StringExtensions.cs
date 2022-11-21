@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 using static TypeCache.Default;
 using Unsafe = TypeCache.Reflection.Unsafe;
@@ -196,7 +196,8 @@ public static class StringExtensions
 	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
 	/// <see langword="        return"/> <see cref="string.Empty"/>;<br/>
 	/// <br/>
-	/// <see langword="    var"/> span = @<paramref name="this"/>.ToSpan();<br/>
+	/// <see langword="    "/>Span&lt;<see cref="char"/>&gt; span = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
 	/// <see langword="    var"/> i = -1;<br/>
 	/// <see langword="    while"/> (++i &lt; span.Length)<br/>
 	/// <see langword="    {"/><br/>
@@ -213,7 +214,8 @@ public static class StringExtensions
 		if (@this.IsBlank())
 			return string.Empty;
 
-		var span = @this.ToSpan();
+		Span<char> span = stackalloc char[@this.Length];
+		@this.AsSpan().CopyTo(span);
 		var i = -1;
 		while (++i < span.Length)
 		{
@@ -230,7 +232,8 @@ public static class StringExtensions
 			return @this;
 
 		var count = 0;
-		var span = @this.ToSpan();
+		Span<char> span = stackalloc char[@this.Length];
+		@this.AsSpan().CopyTo(span);
 		var i = -1;
 		while (++i < span.Length)
 		{
@@ -259,7 +262,8 @@ public static class StringExtensions
 		showTerms ??= Array<string>.Empty;
 
 		var count = 0;
-		var span = @this.ToSpan();
+		Span<char> span = stackalloc char[@this.Length];
+		@this.AsSpan().CopyTo(span);
 		var i = -1;
 		while (++i < span.Length)
 		{

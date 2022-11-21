@@ -1,9 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -17,7 +20,7 @@ public sealed class Accessor<T> : IAccessor<T>
 	{
 		this._Items = items
 			.ToDictionary(item => item.Name, item => item)
-			.ToImmutableDictionary();
+			.ToImmutableDictionary(StringComparer.OrdinalIgnoreCase);
 	}
 
 	public T? this[string name] => this._Items.TryGetValue(name, out var item) ? item : default;

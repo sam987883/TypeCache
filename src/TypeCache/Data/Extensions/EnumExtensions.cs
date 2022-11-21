@@ -4,7 +4,7 @@ using System;
 using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection;
 using static TypeCache.Default;
 
@@ -38,7 +38,7 @@ public static class EnumExtensions
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool IsSQLType(this SystemType @this)
-		=> SQLSystemTypes.Has(@this);
+		=> SQLSystemTypes.ContainsEnum(@this);
 
 	public static Type ToType(this SqlDbType @this)
 		=> @this switch

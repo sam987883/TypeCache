@@ -6,9 +6,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using static TypeCache.Default;
@@ -42,7 +42,7 @@ public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 
 	public IEnumerable<K> Keys => this._Dictionary.Keys;
 
-	public IEnumerable<V> Values => this._Dictionary.Values.Map(_ => _.Value);
+	public IEnumerable<V> Values => this._Dictionary.Values.Select(_ => _.Value);
 
 	public int Count => this._Dictionary.Count;
 
@@ -52,11 +52,11 @@ public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
-		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).AsEnumerable().GetEnumerator();
+		=> this._Dictionary.Select(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	IEnumerator IEnumerable.GetEnumerator()
-		=> this._Dictionary.Map(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
+		=> this._Dictionary.Select(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 
 	bool IReadOnlyDictionary<K, V>.TryGetValue(K key, [MaybeNullWhen(false)] out V value)
 	{

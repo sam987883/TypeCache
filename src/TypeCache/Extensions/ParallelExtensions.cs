@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-namespace TypeCache.Collections.Extensions;
+namespace TypeCache.Extensions;
 
 public static class ParallelExtensions
 {

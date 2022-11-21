@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -34,9 +34,11 @@ public sealed class DataTableJsonConverter : JsonConverter<DataTable>
 					}
 				}
 
-				table.Columns.AddRange(dictionary.Map(pair => pair.Value is not null ? new DataColumn(pair.Key, pair.Value.GetType()) : new DataColumn(pair.Key)));
+				table.Columns.AddRange(dictionary.Select(pair => pair.Value is not null ? new DataColumn(pair.Key, pair.Value.GetType()) : new DataColumn(pair.Key)).ToArray());
 				var row = table.NewRow();
-				dictionary.Do(pair => row[pair.Key] = pair.Value ?? DBNull.Value);
+				foreach (var pair in dictionary)
+					row[pair.Key] = pair.Value ?? DBNull.Value;
+
 				table.Rows.Add(row);
 
 				while (reader.TokenType is JsonTokenType.StartObject)
@@ -66,12 +68,12 @@ public sealed class DataTableJsonConverter : JsonConverter<DataTable>
 			writer.WriteNullValue();
 		else
 		{
-			var columns = table.Columns.If<DataColumn>().ToArray();
+			var columns = table.Columns.OfType<DataColumn>().ToArray();
 			writer.WriteStartArray();
-			table.Rows.If<DataRow>().Do(row =>
+			foreach (var row in table.Rows.OfType<DataRow>())
 			{
 				writer.WriteStartObject();
-				columns.Do(column =>
+				columns.ForEach(column =>
 				{
 					var value = row[column];
 					if (value is DBNull || value is null)
@@ -83,7 +85,7 @@ public sealed class DataTableJsonConverter : JsonConverter<DataTable>
 					}
 				});
 				writer.WriteEndObject();
-			});
+			}
 			writer.WriteEndArray();
 		}
 	}

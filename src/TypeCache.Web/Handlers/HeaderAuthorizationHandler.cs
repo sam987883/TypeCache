@@ -1,9 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using TypeCache.Web.Attributes;
 using TypeCache.Web.Extensions;
@@ -28,10 +30,11 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 			var type = controller.ControllerTypeInfo.GetTypeMember();
 			var method = type.GetMethod(controller.MethodInfo.MethodHandle)!;
 			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
-			var success = type.Attributes.If<RequireHeaderAttribute>()
-				.Append(method.Attributes.If<RequireHeaderAttribute>())
+			var success = type
+				.Attributes.OfType<RequireHeaderAttribute>()
+				.Union(method.Attributes.OfType<RequireHeaderAttribute>())
 				.All(attribue => headers.TryGetValue(attribue!.Key, out var values)
-					&& (!attribue.AllowedValues.Any() || values.HasAny(attribue.AllowedValues)));
+					&& (!attribue.AllowedValues.Any() || values.Any(value => attribue.AllowedValues.Contains(value, StringComparer.OrdinalIgnoreCase))));
 
 			if (success)
 				context.Succeed(requirement);

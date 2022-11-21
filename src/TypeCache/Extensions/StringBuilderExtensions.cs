@@ -20,6 +20,13 @@ public static class StringBuilderExtensions
 		=> condition ? @this.Append(value) : @this;
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Append(<paramref name="condition"/> ? <paramref name="trueValue"/> : <paramref name="falseValue"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, string trueValue, string falseValue)
+		=> @this.Append(condition ? trueValue : falseValue);
+
+	/// <summary>
 	/// <code>
 	/// =&gt; <paramref name="value"/> <see langword="switch"/><br/>
 	/// {<br/>
@@ -67,6 +74,13 @@ public static class StringBuilderExtensions
 		};
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.AppendIf(<paramref name="condition"/>, <paramref name="trueValue"/>).AppendIf(!<paramref name="condition"/>,  <paramref name="falseValue"/>);</c>
+	/// </summary>
+	[DebuggerHidden]
+	public static StringBuilder AppendIf<T>(this StringBuilder @this, bool condition, T trueValue, T falseValue)
+		=> @this.AppendIf(condition, trueValue).AppendIf(!condition, falseValue);
+
+	/// <summary>
 	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.Append(<paramref name="value"/>) : @<paramref name="this"/>;</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
@@ -86,6 +100,13 @@ public static class StringBuilderExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static StringBuilder AppendLineIf(this StringBuilder @this, bool condition, string value)
 		=> condition ? @this.AppendLine(value) : @this;
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.AppendLine(<paramref name="condition"/> ? <paramref name="trueValue"/> : <paramref name="falseValue"/>);</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static StringBuilder AppendLineIf(this StringBuilder @this, bool condition, string trueValue, string falseValue)
+		=> @this.AppendLine(condition ? trueValue : falseValue);
 
 	/// <inheritdoc cref="StringWriter.StringWriter(StringBuilder)"/>
 	/// <remarks>

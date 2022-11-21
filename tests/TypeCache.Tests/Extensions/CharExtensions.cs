@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using Xunit;
 

@@ -8,13 +8,13 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TypeCache.Attributes;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -22,6 +22,8 @@ namespace TypeCache.Reflection.Extensions;
 
 public static class TypeExtensions
 {
+	private const char GENERIC_TICKMARK = '`';
+
 	static TypeExtensions()
 	{
 		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(159)

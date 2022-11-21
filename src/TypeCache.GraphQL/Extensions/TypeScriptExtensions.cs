@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using System.Text;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
@@ -35,7 +35,7 @@ public static class TypeScriptExtensions
 		if (@this.Description.IsNotBlank())
 			builder.AppendLine(Invariant($"/* {@this.Description} */"));
 		builder.Append("export enum ").AppendLine(@this.Name).Append('{');
-		@this.Values.Do(value =>
+		@this.Values.ToArray().ForEach(value =>
 		{
 			builder.AppendLine().Append('\t').Append(value.Name);
 			if (value.Value is not null && long.TryParse(value.Value.ToString(), out var id))
@@ -50,7 +50,7 @@ public static class TypeScriptExtensions
 		if (@this.Description.IsNotBlank())
 			builder.AppendLine(Invariant($"/* {@this.Description} */"));
 		builder.AppendLine($"export type {@this.Name} = {{");
-		@this.Fields.Do(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
+		@this.Fields.ToArray().ForEach(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
 		return builder.Append('}').AppendLine().ToString();
 	}
 }

@@ -3,7 +3,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -24,7 +23,7 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 	/// <see langword="    this"/>._Equals = <paramref name="customEquatableEquals"/>;<br/>
 	/// <br/>
 	/// <see langword="    var"/> hashCode = <see langword="new"/> <see cref="HashCode"/>();<br/>
-	/// <see langword="    "/><paramref name="customEqualityFactors"/>.Do(hashCode.Add);<br/>
+	/// <see langword="    "/><paramref name="customEqualityFactors"/>.ForEach(hashCode.Add);<br/>
 	/// <see langword="    this"/>._HashCode = hashCode.ToHashCode();<br/>
 	/// }
 	/// </code>
@@ -39,7 +38,7 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 		this._Equals = customEquatableEquals;
 
 		var hashCode = new HashCode();
-		customEqualityFactors.Do(hashCode.Add);
+		customEqualityFactors.ForEach(hashCode.Add);
 		this._HashCode = hashCode.ToHashCode();
 	}
 

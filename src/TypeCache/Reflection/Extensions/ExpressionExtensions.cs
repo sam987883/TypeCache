@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
@@ -16,6 +16,8 @@ namespace TypeCache.Reflection.Extensions;
 
 public static class ExpressionExtensions
 {
+	private static readonly ConstantExpression NullExpression = Expression.Constant(null);
+
 	/// <inheritdoc cref="Expression.AndAlso(Expression, Expression)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.AndAlso(@<paramref name="this"/>, <paramref name="operand"/>);</c>
@@ -42,11 +44,10 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Map(index =&gt;
-	///		(<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public static MethodCallExpression Array(this Expression @this, params int[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.Map(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
@@ -58,11 +59,10 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Map(index =&gt;
-	///		(<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public static MethodCallExpression Array(this Expression @this, params long[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.Map(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
@@ -678,21 +678,23 @@ public static class ExpressionExtensions
 
 	/// <remarks>
 	/// <code>
-	/// <see langword="var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="if"/> (parameterInfos.Any())<br/>
-	/// <see langword="    "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
+	/// {<br/>
+	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
+	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
+	/// <see langword="        "/>.Select(parameterInfo =&gt; parameterInfo.Parameter())<br/>
+	/// <see langword="        "/>.ToArray();<br/>
 	/// <br/>
-	/// <see langword="var"/> parameters = parameterInfos.Map(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
-	/// <see langword="return"/> @<paramref name="this"/>.New(parameters).Lambda(parameters);
+	/// <see langword="    return"/> @<paramref name="this"/>.New(parameters).Lambda(parameters);<br/>
+	/// }
 	/// </code>
 	/// </remarks>
 	public static LambdaExpression Lambda(this ConstructorInfo @this)
 	{
-		var parameterInfos = @this.GetParameters();
-		if (parameterInfos.Any())
-			parameterInfos.Sort(ParameterPositionComparer);
+		var parameters = @this.GetParameters()
+			.OrderBy(parameterInfo => parameterInfo.Position)
+			.Select(parameterInfo => parameterInfo!.Parameter())
+			.ToArray();
 
-		var parameters = parameterInfos.Map(parameterInfo => parameterInfo!.Parameter()).ToArray();
 		return @this.New(parameters).Lambda(parameters);
 	}
 
@@ -700,11 +702,11 @@ public static class ExpressionExtensions
 	/// <code>
 	/// {<br/>
 	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter(@<paramref name="this"/>.DeclaringType!);<br/>
-	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="    if"/> (parameterInfos.Any())<br/>
-	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
+	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
+	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
+	/// <see langword="        "/>.Select(parameterInfo =&gt; parameterInfo.Parameter())<br/>
+	/// <see langword="        "/>.ToArray();<br/>
 	/// <br/>
-	/// <see langword="    var"/> parameters = parameterInfos.Map(parameterInfo =&gt; parameterInfo!.Parameter()).ToArray();<br/>
 	/// <see langword="    return"/> !@<paramref name="this"/>.IsStatic<br/>
 	/// <see langword="        "/>? instance.Call(@<paramref name="this"/>, parameters).Lambda(<see langword="new"/>[] { instance }.And(parameters))<br/>
 	/// <see langword="        "/>: @<paramref name="this"/>.CallStatic(parameters).Lambda(parameters);<br/>
@@ -714,40 +716,38 @@ public static class ExpressionExtensions
 	public static LambdaExpression Lambda(this MethodInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).Parameter(@this.DeclaringType!);
-		var parameterInfos = @this.GetParameters();
-		if (parameterInfos.Any())
-			parameterInfos.Sort(ParameterPositionComparer);
+		var parameters = @this.GetParameters()
+			.OrderBy(parameterInfo => parameterInfo.Position)
+			.Select(parameterInfo => parameterInfo!.Parameter())
+			.ToArray();
 
-		var parameters = parameterInfos.Map(parameterInfo => parameterInfo!.Parameter()).ToArray();
 		return !@this.IsStatic
-			? instance.Call(@this, parameters).Lambda(new[] { instance }.Append(parameters))
+			? instance.Call(@this, parameters).Lambda(parameters.Prepend(instance))
 			: @this.CallStatic(parameters).Lambda(parameters);
 	}
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
-		=> Expression.Lambda(Expression.GetActionType(parameters.Map(parameter => parameter.Type).ToArray()), @this, parameters);
+		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type)), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
-		=> Expression.Lambda(Expression.GetActionType(parameters.Map(parameter => parameter.Type)), @this, parameters);
+		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
 	/// <remarks>
 	/// <code>
 	/// {<br/>
 	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
-	/// <br/>
-	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="    if"/> (parameterInfos.Any())<br/>
-	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
-	/// <br/>
-	/// <see langword="    var"/> parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType));<br/>
+	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
+	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
+	/// <see langword="        "/>.Select(parameterInfo =&gt; arguments.Array()[i].Convert(parameterInfo.ParameterType))<br/>
+	/// <see langword="        "/>.ToArray();<br/>
 	/// <br/>
 	/// <see langword="    return"/> @<paramref name="this"/>.New(parameters).As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments);<br/>
 	/// }
@@ -756,12 +756,11 @@ public static class ExpressionExtensions
 	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this ConstructorInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
-
-		var parameterInfos = @this.GetParameters();
-		if (parameterInfos.Any())
-			parameterInfos.Sort(ParameterPositionComparer);
-
-		var parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType));
+		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position);
+		var parameters = @this.GetParameters()
+			.OrderBy(parameterInfo => parameterInfo.Position)
+			.Select((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
+			.ToArray();
 
 		return @this.New(parameters).As<object>().Lambda<Func<object?[]?, object?>>(arguments);
 	}
@@ -770,16 +769,13 @@ public static class ExpressionExtensions
 	/// <code>
 	/// {<br/>
 	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
-	/// <br/>
-	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters();<br/>
-	/// <see langword="    if"/> (parameterInfos.Any())<br/>
-	/// <see langword="        "/>parameterInfos.Sort(<see cref="ParameterPositionComparer"/>);<br/>
-	/// <br/>
-	/// <see langword="    var"/> offset = !@this.IsStatic ? 1 : 0;<br/>
-	/// <see langword="    var"/> parameters = parameterInfos.Map((parameterInfo, i) => arguments.Array()[i + offset].Convert(parameterInfo.ParameterType));<br/>
-	/// <see langword="    var"/> call = !@<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="        "/>? parameters.First().Cast(@<paramref name="this"/>.DeclaringType!).Call(@<paramref name="this"/>, parameters.Skip(1))<br/>
-	/// <see langword="        "/>: @<paramref name="this"/>.CallStatic(parameters);<br/>
+	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters().OrderBy(parameterInfo =&gt; parameterInfo.Position);<br/>
+	/// <see langword="    var"/> parameters = @<paramref name="this"/>.IsStatic<br/>
+	/// <see langword="        "/>? parameterInfos.Select((parameterInfo, i) =&gt; arguments.Array()[i].Convert(parameterInfo.ParameterType));<br/>
+	/// <see langword="        "/>: parameterInfos.Select((parameterInfo, i) =&gt; arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));<br/>
+	/// <see langword="    var"/> call = @<paramref name="this"/>.IsStatic<br/>
+	/// <see langword="        "/>? @<paramref name="this"/>.CallStatic(parameters)<br/>
+	/// <see langword="        "/>: arguments.Array()[0].Cast(@<paramref name="this"/>.DeclaringType!).Call(@<paramref name="this"/>, parameters);<br/>
 	/// <br/>
 	/// <see langword="    return"/> @<paramref name="this"/>.ReturnType != <see langword="typeof"/>(<see langword="void"/>)<br/>
 	///	<see langword="        "/>? call.As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments)<br/>
@@ -790,14 +786,10 @@ public static class ExpressionExtensions
 	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this MethodInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
-
-		var parameterInfos = @this.GetParameters();
-		if (parameterInfos.Any())
-			parameterInfos.Sort(ParameterPositionComparer);
-
+		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position);
 		var parameters = @this.IsStatic
-			? parameterInfos.Map((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
-			: parameterInfos.Map((parameterInfo, i) => arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));
+			? parameterInfos.Select((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
+			: parameterInfos.Select((parameterInfo, i) => arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));
 		var call = @this.IsStatic
 			? @this.CallStatic(parameters)
 			: arguments.Array()[0].Cast(@this.DeclaringType!).Call(@this, parameters);
@@ -809,31 +801,31 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
-		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[]? parameters)
-		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
-		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Map(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[]? parameters)
-		=> Expression.Lambda(Expression.GetFuncType(parameters.Map(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.PropertyOrField(Expression, string)"/>
 	/// <remarks>

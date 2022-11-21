@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
@@ -27,12 +27,15 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 
 	internal TypeMember(Type type)
 	{
+		const BindingFlags BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+		const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
 		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
 		this.BaseTypeHandle = type.BaseType?.TypeHandle;
 		this.ElementTypeHandle = type.HasElementType ? type.GetElementType()?.TypeHandle : null;
 		this.GenericHandle = type.IsGenericType && !type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().TypeHandle : null;
-		this.GenericTypeHandles = type.GenericTypeArguments.Any() ? type.GenericTypeArguments.Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
-		this.InterfaceTypeHandles = type.GetInterfaces().Any() ? type.GetInterfaces().Map(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
+		this.GenericTypeHandles = type.GenericTypeArguments.Any() ? type.GenericTypeArguments.Select(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
+		this.InterfaceTypeHandles = type.GetInterfaces().Any() ? type.GetInterfaces().Select(_ => _.TypeHandle).ToImmutableArray() : ImmutableArray<RuntimeTypeHandle>.Empty;
 		this.Internal = !type.IsVisible;
 		this.Kind = type.GetKind();
 		this.Name = type.Name();
@@ -46,8 +49,8 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		var anyConstructors = type.GetConstructors(INSTANCE_BINDING_FLAGS).Any(constructorInfo => constructorInfo.IsInvokable());
 		if (anyConstructors)
 			this.Constructors = type.GetConstructors(INSTANCE_BINDING_FLAGS)
-				.If(constructorInfo => constructorInfo.IsInvokable())
-				.Map(constructorInfo => new ConstructorMember(constructorInfo, this))
+				.Where(constructorInfo => constructorInfo.IsInvokable())
+				.Select(constructorInfo => new ConstructorMember(constructorInfo, this))
 				.ToImmutableArray();
 		else
 			this.Constructors = ImmutableArray<ConstructorMember>.Empty;
@@ -58,8 +61,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 			this._CreateValueType = null;
 
 		if (type.GetEvents(BINDING_FLAGS).Any())
-			this.Events = type.GetEvents(BINDING_FLAGS)
-				.Map(eventInfo => new EventMember(eventInfo, this))
+			this.Events = type.GetEvents(BINDING_FLAGS).Select(eventInfo => new EventMember(eventInfo, this))
 				.ToImmutableArray();
 		else
 			this.Events = ImmutableArray<EventMember>.Empty;
@@ -69,24 +71,24 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 			Kind.Delegate => ImmutableArray<FieldMember>.Empty,
 			_ when type.GetFields(BINDING_FLAGS).Any(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike) =>
 				type.GetFields(BINDING_FLAGS)
-					.If(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
-					.Map(fieldInfo => new FieldMember(fieldInfo, this))
+					.Where(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
+					.Select(fieldInfo => new FieldMember(fieldInfo, this))
 					.ToImmutableArray(),
 			_ => ImmutableArray<FieldMember>.Empty
 		};
 
 		if (type.GetMethods(BINDING_FLAGS).Any(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable()))
 			this.Methods = type.GetMethods(BINDING_FLAGS)
-				.If(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
-				.Map(methodInfo => new MethodMember(methodInfo, this))
+				.Where(methodInfo => !methodInfo.IsSpecialName && methodInfo.IsInvokable())
+				.Select(methodInfo => new MethodMember(methodInfo, this))
 				.ToImmutableArray();
 		else
 			this.Methods = ImmutableArray<MethodMember>.Empty;
 
 		if (type.GetProperties(BINDING_FLAGS).Any(propertyInfo => propertyInfo.PropertyType.IsInvokable()))
 			this.Properties = type.GetProperties(BINDING_FLAGS)
-				.If(propertyInfo => propertyInfo.PropertyType.IsInvokable())
-				.Map(propertyInfo => new PropertyMember(propertyInfo, this))
+				.Where(propertyInfo => propertyInfo.PropertyType.IsInvokable())
+				.Select(propertyInfo => new PropertyMember(propertyInfo, this))
 				.ToImmutableArray();
 		else
 			this.Properties = ImmutableArray<PropertyMember>.Empty;
@@ -115,11 +117,11 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 
 	public IReadOnlyList<RuntimeTypeHandle> GenericTypeHandles { get; }
 
-	public IReadOnlyList<TypeMember> GenericTypes => this.GenericTypeHandles.Map(handle => handle.GetTypeMember());
+	public IReadOnlyList<TypeMember> GenericTypes => this.GenericTypeHandles.Select(handle => handle.GetTypeMember()).ToArray();
 
 	public IReadOnlyList<RuntimeTypeHandle> InterfaceTypeHandles { get; }
 
-	public IReadOnlyList<TypeMember> InterfaceTypes => this.InterfaceTypeHandles.Map(handle => handle.GetTypeMember());
+	public IReadOnlyList<TypeMember> InterfaceTypes => this.InterfaceTypeHandles.Select(handle => handle.GetTypeMember()).ToArray();
 
 	/// <inheritdoc cref="Type.IsVisible"/>
 	public bool Internal { get; }
@@ -150,8 +152,8 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <code>
 	/// =&gt; <see langword="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when this"/>.Constructors.IfFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
-	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; !<paramref name="parameters"/>.Any() =&gt; <see langword="this"/>._CreateValueType(),<br/>
+	/// <see langword="    "/>_ <see langword="when this"/>.Constructors.TryFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
+	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; <paramref name="parameters"/>?.Any() <see langword="is not true"/> =&gt; <see langword="this"/>._CreateValueType(),<br/>
 	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// }
 	/// </code>
@@ -160,98 +162,79 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	public object? Create(params object?[]? parameters)
 		=> this switch
 		{
-			_ when this.Constructors.IfFirst(constructor => constructor.Parameters.IsCallableWith(parameters), out var constructor) => constructor.Create(parameters),
-			{ Kind: Kind.Struct } when this._CreateValueType is not null && !parameters.Any() => this._CreateValueType(),
+			_ when this.Constructors.TryFirst(constructor => constructor.Parameters.IsCallableWith(parameters), out var constructor) => constructor.Create(parameters),
+			{ Kind: Kind.Struct } when this._CreateValueType is not null && parameters?.Any() is not true => this._CreateValueType(),
 			_ => null
 		};
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Constructors.Map(constructor =&gt; constructor.Method).First&lt;<typeparamref name="D"/>&gt;();</c>
+	/// <c>=&gt; <see langword="this"/>.Constructors.Select(constructor =&gt; constructor.Method).FirstOrDefault&lt;<typeparamref name="D"/>&gt;();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public D? GetConstructor<D>()
 		where D : Delegate
-		=> this.Constructors.Map(constructor => constructor.Method).First<D>();
+		=> this.Constructors.Select(constructor => constructor.Method).FirstOrDefault<D>();
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Constructors.First(constructor =&gt; constructor.Handle == <paramref name="handle"/>);</c>
+	/// <c>=&gt; <see langword="this"/>.Constructors.FirstOrDefault(constructor =&gt; constructor.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public ConstructorMember? GetConstructor(RuntimeMethodHandle handle)
-		=> this.Constructors.First(constructor => constructor.MethodHandle == handle);
+		=> this.Constructors.FirstOrDefault(constructor => constructor.MethodHandle == handle);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Fields.First(field =&gt; field.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
+	/// <c>=&gt; <see langword="this"/>.Fields.FirstOrDefault(field =&gt; field.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public FieldMember? GetField(string name, StringComparison comparison = StringComparison.Ordinal)
-		=> this.Fields.First(field => field.Name.Is(name, comparison));
+		=> this.Fields.FirstOrDefault(field => field.Name.Is(name, comparison));
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.Get(<paramref name="name"/>).IfFirst(<see langword="out var"/> methods) ? methods.If(method =&gt; method.Static == <paramref name="isStatic"/>).Map(method =&gt; method!.Method).First&lt;<typeparamref name="D"/>&gt;() : <see langword="null"/>;</c>
+	/// <c>=&gt; <see langword="this"/>.Methods<br/>
+	/// <see langword="    "/>.Where(method =&gt; method.Static == <paramref name="isStatic"/> &amp;&amp; method.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>))<br/>
+	/// <see langword="    "/>.Select(method =&gt; method.Method)<br/>
+	/// <see langword="    "/>.OfType&lt;<typeparamref name="D"/>&gt;()<br/>
+	/// <see langword="    "/>.FirstOrDefault();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public D? GetMethod<D>(string name, bool isStatic = false, StringComparison comparison = StringComparison.Ordinal)
 		where D : Delegate
-		=> this.Methods.If(method => method.Static == isStatic && method.Name.Is(name, comparison)).Map(method => method!.Method).First<D>();
+		=> this.Methods
+			.Where(method => method.Static == isStatic && method.Name.Is(name, comparison))
+			.Select(method => method!.Method)
+			.OfType<D>()
+			.FirstOrDefault();
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.Values.Gather().First(method =&gt; method.Handle == <paramref name="handle"/>);</c>
+	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public MethodMember? GetMethod(RuntimeMethodHandle handle)
-		=> this.Methods.First(method => method.Handle == handle);
+		=> this.Methods.FirstOrDefault(method => method.Handle == handle);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Properties.First(property =&gt; property.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
+	/// <c>=&gt; <see langword="this"/>.Properties.FirstOrDefault(property =&gt; property.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public PropertyMember? GetProperty(string name, StringComparison comparison = StringComparison.Ordinal)
-		=> this.Properties.First(property => property.Name.Is(name, comparison));
+		=> this.Properties.FirstOrDefault(property => property.Name.Is(name, comparison));
 
 	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> foundMethodToInvoke = <see langword="this"/>.Methods<br/>
-	/// <see langword="        "/>.If(method =&gt; !method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method.Parameters.IsCallableWith(parameters))<br/>
-	/// <see langword="        "/>.First();<br/>
-	/// <see langword="    "/>foundMethodToInvoke.AssertNotNull();<br/>
-	/// <see langword="    return"/> foundMethodToInvoke.Invoke(<paramref name="arguments"/>);<br/>
-	/// }
-	/// </code>
+	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(name, comparison) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>))?.Invoke(<paramref name="arguments"/>);</c>
 	/// </summary>
-	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
+	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <exception cref="ArgumentException"></exception>
+	[DebuggerHidden]
 	public object? InvokeMethod(string name, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
-	{
-		var foundMethodToInvoke = this.Methods
-			.If(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(!method.Static ? arguments.Skip(1).ToArray() : arguments))
-			.First();
-		foundMethodToInvoke.AssertNotNull();
-		return foundMethodToInvoke.Invoke(arguments);
-	}
+		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(arguments))?.Invoke(arguments);
 
 	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> genericMethod = <see langword="this"/>.Methods<br/>
-	/// <see langword="        "/>.If(genericMethod =&gt; !method.Static &amp;&amp; method.Name.Is(name, <paramref name="comparison"/>) &amp;&amp; method!.Parameters.IsCallableWith(parameters))<br/>
-	/// <see langword="        "/>.First();<br/>
-	/// <see langword="    "/>genericMethod.AssertNotNull();<br/>
-	/// <see langword="    return"/> genericMethod.Invoke(<paramref name="genericTypes"/>, <paramref name="arguments"/>);<br/>
-	/// }
-	/// </code>
+	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(name, comparison) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>))?.InvokeGeneric(<paramref name="arguments"/>);</c>
 	/// </summary>
-	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
+	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <exception cref="ArgumentException"></exception>
 	public object? InvokeGenericMethod(string name, Type[] genericTypes, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
-	{
-		var genericMethod = this.Methods
-			.If(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(!method.Static ? arguments.Skip(1).ToArray() : arguments))
-			.First();
-		genericMethod.AssertNotNull();
-		return genericMethod.Invoke(genericTypes, arguments);
-	}
+		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(arguments))?.InvokeGeneric(genericTypes, arguments);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Handle == <paramref name="other"/>?.Handle;</c>

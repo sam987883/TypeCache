@@ -35,7 +35,7 @@ public static class RangeExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static void Do(this Range @this, Action<int> action)
+	public static void ForEach(this Range @this, Action<int> action)
 	{
 		action.AssertNotNull();
 
@@ -90,37 +90,6 @@ public static class RangeExtensions
 			(false, false) => other.Start.Value >= @this.Start.Value && other.End.Value <= @this.End.Value,
 			_ => false
 		};
-
-	/// <summary>
-	/// <code>
-	/// <paramref name="condition"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (!reverse.HasValue)<br/>
-	/// <see langword="    yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
-	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
-	/// <see langword="    if"/> (<paramref name="condition"/>(i))<br/>
-	/// <see langword="        yield return"/> i;
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<int> If(this Range @this, Predicate<int> condition)
-	{
-		condition.AssertNotNull();
-
-		var reverse = @this.IsReverse();
-		if (!reverse.HasValue)
-			yield break;
-
-		var end = @this.End.Value;
-		var increment = reverse.Value ? -1 : 1;
-		for (var i = @this.Start.Value; i != end; i += increment)
-			if (condition(i))
-				yield return i;
-	}
 
 	/// <summary>
 	/// <code>
@@ -185,7 +154,7 @@ public static class RangeExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<T> Map<T>(this Range @this, Func<int, T> map)
+	public static IEnumerable<T> Select<T>(this Range @this, Func<int, T> map)
 	{
 		map.AssertNotNull();
 
@@ -315,5 +284,36 @@ public static class RangeExtensions
 		var end = @this.End.Value + increment;
 		for (var i = @this.Start.Value; i != end; i += increment)
 			yield return i;
+	}
+
+	/// <summary>
+	/// <code>
+	/// <paramref name="condition"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
+	/// <see langword="if"/> (!reverse.HasValue)<br/>
+	/// <see langword="    yield break"/>;<br/>
+	/// <br/>
+	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
+	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
+	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
+	/// <see langword="    if"/> (<paramref name="condition"/>(i))<br/>
+	/// <see langword="        yield return"/> i;
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IEnumerable<int> Where(this Range @this, Predicate<int> condition)
+	{
+		condition.AssertNotNull();
+
+		var reverse = @this.IsReverse();
+		if (!reverse.HasValue)
+			yield break;
+
+		var end = @this.End.Value;
+		var increment = reverse.Value ? -1 : 1;
+		for (var i = @this.Start.Value; i != end; i += increment)
+			if (condition(i))
+				yield return i;
 	}
 }

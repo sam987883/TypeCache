@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Generic;
-using TypeCache.Collections.Extensions;
+using System.Linq;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Collections.Extensions;
+namespace TypeCache.Tests.Extensions;
 
 public class EnumeratorExtensions
 {

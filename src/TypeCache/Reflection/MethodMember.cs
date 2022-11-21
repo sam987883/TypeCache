@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -29,21 +30,22 @@ public sealed class MethodMember : IMember, IEquatable<MethodMember>
 		this.Handle = methodInfo.MethodHandle;
 		this.Internal = methodInfo.IsAssembly;
 		this.Name = methodInfo.Name();
-		this.Parameters = methodInfo.GetParameters().Map(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = methodInfo.GetParameters().Select(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Public = methodInfo.IsPublic;
 		this.Return = new ReturnParameter(methodInfo);
 		this.Static = methodInfo.IsStatic;
 		this.Type = type;
 
 		this._GenericInvokeCache = methodInfo.ContainsGenericParameters
-			? new LazyDictionary<RuntimeTypeHandle[], Func<object?[]?, object>>(createGenericInvoke, comparer: RuntimeTypeHandleArrayComparer)
+			? new LazyDictionary<RuntimeTypeHandle[], Func<object?[]?, object>>(createGenericInvoke,
+				comparer: new CustomEqualityComparer<RuntimeTypeHandle[]>((a, b) => a?.SequenceEqual(b!) is true))
 			: ImmutableDictionary<RuntimeTypeHandle[], Func<object?[]?, object>>.Empty;
 		this._Invoke = Lazy.Create(() => ((MethodInfo)this).LambdaInvoke().Compile());
 		this._Method = Lazy.Create(() => ((MethodInfo)this).Lambda().Compile());
 
 		Func<object?[]?, object> createGenericInvoke(params RuntimeTypeHandle[] handles)
 		{
-			var types = handles.Map(handle => handle.ToType()).ToArray();
+			var types = handles.Select(handle => handle.ToType()).ToArray();
 			return methodInfo.MakeGenericMethod(types).LambdaInvoke().Compile()!;
 		}
 	}
@@ -100,18 +102,18 @@ public sealed class MethodMember : IMember, IEquatable<MethodMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>._Invoke.Value(<paramref name="arguments"/>);</c>
 	/// </summary>
-	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
+	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? Invoke(params object?[]? arguments)
 		=> this._Invoke.Value(arguments);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>._Cache?[<paramref name="genericTypes"/>.Map(type =&gt; type.TypeHandle).ToArray()].Invoke(<paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see langword="this"/>._Cache?[<paramref name="genericTypes"/>.Select(type =&gt; type.TypeHandle).ToArray()].Invoke(<paramref name="arguments"/>);</c>
 	/// </summary>
-	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
+	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? InvokeGeneric(Type[] genericTypes, params object?[]? arguments)
-		=> this._GenericInvokeCache[genericTypes.Map(type => type.TypeHandle).ToArray()](arguments);
+		=> this._GenericInvokeCache[genericTypes.Select(type => type.TypeHandle).ToArray()](arguments);
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>

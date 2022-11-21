@@ -3,41 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Collections.Extensions;
+namespace TypeCache.Tests.Extensions;
 
 public class ArrayExtensions
 {
-	[Fact]
-	public async Task AllAsync()
-	{
-		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
-		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
-
-		await arrayOfTasks.AllAsync<Task>();
-		await arrayOfIntTasks.AllAsync();
-
-		await Task.CompletedTask;
-	}
-
-	[Fact]
-	public async Task AnyAsync()
-	{
-		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
-		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
-
-		await arrayOfTasks.AnyAsync<Task>();
-		await arrayOfIntTasks.AnyAsync();
-
-		await Task.CompletedTask;
-	}
-
 	[Fact]
 	public void Clear()
 	{
@@ -58,63 +33,6 @@ public class ArrayExtensions
 	}
 
 	[Fact]
-	public void Do()
-	{
-		var stringArray = new[] { "123", "abc", "def" };
-
-		stringArray.Do(value => Assert.Contains(value, stringArray));
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string>));
-
-		stringArray.Do((value, i) =>
-		{
-			Assert.Contains(value, stringArray);
-			Assert.Contains(i, new[] { 0, 1, 2 });
-		});
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string, int>));
-
-		stringArray.Do(new ActionRef<string>((ref string value) =>
-		{
-			value = value.ToUpperInvariant();
-		}));
-		Assert.Equal("ABC", stringArray[1]);
-		Assert.Equal("DEF", stringArray[2]);
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as ActionRef<string>));
-
-		stringArray.Do(new ActionRef<string, int>((ref string value, ref int i) =>
-		{
-			value = i.ToString();
-			if (i == 0)
-				++i;
-		}));
-		Assert.Equal("0", stringArray[0]);
-		Assert.Equal("ABC", stringArray[1]);
-		Assert.Equal("2", stringArray[2]);
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as ActionRef<string, int>));
-
-		stringArray = new[] { "123", "abc", "def" };
-		var i = 0;
-		stringArray.Do(value => Assert.Contains(value, stringArray), () => ++i);
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string>, () => ++i));
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(value => Assert.Contains(value, stringArray), null));
-		Assert.Equal(2, i);
-
-		stringArray.Do((value, i) =>
-		{
-			Assert.Contains(value, stringArray);
-			Assert.Contains(stringArray[i], stringArray);
-			Assert.Contains(i, new[] { 0, 1, 2 });
-		}, () => ++i);
-		Assert.Equal(4, i);
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do(null as Action<string, int>, () => ++i));
-		Assert.Throws<ArgumentNullException>(() => stringArray.Do((value, i) =>
-		{
-			Assert.Contains(value, stringArray);
-			Assert.Contains(stringArray[i], stringArray);
-			Assert.Contains(i, new[] { 0, 1, 2 });
-		}, null));
-	}
-
-	[Fact]
 	public void Get()
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
@@ -128,37 +46,13 @@ public class ArrayExtensions
 	}
 
 	[Fact]
-	public void If()
-	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-
-		Assert.Equal(new[] { 1, 3, 5 }, intArray.If(i => i % 2 == 1));
-		Assert.Empty(intArray.If(i => i > 6));
-		Assert.Throws<ArgumentNullException>(() => intArray.If(null).ToArray());
-	}
-
-	[Fact]
-	public async Task IfAsync()
-	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-
-		Assert.Equal(new[] { 1, 3, 5 }, await intArray.IfAsync(async (i, token) => await Task.FromResult(i % 2 == 1)).ToArrayAsync());
-		Assert.Empty(await intArray.IfAsync(async (i, token) => await Task.FromResult(i > 6)).ToArrayAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, Task<bool>>).ToArrayAsync());
-		await Assert.ThrowsAsync<ArgumentNullException>(async () => await intArray.IfAsync(null as Func<int, CancellationToken, Task<bool>>).ToArrayAsync());
-
-		await Task.CompletedTask;
-	}
-
-	[Fact]
 	public void ToArray()
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 
-		Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.Map(i => i.ToString()));
-		Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.Map(i => char.Parse(i.ToString())));
-		Assert.Equal(Array<char>.Empty, Array<int>.Empty.Map(i => char.Parse(i.ToString())));
-		Assert.Equal(Array<char>.Empty, (null as int[]).Map(i => char.Parse(i.ToString())));
+		Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.Select(i => i.ToString()));
+		Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.Select(i => char.Parse(i.ToString())));
+		Assert.Equal(Array<char>.Empty, Array<int>.Empty.Select(i => char.Parse(i.ToString())));
 	}
 
 	[Fact]
@@ -188,7 +82,7 @@ public class ArrayExtensions
 
 		intArray.Sort();
 		Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray);
-		intArray.Sort(new Comparison<int>((a, b) => a < b ? 1 : (a > b ? -1 : 0)));
+		intArray.Sort(new Comparison<int>((a, b) => a < b ? 1 : a > b ? -1 : 0));
 		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, intArray);
 		intArray.Sort(2, 3, Comparer<int>.Default);
 		Assert.Equal(new[] { 6, 5, 2, 3, 4, 1 }, intArray);
@@ -209,18 +103,8 @@ public class ArrayExtensions
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
 
-		Assert.Empty((null as int[]).Map(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.Map(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.Map((x, i) => (i + 1).ToString()));
-	}
-
-	[Fact]
-	public async Task ToAsync()
-	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
-
-		Assert.Equal(await stringArray.ToAsync().ToArrayAsync(), await intArray.MapAsync(async i => await Task.FromResult(i.ToString())).ToArrayAsync());
+		Assert.Equal(stringArray, intArray.Select(i => i.ToString()));
+		Assert.Equal(stringArray, intArray.Select((x, i) => (i + 1).ToString()));
 	}
 
 	[Fact]
@@ -319,10 +203,8 @@ public class ArrayExtensions
 	public void WaitForAll()
 	{
 		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
-		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
 
-		arrayOfTasks.WaitForAll<Task>();
-		arrayOfIntTasks.WaitForAll<int>();
+		arrayOfTasks.WaitAll();
 	}
 
 	[Fact]
@@ -331,7 +213,31 @@ public class ArrayExtensions
 		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
 		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
 
-		arrayOfTasks.WaitForAny<Task>();
-		arrayOfIntTasks.WaitForAny<int>();
+		arrayOfTasks.WaitAny<Task>();
+		arrayOfIntTasks.WaitAny<int>();
+	}
+
+	[Fact]
+	public async Task WhenAllAsync()
+	{
+		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
+		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
+
+		await arrayOfTasks.WhenAllAsync<Task>();
+		await arrayOfIntTasks.WhenAllAsync();
+
+		await Task.CompletedTask;
+	}
+
+	[Fact]
+	public async Task WhenAnyAsync()
+	{
+		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
+		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
+
+		await arrayOfTasks.WhenAnyAsync<Task>();
+		await arrayOfIntTasks.WhenAnyAsync();
+
+		await Task.CompletedTask;
 	}
 }

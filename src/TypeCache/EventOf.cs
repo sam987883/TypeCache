@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using TypeCache.Collections.Extensions;
+using System.Linq;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
@@ -24,7 +24,7 @@ public static class EventOf<T>
 		handler.AssertNotNull();
 
 		var key = DateTime.UtcNow.Ticks;
-		var eventMember = Events.If(_ => _.Name.Is(eventMemberName)).First()!;
+		var eventMember = Events.First(_ => _.Name.Is(eventMemberName));
 		var reference = new HandlerReference(new WeakReference<T>(instance), eventMember, handler);
 		eventMember.Add(instance!, handler);
 		EventHandlers.Add(key, reference);

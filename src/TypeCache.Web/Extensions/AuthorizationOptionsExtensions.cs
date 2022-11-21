@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Web.Requirements;
 using static TypeCache.Default;
 
@@ -14,7 +14,7 @@ public static class AuthorizationOptionsExtensions
 	private static AuthorizationPolicy AddAuthorizationPolicy(this AuthorizationOptions @this, IAuthorizationRequirement requirement, params string[]? authenticationSchemas)
 	{
 		var builder = new AuthorizationPolicyBuilder();
-		if (authenticationSchemas.Any())
+		if (authenticationSchemas?.Any() is true)
 			builder.AddAuthenticationSchemes(authenticationSchemas);
 		builder.RequireAuthenticatedUser();
 		builder.AddRequirements(requirement);

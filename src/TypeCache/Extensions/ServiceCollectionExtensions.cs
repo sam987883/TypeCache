@@ -3,12 +3,12 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Business;
 using TypeCache.GraphQL.Extensions;
@@ -72,11 +72,10 @@ public static class ServiceCollectionExtensions
 	/// Registers Singleton Rules for the generic SQL API Commands.<br/>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    "/>typeAssembly?.DefinedTypes<br/>
-	/// <see langword="        "/>.If(type =&gt; type.IsDefined(<see langword="typeof"/>(<see cref="SqlApiAttribute"/>), <see langword="false"/>))<br/>
-	/// <see langword="        "/>.Do(type =&gt; @this.AddSingleton(<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> type <see langword="in"/> typeAssembly.DefinedTypes.Where(type =&gt; type.IsDefined(typeof(SqlApiAttribute), <see langword="false"/>)))<br/>
+	/// <see langword="        "/>@this.AddSingleton(<br/>
 	/// <see langword="            "/><see langword="typeof"/>(IRule&lt;,&gt;).MakeGenericType(<see langword="typeof"/>(<see cref="SqlCommand"/>), typeof(IList&lt;&gt;).MakeGenericType(type)),<br/>
-	/// <see langword="            "/><see langword="typeof"/>(SqlCommandModelsRule&lt;&gt;).MakeGenericType(type)));<br/>
+	/// <see langword="            "/><see langword="typeof"/>(SqlCommandModelsRule&lt;&gt;).MakeGenericType(type));<br/>
 	/// <br/>
 	/// <see langword="    return"/> @<paramref name="this"/>;<br/>
 	/// }
@@ -87,13 +86,12 @@ public static class ServiceCollectionExtensions
 	/// <see cref="RegisterSqlCommandRules(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
-	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this, Assembly? typeAssembly)
+	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this, Assembly typeAssembly)
 	{
-		typeAssembly?.DefinedTypes
-			.If(type => type.IsDefined(typeof(SqlApiAttribute), false))
-			.Do(type => @this.AddSingleton(
+		foreach (var type in typeAssembly.DefinedTypes.Where(type => type.IsDefined(typeof(SqlApiAttribute), false)))
+			@this.AddSingleton(
 				typeof(IRule<,>).MakeGenericType(typeof(SqlCommand), typeof(IList<>).MakeGenericType(type)),
-				typeof(SqlCommandModelsRule<>).MakeGenericType(type)));
+				typeof(SqlCommandModelsRule<>).MakeGenericType(type));
 
 		return @this;
 	}

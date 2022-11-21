@@ -3,7 +3,6 @@
 using System;
 using System.Threading.Tasks;
 using GraphQL;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using static System.FormattableString;

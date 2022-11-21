@@ -2,7 +2,6 @@
 
 using System;
 using System.Text;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using Xunit;
 

@@ -1,12 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using static System.FormattableString;
@@ -37,24 +37,20 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(procedure);
 		sqlCommand.Type = CommandType.StoredProcedure;
 
-		objectSchema.Parameters
-			.If(parameter => parameter.Direction.IsAny(ParameterDirection.Input, ParameterDirection.InputOutput))
-			.Do(parameter =>
-			{
-				if (httpContext.Request.Query.TryGetValue(parameter.Name, out var values))
-					sqlCommand.Parameters.Add(parameter.Name, values.First()!);
-			});
+		foreach (var parameter in objectSchema.Parameters.Where(parameter => parameter.Direction.IsAny(ParameterDirection.Input, ParameterDirection.InputOutput)))
+		{
+			if (httpContext.Request.Query.TryGetValue(parameter.Name, out var values))
+				sqlCommand.Parameters.Add(parameter.Name, values.First()!);
+		}
 
 		var mediator = httpContext.GetMediator();
 		var result = await mediator.ApplyRuleAsync<SqlCommand, DataSet>(sqlCommand, httpContext.RequestAborted);
 
-		objectSchema.Parameters
-			.If(parameter => parameter.Direction.IsAny(ParameterDirection.Output, ParameterDirection.InputOutput))
-			.Do(parameter =>
-			{
-				if (sqlCommand.Parameters.TryGetValue(parameter.Name, out var value))
-					httpContext.Items[parameter.Name] = value;
-			});
+		foreach (var parameter in objectSchema.Parameters.Where(parameter => parameter.Direction.IsAny(ParameterDirection.Output, ParameterDirection.InputOutput)))
+		{
+			if (sqlCommand.Parameters.TryGetValue(parameter.Name, out var value))
+				httpContext.Items[parameter.Name] = value;
+		}
 
 		return Results.Ok(result);
 	}
@@ -72,9 +68,8 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateDeleteSQL(where, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		httpContext.Request.Query
-			.If(pair => pair.Key.StartsWith('@'))
-			.Do(pair => sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value));
+		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
+			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
 		JsonArray? result = null;
@@ -123,9 +118,8 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		httpContext.Request.Query
-			.If(pair => pair.Key.StartsWith('@'))
-			.Do(pair => sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value));
+		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
+			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
 		JsonArray? result = null;
@@ -374,9 +368,8 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateSelectSQL(selectQuery);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		httpContext.Request.Query
-			.If(pair => pair.Key.StartsWith('@'))
-			.Do(pair => sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value));
+		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
+			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
 		return Results.Ok(await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted));
@@ -396,9 +389,8 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		httpContext.Request.Query
-			.If(pair => pair.Key.StartsWith('@'))
-			.Do(pair => sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value));
+		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
+			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
 		JsonArray? result = null;

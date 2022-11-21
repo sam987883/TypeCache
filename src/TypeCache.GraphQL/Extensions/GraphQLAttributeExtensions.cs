@@ -5,12 +5,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using TypeCache.Reflection.Extensions;
@@ -24,19 +23,19 @@ public static class GraphQLAttributeExtensions
 {
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLDeprecationReason(this IMember @this)
-		=> @this.Attributes.First<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
+		=> @this.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
 	public static string? GraphQLDescription(this IMember @this)
-		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description switch
+		=> @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description switch
 		{
 			null => null,
-			var description when @this is TypeMember type && type.GenericHandle.HasValue => string.Format(InvariantCulture, description, type.GenericTypes.Map(_ => _.GraphQLName()).ToArray()),
+			var description when @this is TypeMember type && type.GenericHandle.HasValue => string.Format(InvariantCulture, description, type.GenericTypes.Select(_ => _.GraphQLName()).ToArray()),
 			var description => description
 		};
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLDescription(this MethodParameter @this)
-		=> @this.Attributes.First<GraphQLDescriptionAttribute>()?.Description;
+		=> @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description;
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool GraphQLIgnore(this IMember @this)
@@ -48,13 +47,13 @@ public static class GraphQLAttributeExtensions
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string? GraphQLKey(this IMember @this)
-		=> @this.Attributes.First<GraphQLKeyAttribute>()?.Name;
+		=> @this.Attributes.FirstOrDefault<GraphQLKeyAttribute>()?.Name;
 
 	public static string GraphQLInputName(this TypeMember @this)
-		=> @this.Attributes.First<GraphQLInputNameAttribute>()?.Name switch
+		=> @this.Attributes.FirstOrDefault<GraphQLInputNameAttribute>()?.Name switch
 		{
 			null => Invariant($"{@this.GraphQLName()}Input"),
-			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Map(_ => _.Name).ToArray()),
+			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Select(_ => _.Name).ToArray()),
 			var name => name
 		};
 
@@ -63,28 +62,28 @@ public static class GraphQLAttributeExtensions
 		{
 			MethodMember method => method.GraphQLName(),
 			TypeMember type => type.GraphQLName(),
-			_ => @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name
+			_ => @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name
 		};
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string GraphQLName(this MethodMember @this)
-		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
+		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
 
 	public static string GraphQLName(this TypeMember @this)
-		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name switch
+		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name switch
 		{
 			null when @this.GenericHandle.HasValue => Invariant($"{@this.GenericTypes.First()!.Name}{@this.Name}"),
 			null => @this.Name,
-			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Map(type => type.Name).ToArray()),
+			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Select(type => type.Name).ToArray()),
 			var name => name
 		};
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string GraphQLName(this MethodParameter @this)
-		=> @this.Attributes.First<GraphQLNameAttribute>()?.Name ?? @this.Name;
+		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name;
 
 	public static Type GraphQLType(this MethodParameter @this)
-		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		=> @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>()?.GraphType switch
 		{
 			null => @this.Type!.GraphQLType(true) switch
 			{
@@ -95,7 +94,7 @@ public static class GraphQLAttributeExtensions
 		};
 
 	public static Type GraphQLType(this PropertyMember @this, bool isInputType)
-		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		=> @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>()?.GraphType switch
 		{
 			null => @this.PropertyType.GraphQLType(isInputType) switch
 			{
@@ -106,7 +105,7 @@ public static class GraphQLAttributeExtensions
 		};
 
 	public static Type GraphQLType(this ReturnParameter @this)
-		=> @this.Attributes.First<GraphQLTypeAttribute>()?.GraphType switch
+		=> @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>()?.GraphType switch
 		{
 			null => @this.Type!.GraphQLType(false) switch
 			{

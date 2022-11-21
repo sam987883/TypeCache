@@ -2,7 +2,6 @@
 
 using System;
 using System.Security.Cryptography;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Security;

@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using GraphQL;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -17,12 +15,15 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		this.Description = TypeOf<T>.Member.GraphQLDescription();
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
-		TypeOf<T>.Properties
-			.If(property => property.Getter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property.ToFieldType<T>()));
+		var fields = TypeOf<T>.Properties
+			.Where(property => property.Getter is not null && !property.GraphQLIgnore())
+			.Select(property => property.ToFieldType<T>());
+		foreach (var field in fields)
+			this.AddField(field);
 
-		TypeOf<T>.InterfaceTypes
-			.If(type => type.ElementType is null && !type.GenericHandle.HasValue)
-			.Do(type => this.Interfaces.Add(type));
+		var nonGenericInterfaces = TypeOf<T>.InterfaceTypes
+			.Where(type => type.ElementType is null && !type.GenericHandle.HasValue);
+		foreach (var nonGenericInterface in nonGenericInterfaces)
+			this.Interfaces.Add(nonGenericInterface);
 	}
 }

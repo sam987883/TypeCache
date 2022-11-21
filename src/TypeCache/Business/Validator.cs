@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 using static TypeCache.Default;
@@ -26,7 +26,7 @@ public readonly struct Validator
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    if"/> (<paramref name="items"/>.Any())<br/>
+	/// <see langword="    if"/> (<paramref name="items"/>?.Any() <see langword="is true"/>)<br/>
 	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is not empty.");<br/>
 	///	}
 	/// </code>
@@ -35,7 +35,7 @@ public readonly struct Validator
 		, [CallerArgumentExpression("items")] string? argument = null
 		, [CallerMemberName] string? caller = null)
 	{
-		if (items.Any())
+		if (items?.Any() is true)
 			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is not empty."));
 	}
 
@@ -124,7 +124,7 @@ public readonly struct Validator
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    if"/> (!<paramref name="items"/>.Any())<br/>
+	/// <see langword="    if"/> (<paramref name="items"/>?.Any() <see langword="is not true"/>)<br/>
 	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
 	///	}
 	/// </code>
@@ -133,14 +133,14 @@ public readonly struct Validator
 		, [CallerArgumentExpression("items")] string? argument = null
 		, [CallerMemberName] string? caller = null)
 	{
-		if (!items.Any())
+		if (items?.Any() is not true)
 			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    if"/> (!<paramref name="items"/>.Any())<br/>
+	/// <see langword="    if"/> (<paramref name="items"/>?.Any() <see langword="is not true"/>)<br/>
 	///	<see langword="        this"/>.Fails.Add($"FAIL: {<paramref name="caller"/>} ---&gt; {<paramref name="argument"/>} is {(<paramref name="items"/> <see langword="is not null"/> ? "empty" : "null")}.");<br/>
 	///	}
 	/// </code>
@@ -149,7 +149,7 @@ public readonly struct Validator
 		, [CallerArgumentExpression("items")] string? argument = null
 		, [CallerMemberName] string? caller = null)
 	{
-		if (!items.Any())
+		if (items?.Any() is not true)
 			this.Fails.Add(Invariant($"FAIL: {caller} ---> {argument} is {(items is not null ? "empty" : NULL)}."));
 	}
 

@@ -5,10 +5,10 @@ using System.Collections;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 using static TypeCache.Default;
@@ -54,14 +54,14 @@ public static class SqlExtensions
 			JsonValueKind.Null => "NULL",
 			_ => Invariant($"N'{json.ToString()!.EscapeValue()}'")
 		},
-		JsonArray jsonArray when jsonArray[0] is JsonObject jsonObject => jsonArray.Map(item => jsonObject.Map(pair => item!.AsObject()[pair.Key]!.AsValue().GetValue<object>()).ToSQL()).Join("\r\t, "),
-		JsonArray jsonArray when jsonArray[0] is JsonValue => jsonArray.Map(item => new[] { item!.AsValue().GetValue<object>() }.ToSQL()).ToCSV(),
+		JsonArray jsonArray when jsonArray[0] is JsonObject jsonObject => string.Join("\r\t, ", jsonArray.Select(item => jsonObject.Select(pair => item!.AsObject()[pair.Key]!.AsValue().GetValue<object>()).ToSQL())),
+		JsonArray jsonArray when jsonArray[0] is JsonValue => jsonArray.Select(item => new[] { item!.AsValue().GetValue<object>() }.ToSQL()).ToCSV(),
 		JsonObject jsonObject => jsonObject.ToJsonString().EscapeValue(),
 		JsonValue jsonValue => jsonValue.GetValue<object>().ToSQL(),
 		JsonNode jsonNode => jsonNode.ToString().Replace("\"", string.Empty).EscapeValue(),
 		DataRow row => row.ItemArray.ToSQL(),
-		DataTable table => table.Rows.If<DataRow>().Map(row => row.ToSQL()).Join("\r\t, "),
-		IEnumerable enumerable => Invariant($"({enumerable.As<object>().Map(_ => _.ToSQL()).ToCSV()})"),
+		DataTable table => string.Join("\r\t, ", table.Rows.OfType<DataRow>().Select(row => row.ToSQL())),
+		IEnumerable enumerable => Invariant($"({enumerable.Cast<object>().Select(_ => _.ToSQL()).ToCSV()})"),
 		_ => @this.ToString() ?? "NULL"
 	};
 }

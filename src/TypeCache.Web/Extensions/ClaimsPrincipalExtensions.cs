@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using System.Security.Claims;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Extensions;

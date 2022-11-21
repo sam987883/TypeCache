@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
@@ -24,6 +24,8 @@ public sealed class DelegateMember : IMember, IEquatable<DelegateMember>
 
 	internal DelegateMember(Type type)
 	{
+		const BindingFlags INSTANCE_BINDING_FLAGS = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
 		typeof(Delegate).IsAssignableFrom(type.BaseType).AssertTrue();
 
 		this.Attributes = type.GetCustomAttributes<Attribute>()?.ToImmutableArray() ?? ImmutableArray<Attribute>.Empty;
@@ -35,7 +37,7 @@ public sealed class DelegateMember : IMember, IEquatable<DelegateMember>
 		var methodInfo = type.GetMethod(METHOD_NAME, INSTANCE_BINDING_FLAGS)!;
 
 		this.MethodHandle = methodInfo.MethodHandle;
-		this.Parameters = methodInfo.GetParameters().Map(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = methodInfo.GetParameters().Select(parameter => new MethodParameter(methodInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Return = new ReturnParameter(methodInfo);
 		this._Invoke = Lazy.Create(() => ((MethodInfo)this.MethodHandle.ToMethodBase(this.TypeHandle)!).LambdaInvoke().Compile());
 		this._Method = Lazy.Create(() => ((MethodInfo)this.MethodHandle.ToMethodBase(this.TypeHandle)!).Lambda().Compile());
@@ -75,7 +77,7 @@ public sealed class DelegateMember : IMember, IEquatable<DelegateMember>
 	public override int GetHashCode()
 		=> this.TypeHandle.GetHashCode();
 
-	/// <remarks>First item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
+	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public object? Invoke(params object?[]? arguments)
 		=> this._Invoke.Value(arguments);

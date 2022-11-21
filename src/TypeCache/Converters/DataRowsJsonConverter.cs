@@ -1,13 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Converters;
 
@@ -24,12 +22,12 @@ public sealed class DataRowsJsonConverter : JsonConverter<DataRow[]>
 			return;
 		}
 
-		var columns = rows.First()?.Table.Columns.If<DataColumn>().ToArray();
+		var columns = rows.FirstOrDefault()?.Table.Columns.OfType<DataColumn>().ToArray();
 		writer.WriteStartArray();
-		rows.Do(row =>
+		rows.ForEach(row =>
 		{
 			writer.WriteStartObject();
-			columns.Do(column =>
+			columns?.ForEach(column =>
 			{
 				var value = row[column];
 				if (value is DBNull || value is null)

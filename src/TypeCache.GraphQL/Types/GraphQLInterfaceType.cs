@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
@@ -17,8 +17,10 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 
 		this.Name = TypeOf<T>.Member.GraphQLName();
 
-		TypeOf<T>.Properties
-			.If(property => property.Getter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(property.ToFieldType<T>()));
+		var fields = TypeOf<T>.Properties
+			.Where(property => property.Getter is not null && !property.GraphQLIgnore())
+			.Select(property => property.ToFieldType<T>());
+		foreach (var field in fields)
+			this.AddField(field);
 	}
 }

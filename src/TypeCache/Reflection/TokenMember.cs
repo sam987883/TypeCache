@@ -50,7 +50,7 @@ public sealed class TokenMember<T> : IMember, IEquatable<TokenMember<T>>
 	public T Value { get; }
 
 	public bool Equals([NotNullWhen(true)] TokenMember<T>? other)
-		=> other is not null && this.Type.Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, NAME_STRING_COMPARISON);
+		=> other is not null && this.Type.Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)

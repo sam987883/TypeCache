@@ -2,12 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TypeCache.Collections.Extensions;
-using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -24,14 +21,14 @@ public static class JsonExtensions
 	{
 		@this.ValueKind.AssertEquals(JsonValueKind.Array);
 
-		return @this.EnumerateArrayValues().Map(jsonElement => jsonElement.GetValue()).ToArray();
+		return @this.EnumerateArrayValues().Select(jsonElement => jsonElement.GetValue()).ToArray();
 	}
 
 	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)
 	{
 		@this.ValueKind.AssertEquals(JsonValueKind.Object);
 
-		var properties = new Dictionary<string, JsonElement>(NAME_STRING_COMPARISON.ToStringComparer());
+		var properties = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
 		using var enumerator = @this.EnumerateObject();
 		while (enumerator.MoveNext())
 		{
@@ -44,7 +41,7 @@ public static class JsonExtensions
 	{
 		@this.ValueKind.AssertEquals(JsonValueKind.Object);
 
-		var properties = new Dictionary<string, object?>(NAME_STRING_COMPARISON.ToStringComparer());
+		var properties = new Dictionary<string, object?>(StringComparer.Ordinal);
 		using var enumerator = @this.EnumerateObject();
 		while (enumerator.MoveNext())
 		{

@@ -2,12 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Resolvers;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
@@ -64,7 +64,7 @@ public sealed class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldRe
 			{
 				ValueTask<IEnumerable<CHILD>> valueTask => await valueTask,
 				Task<IEnumerable<CHILD>> task => await task,
-				IAsyncEnumerable<CHILD> items => (await items.ToListAsync()).ToArray(),
+				IAsyncEnumerable<CHILD> items => items.ToBlockingEnumerable().ToArray(),
 				IEnumerable<CHILD> items => items,
 				_ => Array<CHILD>.Empty
 			};

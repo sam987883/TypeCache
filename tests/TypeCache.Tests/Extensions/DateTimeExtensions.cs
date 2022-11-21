@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using Xunit;
 

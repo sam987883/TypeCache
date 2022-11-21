@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -21,8 +21,8 @@ public static class MemberExtensions
 	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
 	///	<see langword="    "/><see cref="SystemType.Array"/> =&gt; @<paramref name="this"/>.ElementType,<br/>
 	///	<see langword="    "/><see cref="SystemType.Dictionary"/> <see langword="or"/> <see cref="SystemType.SortedDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableDictionary"/> <see langword="or"/> <see cref="SystemType.ImmutableSortedDictionary"/><br/>
-	///	<see langword="        "/>=&gt; <see langword="typeof"/>(<see cref="KeyValuePair"/>&lt;,&gt;).MakeGenericType(@<paramref name="this"/>.GenericTypes.Map(_ =&gt; (<see cref="Type"/>)_).ToArray()).GetTypeMember(),<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.SystemType.IsCollection() =&gt; @<paramref name="this"/>.GenericTypes.First()<br/>
+	///	<see langword="        "/>=&gt; <see langword="typeof"/>(<see cref="KeyValuePair"/>&lt;,&gt;).MakeGenericType(@<paramref name="this"/>.GenericTypes.Select(_ =&gt; (<see cref="Type"/>)_).ToArray()).GetTypeMember(),<br/>
+	///	<see langword="    "/>_ <see langword="when"/> @<paramref name="this"/>.SystemType.IsCollection() =&gt; @<paramref name="this"/>.GenericTypes.FirstOrDefault()<br/>
 	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
 	/// };<br/>
 	/// </code>
@@ -33,7 +33,7 @@ public static class MemberExtensions
 			null => null,
 			SystemType.Array => @this.ElementType,
 			SystemType.Dictionary or SystemType.SortedDictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
-				=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypes.Map(_ => (Type)_).ToArray()).GetTypeMember(),
+				=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypes.Select(_ => (Type)_).ToArray()).GetTypeMember(),
 			_ when @this.SystemType.IsCollection() => @this.GenericTypes.First(),
 			_ => null
 		};
@@ -43,7 +43,11 @@ public static class MemberExtensions
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
 	///	<see langword="    null"/> =&gt; <see langword="null"/>,<br/>
-	///	<see langword="    "/><see cref="Member"/> member =&gt; member.Type,<br/>
+	///	<see langword="    "/><see cref="ConstructorMember"/> member =&gt; member.Type,<br/>
+	///	<see langword="    "/><see cref="EventMember"/> member =&gt; member.Type,<br/>
+	///	<see langword="    "/><see cref="FieldMember"/> member =&gt; member.Type,<br/>
+	///	<see langword="    "/><see cref="MethodMember"/> member =&gt; member.Type,<br/>
+	///	<see langword="    "/><see cref="PropertyMember"/> member =&gt; member.Type,<br/>
 	///	<see langword="    "/><see cref="Type"/> type =&gt; type.TypeHandle.GetTypeMember(),<br/>
 	///	<see langword="    "/><see cref="MemberInfo"/> memberInfo =&gt; memberInfo.DeclaringType!.TypeHandle.GetTypeMember(),<br/>
 	///	<see langword="    "/>_ =&gt; @<paramref name="this"/>.GetType().TypeHandle.GetTypeMember()<br/>
@@ -163,7 +167,7 @@ public static class MemberExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (!<paramref name="arguments"/>.Any())<br/>
+	/// <see langword="if"/> (<paramref name="arguments"/>.Any() <see langword="is not true"/>)<br/>
 	/// <see langword="    return"/> !@<paramref name="this"/>.Any() || @<paramref name="this"/>.All(parameter =&gt; parameter!.HasDefaultValue || parameter.IsOptional);<br/>
 	/// <br/>
 	/// <see langword="var"/> argumentEnumerator = arguments.GetEnumerator();<br/>
@@ -174,7 +178,7 @@ public static class MemberExtensions
 	/// </summary>
 	internal static bool IsCallableWith(this IEnumerable<MethodParameter> @this, params object?[]? arguments)
 	{
-		if (!arguments.Any())
+		if (arguments?.Any() is not true)
 			return !@this.Any() || @this.All(parameter => parameter!.HasDefaultValue || parameter.IsOptional);
 
 		var argumentEnumerator = arguments.GetEnumerator();
@@ -186,7 +190,7 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements&lt;<see cref="IConvertible"/>&gt;()
 	/// || (@<paramref name="this"/>.SystemType <see langword="is"/> <see cref="SystemType.Nullable"/>
-	/// &amp;&amp; @<paramref name="this"/>.GenericTypes.First()!.Implements&lt;<see cref="IConvertible"/>&gt;());</c>
+	/// &amp;&amp; @<paramref name="this"/>.GenericTypes.FirstOrDefault()!.Implements&lt;<see cref="IConvertible"/>&gt;());</c>
 	/// </summary>
 	public static bool IsConvertible(this TypeMember @this)
 		=> @this.Implements<IConvertible>() || (@this.SystemType is SystemType.Nullable && @this.GenericTypes.First()!.Implements<IConvertible>());

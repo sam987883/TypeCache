@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Business;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -85,7 +85,10 @@ public sealed class GraphQLSchema : Schema, IName
 		dataSource.AssertNotNull();
 
 		var table = dataSource.GetDatabaseSchema(SchemaCollection.MetaDataCollections);
-		return table.Rows.If<DataRow>().Map(row => this.AddDatabaseSchemaQuery(dataSourceName, row["CollectionName"].ToString().ToEnum<SchemaCollection>()!.Value));
+		return table.Rows
+			.OfType<DataRow>()
+			.Select(row => this.AddDatabaseSchemaQuery(dataSourceName, row["CollectionName"].ToString().ToEnum<SchemaCollection>()!.Value))
+			.ToArray();
 	}
 
 	/// <summary>
@@ -104,30 +107,28 @@ public sealed class GraphQLSchema : Schema, IName
 		dataSource.AssertNotNull();
 
 		var table = dataSource.GetDatabaseSchema(collection);
-		var columns = table.Columns.As<DataColumn>().Map(column => column.ColumnName);
 		var graphDatabasesEnum = new EnumerationGraphType
 		{
 			Name = Invariant($"{dataSource.Name.ToPascalCase()}Database"),
 			Description = Invariant($"`{dataSource}` databases."),
 		};
-		dataSource.Databases.Do(database => graphDatabasesEnum.Add(new(database, database)));
+		foreach (var database in dataSource.Databases)
+			graphDatabasesEnum.Add(new(database, database));
 		var graphOrderByEnum = new EnumerationGraphType
 		{
 			Name = Invariant($"{table.TableName.ToPascalCase()}Column"),
 			Description = Invariant($"`{table.TableName}` columns.")
 		};
-		table.Columns.As<DataColumn>().Do(column =>
-		{
-			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Ascending));
-			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Descending));
-		});
 		var resolvedType = new ObjectGraphType
 		{
 			Name = table.TableName,
 			Description = Invariant($"Database Schema Collection: `{table.TableName}`")
 		};
-		table.Columns.As<DataColumn>().Do(column =>
+		foreach (var column in table.Columns.OfType<DataColumn>())
 		{
+			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Ascending));
+			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Descending));
+
 			var field = resolvedType.AddField(new()
 			{
 				Name = FixName(column!.ColumnName),
@@ -154,7 +155,7 @@ public sealed class GraphQLSchema : Schema, IName
 			});
 			field.Metadata.Add(ColumnName, column.ColumnName);
 			field.Metadata.Add(ColumnType, column.DataType.TypeHandle);
-		});
+		}
 
 		var fieldType = this.Query.AddField(new()
 		{
@@ -188,11 +189,11 @@ public sealed class GraphQLSchema : Schema, IName
 		database ??= dataSource.DefaultDatabase;
 		var objectSchemas = dataSource.ObjectSchemas.Values.ToArray();
 		if (schema.IsNotBlank())
-			objectSchemas = objectSchemas.If(_ => _.DatabaseName.Is(database) && _.SchemaName.Is(schema)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.Is(database) && _.SchemaName.Is(schema)).ToArray();
 		else if (database.IsNotBlank())
-			objectSchemas = objectSchemas.If(_ => _.DatabaseName.Is(database)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.Is(database)).ToArray();
 
-		objectSchemas.Do(objectSchema =>
+		objectSchemas.ForEach(objectSchema =>
 		{
 			var table = objectSchema.ObjectName.ToPascalCase();
 			var dataInputType = new InputObjectGraphType
@@ -200,37 +201,29 @@ public sealed class GraphQLSchema : Schema, IName
 				Name = Invariant($"{objectSchema.ObjectName}Input"),
 				Description = Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`")
 			};
-			objectSchema.Columns.Do(column =>
-			{
-				var columnDataType = column.DataTypeHandle.ToType();
-				var field = dataInputType.AddField(new()
-				{
-					Name = column.Name,
-					Description = Invariant($"`{column.Name}`"),
-					Type = column.DataTypeHandle switch
-					{
-						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.GetTypeMember().NullableGraphQLType()
-					}
-				});
-			});
 			var graphOrderByEnum = new EnumerationGraphType
 			{
 				Name = Invariant($"{table}OrderBy")
 			};
-			objectSchema.Columns.Do(column =>
-			{
-				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Ascending));
-				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
-			});
 			var resolvedType = new ObjectGraphType
 			{
 				Name = objectSchema.ObjectName,
 				Description = Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`")
 			};
-			objectSchema.Columns.Do(column =>
+			foreach (var column in objectSchema.Columns)
 			{
 				var columnDataType = column.DataTypeHandle.ToType();
+				dataInputType.AddField(new()
+				{
+					Name = column.Name,
+					Description = Invariant($"`{column.Name}`"),
+					Type = columnDataType switch
+					{
+						_ when columnDataType == typeof(object) => typeof(StringGraphType),
+						_ => columnDataType.GetTypeMember().NullableGraphQLType()
+					}
+				});
+
 				var field = resolvedType.AddField(new()
 				{
 					Name = FixName(column.Name),
@@ -257,10 +250,12 @@ public sealed class GraphQLSchema : Schema, IName
 				});
 				field.Metadata.Add(ColumnName, column.Name);
 				field.Metadata.Add(ColumnType, column.DataTypeHandle);
-			});
 
-			if (objectSchema.Type.IsAny(ObjectType.Table, ObjectType.View)
-				&& actions.HasFlag(SqlApiAction.Select))
+				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Ascending));
+				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
+			}
+
+			if (objectSchema.Type.IsAny(ObjectType.Table, ObjectType.View) && actions.HasFlag(SqlApiAction.Select))
 			{
 				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
 				var arguments = new QueryArguments();
@@ -273,9 +268,9 @@ public sealed class GraphQLSchema : Schema, IName
 				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
 				arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
 				arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
-				arguments.Add<TimeSpanSecondsGraphType>("timeout", null);
+				arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null);
 
-				var fieldType = new FieldType
+				var field = new FieldType
 				{
 					Arguments = arguments,
 					Name = Invariant($"select{table}"),
@@ -283,8 +278,8 @@ public sealed class GraphQLSchema : Schema, IName
 					Resolver = new SqlApiSelectFieldResolver(),
 					ResolvedType = selectResponseType
 				};
-				fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
-				this.Query!.AddField(fieldType);
+				field.Metadata[nameof(ObjectSchema)] = objectSchema;
+				this.Query!.AddField(field);
 			}
 
 			if (objectSchema.Type is ObjectType.Table)
@@ -303,7 +298,7 @@ public sealed class GraphQLSchema : Schema, IName
 						},
 						new QueryArgument<TimeSpanSecondsGraphType>
 						{
-							Name = "timeout",
+							Name = nameof(SqlCommand.Timeout),
 							Description = "The SQL command timeout in seconds."
 						}),
 						Name = Invariant($"delete{table}"),
@@ -332,7 +327,7 @@ public sealed class GraphQLSchema : Schema, IName
 							},
 							new QueryArgument<TimeSpanSecondsGraphType>
 							{
-								Name = "timeout",
+								Name = nameof(SqlCommand.Timeout),
 								Description = "The SQL command timeout in seconds."
 							}),
 						Name = Invariant($"delete{table}Data"),
@@ -356,7 +351,7 @@ public sealed class GraphQLSchema : Schema, IName
 					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
 					arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
 					arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
-					arguments.Add<TimeSpanSecondsGraphType>("timeout", null);
+					arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null);
 
 					var fieldType = new FieldType
 					{
@@ -450,26 +445,26 @@ public sealed class GraphQLSchema : Schema, IName
 		var fieldTypes = new List<FieldType>();
 
 		var methods = TypeOf<T>.Methods.ToArray();
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLQueryAttribute>()).Map(this.AddQuery));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLMutationAttribute>()).Map(this.AddMutation));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLQueryAttribute>()).Select(this.AddQuery));
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLMutationAttribute>()).Select(this.AddMutation));
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Select(method =>
 		{
-			var parentType = method.Attributes.First<GraphQLSubqueryAttribute>()!.ParentType;
+			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First()!.ParentType;
 			var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, controller, this.DataLoader)!;
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Select(method =>
 		{
-			var attribute = method.Attributes.First<GraphQLSubqueryBatchAttribute>()!;
+			var attribute = method.Attributes.OfType<GraphQLSubqueryBatchAttribute>().First()!;
 			return this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubqueryCollectionAttribute>()).Map(method =>
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryCollectionAttribute>()).Select(method =>
 		{
-			var attribute = method.Attributes.First<GraphQLSubqueryCollectionAttribute>()!;
+			var attribute = method.Attributes.OfType<GraphQLSubqueryCollectionAttribute>().First()!;
 			return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.If(method => method.Attributes.Any<GraphQLSubscriptionAttribute>()).Map(this.AddSubscription));
+		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubscriptionAttribute>()).Select(this.AddSubscription));
 
 		return fieldTypes.ToArray();
 	}
@@ -485,7 +480,7 @@ public sealed class GraphQLSchema : Schema, IName
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddMutation<T>(string method)
-		=> TypeOf<T>.Methods.If(_ => _.Name.Is(method)).Map(this.AddMutation).ToArray();
+		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(this.AddMutation).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -517,7 +512,7 @@ public sealed class GraphQLSchema : Schema, IName
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddQuery<T>(string method)
-		=> TypeOf<T>.Methods.If(_ => _.Name.Is(method)).Map(this.AddQuery).ToArray();
+		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(this.AddQuery).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -549,7 +544,7 @@ public sealed class GraphQLSchema : Schema, IName
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public FieldType[] AddSubscription<T>(string method)
-		=> TypeOf<T>.Methods.If(_ => _.Name.Is(method)).Map(this.AddSubscription).ToArray();
+		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(this.AddSubscription).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -608,20 +603,18 @@ public sealed class GraphQLSchema : Schema, IName
 		if (!method.Return.Type.SystemType.IsCollection())
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
-		if (!parentType.GetTypeMember().Properties.IfFirst(property => property.GraphQLKey()?.Is(key) is true, out var parentKeyProperty)
+		if (!parentType.GetTypeMember().Properties.Where(property => property.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
-		if (!childType.Properties.IfFirst(property => property.GraphQLKey().Is(key), out var childKeyProperty)
+		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var getParentKey = parentKeyProperty.Getter.Method;
-		var getChildKey = childKeyProperty.Getter.Method;
-
-		var addSubQueryBatchMethod = TypeOf<GraphQLSchema>.Methods.If(_ => _.Name.Is(nameof(AddSubqueryBatch)) && method.GenericTypeCount == 3).First()!;
-		return (FieldType)addSubQueryBatchMethod.InvokeGeneric(new[] { parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, this, method, getParentKey, getChildKey)!;
+		return (FieldType)TypeOf<GraphQLSchema>.InvokeGenericMethod(nameof(AddSubqueryBatch)
+			, new[] { parentType, (Type)childType, (Type)childKeyProperty.PropertyType }
+			, this, method, parentKeyProperty.Getter.Method, childKeyProperty.Getter.Method)!;
 	}
 
 	/// <summary>
@@ -670,22 +663,20 @@ public sealed class GraphQLSchema : Schema, IName
 	public FieldType AddSubqueryCollection(MethodMember method, Type parentType, string key)
 	{
 		if (!method.Return.Type.SystemType.IsCollection())
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
 
-		if (!parentType.GetTypeMember().Properties.IfFirst(property => property.GraphQLKey()?.Is(key) is true, out var parentKeyProperty)
+		if (!parentType.GetTypeMember().Properties.Where(property => property.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty)
 			|| parentKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
 		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
-		if (!childType.Properties.IfFirst(property => property.GraphQLKey().Is(key), out var childKeyProperty)
+		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var getParentKey = parentKeyProperty.Getter.Method;
-		var getChildKey = childKeyProperty.Getter.Method;
-
-		var addSubqueryCollectionMethod = TypeOf<GraphQLSchema>.Methods.If(_ => _.Name.Is(nameof(AddSubqueryCollection)) && _.GenericTypeCount == 3).First();
-		return (FieldType)addSubqueryCollectionMethod!.InvokeGeneric(new[] { (Type)parentType, (Type)childType, (Type)childKeyProperty.PropertyType }, this, method, getParentKey, getChildKey)!;
+		return (FieldType)TypeOf<GraphQLSchema>.InvokeGenericMethod(nameof(AddSubqueryCollection)
+			, new[] { parentType, (Type)childType, (Type)childKeyProperty.PropertyType }
+			, this, method, parentKeyProperty.Getter.Method, childKeyProperty.Getter.Method)!;
 	}
 
 	/// <summary>
@@ -735,7 +726,7 @@ public sealed class GraphQLSchema : Schema, IName
 	public void AddSqlApiEndpoints<T>(string dataSourceName, string table, string? graphQlName = null)
 		where T : new()
 	{
-		var action = TypeOf<T>.Attributes.First<SqlApiAttribute>()?.Actions ?? SqlApiAction.CRUD;
+		var action = TypeOf<T>.Attributes.FirstOrDefault<SqlApiAttribute>()?.Actions ?? SqlApiAction.CRUD;
 
 		if (action.HasFlag(SqlApiAction.DeleteData))
 			this.AddSqlApiDeleteDataEndpoint<T>(dataSourceName, table, graphQlName is not null ? Invariant($"delete{graphQlName}") : null);
@@ -780,12 +771,13 @@ public sealed class GraphQLSchema : Schema, IName
 
 		var name = dataSource.CreateName(procedure);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var parameters = objectSchema.Parameters.If(_ => _.Direction is ParameterDirection.Input || _.Direction is ParameterDirection.InputOutput)
-			.Map(parameter => parameter.Name)
+		var parameters = objectSchema.Parameters
+			.Where(_ => _.Direction is ParameterDirection.Input || _.Direction is ParameterDirection.InputOutput)
+			.Select(parameter => parameter.Name)
 			.ToArray();
 		var fieldType = new FieldType
 		{
-			Arguments = new QueryArguments(parameters.Map(parameter => new QueryArgument(typeof(StringGraphType)) { Name = parameter })),
+			Arguments = new QueryArguments(parameters.Select(parameter => new QueryArgument(typeof(StringGraphType)) { Name = parameter })),
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"call{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"Calls stored procedure: {name}."),
 			Resolver = new SqlApiCallFieldResolver<T>()
@@ -824,7 +816,7 @@ public sealed class GraphQLSchema : Schema, IName
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<ListGraphType<GraphQLInputType<T>>>("data", null, "The data to be deleted.");
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -863,7 +855,7 @@ public sealed class GraphQLSchema : Schema, IName
 		var arguments = new QueryArguments();
 		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
 		arguments.Add<StringGraphType>("where", null, "If `where` is omitted, all records will be deleted!");
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -902,7 +894,7 @@ public sealed class GraphQLSchema : Schema, IName
 		var arguments = new QueryArguments();
 		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("columns", null, "The columns to insert data into.");
 		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("data", null, "The data to be inserted.");
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -942,16 +934,14 @@ public sealed class GraphQLSchema : Schema, IName
 		{
 			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
 		};
-		TypeOf<T>.Member.Properties
-			.If(property => !property.GraphQLIgnore())
-			.Do(property =>
-			{
-				var propertyName = property.GraphQLName();
-				var propertyDeprecationReason = property.GraphQLDeprecationReason();
+		foreach (var property in TypeOf<T>.Member.Properties.Where(property => !property.GraphQLIgnore()))
+		{
+			var propertyName = property.GraphQLName();
+			var propertyDeprecationReason = property.GraphQLDeprecationReason();
 
-				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
-				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
-			});
+			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
+			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+		}
 
 		var arguments = new QueryArguments();
 		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
@@ -964,7 +954,7 @@ public sealed class GraphQLSchema : Schema, IName
 		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
 		arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
 		arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1005,16 +995,14 @@ public sealed class GraphQLSchema : Schema, IName
 		{
 			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
 		};
-		TypeOf<T>.Member.Properties
-			.If(property => !property.GraphQLIgnore())
-			.Do(property =>
-			{
-				var propertyName = property.GraphQLName();
-				var propertyDeprecationReason = property.GraphQLDeprecationReason();
+		foreach (var property in TypeOf<T>.Member.Properties.Where(property => !property.GraphQLIgnore()))
+		{
+			var propertyName = property.GraphQLName();
+			var propertyDeprecationReason = property.GraphQLDeprecationReason();
 
-				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
-				graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
-			});
+			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
+			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+		}
 
 		var arguments = new QueryArguments();
 		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
@@ -1026,7 +1014,7 @@ public sealed class GraphQLSchema : Schema, IName
 		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
 		arguments.Add<UIntGraphType>(nameof(SelectQuery.Fetch), 0U);
 		arguments.Add<UIntGraphType>(nameof(SelectQuery.Offset), 0U);
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1064,7 +1052,7 @@ public sealed class GraphQLSchema : Schema, IName
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("set", null, "The columns to be updated.");
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1104,7 +1092,7 @@ public sealed class GraphQLSchema : Schema, IName
 		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
 		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>("set", null, "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
 		arguments.Add<StringGraphType>("where", null, "If `where` is omitted, all records will be updated.");
-		arguments.Add<TimeSpanSecondsGraphType>("timeout", null, "SQL Command timeout in seconds.");
+		arguments.Add<TimeSpanSecondsGraphType>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1124,8 +1112,6 @@ public sealed class GraphQLSchema : Schema, IName
 		if (!name.Contains('_'))
 			return name;
 
-		var chars = name.ToLowerInvariant().ToCharArray();
-		chars.ToIndex('_').Do(i => chars[i + 1] = chars[i + 1].ToUpperCase());
-		return new string(chars.If(c => c != '_').ToArray());
+		return string.Join(string.Empty, name.ToLowerInvariant().Split('_').Select(_ => _.ToPascalCase()));
 	}
 }

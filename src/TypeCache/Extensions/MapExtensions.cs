@@ -2,7 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using TypeCache.Collections.Extensions;
+using System.Linq;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Extensions;
@@ -15,7 +16,8 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		source.Do(pair => @this[pair.Key] = pair.Value);
+		foreach (var pair in source)
+			@this[pair.Key] = pair.Value;
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -24,8 +26,8 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		source.If(pair => @this.ContainsKey(pair.Key) == match)
-			.Do(pair => @this[pair.Key] = pair.Value);
+		foreach (var pair in source.Where(pair => @this.ContainsKey(pair.Key) == match))
+			@this[pair.Key] = pair.Value;
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -35,16 +37,16 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		@this.GetTypeMember()!.Fields
-			.ToDictionary(_ => _.Name, _ => _, nameComparison)
-			.Match(source.ToDictionary(nameComparison))
-			.If(match => match.Value1.SetMethod is not null
-				&& match.Value1.FieldType.Supports(match.Value2!.GetTypeMember()!))
-			.Do(match =>
-			{
-				if (match.Value2 is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue!(@this, match.Value2);
-			});
+		var targetFieldMap = @this.GetTypeMember()!.Fields
+			.Where(field => field.SetMethod is not null)
+			.ToDictionary(field => field.Name, field => field, nameComparison.ToStringComparer());
+		foreach (var pair in source)
+		{
+			if (targetFieldMap.TryGetValue(pair.Key, out var field)
+				&& ((pair.Value is null && field.FieldType.Nullable)
+					|| (pair.Value is not null && field.FieldType.Supports(pair.Value.GetTypeMember()!))))
+				field.SetValue!(@this, pair.Value);
+		}
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -55,22 +57,21 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
+		var comparer = nameComparison.ToStringComparer();
 		var targetFieldMap = @this.GetTypeMember()!.Fields
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourceFieldMap = source.GetTypeMember()!.Fields
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-
-		targetFieldMap
-			.Match(sourceFieldMap)
-			.If(match => match.Value1.SetMethod is not null
-				&& match.Value2.GetMethod is not null
-				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
-			.Do(match =>
+			.Where(field => field.SetMethod is not null)
+			.ToDictionary(_ => _.Name, _ => _, comparer);
+		foreach (var sourceField in source.GetTypeMember()!.Fields
+			.Where(field => field.GetMethod is not null))
+		{
+			if (targetFieldMap.TryGetValue(sourceField.Name, out var targetField))
 			{
-				var value = match.Value2.GetValue!(source);
-				if (value is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue!(@this, value);
-			});
+				var value = sourceField.GetValue!(source);
+				if ((value is null && targetField.FieldType.Nullable)
+					|| (value is not null && targetField.FieldType.Supports(sourceField.FieldType)))
+					targetField.SetValue!(@this, value);
+			}
+		}
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -79,26 +80,24 @@ public static partial class MapExtensions
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
+		fields.AssertNotEmpty();
 		(@this, source).AssertNotSame();
 
+		var comparer = nameComparison.ToStringComparer();
 		var targetFieldMap = @this.GetTypeMember()!.Fields
-			.If(_ => fields.Has(_.Name, nameComparison))
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourceFieldMap = source.GetTypeMember()!.Fields
-			.If(_ => fields.Has(_.Name, nameComparison))
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-
-		targetFieldMap
-			.Match(sourceFieldMap)
-			.If(match => match.Value1.SetMethod is not null
-				&& match.Value2.GetMethod is not null
-				&& match.Value1.FieldType.Supports(match.Value2.FieldType))
-			.Do(match =>
+			.Where(field => field.SetMethod is not null)
+			.ToDictionary(_ => _.Name, _ => _, comparer);
+		foreach (var sourceField in source.GetTypeMember()!.Fields
+			.Where(field => field.GetMethod is not null && fields.Contains(field.Name, comparer)))
+		{
+			if (targetFieldMap.TryGetValue(sourceField.Name, out var targetField))
 			{
-				var value = match.Value2.GetValue!(source);
-				if (value is not null || match.Value1.FieldType.Nullable)
-					match.Value1.SetValue!(@this, value);
-			});
+				var value = sourceField.GetValue!(source);
+				if ((value is null && targetField.FieldType.Nullable)
+					|| (value is not null && targetField.FieldType.Supports(sourceField.FieldType)))
+					targetField.SetValue!(@this, value);
+			}
+		}
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -108,16 +107,17 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		@this.GetTypeMember()!.Properties
-			.ToDictionary(_ => _.Name, _ => _, nameComparison)
-			.Match(source.ToDictionary(nameComparison))
-			.If(match => match.Value1.Setter is not null
-				&& match.Value1.PropertyType.Supports(match.Value2!.GetTypeMember()!))
-			.Do(match =>
-			{
-				if (match.Value2 is not null || match.Value1.PropertyType.Nullable)
-					match.Value1.SetValue(@this, match.Value2);
-			});
+		var comparer = nameComparison.ToStringComparer();
+		var targetPropertyMap = @this.GetTypeMember()!.Properties
+			.Where(property => property.Setter is not null)
+			.ToDictionary(property => property.Name, property => property, comparer);
+		foreach (var pair in source)
+		{
+			if (targetPropertyMap.TryGetValue(pair.Key, out var property)
+				&& ((pair.Value is null && property.PropertyType.Nullable)
+					|| (pair.Value is not null && property.PropertyType.Supports(pair.Value.GetTypeMember()!))))
+				property.SetValue(@this, pair.Value);
+		}
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -128,22 +128,21 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
+		var comparer = nameComparison.ToStringComparer();
 		var targetPropertyMap = @this.GetTypeMember()!.Properties
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourcePropertyMap = source.GetTypeMember()!.Properties
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-
-		targetPropertyMap
-			.Match(sourcePropertyMap)
-			.If(match => match.Value1.Setter is not null
-				&& match.Value2.Getter is not null
-				&& match.Value1.PropertyType.Supports(match.Value2.PropertyType))
-			.Do(match =>
+			.Where(property => property.Setter is not null)
+			.ToDictionary(property => property.Name, property => property, comparer);
+		foreach (var sourceProperty in source.GetTypeMember()!.Properties
+			.Where(property => property.Getter is not null))
+		{
+			if (targetPropertyMap.TryGetValue(sourceProperty.Name, out var targetProperty))
 			{
-				var value = match.Value2.GetValue(source);
-				if (value is not null || match.Value1.PropertyType.Nullable)
-					match.Value1.SetValue(@this, value);
-			});
+				var value = sourceProperty.GetValue(source);
+				if ((value is null && targetProperty.PropertyType.Nullable)
+					|| (value is not null && targetProperty.PropertyType.Supports(sourceProperty.PropertyType)))
+					targetProperty.SetValue(@this, value);
+			}
+		}
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -154,23 +153,20 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 		(@this, source).AssertNotSame();
 
+		var comparer = nameComparison.ToStringComparer();
 		var targetPropertyMap = @this.GetTypeMember()!.Properties
-			.If(_ => properties.Has(_.Name, nameComparison))
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-		var sourcePropertyMap = source.GetTypeMember()!.Properties
-			.If(_ => properties.Has(_.Name, nameComparison))
-			.ToDictionary(_ => _.Name, _ => _, nameComparison);
-
-		targetPropertyMap
-			.Match(sourcePropertyMap)
-			.If(match => match.Value1.Setter is not null
-				&& match.Value2.Getter is not null
-				&& match.Value1.PropertyType.Supports(match.Value2.PropertyType))
-			.Do(match =>
+			.Where(property => property.Setter is not null)
+			.ToDictionary(property => property.Name, property => property, comparer);
+		foreach (var sourceProperty in source.GetTypeMember()!.Properties
+			.Where(property => property.Getter is not null && properties.Contains(property.Name, comparer)))
+		{
+			if (targetPropertyMap.TryGetValue(sourceProperty.Name, out var targetProperty))
 			{
-				var value = match.Value2.GetValue(source);
-				if (value is not null || match.Value1.PropertyType.Nullable)
-					match.Value1.SetValue(@this, value);
-			});
+				var value = sourceProperty.GetValue(source);
+				if ((value is null && targetProperty.PropertyType.Nullable)
+					|| (value is not null && targetProperty.PropertyType.Supports(sourceProperty.PropertyType)))
+					targetProperty.SetValue(@this, value);
+			}
+		}
 	}
 }

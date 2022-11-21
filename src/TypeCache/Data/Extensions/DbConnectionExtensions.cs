@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data.Common;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Data.Extensions;
@@ -17,8 +16,11 @@ public static class DbConnectionExtensions
 	/// <see langword="    if"/> (<paramref name="sqlCommand"/>.Timeout.HasValue)<br/>
 	/// <see langword="        "/>dbCommand.CommandTimeout = (<see cref="int"/>)<paramref name="sqlCommand"/>.Timeout.Value.TotalSeconds;<br/>
 	/// <br/>
-	/// <see langword="    "/><paramref name="sqlCommand"/>.Parameters.Do((pair =&gt; dbCommand.AddInputParameter(pair.Key, pair.Value));<br/>
-	/// <see langword="    "/><paramref name="sqlCommand"/>.OutputParameters.Do((pair =&gt; dbCommand.AddOutputParameter(pair.Key, pair.Value));<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> pair <see langword="in"/> <paramref name="sqlCommand"/>.Parameters)<br/>
+	/// <see langword="        "/>dbCommand.AddInputParameter(pair.Key, pair.Value);<br/>
+	/// <br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> pair <see langword="in"/> <paramref name="sqlCommand"/>.OutputParameters)<br/>
+	/// <see langword="        "/>dbCommand.AddOutputParameter(pair.Key, pair.Value);<br/>
 	/// <br/>
 	/// <see langword="    return"/> dbCommand;<br/>
 	/// }
@@ -32,8 +34,11 @@ public static class DbConnectionExtensions
 		if (sqlCommand.Timeout.HasValue)
 			dbCommand.CommandTimeout = (int)sqlCommand.Timeout.Value.TotalSeconds;
 
-		sqlCommand.Parameters.Do(pair => dbCommand.AddInputParameter(pair.Key, pair.Value));
-		sqlCommand.OutputParameters.Do(pair => dbCommand.AddOutputParameter(pair.Key, pair.Value));
+		foreach (var pair in sqlCommand.Parameters)
+			dbCommand.AddInputParameter(pair.Key, pair.Value);
+
+		foreach (var pair in sqlCommand.OutputParameters)
+			dbCommand.AddOutputParameter(pair.Key, pair.Value);
 
 		return dbCommand;
 	}

@@ -3,10 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using GraphQL;
-using GraphQL.Types.Relay.DataObjects;
 using GraphQLParser.AST;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
@@ -22,15 +21,17 @@ public static class ResolveFieldContextExtensions
 		name.AssertNotBlank();
 
 		var table = objectSchema.CreateDataTable();
-		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name);
+		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name).ToArray();
 		if (arguments is null)
 			return table;
 
 		table.BeginLoadData();
-		arguments.Do(argument =>
+		arguments.ForEach(argument =>
 		{
 			var row = table.NewRow();
-			argument.Do(pair => row[pair.Key] = pair.Value ?? DBNull.Value);
+			foreach (var pair in argument)
+				row[pair.Key] = pair.Value ?? DBNull.Value;
+
 			table.Rows.Add(row);
 		});
 		table.EndLoadData();
@@ -80,10 +81,11 @@ public static class ResolveFieldContextExtensions
 	public static IDictionary<string, object?> GetInputs(this IResolveFieldContext @this)
 	{
 		var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-		if (!@this.Operation.SelectionSet.Selections.IfFirst<GraphQLField>(out var root) || !root.Arguments.Any())
+		if (!@this.Operation.SelectionSet.Selections.OfType<GraphQLField>().TryFirst(out var root) || root.Arguments?.Any() is not true)
 			return dictionary;
 
-		root.Arguments.Do(argument => dictionary.AddInputs(argument.Name.StringValue, argument.Value));
+		foreach (var argument in root.Arguments)
+			dictionary.AddInputs(argument.Name.StringValue, argument.Value);
 
 		return dictionary;
 	}
@@ -93,7 +95,7 @@ public static class ResolveFieldContextExtensions
 	/// </summary>
 	public static IEnumerable<string> GetSelections(this IResolveFieldContext @this)
 	{
-		var fragments = @this.Document.Definitions.If<GraphQLFragmentDefinition>();
+		var fragments = @this.Document.Definitions.OfType<GraphQLFragmentDefinition>();
 		foreach (var pair in @this.SubFields!)
 		{
 			var selectionSet = pair.Value.Field.SelectionSet;
@@ -111,13 +113,14 @@ public static class ResolveFieldContextExtensions
 	{
 		if (value is GraphQLListValue listValue)
 		{
-			if (listValue.Values.Any<GraphQLObjectValue>())
-				listValue.Values.If<GraphQLObjectValue>().Do((objectValue, i) => objectValue.Fields.Do(field => @this[Invariant($"{path}.{i}.{field.Name}")] = field.Value.GetScalarValue()));
-			else if (listValue.Values.Any())
-				@this[path] = listValue.Values.Map(_ => _.GetScalarValue()).ToArray();
+			if (listValue.Values?.Any<GraphQLObjectValue>() is true)
+				listValue.Values.OfType<GraphQLObjectValue>().ToArray().ForEach((objectValue, i) =>
+					objectValue.Fields?.ForEach(field => @this[Invariant($"{path}.{i}.{field.Name}")] = field.Value.GetScalarValue()));
+			else if (listValue.Values?.Any() is true)
+				@this[path] = listValue.Values.Select(_ => _.GetScalarValue()).ToArray();
 		}
 		else if (value is GraphQLObjectValue objectValue)
-			objectValue.Fields.Do(field => @this.AddInputs(Invariant($"{path}.{field.Name}"), field.Value));
+			objectValue.Fields?.ForEach(field => @this.AddInputs(Invariant($"{path}.{field.Name}"), field.Value));
 		else
 			@this[path] = value.GetScalarValue();
 	}

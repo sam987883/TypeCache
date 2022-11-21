@@ -6,11 +6,11 @@ using System.Collections.Immutable;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Primitives;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
@@ -56,21 +56,18 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 
 	public DataTable CreateDataTable()
 	{
-		var primaryKeys = this.Columns.If(column => column.PrimaryKey).Map(column => column.Name);
+		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).Select(column => column.Name).ToArray();
 		var table = new DataTable(this.Name);
-		this.Columns.Do(column => table.Columns.Add(new DataColumn(column.Name, column.DataTypeHandle.ToType())));
-		table.PrimaryKey = table.Columns.If<DataColumn>().If(column => primaryKeys.Has(column.ColumnName)).ToArray();
+		var columns = this.Columns.Select(column => new DataColumn(column.Name, column.DataTypeHandle.ToType())).ToArray();
+		table.Columns.AddRange(columns);
+		table.PrimaryKey = columns.Where(column => primaryKeys.Contains(column.ColumnName, StringComparer.OrdinalIgnoreCase)).ToArray();
 		return table;
 	}
 
 	public string CreateCountSQL(string? distinctColumn, string where)
 		=> new StringBuilder()
-			.AppendLine(distinctColumn.IsNotBlank()
-				? Invariant($"SELECT COUNT(DISTINCT {this.DataSource.EscapeIdentifier(distinctColumn)})")
-				: "SELECT COUNT(*)")
-			.AppendLine(this.DataSource.Type is SqlServer
-				? Invariant($"FROM {this.Name} WITH(NOLOCK)")
-				: Invariant($"FROM {this.Name}"))
+			.AppendLineIf(distinctColumn.IsBlank(), "SELECT COUNT(*)", Invariant($"SELECT COUNT(DISTINCT {(distinctColumn.IsNotBlank() ? this.DataSource.EscapeIdentifier(distinctColumn!) : null)})"))
+			.AppendLineIf(this.DataSource.Type is not SqlServer, Invariant($"FROM {this.Name}"), Invariant($"FROM {this.Name} WITH(NOLOCK)"))
 			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
@@ -85,7 +82,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 
 	public string CreateDeleteSQL(DataTable data, params string[] output)
 	{
-		var columns = data.PrimaryKey.If<DataColumn>().Map(column => this.DataSource.EscapeIdentifier(column.ColumnName));
+		var columns = data.PrimaryKey.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName));
 
 		return new StringBuilder()
 			.AppendLine(Invariant($"DELETE {this.Name}"))
@@ -94,15 +91,15 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.Append(data.ToSQL())
-			.AppendLine(Invariant($") AS data ({data.Columns.If<DataColumn>().Map(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
-			.AppendLine(Invariant($"ON {columns.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.AppendLine(Invariant($") AS data ({data.Columns.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
+			.Append("ON ").AppendJoin(" AND ", columns.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
 	public string CreateDeleteSQL(JsonArray data, StringValues output)
 	{
-		var columns = this.Columns.If(column => column.PrimaryKey).Map(column => this.DataSource.EscapeIdentifier(column.Name));
+		var columns = this.Columns.Where(column => column.PrimaryKey).Select(column => this.DataSource.EscapeIdentifier(column.Name));
 
 		return new StringBuilder()
 			.AppendLine(Invariant($"DELETE {this.Name}"))
@@ -111,8 +108,8 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.Append(data.ToSQL())
-			.AppendLine(Invariant($") AS data ({data[0]!.AsObject().Map(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()})"))
-			.AppendLine(Invariant($"ON {columns.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.AppendLine(Invariant($") AS data ({data[0]!.AsObject().Select(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()})"))
+			.Append("ON ").AppendJoin(" AND ", columns.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
@@ -120,9 +117,10 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateDeleteSQL<T>(T[] data, StringValues output)
 	{
 		var primaryKeys = this.Columns
-			.If(column => column.PrimaryKey)
-			.Map(column => column.Name);
-		var escapedPrimaryKeys = primaryKeys.Each(this.DataSource.EscapeIdentifier).ToArray();
+			.Where(column => column.PrimaryKey)
+			.Select(column => column.Name)
+			.ToArray();
+		var escapedPrimaryKeys = primaryKeys.Select(this.DataSource.EscapeIdentifier).ToArray();
 
 		return new StringBuilder()
 			.AppendLine(Invariant($"DELETE {this.Name}"))
@@ -132,7 +130,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 			.Append('(').AppendLine()
 			.AppendValuesSQL(data, primaryKeys)
 			.AppendLine(Invariant($") AS data ({escapedPrimaryKeys.ToCSV()})"))
-			.AppendLine(Invariant($"ON {escapedPrimaryKeys.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.Append("ON ").AppendJoin(" AND ", escapedPrimaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
@@ -140,7 +138,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateInsertSQL(string[] columns, SelectQuery selectQuery, params string[] output)
 		=> new StringBuilder()
 			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({columns.Map(this.DataSource.EscapeIdentifier).ToCSV()})"))
+			.AppendLine(Invariant($"({columns.Select(this.DataSource.EscapeIdentifier).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(this.CreateSelectSQL(selectQuery))
 			.ToString();
@@ -148,7 +146,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateInsertSQL(JsonArray data, params string[] output)
 		=> new StringBuilder()
 			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({data[0]!.AsObject().Map(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()}"))
+			.AppendLine(Invariant($"({data[0]!.AsObject().Select(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(data.ToSQL())
 			.AppendStatementEndSQL()
@@ -157,7 +155,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateInsertSQL(DataTable data, params string[] output)
 		=> new StringBuilder()
 			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({data.Columns.If<DataColumn>().Map(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
+			.AppendLine(Invariant($"({data.Columns.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(data.ToSQL())
 			.AppendStatementEndSQL()
@@ -166,7 +164,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateInsertSQL<T>(string[] columns, T[] data, params string[] output)
 		=> new StringBuilder()
 			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({columns.Each(this.DataSource.EscapeIdentifier).ToCSV()})"))
+			.AppendLine(Invariant($"({columns.Select(this.DataSource.EscapeIdentifier).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendValuesSQL(data, columns)
 			.AppendStatementEndSQL()
@@ -186,17 +184,17 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 
 		return sqlBuilder
 			.Append(' ')
-			.AppendLine(select.Select.Any() ? select.Select.ToCSV() : "*")
+			.AppendLine(select.Select?.Any() is true ? select.Select.ToCSV() : "*")
 			.AppendLine(Invariant($"FROM {select.From} {select.TableHints}"))
 			.AppendLineIf(select.Where.IsNotBlank(), Invariant($"WHERE {select.Where}"))
-			.AppendLineIf(select.GroupBy.Any(), select.GroupByOption switch
+			.AppendLineIf(select.GroupBy?.Any() is true, select.GroupByOption switch
 			{
 				GroupBy.Cube => Invariant($"GROUP BY CUBE({select.GroupBy.ToCSV()})"),
 				GroupBy.Rollup => Invariant($"GROUP BY ROLLUP({select.GroupBy.ToCSV()})"),
 				_ => Invariant($"GROUP BY {select.GroupBy.ToCSV()}")
 			})
 			.AppendLineIf(select.Having.IsNotBlank(), Invariant($"HAVING {select.Having}"))
-			.AppendLineIf(select.OrderBy.Any(), Invariant($"ORDER BY {select.OrderBy.ToCSV()}"))
+			.AppendLineIf(select.OrderBy?.Any() is true, Invariant($"ORDER BY {select.OrderBy.ToCSV()}"))
 			.AppendLineIf(select.Offset > 0, Invariant($"OFFSET {select.Offset} ROWS"))
 			.AppendLineIf(select.Fetch > 0, Invariant($"FETCH NEXT {select.Fetch} ROWS ONLY"))
 			.AppendStatementEndSQL()
@@ -225,52 +223,51 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateUpdateSQL(JsonArray data, params string[] output)
 	{
 		var primaryKeys = this.Columns
-			.If(column => column.PrimaryKey)
-			.Map(column => this.DataSource.EscapeIdentifier(column.Name));
+			.Where(column => column.PrimaryKey)
+			.Select(column => this.DataSource.EscapeIdentifier(column.Name));
 		var setColumns = data[0]!.AsObject()
-			.If(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(pair.Key)))
-			.Map(pair => this.DataSource.EscapeIdentifier(pair.Key));
+			.Where(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(pair.Key)))
+			.Select(pair => this.DataSource.EscapeIdentifier(pair.Key));
 		var columns = data[0]!.AsObject()
-			.Map(pair => this.DataSource.EscapeIdentifier(pair.Key));
+			.Select(pair => this.DataSource.EscapeIdentifier(pair.Key));
 
 		return new StringBuilder()
 			.AppendLine(this.DataSource.Type is SqlServer
 				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
 				: Invariant($"UPDATE {this.Name}"))
-			.AppendLine(Invariant($"SET {setColumns.Each(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
+			.AppendLine(Invariant($"SET {setColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLine(Invariant($"FROM {this.Name} AS _"))
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.Append(Invariant($"VALUES {data.ToSQL()}"))
 			.AppendLine(Invariant($") AS data ({columns.ToCSV()})"))
-			.AppendLine(Invariant($"ON {primaryKeys.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.Append("ON ").AppendJoin(" AND ", primaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
 	public string CreateUpdateSQL(DataTable data, params string[] output)
 	{
-		var primaryKeys = data.PrimaryKey
-			.Map(column => this.DataSource.EscapeIdentifier(column.ColumnName));
-		var setColumns = data.Columns.If<DataColumn>()
-			.If(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(dataColumn.ColumnName)))
-			.Map(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
-		var columns = data.Columns.If<DataColumn>()
-			.Map(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
+		var primaryKeys = data.PrimaryKey.Select(column => this.DataSource.EscapeIdentifier(column.ColumnName));
+		var setColumns = data.Columns.OfType<DataColumn>()
+			.Where(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(dataColumn.ColumnName)))
+			.Select(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
+		var columns = data.Columns.OfType<DataColumn>()
+			.Select(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
 
 		return new StringBuilder()
 			.AppendLine(this.DataSource.Type is SqlServer
 				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
 				: Invariant($"UPDATE {this.Name}"))
-			.AppendLine(Invariant($"SET {setColumns.Each(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
+			.AppendLine(Invariant($"SET {setColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLine(Invariant($"FROM {this.Name} AS _"))
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.Append(data.ToSQL())
 			.AppendLine(Invariant($") AS data ({columns.ToCSV()})"))
-			.AppendLine(Invariant($"ON {primaryKeys.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.Append("ON ").AppendJoin(" AND ", primaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
@@ -278,33 +275,33 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 	public string CreateUpdateSQL<T>(string[] columns, T[] data, params string[] output)
 	{
 		var primaryKeys = this.Columns
-			.If(column => column.PrimaryKey)
-			.Map(column => this.DataSource.EscapeIdentifier(column.Name));
-		var escapedColumns = columns.Each(this.DataSource.EscapeIdentifier);
+			.Where(column => column.PrimaryKey)
+			.Select(column => this.DataSource.EscapeIdentifier(column.Name));
+		var escapedColumns = columns.Select(this.DataSource.EscapeIdentifier);
 
 		return new StringBuilder()
 			.AppendLine(this.DataSource.Type is SqlServer
 				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
 				: Invariant($"UPDATE {this.Name}"))
-			.AppendLine(Invariant($"SET {escapedColumns.Each(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
+			.AppendLine(Invariant($"SET {escapedColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLine(Invariant($"FROM {this.Name} AS _"))
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.AppendValuesSQL(data, columns)
 			.AppendLine(Invariant($") AS data ({escapedColumns.ToCSV()})"))
-			.AppendLine(Invariant($"ON {primaryKeys.Each(column => Invariant($"data.{column} = _.{column}")).Join(" AND ")}"))
+			.Append("ON ").AppendJoin(" AND ", primaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool HasColumn(string column) =>
-		this.Columns.Map(_ => _.Name).Has(column);
+		this.Columns.Any(_ => _.Name.Is(column));
 
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public bool HasParameter(string parameter) =>
-		this.Parameters.Map(_ => _.Name).Has(parameter);
+		this.Parameters.Any(_ => _.Name.Is(parameter));
 
 	[DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] ObjectSchema? other)

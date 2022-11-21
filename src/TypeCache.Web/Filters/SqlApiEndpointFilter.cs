@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
-using TypeCache.Extensions;
 using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;
@@ -39,7 +39,7 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 		context.HttpContext.Items.Add(nameof(IDataSource), dataSource);
 
 		var database = (string)routeValues[DATABASE]!;
-		if (!dataSource.Databases.Has(database))
+		if (!dataSource.Databases.Contains(database, StringComparer.OrdinalIgnoreCase))
 			return Results.NotFound(Invariant($"Database {database} was not found in Data Source [{dataSourceName}]."));
 
 		ObjectSchema? objectSchema = null;

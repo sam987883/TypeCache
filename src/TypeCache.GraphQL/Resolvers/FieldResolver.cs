@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -20,7 +20,7 @@ public abstract class FieldResolver<T> : IFieldResolver
 		catch (Exception error)
 		{
 			if (error is ValidationException exception)
-				exception.ValidationMessages.Do(message => context.Errors.Add(new ExecutionError(message)));
+				exception.ValidationMessages.ForEach(message => context.Errors.Add(new ExecutionError(message)));
 			else
 				context.Errors.Add(new ExecutionError(error.Message, error));
 			return default;

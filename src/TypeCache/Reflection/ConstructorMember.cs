@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
@@ -25,7 +26,7 @@ public sealed class ConstructorMember : IMember, IEquatable<ConstructorMember>
 		this.Internal = constructorInfo.IsAssembly;
 		this.MethodHandle = constructorInfo.MethodHandle;
 		this.Name = constructorInfo.Name();
-		this.Parameters = constructorInfo.GetParameters().Map(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
+		this.Parameters = constructorInfo.GetParameters().Select(parameter => new MethodParameter(constructorInfo.MethodHandle, parameter)).ToImmutableArray();
 		this.Public = constructorInfo.IsPublic;
 		this.Type = type;
 		this._Invoke = Lazy.Create(() => ((ConstructorInfo)this.MethodHandle.ToMethodBase(this.Type.TypeHandle)!).LambdaInvoke().Compile());

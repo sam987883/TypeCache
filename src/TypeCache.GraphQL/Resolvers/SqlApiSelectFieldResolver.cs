@@ -2,13 +2,14 @@
 
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types.Relay.DataObjects;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using static System.FormattableString;
@@ -29,11 +30,12 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 			Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 			From = objectSchema.Name,
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
 			Select = objectSchema.Columns
-				.If(column => selections.AnyRight(Invariant($"{nameof(SelectResponse<DataRow>.Items)}.{column.Name}"))
-					|| selections.AnyRight(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}")))
-				.Map(column => column.Name),
+				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Items)}.{column.Name}"))
+					|| _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
+				.Select(column => column.Name)
+				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
 			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
@@ -41,10 +43,10 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 		var sql = objectSchema.CreateSelectSQL(select);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.AnyLeft(Invariant($"{nameof(SelectResponse<DataRow>.Items)}."))
-			|| selections.AnyLeft(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.")))
+		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Items)}."))
+			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}."))))
 		{
 			var result = await mediator.ApplyRuleAsync<SqlCommand, DataTable>(sqlCommand, context.CancellationToken);
 			var totalCount = result.Rows.Count;
@@ -70,8 +72,8 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 				TotalCount = totalCount
 			};
 		}
-		else if (selections.Has(nameof(SelectResponse<DataRow>.TotalCount))
-			|| selections.AnyLeft(Invariant($"{nameof(SelectResponse<DataRow>.PageInfo)}.")))
+		else if (selections.Any(_ => _.Is(nameof(SelectResponse<DataRow>.TotalCount))
+			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);
@@ -113,11 +115,12 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 			Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 			From = objectSchema.Name,
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
 			Select = objectSchema.Columns
-				.If(column => selections.AnyRight(Invariant($"{nameof(SelectResponse<T>.Items)}.{column.Name}"))
-					|| selections.AnyRight(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}")))
-				.Map(column => column.Name),
+				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<T>.Items)}.{column.Name}"))
+					|| _.Right(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
+				.Select(column => column.Name)
+				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
 			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
@@ -125,10 +128,10 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 		var sql = objectSchema.CreateSelectSQL(select);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.AnyLeft(Invariant($"{nameof(SelectResponse<T>.Items)}."))
-			|| selections.AnyLeft(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}.")))
+		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<T>.Items)}."))
+			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
 		{
 			var result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
 			var totalCount = result.Count;
@@ -154,8 +157,8 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 				TotalCount = totalCount
 			};
 		}
-		else if (selections.Has(nameof(SelectResponse<T>.TotalCount))
-			|| selections.AnyLeft(Invariant($"{nameof(SelectResponse<T>.PageInfo)}.")))
+		else if (selections.Any(_ => _.Is(nameof(SelectResponse<T>.TotalCount))
+			|| _.Left(Invariant($"{nameof(SelectResponse<T>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);

@@ -3,7 +3,6 @@
 using System;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Requirements;
 
@@ -19,7 +18,7 @@ public class RequireHeaderAttribute : AuthorizeAttribute
 	public RequireHeaderAttribute(string key, params string[] allowedValues) : base(nameof(HeaderAuthorizationRequirement))
 	{
 		key.AssertNotBlank();
-		allowedValues.Do(allowedValue => allowedValue.AssertNotBlank());
+		allowedValues?.ForEach(allowedValue => allowedValue.AssertNotBlank());
 
 		this.Key = key;
 		this.AllowedValues = allowedValues ?? Array<string>.Empty;

@@ -1,10 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
-using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -16,14 +14,16 @@ public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 		this.Description = TypeOf<T>.Member.GraphQLDescription();
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
-		TypeOf<T>.Properties
-			.If(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
-			.Do(property => this.AddField(new()
+		var fields = TypeOf<T>.Properties
+			.Where(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
+			.Select(property => new FieldType()
 			{
 				Type = property.GraphQLType(true),
 				Name = property.GraphQLName(),
 				Description = property.GraphQLDescription(),
 				DeprecationReason = property.GraphQLDeprecationReason(),
-			}));
+			});
+		foreach (var field in fields)
+			this.AddField(field);
 	}
 }

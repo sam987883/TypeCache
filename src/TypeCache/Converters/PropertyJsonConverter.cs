@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 
@@ -13,16 +13,16 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 {
 	public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
-		if (reader.TokenType == JsonTokenType.StartObject)
+		if (reader.TokenType is JsonTokenType.StartObject)
 		{
 			var output = TypeOf<T>.Create()!;
-			while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();
 				if (!reader.Read() || name.IsBlank())
 					continue;
 
-				var property = TypeOf<T>.Properties.If(_ => _.Name.Is(name)).First();
+				var property = TypeOf<T>.Properties.FirstOrDefault(_ => _.Name.Is(name));
 				property?.SetValue(output, reader.TokenType switch
 				{
 					JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
@@ -44,12 +44,12 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		}
 
 		writer.WriteStartObject();
-		TypeOf<T>.Properties.If(property => property.Getter?.Static is false).Do(property =>
+		foreach (var property in TypeOf<T>.Properties.Where(property => property.Getter?.Static is false))
 		{
 			writer.WritePropertyName(property.Name);
 			var value = property.GetValue(input);
 			writer.WriteValue(value, options);
-		});
+		}
 		writer.WriteEndObject();
 	}
 }

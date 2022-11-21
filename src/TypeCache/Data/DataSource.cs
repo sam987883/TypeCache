@@ -7,11 +7,11 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
@@ -93,7 +93,7 @@ internal sealed class DataSource : IDataSource
 		if (items.Length > 3)
 			throw new ArgumentException(Invariant($"{nameof(DataSource)}.{nameof(CreateName)}: Invalid name: {databaseObject}"), nameof(databaseObject));
 
-		items = items.Each(item => this.Type switch
+		items = items.Select(item => this.Type switch
 		{
 			PostgreSql => item.Trim('"'),
 			_ => item.TrimStart('[').TrimEnd(']')
@@ -151,8 +151,8 @@ internal sealed class DataSource : IDataSource
 			await connection.ChangeDatabaseAsync(database, token);
 
 		var table = await connection.GetSchemaAsync(schemaSet.DataSetName, token);
-		table.Select().Do(async row =>
-			schemaSet.Tables.Add(await connection.GetSchemaAsync(row[collectionName].ToString()!, token)));
+		foreach (var row in table.Select())
+			schemaSet.Tables.Add(await connection.GetSchemaAsync(row[collectionName].ToString()!, token));
 
 		return schemaSet;
 	}
@@ -179,7 +179,7 @@ internal sealed class DataSource : IDataSource
 			connection.ChangeDatabase(database);
 
 		var table = connection.GetSchema(schemaSet.DataSetName);
-		table.Select().Do(row =>
+		table.Select().ForEach(row =>
 			schemaSet.Tables.Add(connection.GetSchema(row[collectionName].ToString()!)));
 
 		return schemaSet;
@@ -221,7 +221,7 @@ internal sealed class DataSource : IDataSource
 			_ => table?.Select()
 		};
 
-		return rows?.Map(row => row[database_name].ToString()!) ?? Array<string>.Empty;
+		return rows?.Select(row => row[database_name].ToString()!).ToArray() ?? Array<string>.Empty;
 	}
 
 	private IReadOnlyDictionary<DatabaseObject, ObjectSchema> GetObjectSchemas()
@@ -240,13 +240,13 @@ internal sealed class DataSource : IDataSource
 		adapter.MissingMappingAction = MissingMappingAction.Passthrough;
 		adapter.MissingSchemaAction = MissingSchemaAction.Add;
 
-		this.Databases.Do(databaseName =>
+		this.Databases.ToArray().ForEach(databaseName =>
 		{
 			connection.ChangeDatabase(databaseName);
 
 			var tables = connection.GetSchema(SchemaCollection.Tables.Name());
 			var tablesRows = tables.Select(Invariant($"{table_type} = 'BASE TABLE'"), Invariant($"{table_name} ASC"));
-			tablesRows.Do(tablesRow =>
+			tablesRows.ForEach(tablesRow =>
 			{
 				var tableName = tablesRow[table_name].ToString()!;
 				var tableSchema = tablesRow[table_schema].ToString()!;
@@ -259,9 +259,10 @@ internal sealed class DataSource : IDataSource
 				{
 					adapter.FillSchema(table, SchemaType.Source);
 
-					var columns = table.Columns.As<DataColumn>()
-						.Map(column => new ColumnSchema(
-							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Has(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
+					var columns = table.Columns
+						.OfType<DataColumn>()
+						.Select(column => new ColumnSchema(
+							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Contains(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
 
 					var objectSchema = new ObjectSchema(this, ObjectType.Table, name, databaseName, tableSchema, tableName, columns);
 					objectSchemas.Add(name, objectSchema);
@@ -271,7 +272,7 @@ internal sealed class DataSource : IDataSource
 
 			var views = connection.GetSchema(SchemaCollection.Views.Name());
 			var viewsRows = views?.Select(null, Invariant($"{table_name} ASC"));
-			viewsRows.Do(viewsRow =>
+			viewsRows?.ForEach(viewsRow =>
 			{
 				var tableName = viewsRow[table_name].ToString()!;
 				var tableSchema = viewsRow[table_schema].ToString()!;
@@ -284,9 +285,10 @@ internal sealed class DataSource : IDataSource
 				{
 					adapter.FillSchema(table, SchemaType.Source);
 
-					var columns = table.Columns.As<DataColumn>()
-						.Map(column => new ColumnSchema(
-							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Has(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
+					var columns = table.Columns
+						.OfType<DataColumn>()
+						.Select(column => new ColumnSchema(
+							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Contains(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
 
 					var objectSchema = new ObjectSchema(this, ObjectType.View, name, databaseName, tableSchema, tableName, columns);
 					objectSchemas.Add(name, objectSchema);
@@ -297,7 +299,7 @@ internal sealed class DataSource : IDataSource
 			var procedures = connection.GetSchema(SchemaCollection.Procedures.Name());
 			var procedureParameters = connection.GetSchema(SchemaCollection.ProcedureParameters.Name());
 			var proceduresRows = procedures?.Select(null, Invariant($"{routine_name} ASC"));
-			proceduresRows.Do(proceduresRow =>
+			proceduresRows?.ForEach(proceduresRow =>
 			{
 				var routineName = proceduresRow[routine_name].ToString()!;
 				var routineSchema = proceduresRow[routine_schema].ToString()!;
@@ -306,7 +308,7 @@ internal sealed class DataSource : IDataSource
 				var procedureParametersRows = procedureParameters?.Select(
 					Invariant($"{specific_schema} = '{routineSchema}' AND {specific_name} = '{routineName}'")
 					, Invariant($"{ordinal_position} ASC"));
-				var parameters = procedureParametersRows.Map(row => new ParameterSchema(row[parameter_name].ToString()!, row[parameter_mode].ToString() switch
+				var parameters = procedureParametersRows?.Select(row => new ParameterSchema(row[parameter_name].ToString()!, row[parameter_mode].ToString() switch
 				{
 					string value when value.Is("OUT") => ParameterDirection.Output,
 					string value when value.Is("INOUT") => ParameterDirection.InputOutput,
@@ -319,7 +321,7 @@ internal sealed class DataSource : IDataSource
 					_ when routineType.Is("FUNCTION") => ObjectType.Function,
 					_ => ObjectType.StoredProcedure
 				};
-				var objectSchema = new ObjectSchema(this, objectType, name, databaseName, routineSchema, routineName, parameters);
+				var objectSchema = new ObjectSchema(this, objectType, name, databaseName, routineSchema, routineName, parameters ?? Array<ParameterSchema>.Empty);
 				objectSchemas.Add(name, objectSchema);
 			});
 		});

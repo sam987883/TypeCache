@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static TypeCache.Default;
 
-namespace TypeCache.Collections.Extensions;
+namespace TypeCache.Extensions;
 
 public static class AsyncEnumeratorExtensions
 {

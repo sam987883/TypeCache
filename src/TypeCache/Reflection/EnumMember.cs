@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
@@ -45,18 +45,18 @@ public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 		this.Name = type.Name();
 		this.Public = type.IsPublic;
 		this.TypeHandle = type.TypeHandle;
-		this.Flags = this.Attributes.Any<FlagsAttribute>();
+		this.Flags = this.Attributes.OfType<FlagsAttribute>().Any();
 		this.Tokens = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-			.If(fieldInfo => type.IsAssignableFrom(fieldInfo.FieldType))
-			.Map(fieldInfo => new TokenMember<T>(fieldInfo, this))
+			.Where(fieldInfo => type.IsAssignableFrom(fieldInfo.FieldType))
+			.Select(fieldInfo => new TokenMember<T>(fieldInfo, this))
 			.ToArray();
 	}
 
 	public TokenMember<T>? this[T value]
-		=> this.Tokens.First(token => this.Comparer.EqualTo(token.Value, value));
+		=> this.Tokens.FirstOrDefault(token => this.Comparer.EqualTo(token.Value, value));
 
 	public TokenMember<T>? this[string text, StringComparison comparison = STRING_COMPARISON]
-		=> this.Tokens.First(token => token.Name.Is(text, comparison));
+		=> this.Tokens.FirstOrDefault(token => token.Name.Is(text, comparison));
 
 	/// <inheritdoc/>
 	public IReadOnlyList<Attribute> Attributes { get; }

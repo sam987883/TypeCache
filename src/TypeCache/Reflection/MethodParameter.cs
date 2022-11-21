@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Attributes;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
@@ -28,7 +28,7 @@ public readonly struct MethodParameter : IEquatable<MethodParameter>
 		this.HasDefaultValue = parameterInfo.HasDefaultValue;
 		this.IsOptional = parameterInfo.IsOptional;
 		this.IsOut = parameterInfo.IsOut;
-		this.Name = this.Attributes.First<NameAttribute>()?.Name ?? parameterInfo.Name ?? string.Empty;
+		this.Name = this.Attributes.FirstOrDefault<NameAttribute>()?.Name ?? parameterInfo.Name ?? string.Empty;
 		this.TypeHandle = parameterInfo.ParameterType.TypeHandle;
 	}
 

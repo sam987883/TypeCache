@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
@@ -16,7 +16,7 @@ public sealed class DictionaryJsonConverter : JsonConverter<IDictionary<string, 
 	{
 		var dictionary = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
 
-		if (reader.TokenType == JsonTokenType.StartObject)
+		if (reader.TokenType is JsonTokenType.StartObject)
 		{
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
@@ -34,11 +34,11 @@ public sealed class DictionaryJsonConverter : JsonConverter<IDictionary<string, 
 		if (dictionary.Any())
 		{
 			writer.WriteStartObject();
-			dictionary.Do(pair =>
+			foreach (var pair in dictionary)
 			{
 				writer.WritePropertyName(pair.Key);
 				writer.WriteValue(pair.Value, options);
-			});
+			}
 			writer.WriteEndObject();
 		}
 		else
@@ -53,7 +53,7 @@ public class DictionaryJsonConverter<T> : JsonConverter<IDictionary<string, T>>
 	{
 		var dictionary = new Dictionary<string, T>(STRING_COMPARISON.ToStringComparer());
 
-		if (reader.TokenType == JsonTokenType.StartObject)
+		if (reader.TokenType is JsonTokenType.StartObject)
 		{
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
@@ -71,11 +71,11 @@ public class DictionaryJsonConverter<T> : JsonConverter<IDictionary<string, T>>
 		if (dictionary.Any())
 		{
 			writer.WriteStartObject();
-			dictionary.Do(pair =>
+			foreach (var pair in dictionary)
 			{
 				writer.WritePropertyName(pair.Key);
 				writer.WriteValue(pair.Value, options);
-			});
+			}
 			writer.WriteEndObject();
 		}
 		else

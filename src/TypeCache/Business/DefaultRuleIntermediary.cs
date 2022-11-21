@@ -2,15 +2,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Business;
 
-public sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermediary<REQUEST, RESPONSE>
+internal sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermediary<REQUEST, RESPONSE>
 {
 	private readonly IRule<REQUEST, RESPONSE> _Rule;
 	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;
@@ -27,7 +27,7 @@ public sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermedia
 		{
 			if (this._ValidationRules.Any())
 			{
-				var failedValidation = this._ValidationRules.ToMany(_ => _.Validate(request)).ToArray();
+				var failedValidation = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 				if (failedValidation.Any())
 					return new(failedValidation);
 			}

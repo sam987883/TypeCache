@@ -8,7 +8,8 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Tables;
 using static System.Math;
-using static TypeCache.Default;
+
+const string DATASOURCE = "Default";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services

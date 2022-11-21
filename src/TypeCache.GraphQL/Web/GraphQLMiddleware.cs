@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;
 using static System.FormattableString;
@@ -88,8 +88,8 @@ public sealed class GraphQLMiddleware
 
 		if (error is not null)
 		{
-			result.Extensions["ErrorMessage"] = error.Message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).EachTrim();
+			result.Extensions["ErrorMessage"] = error.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(_ => _.Trim());
 		}
 
 		httpContext.Response.ContentType = Application.Json;

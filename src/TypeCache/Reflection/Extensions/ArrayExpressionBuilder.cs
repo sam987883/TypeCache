@@ -1,8 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.Reflection.Extensions;
 
@@ -24,10 +25,10 @@ public readonly struct ArrayExpressionBuilder
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[]?)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Map(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public IndexExpression this[params int[] indexes]
-		=> Expression.ArrayAccess(this._Expression, indexes.Map(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayAccess(this._Expression, (IEnumerable<Expression>)indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[]?)"/>
 	/// <remarks>
@@ -38,10 +39,10 @@ public readonly struct ArrayExpressionBuilder
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[]?)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Map(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public IndexExpression this[params long[] indexes]
-		=> Expression.ArrayAccess(this._Expression, indexes.Map(index => (Expression)Expression.Constant(index)));
+		=> Expression.ArrayAccess(this._Expression, (IEnumerable<Expression>)indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[]?)"/>
 	/// <remarks>

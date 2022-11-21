@@ -2,7 +2,7 @@
 
 using System;
 using GraphQL.Types;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -17,6 +17,6 @@ public sealed class GraphQLUnionType : UnionGraphType
 			throw new ArgumentOutOfRangeException(nameof(GraphQLUnionType), $"2 or more types are required.");
 
 		var graphObjectType = typeof(GraphQLObjectType<>);
-		types.Do(type => this.Type(graphObjectType.MakeGenericType(type)));
+		types.ForEach(type => this.Type(graphObjectType.MakeGenericType(type)));
 	}
 }

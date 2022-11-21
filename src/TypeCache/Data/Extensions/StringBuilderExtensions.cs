@@ -1,12 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Primitives;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
@@ -33,9 +30,9 @@ public static class StringBuilderExtensions
 
 	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, T[] input, StringValues columns)
 	{ 
-		var values = input.Map(row => Invariant($"({columns.Map(column => (TypeOf<T>.Properties.If(_ => _.Name.Is(column)).First()?.GetValue(row!)).ToSQL()).ToCSV()})"));
+		var values = input.Select(row => Invariant($"({columns.Select<string, string>(column => (TypeOf<T>.Properties.Where(_ => _.Name.Is(column)).First()?.GetValue(row!)).ToSQL()).ToCSV()})")).ToArray();
 		@this.Append("VALUES ");
-		values.Do(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
+		values.ForEach(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
 		return @this.AppendLine();
 	}
 }

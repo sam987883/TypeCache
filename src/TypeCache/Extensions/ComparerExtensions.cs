@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static TypeCache.Default;
 
-namespace TypeCache.Collections.Extensions;
+namespace TypeCache.Extensions;
 
 public static class ComparerExtensions
 {

@@ -5,66 +5,24 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using TypeCache.Collections;
 using TypeCache.Extensions;
 using static TypeCache.Default;
 
-namespace TypeCache.Collections.Extensions;
+namespace TypeCache.Extensions;
 
 public static class ArrayExtensions
 {
-	/// <inheritdoc cref="Task.WhenAll(Task[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static async Task AllAsync<T>(this Task[] @this)
-		=> await Task.WhenAll(@this);
-
-	/// <inheritdoc cref="Task.WhenAll{TResult}(Task{TResult}[])"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Any()
-	/// ? <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>)
-	/// : <see langword="await"/> <see cref="Task"/>.FromResult(<see cref="Array{T}.Empty"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static async Task<T[]> AllAsync<T>(this Task<T>[]? @this)
-		=> @this.Any() ? await Task.WhenAll(@this) : await Task.FromResult(Array<T>.Empty);
-
-	/// <inheritdoc cref="Task.WhenAny(Task[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static async Task AnyAsync<T>(this Task[] @this)
-		=> await Task.WhenAny(@this);
-
-	/// <inheritdoc cref="Task.WhenAny{TResult}(Task{TResult}[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static async Task<Task<T>> AnyAsync<T>(this Task<T>[] @this)
-		=> await Task.WhenAny(@this);
-
-	/// <inheritdoc cref="Task.WhenAny{TResult}(Task{TResult}[])"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="IEnumerable{T}"/>;</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static IEnumerable<T> AsEnumerable<T>([NotNullIfNotNull("this")] this T[] @this)
-		=> @this as IEnumerable<T>;
-
 	/// <inheritdoc cref="Array.Clear(Array, int, int)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Array"/>.Clear(@<paramref name="this"/>, <paramref name="start"/>, <paramref name="length"/> == 0
-	/// ? @<paramref name="this"/>.Length
-	/// : <paramref name="length"/>);</c>
+	/// <c>=&gt; <see cref="Array"/>.Clear(@<paramref name="this"/>, <paramref name="start"/>, <paramref name="length"/> == 0 ? @<paramref name="this"/>.Length : <paramref name="length"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
@@ -114,6 +72,48 @@ public static class ArrayExtensions
 			yield return (tuple.A[i], tuple.B[i], tuple.C[i]);
 	}
 
+	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Array"/>.ForEach(@<paramref name="this"/>, action);</c>
+	/// </remarks>
+	public static void ForEach<T>(this T[] @this, Action<T> action)
+		=> Array.ForEach(@this, action);
+
+	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
+	/// <remarks>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="between"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    var"/> first = <see langword="true"/>;<br/>
+	/// <see langword="    "/><see cref="Array"/>.ForEach(@<paramref name="this"/>, value =&gt;<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (first)<br/>
+	/// <see langword="            "/>first = <see langword="false"/>;<br/>
+	/// <see langword="        else"/><br/>
+	/// <see langword="            "/>between();<br/>
+	/// <br/>
+	/// <see langword="        "/><paramref name="action"/>(value);<br/>
+	/// <see langword="    "/>});<br/>
+	/// }
+	/// </code>
+	/// </remarks>
+	public static void ForEach<T>(this T[] @this, Action<T> action, Action between)
+	{
+		between.AssertNotNull();
+
+		var first = true;
+		Array.ForEach(@this, value =>
+		{
+			if (first)
+				first = false;
+			else
+				between();
+
+			action(value);
+		});
+	}
+
 	/// <summary>
 	/// <code>
 	/// {<br/>
@@ -127,7 +127,7 @@ public static class ArrayExtensions
 	/// </summary>
 	/// <remarks>Can modify the items in the array.</remarks>
 	/// <exception cref="ArgumentNullException"/>
-	public static void Do<T>(this T[]? @this, ActionRef<T> action)
+	public static void ForEach<T>(this T[]? @this, ActionRef<T> action)
 	{
 		action.AssertNotNull();
 
@@ -152,7 +152,7 @@ public static class ArrayExtensions
 	/// index = 0 restarts the loop, --index repeats the current item and ++index skips the next item.
 	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
-	public static void Do<T>(this T[]? @this, ActionRef<T, int> action)
+	public static void ForEach<T>(this T[]? @this, ActionRef<T, int> action)
 	{
 		action.AssertNotNull();
 
@@ -161,83 +161,75 @@ public static class ArrayExtensions
 			action(ref @this![i], ref i);
 	}
 
+	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
 	/// <remarks>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    "/><paramref name="edit"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>.IsEmpty)<br/>
-	/// <see langword="        yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/><paramref name="each"/>(@<paramref name="this"/>[i]);<br/>
+	/// <see langword="    var"/> i = -1;<br/>
+	/// <see langword="    "/><see cref="Array"/>.ForEach(@<paramref name="this"/>, value =&gt; <paramref name="action"/>(value, ++i));
 	/// }
 	/// </code>
 	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<T> Each<T>(this T[]? @this, Func<T, T> edit)
+	public static void ForEach<T>(this T[] @this, Action<T, int> action)
 	{
-		edit.AssertNotNull();
+		var i = -1;
+		Array.ForEach(@this, value => action(value, ++i));
+	}
 
-		if (@this is null)
-			yield break;
+	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
+	/// <remarks>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><paramref name="between"/>.AssertNotNull();<br/>
+	/// <br/>
+	/// <see langword="    var"/> i = -1;<br/>
+	/// <see langword="    "/><see cref="Array"/>.ForEach(@<paramref name="this"/>, value =&gt;<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        if"/> (++i > 0)<br/>
+	/// <see langword="            "/>between();<br/>
+	/// <br/>
+	/// <see langword="        "/><paramref name="action"/>(value, i);<br/>
+	/// <see langword="    "/>});<br/>
+	/// }
+	/// </code>
+	/// </remarks>
+	public static void ForEach<T>(this T[] @this, Action<T, int> action, Action between)
+	{
+		between.AssertNotNull();
 
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			yield return edit(@this[i]);
+		var i = -1;
+		Array.ForEach(@this, value =>
+		{
+			if (++i > 0)
+				between();
+
+			action(value, i);
+		});
 	}
 
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    "/><paramref name="edit"/>.AssertNotNull();<br/>
+	/// <see langword="    "/><paramref name="range"/> = <paramref name="range"/>.Normalize(@<paramref name="this"/>.Length);<br/>
+	/// <see langword="    if"/> (<paramref name="range"/>.Any() <see langword="is not true"/>)<br/>
+	/// <see langword="        return"/> <see cref="Array{T}.Empty"/>;<br/>
 	/// <br/>
-	/// <see langword="    if"/> (@<paramref name="this"/> <see langword="is null"/>)<br/>
-	/// <see langword="        yield break"/>;<br/>
+	/// <see langword="    var"/> reverse = <paramref name="range"/>.IsReverse() <see langword="is true"/>;<br/>
+	/// <see langword="    if"/> (reverse)<br/>
+	/// <see langword="        "/><paramref name="range"/> = <paramref name="range"/>.Reverse();<br/>
 	/// <br/>
-	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="        "/><paramref name="each"/>(@<paramref name="this"/>[i], i);<br/>
+	/// <see langword="    var"/> span = @<paramref name="this"/>.AsSpan(<paramref name="range"/>);<br/>
+	/// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[span.Length];<br/>
+	/// <see langword="    var"/> copySpan = copy.AsSpan();<br/>
+	/// <see langword="    "/>span.CopyTo(copySpan);<br/>
+	/// <see langword="    if"/> (reverse)<br/>
+	/// <see langword="        "/>copySpan.Reverse();<br/>
+	/// <br/>
+	/// <see langword="    return"/> copy;<br/>
 	/// }
 	/// </code>
 	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<T> Each<T>(this T[]? @this, Func<T, int, T> edit)
-	{
-		edit.AssertNotNull();
-
-		if (@this is null)
-			yield break;
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			yield return edit(@this[i], i);
-	}
-
-    /// <summary>
-    /// <code>
-    /// {<br/>
-    /// <see langword="    "/><paramref name="range"/> = <paramref name="range"/>.Normalize(@<paramref name="this"/>.Length);<br/>
-    /// <see langword="    if"/> (<paramref name="range"/>.Any() <see langword="is not true"/>)<br/>
-    /// <see langword="        return"/> <see cref="Array{T}.Empty"/>;<br/>
-    /// <br/>
-    /// <see langword="    var"/> reverse = <paramref name="range"/>.IsReverse() <see langword="is true"/>;<br/>
-    /// <see langword="    if"/> (reverse)<br/>
-    /// <see langword="        "/><paramref name="range"/> = <paramref name="range"/>.Reverse();<br/>
-    /// <br/>
-    /// <see langword="    var"/> span = @<paramref name="this"/>.AsSpan(<paramref name="range"/>);<br/>
-    /// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[span.Length];<br/>
-    /// <see langword="    var"/> copySpan = copy.AsSpan();<br/>
-    /// <see langword="    "/>span.CopyTo(copySpan);<br/>
-    /// <see langword="    if"/> (reverse)<br/>
-    /// <see langword="        "/>copySpan.Reverse();<br/>
-    /// <br/>
-    /// <see langword="    return"/> copy;<br/>
-    /// }
-    /// </code>
-    /// </summary>
-    public static IEnumerable<T> Get<T>(this T[] @this, Range range)
+	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
 		range = range.Normalize(@this.Length);
 		if (range.Any() is not true)
@@ -257,21 +249,21 @@ public static class ArrayExtensions
 		return copy;
 	}
 
-    /// <summary>
-    /// <code>
-    /// {<br/>
-    /// <see langword="    "/><see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
-    /// <see langword="        return"/> <see cref="Array{T}.Empty"/><br/>
-    /// <br/>
-    /// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[@<paramref name="this"/>.Length];<br/>
-    /// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(copy);<br/>
-    /// <see langword="    return"/> copy;<br/>
-    /// }
-    /// </code>
-    /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
-    public static T[] GetCopy<T>(this T[] @this)
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    "/><see langword="if"/> (!@<paramref name="this"/>.Any())<br/>
+	/// <see langword="        return"/> <see cref="Array{T}.Empty"/><br/>
+	/// <br/>
+	/// <see langword="    var"/> copy = <see langword="new"/> <typeparamref name="T"/>[@<paramref name="this"/>.Length];<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(copy);<br/>
+	/// <see langword="    return"/> copy;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	public static T[] GetCopy<T>(this T[] @this)
 	{
 		if (!@this.Any())
 			return Array<T>.Empty;
@@ -279,117 +271,6 @@ public static class ArrayExtensions
 		var copy = new T[@this.Length];
 		@this.AsSpan().CopyTo(copy);
 		return copy;
-	}
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="        yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
-	/// <see langword="        if "/>(<paramref name="filter"/>(item))<br/>
-	/// <see langword="            yield return"/> item;<br/>
-	/// <see langword="    "/>}<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IEnumerable<T> If<T>(this T[]? @this, Predicate<T> filter)
-	{
-		filter.AssertNotNull();
-
-		if (!@this.Any())
-			yield break;
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-		{
-			var item = @this[i];
-			if (filter(item))
-				yield return item;
-		}
-	}
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="        yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
-	/// <see langword="        if "/>(<see langword="await"/> <paramref name="filter"/>(item))<br/>
-	/// <see langword="            yield return"/> item;<br/>
-	/// <see langword="    "/>}<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, Func<T, Task<bool>> filter, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		filter.AssertNotNull();
-
-		if (!@this.Any())
-			yield break;
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-		{
-			if (token.IsCancellationRequested)
-				yield break;
-
-			var item = @this[i];
-			if (await filter(item))
-				yield return item;
-		}
-	}
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="filter"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="        yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="    var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        var"/> item = @<paramref name="this"/>[i];<br/>
-	/// <see langword="        if "/>(<see langword="await"/> <paramref name="filter"/>(item, <paramref name="token"/>))<br/>
-	/// <see langword="            yield return"/> item;<br/>
-	/// <see langword="    "/>}<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static async IAsyncEnumerable<T> IfAsync<T>(this T[]? @this, Func<T, CancellationToken, Task<bool>> filter, [EnumeratorCancellation] CancellationToken token = default)
-	{
-		filter.AssertNotNull();
-
-		if (!@this.Any())
-			yield break;
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-		{
-			if (token.IsCancellationRequested)
-				yield break;
-
-			var item = @this[i];
-			if (await filter(item, token))
-				yield return item;
-		}
 	}
 
 	/// <inheritdoc cref="Parallel.Invoke(Action[])"/>
@@ -414,60 +295,6 @@ public static class ArrayExtensions
 	/// <exception cref="IndexOutOfRangeException"/>
 	public static int Length<T>(this T[,] @this, int dimension)
 		=> @this.GetUpperBound(dimension) - @this.GetLowerBound(dimension);
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="map"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="        return"/> Array&lt;<typeparamref name="V"/>&gt;.Empty;<br/>
-	/// <br/>
-	/// <see langword="    var"/> array = <see langword="new"/> <typeparamref name="V"/>[@<paramref name="this"/>.Length];<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.Do((item, i) =&gt; array[i] = <paramref name="map"/>(item));<br/>
-	/// <see langword="    return"/> array;<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static V[] Map<T, V>(this T[]? @this, Func<T, V> map)
-	{
-		map.AssertNotNull();
-
-		if (!@this.Any())
-			return Array<V>.Empty;
-
-		var array = new V[@this.Length];
-		@this.Do((item, i) => array[i] = map(item));
-		return array;
-	}
-
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="map"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!@<paramref name="this"/>.Any())<br/>
-	/// <see langword="        return"/> Array&lt;<typeparamref name="V"/>&gt;.Empty;<br/>
-	/// <br/>
-	/// <see langword="    var"/> array = <see langword="new"/> <typeparamref name="V"/>[@<paramref name="this"/>.Length];<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.Do((item, i) =&gt; array[i] = <paramref name="map"/>(item, i));<br/>
-	/// <see langword="    return"/> array;<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static V[] Map<T, V>(this T[]? @this, Func<T, int, V> map)
-	{
-		map.AssertNotNull();
-
-		if (!@this.Any())
-			return Array<V>.Empty;
-
-		var array = new V[@this.Length];
-		@this.Do((item, i) => array[i] = map(item, i));
-		return array;
-	}
 
 	/// <inheritdoc cref="Array.Reverse{T}(T[])"/>
 	/// <remarks>
@@ -540,7 +367,7 @@ public static class ArrayExtensions
 		if (sourceIndex + length > @this.Length)
 			throw new IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");
 
-		var array = new T[length > 0 ? length : (@this.Length - sourceIndex)];
+		var array = new T[length > 0 ? length : @this.Length - sourceIndex];
 		Array.Copy(@this, sourceIndex, array, 0, array.Length);
 		return array;
 	}
@@ -589,7 +416,7 @@ public static class ArrayExtensions
 		const string HEX_CHARS = "0123456789ABCDEF";
 
 		Span<char> chars = stackalloc char[@this.Length * sizeof(char)];
-		var bytes = @this.ToReadOnlySpan();
+		var bytes = @this.AsSpan().AsReadOnly();
 		for (var i = 0; i < bytes.Length; ++i)
 		{
 			var c = i * 2;
@@ -712,35 +539,85 @@ public static class ArrayExtensions
 	public static ulong ToUInt64(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt64(@this, startIndex);
 
-	/// <inheritdoc cref="Task.WaitAll(Task[], CancellationToken)"/>
+	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAll(@<paramref name="this"/>, <paramref name="token"/>);</c>
+	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static void WaitForAll<T>(this Task[] @this, CancellationToken token = default)
-		=> Task.WaitAll(@this, token);
-
-	/// <inheritdoc cref="Task.WaitAll(Task[], int, CancellationToken)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAll(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static void WaitForAll<T>(this Task[] @this, TimeSpan timeout, CancellationToken token = default)
-		=> Task.WaitAll(@this, (int)timeout.TotalMilliseconds, token);
+	public static void WaitAny<T>(this Task[] @this)
+		=> Task.WaitAny(@this);
 
 	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, <paramref name="token"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static void WaitForAny<T>(this Task[] @this, CancellationToken token = default)
+	public static void WaitAny<T>(this Task[] @this, CancellationToken token)
 		=> Task.WaitAny(@this, token);
 
 	/// <inheritdoc cref="Task.WaitAny(Task[], int, CancellationToken)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, <paramref name="milliseconds"/>, <paramref name="token"/>);</c>
+	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static void WaitForAny<T>(this Task[] @this, int milliseconds, CancellationToken token = default)
-		=> Task.WaitAny(@this, milliseconds, token);
+	public static void WaitAny<T>(this Task[] @this, TimeSpan timeout, CancellationToken token)
+		=> Task.WaitAny(@this, (int)timeout.TotalMilliseconds, token);
+
+	/// <inheritdoc cref="Task.WaitAll(Task[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static void WaitAll(this Task[] @this)
+		=> Task.WaitAll(@this);
+
+	/// <inheritdoc cref="Task.WaitAll(Task[], CancellationToken)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>, <paramref name="token"/>);</c>
+	/// </remarks>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static void WaitAll(this Task[] @this, CancellationToken token)
+		=> Task.WaitAll(@this, token);
+
+	/// <inheritdoc cref="Task.WaitAll(Task[], CancellationToken)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
+	/// </remarks>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static void WaitAll(this Task[] @this, TimeSpan timeout, CancellationToken token)
+		=> Task.WaitAll(@this, (int)timeout.TotalMilliseconds, token);
+
+	/// <inheritdoc cref="Task.WhenAll(Task[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static async Task WhenAllAsync<T>(this Task[] @this)
+		=> await Task.WhenAll(@this);
+
+	/// <inheritdoc cref="Task.WhenAll{TResult}(Task{TResult}[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static async Task<T[]> WhenAllAsync<T>(this Task<T>[] @this)
+		=> await Task.WhenAll(@this);
+
+	/// <inheritdoc cref="Task.WhenAny(Task[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static async Task WhenAnyAsync<T>(this Task[] @this)
+		=> await Task.WhenAny(@this);
+
+	/// <inheritdoc cref="Task.WhenAny{TResult}(Task{TResult}[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static async Task<Task<T>> WhenAnyAsync<T>(this Task<T>[] @this)
+		=> await Task.WhenAny(@this);
 }

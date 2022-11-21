@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using TypeCache.Web.Requirements;
 
@@ -25,18 +25,20 @@ public class RequireClaimAttribute : AuthorizeAttribute
 		claims.AssertNotEmpty();
 
 		this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
-		claims.Do(claim =>
+		claims?.ForEach(claim =>
 		{
-			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.CountOf(separator) > 1).AssertEquals(false);
+			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.Count(c => c.Equals(separator)) > 1).AssertEquals(false);
 
 			if (claim.Contains(separator))
 			{
 				(string? key, string? value, IEnumerable<string> _) = claim.Split(separator);
-
-				if (this.Claims.Get(key!).IfFirst(out var values))
-					this.Claims[key!] = values.Append(value).ToArray()!;
-				else
-					this.Claims.Add(key!, new[] { value! });
+				if (key.IsNotBlank())
+				{
+					if (this.Claims.TryGetValue(key, out var values))
+						this.Claims[key!] = values.Append(value).ToArray()!;
+					else
+						this.Claims.Add(key!, new[] { value! });
+				}
 			}
 			else
 				this.Claims.Add(claim, Array<string>.Empty);

@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Reflection.Extensions;
 using TypeCache.Web.Attributes;
 using TypeCache.Web.Extensions;
@@ -19,8 +19,9 @@ public class ClaimAuthorizationHandler : AuthorizationHandler<ClaimAuthorization
 		{
 			var type = controller.ControllerTypeInfo.GetTypeMember();
 			var method = type.GetMethod(controller.MethodInfo.MethodHandle)!;
-			var success = type.Attributes.If<RequireClaimAttribute>()
-				.Append(method.Attributes.If<RequireClaimAttribute>())
+			var success = type.Attributes
+				.OfType<RequireClaimAttribute>()
+				.Union(method.Attributes.OfType<RequireClaimAttribute>())
 				.All(attribute => attribute!.Claims.Any(pair => context.User.Any(pair.Key, pair.Value)));
 
 			if (success)

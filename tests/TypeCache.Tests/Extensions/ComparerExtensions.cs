@@ -2,10 +2,10 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Collections.Extensions;
+namespace TypeCache.Tests.Extensions;
 
 public class ComparerExtensions
 {

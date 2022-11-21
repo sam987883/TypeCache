@@ -3,8 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
+using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
@@ -88,11 +89,11 @@ public static class ValueExtensions
 
 	/// <inheritdoc cref="decimal.GetBits(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).Map(i => i.ToBytes()).Gather().ToArray();</c>
+	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.ToBytes()).ToArray();</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
-		=> decimal.GetBits(@this).Map(i => i.ToBytes()).Gather().ToArray();
+		=> decimal.GetBits(@this).SelectMany(i => i.ToBytes()).ToArray();
 
 	/// <inheritdoc cref="BitConverter.GetBytes(double)"/>
 	/// <remarks>

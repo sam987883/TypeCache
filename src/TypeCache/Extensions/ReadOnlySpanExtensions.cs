@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Reflection;
 using static TypeCache.Default;
 using Unsafe = TypeCache.Reflection.Unsafe;
@@ -139,7 +139,7 @@ public static class ReadOnlySpanExtensions
 	/// <see langword="if"/> (!<paramref name="values"/>.Any())<br/>
 	/// <see langword="    return"/> <see cref="string.Empty"/>;<br/>
 	/// <br/>
-	/// <see langword="var"/> totalLength = (<see cref="int"/>)<paramref name="values"/>.Map(value =&gt; value.Length).Sum() + @<paramref name="this"/>.Length * (<paramref name="values"/>.Count() - 1);<br/>
+	/// <see langword="var"/> totalLength = (<see cref="int"/>)<paramref name="values"/>.Select(value =&gt; value.Length).Sum() + @<paramref name="this"/>.Length * (<paramref name="values"/>.Count() - 1);<br/>
 	/// Span&lt;<see cref="char"/>&gt; result = <see langword="stackalloc"/> <see cref="char"/>[totalLength];<br/>
 	/// <br/>
 	/// <see langword="var"/> offset = 0;<br/>
@@ -165,7 +165,7 @@ public static class ReadOnlySpanExtensions
 		if (!values.Any())
 			return string.Empty;
 
-		var totalLength = (int)values.Map(value => value.Length).Sum() + @this.Length * (values.Count() - 1);
+		var totalLength = (int)values.Select(value => value.Length).Sum() + @this.Length * (values.Count() - 1);
 		Span<char> result = stackalloc char[totalLength];
 
 		var offset = 0;

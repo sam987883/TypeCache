@@ -3,9 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
@@ -37,12 +37,12 @@ public static class EnumExtensions
 		=> EnumOf<T>.Member[@this]?.Hex ?? @this.ToString("X");
 
 	/// <summary>
-	/// <c>=&gt; <paramref name="tokens"/>.Has(@<paramref name="this"/>, <see cref="EnumOf{T}.Comparer"/>);</c>
+	/// <c>=&gt; <paramref name="tokens"/>.Any(token =&gt; <see cref="EnumOf{T}.Comparer"/>.EqualTo(@<paramref name="this"/>, token));</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool IsAny<T>(this T @this, params T[] tokens)
 		where T : struct, Enum
-		=> tokens.Has(@this, EnumOf<T>.Comparer);
+		=> tokens.Any(token => EnumOf<T>.Comparer.EqualTo(@this, token));
 
 	/// <summary>
 	/// <c>=&gt; <see cref="EnumOf{T}"/>.IsDefined(@<paramref name="this"/>);</c>

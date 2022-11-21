@@ -2,9 +2,9 @@
 
 using System;
 using System.Data;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 using static System.FormattableString;
 
@@ -60,11 +60,12 @@ public sealed class DataSetJsonConverter : JsonConverter<DataSet>
 		if (dataSet.DataSetName.IsNotBlank())
 			writer.WriteString(nameof(dataSet.DataSetName), dataSet.DataSetName);
 
-		dataSet.Tables.If<DataTable>().Do((table, i) =>
+		var i = -1;
+		foreach (var table in dataSet.Tables.OfType<DataTable>())
 		{
-			writer.WritePropertyName(table.TableName.IsNotBlank() ? table.TableName : Invariant($"Table{i + 1}"));
+			writer.WritePropertyName(table.TableName.IsNotBlank() ? table.TableName : Invariant($"Table{++i + 1}"));
 			JsonSerializer.Serialize(writer, table, options);
-		});
+		}
 
 		writer.WriteEndObject();
 	}

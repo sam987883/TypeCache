@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
@@ -45,7 +45,7 @@ public static class GraphQLExtensions
 		var end = start + items.Length;
 		var connection = new Connection<T>
 		{
-			Edges = items.Map((item, i) => new Edge<T>
+			Edges = items.Select((item, i) => new Edge<T>
 			{
 				Cursor = (start + i).ToString(),
 				Node = item
@@ -207,8 +207,8 @@ public static class GraphQLExtensions
 
 	public static IEnumerable<OrderBy> ToOrderBy(this string[] @this)
 	{
-		var ascending = @this.Map(column => new OrderBy(column, Sort.Ascending));
-		var descending = @this.Map(column => new OrderBy(column, Sort.Descending));
+		var ascending = @this.Select(column => new OrderBy(column, Sort.Ascending));
+		var descending = @this.Select(column => new OrderBy(column, Sort.Descending));
 		var tokens = ascending.Union(descending).ToArray();
 		tokens.Sort(new CustomComparer<OrderBy>((orderBy1, orderBy2) => StringComparer.Ordinal.Compare(orderBy1.Display, orderBy2.Display)));
 		return tokens;
@@ -216,8 +216,8 @@ public static class GraphQLExtensions
 
 	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
 		=> new QueryArguments(@this
-			.If(parameter => !parameter.GraphQLIgnore() && !parameter.Type.TypeHandle.Is<IResolveFieldContext>())
-			.Map(parameter => new QueryArgument(parameter.GraphQLType())
+			.Where(parameter => !parameter.GraphQLIgnore() && !parameter.Type.TypeHandle.Is<IResolveFieldContext>())
+			.Select(parameter => new QueryArgument(parameter.GraphQLType())
 			{
 				Name = parameter.GraphQLName(),
 				Description = parameter.GraphQLDescription(),

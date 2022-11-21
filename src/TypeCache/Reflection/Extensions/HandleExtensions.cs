@@ -2,9 +2,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions;

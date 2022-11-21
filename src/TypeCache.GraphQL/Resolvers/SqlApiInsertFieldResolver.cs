@@ -2,13 +2,14 @@
 
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Business;
 using TypeCache.Collections;
-using TypeCache.Collections.Extensions;
 using TypeCache.Data;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using static System.FormattableString;
@@ -25,8 +26,8 @@ public class SqlApiInsertFieldResolver : FieldResolver<OutputResponse<DataRow>>
 		var selections = context.GetSelections().ToArray();
 		var select = context.GetArgument<string[]>(nameof(SelectQuery.Select));
 		var output = selections
-			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}")))
-			.Each(column => objectSchema.DataSource.Type switch
+			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}"))))
+			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
 				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
@@ -42,17 +43,18 @@ public class SqlApiInsertFieldResolver : FieldResolver<OutputResponse<DataRow>>
 				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
 				Select = objectSchema.Columns
-					.If(column => select.AnyRight(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}")))
-					.Map(column => column.Name),
+					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
+					.Select(column => column.Name)
+					.ToArray(),
 				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
 				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
@@ -81,8 +83,8 @@ public class SqlApiInsertFieldResolver<T> : FieldResolver<OutputResponse<T>>
 		var selections = context.GetSelections().ToArray();
 		var select = context.GetArgument<string[]>(nameof(SelectQuery.Select));
 		var output = selections
-			.If(column => selections.AnyLeft(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}")))
-			.Each(column => objectSchema.DataSource.Type switch
+			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}"))))
+			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
 				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
@@ -98,17 +100,18 @@ public class SqlApiInsertFieldResolver<T> : FieldResolver<OutputResponse<T>>
 				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Map(_ => _.ToString()),
+				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
 				Select = objectSchema.Columns
-					.If(column => select.AnyRight(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}")))
-					.Map(column => column.Name),
+					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
+					.Select(column => column.Name)
+					.ToArray(),
 				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
 				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		context.GetArgument<Parameter[]>("parameters")?.Do(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
+		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = (IList<T>)Array<T>.Empty;
 		if (output.Any())

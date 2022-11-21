@@ -1,17 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using GraphQL.Types;
-using GraphQLParser.AST;
-using TypeCache.Collections.Extensions;
-using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.SqlApi;
-using TypeCache.Reflection;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -20,26 +14,27 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 {
 	public GraphQLEnumType()
 	{
-		this.Name = EnumOf<T>.Attributes.First<GraphQLNameAttribute>()?.Name ?? EnumOf<T>.Name;
-		this.Description = EnumOf<T>.Attributes.First<GraphQLDescriptionAttribute>()?.Description;
-		this.DeprecationReason = EnumOf<T>.Attributes.First<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
+		this.Name = EnumOf<T>.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? EnumOf<T>.Name;
+		this.Description = EnumOf<T>.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description;
+		this.DeprecationReason = EnumOf<T>.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
-		var changeEnumCase = new Func<string, string>(_ => _);
-		if (EnumOf<T>.Attributes.IfFirst<ConstantCaseAttribute>(out var constantCaseAttribute))
-			changeEnumCase = constantCaseAttribute.ChangeEnumCase;
-		else if (EnumOf<T>.Attributes.IfFirst<CamelCaseAttribute>(out var camelCaseAttribute))
-			changeEnumCase = camelCaseAttribute.ChangeEnumCase;
-		else if (EnumOf<T>.Attributes.IfFirst<PascalCaseAttribute>(out var pascalCaseAttribute))
-			changeEnumCase = pascalCaseAttribute.ChangeEnumCase;
+		var changeEnumCase = EnumOf<T>.Attributes switch
+		{
+			var attributes when attributes.OfType<ConstantCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			var attributes when attributes.OfType<CamelCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			var attributes when attributes.OfType<PascalCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			_ => new Func<string, string>(_ => _)
+		};
 
 		EnumOf<T>.Tokens
-			.If(token => !token.GraphQLIgnore())
-			.Map(token => new EnumValueDefinition(token.Attributes.First<GraphQLNameAttribute>()?.Name ?? changeEnumCase(token.Name), token.Value)
+			.Where(token => !token.GraphQLIgnore())
+			.Select(token => new EnumValueDefinition(token.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(token.Name), token.Value)
 			{
 				Description = token.GraphQLDescription(),
 				DeprecationReason = token.GraphQLDeprecationReason()
 			})
-			.Do(this.Add);
+			.ToArray()
+			.ForEach(this.Add);
 	}
 
 	/// <inheritdoc/>
@@ -53,26 +48,9 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 
 	/// <inheritdoc/>
 	public override object? ParseValue(object? value)
-		=> value switch
-		{
-			null => null,
-			Enum token => token,
-			sbyte number => Enum.ToObject(typeof(T), number),
-			byte number => Enum.ToObject(typeof(T), number),
-			short number => Enum.ToObject(typeof(T), number),
-			ushort number => Enum.ToObject(typeof(T), number),
-			int number => Enum.ToObject(typeof(T), number),
-			uint number => Enum.ToObject(typeof(T), number),
-			long number => Enum.ToObject(typeof(T), number),
-			ulong number => Enum.ToObject(typeof(T), number),
-			_ => Enum.ToObject(typeof(T), value)
-		};
+		=> value is not null ? Enum.ToObject(typeof(T), value) : null;
 
 	/// <inheritdoc/>
 	public override object? Serialize(object? value)
-		=> this.ParseValue(value) switch
-		{
-			T token => token.ToString("G"),
-			_ => null
-		};
+		=> this.ParseValue(value);
 }

@@ -2,9 +2,9 @@
 
 using System;
 using System.Data;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using TypeCache.Collections.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Converters;
@@ -22,12 +22,12 @@ public sealed class DataViewJsonConverter : JsonConverter<DataView>
 			return;
 		}
 
-		var columns = view.Table.Columns.If<DataColumn>().Map(column => column.ColumnName);
 		writer.WriteStartArray();
-		view.If<DataRowView>().Do(row =>
+		var columns = view.Table.Columns.OfType<DataColumn>().Select(column => column.ColumnName).ToArray();
+		foreach (var row in view.OfType<DataRowView>())
 		{
 			writer.WriteStartObject();
-			columns.Do(column =>
+			columns.ForEach(column =>
 			{
 				var value = row[column];
 				if (value is DBNull || value is null)
@@ -39,7 +39,8 @@ public sealed class DataViewJsonConverter : JsonConverter<DataView>
 				}
 			});
 			writer.WriteEndObject();
-		});
+		}
+
 		writer.WriteEndArray();
 	}
 }
