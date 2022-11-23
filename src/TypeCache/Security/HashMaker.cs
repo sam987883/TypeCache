@@ -53,7 +53,7 @@ public class HashMaker : IHashMaker
 
 	public string Encrypt(long id)
 	{
-		var chars = this.Encrypt(id.ToBytes()).ToBase64Chars().AsSpan().Replace('+', '-').Replace('/', '_');
+		var chars = this.Encrypt(id.GetBytes()).ToBase64Chars().AsSpan().Replace('+', '-').Replace('/', '_');
 		return new string(chars.Slice(0, chars.Length - 2).ToArray());
 	}
 

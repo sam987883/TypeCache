@@ -193,8 +193,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <c>=&gt; <see langword="this"/>.Methods<br/>
 	/// <see langword="    "/>.Where(method =&gt; method.Static == <paramref name="isStatic"/> &amp;&amp; method.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>))<br/>
 	/// <see langword="    "/>.Select(method =&gt; method.Method)<br/>
-	/// <see langword="    "/>.OfType&lt;<typeparamref name="D"/>&gt;()<br/>
-	/// <see langword="    "/>.FirstOrDefault();</c>
+	/// <see langword="    "/>.FirstOrDefault&lt;<typeparamref name="D"/>&gt();</c>
 	/// </summary>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public D? GetMethod<D>(string name, bool isStatic = false, StringComparison comparison = StringComparison.Ordinal)
@@ -202,8 +201,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		=> this.Methods
 			.Where(method => method.Static == isStatic && method.Name.Is(name, comparison))
 			.Select(method => method!.Method)
-			.OfType<D>()
-			.FirstOrDefault();
+			.FirstOrDefault<D>();
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Handle == <paramref name="handle"/>);</c>

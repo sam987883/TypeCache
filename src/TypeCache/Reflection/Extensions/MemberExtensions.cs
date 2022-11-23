@@ -193,7 +193,7 @@ public static class MemberExtensions
 	/// &amp;&amp; @<paramref name="this"/>.GenericTypes.FirstOrDefault()!.Implements&lt;<see cref="IConvertible"/>&gt;());</c>
 	/// </summary>
 	public static bool IsConvertible(this TypeMember @this)
-		=> @this.Implements<IConvertible>() || (@this.SystemType is SystemType.Nullable && @this.GenericTypes.First()!.Implements<IConvertible>());
+		=> @this.Implements<IConvertible>() || (@this.SystemType is SystemType.Nullable && @this.GenericTypes.First().Implements<IConvertible>());
 
 	/// <summary>
 	/// <c>=&gt; ((<see cref="Type"/>)@<paramref name="this"/>).IsSubclassOf((<see cref="Type"/>)<paramref name="typeMember"/>);</c>

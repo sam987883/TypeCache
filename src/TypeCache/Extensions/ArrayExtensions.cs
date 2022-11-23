@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -387,30 +386,6 @@ public static class ArrayExtensions
 	public static char[] ToBase64Chars(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> ((ReadOnlySpan<byte>)@this).ToBase64Chars(options);
 
-	/// <inheritdoc cref="BitConverter.ToBoolean(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToBoolean(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool ToBoolean(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToBoolean(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToChar(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToChar(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static char ToChar(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToChar(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToDouble(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToDouble(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static double ToDouble(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToDouble(@this, startIndex);
-
 	public static string ToHex(this byte[] @this)
 	{
 		const string HEX_CHARS = "0123456789ABCDEF";
@@ -444,60 +419,12 @@ public static class ArrayExtensions
 		where T : notnull
 		=> ImmutableStack.Create(@this ?? Array<T>.Empty);
 
-	/// <inheritdoc cref="BitConverter.ToInt16(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToInt16(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static short ToInt16(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToInt16(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToInt32(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToInt32(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static int ToInt32(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToInt32(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToInt64(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToInt64(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static long ToInt64(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToInt64(@this, startIndex);
-
 	/// <remarks>
 	/// <c>=&gt; <see cref="JsonSerializer"/>.SerializeToNode(@<paramref name="this"/>, <paramref name="options"/>) <see langword="as"/> <see cref="JsonArray"/>;</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
-
-	/// <inheritdoc cref="BitConverter.ToSingle(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToSingle(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static float ToSingle(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToSingle(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToString(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static string ToText(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToString(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToString(byte[], int, int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>, <paramref name="startIndex"/>, <paramref name="length"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static string ToText(this byte[] @this, int startIndex, int length)
-		=> BitConverter.ToString(@this, startIndex, length);
 
 	/// <inheritdoc cref="Encoding.GetString(byte[])"/>
 	/// <remarks>
@@ -514,30 +441,6 @@ public static class ArrayExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string ToText(this byte[] @this, Encoding encoding, int index, int count)
 		=> encoding.GetString(@this, index, count);
-
-	/// <inheritdoc cref="BitConverter.ToUInt16(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt16(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static ushort ToUInt16(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToUInt16(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToUInt32(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt32(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static uint ToUInt32(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToUInt32(@this, startIndex);
-
-	/// <inheritdoc cref="BitConverter.ToUInt64(byte[], int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt64(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static ulong ToUInt64(this byte[] @this, int startIndex = 0)
-		=> BitConverter.ToUInt64(@this, startIndex);
 
 	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
 	/// <remarks>

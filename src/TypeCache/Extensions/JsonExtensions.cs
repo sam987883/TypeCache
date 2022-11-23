@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -53,7 +54,7 @@ public static class JsonExtensions
 	public static object? GetValue(this JsonElement @this)
 		=> @this.ValueKind switch
 		{
-			JsonValueKind.Undefined => throw new NotImplementedException(),
+			JsonValueKind.Undefined => throw new UnreachableException(),
 			JsonValueKind.True => true,
 			JsonValueKind.False => false,
 			JsonValueKind.Number when @this.TryGetInt32(out var value) => value,

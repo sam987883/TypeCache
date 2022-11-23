@@ -4,12 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TypeCache.Collections;
 using TypeCache.Reflection;
+using static System.Globalization.CultureInfo;
 using static TypeCache.Default;
 using Unsafe = TypeCache.Reflection.Unsafe;
 
@@ -17,6 +20,7 @@ namespace TypeCache.Extensions;
 
 public static class StringExtensions
 {
+	/// <inheritdoc cref="char.IsDigit(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsDigit());</c>
 	/// </remarks>
@@ -24,6 +28,7 @@ public static class StringExtensions
 	public static bool AnyDigit(this string @this)
 		=> @this.Any(c => c.IsDigit());
 
+	/// <inheritdoc cref="char.IsLetter(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetter());</c>
 	/// </remarks>
@@ -31,6 +36,7 @@ public static class StringExtensions
 	public static bool AnyLetter(this string @this)
 		=> @this.Any(c => c.IsLetter());
 
+	/// <inheritdoc cref="char.IsLetterOrDigit(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetterOrDigit());</c>
 	/// </remarks>
@@ -38,13 +44,15 @@ public static class StringExtensions
 	public static bool AnyLetterOrDigit(this string @this)
 		=> @this.Any(c => c.IsLetterOrDigit());
 
+	/// <inheritdoc cref="char.IsLower(char)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLowercase());</c>
+	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLower());</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool AnyLowercase(this string @this)
-		=> @this.Any(c => c.IsLowercase());
+	public static bool AnyLower(this string @this)
+		=> @this.Any(c => c.IsLower());
 
+	/// <inheritdoc cref="char.IsNumber(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsNumber());</c>
 	/// </remarks>
@@ -52,6 +60,7 @@ public static class StringExtensions
 	public static bool AnyNumber(this string @this)
 		=> @this.Any(c => c.IsNumber());
 
+	/// <inheritdoc cref="char.IsPunctuation(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsPunctuation());</c>
 	/// </remarks>
@@ -59,6 +68,7 @@ public static class StringExtensions
 	public static bool AnyPunctuation(this string @this)
 		=> @this.Any(c => c.IsPunctuation());
 
+	/// <inheritdoc cref="char.IsSymbol(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsSymbol());</c>
 	/// </remarks>
@@ -66,23 +76,21 @@ public static class StringExtensions
 	public static bool AnySymbol(this string @this)
 		=> @this.Any(c => c.IsSymbol());
 
+	/// <inheritdoc cref="char.IsUpper(char)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsUppercase());</c>
+	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsUpper());</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyUppercase(this string @this)
-		=> @this.Any(c => c.IsUppercase());
+		=> @this.Any(c => c.IsUpper());
 
+	/// <inheritdoc cref="char.IsWhiteSpace(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsWhiteSpace());</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool AnyWhiteSpace(this string @this)
 		=> @this.Any(c => c.IsWhiteSpace());
-
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static string Edit(this string @this, StringEditor edit)
-		=> edit(@this);
 
 	/// <inheritdoc cref="Convert.FromBase64String(string)"/>
 	/// <remarks>
@@ -133,7 +141,7 @@ public static class StringExtensions
 	/// <c>=&gt; <see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsEmpty([NotNullWhen(false)] this string? @this)
+	public static bool IsNullOrEmpty([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrEmpty(@this);
 
 	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
@@ -149,7 +157,7 @@ public static class StringExtensions
 	/// <c>=&gt; !<see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsNotEmpty([NotNullWhen(true)] this string? @this)
+	public static bool IsNotNullOrEmpty([NotNullWhen(true)] this string? @this)
 		=> !string.IsNullOrEmpty(@this);
 
 	/// <remarks>
@@ -296,50 +304,25 @@ public static class StringExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	[return: NotNullIfNotNull("this")]
 	public static string? NullIfEmpty(this string? @this)
-		=> @this.IsNotEmpty() ? @this : null;
+		=> @this.IsNotNullOrEmpty() ? @this : null;
 
+	/// <inheritdoc cref="IParsable{TSelf}.Parse(string, IFormatProvider?)"/>
 	/// <remarks>
-	/// <code>
-	/// =&gt; <see cref="TypeOf{T}.SystemType"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see cref="TypeOf{T}.Kind"/> == <see cref="Kind.Enum"/> &amp;&amp; <see cref="Enum"/>.TryParse&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; value,<br/>
-	/// <see langword="    "/><see cref="SystemType.Boolean"/> <see langword="when"/> <see cref="bool"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="bool"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Char"/> <see langword="   when"/> <see cref="char"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="char"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.SByte"/> <see langword="  when"/> <see cref="sbyte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="sbyte"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int16"/> <see langword="  when"/> <see cref="short"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="short"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int32"/> <see langword="  when"/> <see cref="int"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="    "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="int"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Int64"/> <see langword="  when"/> <see cref="long"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="long"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Byte"/> <see langword="   when"/> <see cref="byte"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="byte"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt16"/> <see langword=" when"/> <see cref="ushort"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword=" "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="ushort"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt32"/> <see langword=" when"/> <see cref="uint"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="   "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="uint"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.UInt64"/> <see langword=" when"/> <see cref="ulong"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="ulong"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Single"/> <see langword=" when"/> <see cref="float"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword="  "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="float"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Double"/> <see langword=" when"/> <see cref="double"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) <see langword=" "/>=&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="double"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/><see cref="SystemType.Decimal"/> <see langword="when"/> <see cref="decimal"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> value) =&gt; <see cref="Unsafe"/>.Convert&lt;<see cref="decimal"/>, <typeparamref name="T"/>&gt;(value),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// } <see langword="as"/> <typeparamref name="T"/>?;
-	/// </code>
+	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	public static T? Parse<T>(this string @this)
-		where T : unmanaged
-		=> TypeOf<T>.SystemType switch
-		{
-			_ when TypeOf<T>.Kind == Kind.Enum && Enum.TryParse<T>(@this, out var value) => (T?)value,
-			SystemType.Boolean when bool.TryParse(@this, out var value) => Unsafe.Convert<bool, T>(value),
-			SystemType.Char when char.TryParse(@this, out var value) => Unsafe.Convert<char, T>(value),
-			SystemType.SByte when sbyte.TryParse(@this, out var value) => Unsafe.Convert<sbyte, T>(value),
-			SystemType.Int16 when short.TryParse(@this, out var value) => Unsafe.Convert<short, T>(value),
-			SystemType.Int32 when int.TryParse(@this, out var value) => Unsafe.Convert<int, T>(value),
-			SystemType.Int64 when long.TryParse(@this, out var value) => Unsafe.Convert<long, T>(value),
-			SystemType.Byte when sbyte.TryParse(@this, out var value) => Unsafe.Convert<sbyte, T>(value),
-			SystemType.UInt16 when ushort.TryParse(@this, out var value) => Unsafe.Convert<ushort, T>(value),
-			SystemType.UInt32 when uint.TryParse(@this, out var value) => Unsafe.Convert<uint, T>(value),
-			SystemType.UInt64 when ulong.TryParse(@this, out var value) => Unsafe.Convert<ulong, T>(value),
-			SystemType.Single when float.TryParse(@this, out var value) => Unsafe.Convert<float, T>(value),
-			SystemType.Double when double.TryParse(@this, out var value) => Unsafe.Convert<double, T>(value),
-			SystemType.Decimal when decimal.TryParse(@this, out var value) => Unsafe.Convert<decimal, T>(value),
-			_ => null
-		};
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Parse<T>(this string @this, IFormatProvider? formatProvider = null)
+		where T : IParsable<T>
+		=> T.Parse(@this, formatProvider ?? InvariantCulture);
+
+	/// <inheritdoc cref="INumberBase{TSelf}.Parse(ReadOnlySpan{char}, NumberStyles, IFormatProvider?)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Parse<T>(this string @this, NumberStyles style, IFormatProvider? formatProvider = null)
+		where T : INumberBase<T>
+		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
 
 	/// <inheritdoc cref="Regex.Escape(string)"/>
 	/// <remarks>
@@ -392,7 +375,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <code>
 	/// Span&lt;<see cref="byte"/>&gt; bytes = <see langword="stackalloc"/> <see cref="byte"/>[<paramref name="encoding"/>.GetMaxByteCount(@<paramref name="this"/>.Length) - 1];<br/>
-	/// @<paramref name="this"/>.ToBytes(<paramref name="encoding"/>, bytes);<br/>
+	/// @<paramref name="this"/>.GetBytes(<paramref name="encoding"/>, bytes);<br/>
 	/// <br/>
 	/// Span&lt;<see cref="char"/>&gt; chars = <see langword="stackalloc"/> <see cref="char"/>[bytes.Length * <see langword="sizeof"/>(<see cref="char"/>)];<br/>
 	/// <see langword="return"/> <see cref="Convert"/>.TryToBase64Chars(bytes, chars, <see langword="out var"/> count)<br/>
@@ -463,4 +446,31 @@ public static class StringExtensions
 	/// </remarks>
 	public static string TrimStart(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
 		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
+
+	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, [MaybeNullWhen(false)] out T value)
+		where T : ISpanParsable<T>
+		=> T.TryParse(@this, InvariantCulture, out value);
+
+	/// <inheritdoc cref="IParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
+		where T : IParsable<T>
+		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
+
+	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(string?, NumberStyles, IFormatProvider?, out TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
+		where T : INumberBase<T>
+		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);
 }

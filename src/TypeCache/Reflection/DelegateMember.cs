@@ -14,7 +14,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-[DebuggerDisplay("Delegate {Name,nq}", Name = "{Name}")]
+[DebuggerDisplay("DelegateOf<{Name,nq}>", Name = "{Name}")]
 public sealed class DelegateMember : IMember, IEquatable<DelegateMember>
 {
 	private const string METHOD_NAME = "Invoke";

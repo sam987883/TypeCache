@@ -449,19 +449,19 @@ public sealed class GraphQLSchema : Schema, IName
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLMutationAttribute>()).Select(this.AddMutation));
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Select(method =>
 		{
-			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First()!.ParentType;
+			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First().ParentType;
 			var controller = !method.Static ? this.GetRequiredService(method.Type) : null;
 			var resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method, controller, this.DataLoader)!;
 			return this.Query.AddField(method.ToFieldType(resolver));
 		}));
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Select(method =>
 		{
-			var attribute = method.Attributes.OfType<GraphQLSubqueryBatchAttribute>().First()!;
+			var attribute = method.Attributes.OfType<GraphQLSubqueryBatchAttribute>().First();
 			return this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
 		}));
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryCollectionAttribute>()).Select(method =>
 		{
-			var attribute = method.Attributes.OfType<GraphQLSubqueryCollectionAttribute>().First()!;
+			var attribute = method.Attributes.OfType<GraphQLSubqueryCollectionAttribute>().First();
 			return this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
 		}));
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubscriptionAttribute>()).Select(this.AddSubscription));
@@ -607,7 +607,7 @@ public sealed class GraphQLSchema : Schema, IName
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
+		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First();
 		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
@@ -669,7 +669,7 @@ public sealed class GraphQLSchema : Schema, IName
 			|| parentKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
 
-		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First()!;
+		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First();
 		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
 			|| childKeyProperty!.Getter is null)
 			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");

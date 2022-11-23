@@ -15,7 +15,7 @@ using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
-[DebuggerDisplay("Enum {Name,nq}", Name = "{Name}")]
+[DebuggerDisplay("EnumOf<{Name,nq}>", Name = "{Name}")]
 public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 	where T : struct, Enum
 {
@@ -32,6 +32,8 @@ public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 
 	internal EnumMember()
 	{
+		const BindingFlags STATIC_BINDINGS = BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Static;
+
 		var type = typeof(T);
 		var underlyingType = type.GetEnumUnderlyingType();
 		var compare = CreateCompare(underlyingType);
@@ -46,7 +48,7 @@ public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 		this.Public = type.IsPublic;
 		this.TypeHandle = type.TypeHandle;
 		this.Flags = this.Attributes.OfType<FlagsAttribute>().Any();
-		this.Tokens = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+		this.Tokens = type.GetFields(STATIC_BINDINGS)
 			.Where(fieldInfo => type.IsAssignableFrom(fieldInfo.FieldType))
 			.Select(fieldInfo => new TokenMember<T>(fieldInfo, this))
 			.ToArray();

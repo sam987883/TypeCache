@@ -12,6 +12,14 @@ namespace TypeCache.Extensions;
 
 public static class RuneExtensions
 {
+	/// <inheritdoc cref="Rune.GetUnicodeCategory(Rune)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Rune"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static UnicodeCategory GetUnicodeCategory(this Rune @this)
+		=> Rune.GetUnicodeCategory(@this);
+
 	/// <inheritdoc cref="Rune.IsControl(Rune)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsControl(@<paramref name="this"/>);</c>
@@ -49,7 +57,7 @@ public static class RuneExtensions
 	/// <c>=&gt; <see cref="Rune"/>.IsLower(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsLowercase(this Rune @this)
+	public static bool IsLower(this Rune @this)
 		=> Rune.IsLower(@this);
 
 	/// <inheritdoc cref="Rune.IsNumber(Rune)"/>
@@ -89,7 +97,7 @@ public static class RuneExtensions
 	/// <c>=&gt; <see cref="Rune"/>.IsUpper(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsUppercase(this Rune @this)
+	public static bool IsUpper(this Rune @this)
 		=> Rune.IsUpper(@this);
 
 	/// <inheritdoc cref="Rune.IsWhiteSpace(Rune)"/>
@@ -100,21 +108,21 @@ public static class RuneExtensions
 	public static bool IsWhiteSpace(this Rune @this)
 		=> Rune.IsWhiteSpace(@this);
 
-	/// <inheritdoc cref="Rune.ToLowerInvariant(Rune)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Rune"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static Rune ToLowerCase(this Rune @this)
-		=> Rune.ToLowerInvariant(@this);
-
 	/// <inheritdoc cref="Rune.ToLower(Rune)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static Rune ToLowerCase(this Rune @this, CultureInfo culture)
+	public static Rune ToLower(this Rune @this, CultureInfo culture)
 		=> Rune.ToLower(@this, culture);
+
+	/// <inheritdoc cref="Rune.ToLowerInvariant(Rune)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Rune"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Rune ToLowerInvariant(this Rune @this)
+		=> Rune.ToLowerInvariant(@this);
 
 	/// <inheritdoc cref="Rune.GetNumericValue(Rune)"/>
 	/// <remarks>
@@ -124,27 +132,19 @@ public static class RuneExtensions
 	public static double ToNumber(this Rune @this)
 		=> Rune.GetNumericValue(@this);
 
-	/// <inheritdoc cref="Rune.ToUpperInvariant(Rune)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Rune"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static Rune ToUpperCase(this Rune @this)
-		=> Rune.ToUpperInvariant(@this);
-
 	/// <inheritdoc cref="Rune.ToUpper(Rune)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static Rune ToUpperCase(this Rune @this, CultureInfo culture)
+	public static Rune ToUpper(this Rune @this, CultureInfo culture)
 		=> Rune.ToUpper(@this, culture);
 
-	/// <inheritdoc cref="Rune.GetUnicodeCategory(Rune)"/>
+	/// <inheritdoc cref="Rune.ToUpperInvariant(Rune)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Rune"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Rune"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static UnicodeCategory ToUnicodeCategory(this Rune @this)
-		=> Rune.GetUnicodeCategory(@this);
+	public static Rune ToUpperInvariant(this Rune @this)
+		=> Rune.ToUpperInvariant(@this);
 }

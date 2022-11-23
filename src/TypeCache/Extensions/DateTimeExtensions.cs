@@ -43,13 +43,13 @@ public static class DateTimeExtensions
 	/// <see langword="    "/><see cref="DateTimeKind.Local"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTimeFromUtc(@<paramref name="this"/>, <see cref="TimeZoneInfo.Local"/>),<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Unspecified"/> =&gt; @<paramref name="this"/>.As(<paramref name="kind"/>),<br/>
 	/// <see langword="    "/><see cref="DateTimeKind.Utc"/> =&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="ArgumentOutOfRangeException"/>($"{<see langword="nameof"/>(ToTimeZone)}: {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} value of {<paramref name="kind"/>} is not supported.")<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="UnreachableException"/>($"{<see langword="nameof"/>(ToTimeZone)}: {<see langword="nameof"/>(<see cref="DateTimeKind"/>)} value of {<paramref name="kind"/>} is not supported.")<br/>
 	/// };
 	/// </code>
 	/// </remarks>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="UnreachableException"/>
 	public static DateTime ToTimeZone(this DateTime @this, DateTimeKind kind)
 		=> kind switch
 		{
@@ -57,7 +57,7 @@ public static class DateTimeExtensions
 			DateTimeKind.Local => ConvertTimeFromUtc(@this, TimeZoneInfo.Local),
 			DateTimeKind.Unspecified => @this.As(kind),
 			DateTimeKind.Utc => ConvertTimeToUtc(@this),
-			_ => throw new ArgumentOutOfRangeException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind} is not supported.")
+			_ => throw new UnreachableException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind:D} is not supported.")
 		};
 
 	/// <remarks>
@@ -76,7 +76,7 @@ public static class DateTimeExtensions
 		{
 			DateTimeKind.Local => ConvertTime(@this, targetTimeZone),
 			DateTimeKind.Utc => ConvertTimeFromUtc(@this, targetTimeZone),
-			_ => throw new TimeZoneNotFoundException($"{nameof(ConvertTime)}: {nameof(DateTime)} value must have a {nameof(DateTimeKind)} of {DateTimeKind.Local} or {DateTimeKind.Utc}.")
+			_ => throw new TimeZoneNotFoundException($"{nameof(ConvertTime)}: {nameof(DateTime)} value must have a {nameof(DateTimeKind)} of {DateTimeKind.Local} or {DateTimeKind.Utc} only.")
 		};
 
 	/// <inheritdoc cref="TimeZoneInfo.ConvertTime(DateTimeOffset, TimeZoneInfo)"/>

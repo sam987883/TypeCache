@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using GraphQL.Types;
 using TypeCache.Attributes;
 using TypeCache.GraphQL.Attributes;
+using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.TestApp.Tables;
@@ -9,7 +11,7 @@ namespace TypeCache.GraphQL.TestApp.Tables;
 [SqlApi]
 public class Person
 {
-	[GraphQLType(ScalarType.HashID)]
+	[GraphQLType<GraphQLHashIdType>()]
 	public int BusinessEntityID { get; set; }
 	public string? PersonType { get; set; }
 	public bool NameStyle { get; set; }
@@ -21,9 +23,9 @@ public class Person
 	public int EmailPromotion { get; set; }
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
-	[GraphQLType(ScalarType.Guid)]
+	[GraphQLType<GuidGraphType>()]
 	[Name("rowguid")]
 	public Guid Rowguid { get; set; }
-	[GraphQLType(ScalarType.NotNullString)]
+	[GraphQLType<NonNullGraphType<StringGraphType>>()]
 	public DateTime ModifiedDate { get; set; }
 }

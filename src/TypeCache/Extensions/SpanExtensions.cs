@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using TypeCache.Collections;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
@@ -20,48 +18,10 @@ public static class SpanExtensions
 		=> (ReadOnlySpan<T>)@this;
 
 	/// <remarks>
-	/// <code>
-	/// <paramref name="edit"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/>@<paramref name="this"/>[i] = (@<paramref name="this"/>[i]);
-	/// </code>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	public static void Each<T>(this Span<T> @this, Func<T, T> edit)
-	{
-		edit.AssertNotNull();
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			@this[i] = edit(@this[i]);
-	}
-
-	/// <remarks>
-	/// <code>
-	/// <paramref name="edit"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/>@<paramref name="this"/>[i] = (@<paramref name="this"/>[i]);
-	/// </code>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	public static void Each<T>(this Span<T> @this, Func<T, int, T> edit)
-	{
-		edit.AssertNotNull();
-
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			@this[i] = edit(@this[i], i);
-	}
-
-	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static T Read<T>(this Span<byte> @this)
+	public static T Read<T>(this scoped Span<byte> @this)
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
 
@@ -114,7 +74,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryRead(@<paramref name="this"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool TryRead<T>(this Span<byte> @this, out T value)
+	public static bool TryRead<T>(this scoped Span<byte> @this, out T value)
 		where T : struct
 		=> MemoryMarshal.TryRead(@this, out value);
 
@@ -123,7 +83,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryWrite(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool TryWrite<T>(this Span<byte> @this, T value)
+	public static bool TryWrite<T>(this scoped Span<byte> @this, T value)
 		where T : struct
 		=> MemoryMarshal.TryWrite(@this, ref value);
 
@@ -132,7 +92,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Write(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static void Write<T>(this Span<byte> @this, ref T value)
+	public static void Write<T>(this scoped Span<byte> @this, ref T value)
 		where T : struct
 		=> MemoryMarshal.Write(@this, ref value);
 }

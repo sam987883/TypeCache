@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using static TypeCache.Default;
@@ -12,6 +13,111 @@ namespace TypeCache.Extensions;
 
 public static class ValueExtensions
 {
+	/// <inheritdoc cref="INumberBase.Abs(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Abs(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T AbsoluteValue<T>(this T @this)
+		where T : INumberBase<T>
+		=> T.Abs(@this);
+
+	/// <inheritdoc cref="IFloatingPointIeee754{TSelf}.BitDecrement(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.BitDecrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T BitDecrement<T>(this T @this)
+		where T : IFloatingPointIeee754<T>
+		=> T.BitDecrement(@this);
+
+	/// <inheritdoc cref="IFloatingPointIeee754{TSelf}.BitIncrement(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.BitIncrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T BitIncrement<T>(this T @this)
+		where T : IFloatingPointIeee754<T>
+		=> T.BitIncrement(@this);
+
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Ceiling(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Ceiling(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Ceiling<T>(this T @this)
+		where T : IFloatingPoint<T>
+		=> T.Ceiling(@this);
+
+	/// <remarks>
+	/// <code>
+	/// (@<paramref name="this"/> &gt;= 0).Assert(<see langword="true"/>);<br/>
+	/// <br/>
+	/// <see langword="var"/> result = 1UL;<br/>
+	/// <see langword="while"/> (@<paramref name="this"/> &gt; 0)<br/>
+	/// {<br/>
+	/// <see langword="    "/>result *= (ulong)@<paramref name="this"/>;<br/>
+	/// <see langword="    "/>--@<paramref name="this"/>;<br/>
+	/// }<br/>
+	/// <see langword="return"/> result;
+	/// </code>
+	/// </remarks>
+	public static ulong Factorial(this int @this)
+	{
+		(@this >= 0).AssertTrue();
+
+		var result = 1UL;
+		while (@this > 0)
+		{
+			result *= (ulong)@this;
+			--@this;
+		}
+		return result;
+	}
+
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Floor(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Floor(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Floor<T>(this T @this)
+		where T : IFloatingPoint<T>
+		=> T.Floor(@this);
+
+	/// <inheritdoc cref="INumber{TSelf}.Max(TSelf, TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Maximum<T>(this (T, T) @this)
+		where T : INumber<T>
+		=> T.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="INumber{TSelf}.Max(TSelf, TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="int"/>.Max(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Index Maximum(this (Index, Index) @this)
+		=> int.Max(@this.Item1.Value, @this.Item2.Value);
+
+	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Minimum<T>(this (T, T) @this)
+		where T : INumber<T>
+		=> T.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="int"/>.Min(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static Index Minimum(this (Index, Index) @this)
+		=> int.Min(@this.Item1.Value, @this.Item2.Value);
+
 	/// <remarks>
 	/// <code>
 	/// <see langword="while"/> (--<paramref name="count"/> &gt; -1)<br/>
@@ -25,6 +131,51 @@ public static class ValueExtensions
 			yield return @this;
 	}
 
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Round<T>(this T @this)
+		where T : IFloatingPoint<T>
+		=> T.Round(@this);
+
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Round<T>(this T @this, int digits)
+		where T : IFloatingPoint<T>
+		=> T.Round(@this, digits);
+
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Round<T>(this T @this, MidpointRounding rounding)
+		where T : IFloatingPoint<T>
+		=> T.Round(@this, rounding);
+
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, int, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static T Round<T>(this T @this, int digits, MidpointRounding rounding)
+		where T : IFloatingPoint<T>
+		=> T.Round(@this, digits, rounding);
+
+	/// <inheritdoc cref="INumber{TSelf}.Sign(TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static int Sign<T>(this T @this)
+		where T : INumber<T>
+		=> T.Sign(@this);
+
 	/// <remarks>
 	/// <c>=&gt; (@<paramref name="this"/>, <paramref name="value"/>) = (<paramref name="value"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
@@ -32,6 +183,13 @@ public static class ValueExtensions
 	public static void Swap<T>(this ref T @this, ref T value)
 		where T : struct
 		=> (@this, value) = (value, @this);
+
+	/// <remarks>
+	/// <c>=&gt; (@<paramref name="this"/>.Item2, @<paramref name="this"/>.Item1);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static (T, T) Swap<T>(this (T, T) @this)
+		=> (@this.Item2, @this.Item1);
 
 	public static IEnumerable<int> To(this int @this, int end, int increment = 0)
 	{
@@ -71,159 +229,20 @@ public static class ValueExtensions
 		}
 	}
 
-	/// <inheritdoc cref="BitConverter.GetBytes(bool)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this bool @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(char)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this char @this)
-		=> BitConverter.GetBytes(@this);
-
 	/// <inheritdoc cref="decimal.GetBits(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.ToBytes()).ToArray();</c>
+	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.GetBytes()).ToArray();</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
-		=> decimal.GetBits(@this).SelectMany(i => i.ToBytes()).ToArray();
+		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
 
-	/// <inheritdoc cref="BitConverter.GetBytes(double)"/>
+	/// <inheritdoc cref="IFloatingPoint{TSelf}.Truncate(TSelf)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <typeparamref name="T"/>.Truncate(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this double @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(float)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this float @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(Half)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this Half @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this int @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(long)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this long @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(short)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this short @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(uint)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this uint @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(ulong)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this ulong @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(ushort)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static byte[] ToBytes(this ushort @this)
-		=> BitConverter.GetBytes(@this);
-
-	/// <inheritdoc cref="BitConverter.GetBytes(long)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.Int64BitsToDouble(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static double ToDouble(this long @this)
-		=> BitConverter.Int64BitsToDouble(@this);
-
-	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(short)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.Int16BitsToHalf(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static Half ToInt16(this short @this)
-		=> BitConverter.Int16BitsToHalf(@this);
-
-	/// <inheritdoc cref="BitConverter.UInt16BitsToHalf(ushort)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.UInt16BitsToHalf(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static Half ToUInt16(this ushort @this)
-		=> BitConverter.UInt16BitsToHalf(@this);
-
-	/// <inheritdoc cref="BitConverter.HalfToInt16Bits(Half)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.HalfToInt16Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static short ToInt16(this Half @this)
-		=> BitConverter.HalfToInt16Bits(@this);
-
-	/// <inheritdoc cref="BitConverter.HalfToUInt16Bits(Half)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.HalfToUInt16Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static ushort ToUInt16(this Half @this)
-		=> BitConverter.HalfToUInt16Bits(@this);
-
-	/// <inheritdoc cref="BitConverter.SingleToInt32Bits(float)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.SingleToInt32Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static int ToInt32(this float @this)
-		=> BitConverter.SingleToInt32Bits(@this);
-
-	/// <inheritdoc cref="BitConverter.DoubleToInt64Bits(double)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.DoubleToInt64Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static long ToInt64(this double @this)
-		=> BitConverter.DoubleToInt64Bits(@this);
-
-	/// <inheritdoc cref="BitConverter.Int32BitsToSingle(int)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.Int32BitsToSingle(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static float ToSingle(this int @this)
-		=> BitConverter.Int32BitsToSingle(@this);
+	public static T Truncate<T>(this T @this)
+		where T : IFloatingPoint<T>
+		=> T.Truncate(@this);
 }

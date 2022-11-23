@@ -55,7 +55,7 @@ public static class DbDataReaderExtensions
 	/// <see langword="    "/>{<br/>
 	/// <see langword="        var"/> model = <see cref="TypeOf{T}"/>.Create()!;<br/>
 	/// <see langword="        "/>@<paramref name="this"/>.GetValues(values);<br/>
-	/// <see langword="        "/>properties.Do((property, columnIndex) =&gt; property.SetValue(model, values[columnIndex]));<br/>
+	/// <see langword="        "/>properties.ForEach((property, columnIndex) =&gt; property.SetValue(model, values[columnIndex]));<br/>
 	/// <see langword="        "/>rows.Add(model);<br/>
 	/// <see langword="    "/>}<br/>
 	/// <see langword="    return"/> rows;<br/>
@@ -94,7 +94,7 @@ public static class DbDataReaderExtensions
 	/// <see langword="    "/>{<br/>
 	/// <see langword="        var"/> jsonObject = <see langword="new"/> <see cref="JsonObject"/>(options);<br/>
 	/// <see langword="        "/>@<paramref name="this"/>.GetValues(values);<br/>
-	/// <see langword="        "/>range.Do(i =&gt; jsonObject.Add(columns[i], JsonValue.Create(values[i], options)));<br/>
+	/// <see langword="        "/>range.ForEach(i =&gt; jsonObject.Add(columns[i], JsonValue.Create(values[i], options)));<br/>
 	/// <see langword="        "/>jsonArray.Add(jsonObject);<br/>
 	/// <see langword="    "/>}<br/>
 	/// <see langword="    return"/> jsonArray;<br/>

@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -11,6 +10,14 @@ namespace TypeCache.Extensions;
 
 public static class CharExtensions
 {
+	/// <inheritdoc cref="char.GetUnicodeCategory(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static UnicodeCategory GetUnicodeCategory(this char @this)
+		=> char.GetUnicodeCategory(@this);
+
 	/// <inheritdoc cref="char.IsControl(char)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsControl(@<paramref name="this"/>);</c>
@@ -56,7 +63,7 @@ public static class CharExtensions
 	/// <c>=&gt; <see cref="char"/>.IsLower(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsLowercase(this char @this)
+	public static bool IsLower(this char @this)
 		=> char.IsLower(@this);
 
 	/// <inheritdoc cref="char.IsLowSurrogate(char)"/>
@@ -112,7 +119,7 @@ public static class CharExtensions
 	/// <c>=&gt; <see cref="char"/>.IsUpper(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool IsUppercase(this char @this)
+	public static bool IsUpper(this char @this)
 		=> char.IsUpper(@this);
 
 	/// <inheritdoc cref="char.IsWhiteSpace(char)"/>
@@ -155,21 +162,21 @@ public static class CharExtensions
 	public static string Join(this char @this, IEnumerable<object> values)
 		=> string.Join(@this, values);
 
-	/// <inheritdoc cref="char.ToLowerInvariant(char)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="char"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static char ToLowerCase(this char @this)
-		=> char.ToLowerInvariant(@this);
-
 	/// <inheritdoc cref="char.ToLower(char)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static char ToLowerCase(this char @this, CultureInfo culture)
+	public static char ToLower(this char @this, CultureInfo culture)
 		=> char.ToLower(@this, culture);
+
+	/// <inheritdoc cref="char.ToLowerInvariant(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static char ToLowerInvariant(this char @this)
+		=> char.ToLowerInvariant(@this);
 
 	/// <inheritdoc cref="char.GetNumericValue(char)"/>
 	/// <remarks>
@@ -179,27 +186,19 @@ public static class CharExtensions
 	public static double ToNumber(this char @this)
 		=> char.GetNumericValue(@this);
 
-	/// <inheritdoc cref="char.ToUpperInvariant(char)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="char"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static char ToUpperCase(this char @this)
-		=> char.ToUpperInvariant(@this);
-
 	/// <inheritdoc cref="char.ToUpper(char)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static char ToUpperCase(this char @this, CultureInfo culture)
+	public static char ToUpper(this char @this, CultureInfo culture)
 		=> char.ToUpper(@this, culture);
 
-	/// <inheritdoc cref="char.GetUnicodeCategory(char)"/>
+	/// <inheritdoc cref="char.ToUpperInvariant(char)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="char"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="char"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static UnicodeCategory ToUnicodeCategory(this char @this)
-		=> char.GetUnicodeCategory(@this);
+	public static char ToUpperInvariant(this char @this)
+		=> char.ToUpperInvariant(@this);
 }

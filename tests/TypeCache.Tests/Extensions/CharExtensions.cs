@@ -46,8 +46,8 @@ public class CharExtensions
 	[Fact]
 	public void IsLower()
 	{
-		Assert.True('f'.IsLowercase());
-		Assert.False('F'.IsLowercase());
+		Assert.True('f'.IsLower());
+		Assert.False('F'.IsLower());
 	}
 
 	[Fact]
@@ -93,8 +93,8 @@ public class CharExtensions
 	[Fact]
 	public void IsUpper()
 	{
-		Assert.False('f'.IsUppercase());
-		Assert.True('F'.IsUppercase());
+		Assert.False('f'.IsUpper());
+		Assert.True('F'.IsUpper());
 	}
 
 	[Fact]
@@ -120,7 +120,7 @@ public class CharExtensions
 	[Fact]
 	public void ToLower()
 	{
-		Assert.Equal('f', 'F'.ToLowerCase());
+		Assert.Equal('f', 'F'.ToLowerInvariant());
 	}
 
 	[Fact]
@@ -132,13 +132,13 @@ public class CharExtensions
 	[Fact]
 	public void ToUpper()
 	{
-		Assert.Equal('F', 'f'.ToUpperCase());
+		Assert.Equal('F', 'f'.ToUpperInvariant());
 	}
 
 	[Fact]
 	public void ToUnicodeCategory()
 	{
-		Assert.Equal(UnicodeCategory.LowercaseLetter, 'f'.ToUnicodeCategory());
-		Assert.Equal(UnicodeCategory.UppercaseLetter, 'F'.ToUnicodeCategory());
+		Assert.Equal(UnicodeCategory.LowercaseLetter, 'f'.GetUnicodeCategory());
+		Assert.Equal(UnicodeCategory.UppercaseLetter, 'F'.GetUnicodeCategory());
 	}
 }

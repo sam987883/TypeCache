@@ -41,7 +41,7 @@ public sealed class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldRe
 			controller.AssertNotNull();
 
 		if (!method.Return.Type.Implements<IEnumerable<CHILD>>()
-			&& ((method.Return.Task || method.Return.ValueTask) && !method.Return.Type.GenericTypes.First()!.Implements<IEnumerable<CHILD>>()))
+			&& ((method.Return.Task || method.Return.ValueTask) && !method.Return.Type.GenericTypes.First().Implements<IEnumerable<CHILD>>()))
 			throw new ArgumentException($"{nameof(CollectionLoaderFieldResolver<PARENT, CHILD, KEY>)}: Expected method [{method.Name}] to have a return type of [{TypeOf<IEnumerable<CHILD>>.Name}] instead of [{method.Return.Type.Name}].");
 
 		this._Method = method;

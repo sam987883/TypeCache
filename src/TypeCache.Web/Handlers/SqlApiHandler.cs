@@ -40,7 +40,7 @@ internal static class SqlApiHandler
 		foreach (var parameter in objectSchema.Parameters.Where(parameter => parameter.Direction.IsAny(ParameterDirection.Input, ParameterDirection.InputOutput)))
 		{
 			if (httpContext.Request.Query.TryGetValue(parameter.Name, out var values))
-				sqlCommand.Parameters.Add(parameter.Name, values.First()!);
+				sqlCommand.Parameters.Add(parameter.Name, values.First());
 		}
 
 		var mediator = httpContext.GetMediator();

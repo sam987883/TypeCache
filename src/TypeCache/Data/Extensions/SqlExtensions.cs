@@ -36,7 +36,7 @@ public static class SqlExtensions
 		Guid guid => Invariant($"'{guid:D}'"),
 		LogicalOperator.And => "AND",
 		LogicalOperator.Or => "OR",
-		LogicalOperator _ => throw new NotImplementedException(Invariant($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL.")),
+		LogicalOperator _ => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL.")),
 		Sort.Ascending => "ASC",
 		Sort.Descending => "DESC",
 		Sort _ => string.Empty,
