@@ -52,7 +52,7 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 				if (objectSchema is null)
 					return Results.NotFound(Invariant($"{nameof(ObjectSchema)} for {name} was not found."));
 
-				if (objectSchema.Type is not ObjectType.Table)
+				if (objectSchema.Type is not DatabaseObjectType.Table)
 					return Results.BadRequest(Invariant($"[{table}] is not a table."));
 			}
 			else if(routeValues.TryGetValue(VIEW, out var view))
@@ -62,7 +62,7 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 				if (objectSchema is null)
 					return Results.NotFound(Invariant($"{nameof(ObjectSchema)} for {name} was not found."));
 
-				if (objectSchema.Type is not ObjectType.View)
+				if (objectSchema.Type is not DatabaseObjectType.View)
 					return Results.BadRequest(Invariant($"[{view}] is not a view."));
 			}
 			else if (routeValues.TryGetValue(PROCEDURE, out var procedure))
@@ -72,7 +72,7 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 				if (objectSchema is null)
 					return Results.NotFound(Invariant($"{nameof(ObjectSchema)} for {name} was not found."));
 
-				if (objectSchema.Type is not ObjectType.StoredProcedure)
+				if (objectSchema.Type is not DatabaseObjectType.StoredProcedure)
 					return Results.BadRequest(Invariant($"[{procedure}] is not a stored procedure."));
 			}
 		}

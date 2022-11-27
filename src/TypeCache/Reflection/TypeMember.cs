@@ -40,6 +40,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		this.Kind = type.GetKind();
 		this.Name = type.Name();
 		this.Namespace = type.Namespace!;
+		this.ObjectType = type.GetObjectType();
 		this.SystemType = type.GetSystemType();
 		this.Nullable = this.SystemType is SystemType.Nullable || this.Kind is not Kind.Struct;
 		this.Public = type.IsPublic;
@@ -66,9 +67,9 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		else
 			this.Events = ImmutableArray<EventMember>.Empty;
 
-		this.Fields = this.Kind switch
+		this.Fields = this.ObjectType switch
 		{
-			Kind.Delegate => ImmutableArray<FieldMember>.Empty,
+			ObjectType.Delegate => ImmutableArray<FieldMember>.Empty,
 			_ when type.GetFields(BINDING_FLAGS).Any(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike) =>
 				type.GetFields(BINDING_FLAGS)
 					.Where(fieldInfo => !fieldInfo.IsLiteral && !fieldInfo.FieldType.IsByRefLike)
@@ -96,9 +97,9 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 
 	private readonly Func<object>? _CreateValueType;
 
-	/// <inheritdoc/>
 	public IReadOnlyList<Attribute> Attributes { get; }
 
+	/// <inheritdoc cref="Type.BaseType"/>
 	public TypeMember? BaseType => this.BaseTypeHandle.HasValue ? this.BaseTypeHandle.Value.GetTypeMember() : null;
 
 	public RuntimeTypeHandle? BaseTypeHandle { get; }
@@ -130,42 +131,58 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 
 	public IReadOnlyList<MethodMember> Methods { get; }
 
-	/// <inheritdoc/>
 	public string Name { get; }
 
+	/// <inheritdoc cref="Type.Namespace"/>
 	public string Namespace { get; }
 
 	public bool Nullable { get; }
+
+	public ObjectType ObjectType { get; }
 
 	public IReadOnlyList<PropertyMember> Properties { get; }
 
 	/// <inheritdoc cref="Type.IsPublic"/>
 	public bool Public { get; }
 
+	/// <inheritdoc cref="Type.IsByRef"/>
 	public bool Ref { get; }
 
 	public SystemType SystemType { get; }
 
+	/// <inheritdoc cref="Type.TypeHandle"/>
 	public RuntimeTypeHandle TypeHandle { get; }
 
 	/// <summary>
 	/// <code>
-	/// =&gt; <see langword="this"/> <see langword="switch"/><br/>
+	/// =&gt; <see langword="this"/>.FindConstructor(<paramref name="parameters"/>) <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when this"/>.Constructors.TryFirst(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="parameters"/>), <see langword="out var"/> constructor) =&gt; constructor.Create(<paramref name="parameters"/>),<br/>
-	/// <see langword="    "/>{ Kind: <see cref="Kind.Struct"/> } <see langword="when this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; <paramref name="parameters"/>?.Any() <see langword="is not true"/> =&gt; <see langword="this"/>._CreateValueType(),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// <see langword="    "/><see langword="null"/> <see langword="when this"/>._CreateValueType <see langword="is not null"/> &amp;&amp; <paramref name="parameters"/>?.Any() <see langword="is not true"/> =&gt; <see langword="this"/>._CreateValueType(),<br/>
+	/// <see langword="    "/><see langword="null"/> =&gt; <see langword="throw new"/> <see cref="MissingMethodException"/>(<see langword="this"/>.Name, <see langword="this"/>.Name),<br/>
+	/// <see langword="    var"/>_ constructor =&gt; constructor.Create(<paramref name="parameters"/>)<br/>
 	/// }
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
 	public object? Create(params object?[]? parameters)
-		=> this switch
+		=> this.FindConstructor(parameters) switch
 		{
-			_ when this.Constructors.TryFirst(constructor => constructor.Parameters.IsCallableWith(parameters), out var constructor) => constructor.Create(parameters),
-			{ Kind: Kind.Struct } when this._CreateValueType is not null && parameters?.Any() is not true => this._CreateValueType(),
-			_ => null
+			null when this._CreateValueType is not null && parameters?.Any() is not true => this._CreateValueType(),
+			null => throw new MissingMethodException(this.Name, this.Name),
+			var constructor => constructor.Create(parameters)
 		};
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Constructors.FirstOrDefault(constructor =&gt; constructor.Parameters.IsCallableWith(<paramref name="arguments"/>));</c>
+	/// </summary>
+	public ConstructorMember? FindConstructor(params object?[]? arguments)
+		=> this.Constructors.FirstOrDefault(constructor => constructor.Parameters.IsCallableWith(arguments));
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>));</c>
+	/// </summary>
+	public MethodMember? FindMethod(string name, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
+		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method.Parameters.IsCallableWith(arguments));
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Constructors.Select(constructor =&gt; constructor.Method).FirstOrDefault&lt;<typeparamref name="D"/>&gt;();</c>
@@ -218,21 +235,37 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		=> this.Properties.FirstOrDefault(property => property.Name.Is(name, comparison));
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(name, comparison) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>))?.Invoke(<paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see langword="this"/>.FindMethod(<paramref name="name"/>, <paramref name="arguments"/>, <paramref name="comparison"/>)<br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; <see langword="throw new"/> <see cref="MissingMethodException"/>(<see langword="this"/>.Name, <paramref name="name"/>),<br/>
+	/// <see langword="    var"/> method =&gt; method.Invoke(<paramref name="arguments"/>)<br/>
+	/// }</c>
 	/// </summary>
 	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
-	/// <exception cref="ArgumentException"></exception>
+	/// <exception cref="MissingMethodException"></exception>
 	[DebuggerHidden]
 	public object? InvokeMethod(string name, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
-		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(arguments))?.Invoke(arguments);
+		=> this.FindMethod(name, arguments, comparison) switch
+		{
+			null => throw new MissingMethodException(this.Name, name),
+			var method => method.Invoke(arguments)
+		};
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(name, comparison) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>))?.InvokeGeneric(<paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see langword="this"/>.FindMethod(<paramref name="name"/>, <paramref name="arguments"/>, <paramref name="comparison"/>)<br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; <see langword="throw new"/> <see cref="MissingMethodException"/>(<see langword="this"/>.Name, <paramref name="name"/>),<br/>
+	/// <see langword="    var"/> method =&gt; method.InvokeGeneric(<paramref name="genericTypes"/>, <paramref name="arguments"/>)<br/>
+	/// }</c>
 	/// </summary>
 	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
-	/// <exception cref="ArgumentException"></exception>
+	/// <exception cref="MissingMethodException"></exception>
 	public object? InvokeGenericMethod(string name, Type[] genericTypes, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
-		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method!.Parameters.IsCallableWith(arguments))?.InvokeGeneric(genericTypes, arguments);
+		=> this.FindMethod(name, arguments, comparison) switch
+		{
+			null => throw new MissingMethodException(this.Name, name),
+			var method => method.InvokeGeneric(genericTypes, arguments)
+		};
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Handle == <paramref name="other"/>?.Handle;</c>

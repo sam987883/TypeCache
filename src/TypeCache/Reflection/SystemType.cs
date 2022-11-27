@@ -4,75 +4,41 @@ namespace TypeCache.Reflection;
 
 public enum SystemType
 {
-	Unknown = 0,
+	None = 0,
 	/// <summary>
-	/// <c><see cref="System.Object"/></c>
+	/// <code>
+	/// <see cref="System.Action"/><br/>
+	/// <see cref="System.Action{T}"/><br/>
+	/// <see cref="System.Action{T1, T2}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/><br/>
+	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+	/// </code>
 	/// </summary>
-	Object,
+	Action,
 	/// <summary>
-	/// <c><see cref="System.Boolean"/></c>
+	/// <c><see cref="System.Attribute"/></c>
 	/// </summary>
 	Boolean,
-	/// <summary>
-	/// <c><see cref="System.SByte"/></c>
-	/// </summary>
-	SByte,
 	/// <summary>
 	/// <c><see cref="System.Byte"/></c>
 	/// </summary>
 	Byte,
 	/// <summary>
-	/// <c><see cref="System.Int16"/></c>
+	/// <c><see cref="System.Char"/></c>
 	/// </summary>
-	Int16,
-	/// <summary>
-	/// <c><see cref="System.UInt16"/></c>
-	/// </summary>
-	UInt16,
-	/// <summary>
-	/// <c><see cref="System.Int32"/></c>
-	/// </summary>
-	Int32,
-	/// <summary>
-	/// <c><see cref="System.UInt32"/></c>
-	/// </summary>
-	UInt32,
-	/// <summary>
-	/// <c><see cref="System.Int64"/></c>
-	/// </summary>
-	Int64,
-	/// <summary>
-	/// <c><see cref="System.UInt64"/></c>
-	/// </summary>
-	UInt64,
-	/// <summary>
-	/// <c><see cref="System.Numerics.BigInteger"/></c>
-	/// </summary>
-	BigInteger,
-	/// <summary>
-	/// <c><see cref="System.IntPtr"/></c>
-	/// </summary>
-	IntPtr,
-	/// <summary>
-	/// <c><see cref="System.UIntPtr"/></c>
-	/// </summary>
-	UIntPtr,
-	/// <summary>
-	/// <c><see cref="System.Single"/></c>
-	/// </summary>
-	Single,
-	/// <summary>
-	/// <c><see cref="System.Double"/></c>
-	/// </summary>
-	Double,
-	/// <summary>
-	/// <c><see cref="System.Half"/></c>
-	/// </summary>
-	Half,
-	/// <summary>
-	/// <c><see cref="System.Decimal"/></c>
-	/// </summary>
-	Decimal,
+	Char,
 	/// <summary>
 	/// <c><see cref="System.DateOnly"/></c>
 	/// </summary>
@@ -86,65 +52,71 @@ public enum SystemType
 	/// </summary>
 	DateTimeOffset,
 	/// <summary>
-	/// <c><see cref="System.TimeOnly"/></c>
+	/// <c><see cref="System.DBNull"/></c>
 	/// </summary>
-	TimeOnly,
+	DBNull,
 	/// <summary>
-	/// <c><see cref="System.TimeSpan"/></c>
+	/// <c><see cref="System.Decimal"/></c>
 	/// </summary>
-	TimeSpan,
+	Decimal,
+	/// <summary>
+	/// <c><see cref="System.Double"/></c>
+	/// </summary>
+	Double,
+	/// <summary>
+	/// <code>
+	/// <see cref="System.Func{TResult}"/><br/>
+	/// <see cref="System.Func{T, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult}"/><br/>
+	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult}"/>
+	/// </code>
+	/// </summary>
+	Func,
 	/// <summary>
 	/// <c><see cref="System.Guid"/></c>
 	/// </summary>
 	Guid,
 	/// <summary>
-	/// <c><see cref="System.Char"/></c>
+	/// <c><see cref="System.Half"/></c>
 	/// </summary>
-	Char,
+	Half,
 	/// <summary>
 	/// <c><see cref="System.Index"/></c>
 	/// </summary>
 	Index,
 	/// <summary>
-	/// <c><see cref="System.Range"/></c>
+	/// <c><see cref="System.Int128"/></c>
 	/// </summary>
-	Range,
+	Int128,
 	/// <summary>
-	/// <c><see cref="System.Text.Json.JsonElement"/></c>
+	/// <c><see cref="System.Int16"/></c>
 	/// </summary>
-	JsonElement,
+	Int16,
 	/// <summary>
-	/// <c><see cref="System.String"/></c>
+	/// <c><see cref="System.Int32"/></c>
 	/// </summary>
-	String,
+	Int32,
 	/// <summary>
-	/// <c><see cref="System.Uri"/></c>
+	/// <c><see cref="System.Int64"/></c>
 	/// </summary>
-	Uri,
+	Int64,
 	/// <summary>
-	/// <c><see cref="System.DBNull"/></c>
+	/// <c><see cref="System.IntPtr"/></c>
 	/// </summary>
-	DBNull,
-	/// <summary>
-	/// <c><see cref="System.Void"/></c>
-	/// </summary>
-	Void,
-	/// <summary>
-	/// <c><see cref="System.Span{T}"/></c>
-	/// </summary>
-	Span,
-	/// <summary>
-	/// <c><see cref="System.Memory{T}"/></c>
-	/// </summary>
-	Memory,
-	/// <summary>
-	/// <c><see cref="System.ReadOnlySpan{T}"/></c>
-	/// </summary>
-	ReadOnlySpan,
-	/// <summary>
-	/// <c><see cref="System.ReadOnlyMemory{T}"/></c>
-	/// </summary>
-	ReadOnlyMemory,
+	IntPtr,
 	/// <summary>
 	/// <code>
 	/// <see cref="System.Lazy{T}"/><br/>
@@ -153,23 +125,119 @@ public enum SystemType
 	/// </summary>
 	Lazy,
 	/// <summary>
+	/// <c><see cref="System.Memory{T}"/></c>
+	/// </summary>
+	Memory,
+	/// <summary>
 	/// <c><see cref="System.Nullable{T}"/></c>
 	/// </summary>
 	Nullable,
 	/// <summary>
-	/// <code>
-	/// <see cref="System.Threading.Tasks.Task"/><br/>
-	/// <see cref="System.Threading.Tasks.Task{TResult}"/>
-	/// </code>
+	/// <c><see cref="System.Object"/></c>
 	/// </summary>
-	Task,
+	Object,
+	/// <summary>
+	/// <c><see cref="System.Range"/></c>
+	/// </summary>
+	Range,
+	/// <summary>
+	/// <c><see cref="System.ReadOnlyMemory{T}"/></c>
+	/// </summary>
+	ReadOnlyMemory,
+	/// <summary>
+	/// <c><see cref="System.ReadOnlySpan{T}"/></c>
+	/// </summary>
+	ReadOnlySpan,
+	/// <summary>
+	/// <c><see cref="System.SByte"/></c>
+	/// </summary>
+	SByte,
+	/// <summary>
+	/// <c><see cref="System.Single"/></c>
+	/// </summary>
+	Single,
+	/// <summary>
+	/// <c><see cref="System.Span{T}"/></c>
+	/// </summary>
+	Span,
+	/// <summary>
+	/// <c><see cref="System.String"/></c>
+	/// </summary>
+	String,
+	/// <summary>
+	/// <c><see cref="System.TimeOnly"/></c>
+	/// </summary>
+	TimeOnly,
+	/// <summary>
+	/// <c><see cref="System.TimeSpan"/></c>
+	/// </summary>
+	TimeSpan,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.Threading.Tasks.ValueTask"/><br/>
-	/// <see cref="System.Threading.Tasks.ValueTask{TResult}"/>
+	/// <see cref="System.Tuple{T1}"/><br/>
+	/// <see cref="System.Tuple{T1, T2}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3, T4}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
 	/// </code>
 	/// </summary>
-	ValueTask,
+	Tuple,
+	/// <summary>
+	/// <c><see cref="System.Type"/></c>
+	/// </summary>
+	Type,
+	/// <summary>
+	/// <c><see cref="System.UInt128"/></c>
+	/// </summary>
+	UInt128,
+	/// <summary>
+	/// <c><see cref="System.UInt16"/></c>
+	/// </summary>
+	UInt16,
+	/// <summary>
+	/// <c><see cref="System.UInt32"/></c>
+	/// </summary>
+	UInt32,
+	/// <summary>
+	/// <c><see cref="System.UInt64"/></c>
+	/// </summary>
+	UInt64,
+	/// <summary>
+	/// <c><see cref="System.UIntPtr"/></c>
+	/// </summary>
+	UIntPtr,
+	/// <summary>
+	/// <c><see cref="System.Uri"/></c>
+	/// </summary>
+	Uri,
+	/// <summary>
+	/// <code>
+	/// <see cref="System.ValueTuple"/><br/>
+	/// <see cref="System.ValueTuple{T1}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3, T4}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
+	/// </code>
+	/// </summary>
+	ValueTuple,
+	/// <summary>
+	/// <c><see cref="System.Void"/></c>
+	/// </summary>
+	Void,
+	/// <summary>
+	/// <code>
+	/// <see cref="System.WeakReference"/><br/>
+	/// <see cref="System.WeakReference{T}"/>
+	/// </code>
+	/// </summary>
+	WeakReference,
 	/// <summary>
 	/// <c><see cref="System.Array"/></c>
 	/// </summary>
@@ -191,10 +259,6 @@ public enum SystemType
 	/// </summary>
 	Collection,
 	/// <summary>
-	/// <c><see cref="System.Collections.CollectionBase"/></c>
-	/// </summary>
-	CollectionBase,
-	/// <summary>
 	/// <c><see cref="System.Collections.Concurrent.ConcurrentBag{T}"/></c>
 	/// </summary>
 	ConcurrentBag,
@@ -215,10 +279,6 @@ public enum SystemType
 	/// </summary>
 	Dictionary,
 	/// <summary>
-	/// <c><see cref="System.Collections.DictionaryBase"/></c>
-	/// </summary>
-	DictionaryBase,
-	/// <summary>
 	/// <c><see cref="System.Collections.Generic.HashSet{T}"/></c>
 	/// </summary>
 	HashSet,
@@ -230,58 +290,6 @@ public enum SystemType
 	/// <c><see cref="System.Collections.Specialized.HybridDictionary"/></c>
 	/// </summary>
 	HybridDictionary,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.IAsyncEnumerable{T}"/></c>
-	/// </summary>
-	IAsyncEnumerable,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.Collections.ICollection"/><br/>
-	/// <see cref="System.Collections.Generic.ICollection{T}"/>
-	/// </code>
-	/// </summary>
-	ICollection,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.Collections.IDictionary"/><br/>
-	/// <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>
-	/// </code>
-	/// </summary>
-	IDictionary,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.Collections.IEnumerable"/><br/>
-	/// <see cref="System.Collections.Generic.IEnumerable{T}"/>
-	/// </code>
-	/// </summary>
-	IEnumerable,
-	/// <summary>
-	/// <c><see cref="System.Collections.Immutable.IImmutableDictionary{TKey, TValue}"/></c>
-	/// </summary>
-	IImmutableDictionary,
-	/// <summary>
-	/// <c><see cref="System.Collections.Immutable.IImmutableList{T}"/></c>
-	/// </summary>
-	IImmutableList,
-	/// <summary>
-	/// <c><see cref="System.Collections.Immutable.IImmutableQueue{T}"/></c>
-	/// </summary>
-	IImmutableQueue,
-	/// <summary>
-	/// <c><see cref="System.Collections.Immutable.IImmutableSet{T}"/></c>
-	/// </summary>
-	IImmutableSet,
-	/// <summary>
-	/// <c><see cref="System.Collections.Immutable.IImmutableStack{T}"/></c>
-	/// </summary>
-	IImmutableStack,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.Collections.IList"/><br/>
-	/// <see cref="System.Collections.Generic.IList{T}"/>
-	/// </code>
-	/// </summary>
-	IList,
 	/// <summary>
 	/// <c><see cref="System.Collections.Immutable.ImmutableArray{T}"/></c>
 	/// </summary>
@@ -314,30 +322,6 @@ public enum SystemType
 	/// <c><see cref="System.Collections.Immutable.ImmutableStack{T}"/></c>
 	/// </summary>
 	ImmutableStack,
-	/// <summary>
-	/// <c><see cref="System.Collections.Specialized.IOrderedDictionary"/></c>
-	/// </summary>
-	IOrderedDictionary,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.IReadOnlyCollection{T}"/></c>
-	/// </summary>
-	IReadOnlyCollection,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/></c>
-	/// </summary>
-	IReadOnlyDictionary,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.IReadOnlyList{T}"/></c>
-	/// </summary>
-	IReadOnlyList,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.IReadOnlySet{T}"/></c>
-	/// </summary>
-	IReadOnlySet,
-	/// <summary>
-	/// <c><see cref="System.Collections.Generic.ISet{T}"/></c>
-	/// </summary>
-	ISet,
 	/// <summary>
 	/// <c><see cref="System.Collections.ObjectModel.KeyedCollection{TKey, TItem}"/></c>
 	/// </summary>
@@ -383,10 +367,6 @@ public enum SystemType
 	/// </summary>
 	ReadOnlyCollection,
 	/// <summary>
-	/// <c><see cref="System.Collections.ReadOnlyCollectionBase"/></c>
-	/// </summary>
-	ReadOnlyCollectionBase,
-	/// <summary>
 	/// <c><see cref="System.Collections.ObjectModel.ReadOnlyDictionary{TKey, TValue}"/></c>
 	/// </summary>
 	ReadOnlyDictionary,
@@ -419,85 +399,41 @@ public enum SystemType
 	/// </summary>
 	StringDictionary,
 	/// <summary>
-	/// <code>
-	/// <see cref="System.Tuple{T1}"/><br/>
-	/// <see cref="System.Tuple{T1, T2}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
-	/// </code>
+	/// <c><see cref="System.Numerics.BigInteger"/></c>
 	/// </summary>
-	Tuple,
+	BigInteger,
+	/// <summary>
+	/// <c><see cref="System.Text.Json.JsonDocument"/></c>
+	/// </summary>
+	JsonDocument,
+	/// <summary>
+	/// <c><see cref="System.Text.Json.JsonElement"/></c>
+	/// </summary>
+	JsonElement,
+	/// <summary>
+	/// <c><see cref="System.Text.Json.Nodes.JsonArray"/></c>
+	/// </summary>
+	JsonArray,
+	/// <summary>
+	/// <c><see cref="System.Text.Json.Nodes.JsonObject"/></c>
+	/// </summary>
+	JsonObject,
+	/// <summary>
+	/// <c><see cref="System.Text.Json.Nodes.JsonValue"/></c>
+	/// </summary>
+	JsonValue,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.ValueTuple"/><br/>
-	/// <see cref="System.ValueTuple{T1}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
+	/// <see cref="System.Threading.Tasks.Task"/><br/>
+	/// <see cref="System.Threading.Tasks.Task{TResult}"/>
 	/// </code>
 	/// </summary>
-	ValueTuple,
+	Task,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.Action"/><br/>
-	/// <see cref="System.Action{T}"/><br/>
-	/// <see cref="System.Action{T1, T2}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+	/// <see cref="System.Threading.Tasks.ValueTask"/><br/>
+	/// <see cref="System.Threading.Tasks.ValueTask{TResult}"/>
 	/// </code>
 	/// </summary>
-	Action,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.Func{TResult}"/><br/>
-	/// <see cref="System.Func{T, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult}"/>
-	/// </code>
-	/// </summary>
-	Func,
-	/// <summary>
-	/// <c><see cref="System.Type"/></c>
-	/// </summary>
-	Type,
-	/// <summary>
-	/// <code>
-	/// <see cref="System.WeakReference"/><br/>
-	/// <see cref="System.WeakReference{T}"/>
-	/// </code>
-	/// </summary>
-	WeakReference
+	ValueTask
 }

@@ -64,7 +64,7 @@ public class SqlExtensions
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test");
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test");
 
 		var expected = Invariant($@"SELECT COUNT(*)
 FROM {table} WITH(NOLOCK)
@@ -80,7 +80,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -109,7 +109,7 @@ ON data.[ID] = _.[ID];
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -130,7 +130,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -160,7 +160,7 @@ VALUES (N'FirstName1', N'LastName1')
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -194,7 +194,7 @@ ORDER BY [First Name] ASC, Last_Name DESC;
 	public void CreateSelectSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, new DatabaseObject("db.dbo.Test"), "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, new DatabaseObject("db.dbo.Test"), "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -229,7 +229,7 @@ FETCH NEXT 100 ROWS ONLY;
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
@@ -265,7 +265,7 @@ ON data.[ID] = _.[ID];
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
 		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, ObjectType.Table, table, "db", "dbo", "Test", new[]
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),

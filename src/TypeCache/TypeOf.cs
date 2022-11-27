@@ -16,6 +16,7 @@ public static class TypeOf<T>
 
 	public static IReadOnlyList<Attribute> Attributes => Member.Attributes;
 
+	/// <inheritdoc cref="Type.BaseType"/>
 	public static TypeMember? BaseType => Member.BaseType;
 
 	public static TypeMember? ElementType => Member.ElementType;
@@ -40,6 +41,8 @@ public static class TypeOf<T>
 	public static string Namespace => Member.Namespace;
 
 	public static bool Nullable => Member.Nullable;
+
+	public static ObjectType ObjectType => Member.ObjectType;
 
 	/// <inheritdoc cref="Type.IsPublic"/>
 	public static bool Public => Member.Public;

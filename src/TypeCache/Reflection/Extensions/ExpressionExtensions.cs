@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
@@ -353,31 +354,14 @@ public static class ExpressionExtensions
 			_ => @this.Cast(targetType, overflowCheck)
 		};
 
-	private static object? ConvertToSByte(object value, Type targetType, bool overflowCheck)
-		=> value switch
-		{
-			null or DBNull => null,
-			_ when targetType == value.GetType() => value,
-			Enum => ((IConvertible)value).ToSByte(InvariantCulture),
-			IConvertible convertible => System.Convert.ChangeType(value, targetType, InvariantCulture),
-			_ when overflowCheck => checked((sbyte)value),
-			_ => (sbyte)value,
-		};
-
 	private static object? ConvertTo<T>(object value, Type targetType, bool overflowCheck)
 		where T : struct
 		=> value switch
 		{
 			null or DBNull => null,
 			_ when targetType == value.GetType() => value,
-			Enum when targetType == typeof(sbyte) => ((IConvertible)value).ToSByte(InvariantCulture),
-			Enum when targetType == typeof(short) => ((IConvertible)value).ToInt16(InvariantCulture),
-			Enum when targetType == typeof(int) => ((IConvertible)value).ToInt32(InvariantCulture),
-			Enum when targetType == typeof(long) => ((IConvertible)value).ToInt64(InvariantCulture),
-			Enum when targetType == typeof(byte) => ((IConvertible)value).ToByte(InvariantCulture),
-			Enum when targetType == typeof(ushort) => ((IConvertible)value).ToUInt16(InvariantCulture),
-			Enum when targetType == typeof(uint) => ((IConvertible)value).ToUInt32(InvariantCulture),
-			Enum when targetType == typeof(ulong) => ((IConvertible)value).ToUInt64(InvariantCulture),
+			Enum when targetType.IsEnumUnderlyingType() => System.Convert.ChangeType(value, targetType, InvariantCulture),
+			Enum when targetType == typeof(string) => Enum.Format(value.GetType(), value, "G"),
 			string text when targetType == typeof(DateTime) => DateTime.Parse(text, InvariantCulture),
 			IConvertible convertible when targetType.Implements<IConvertible>() => System.Convert.ChangeType(value, targetType, InvariantCulture),
 			string text when targetType == typeof(IntPtr) => IntPtr.Parse(text, InvariantCulture),
@@ -399,7 +383,7 @@ public static class ExpressionExtensions
 			string text => Enum.Parse(targetType, text, true),
 			_ when value.GetType() == targetType => value,
 			_ when value.GetType() == Enum.GetUnderlyingType(targetType) => Enum.ToObject(targetType, value),
-			_ => throw new InvalidCastException(Invariant($"Type \"{value.GetType().Name}\" cannot be converted to {nameof(Enum)} type \"{targetType.Name}\".")),
+			_ => throw new InvalidCastException(Invariant($"Type [{value.GetType().Name}] cannot be converted to {nameof(Enum)} type [{targetType.Name}].")),
 		};
 
 	private static object? ConvertToString(object value)
@@ -408,12 +392,12 @@ public static class ExpressionExtensions
 			null or DBNull => null,
 			string => value,
 			Enum => Enum.GetName(value.GetType(), value),
-			Guid guid => guid.ToString("D", InvariantCulture),
-			DateOnly dateOnly => dateOnly.ToString("O", InvariantCulture),
-			DateTime dateTime => dateTime.ToString("O", InvariantCulture),
-			DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("O", InvariantCulture),
-			TimeOnly timeOnly => timeOnly.ToString("O", InvariantCulture),
-			TimeSpan timeSpan => timeSpan.ToString("O", InvariantCulture),
+			Guid guid => guid.ToText(),
+			DateOnly dateOnly => dateOnly.ToISO8601(),
+			DateTime dateTime => dateTime.ToISO8601(),
+			DateTimeOffset dateTimeOffset => dateTimeOffset.ToISO8601(),
+			TimeOnly timeOnly => timeOnly.ToISO8601(),
+			TimeSpan timeSpan => timeSpan.ToText(),
 			IFormattable formattable => formattable.ToString(null, InvariantCulture),
 			Uri uri => uri.ToString(),
 			_ => (string)value,

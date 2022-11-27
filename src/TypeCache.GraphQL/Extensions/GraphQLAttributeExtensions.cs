@@ -124,16 +124,17 @@ public static class GraphQLAttributeExtensions
 	internal static Type GraphQLType(this TypeMember @this, bool isInputType)
 		=> @this switch
 		{
-			{ Kind: Kind.Delegate or Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
 			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
 			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First() switch
 			{
-				{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
+				{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
 				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
 			},
 			_ when @this.SystemType.IsCollection() => @this.CollectionType()!.GraphQLType(isInputType).ToListGraphType(),
 			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().GraphQLType(isInputType),
-			{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
+			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
 			{ Kind: Kind.Class } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
 			{ Kind: Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType().ToNonNullGraphType(),
 			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
@@ -144,16 +145,17 @@ public static class GraphQLAttributeExtensions
 	internal static Type NullableGraphQLType(this TypeMember @this)
 		=> @this switch
 		{
-			{ Kind: Kind.Delegate or Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
+			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
 			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
-			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First() switch
+			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First()! switch
 			{
-				{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
+				{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
 				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
 			},
 			_ when @this.SystemType.IsCollection() => @this.CollectionType()!.NullableGraphQLType().ToListGraphType(),
 			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().NullableGraphQLType(),
-			{ Kind: Kind.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
+			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
 			{ Kind: Kind.Class or Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
 			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
 			_ => ((Type)@this).ToGraphQLObjectType()

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using static System.Globalization.CultureInfo;
 using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
@@ -236,6 +237,48 @@ public static class ValueExtensions
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
 		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
+		=> @this.ToString("O", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
+		=> @this.ToString("O", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
+		=> @this.ToString("O", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
+		=> @this.ToString("O", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToText(this Guid @this, IFormatProvider? provider = null)
+		=> @this.ToString("D", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
+		=> @this.ToString("c", provider ?? InvariantCulture);
 
 	/// <inheritdoc cref="IFloatingPoint{TSelf}.Truncate(TSelf)"/>
 	/// <remarks>

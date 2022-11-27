@@ -20,11 +20,11 @@ using static TypeCache.Default;
 
 namespace TypeCache.Data;
 
-public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, DatabaseObject Name, string DatabaseName, string SchemaName, string ObjectName)
+public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Type, DatabaseObject Name, string DatabaseName, string SchemaName, string ObjectName)
 {
 	public ObjectSchema(
 		IDataSource dataSource
-		, ObjectType type
+		, DatabaseObjectType type
 		, DatabaseObject name
 		, string databaseName
 		, string schemaName
@@ -37,7 +37,7 @@ public sealed record ObjectSchema(IDataSource DataSource, ObjectType Type, Datab
 
 	public ObjectSchema(
 		IDataSource dataSource
-		, ObjectType type
+		, DatabaseObjectType type
 		, DatabaseObject name
 		, string databaseName
 		, string schemaName

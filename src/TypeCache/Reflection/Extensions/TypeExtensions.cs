@@ -8,14 +8,17 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
+using static System.FormattableString;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection.Extensions;
@@ -28,128 +31,6 @@ public static class TypeExtensions
 	{
 		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(159)
 		{
-			{ typeof(object).TypeHandle, SystemType.Object },
-			{ typeof(bool).TypeHandle, SystemType.Boolean },
-			{ typeof(sbyte).TypeHandle, SystemType.SByte },
-			{ typeof(byte).TypeHandle, SystemType.Byte },
-			{ typeof(short).TypeHandle, SystemType.Int16 },
-			{ typeof(ushort).TypeHandle, SystemType.UInt16 },
-			{ typeof(int).TypeHandle, SystemType.Int32 },
-			{ typeof(uint).TypeHandle, SystemType.UInt32 },
-			{ typeof(long).TypeHandle, SystemType.Int64 },
-			{ typeof(ulong).TypeHandle, SystemType.UInt64 },
-			{ typeof(IntPtr).TypeHandle, SystemType.IntPtr },
-			{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr },
-			{ typeof(BigInteger).TypeHandle, SystemType.BigInteger },
-			{ typeof(float).TypeHandle, SystemType.Single },
-			{ typeof(double).TypeHandle, SystemType.Double },
-			{ typeof(Half).TypeHandle, SystemType.Half },
-			{ typeof(decimal).TypeHandle, SystemType.Decimal },
-			{ typeof(char).TypeHandle, SystemType.Char },
-			{ typeof(DateOnly).TypeHandle, SystemType.DateOnly },
-			{ typeof(DateTime).TypeHandle, SystemType.DateTime },
-			{ typeof(DateTimeOffset).TypeHandle, SystemType.DateTimeOffset },
-			{ typeof(TimeOnly).TypeHandle, SystemType.TimeOnly },
-			{ typeof(TimeSpan).TypeHandle, SystemType.TimeSpan },
-			{ typeof(Guid).TypeHandle, SystemType.Guid },
-			{ typeof(Index).TypeHandle, SystemType.Index },
-			{ typeof(Range).TypeHandle, SystemType.Range },
-			{ typeof(JsonElement).TypeHandle, SystemType.JsonElement },
-			{ typeof(string).TypeHandle, SystemType.String },
-			{ typeof(Uri).TypeHandle, SystemType.Uri },
-			{ typeof(DBNull).TypeHandle, SystemType.DBNull },
-			{ typeof(void).TypeHandle, SystemType.Void },
-			{ typeof(Span<>).TypeHandle, SystemType.Span },
-			{ typeof(Memory<>).TypeHandle, SystemType.Memory },
-			{ typeof(ReadOnlySpan<>).TypeHandle, SystemType.ReadOnlySpan },
-			{ typeof(ReadOnlyMemory<>).TypeHandle, SystemType.ReadOnlyMemory },
-			{ typeof(Lazy<>).TypeHandle, SystemType.Lazy },
-			{ typeof(Lazy<,>).TypeHandle, SystemType.Lazy },
-			{ typeof(Nullable<>).TypeHandle, SystemType.Nullable },
-			{ typeof(Task).TypeHandle, SystemType.Task },
-			{ typeof(Task<>).TypeHandle, SystemType.Task },
-			{ typeof(ValueTask).TypeHandle, SystemType.ValueTask },
-			{ typeof(ValueTask<>).TypeHandle, SystemType.ValueTask },
-			{ typeof(Array).TypeHandle, SystemType.Array },
-			{ typeof(ArrayList).TypeHandle, SystemType.ArrayList },
-			{ typeof(BitArray).TypeHandle, SystemType.BitArray },
-			{ typeof(BlockingCollection<>).TypeHandle, SystemType.BlockingCollection },
-			{ typeof(Collection<>).TypeHandle, SystemType.Collection },
-			{ typeof(CollectionBase).TypeHandle, SystemType.CollectionBase },
-			{ typeof(ConcurrentBag<>).TypeHandle, SystemType.ConcurrentBag },
-			{ typeof(ConcurrentDictionary<,>).TypeHandle, SystemType.ConcurrentDictionary },
-			{ typeof(ConcurrentQueue<>).TypeHandle, SystemType.ConcurrentQueue },
-			{ typeof(Dictionary<,>).TypeHandle, SystemType.Dictionary },
-			{ typeof(DictionaryBase).TypeHandle, SystemType.DictionaryBase },
-			{ typeof(HashSet<>).TypeHandle, SystemType.HashSet },
-			{ typeof(Hashtable).TypeHandle, SystemType.Hashtable },
-			{ typeof(HybridDictionary).TypeHandle, SystemType.HybridDictionary },
-			{ typeof(IAsyncEnumerable<>).TypeHandle, SystemType.IAsyncEnumerable },
-			{ typeof(ICollection).TypeHandle, SystemType.ICollection },
-			{ typeof(ICollection<>).TypeHandle, SystemType.ICollection },
-			{ typeof(IDictionary).TypeHandle, SystemType.IDictionary },
-			{ typeof(IDictionary<,>).TypeHandle, SystemType.IDictionary },
-			{ typeof(IEnumerable).TypeHandle, SystemType.IEnumerable },
-			{ typeof(IEnumerable<>).TypeHandle, SystemType.IEnumerable },
-			{ typeof(IImmutableDictionary<,>).TypeHandle, SystemType.IImmutableDictionary },
-			{ typeof(IImmutableList<>).TypeHandle, SystemType.IImmutableList },
-			{ typeof(IImmutableQueue<>).TypeHandle, SystemType.IImmutableQueue },
-			{ typeof(IImmutableSet<>).TypeHandle, SystemType.IImmutableSet },
-			{ typeof(IImmutableStack<>).TypeHandle, SystemType.IImmutableStack },
-			{ typeof(IList).TypeHandle, SystemType.IList },
-			{ typeof(IList<>).TypeHandle, SystemType.IList },
-			{ typeof(ImmutableArray<>).TypeHandle, SystemType.ImmutableArray },
-			{ typeof(ImmutableDictionary<,>).TypeHandle, SystemType.ImmutableDictionary },
-			{ typeof(ImmutableHashSet<>).TypeHandle, SystemType.ImmutableHashSet },
-			{ typeof(ImmutableList<>).TypeHandle, SystemType.ImmutableList },
-			{ typeof(ImmutableQueue<>).TypeHandle, SystemType.ImmutableQueue },
-			{ typeof(ImmutableSortedDictionary<,>).TypeHandle, SystemType.ImmutableSortedDictionary },
-			{ typeof(ImmutableSortedSet<>).TypeHandle, SystemType.ImmutableSortedSet },
-			{ typeof(ImmutableStack<>).TypeHandle, SystemType.ImmutableStack },
-			{ typeof(IOrderedDictionary).TypeHandle, SystemType.IOrderedDictionary },
-			{ typeof(IReadOnlyCollection<>).TypeHandle, SystemType.IReadOnlyCollection },
-			{ typeof(IReadOnlyDictionary<,>).TypeHandle, SystemType.IReadOnlyDictionary },
-			{ typeof(IReadOnlyList<>).TypeHandle, SystemType.IReadOnlyList },
-			{ typeof(IReadOnlySet<>).TypeHandle, SystemType.IReadOnlySet },
-			{ typeof(ISet<>).TypeHandle, SystemType.ISet },
-			{ typeof(KeyedCollection<,>).TypeHandle, SystemType.KeyedCollection },
-			{ typeof(LinkedList<>).TypeHandle, SystemType.LinkedList },
-			{ typeof(List<>).TypeHandle, SystemType.List },
-			{ typeof(ListDictionary).TypeHandle, SystemType.ListDictionary },
-			{ typeof(NameObjectCollectionBase).TypeHandle, SystemType.NameObjectCollectionBase },
-			{ typeof(NameValueCollection).TypeHandle, SystemType.NameValueCollection },
-			{ typeof(ObservableCollection<>).TypeHandle, SystemType.ObservableCollection },
-			{ typeof(OrderedDictionary).TypeHandle, SystemType.OrderedDictionary },
-			{ typeof(PriorityQueue<,>).TypeHandle, SystemType.PriorityQueue },
-			{ typeof(Queue<>).TypeHandle, SystemType.Queue },
-			{ typeof(ReadOnlyCollection<>).TypeHandle, SystemType.ReadOnlyCollection },
-			{ typeof(ReadOnlyCollectionBase).TypeHandle, SystemType.ReadOnlyCollectionBase },
-			{ typeof(ReadOnlyDictionary<,>).TypeHandle, SystemType.ReadOnlyDictionary },
-			{ typeof(ReadOnlyObservableCollection<>).TypeHandle, SystemType.ReadOnlyObservableCollection },
-			{ typeof(SortedDictionary<,>).TypeHandle, SystemType.SortedDictionary },
-			{ typeof(SortedList<,>).TypeHandle, SystemType.SortedList },
-			{ typeof(SortedSet<>).TypeHandle, SystemType.SortedSet },
-			{ typeof(Stack<>).TypeHandle, SystemType.Stack },
-			{ typeof(StringCollection).TypeHandle, SystemType.StringCollection },
-			{ typeof(StringDictionary).TypeHandle, SystemType.StringDictionary },
-			{ typeof(Tuple).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(ValueTuple).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,,>).TypeHandle, SystemType.ValueTuple },
 			{ typeof(Action).TypeHandle, SystemType.Action },
 			{ typeof(Action<>).TypeHandle, SystemType.Action },
 			{ typeof(Action<,>).TypeHandle, SystemType.Action },
@@ -167,6 +48,15 @@ public static class TypeExtensions
 			{ typeof(Action<,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
 			{ typeof(Action<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
 			{ typeof(Action<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
+			{ typeof(bool).TypeHandle, SystemType.Boolean },
+			{ typeof(byte).TypeHandle, SystemType.Byte },
+			{ typeof(char).TypeHandle, SystemType.Char },
+			{ typeof(DateOnly).TypeHandle, SystemType.DateOnly },
+			{ typeof(DateTime).TypeHandle, SystemType.DateTime },
+			{ typeof(DateTimeOffset).TypeHandle, SystemType.DateTimeOffset },
+			{ typeof(DBNull).TypeHandle, SystemType.DBNull },
+			{ typeof(decimal).TypeHandle, SystemType.Decimal },
+			{ typeof(double).TypeHandle, SystemType.Double },
 			{ typeof(Func<>).TypeHandle, SystemType.Func },
 			{ typeof(Func<,>).TypeHandle, SystemType.Func },
 			{ typeof(Func<,,>).TypeHandle, SystemType.Func },
@@ -184,9 +74,104 @@ public static class TypeExtensions
 			{ typeof(Func<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
 			{ typeof(Func<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
 			{ typeof(Func<,,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
+			{ typeof(Guid).TypeHandle, SystemType.Guid },
+			{ typeof(Half).TypeHandle, SystemType.Half },
+			{ typeof(Index).TypeHandle, SystemType.Index },
+			{ typeof(Int128).TypeHandle, SystemType.Int128 },
+			{ typeof(Int16).TypeHandle, SystemType.Int16 },
+			{ typeof(Int32).TypeHandle, SystemType.Int32 },
+			{ typeof(Int64).TypeHandle, SystemType.Int64 },
+			{ typeof(IntPtr).TypeHandle, SystemType.IntPtr },
+			{ typeof(Lazy<>).TypeHandle, SystemType.Lazy },
+			{ typeof(Lazy<,>).TypeHandle, SystemType.Lazy },
+			{ typeof(Memory<>).TypeHandle, SystemType.Memory },
+			{ typeof(Nullable<>).TypeHandle, SystemType.Nullable },
+			{ typeof(Object).TypeHandle, SystemType.Object },
+			{ typeof(Range).TypeHandle, SystemType.Range },
+			{ typeof(ReadOnlyMemory<>).TypeHandle, SystemType.ReadOnlyMemory },
+			{ typeof(ReadOnlySpan<>).TypeHandle, SystemType.ReadOnlySpan },
+			{ typeof(SByte).TypeHandle, SystemType.SByte },
+			{ typeof(Single).TypeHandle, SystemType.Single },
+			{ typeof(Span<>).TypeHandle, SystemType.Span },
+			{ typeof(String).TypeHandle, SystemType.String },
+			{ typeof(TimeOnly).TypeHandle, SystemType.TimeOnly },
+			{ typeof(TimeSpan).TypeHandle, SystemType.TimeSpan },
+			{ typeof(Tuple).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,,,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,,,,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
+			{ typeof(Type).TypeHandle, SystemType.Type },
+			{ typeof(UInt128).TypeHandle, SystemType.UInt128 },
+			{ typeof(UInt16).TypeHandle, SystemType.UInt16 },
+			{ typeof(UInt32).TypeHandle, SystemType.UInt32 },
+			{ typeof(UInt64).TypeHandle, SystemType.UInt64 },
+			{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr },
+			{ typeof(Uri).TypeHandle, SystemType.Uri },
+			{ typeof(ValueTuple).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,,,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,,,,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(ValueTuple<,,,,,,,>).TypeHandle, SystemType.ValueTuple },
+			{ typeof(void).TypeHandle, SystemType.Void },
 			{ typeof(WeakReference).TypeHandle, SystemType.WeakReference },
 			{ typeof(WeakReference<>).TypeHandle, SystemType.WeakReference },
-			{ typeof(Type).TypeHandle, SystemType.Type },
+			{ typeof(ArrayList).TypeHandle, SystemType.ArrayList },
+			{ typeof(BitArray).TypeHandle, SystemType.BitArray },
+			{ typeof(BlockingCollection<>).TypeHandle, SystemType.BlockingCollection },
+			{ typeof(Collection<>).TypeHandle, SystemType.Collection },
+			{ typeof(ConcurrentBag<>).TypeHandle, SystemType.ConcurrentBag },
+			{ typeof(ConcurrentDictionary<,>).TypeHandle, SystemType.ConcurrentDictionary },
+			{ typeof(ConcurrentQueue<>).TypeHandle, SystemType.ConcurrentQueue },
+			{ typeof(Dictionary<,>).TypeHandle, SystemType.Dictionary },
+			{ typeof(HashSet<>).TypeHandle, SystemType.HashSet },
+			{ typeof(Hashtable).TypeHandle, SystemType.Hashtable },
+			{ typeof(HybridDictionary).TypeHandle, SystemType.HybridDictionary },
+			{ typeof(ImmutableArray<>).TypeHandle, SystemType.ImmutableArray },
+			{ typeof(ImmutableDictionary<,>).TypeHandle, SystemType.ImmutableDictionary },
+			{ typeof(ImmutableHashSet<>).TypeHandle, SystemType.ImmutableHashSet },
+			{ typeof(ImmutableList<>).TypeHandle, SystemType.ImmutableList },
+			{ typeof(ImmutableQueue<>).TypeHandle, SystemType.ImmutableQueue },
+			{ typeof(ImmutableSortedDictionary<,>).TypeHandle, SystemType.ImmutableSortedDictionary },
+			{ typeof(ImmutableSortedSet<>).TypeHandle, SystemType.ImmutableSortedSet },
+			{ typeof(ImmutableStack<>).TypeHandle, SystemType.ImmutableStack },
+			{ typeof(KeyedCollection<,>).TypeHandle, SystemType.KeyedCollection },
+			{ typeof(LinkedList<>).TypeHandle, SystemType.LinkedList },
+			{ typeof(List<>).TypeHandle, SystemType.List },
+			{ typeof(ListDictionary).TypeHandle, SystemType.ListDictionary },
+			{ typeof(NameObjectCollectionBase).TypeHandle, SystemType.NameObjectCollectionBase },
+			{ typeof(NameValueCollection).TypeHandle, SystemType.NameValueCollection },
+			{ typeof(ObservableCollection<>).TypeHandle, SystemType.ObservableCollection },
+			{ typeof(OrderedDictionary).TypeHandle, SystemType.OrderedDictionary },
+			{ typeof(PriorityQueue<,>).TypeHandle, SystemType.PriorityQueue },
+			{ typeof(Queue<>).TypeHandle, SystemType.Queue },
+			{ typeof(ReadOnlyCollection<>).TypeHandle, SystemType.ReadOnlyCollection },
+			{ typeof(ReadOnlyDictionary<,>).TypeHandle, SystemType.ReadOnlyDictionary },
+			{ typeof(ReadOnlyObservableCollection<>).TypeHandle, SystemType.ReadOnlyObservableCollection },
+			{ typeof(SortedDictionary<,>).TypeHandle, SystemType.SortedDictionary },
+			{ typeof(SortedList<,>).TypeHandle, SystemType.SortedList },
+			{ typeof(SortedSet<>).TypeHandle, SystemType.SortedSet },
+			{ typeof(Stack<>).TypeHandle, SystemType.Stack },
+			{ typeof(StringCollection).TypeHandle, SystemType.StringCollection },
+			{ typeof(StringDictionary).TypeHandle, SystemType.StringDictionary },
+			{ typeof(BigInteger).TypeHandle, SystemType.BigInteger },
+			{ typeof(JsonDocument).TypeHandle, SystemType.JsonDocument },
+			{ typeof(JsonElement).TypeHandle, SystemType.JsonElement },
+			{ typeof(JsonArray).TypeHandle, SystemType.JsonArray },
+			{ typeof(JsonObject).TypeHandle, SystemType.JsonObject },
+			{ typeof(JsonValue).TypeHandle, SystemType.JsonValue },
+			{ typeof(Task).TypeHandle, SystemType.Task },
+			{ typeof(Task<>).TypeHandle, SystemType.Task },
+			{ typeof(ValueTask).TypeHandle, SystemType.ValueTask },
+			{ typeof(ValueTask<>).TypeHandle, SystemType.ValueTask },
 		}.ToImmutableDictionary();
 	}
 
@@ -203,57 +188,118 @@ public static class TypeExtensions
 	/// <code>
 	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see cref="Kind.Class"/>,<br/>
 	/// <see langword="    "/>{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
-	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see cref="Kind.Enum"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when typeof"/>(<see cref="Delegate"/>).IsAssignableFrom(@<paramref name="this"/>.BaseType) =&gt; <see cref="Kind.Delegate"/>,<br/>
 	/// <see langword="    "/>{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
+	/// <see langword="    "/>{ IsClass: <see langword="true"/> } =&gt; <see cref="Kind.Class"/>,<br/>
 	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="Kind.Class"/><br/>
+	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="UnreachableException"/>(Invariant($"Type [{@this.Name ?? "null"}] is not supported."))<br/>
 	/// };
 	/// </code>
 	/// </summary>
 	public static Kind GetKind(this Type @this)
 		=> @this switch
 		{
-			_ when @this == typeof(string) => Kind.Class,
 			{ IsPointer: true } => Kind.Pointer,
-			{ IsEnum: true } => Kind.Enum,
-			_ when typeof(Delegate).IsAssignableFrom(@this.BaseType) => Kind.Delegate,
 			{ IsInterface: true } => Kind.Interface,
+			{ IsClass: true } => Kind.Class,
 			{ IsValueType: true } => Kind.Struct,
-			_ => Kind.Class,
+			_ => throw new UnreachableException(Invariant($"Type [{@this.Name ?? "null"}] is not supported."))
 		};
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name
-	///		?? (@<paramref name="this"/>.Name.Contains('`') ? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) : @<paramref name="this"/>.Name);</c>
-	/// </summary>
-	public static string Name(this MemberInfo @this)
-		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name.IndexOf(GENERIC_TICKMARK) switch
+	public static ObjectType GetObjectType(this Type @this)
+		=> @this switch
 		{
-			-1 => @this.Name,
-			var i => @this.Name.Left(i)
+			{ IsArray: true } => ObjectType.Array,
+			{ IsEnum: true } => ObjectType.Enum,
+			{ IsClass: true } => @this switch
+			{
+				_ when @this.Implements<IAsyncResult>() => ObjectType.AsyncResult,
+				_ when @this.IsAssignableTo(typeof(Attribute)) => ObjectType.Attribute,
+				_ when @this.IsAssignableTo(typeof(Delegate)) => ObjectType.Delegate,
+				_ when @this.IsAssignableTo(typeof(Exception)) => ObjectType.Exception,
+				_ when @this.IsAssignableTo(typeof(JsonNode)) => ObjectType.JsonNode,
+				_ when @this.IsAssignableTo(typeof(OrderedDictionary)) => ObjectType.OrderedDictionary,
+				_ when @this.IsAssignableTo(typeof(Stream)) => ObjectType.Stream,
+				_ => ObjectType.Unknown
+			},
+			{ IsGenericType: true } or { IsGenericTypeDefinition: true } => @this.ToGenericType()! switch
+			{
+				var genericType when genericType.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
+				var genericType when genericType.IsOrImplements(typeof(IImmutableSet<>)) => ObjectType.ImmutableSet,
+				var genericType when genericType.IsOrImplements(typeof(IImmutableList<>)) => ObjectType.ImmutableList,
+				var genericType when genericType.IsOrImplements(typeof(IImmutableQueue<>)) => ObjectType.ImmutableQueue,
+				var genericType when genericType.IsOrImplements(typeof(IImmutableStack<>)) => ObjectType.ImmutableStack,
+				var genericType when genericType.IsOrImplements(typeof(IReadOnlyDictionary<,>)) => ObjectType.ReadOnlyDictionary,
+				var genericType when genericType.IsOrImplements(typeof(IReadOnlySet<>)) => ObjectType.ReadOnlySet,
+				var genericType when genericType.IsOrImplements(typeof(IReadOnlyList<>)) => ObjectType.ReadOnlyList,
+				var genericType when genericType.IsOrImplements(typeof(IReadOnlyCollection<>)) => ObjectType.ReadOnlyCollection,
+				var genericType when genericType.IsOrImplements(typeof(IDictionary<,>)) => ObjectType.Dictionary,
+				var genericType when genericType.IsOrImplements(typeof(ISet<>)) => ObjectType.Set,
+				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
+				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
+				var genericType when genericType.IsOrImplements(typeof(IList<>)) => ObjectType.List,
+				var genericType when genericType.IsOrImplements(typeof(ICollection<>)) => ObjectType.Collection,
+				var genericType when genericType.IsOrImplements(typeof(IEnumerable<>)) => ObjectType.Enumerable,
+				var genericType when genericType.IsOrImplements(typeof(IEnumerator<>)) => ObjectType.Enumerator,
+				var genericType when genericType.IsOrImplements(typeof(IObservable<>)) => ObjectType.Observable,
+				var genericType when genericType.IsOrImplements(typeof(IObserver<>)) => ObjectType.Observer,
+				_ => ObjectType.Unknown
+			},
+			_ => ObjectType.Unknown
 		};
 
 	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="switch"/><br/>
 	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <see cref="SystemTypes"/>.TryGetValue(@<paramref name="this"/>.ToGenericType()?.TypeHandle ?? @<paramref name="this"/>.TypeHandle, <see langword="out var"/> systemType) =&gt; systemType,<br/>
-	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; @<paramref name="this"/>.GetEnumUnderlyingType().GetSystemType(),<br/>
-	/// <see langword="    "/>{ IsArray: <see langword="true"/> } =&gt; <see cref="SystemType.Array"/>,<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="SystemType.Unknown"/><br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="sbyte"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="short"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="int"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="long"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="byte"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="ushort"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="uint"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="ulong"/>) =&gt; <see langword="true"/>,<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="false"/><br/>
 	/// };
-	/// </code>
+	/// <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>, <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>);</c>
 	/// </summary>
+	[DebuggerHidden]
+	public static bool IsEnumUnderlyingType(this Type @this)
+		=> @this switch
+		{
+			_ when @this == typeof(sbyte) => true,
+			_ when @this == typeof(short) => true,
+			_ when @this == typeof(int) => true,
+			_ when @this == typeof(long) => true,
+			_ when @this == typeof(byte) => true,
+			_ when @this == typeof(ushort) => true,
+			_ when @this == typeof(uint) => true,
+			_ when @this == typeof(ulong) => true,
+			_ => false
+		};
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name ?? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`'));</c>
+	/// </summary>
+	[DebuggerHidden]
+	public static string Name(this MemberInfo @this)
+		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/>{ IsEnum: true } =&gt; SystemTypes[<see cref="Enum"/>.GetUnderlyingType(@<paramref name="this"/>).TypeHandle],<br/>
+	/// <see langword="    "/>_ <see langword="when"/> SystemTypes.TryGetValue(@<paramref name="this"/>.ToGenericType()?.TypeHandle ?? @<paramref name="this"/>.TypeHandle, <see langword="out var"/> systemType) =&gt; systemType,<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="SystemType.None"/><br/>
+	/// };</c>
+	/// </summary>
+	[DebuggerHidden]
 	public static SystemType GetSystemType(this Type @this)
 		=> @this switch
 		{
+			{ IsEnum: true } => SystemTypes[Enum.GetUnderlyingType(@this).TypeHandle],
 			_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
-			{ IsEnum: true } => @this.GetEnumUnderlyingType().GetSystemType(),
-			{ IsArray: true } => SystemType.Array,
-			_ => SystemType.Unknown
+			_ => SystemType.None
 		};
 
 	/// <summary>
@@ -272,10 +318,10 @@ public static class TypeExtensions
 
 	/// <summary>
 	/// <code>
-	/// <see langword="if"/> (<paramref name="type"/>.IsInterface)<br/>
-	/// <see langword="    return"/> @<paramref name="this"/>.GetInterfaces().Any(<paramref name="type"/>.Is);<br/>
-	/// <see langword="else"/><br/>
 	/// {<br/>
+	/// <see langword="    if"/> (<paramref name="type"/>.IsInterface)<br/>
+	/// <see langword="        return"/> @<paramref name="this"/>.GetInterfaces().Any(<paramref name="type"/>.Is);<br/>
+	/// <br/>
 	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
 	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
 	/// <see langword="    "/>{<br/>
@@ -283,24 +329,24 @@ public static class TypeExtensions
 	/// <see langword="             return true"/>;<br/>
 	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
 	/// <see langword="    "/>}<br/>
-	/// }<br/>
-	/// <see langword="return false"/>;
+	/// <br/>
+	/// <see langword="    return false"/>;<br/>
+	/// }
 	/// </code>
 	/// </summary>
 	public static bool Implements(this Type @this, Type type)
 	{
 		if (type.IsInterface)
 			return @this.GetInterfaces().Any(type.Is);
-		else
+
+		var baseType = @this.BaseType;
+		while (baseType is not null)
 		{
-			var baseType = @this.BaseType;
-			while (baseType is not null)
-			{
-				if (baseType.Is(type))
-					return true;
-				baseType = baseType.BaseType;
-			}
+			if (baseType.Is(type))
+				return true;
+			baseType = baseType.BaseType;
 		}
+
 		return false;
 	}
 
@@ -312,15 +358,31 @@ public static class TypeExtensions
 		=> @this == typeof(T);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/> == <paramref name="type"/>
-	///		|| (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType());</c>
+	/// <c>=&gt; (@<paramref name="this"/> == <paramref name="type"/>
+	///		|| (<paramref name="type"/>.IsGenericTypeDefinition) &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType());</c>
 	/// </summary>
+	[DebuggerHidden]
 	public static bool Is(this Type? @this, Type? type)
-		=> @this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+		=> (@this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true) ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<typeparamref name="T"/>&gt;() || @<paramref name="this"/>.Implements&lt;<typeparamref name="T"/>&gt;();</c>
+	/// </summary>
+	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	public static bool IsOrImplements<T>(this Type @this)
+		=> @this.Is<T>() || @this.Implements<T>();
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Is(<paramref name="type"/>) || @<paramref name="this"/>.Implements(<paramref name="type"/>);</c>
+	/// </summary>
+	[DebuggerHidden]
+	public static bool IsOrImplements(this Type @this, Type type)
+		=> @this.Is(type) || @this.Implements(type);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
 	/// </summary>
+	[DebuggerHidden]
 	public static bool IsEnumerableOf<T>(this Type @this)
 		=> @this.Is<IEnumerable<T>>() || @this.Implements<IEnumerable<T>>();
 
@@ -334,6 +396,7 @@ public static class TypeExtensions
 	/// };
 	/// </code>
 	/// </summary>
+	[DebuggerHidden]
 	public static Type? ToGenericType(this Type? @this)
 		=> @this switch
 		{

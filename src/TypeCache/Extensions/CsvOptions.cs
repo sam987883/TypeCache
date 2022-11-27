@@ -11,11 +11,11 @@ public struct CsvOptions
 
 	public string ByteFormatSpecifier { get; set; } = "X";
 
-	public string DateOnlyFormatSpecifier { get; set; } = "o";
+	public string DateOnlyFormatSpecifier { get; set; } = "O";
 
-	public string DateTimeFormatSpecifier { get; set; } = "o";
+	public string DateTimeFormatSpecifier { get; set; } = "O";
 
-	public string DateTimeOffsetFormatSpecifier { get; set; } = "o";
+	public string DateTimeOffsetFormatSpecifier { get; set; } = "O";
 
 	public string DecimalFormatSpecifier { get; set; } = "D";
 
@@ -39,7 +39,7 @@ public struct CsvOptions
 
 	public string NullText { get; set; } = string.Empty;
 
-	public string TimeOnlyFormatSpecifier { get; set; } = "o";
+	public string TimeOnlyFormatSpecifier { get; set; } = "O";
 
 	public string TimeSpanFormatSpecifier { get; set; } = "c";
 

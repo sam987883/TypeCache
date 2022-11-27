@@ -110,38 +110,50 @@ public static class JsonExtensions
 			case bool success:
 				@this.WriteBooleanValue(success);
 				break;
-			case sbyte or byte or short or ushort or int or IntPtr:
-				@this.WriteNumberValue(Convert.ToInt32(value));
-				break;
-			case byte or ushort or uint:
-				@this.WriteNumberValue(Convert.ToUInt32(value));
+			case int number:
+				@this.WriteNumberValue(number);
 				break;
 			case long number:
+				@this.WriteNumberValue(number);
+				break;
+			case uint number:
 				@this.WriteNumberValue(number);
 				break;
 			case ulong number:
 				@this.WriteNumberValue(number);
 				break;
-			case float or Half or double:
-				@this.WriteNumberValue(Convert.ToDouble(value));
+			case sbyte or short or ushort or IntPtr:
+				@this.WriteNumberValue(Convert.ToInt32(value));
+				break;
+			case byte or ushort or uint or UIntPtr:
+				@this.WriteNumberValue(Convert.ToUInt32(value));
+				break;
+			case float number:
+				@this.WriteNumberValue(number);
+				break;
+			case double number:
+				@this.WriteNumberValue(number);
 				break;
 			case decimal number:
 				@this.WriteNumberValue(number);
 				break;
+			case Half number:
+				@this.WriteNumberValue((float)number);
+				break;
 			case DateOnly date:
-				@this.WriteStringValue(date.ToShortDateString());
+				@this.WriteStringValue(date.ToISO8601());
 				break;
 			case DateTime dateTime:
-				@this.WriteStringValue(dateTime);
+				@this.WriteStringValue(dateTime.ToISO8601());
 				break;
 			case DateTimeOffset dateTimeOffset:
-				@this.WriteStringValue(dateTimeOffset);
+				@this.WriteStringValue(dateTimeOffset.ToISO8601());
 				break;
 			case TimeOnly time:
-				@this.WriteStringValue(time.ToShortTimeString());
+				@this.WriteStringValue(time.ToISO8601());
 				break;
 			case TimeSpan timeSpan:
-				@this.WriteStringValue(timeSpan.ToString("c"));
+				@this.WriteStringValue(timeSpan.ToText());
 				break;
 			case Guid id:
 				@this.WriteStringValue(id);

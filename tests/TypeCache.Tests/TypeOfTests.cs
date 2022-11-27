@@ -106,7 +106,7 @@ public class TypeOfTests
 		Assert.Equal(10, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 	}
 
 	[Fact]
@@ -147,14 +147,14 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.TypeHandle);
 		Assert.Equal(3, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
-		Assert.True(member.SystemType.IsCollection());
+		Assert.False(member.SystemType.IsCollection());
 		Assert.False(member.SystemType.IsImmutable());
 		Assert.Equal(3, member.Methods.Count);
 		Assert.Contains(member.Name, type.Name);
+		Assert.Equal(ObjectType.List, member.ObjectType);
 		Assert.Equal(1, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.IList, member.SystemType);
 	}
 
 	[Fact]
@@ -173,13 +173,14 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.TypeHandle);
 		Assert.Equal(2, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
-		Assert.Equal(Kind.Delegate, member.Kind);
+		Assert.Equal(Kind.Class, member.Kind);
 		Assert.Equal(48, member.Methods.Count);
 		Assert.Contains(member.Name, type.Name);
+		Assert.Equal(ObjectType.Delegate, member.ObjectType);
 		Assert.Equal(2, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 	}
 
 	[Fact]
@@ -198,9 +199,10 @@ public class TypeOfTests
 		Assert.Equal(type.TypeHandle, member.TypeHandle);
 		Assert.Equal(3, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
-		Assert.Equal(Kind.Enum, member.Kind);
+		Assert.Equal(Kind.Struct, member.Kind);
 		Assert.Equal(60, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
+		Assert.Equal(ObjectType.Enum, member.ObjectType);
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
@@ -229,7 +231,7 @@ public class TypeOfTests
 		Assert.Equal(1, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 	}
 
 	[Fact]
@@ -254,7 +256,7 @@ public class TypeOfTests
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 
 		type = typeof(int*);
 		member = type.GetTypeMember();
@@ -275,7 +277,7 @@ public class TypeOfTests
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 
 		type = typeof(bool*);
 		member = type.GetTypeMember();
@@ -296,7 +298,7 @@ public class TypeOfTests
 		Assert.Empty(member.Properties);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 	}
 
 	[Fact]
@@ -383,6 +385,6 @@ public class TypeOfTests
 		Assert.Equal(7, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
-		Assert.Equal(SystemType.Unknown, member.SystemType);
+		Assert.Equal(SystemType.None, member.SystemType);
 	}
 }

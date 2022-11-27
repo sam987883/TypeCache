@@ -10,8 +10,6 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Data.Extensions;
 
@@ -140,85 +138,5 @@ public static class DbDataReaderExtensions
 			writer.WriteEndObject();
 		}
 		writer.WriteEndArray();
-	}
-
-	public static async Task<T[]> ReadRowsAsync<T>(this DbDataReader @this, int initialCapacity = 0, CancellationToken token = default)
-	{
-		var type = TypeOf<T>.Member;
-		var columnCount = @this.VisibleFieldCount;
-		var rows = new List<T>(initialCapacity);
-		if (type.SystemType == SystemType.Tuple)
-		{
-			var values = new object[columnCount];
-			var tupleType = typeof(Tuple).GetTypeMember();
-			var genericTypes = type.GenericTypes.OfType<Type>().ToArray();
-			while (await @this.ReadAsync(token))
-			{
-				@this.GetValues(values);
-				rows.Add((T)tupleType.InvokeGenericMethod(nameof(Tuple.Create), genericTypes!, values)!);
-			}
-		}
-		else if (type.SystemType == SystemType.ValueTuple)
-		{
-			var values = new object[columnCount];
-			var valueTupleType = typeof(ValueTuple).GetTypeMember();
-			var genericTypes = type.GenericTypes.OfType<Type>().ToArray();
-			while (await @this.ReadAsync(token))
-			{
-				@this.GetValues(values);
-				rows.Add((T)valueTupleType.InvokeGenericMethod(nameof(ValueTuple.Create), genericTypes!, values)!);
-			}
-		}
-		else if (type.SystemType == SystemType.Array && type.ElementType!.SystemType == SystemType.Object)
-		{
-			while (await @this.ReadAsync(token))
-			{
-				var values = new object[columnCount];
-				@this.GetValues(values);
-				rows.Add((T)(object)values);
-			}
-		}
-		else if (type.Kind == Kind.Enum
-			|| type.SystemType.IsPrimitive()
-			|| type.SystemType == SystemType.Half
-			|| type.SystemType == SystemType.Decimal
-			|| type.SystemType == SystemType.Guid
-			|| type.SystemType == SystemType.DateOnly
-			|| type.SystemType == SystemType.DateTime
-			|| type.SystemType == SystemType.DateTimeOffset
-			|| type.SystemType == SystemType.TimeOnly
-			|| type.SystemType == SystemType.TimeSpan
-			|| type.SystemType == SystemType.String
-			|| (type.SystemType == SystemType.Array && type.ElementType!.SystemType == SystemType.Byte))
-		{
-			while (await @this.ReadAsync(token))
-				rows.Add(await @this.GetFieldValueAsync<T>(0, token));
-		}
-		else if (type.SystemType == SystemType.Dictionary || type.SystemType == SystemType.IDictionary)
-		{
-			var columns = @this.GetColumns();
-			var values = new object[columnCount];
-			while (await @this.ReadAsync(token))
-			{
-				@this.GetValues(values);
-				var dictionary = new Dictionary<string, object>(columnCount, StringComparer.OrdinalIgnoreCase);
-				columns.ForEach((column, i) => dictionary.Add(column, values[i]));
-				rows.Add((T)(object)dictionary);
-			}
-		}
-		else
-		{
-			var propertyMap = TypeOf<T>.Member.Properties.ToDictionary(property => property.Name, property => property);
-			var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
-			var values = new object[columnCount];
-			while (await @this.ReadAsync(token))
-			{
-				var model = TypeOf<T>.Create()!;
-				@this.GetValues(values);
-				properties.ForEach((property, i) => property.SetValue(model, values[i]));
-				rows.Add(model);
-			}
-		}
-		return rows.ToArray();
 	}
 }

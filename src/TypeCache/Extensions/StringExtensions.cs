@@ -184,11 +184,11 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="string.Substring(int, int)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Substring(0, <paramref name="length"/>);</c>
+	/// <c>=&gt; <paramref name="length"/> &gt; -1 ? @<paramref name="this"/>.Substring(0, <paramref name="length"/>) : @<paramref name="this"/>;</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static string Left(this string @this, int length)
-		=> @this.Substring(0, length);
+		=> length > -1 ? @this.Substring(0, length) : @this;
 
 	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
 	/// <remarks>
@@ -205,13 +205,11 @@ public static class StringExtensions
 	/// <see langword="        return"/> <see cref="string.Empty"/>;<br/>
 	/// <br/>
 	/// <see langword="    "/>Span&lt;<see cref="char"/>&gt; span = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
 	/// <see langword="    var"/> i = -1;<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
 	/// <see langword="    while"/> (++i &lt; span.Length)<br/>
-	/// <see langword="    {"/><br/>
 	/// <see langword="        if"/> (span[i].IsLetterOrDigit())<br/>
 	/// <see langword="            "/>span[i] = mask;<br/>
-	/// <see langword="    }"/><br/>
 	/// <br/>
 	/// <see langword="    new"/> <see cref="string"/>(span);<br/>
 	/// }
@@ -226,10 +224,8 @@ public static class StringExtensions
 		@this.AsSpan().CopyTo(span);
 		var i = -1;
 		while (++i < span.Length)
-		{
 			if (span[i].IsLetterOrDigit())
 				span[i] = mask;
-		}
 
 		return new string(span);
 	}

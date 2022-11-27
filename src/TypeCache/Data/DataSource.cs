@@ -264,7 +264,7 @@ internal sealed class DataSource : IDataSource
 						.Select(column => new ColumnSchema(
 							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Contains(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
 
-					var objectSchema = new ObjectSchema(this, ObjectType.Table, name, databaseName, tableSchema, tableName, columns);
+					var objectSchema = new ObjectSchema(this, DatabaseObjectType.Table, name, databaseName, tableSchema, tableName, columns);
 					objectSchemas.Add(name, objectSchema);
 				}
 				catch (Exception) { }
@@ -290,7 +290,7 @@ internal sealed class DataSource : IDataSource
 						.Select(column => new ColumnSchema(
 							column.ColumnName, column.AllowDBNull, table.PrimaryKey.Contains(column), column.ReadOnly, column.Unique, column.DataType.TypeHandle));
 
-					var objectSchema = new ObjectSchema(this, ObjectType.View, name, databaseName, tableSchema, tableName, columns);
+					var objectSchema = new ObjectSchema(this, DatabaseObjectType.View, name, databaseName, tableSchema, tableName, columns);
 					objectSchemas.Add(name, objectSchema);
 				}
 				catch (Exception) { }
@@ -318,8 +318,8 @@ internal sealed class DataSource : IDataSource
 				var name = this.CreateName(databaseName, routineSchema, routineName);
 				var objectType = routineType switch
 				{
-					_ when routineType.Is("FUNCTION") => ObjectType.Function,
-					_ => ObjectType.StoredProcedure
+					_ when routineType.Is("FUNCTION") => DatabaseObjectType.Function,
+					_ => DatabaseObjectType.StoredProcedure
 				};
 				var objectSchema = new ObjectSchema(this, objectType, name, databaseName, routineSchema, routineName, parameters ?? Array<ParameterSchema>.Empty);
 				objectSchemas.Add(name, objectSchema);

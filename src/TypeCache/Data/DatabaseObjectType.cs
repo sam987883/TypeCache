@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace TypeCache.Data;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum ObjectType
+public enum DatabaseObjectType
 {
 	Table = 1,
 	View,

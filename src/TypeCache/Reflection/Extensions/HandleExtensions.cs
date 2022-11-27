@@ -14,14 +14,20 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable());</c>
 	/// </remarks>
-	internal static bool IsInvokable(this ConstructorInfo @this)
+	private static bool IsInvokable(this MethodBase @this)
 		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable()) &amp;&amp; @<paramref name="this"/>.IsInvokable();</c>
+	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable();</c>
+	/// </remarks>
+	internal static bool IsInvokable(this ConstructorInfo @this)
+		=> ((MethodBase)@this).IsInvokable();
+
+	/// <remarks>
+	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
 	/// </remarks>
 	internal static bool IsInvokable(this MethodInfo @this)
-		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable()) && @this.ReturnType.IsInvokable();
+		=> ((MethodBase)@this).IsInvokable() && @this.ReturnType.IsInvokable();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
@@ -78,16 +84,21 @@ public static class HandleExtensions
 		=> FieldInfo.GetFieldFromHandle(@this, typeHandle);
 
 	/// <remarks>
-	/// <code>
-	/// var type = @this.ToType();<br/>
-	/// <see langword="return"/> type?.IsGenericType <see langword="is true"/> ? type.GetGenericTypeDefinition() : <see langword="null"/>;
-	/// </code>
+	/// <c>=&gt; @this.ToType() <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    null"/> =&gt; <see langword="null"/>,<br/>
+	/// <see langword="    var"/> type <see langword="when"/> type.IsGenericType =&gt; type.GetGenericTypeDefinition(),<br/>
+	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
+	/// };
+	/// </c>
 	/// </remarks>
 	public static Type? ToGenericType(this RuntimeTypeHandle @this)
-	{
-		var type = @this.ToType();
-		return type?.IsGenericType is true ? type.GetGenericTypeDefinition() : null;
-	}
+		=> @this.ToType() switch
+		{
+			null => null,
+			var type when type.IsGenericType => type.GetGenericTypeDefinition(),
+			_ => null
+		};
 
 	/// <inheritdoc cref="Type.MakeGenericType(Type[])"/>
 	/// <remarks>
@@ -102,8 +113,8 @@ public static class HandleExtensions
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static MethodBase? ToMethodBase(this RuntimeMethodHandle @this)
-		=> MethodBase.GetMethodFromHandle(@this);
+	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this)
+		=> MethodBase.GetMethodFromHandle(@this) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(...) returned null.");
 
 	/// <inheritdoc cref="MethodBase.GetMethodFromHandle(RuntimeMethodHandle, RuntimeTypeHandle)"/>
 	/// <remarks>
@@ -111,8 +122,8 @@ public static class HandleExtensions
 	/// </remarks>
 	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method using a generic parameter of its declared type.</param>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static MethodBase? ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
-		=> MethodBase.GetMethodFromHandle(@this, typeHandle);
+	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
+		=> MethodBase.GetMethodFromHandle(@this, typeHandle) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(..., ...) returned null.");
 
 	/// <inheritdoc cref="Type.GetTypeFromHandle(RuntimeTypeHandle)"/>
 	/// <remarks>
@@ -120,5 +131,5 @@ public static class HandleExtensions
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static Type ToType(this RuntimeTypeHandle @this)
-		=> Type.GetTypeFromHandle(@this)!;
+		=> Type.GetTypeFromHandle(@this) ?? throw new UnreachableException("Type.GetTypeFromHandle(...) returned null.");
 }

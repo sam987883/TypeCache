@@ -255,7 +255,7 @@ public sealed class GraphQLSchema : Schema, IName
 				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
 			}
 
-			if (objectSchema.Type.IsAny(ObjectType.Table, ObjectType.View) && actions.HasFlag(SqlApiAction.Select))
+			if (objectSchema.Type.IsAny(DatabaseObjectType.Table, DatabaseObjectType.View) && actions.HasFlag(SqlApiAction.Select))
 			{
 				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
 				var arguments = new QueryArguments();
@@ -282,7 +282,7 @@ public sealed class GraphQLSchema : Schema, IName
 				this.Query!.AddField(field);
 			}
 
-			if (objectSchema.Type is ObjectType.Table)
+			if (objectSchema.Type is DatabaseObjectType.Table)
 			{
 				var outputResponseType = OutputResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
 
