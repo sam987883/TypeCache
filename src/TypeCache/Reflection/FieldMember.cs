@@ -7,8 +7,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Attributes;
-using TypeCache.Reflection.Extensions;
+using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;

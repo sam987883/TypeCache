@@ -3,7 +3,7 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using TypeCache.Reflection.Extensions;
+using TypeCache.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;

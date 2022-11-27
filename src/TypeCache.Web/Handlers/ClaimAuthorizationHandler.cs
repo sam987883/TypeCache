@@ -3,7 +3,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Reflection.Extensions;
+using TypeCache.Extensions;
 using TypeCache.Web.Attributes;
 using TypeCache.Web.Extensions;
 using TypeCache.Web.Requirements;

@@ -12,7 +12,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 using static TypeCache.Default;

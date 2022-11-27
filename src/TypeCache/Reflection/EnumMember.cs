@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;

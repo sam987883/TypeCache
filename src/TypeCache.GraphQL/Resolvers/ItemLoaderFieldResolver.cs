@@ -9,7 +9,6 @@ using GraphQL.Resolvers;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;

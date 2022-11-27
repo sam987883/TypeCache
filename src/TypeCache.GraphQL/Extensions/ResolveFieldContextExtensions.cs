@@ -9,7 +9,6 @@ using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;

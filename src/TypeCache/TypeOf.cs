@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using TypeCache.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache;

@@ -2,39 +2,15 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using TypeCache.Reflection;
 using static TypeCache.Default;
 
-namespace TypeCache.Reflection.Extensions;
+namespace TypeCache.Extensions;
 
 public static class HandleExtensions
 {
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable());</c>
-	/// </remarks>
-	private static bool IsInvokable(this MethodBase @this)
-		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
-
-	/// <remarks>
-	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable();</c>
-	/// </remarks>
-	internal static bool IsInvokable(this ConstructorInfo @this)
-		=> ((MethodBase)@this).IsInvokable();
-
-	/// <remarks>
-	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
-	/// </remarks>
-	internal static bool IsInvokable(this MethodInfo @this)
-		=> ((MethodBase)@this).IsInvokable() && @this.ReturnType.IsInvokable();
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
-	/// </remarks>
-	internal static bool IsInvokable(this Type @this)
-		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
-
 	/// <remarks>
 	/// <c>=&gt; <see cref="TypeMember.Cache"/>[@<paramref name="this"/>];</c>
 	/// </remarks>
@@ -56,7 +32,7 @@ public static class HandleExtensions
 	/// </remarks>
 	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
 	public static bool Is(this RuntimeTypeHandle @this, Type type)
-		=> @this.Equals(type.TypeHandle) || (type.IsGenericTypeDefinition && @this.ToGenericType() == type);
+		=> @this.Equals(type.TypeHandle) || type.IsGenericTypeDefinition && @this.ToGenericType() == type;
 
 	/// <inheritdoc cref="Type.MakeArrayType(int)"/>
 	/// <remarks>

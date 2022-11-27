@@ -8,7 +8,6 @@ using GraphQL.Resolvers;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.GraphQL.Resolvers;
 

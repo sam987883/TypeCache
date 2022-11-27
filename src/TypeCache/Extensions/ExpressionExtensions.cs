@@ -9,11 +9,12 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 using static TypeCache.Default;
 
-namespace TypeCache.Reflection.Extensions;
+namespace TypeCache.Extensions;
 
 public static class ExpressionExtensions
 {

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 using TypeCache.Web.Attributes;
 using TypeCache.Web.Extensions;
 using TypeCache.Web.Requirements;

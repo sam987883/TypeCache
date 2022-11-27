@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests.Reflection.Extensions;

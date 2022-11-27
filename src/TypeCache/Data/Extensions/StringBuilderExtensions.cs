@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 

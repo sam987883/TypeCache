@@ -7,7 +7,6 @@ using System.Linq;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using TypeCache.Reflection.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests;

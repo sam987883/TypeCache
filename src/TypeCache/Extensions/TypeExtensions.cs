@@ -18,10 +18,11 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static System.FormattableString;
 using static TypeCache.Default;
 
-namespace TypeCache.Reflection.Extensions;
+namespace TypeCache.Extensions;
 
 public static class TypeExtensions
 {
@@ -78,22 +79,22 @@ public static class TypeExtensions
 			{ typeof(Half).TypeHandle, SystemType.Half },
 			{ typeof(Index).TypeHandle, SystemType.Index },
 			{ typeof(Int128).TypeHandle, SystemType.Int128 },
-			{ typeof(Int16).TypeHandle, SystemType.Int16 },
-			{ typeof(Int32).TypeHandle, SystemType.Int32 },
-			{ typeof(Int64).TypeHandle, SystemType.Int64 },
+			{ typeof(short).TypeHandle, SystemType.Int16 },
+			{ typeof(int).TypeHandle, SystemType.Int32 },
+			{ typeof(long).TypeHandle, SystemType.Int64 },
 			{ typeof(IntPtr).TypeHandle, SystemType.IntPtr },
 			{ typeof(Lazy<>).TypeHandle, SystemType.Lazy },
 			{ typeof(Lazy<,>).TypeHandle, SystemType.Lazy },
 			{ typeof(Memory<>).TypeHandle, SystemType.Memory },
 			{ typeof(Nullable<>).TypeHandle, SystemType.Nullable },
-			{ typeof(Object).TypeHandle, SystemType.Object },
+			{ typeof(object).TypeHandle, SystemType.Object },
 			{ typeof(Range).TypeHandle, SystemType.Range },
 			{ typeof(ReadOnlyMemory<>).TypeHandle, SystemType.ReadOnlyMemory },
 			{ typeof(ReadOnlySpan<>).TypeHandle, SystemType.ReadOnlySpan },
-			{ typeof(SByte).TypeHandle, SystemType.SByte },
-			{ typeof(Single).TypeHandle, SystemType.Single },
+			{ typeof(sbyte).TypeHandle, SystemType.SByte },
+			{ typeof(float).TypeHandle, SystemType.Single },
 			{ typeof(Span<>).TypeHandle, SystemType.Span },
-			{ typeof(String).TypeHandle, SystemType.String },
+			{ typeof(string).TypeHandle, SystemType.String },
 			{ typeof(TimeOnly).TypeHandle, SystemType.TimeOnly },
 			{ typeof(TimeSpan).TypeHandle, SystemType.TimeSpan },
 			{ typeof(Tuple).TypeHandle, SystemType.Tuple },
@@ -107,9 +108,9 @@ public static class TypeExtensions
 			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
 			{ typeof(Type).TypeHandle, SystemType.Type },
 			{ typeof(UInt128).TypeHandle, SystemType.UInt128 },
-			{ typeof(UInt16).TypeHandle, SystemType.UInt16 },
-			{ typeof(UInt32).TypeHandle, SystemType.UInt32 },
-			{ typeof(UInt64).TypeHandle, SystemType.UInt64 },
+			{ typeof(ushort).TypeHandle, SystemType.UInt16 },
+			{ typeof(uint).TypeHandle, SystemType.UInt32 },
+			{ typeof(ulong).TypeHandle, SystemType.UInt64 },
 			{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr },
 			{ typeof(Uri).TypeHandle, SystemType.Uri },
 			{ typeof(ValueTuple).TypeHandle, SystemType.ValueTuple },
@@ -363,7 +364,7 @@ public static class TypeExtensions
 	/// </summary>
 	[DebuggerHidden]
 	public static bool Is(this Type? @this, Type? type)
-		=> (@this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true) ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+		=> @this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<typeparamref name="T"/>&gt;() || @<paramref name="this"/>.Implements&lt;<typeparamref name="T"/>&gt;();</c>
@@ -404,4 +405,28 @@ public static class TypeExtensions
 			{ IsGenericType: true } => @this.GetGenericTypeDefinition(),
 			_ => null
 		};
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable());</c>
+	/// </remarks>
+	private static bool IsInvokable(this MethodBase @this)
+		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
+
+	/// <remarks>
+	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable();</c>
+	/// </remarks>
+	internal static bool IsInvokable(this ConstructorInfo @this)
+		=> ((MethodBase)@this).IsInvokable();
+
+	/// <remarks>
+	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
+	/// </remarks>
+	internal static bool IsInvokable(this MethodInfo @this)
+		=> ((MethodBase)@this).IsInvokable() && @this.ReturnType.IsInvokable();
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
+	/// </remarks>
+	internal static bool IsInvokable(this Type @this)
+		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 }

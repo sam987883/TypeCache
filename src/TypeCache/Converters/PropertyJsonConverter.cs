@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection.Converters;
 

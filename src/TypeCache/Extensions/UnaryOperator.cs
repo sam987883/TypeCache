@@ -2,7 +2,7 @@
 
 using System.Linq.Expressions;
 
-namespace TypeCache.Reflection.Extensions;
+namespace TypeCache.Extensions;
 
 public enum UnaryOperator
 {

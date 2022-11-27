@@ -8,9 +8,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static TypeCache.Default;
 
-namespace TypeCache.Reflection.Extensions;
+namespace TypeCache.Extensions;
 
 public static class MemberExtensions
 {
@@ -183,7 +184,7 @@ public static class MemberExtensions
 
 		var argumentEnumerator = arguments.GetEnumerator();
 		return @this.All(parameter => argumentEnumerator.IfNext(out var argument)
-			? (argument is not null ? parameter.Type.Supports(argument.GetType()) : parameter.Type.Nullable)
+			? argument is not null ? parameter.Type.Supports(argument.GetType()) : parameter.Type.Nullable
 			: parameter.HasDefaultValue || parameter.IsOptional) && !argumentEnumerator.MoveNext();
 	}
 
@@ -193,7 +194,7 @@ public static class MemberExtensions
 	/// &amp;&amp; @<paramref name="this"/>.GenericTypes.FirstOrDefault()!.Implements&lt;<see cref="IConvertible"/>&gt;());</c>
 	/// </summary>
 	public static bool IsConvertible(this TypeMember @this)
-		=> @this.Implements<IConvertible>() || (@this.SystemType is SystemType.Nullable && @this.GenericTypes.First().Implements<IConvertible>());
+		=> @this.Implements<IConvertible>() || @this.SystemType is SystemType.Nullable && @this.GenericTypes.First().Implements<IConvertible>();
 
 	/// <summary>
 	/// <c>=&gt; ((<see cref="Type"/>)@<paramref name="this"/>).IsSubclassOf((<see cref="Type"/>)<paramref name="typeMember"/>);</c>
@@ -215,5 +216,5 @@ public static class MemberExtensions
 	/// || (@<paramref name="this"/>.IsConvertible() &amp;&amp; <paramref name="typeMember"/>.IsConvertible());</c>
 	/// </summary>
 	public static bool Supports(this TypeMember @this, TypeMember typeMember)
-		=> @this.TypeHandle.Equals(typeMember.TypeHandle) || typeMember.IsSubclassOf(@this) || (@this.IsConvertible() && typeMember.IsConvertible());
+		=> @this.TypeHandle.Equals(typeMember.TypeHandle) || typeMember.IsSubclassOf(@this) || @this.IsConvertible() && typeMember.IsConvertible();
 }

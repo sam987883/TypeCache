@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 
 namespace TypeCache.Reflection;
 

@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using TypeCache.Reflection.Extensions;
 using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
