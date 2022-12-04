@@ -1,12 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Text;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -16,7 +11,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static UnicodeCategory GetUnicodeCategory(this Rune @this)
 		=> Rune.GetUnicodeCategory(@this);
 
@@ -24,7 +19,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsControl(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsControl(this Rune @this)
 		=> Rune.IsControl(@this);
 
@@ -32,7 +27,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsDigit(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsDigit(this Rune @this)
 		=> Rune.IsDigit(@this);
 
@@ -40,7 +35,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsLetter(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLetter(this Rune @this)
 		=> Rune.IsLetter(@this);
 
@@ -48,7 +43,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsLetterOrDigit(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLetterOrDigit(this Rune @this)
 		=> Rune.IsLetterOrDigit(@this);
 
@@ -56,7 +51,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsLower(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLower(this Rune @this)
 		=> Rune.IsLower(@this);
 
@@ -64,7 +59,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsNumber(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsNumber(this Rune @this)
 		=> Rune.IsNumber(@this);
 
@@ -72,7 +67,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsPunctuation(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsPunctuation(this Rune @this)
 		=> Rune.IsPunctuation(@this);
 
@@ -80,7 +75,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsSeparator(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSeparator(this Rune @this)
 		=> Rune.IsSeparator(@this);
 
@@ -88,7 +83,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsSymbol(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSymbol(this Rune @this)
 		=> Rune.IsSymbol(@this);
 
@@ -96,7 +91,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsUpper(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsUpper(this Rune @this)
 		=> Rune.IsUpper(@this);
 
@@ -104,7 +99,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.IsWhiteSpace(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsWhiteSpace(this Rune @this)
 		=> Rune.IsWhiteSpace(@this);
 
@@ -112,7 +107,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Rune ToLower(this Rune @this, CultureInfo culture)
 		=> Rune.ToLower(@this, culture);
 
@@ -120,7 +115,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Rune ToLowerInvariant(this Rune @this)
 		=> Rune.ToLowerInvariant(@this);
 
@@ -128,7 +123,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.GetNumericValue(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static double ToNumber(this Rune @this)
 		=> Rune.GetNumericValue(@this);
 
@@ -136,7 +131,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Rune ToUpper(this Rune @this, CultureInfo culture)
 		=> Rune.ToUpper(@this, culture);
 
@@ -144,7 +139,7 @@ public static class RuneExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Rune ToUpperInvariant(this Rune @this)
 		=> Rune.ToUpperInvariant(@this);
 }

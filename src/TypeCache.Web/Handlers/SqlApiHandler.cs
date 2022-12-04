@@ -76,7 +76,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}
@@ -99,7 +99,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}
@@ -126,7 +126,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}
@@ -149,7 +149,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}
@@ -397,7 +397,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}
@@ -420,7 +420,7 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 			result = await mediator.ApplyRuleAsync<SqlCommand, JsonArray>(sqlCommand, httpContext.RequestAborted);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, httpContext.RequestAborted);
 
 		return Results.Ok(result);
 	}

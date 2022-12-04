@@ -1,20 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TypeCache.Collections;
-using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
-using static TypeCache.Default;
-using Unsafe = TypeCache.Reflection.Unsafe;
 
 namespace TypeCache.Extensions;
 
@@ -24,7 +15,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsDigit());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyDigit(this string @this)
 		=> @this.Any(c => c.IsDigit());
 
@@ -32,7 +23,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetter());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyLetter(this string @this)
 		=> @this.Any(c => c.IsLetter());
 
@@ -40,7 +31,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLetterOrDigit());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyLetterOrDigit(this string @this)
 		=> @this.Any(c => c.IsLetterOrDigit());
 
@@ -48,7 +39,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsLower());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyLower(this string @this)
 		=> @this.Any(c => c.IsLower());
 
@@ -56,7 +47,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsNumber());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyNumber(this string @this)
 		=> @this.Any(c => c.IsNumber());
 
@@ -64,7 +55,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsPunctuation());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyPunctuation(this string @this)
 		=> @this.Any(c => c.IsPunctuation());
 
@@ -72,7 +63,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsSymbol());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnySymbol(this string @this)
 		=> @this.Any(c => c.IsSymbol());
 
@@ -80,7 +71,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsUpper());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyUppercase(this string @this)
 		=> @this.Any(c => c.IsUpper());
 
@@ -88,15 +79,22 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsWhiteSpace());</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool AnyWhiteSpace(this string @this)
 		=> @this.Any(c => c.IsWhiteSpace());
+
+	/// <remarks>
+	/// <c>=&gt; <paramref name="chars"/>?.Any(@<paramref name="this"/>.Contains) <see langword="is true"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsAny(this string @this, params char[] chars)
+		=> chars?.Any(@this.Contains) is true;
 
 	/// <inheritdoc cref="Convert.FromBase64String(string)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.FromBase64String(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] FromBase64(this string @this)
 		=> Convert.FromBase64String(@this);
 
@@ -117,22 +115,22 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Has(this string @this, string value, StringComparison comparison = STRING_COMPARISON)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Has(this string @this, string value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.Contains(value, comparison);
 
 	/// <remarks>
 	/// <c>=&gt; <paramref name="comparison"/>.ToStringComparer().Equals(@<paramref name="this"/>, <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Is(this string? @this, string? value, StringComparison comparison = STRING_COMPARISON)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Is(this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> comparison.ToStringComparer().Equals(@this, value);
 
 	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.IsNullOrWhiteSpace(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsBlank([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrWhiteSpace(@this);
 
@@ -140,7 +138,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsNullOrEmpty([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrEmpty(@this);
 
@@ -148,7 +146,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; !<see cref="string"/>.IsNullOrWhiteSpace(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsNotBlank([NotNullWhen(true)] this string? @this)
 		=> !string.IsNullOrWhiteSpace(@this);
 
@@ -156,21 +154,21 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; !<see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsNotNullOrEmpty([NotNullWhen(true)] this string? @this)
 		=> !string.IsNullOrEmpty(@this);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this string? @this, IEnumerable<string> values)
 		=> @this.AsSpan().Join(values);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this string? @this, params string[] values)
 		=> @this.AsSpan().Join(values);
 
@@ -178,7 +176,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Left(this string @this, char text)
 		=> @this.StartsWith(text);
 
@@ -186,7 +184,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="length"/> &gt; -1 ? @<paramref name="this"/>.Substring(0, <paramref name="length"/>) : @<paramref name="this"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Left(this string @this, int length)
 		=> length > -1 ? @this.Substring(0, length) : @this;
 
@@ -194,8 +192,8 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Left(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Left(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.StartsWith(text, comparison);
 
 	/// <summary>
@@ -230,7 +228,7 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = STRING_COMPARISON, params string[] hideTerms)
+	public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] hideTerms)
 	{
 		if (@this.IsBlank() || !hideTerms.Any())
 			return @this;
@@ -258,7 +256,7 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = STRING_COMPARISON, params string[] showTerms)
+	public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] showTerms)
 	{
 		if (@this.IsBlank())
 			return @this;
@@ -289,7 +287,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? @<paramref name="this"/> : <see langword="null"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	[return:NotNullIfNotNull("this")]
 	public static string? NullIfBlank(this string? @this)
 		=> @this.IsNotBlank() ? @this : null;
@@ -297,7 +295,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsNotEmpty() ? @<paramref name="this"/> : <see langword="null"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	[return: NotNullIfNotNull("this")]
 	public static string? NullIfEmpty(this string? @this)
 		=> @this.IsNotNullOrEmpty() ? @this : null;
@@ -306,7 +304,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this string @this, IFormatProvider? formatProvider = null)
 		where T : IParsable<T>
 		=> T.Parse(@this, formatProvider ?? InvariantCulture);
@@ -315,7 +313,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this string @this, NumberStyles style, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
 		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
@@ -324,7 +322,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Regex"/>.Escape(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string RegexEscape(this string @this)
 		=> Regex.Escape(@this);
 
@@ -332,7 +330,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Regex"/>.Unescape(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string RegexUnescape(this string @this)
 		=> Regex.Unescape(@this);
 
@@ -356,7 +354,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Right(this string @this, char text)
 		=> @this.EndsWith(text);
 
@@ -364,8 +362,8 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Right(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.EndsWith(text, comparison);
 
 	/// <remarks>
@@ -394,7 +392,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] ToBytes(this string @this, Encoding encoding)
 		=> encoding.GetBytes(@this);
 
@@ -402,7 +400,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>, <paramref name="bytes"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
 		=> encoding.GetBytes(@this, bytes);
 
@@ -416,14 +414,14 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Uri? ToUri(this string? @this)
 		=> @this is not null ? new Uri(@this) : null;
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>, <paramref name="kind"/>) : <see langword="null"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Uri? ToUri(this string? @this, UriKind kind)
 		=> @this is not null ? new Uri(@this, kind) : null;
 
@@ -432,7 +430,7 @@ public static class StringExtensions
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(0, @<paramref name="this"/>.Length - <paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
 	/// </remarks>
-	public static string TrimEnd(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
+	public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> text.IsNotBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
 	/// <remarks>
@@ -440,14 +438,14 @@ public static class StringExtensions
 	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(<paramref name="text"/>.Length)<br/>
 	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
 	/// </remarks>
-	public static string TrimStart(this string @this, string text, StringComparison comparison = STRING_COMPARISON)
+	public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 
 	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, [MaybeNullWhen(false)] out T value)
 		where T : ISpanParsable<T>
 		=> T.TryParse(@this, InvariantCulture, out value);
@@ -456,7 +454,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : IParsable<T>
 		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
@@ -465,7 +463,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : INumberBase<T>
 		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);

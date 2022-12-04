@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
-using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data.Extensions;

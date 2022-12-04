@@ -1,15 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -72,7 +65,7 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Implements<T>(this TypeMember? @this)
 		=> @this.Implements(typeof(T));
 
@@ -113,7 +106,7 @@ public static class MemberExtensions
 	/// </code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Implements(this TypeMember? @this, Type type)
 	{
 		type.AssertNotNull();
@@ -153,7 +146,7 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> &amp;&amp; @<paramref name="this"/>.Handle.Equals(<see langword="typeof"/>(<typeparamref name="V"/>).TypeHandle);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is<V>(this TypeMember? @this)
 		=> @this is not null && @this.TypeHandle.Equals(typeof(V).TypeHandle);
 
@@ -162,7 +155,7 @@ public static class MemberExtensions
 	/// (@<paramref name="this"/>.Handle.Equals(<paramref name="type"/>.TypeHandle)
 	///		|| @<paramref name="this"/>.GenericHandle.Equals(<paramref name="type"/>.TypeHandle));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is(this TypeMember? @this, Type type)
 		=> @this is not null && (@this.TypeHandle.Equals(type.TypeHandle) || @this.GenericHandle.Equals(type.TypeHandle));
 
@@ -199,14 +192,14 @@ public static class MemberExtensions
 	/// <summary>
 	/// <c>=&gt; ((<see cref="Type"/>)@<paramref name="this"/>).IsSubclassOf((<see cref="Type"/>)<paramref name="typeMember"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSubclassOf(this TypeMember @this, TypeMember typeMember)
 		=> ((Type)@this).IsSubclassOf((Type)typeMember);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Supports(<paramref name="type"/>.GetTypeMember();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Supports(this TypeMember @this, Type type)
 		=> @this.Supports(type.GetTypeMember());
 

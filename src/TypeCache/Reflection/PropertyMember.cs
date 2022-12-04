@@ -1,15 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -139,15 +132,15 @@ public sealed class PropertyMember	: IMember, IEquatable<PropertyMember>
 		this.Setter.Invoke(arguments);
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] PropertyMember? other)
 		=> (this.Getter?.Handle, this.Setter?.Handle).Equals((other?.Getter?.Handle, other?.Setter?.Handle));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as PropertyMember);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> (this.Getter?.Handle, this.Setter?.Handle).GetHashCode();
 }

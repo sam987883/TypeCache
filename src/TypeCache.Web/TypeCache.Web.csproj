@@ -5,10 +5,10 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.Web</RootNamespace>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>7.1.2</Version>
+    <Version>7.1.3</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
-    <Title>TypeCache Reflection</Title>
+    <Title>TypeCache Web Library</Title>
     <Description>Web API access to SQL database data operations: allows the front-end to decide how to retrieve and manipulate data.</Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
     <Product>TypeCache</Product>

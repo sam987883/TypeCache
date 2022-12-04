@@ -1,12 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static TypeCache.Default;
-
 namespace TypeCache.Extensions;
 
 public static class AsyncEnumeratorExtensions
@@ -32,7 +25,7 @@ public static class AsyncEnumeratorExtensions
 	/// <summary>
 	/// <c>=&gt; <see langword="await"/> @<paramref name="this"/>.MoveAsync(<paramref name="index"/>) ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async ValueTask<T?> GetAsync<T>(this IAsyncEnumerator<T> @this, int index)
 		=> await @this.MoveAsync(index) ? @this.Current : default;
 
@@ -55,7 +48,7 @@ public static class AsyncEnumeratorExtensions
 	/// <summary>
 	/// <c>=&gt; <see langword="await"/> @<paramref name="this"/>.MoveNextAsync() ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async ValueTask<T?> NextAsync<T>(this IAsyncEnumerator<T> @this)
 		=> await @this.MoveNextAsync() ? @this.Current : default;
 

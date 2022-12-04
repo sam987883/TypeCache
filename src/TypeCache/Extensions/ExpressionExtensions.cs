@@ -1,18 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static System.FormattableString;
 using static System.Globalization.CultureInfo;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -25,14 +17,14 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.AndAlso(@<paramref name="this"/>, <paramref name="operand"/>);</c>
 	/// </remarks>
 	/// <remarks><c>a &amp;&amp; b</c></remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression And(this Expression @this, Expression operand)
 		=> Expression.AndAlso(@this, operand);
 
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="ArrayExpressionBuilder"/>(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ArrayExpressionBuilder Array(this Expression @this)
 		=> new ArrayExpressionBuilder(@this);
 
@@ -40,7 +32,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Array(this Expression @this, int index)
 		=> Expression.ArrayIndex(@this, Expression.Constant(index));
 
@@ -55,7 +47,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Array(this Expression @this, long index)
 		=> Expression.ArrayIndex(@this, Expression.Constant(index));
 
@@ -70,7 +62,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="index"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Array(this Expression @this, Expression index)
 		=> Expression.ArrayIndex(@this, index);
 
@@ -78,7 +70,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Array(this Expression @this, IEnumerable<Expression> indexes)
 		=> Expression.ArrayIndex(@this, indexes);
 
@@ -86,7 +78,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Array(this Expression @this, params Expression[] indexes)
 		=> Expression.ArrayIndex(@this, indexes);
 
@@ -94,7 +86,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeAs(@<paramref name="this"/>, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression As<T>(this Expression @this)
 		where T : class
 		=> Expression.TypeAs(@this, typeof(T));
@@ -103,7 +95,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeAs(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression As(this Expression @this, Type type)
 		=> Expression.TypeAs(@this, type);
 
@@ -154,7 +146,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Assign(@<paramref name="this"/>, <paramref name="expression"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Assign(this Expression @this, Expression expression)
 		=> Expression.Assign(@this, expression);
 
@@ -162,7 +154,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Block(@<paramref name="this"/>, <paramref name="expression"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BlockExpression Block(this Expression @this, Expression expression)
 		=> Expression.Block(@this, expression);
 
@@ -170,7 +162,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Break(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Break(this LabelTarget @this)
 		=> Expression.Break(@this);
 
@@ -178,7 +170,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Break(@<paramref name="this"/>, <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Break(this LabelTarget @this, Expression? value)
 		=> Expression.Break(@this, value);
 
@@ -186,7 +178,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Break(@<paramref name="this"/>, <paramref name="value"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Break(this LabelTarget @this, Expression? value, Type type)
 		=> Expression.Break(@this, value, type);
 
@@ -194,7 +186,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Break(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Break(this LabelTarget @this, Type type)
 		=> Expression.Break(@this, type);
 
@@ -202,7 +194,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="methodInfo"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo)
 		=> Expression.Call(@this, methodInfo);
 
@@ -210,7 +202,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression>? arguments)
 		=> Expression.Call(@this, methodInfo, arguments);
 
@@ -218,7 +210,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, params Expression[]? arguments)
 		=> Expression.Call(@this, methodInfo, arguments);
 
@@ -226,7 +218,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, string method, params Expression[]? arguments)
 		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
@@ -234,7 +226,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, string method, Type[]? genericTypes, params Expression[]? arguments)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
@@ -242,7 +234,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this MethodInfo @this)
 		=> Expression.Call(@this);
 
@@ -250,7 +242,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this MethodInfo @this, IEnumerable<Expression> arguments)
 		=> Expression.Call(@this, arguments);
 
@@ -258,7 +250,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this MethodInfo @this, params Expression[]? arguments)
 		=> Expression.Call(@this, arguments);
 
@@ -266,7 +258,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this Type @this, string method, params Expression[]? arguments)
 		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
@@ -274,7 +266,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this Type @this, string method, Type[]? genericTypes, params Expression[]? arguments)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
@@ -282,7 +274,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression Cast<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Cast(typeof(T), overflowCheck);
 
@@ -297,7 +289,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Coalesce(@<paramref name="this"/>, <paramref name="expression"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Coalesce(this Expression @this, Expression expression)
 		=> Expression.Coalesce(@this, expression);
 
@@ -314,7 +306,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Continue(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Continue(this LabelTarget @this)
 		=> Expression.Continue(@this);
 
@@ -322,14 +314,14 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Continue(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Continue(this LabelTarget @this, Type type)
 		=> Expression.Continue(@this, type);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression Convert<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Convert(typeof(T), overflowCheck);
 
@@ -408,7 +400,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Default(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DefaultExpression Default(this Type @this)
 		=> Expression.Default(@this);
 
@@ -416,7 +408,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Field(@<paramref name="this"/>, <paramref name="fieldInfo"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Field(this Expression @this, FieldInfo fieldInfo)
 		=> Expression.Field(@this, fieldInfo);
 
@@ -424,7 +416,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Field(@<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Field(this Expression @this, string name)
 		=> Expression.Field(@this, name);
 
@@ -506,7 +498,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Goto(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static GotoExpression Goto(this LabelTarget @this)
 		=> Expression.Goto(@this);
 
@@ -514,7 +506,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.IfThen(@<paramref name="this"/>, <paramref name="trueResult"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ConditionalExpression If(this Expression @this, Expression trueResult)
 		=> Expression.IfThen(@this, trueResult);
 
@@ -522,7 +514,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.IfThenElse(@<paramref name="this"/>, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ConditionalExpression If(this Expression @this, Expression trueResult, Expression falseResult)
 		=> Expression.IfThenElse(@this, trueResult, falseResult);
 
@@ -530,7 +522,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Condition(@<paramref name="this"/>, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ConditionalExpression IIf(this Expression @this, Expression trueResult, Expression falseResult)
 		=> Expression.Condition(@this, trueResult, falseResult);
 
@@ -538,7 +530,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Invoke(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static InvocationExpression Invoke(this LambdaExpression @this, IEnumerable<Expression> parameters)
 		=> Expression.Invoke(@this, parameters);
 
@@ -546,7 +538,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Invoke(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static InvocationExpression Invoke(this LambdaExpression @this, params Expression[]? parameters)
 		=> Expression.Invoke(@this, parameters);
 
@@ -554,7 +546,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeIs(@<paramref name="this"/>, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeBinaryExpression Is<T>(this Expression @this)
 		=> Expression.TypeIs(@this, typeof(T));
 
@@ -562,7 +554,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeIs(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeBinaryExpression Is(this Expression @this, Type type)
 		=> Expression.TypeIs(@this, type);
 
@@ -570,7 +562,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ReferenceNotEqual(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression IsNotNull(this Expression @this)
 		=> Expression.ReferenceNotEqual(@this, NullExpression);
 
@@ -578,7 +570,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ReferenceEqual(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression IsNull(this Expression @this)
 		=> Expression.ReferenceEqual(@this, NullExpression);
 
@@ -586,7 +578,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelExpression Label(this LabelTarget @this)
 		=> Expression.Label(@this);
 
@@ -594,7 +586,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>, <paramref name="defaultValue"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelExpression Label(this LabelTarget @this, Expression? defaultValue)
 		=> Expression.Label(@this, defaultValue);
 
@@ -602,7 +594,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelTarget Label(this string? @this)
 		=> Expression.Label(@this);
 
@@ -610,7 +602,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelTarget Label(this Type @this)
 		=> Expression.Label(@this);
 
@@ -618,7 +610,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelTarget Label(this Type @this, string? name)
 		=> Expression.Label(@this, name);
 
@@ -626,7 +618,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Lambda(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LambdaExpression Lambda(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(@this, parameters);
 
@@ -634,7 +626,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Lambda&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression<T> Lambda<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda<T>(@this, parameters);
 
@@ -642,7 +634,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Lambda(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LambdaExpression Lambda(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(@this, parameters);
 
@@ -650,7 +642,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Lambda&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression<T> Lambda<T>(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda<T>(@this, parameters);
 
@@ -816,7 +808,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.PropertyOrField(@<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Member(this Expression @this, string name)
 		=> Expression.PropertyOrField(@this, name);
 
@@ -824,7 +816,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.MemberInit(@<paramref name="this"/>, <paramref name="bindings"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberInitExpression MemberInit(this NewExpression @this, IEnumerable<MemberBinding> bindings)
 		=> Expression.MemberInit(@this, bindings);
 
@@ -832,7 +824,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.MemberInit(@<paramref name="this"/>, <paramref name="bindings"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberInitExpression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
 		=> Expression.MemberInit(@this, bindings);
 
@@ -840,7 +832,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters)
 		=> Expression.New(@this, parameters);
 
@@ -848,7 +840,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static NewExpression New(this ConstructorInfo @this, params Expression[]? parameters)
 		=> Expression.New(@this, parameters);
 
@@ -856,7 +848,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>, <paramref name="memberInfos"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, IEnumerable<MemberInfo> memberInfos)
 		=> Expression.New(@this, parameters, memberInfos);
 
@@ -864,7 +856,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>, <paramref name="memberInfos"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static NewExpression New(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
 		=> Expression.New(@this, parameters, memberInfos);
 
@@ -872,7 +864,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static NewExpression New(this Type @this)
 		=> Expression.New(@this);
 
@@ -977,7 +969,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.OrElse(@<paramref name="this"/>, <paramref name="operand"/>);</c>
 	/// </remarks>
 	/// <remarks><c>a || b</c></remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Or(this Expression @this, Expression operand)
 		=> Expression.OrElse(@this, operand);
 
@@ -985,7 +977,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Parameter(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ParameterExpression Parameter(this ParameterInfo @this)
 		=> Expression.Parameter(@this.ParameterType, @this.Name);
 
@@ -993,7 +985,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Parameter(<see langword="typeof"/>(<typeparamref name="T"/>), @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ParameterExpression Parameter<T>(this string @this)
 		=> Expression.Parameter(typeof(T), @this);
 
@@ -1001,7 +993,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Parameter(<paramref name="type"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ParameterExpression Parameter(this string @this, Type type)
 		=> Expression.Parameter(type, @this);
 
@@ -1009,7 +1001,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="getMethodInfo"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, MethodInfo getMethodInfo)
 		=> Expression.Property(@this, getMethodInfo);
 
@@ -1017,7 +1009,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="propertyInfo"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, PropertyInfo propertyInfo)
 		=> Expression.Property(@this, propertyInfo);
 
@@ -1025,7 +1017,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="propertyInfo"/>, <paramref name="index"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IndexExpression Property(this Expression @this, PropertyInfo propertyInfo, ParameterExpression index)
 		=> Expression.Property(@this, propertyInfo, index);
 
@@ -1033,7 +1025,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, string name)
 		=> Expression.Property(@this, name);
 
@@ -1041,7 +1033,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property<T>(this Expression @this, string name)
 		=> Expression.Property(@this, typeof(T), name);
 
@@ -1049,7 +1041,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="type"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, Type type, string name)
 		=> Expression.Property(@this, type, name);
 
@@ -1057,7 +1049,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Field(<see langword="null"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression StaticField(this FieldInfo @this)
 		=> Expression.Field(null, @this);
 
@@ -1065,7 +1057,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Field(<see langword="null"/>, @<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression StaticField(this Type @this, string name)
 		=> Expression.Field(null, @this, name);
 
@@ -1073,7 +1065,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression StaticProperty(this PropertyInfo @this)
 		=> Expression.Property(null, @this);
 
@@ -1081,7 +1073,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>, <paramref name="index"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IndexExpression StaticProperty(this PropertyInfo @this, ParameterExpression index)
 		=> Expression.Property(null, @this, index);
 
@@ -1089,7 +1081,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>, <paramref name="name"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression StaticProperty(this Type @this, string name)
 		=> Expression.Property(null, @this, name);
 
@@ -1097,7 +1089,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@<paramref name="this"/>, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeBinaryExpression TypeEqual<T>(this Expression @this)
 		=> Expression.TypeEqual(@this, typeof(T));
 
@@ -1105,7 +1097,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeBinaryExpression TypeEqual(this Expression @this, Type type)
 		=> Expression.TypeEqual(@this, type);
 
@@ -1113,7 +1105,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Unbox(@<paramref name="this"/>, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static UnaryExpression Unbox<T>(this Expression @this)
 		where T : struct
 		=> Expression.Unbox(@this, typeof(T));
@@ -1122,7 +1114,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Unbox(@<paramref name="this"/>, <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static UnaryExpression Unbox(this Expression @this, Type type)
 		=> Expression.Unbox(@this, type);
 
@@ -1130,7 +1122,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Block(@<paramref name="this"/>, <see cref="Expression.Empty()"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BlockExpression Void(this MethodCallExpression @this)
 		=> Expression.Block(@this, Expression.Empty());
 }

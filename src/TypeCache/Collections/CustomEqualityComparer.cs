@@ -1,12 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
-
 namespace TypeCache.Collections;
 
 public readonly struct CustomEqualityComparer<T> : IEqualityComparer<T>
@@ -24,11 +17,11 @@ public readonly struct CustomEqualityComparer<T> : IEqualityComparer<T>
 	{
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([AllowNull] T? x, [AllowNull] T? y)
 		=> this._Equals(x, y);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public int GetHashCode([DisallowNull] T value)
 		=> this._GetHashCode(value);
 }

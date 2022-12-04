@@ -1,14 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -96,22 +90,22 @@ public sealed class FieldMember : IMember, IEquatable<FieldMember>
 	/// </summary>
 	public TypeMember Type { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] FieldMember? other)
 		=> this.FieldHandle == other?.FieldHandle;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as FieldMember);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.FieldHandle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.FieldHandle.ToFieldInfo(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static implicit operator FieldInfo(FieldMember member)
 		=> member.FieldHandle.ToFieldInfo(member.Type.TypeHandle);
 }

@@ -1,26 +1,17 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static System.FormattableString;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -181,7 +172,7 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Any(this Type? @this, params Type[] types)
 		=> types.Any(@this.Is);
 
@@ -306,14 +297,14 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.TypeHandle.GetTypeMember();<br/></c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeMember GetTypeMember(this Type @this)
 		=> @this.TypeHandle.GetTypeMember();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Implements<T>(this Type @this)
 		=> @this.Implements(typeof(T));
 
@@ -354,7 +345,7 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is<T>(this Type? @this)
 		=> @this == typeof(T);
 
@@ -369,7 +360,7 @@ public static class TypeExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<typeparamref name="T"/>&gt;() || @<paramref name="this"/>.Implements&lt;<typeparamref name="T"/>&gt;();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsOrImplements<T>(this Type @this)
 		=> @this.Is<T>() || @this.Implements<T>();
 

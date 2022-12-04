@@ -1,12 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using static System.FormattableString;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -59,7 +53,7 @@ public static class AssertExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertEquals(this string? @this, string? value, StringComparison comparison = STRING_COMPARISON,
+	public static void AssertEquals(this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
 		=> @this.AssertEquals(value, comparison.ToStringComparer(), argument, caller);
@@ -91,7 +85,7 @@ public static class AssertExtensions
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertNotSame(this object? @this, object? value, StringComparison comparison = STRING_COMPARISON,
+	public static void AssertNotSame(this object? @this, object? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
 	{

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Collections;
 
@@ -42,15 +38,15 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 		this._HashCode = hashCode.ToHashCode();
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(T? other)
 		=> this._Equals(other);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals(object? other)
 		=> this._Equals(other as T);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this._HashCode;
 }

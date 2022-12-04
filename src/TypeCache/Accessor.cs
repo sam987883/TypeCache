@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -25,7 +24,7 @@ public sealed class Accessor<T> : IAccessor<T>
 
 	public T? this[string name] => this._Items.TryGetValue(name, out var item) ? item : default;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Has(string name)
 		=> this._Items.ContainsKey(name);
 }

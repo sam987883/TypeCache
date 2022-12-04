@@ -1,13 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using TypeCache.Collections;
-using static TypeCache.Default;
 
 namespace TypeCache
 {
@@ -21,11 +15,11 @@ namespace TypeCache
 		private static readonly IReadOnlyDictionary<string, Regex> SinglelineRegex = new LazyDictionary<string, Regex>(pattern =>
 			new Regex(pattern, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline, RegexTimeout), comparer: StringComparer.Ordinal);
 
-		[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public static Regex MultilinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
 			=> MultilineRegex[@this];
 
-		[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public static Regex SinglelinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
 			=> SinglelineRegex[@this];
 	}

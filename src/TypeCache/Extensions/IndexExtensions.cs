@@ -1,10 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
-
 namespace TypeCache.Extensions;
 
 public static class IndexExtensions
@@ -20,7 +15,7 @@ public static class IndexExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="Index"/>(@<paramref name="this"/>.Value + <paramref name="increment"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Next(this Index @this, int increment = 1)
 		=> new Index(@this.Value + increment);
 
@@ -28,7 +23,7 @@ public static class IndexExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="Index"/>(@<paramref name="this"/>.Value - <paramref name="increment"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Previous(this Index @this, int increment = 1)
 		=> new Index(@this.Value - increment);
 }

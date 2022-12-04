@@ -1,12 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Data;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions;
 
@@ -36,7 +32,7 @@ public static class EnumExtensions
 		SystemType.String
 	};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSQLType(this SystemType @this)
 		=> SQLSystemTypes.ContainsEnum(@this);
 

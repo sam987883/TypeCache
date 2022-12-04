@@ -16,7 +16,7 @@ using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
-using static TypeCache.Default;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -62,19 +62,19 @@ public static class GraphQLExtensions
 		return connection;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLInputType(this Type @this)
 		=> typeof(GraphQLInputType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
 		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToListGraphType(this Type @this)
 		=> typeof(ListGraphType<>).MakeGenericType(@this);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
@@ -92,7 +92,7 @@ public static class GraphQLExtensions
 		return fieldType;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldType ToFieldType(this MethodMember @this, object? controller)
 	{
 		var fieldType = @this.ToFieldType();

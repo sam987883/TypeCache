@@ -1,10 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
-
 namespace TypeCache.Extensions;
 
 public static class BitConverterExtensions
@@ -13,7 +8,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this bool @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -21,7 +16,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this char @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -29,7 +24,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this double @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -37,7 +32,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this float @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -45,7 +40,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this Half @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -53,7 +48,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this int @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -61,7 +56,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this long @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -69,7 +64,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this short @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -77,7 +72,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this uint @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -85,7 +80,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this ulong @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -93,7 +88,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.GetBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] GetBytes(this ushort @this)
 		=> BitConverter.GetBytes(@this);
 
@@ -101,7 +96,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToBoolean(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool ToBoolean(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToBoolean(@this);
 
@@ -109,7 +104,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToBoolean(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool ToBoolean(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToBoolean(@this, startIndex);
 
@@ -117,7 +112,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToChar(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToChar(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToChar(@this);
 
@@ -125,7 +120,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToChar(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToChar(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToChar(@this, startIndex);
 
@@ -133,7 +128,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.Int64BitsToDouble(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static double ToDouble(this long @this)
 		=> BitConverter.Int64BitsToDouble(@this);
 
@@ -141,7 +136,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToDouble(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static double ToDouble(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToDouble(@this);
 
@@ -149,7 +144,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToDouble(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static double ToDouble(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToDouble(@this, startIndex);
 
@@ -171,7 +166,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt16(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static short ToInt16(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToInt16(@this);
 
@@ -179,7 +174,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt16(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static short ToInt16(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToInt16(@this, startIndex);
 
@@ -187,7 +182,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.SingleToInt32Bits(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int ToInt32(this float @this)
 		=> BitConverter.SingleToInt32Bits(@this);
 
@@ -195,7 +190,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt32(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int ToInt32(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToInt32(@this);
 
@@ -203,7 +198,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt32(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int ToInt32(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToInt32(@this, startIndex);
 
@@ -211,7 +206,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.DoubleToInt64Bits(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static long ToInt64(this double @this)
 		=> BitConverter.DoubleToInt64Bits(@this);
 
@@ -219,7 +214,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt64(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static long ToInt64(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToInt64(@this);
 
@@ -227,7 +222,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToInt64(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static long ToInt64(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToInt64(@this, startIndex);
 
@@ -235,7 +230,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.Int32BitsToSingle(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static float ToSingle(this int @this)
 		=> BitConverter.Int32BitsToSingle(@this);
 
@@ -243,7 +238,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToSingle(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static float ToSingle(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToSingle(@this);
 
@@ -251,7 +246,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToSingle(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static float ToSingle(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToSingle(@this, startIndex);
 
@@ -259,14 +254,14 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToString(@this.ToArray());
 
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.Span, <paramref name="length"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this ReadOnlySpan<byte> @this, int startIndex, int length)
 		=> BitConverter.ToString(@this.ToArray(), startIndex, length);
 
@@ -274,7 +269,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToString(@this, startIndex);
 
@@ -282,7 +277,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>, <paramref name="startIndex"/>, <paramref name="length"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this byte[] @this, int startIndex, int length)
 		=> BitConverter.ToString(@this, startIndex, length);
 
@@ -304,7 +299,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt16(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ushort ToUInt16(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToUInt16(@this);
 
@@ -312,7 +307,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt16(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ushort ToUInt16(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt16(@this, startIndex);
 
@@ -320,7 +315,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt32(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static uint ToUInt32(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToUInt32(@this);
 
@@ -328,7 +323,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt32(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static uint ToUInt32(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt32(@this, startIndex);
 
@@ -336,7 +331,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt64(@<paramref name="this"/>.Span);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ulong ToUInt64(this ReadOnlySpan<byte> @this)
 		=> BitConverter.ToUInt64(@this);
 
@@ -344,7 +339,7 @@ public static class BitConverterExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt64(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ulong ToUInt64(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt64(@this, startIndex);
 }

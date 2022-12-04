@@ -1,10 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -14,7 +10,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static UnicodeCategory GetUnicodeCategory(this char @this)
 		=> char.GetUnicodeCategory(@this);
 
@@ -22,7 +18,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsControl(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsControl(this char @this)
 		=> char.IsControl(@this);
 
@@ -30,7 +26,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsDigit(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsDigit(this char @this)
 		=> char.IsDigit(@this);
 
@@ -38,7 +34,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsHighSurrogate(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsHighSurrogate(this char @this)
 		=> char.IsHighSurrogate(@this);
 
@@ -46,7 +42,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsLetter(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLetter(this char @this)
 		=> char.IsLetter(@this);
 
@@ -54,7 +50,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsLetterOrDigit(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLetterOrDigit(this char @this)
 		=> char.IsLetterOrDigit(@this);
 
@@ -62,7 +58,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsLower(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLower(this char @this)
 		=> char.IsLower(@this);
 
@@ -70,7 +66,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsLowSurrogate(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsLowSurrogate(this char @this)
 		=> char.IsLowSurrogate(@this);
 
@@ -78,7 +74,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsNumber(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsNumber(this char @this)
 		=> char.IsNumber(@this);
 
@@ -86,7 +82,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsPunctuation(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsPunctuation(this char @this)
 		=> char.IsPunctuation(@this);
 
@@ -94,7 +90,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsSeparator(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSeparator(this char @this)
 		=> char.IsSeparator(@this);
 
@@ -102,7 +98,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsSurrogate(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSurrogate(this char @this)
 		=> char.IsSurrogate(@this);
 
@@ -110,7 +106,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsSymbol(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsSymbol(this char @this)
 		=> char.IsSymbol(@this);
 
@@ -118,7 +114,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsUpper(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsUpper(this char @this)
 		=> char.IsUpper(@this);
 
@@ -126,7 +122,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsWhiteSpace(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsWhiteSpace(this char @this)
 		=> char.IsWhiteSpace(@this);
 
@@ -134,7 +130,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this char @this, params string[] values)
 		=> string.Join(@this, values);
 
@@ -142,7 +138,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this char @this, IEnumerable<string> values)
 		=> string.Join(@this, values);
 
@@ -150,7 +146,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this char @this, params object[] values)
 		=> string.Join(@this, values);
 
@@ -158,7 +154,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this char @this, IEnumerable<object> values)
 		=> string.Join(@this, values);
 
@@ -166,7 +162,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToLower(this char @this, CultureInfo culture)
 		=> char.ToLower(@this, culture);
 
@@ -174,7 +170,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToLowerInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToLowerInvariant(this char @this)
 		=> char.ToLowerInvariant(@this);
 
@@ -182,7 +178,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.GetNumericValue(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static double ToNumber(this char @this)
 		=> char.GetNumericValue(@this);
 
@@ -190,7 +186,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToUpper(this char @this, CultureInfo culture)
 		=> char.ToUpper(@this, culture);
 
@@ -198,7 +194,7 @@ public static class CharExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToUpperInvariant(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char ToUpperInvariant(this char @this)
 		=> char.ToUpperInvariant(@this);
 }

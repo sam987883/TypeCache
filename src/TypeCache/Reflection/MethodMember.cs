@@ -1,16 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -86,15 +79,15 @@ public sealed class MethodMember : IMember, IEquatable<MethodMember>
 	/// <summary>
 	/// <c>=&gt; <paramref name="other"/> <see langword="is not null"/> &amp;&amp; <see langword="this"/>.Handle.Equals(<paramref name="other"/>.Handle) &amp;&amp; <see langword="this"/>.Type.Equals(<paramref name="other"/>.Type);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(MethodMember? other)
 		=> this.Handle == other?.Handle;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as MethodMember);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.Handle.GetHashCode();
 
@@ -102,7 +95,7 @@ public sealed class MethodMember : IMember, IEquatable<MethodMember>
 	/// <c>=&gt; <see langword="this"/>._Invoke.Value(<paramref name="arguments"/>);</c>
 	/// </summary>
 	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(params object?[]? arguments)
 		=> this._Invoke.Value(arguments);
 
@@ -110,14 +103,14 @@ public sealed class MethodMember : IMember, IEquatable<MethodMember>
 	/// <c>=&gt; <see langword="this"/>._Cache?[<paramref name="genericTypes"/>.Select(type =&gt; type.TypeHandle).ToArray()].Invoke(<paramref name="arguments"/>);</c>
 	/// </summary>
 	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? InvokeGeneric(Type[] genericTypes, params object?[]? arguments)
 		=> this._GenericInvokeCache[genericTypes.Select(type => type.TypeHandle).ToArray()](arguments);
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToMethodBase(<paramref name="member"/>.Type.Handle)!;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static implicit operator MethodInfo(MethodMember member)
 		=> (MethodInfo)member.Handle.ToMethodBase(member.Type.TypeHandle)!;
 }

@@ -1,11 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -41,7 +37,7 @@ public static class CsvExtensions
 			TimeSpan time => time.ToString(options.TimeSpanFormatSpecifier, InvariantCulture),
 			Guid guid => guid.ToString(options.GuidFormatSpecifier, InvariantCulture),
 			Enum token => token.ToString(options.EnumFormatSpecifier),
-			string text when text.Contains('"') || text.Contains(',') || text.Contains('\r') || text.Contains('\n') => Invariant($"\"{text.Replace("\"", "\"\"")}\""),
+			string text when text.ContainsAny('"', ',', '\r', '\n') => Invariant($"\"{text.Replace("\"", "\"\"")}\""),
 			string text => text,
 			_ => @this.ToString()?.EscapeCSV() ?? string.Empty
 		};

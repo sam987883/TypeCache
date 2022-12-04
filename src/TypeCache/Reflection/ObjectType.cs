@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TypeCache.Reflection;

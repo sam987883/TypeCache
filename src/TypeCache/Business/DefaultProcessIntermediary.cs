@@ -1,11 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TypeCache.Business;
 
 internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary<REQUEST>
@@ -19,7 +13,7 @@ internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary
 		this._ValidationRules = validationRules;
 	}
 
-	public async ValueTask RunAsync(REQUEST request, CancellationToken token)
+	public async ValueTask RunAsync(REQUEST request, Action onComplete, CancellationToken token)
 	{
 		try
 		{
@@ -27,7 +21,7 @@ internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary
 			if (validationMessages.Any())
 				await ValueTask.FromException(new ValidationException(validationMessages));
 			else
-				await this._Process.PublishAsync(request, token);
+				this._Process.PublishAsync(request, token).GetAwaiter().OnCompleted(onComplete);
 		}
 		catch (Exception error)
 		{

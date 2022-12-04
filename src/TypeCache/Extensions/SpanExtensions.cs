@@ -1,10 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -13,14 +9,14 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; (<see cref="ReadOnlySpan{T}"/>)@<paramref name="this"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ReadOnlySpan<T> AsReadOnly<T>(this Span<T> @this)
 		=> (ReadOnlySpan<T>)@this;
 
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Read<T>(this scoped Span<byte> @this)
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
@@ -45,7 +41,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Cast&lt;<typeparamref name="T"/>, <typeparamref name="R"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Span<R> To<T, R>(this Span<T> @this)
 		where T : struct
 		where R : struct
@@ -55,7 +51,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Span<byte> ToBytes<T>(this Span<T> @this)
 		where T : struct
 		=> MemoryMarshal.AsBytes(@this);
@@ -64,7 +60,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="ref"/> <see cref="MemoryMarshal"/>.AsRef&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ref readonly T ToRef<T>(this Span<byte> @this)
 		where T : struct
 		=> ref MemoryMarshal.AsRef<T>(@this);
@@ -73,7 +69,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryRead(@<paramref name="this"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryRead<T>(this scoped Span<byte> @this, out T value)
 		where T : struct
 		=> MemoryMarshal.TryRead(@this, out value);
@@ -82,7 +78,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryWrite(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryWrite<T>(this scoped Span<byte> @this, T value)
 		where T : struct
 		=> MemoryMarshal.TryWrite(@this, ref value);
@@ -91,7 +87,7 @@ public static class SpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Write(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Write<T>(this scoped Span<byte> @this, ref T value)
 		where T : struct
 		=> MemoryMarshal.Write(@this, ref value);

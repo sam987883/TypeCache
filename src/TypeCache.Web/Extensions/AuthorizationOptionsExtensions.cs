@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Web.Requirements;
-using static TypeCache.Default;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.Web.Extensions;
 
@@ -24,11 +24,11 @@ public static class AuthorizationOptionsExtensions
 		return policy;
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static AuthorizationPolicy AddClaimAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new ClaimAuthorizationRequirement(), authenticationSchemas);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static AuthorizationPolicy AddHeaderAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new HeaderAuthorizationRequirement(), authenticationSchemas);
 }

@@ -1,16 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -47,15 +40,15 @@ public readonly struct MethodParameter : IEquatable<MethodParameter>
 
 	public RuntimeTypeHandle TypeHandle { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(MethodParameter other)
 		=> this._MethodHandle == other._MethodHandle && this.Name.Is(other.Name);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> item is MethodParameter parameter && this.Equals(parameter);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> (this.Name, this._MethodHandle).GetHashCode();
 }

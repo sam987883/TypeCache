@@ -1,13 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using static TypeCache.Business.RuleResponseStatus;
-using static TypeCache.Default;
 
 namespace TypeCache.Business;
 
@@ -20,18 +13,30 @@ internal sealed class Mediator : IMediator
 		this._ServiceProvider = serviceProvider;
 	}
 
+	public async ValueTask ApplyRuleAsync<REQUEST>(REQUEST request, CancellationToken token = default)
+	{
+		var result = await this.GetRuleIntermediary<REQUEST>().GetAsync(request, token);
+		switch (result.Status)
+		{
+			case RuleResponseStatus.Error:
+				throw result.Error!;
+			case RuleResponseStatus.FailValidation:
+				throw new ValidationException(result.ValidationMessages);
+		}
+	}
+
 	public async ValueTask<RESPONSE> ApplyRuleAsync<REQUEST, RESPONSE>(REQUEST request, CancellationToken token = default)
 	{
 		var result = await this.GetRuleIntermediary<REQUEST, RESPONSE>().GetAsync(request, token);
 		return result.Status switch
 		{
-			Success => result.Response!,
-			FailValidation => throw new ValidationException(result.FailedValidation),
+			RuleResponseStatus.Success => result.Response!,
+			RuleResponseStatus.FailValidation => throw new ValidationException(result.ValidationMessages),
 			_ => throw result.Error!
 		};
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[DebuggerHidden]
 	public async ValueTask ApplyRuleAsync<REQUEST, RESPONSE>(REQUEST request, Action<RESPONSE> onSuccess, CancellationToken token = default)
 		=> await this.ApplyRuleAsync(request, onSuccess, async error => await ValueTask.FromException(error), token);
 
@@ -44,7 +49,7 @@ internal sealed class Mediator : IMediator
 				onSuccess(result.Response!);
 				break;
 			case RuleResponseStatus.FailValidation:
-				onError(new ValidationException(result.FailedValidation));
+				onError(new ValidationException(result.ValidationMessages));
 				break;
 			case RuleResponseStatus.Error:
 				onError(result.Error!);
@@ -59,7 +64,7 @@ internal sealed class Mediator : IMediator
 		return result.Status switch
 		{
 			RuleResponseStatus.Success => onSuccess(result.Response!),
-			RuleResponseStatus.FailValidation => throw new ValidationException(result.FailedValidation),
+			RuleResponseStatus.FailValidation => throw new ValidationException(result.ValidationMessages),
 			_ => throw result.Error!
 		};
 	}
@@ -70,18 +75,22 @@ internal sealed class Mediator : IMediator
 		return result.Status switch
 		{
 			RuleResponseStatus.Success => onSuccess(result.Response!),
-			RuleResponseStatus.FailValidation => onError(new ValidationException(result.FailedValidation)),
+			RuleResponseStatus.FailValidation => onError(new ValidationException(result.ValidationMessages)),
 			_ => onError(result.Error!)
 		};
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public async ValueTask RunProcessAsync<REQUEST>(REQUEST request, CancellationToken token = default)
-		=> await this.GetProcessIntermediary<REQUEST>().RunAsync(request, token).ConfigureAwait(false);
+	[DebuggerHidden]
+	public async ValueTask RunProcessAsync<REQUEST>(REQUEST request, Action onComplete, CancellationToken token = default)
+		=> await this.GetProcessIntermediary<REQUEST>().RunAsync(request, onComplete, token);
 
 	private IProcessIntermediary<REQUEST> GetProcessIntermediary<REQUEST>()
 		=> this._ServiceProvider.GetService<IProcessIntermediary<REQUEST>>()
 			?? this._ServiceProvider.GetRequiredService<DefaultProcessIntermediary<REQUEST>>();
+
+	private IRuleIntermediary<REQUEST> GetRuleIntermediary<REQUEST>()
+		=> this._ServiceProvider.GetService<IRuleIntermediary<REQUEST>>()
+			?? this._ServiceProvider.GetRequiredService<DefaultRuleIntermediary<REQUEST>>();
 
 	private IRuleIntermediary<REQUEST, RESPONSE> GetRuleIntermediary<REQUEST, RESPONSE>()
 		=> this._ServiceProvider.GetService<IRuleIntermediary<REQUEST, RESPONSE>>()

@@ -1,11 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Reflection;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -14,7 +10,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TypeMember.Cache"/>[@<paramref name="this"/>];</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TypeMember GetTypeMember(this RuntimeTypeHandle @this)
 		=> TypeMember.Cache[@this];
 
@@ -22,7 +18,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Equals(<see langword="typeof"/>(<typeparamref name="T"/>).TypeHandle);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is<T>(this RuntimeTypeHandle @this)
 		=> @this.Equals(typeof(T).TypeHandle);
 
@@ -30,7 +26,7 @@ public static class HandleExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Equals(<paramref name="type"/>.TypeHandle)
 	/// || (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; @<paramref name="this"/>.ToGenericType() == <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is(this RuntimeTypeHandle @this, Type type)
 		=> @this.Equals(type.TypeHandle) || type.IsGenericTypeDefinition && @this.ToGenericType() == type;
 
@@ -38,7 +34,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeArrayType(<paramref name="rank"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type? ToArrayTypeOf(this RuntimeTypeHandle @this, int rank = 1)
 		=> @this.ToType().MakeArrayType(rank);
 
@@ -46,7 +42,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="FieldInfo"/>.GetFieldFromHandle(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldInfo ToFieldInfo(this RuntimeFieldHandle @this)
 		=> FieldInfo.GetFieldFromHandle(@this);
 
@@ -55,7 +51,7 @@ public static class HandleExtensions
 	/// <c>=&gt; <see cref="FieldInfo"/>.GetFieldFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </remarks>
 	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeFieldHandle"/> is a field whose type is a generic parameter of its declared type.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldInfo ToFieldInfo(this RuntimeFieldHandle @this, RuntimeTypeHandle typeHandle)
 		=> FieldInfo.GetFieldFromHandle(@this, typeHandle);
 
@@ -80,7 +76,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeGenericType(<paramref name="typeArguments"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type? ToGenericTypeOf(this RuntimeTypeHandle @this, params Type[] typeArguments)
 		=> @this.ToType().MakeGenericType(typeArguments);
 
@@ -88,7 +84,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this)
 		=> MethodBase.GetMethodFromHandle(@this) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(...) returned null.");
 
@@ -97,7 +93,7 @@ public static class HandleExtensions
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </remarks>
 	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method using a generic parameter of its declared type.</param>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
 		=> MethodBase.GetMethodFromHandle(@this, typeHandle) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(..., ...) returned null.");
 
@@ -105,7 +101,7 @@ public static class HandleExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Type"/>.GetTypeFromHandle(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToType(this RuntimeTypeHandle @this)
 		=> Type.GetTypeFromHandle(@this) ?? throw new UnreachableException("Type.GetTypeFromHandle(...) returned null.");
 }

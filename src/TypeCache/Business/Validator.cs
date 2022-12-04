@@ -1,12 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static System.FormattableString;
-using static TypeCache.Default;
 
 namespace TypeCache.Business;
 
@@ -96,7 +91,7 @@ public readonly struct Validator
 	/// </code>
 	/// </summary>
 	public void AssertEquals(string? value1, string? value2
-		, StringComparison comparison = STRING_COMPARISON
+		, StringComparison comparison = StringComparison.OrdinalIgnoreCase
 		, [CallerArgumentExpression("value1")] string? argument1 = null
 		, [CallerArgumentExpression("value2")] string? argument2 = null
 		, [CallerMemberName] string? caller = null)

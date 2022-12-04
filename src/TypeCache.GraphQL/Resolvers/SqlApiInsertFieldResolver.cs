@@ -60,7 +60,7 @@ public class SqlApiInsertFieldResolver : FieldResolver<OutputResponse<DataRow>>
 		if (output.Any())
 			result = (await mediator.ApplyRuleAsync<SqlCommand, DataTable>(sqlCommand, context.CancellationToken)).Select();
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, context.CancellationToken);
 
 		return new()
 		{
@@ -117,7 +117,7 @@ public class SqlApiInsertFieldResolver<T> : FieldResolver<OutputResponse<T>>
 		if (output.Any())
 			result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, context.CancellationToken);
 
 		return new()
 		{

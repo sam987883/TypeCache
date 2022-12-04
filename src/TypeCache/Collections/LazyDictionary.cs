@@ -1,17 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static TypeCache.Default;
 
 namespace TypeCache.Collections;
 
@@ -46,15 +38,15 @@ public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 
 	public int Count => this._Dictionary.Count;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool ContainsKey(K key)
 		=> this._Dictionary.ContainsKey(key);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
 		=> this._Dictionary.Select(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this._Dictionary.Select(pair => KeyValuePair.Create(pair.Key, pair.Value.Value)).GetEnumerator();
 

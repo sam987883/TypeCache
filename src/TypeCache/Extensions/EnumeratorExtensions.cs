@@ -1,11 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -32,7 +27,7 @@ public static class EnumeratorExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Move(<paramref name="index"/> + 1) ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T? Get<T>(this IEnumerator<T> @this, int index)
 		=> @this.Move(index + 1) ? @this.Current : default;
 
@@ -159,7 +154,7 @@ public static class EnumeratorExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.MoveNext() ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T? Next<T>(this IEnumerator<T> @this)
 		=> @this.MoveNext() ? @this.Current : default;
 

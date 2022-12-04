@@ -1,16 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -186,7 +179,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Constructors.Select(constructor =&gt; constructor.Method).FirstOrDefault&lt;<typeparamref name="D"/>&gt;();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public D? GetConstructor<D>()
 		where D : Delegate
 		=> this.Constructors.Select(constructor => constructor.Method).FirstOrDefault<D>();
@@ -194,14 +187,14 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Constructors.FirstOrDefault(constructor =&gt; constructor.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public ConstructorMember? GetConstructor(RuntimeMethodHandle handle)
 		=> this.Constructors.FirstOrDefault(constructor => constructor.MethodHandle == handle);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Fields.FirstOrDefault(field =&gt; field.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public FieldMember? GetField(string name, StringComparison comparison = StringComparison.Ordinal)
 		=> this.Fields.FirstOrDefault(field => field.Name.Is(name, comparison));
 
@@ -211,7 +204,7 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <see langword="    "/>.Select(method =&gt; method.Method)<br/>
 	/// <see langword="    "/>.FirstOrDefault&lt;<typeparamref name="D"/>&gt();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public D? GetMethod<D>(string name, bool isStatic = false, StringComparison comparison = StringComparison.Ordinal)
 		where D : Delegate
 		=> this.Methods
@@ -222,14 +215,14 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Handle == <paramref name="handle"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodMember? GetMethod(RuntimeMethodHandle handle)
 		=> this.Methods.FirstOrDefault(method => method.Handle == handle);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Properties.FirstOrDefault(property =&gt; property.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>));</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public PropertyMember? GetProperty(string name, StringComparison comparison = StringComparison.Ordinal)
 		=> this.Properties.FirstOrDefault(property => property.Name.Is(name, comparison));
 
@@ -269,28 +262,28 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Handle == <paramref name="other"/>?.Handle;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(TypeMember? other)
 		=> this.TypeHandle == other?.TypeHandle;
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Equals(<paramref name="item"/> <see langword="as"/> <see cref="TypeMember"/>);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as TypeMember);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Handle.GetHashCode();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.TypeHandle.GetHashCode();
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="member"/>.Handle.ToType();</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static implicit operator Type(TypeMember member)
 		=> member.TypeHandle.ToType();
 }

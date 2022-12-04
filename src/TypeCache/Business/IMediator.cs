@@ -1,13 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TypeCache.Business;
 
 public interface IMediator
 {
+	ValueTask ApplyRuleAsync<REQUEST>(REQUEST request, CancellationToken token = default);
+
 	ValueTask<RESPONSE> ApplyRuleAsync<REQUEST, RESPONSE>(REQUEST request, CancellationToken token = default);
 
 	ValueTask ApplyRuleAsync<REQUEST, RESPONSE>(REQUEST request, Action<RESPONSE> onSuccess, CancellationToken token = default);
@@ -18,5 +16,5 @@ public interface IMediator
 
 	ValueTask<RESULT> ApplyRuleAsync<REQUEST, RESPONSE, RESULT>(REQUEST request, Func<RESPONSE, RESULT> onSuccess, Func<Exception, RESULT> onError, CancellationToken token = default);
 
-	ValueTask RunProcessAsync<REQUEST>(REQUEST request, CancellationToken token = default);
+	ValueTask RunProcessAsync<REQUEST>(REQUEST request, Action onComplete, CancellationToken token = default);
 }

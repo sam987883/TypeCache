@@ -1,12 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Transactions;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 using TransactionIsolationLevel = System.Transactions.IsolationLevel;
 
 namespace TypeCache.Data;
@@ -43,7 +40,7 @@ public sealed class SqlCommand
 	/// DECLARE @ParameterName6 AS DATETIMEOFFSET;
 	/// </code>
 	/// </summary>
-	public IDictionary<string, DbType> OutputParameters { get; } = new Dictionary<string, DbType>(0, STRING_COMPARISON.ToStringComparer());
+	public IDictionary<string, DbType> OutputParameters { get; } = new Dictionary<string, DbType>(0, StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>
 	/// <code>
@@ -52,7 +49,7 @@ public sealed class SqlCommand
 	/// SET @ParameterName3 = 123;
 	/// </code>
 	/// </summary>
-	public IDictionary<string, object?> Parameters { get; } = new Dictionary<string, object?>(0, STRING_COMPARISON.ToStringComparer());
+	public IDictionary<string, object?> Parameters { get; } = new Dictionary<string, object?>(0, StringComparer.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="DbDataReader.RecordsAffected"/>
 	public int RecordsAffected { get; set; }

@@ -1,13 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Converters;
 
@@ -23,7 +19,7 @@ public sealed class DataTableJsonConverter : JsonConverter<DataTable>
 			var table = new DataTable();
 			if (reader.Read() && reader.TokenType is JsonTokenType.StartObject)
 			{
-				var dictionary = new Dictionary<string, object?>(STRING_COMPARISON.ToStringComparer());
+				var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 				while (reader.Read() && reader.TokenType is not JsonTokenType.EndObject)
 				{
 					if (reader.TokenType is JsonTokenType.PropertyName)

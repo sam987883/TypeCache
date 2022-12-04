@@ -8,7 +8,7 @@ using GraphQLParser.AST;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.Security;
-using static TypeCache.Default;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -39,7 +39,7 @@ public sealed class GraphQLHashIdType : ScalarGraphType
 	public override bool CanParseValue(object? value)
 		=> value is null || value is Guid || value is string;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override object? ParseLiteral(GraphQLValue value)
 		=> this.ParseValue(value);
 

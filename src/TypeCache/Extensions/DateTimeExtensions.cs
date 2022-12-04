@@ -1,11 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Security;
 using static System.TimeZoneInfo;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -15,7 +10,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="DateTime"/>.SpecifyKind(@<paramref name="this"/>, <paramref name="kind"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime As(this DateTime @this, DateTimeKind kind)
 		=> DateTime.SpecifyKind(@this, kind);
 
@@ -23,7 +18,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTime(@<paramref name="this"/>, <paramref name="sourceTimeZone"/>, <paramref name="targetTimeZone"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime ChangeTimeZone(this DateTime @this, TimeZoneInfo sourceTimeZone, TimeZoneInfo targetTimeZone)
 		=> ConvertTime(@this, sourceTimeZone, targetTimeZone);
 
@@ -31,7 +26,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeBySystemTimeZoneId(@<paramref name="this"/>, <paramref name="sourceSystemTimeZoneId"/>, <paramref name="targetSystemTimeZoneId"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime ChangeTimeZone(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 		=> ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
 
@@ -83,7 +78,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTime(@<paramref name="this"/>, <paramref name="targetTimeZone"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, TimeZoneInfo targetTimeZone)
 		=> ConvertTime(@this, targetTimeZone);
 
@@ -91,7 +86,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeBySystemTimeZoneId(@<paramref name="this"/>, <paramref name="targetSystemTimeZoneId"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, string targetSystemTimeZoneId)
 		=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
 
@@ -99,7 +94,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime ToUTC(this DateTime @this)
 		=> ConvertTimeToUtc(@this);
 
@@ -107,7 +102,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeZoneInfo"/>.ConvertTimeToUtc(@<paramref name="this"/>, <paramref name="sourceTimeZone"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime ToUTC(this DateTime @this, TimeZoneInfo sourceTimeZone)
 		=> ConvertTimeToUtc(@this, sourceTimeZone);
 }

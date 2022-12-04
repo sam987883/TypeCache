@@ -6,7 +6,7 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>7.1.2</Version>
+    <Version>7.1.3</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
@@ -28,6 +28,7 @@ TypeCache.Reflection - High performance System.Reflection alternative.
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageIcon>TypeCash.png</PackageIcon>
     <PackageTags>Reflection;Linq;GraphQL;WebAPI;MVC</PackageTags>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -46,6 +47,20 @@ TypeCache.Reflection - High performance System.Reflection alternative.
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.FormattableString">
+      <Static>True</Static>
+    </Using>
+    <Using Include="System.Runtime.CompilerServices.MethodImplAttribute">
+      <Alias>MethodImplAttribute</Alias>
+    </Using>
+    <Using Include="System.Runtime.CompilerServices.MethodImplOptions">
+      <Static>True</Static>
+    </Using>
   </ItemGroup>
 
 </Project>

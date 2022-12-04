@@ -1,19 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading;
-using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -23,7 +15,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.Clear(@<paramref name="this"/>, <paramref name="start"/>, <paramref name="length"/> == 0 ? @<paramref name="this"/>.Length : <paramref name="length"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 		=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
 
@@ -276,7 +268,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Parallel"/>.Invoke(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void InParallel(this Action[] @this)
 		=> Parallel.Invoke(@this);
 
@@ -284,7 +276,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Parallel"/>.Invoke(<paramref name="options"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void InParallel(this Action[] @this, ParallelOptions options)
 		=> Parallel.Invoke(options, @this);
 
@@ -299,7 +291,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.Reverse(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Reverse<T>(this T[] @this)
 		=> Array.Reverse(@this);
 
@@ -307,7 +299,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.BinarySearch(@<paramref name="this"/>, <paramref name="value"/>, <paramref name="comparer"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Search<T>(this T[] @this, T value, IComparer<T>? comparer = null)
 		=> Array.BinarySearch(@this, value, comparer);
 
@@ -317,7 +309,7 @@ public static class ArrayExtensions
 	/// ? <paramref name="length"/>
 	/// : @<paramref name="this"/>.Length, <paramref name="value"/>, <paramref name="comparer"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Search<T>(this T[] @this, T value, int start, int length = 0, IComparer<T>? comparer = null)
 		=> Array.BinarySearch(@this, start, length > 0 ? length : @this.Length, value, comparer);
 
@@ -325,7 +317,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.Sort(@<paramref name="this"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Sort<T>(this T[] @this, Comparison<T> comparison)
 		=> Array.Sort(@this, comparison);
 
@@ -333,7 +325,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.Sort(@<paramref name="this"/>, <paramref name="comparer"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Sort<T>(this T[] @this, IComparer<T>? comparer = null)
 		=> Array.Sort(@this, comparer);
 
@@ -343,7 +335,7 @@ public static class ArrayExtensions
 	/// ? <paramref name="length"/>
 	/// : @<paramref name="this"/>.Length, <paramref name="comparer"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null)
 		=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 
@@ -375,14 +367,14 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; ((ReadOnlySpan&lt;<see cref="byte"/>&gt;)@<paramref name="this"/>).ToBase64(<paramref name="options"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToBase64(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> ((ReadOnlySpan<byte>)@this).ToBase64(options);
 
 	/// <remarks>
 	/// <c>=&gt; ((ReadOnlySpan&lt;<see cref="byte"/>&gt;)@<paramref name="this"/>).ToBase64Chars(<paramref name="options"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static char[] ToBase64Chars(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> ((ReadOnlySpan<byte>)@this).ToBase64Chars(options);
 
@@ -405,7 +397,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="ImmutableQueue"/>.Create(@<paramref name="this"/> ?? <see cref="Array{T}.Empty"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ImmutableQueue<T> ToImmutableQueue<T>(this T[]? @this)
 		where T : notnull
 		=> ImmutableQueue.Create(@this ?? Array<T>.Empty);
@@ -414,7 +406,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="ToImmutableStack"/>.Create(@<paramref name="this"/> ?? <see cref="Array{T}.Empty"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
 		where T : notnull
 		=> ImmutableStack.Create(@this ?? Array<T>.Empty);
@@ -422,7 +414,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="JsonSerializer"/>.SerializeToNode(@<paramref name="this"/>, <paramref name="options"/>) <see langword="as"/> <see cref="JsonArray"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
 
@@ -430,7 +422,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this byte[] @this, Encoding encoding)
 		=> encoding.GetString(@this);
 
@@ -438,7 +430,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>, <paramref name="index"/>, <paramref name="count"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this byte[] @this, Encoding encoding, int index, int count)
 		=> encoding.GetString(@this, index, count);
 
@@ -446,7 +438,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAny<T>(this Task[] @this)
 		=> Task.WaitAny(@this);
 
@@ -454,7 +446,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, <paramref name="token"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAny<T>(this Task[] @this, CancellationToken token)
 		=> Task.WaitAny(@this, token);
 
@@ -462,7 +454,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAny<T>(this Task[] @this, TimeSpan timeout, CancellationToken token)
 		=> Task.WaitAny(@this, (int)timeout.TotalMilliseconds, token);
 
@@ -470,7 +462,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAll(this Task[] @this)
 		=> Task.WaitAll(@this);
 
@@ -479,7 +471,7 @@ public static class ArrayExtensions
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>, <paramref name="token"/>);</c>
 	/// </remarks>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAll(this Task[] @this, CancellationToken token)
 		=> Task.WaitAll(@this, token);
 
@@ -488,7 +480,7 @@ public static class ArrayExtensions
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WaitAll(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
 	/// </remarks>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAll(this Task[] @this, TimeSpan timeout, CancellationToken token)
 		=> Task.WaitAll(@this, (int)timeout.TotalMilliseconds, token);
 
@@ -496,7 +488,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async Task WhenAllAsync<T>(this Task[] @this)
 		=> await Task.WhenAll(@this);
 
@@ -504,7 +496,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAll(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async Task<T[]> WhenAllAsync<T>(this Task<T>[] @this)
 		=> await Task.WhenAll(@this);
 
@@ -512,7 +504,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async Task WhenAnyAsync<T>(this Task[] @this)
 		=> await Task.WhenAny(@this);
 
@@ -520,7 +512,7 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="await"/> <see cref="Task"/>.WhenAny(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static async Task<Task<T>> WhenAnyAsync<T>(this Task<T>[] @this)
 		=> await Task.WhenAny(@this);
 }

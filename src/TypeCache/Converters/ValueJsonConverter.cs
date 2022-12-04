@@ -1,29 +1,24 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Converters;
 
 public sealed class ValueJsonConverter : JsonConverter<object?>
 {
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		=> reader.GetValue();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
 		=> JsonSerializer.Serialize(writer, value, options);
 
 	private static IDictionary<string, object> GetObject(ref Utf8JsonReader reader, JsonSerializerOptions options)
 	{
-		var dictionary = new Dictionary<string, object>(STRING_COMPARISON.ToStringComparer());
+		var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 		while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
 		{
 			var name = reader.GetString();

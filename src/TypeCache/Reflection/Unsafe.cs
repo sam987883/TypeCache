@@ -1,10 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -25,7 +22,7 @@ public static class Unsafe
 		public static Convert To { get; }
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TO Convert<FROM, TO>(FROM value)
 		where FROM : unmanaged
 		where TO : unmanaged

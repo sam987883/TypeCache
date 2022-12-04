@@ -1,41 +1,23 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using TypeCache.Collections;
-
 namespace TypeCache.Business;
+
+public readonly struct RuleResponse
+{
+	public required Exception? Error { get; init; }
+
+	public required string[] ValidationMessages { get; init; }
+
+	public required RuleResponseStatus Status { get; init; }
+}
 
 public readonly struct RuleResponse<RESPONSE>
 {
-	public RuleResponse(RESPONSE response)
-	{
-		this.Error = null;
-		this.FailedValidation = Array<string>.Empty;
-		this.Response = response;
-		this.Status = RuleResponseStatus.Success;
-	}
+	public required Exception? Error { get; init; }
 
-	public RuleResponse(params string[] failedValidation)
-	{
-		this.Error = null;
-		this.FailedValidation = failedValidation;
-		this.Response = default;
-		this.Status = RuleResponseStatus.FailValidation;
-	}
+	public required string[] ValidationMessages { get; init; }
 
-	public RuleResponse(Exception error)
-	{
-		this.Error = error;
-		this.FailedValidation = Array<string>.Empty;
-		this.Response = default;
-		this.Status = RuleResponseStatus.Error;
-	}
+	public required RESPONSE? Response { get; init; }
 
-	public Exception? Error { get; init; }
-
-	public string[] FailedValidation { get; init; }
-
-	public RESPONSE? Response { get; init; }
-
-	public RuleResponseStatus Status { get; init; }
+	public required RuleResponseStatus Status { get; init; }
 }

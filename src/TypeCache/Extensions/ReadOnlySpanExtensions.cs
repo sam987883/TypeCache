@@ -1,18 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using TypeCache.Collections;
 using static System.Globalization.CultureInfo;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -161,7 +154,7 @@ public static class ReadOnlySpanExtensions
 	/// <see langword="return new"/> <see cref="string"/>(result);
 	/// </code>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this scoped ReadOnlySpan<char> @this, IEnumerable<string> values)
 	{
 		if (!values.Any())
@@ -190,36 +183,36 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Join((<see cref="IEnumerable{T}"/>)<paramref name="values"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this scoped ReadOnlySpan<char> @this, params string[] values)
 		=> @this.Join((IEnumerable<string>)values);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>[0] == <paramref name="text"/>;</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Left(this scoped ReadOnlySpan<char> @this, char text)
 		=> @this[0] == text;
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Slice(0, <paramref name="length"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> @this, int length)
 		=> @this.Slice(0, length);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	public static bool Left(this scoped ReadOnlySpan<char> @this, string text, StringComparison comparison = STRING_COMPARISON)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Left(this scoped ReadOnlySpan<char> @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.StartsWith(text, comparison);
 
 	/// <inheritdoc cref="ISpanParsable{TSelf}.Parse(ReadOnlySpan{char}, IFormatProvider?)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this scoped ReadOnlySpan<char> @this, IFormatProvider? formatProvider)
 		where T : ISpanParsable<T>
 		=> T.Parse(@this, formatProvider ?? InvariantCulture);
@@ -228,7 +221,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this scoped ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
 		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
@@ -237,7 +230,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T To<T>(this scoped ReadOnlySpan<byte> @this)
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
@@ -246,7 +239,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Cast&lt;<typeparamref name="T"/>, <typeparamref name="R"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ReadOnlySpan<R> To<T, R>(this ReadOnlySpan<T> @this)
 		where T : struct
 		where R : struct
@@ -256,7 +249,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToBase64(this scoped ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> Convert.ToBase64String(@this, options);
 
@@ -280,7 +273,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ReadOnlySpan<byte> ToBytes<T>(this ReadOnlySpan<T> @this)
 		where T : struct
 		=> MemoryMarshal.AsBytes(@this);
@@ -289,7 +282,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.ToEnumerable(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<T> ToEnumerable<T>(this ReadOnlyMemory<T> @this)
 		where T : struct
 		=> MemoryMarshal.ToEnumerable(@this);
@@ -312,7 +305,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <see langword="ref"/> <see cref="MemoryMarshal"/>.AsRef&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ref readonly T ToRef<T>(this ReadOnlySpan<byte> @this)
 		where T : struct
 		=> ref MemoryMarshal.AsRef<T>(@this);
@@ -321,7 +314,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this scoped ReadOnlySpan<byte> @this, Encoding encoding)
 		=> encoding.GetString(@this);
 
@@ -329,7 +322,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, [MaybeNullWhen(false)] out T value)
 		where T : ISpanParsable<T>
 		=> T.TryParse(@this, InvariantCulture, out value);
@@ -338,7 +331,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : ISpanParsable<T>
 		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
@@ -347,7 +340,7 @@ public static class ReadOnlySpanExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : INumberBase<T>
 		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);

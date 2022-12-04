@@ -1,16 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -56,7 +49,7 @@ public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 	public TokenMember<T>? this[T value]
 		=> this.Tokens.FirstOrDefault(token => this.Comparer.EqualTo(token.Value, value));
 
-	public TokenMember<T>? this[string text, StringComparison comparison = STRING_COMPARISON]
+	public TokenMember<T>? this[string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase]
 		=> this.Tokens.FirstOrDefault(token => token.Name.Is(text, comparison));
 
 	/// <inheritdoc/>
@@ -82,23 +75,23 @@ public sealed class EnumMember<T> : IMember, IEquatable<EnumMember<T>>
 	/// <inheritdoc cref="Type.GetEnumUnderlyingType"/>
 	public TypeMember UnderlyingType => this._UnderlyingType.Value;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool IsDefined(T value)
 		=> this.Tokens.Any(token => this.Comparer.EqualTo(token.Value, value));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public string Parse(T value)
 		=> this[value]?.Name ?? value.ToString("G");
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] EnumMember<T>? other)
 		=> this.TypeHandle == other?.TypeHandle;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as EnumMember<T>);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.TypeHandle.GetHashCode();
 }

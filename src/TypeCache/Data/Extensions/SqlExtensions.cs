@@ -1,23 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Collections;
 using System.Data;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
-using static System.FormattableString;
-using static TypeCache.Default;
 
 namespace TypeCache.Data.Extensions;
 
 public static class SqlExtensions
 {
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string EscapeValue([NotNull] this string @this)
 		=> @this.Replace("'", "''");
 

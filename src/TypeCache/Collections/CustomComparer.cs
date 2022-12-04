@@ -1,12 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
-
 namespace TypeCache.Collections;
 
 public readonly struct CustomComparer<T> : IComparer<T>, IEqualityComparer<T>
@@ -32,15 +25,15 @@ public readonly struct CustomComparer<T> : IComparer<T>, IEqualityComparer<T>
 	{
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
-	int IComparer<T>.Compare([AllowNull] T x, [AllowNull] T y)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public int Compare([AllowNull] T x, [AllowNull] T y)
 		=> this._Compare(x, y);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([AllowNull] T x, [AllowNull] T y)
 		=> this._Equals(x, y);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public int GetHashCode([DisallowNull] T value)
 		=> this._GetHashCode(value);
 }

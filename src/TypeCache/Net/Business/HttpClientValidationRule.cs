@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-using System.Net.Http;
 using TypeCache.Business;
 
 namespace TypeCache.Net.Business;

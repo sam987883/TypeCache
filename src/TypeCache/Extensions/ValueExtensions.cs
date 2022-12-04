@@ -1,14 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using static System.Globalization.CultureInfo;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -18,7 +12,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T AbsoluteValue<T>(this T @this)
 		where T : INumberBase<T>
 		=> T.Abs(@this);
@@ -27,7 +21,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.BitDecrement(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T BitDecrement<T>(this T @this)
 		where T : IFloatingPointIeee754<T>
 		=> T.BitDecrement(@this);
@@ -36,7 +30,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.BitIncrement(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T BitIncrement<T>(this T @this)
 		where T : IFloatingPointIeee754<T>
 		=> T.BitIncrement(@this);
@@ -45,7 +39,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Ceiling(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Ceiling<T>(this T @this)
 		where T : IFloatingPoint<T>
 		=> T.Ceiling(@this);
@@ -80,7 +74,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Floor(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Floor<T>(this T @this)
 		where T : IFloatingPoint<T>
 		=> T.Floor(@this);
@@ -89,7 +83,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Maximum<T>(this (T, T) @this)
 		where T : INumber<T>
 		=> T.Max(@this.Item1, @this.Item2);
@@ -98,7 +92,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="int"/>.Max(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Maximum(this (Index, Index) @this)
 		=> int.Max(@this.Item1.Value, @this.Item2.Value);
 
@@ -106,7 +100,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Minimum<T>(this (T, T) @this)
 		where T : INumber<T>
 		=> T.Min(@this.Item1, @this.Item2);
@@ -115,7 +109,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="int"/>.Min(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Minimum(this (Index, Index) @this)
 		=> int.Min(@this.Item1.Value, @this.Item2.Value);
 
@@ -136,7 +130,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Round<T>(this T @this)
 		where T : IFloatingPoint<T>
 		=> T.Round(@this);
@@ -145,7 +139,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Round<T>(this T @this, int digits)
 		where T : IFloatingPoint<T>
 		=> T.Round(@this, digits);
@@ -154,7 +148,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Round<T>(this T @this, MidpointRounding rounding)
 		where T : IFloatingPoint<T>
 		=> T.Round(@this, rounding);
@@ -163,7 +157,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Round<T>(this T @this, int digits, MidpointRounding rounding)
 		where T : IFloatingPoint<T>
 		=> T.Round(@this, digits, rounding);
@@ -172,7 +166,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Sign(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Sign<T>(this T @this)
 		where T : INumber<T>
 		=> T.Sign(@this);
@@ -180,7 +174,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; (@<paramref name="this"/>, <paramref name="value"/>) = (<paramref name="value"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Swap<T>(this ref T @this, ref T value)
 		where T : struct
 		=> (@this, value) = (value, @this);
@@ -188,7 +182,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; (@<paramref name="this"/>.Item2, @<paramref name="this"/>.Item1);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static (T, T) Swap<T>(this (T, T) @this)
 		=> (@this.Item2, @this.Item1);
 
@@ -234,49 +228,49 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.GetBytes()).ToArray();</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
 		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this Guid @this, IFormatProvider? provider = null)
 		=> @this.ToString("D", provider ?? InvariantCulture);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
 		=> @this.ToString("c", provider ?? InvariantCulture);
 
@@ -284,7 +278,7 @@ public static class ValueExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Truncate(@<paramref name="this"/>);</c>
 	/// </remarks>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Truncate<T>(this T @this)
 		where T : IFloatingPoint<T>
 		=> T.Truncate(@this);

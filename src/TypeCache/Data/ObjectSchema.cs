@@ -1,21 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
-using static TypeCache.Default;
 
 namespace TypeCache.Data;
 
@@ -294,11 +286,11 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 			.ToString();
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasColumn(string column) =>
 		this.Columns.Any(_ => _.Name.Is(column));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasParameter(string parameter) =>
 		this.Parameters.Any(_ => _.Name.Is(parameter));
 
@@ -307,11 +299,11 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 		=> other?.DataSource.Equals(this.DataSource) is true
 			&& other?.Name.Equals(this.Name) is true;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> HashCode.Combine(this.DataSource, this.Name);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override string ToString()
 		=> this.Name;
 }

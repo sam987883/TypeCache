@@ -1,11 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using static System.Math;
-using static TypeCache.Default;
 
 namespace TypeCache.Extensions;
 
@@ -16,7 +11,7 @@ public static class RangeExtensions
 	/// ? !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End)
 	/// : <see langword="null"/>;</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool? Any(this Range @this)
 		=> @this.Start.IsFromEnd == @this.End.IsFromEnd ? !@this.Start.Equals(@this.End) : null;
 
@@ -135,7 +130,7 @@ public static class RangeExtensions
 	/// <summary>
 	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>.End.Value - @<paramref name="this"/>.Start.Value);</c>
 	/// </summary>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Length(this Range @this)
 		=> Abs(@this.End.Value - @this.Start.Value);
 
@@ -212,7 +207,7 @@ public static class RangeExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Start.FromStart(<paramref name="count"/>)..@<paramref name="this"/>.End.FromStart(<paramref name="count"/>);</c>
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Range Normalize(this Range @this, int count)
 		=> @this.Start.FromStart(count)..@this.End.FromStart(count);
 

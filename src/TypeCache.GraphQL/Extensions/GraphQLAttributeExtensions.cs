@@ -14,13 +14,13 @@ using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
-using static TypeCache.Default;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLAttributeExtensions
 {
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string? GraphQLDeprecationReason(this IMember @this)
 		=> @this.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
@@ -32,19 +32,19 @@ public static class GraphQLAttributeExtensions
 			var description => description
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string? GraphQLDescription(this MethodParameter @this)
 		=> @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool GraphQLIgnore(this IMember @this)
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool GraphQLIgnore(this MethodParameter @this)
 		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string? GraphQLKey(this IMember @this)
 		=> @this.Attributes.FirstOrDefault<GraphQLKeyAttribute>()?.Name;
 
@@ -64,7 +64,7 @@ public static class GraphQLAttributeExtensions
 			_ => @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string GraphQLName(this MethodMember @this)
 		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
 
@@ -77,7 +77,7 @@ public static class GraphQLAttributeExtensions
 			var name => name
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string GraphQLName(this MethodParameter @this)
 		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name;
 

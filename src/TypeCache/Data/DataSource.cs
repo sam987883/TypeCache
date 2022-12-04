@@ -1,23 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static System.StringSplitOptions;
 using static TypeCache.Data.DataSourceType;
-using static TypeCache.Default;
 
 namespace TypeCache.Data;
 
@@ -81,7 +71,7 @@ internal sealed class DataSource : IDataSource
 
 	public IReadOnlyDictionary<DatabaseObject, ObjectSchema> ObjectSchemas { get; }
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public DbConnection CreateDbConnection()
 		=> this.Factory.CreateConnection(this.ConnectionString);
 
@@ -112,15 +102,15 @@ internal sealed class DataSource : IDataSource
 		};
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public DatabaseObject CreateName(string schema, string objectName)
 		=> new(Invariant($"{this.EscapeIdentifier(this.DefaultDatabase)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public DatabaseObject CreateName(string database, string schema, string objectName)
 		=> new(Invariant($"{this.EscapeIdentifier(database)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"));
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public SqlCommand CreateSqlCommand(string sql)
 		=> new SqlCommand(this, sql);
 
@@ -132,11 +122,11 @@ internal sealed class DataSource : IDataSource
 			_ => Invariant($"[{identifier.Replace("]", "]]")}]")
 		};
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public string EscapeLikeValue([NotNull] string text)
 		=> text.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public string EscapeValue([NotNull] string text)
 		=> text.Replace("'", "''");
 
@@ -196,19 +186,19 @@ internal sealed class DataSource : IDataSource
 		return connection.GetSchema(collection.Name());
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(IDataSource? other)
 		=> this.Name.Is(other?.Name);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as DataSource);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.Name.GetHashCode(StringComparison.OrdinalIgnoreCase);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override string ToString()
 		=> this.Name;
 

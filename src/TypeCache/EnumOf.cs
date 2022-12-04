@@ -1,12 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using TypeCache.Collections;
 using TypeCache.Reflection;
-using static TypeCache.Default;
 
 namespace TypeCache;
 
@@ -33,11 +28,11 @@ public static class EnumOf<T>
 
 	public static TypeMember UnderlyingType => Member.UnderlyingType;
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsDefined(T value)
 		=> Member.IsDefined(value);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Parse(T value)
 		=> Member.Parse(value);
 }

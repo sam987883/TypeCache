@@ -59,7 +59,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver<OutputResponse<Dat
 		if (output.Any())
 			result = (await mediator.ApplyRuleAsync<SqlCommand, DataTable>(sqlCommand, context.CancellationToken)).Select();
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, context.CancellationToken);
 
 		return new()
 		{
@@ -107,7 +107,7 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver<OutputResponse<
 		if (output.Any())
 			result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
 		else
-			await mediator.RunProcessAsync<SqlCommand>(sqlCommand, context.CancellationToken);
+			await mediator.ApplyRuleAsync<SqlCommand>(sqlCommand, context.CancellationToken);
 
 		return new()
 		{

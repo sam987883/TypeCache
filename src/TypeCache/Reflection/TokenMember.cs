@@ -1,14 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
-using static TypeCache.Default;
 
 namespace TypeCache.Reflection;
 
@@ -51,11 +45,11 @@ public sealed class TokenMember<T> : IMember, IEquatable<TokenMember<T>>
 	public bool Equals([NotNullWhen(true)] TokenMember<T>? other)
 		=> other is not null && this.Type.Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as TokenMember<T>);
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.Value.GetHashCode();
 }

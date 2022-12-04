@@ -1,11 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using static TypeCache.Default;
-
 namespace TypeCache.Collections;
 
 public readonly struct CustomEnumerator<T> : IDisposable
@@ -24,11 +18,11 @@ public readonly struct CustomEnumerator<T> : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool MoveNext()
 		=> this.MoveNextFunc();
 
-	[MethodImpl(METHOD_IMPL_OPTIONS), DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public void Reset()
 		=> throw new NotImplementedException();
 }
