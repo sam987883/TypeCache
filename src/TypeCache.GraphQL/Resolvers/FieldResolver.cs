@@ -4,8 +4,8 @@ using System;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
-using TypeCache.Business;
 using TypeCache.Extensions;
+using TypeCache.Mediation;
 
 namespace TypeCache.GraphQL.Resolvers;
 

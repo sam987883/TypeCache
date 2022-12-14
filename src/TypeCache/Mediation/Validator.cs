@@ -3,7 +3,7 @@
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 
-namespace TypeCache.Business;
+namespace TypeCache.Mediation;
 
 public readonly struct Validator
 {

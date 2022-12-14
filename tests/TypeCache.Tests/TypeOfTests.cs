@@ -94,15 +94,15 @@ public class TypeOfTests
 		Assert.Equal(1, member.Constructors.Count);
 		Assert.Null(member.ElementType);
 		Assert.Empty(member.Events);
-		Assert.Equal(10, member.Fields.Count);
+		Assert.Equal(7, member.Fields.Count);
 		Assert.Empty(member.GenericTypes);
 		Assert.Equal(type.TypeHandle, member.TypeHandle);
 		Assert.Equal(0, member.InterfaceTypes.Count);
 		Assert.False(member.Internal);
 		Assert.Equal(Kind.Class, member.Kind);
-		Assert.Equal(9, member.Methods.Count);
+		Assert.Equal(8, member.Methods.Count);
 		Assert.Equal(type.Name, member.Name);
-		Assert.Equal(10, member.Properties.Count);
+		Assert.Equal(7, member.Properties.Count);
 		Assert.True(member.Public);
 		Assert.Equal(type.IsByRef || type.IsByRefLike, member.Ref);
 		Assert.Equal(SystemType.None, member.SystemType);

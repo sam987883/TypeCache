@@ -26,14 +26,6 @@ public sealed class SqlCommand
 	public IDataSource DataSource { get; }
 
 	/// <summary>
-	/// The initial capacity used for the <see cref="IList{T}"/> returned from a <see cref="DbCommand"/>.
-	/// </summary>
-	public int InitialCapacity { get; set; }
-
-	/// <inheritdoc cref="TransactionIsolationLevel"/>
-	public TransactionIsolationLevel IsolationLevel { get; set; } = TransactionIsolationLevel.Unspecified;
-
-	/// <summary>
 	/// <code>
 	/// DECLARE @ParameterName4 AS INTEGER;<br/>
 	/// DECLARE @ParameterName5 AS NVARCHAR(MAX);<br/>
@@ -64,24 +56,6 @@ public sealed class SqlCommand
 
 	/// <inheritdoc cref="DbCommand.CommandType"/>
 	public CommandType Type { get; set; } = CommandType.Text;
-
-	/// <inheritdoc cref="TransactionScopeOption"/>
-	public TransactionScopeOption TransactionScope { get; set; } = TransactionScopeOption.Required;
-
-	public TransactionScope? StartTransaction()
-	{
-		if (this.IsolationLevel is TransactionIsolationLevel.Unspecified)
-			return null;
-
-		var options = new TransactionOptions
-		{
-			IsolationLevel = this.IsolationLevel
-		};
-		if (this.Timeout.HasValue)
-			options.Timeout = this.Timeout.Value;
-
-		return new TransactionScope(this.TransactionScope, options, TransactionScopeAsyncFlowOption.Enabled);
-	}
 
 	/// <summary>
 	/// <b>SQL</b>

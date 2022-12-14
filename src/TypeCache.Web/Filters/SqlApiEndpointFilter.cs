@@ -4,8 +4,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Business;
 using TypeCache.Data;
+using TypeCache.Mediation;
 using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;

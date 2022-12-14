@@ -13,12 +13,11 @@ const string DATASOURCE = "Default";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
-	.RegisterMediator()
-	.RegisterHashMaker((decimal)(Tau - E), (decimal)(Tau + 2*E))
-	.RegisterDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, DataSourceType.SqlServer)
-	.RegisterDataSourceAccessor()
-	.RegisterSqlCommandRules()
-	.RegisterSqlApiRules(typeof(Program).Assembly)
+	.AddMediation()
+	.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2*E))
+	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, DataSourceType.SqlServer)
+	.AddDataSourceAccessor()
+	.AddSqlCommandRules()
 	.RegisterGraphQL()
 	.RegisterGraphQLSchema("AdventureWorks2019Data", schema =>
 	{

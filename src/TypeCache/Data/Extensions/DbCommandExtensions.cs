@@ -186,19 +186,43 @@ public static class DbCommandExtensions
 	/// <summary>
 	/// <code>
 	/// {<br/>
+	/// <see langword="    var"/> rows = <see langword="new"/> <see cref="List{T}"/>(<paramref name="listInitialCapacity"/>);<br/>
 	/// <see langword="    await using var"/> reader = <see langword="await"/> @<paramref name="this"/>.ExecuteReaderAsync(<paramref name="token"/>);<br/>
-	/// <see langword="    var"/> rows = <see langword="await"/> reader.ReadModelsAsync&lt;<typeparamref name="T"/>&gt;(<paramref name="count"/>, <paramref name="token"/>);<br/>
+	/// <see langword="    await"/> reader.ReadModelsAsync&lt;<typeparamref name="T"/>&gt;(rows, <paramref name="token"/>);<br/>
 	/// <see langword="    await"/> reader.CloseAsync();<br/>
 	/// <see langword="    "/>@<paramref name="this"/>.AddInputParameter(<see langword="nameof"/>(reader.RecordsAffected), reader.RecordsAffected);<br/>
 	/// <see langword="    return"/> rows;<br/>
 	/// }
 	/// </code>
 	/// </summary>
-	public static async Task<IList<T>> GetModelsAsync<T>(this DbCommand @this, int initialCapacity = 0, CancellationToken token = default)
+	public static async Task<IList<T>> GetModelsAsync<T>(this DbCommand @this, int listInitialCapacity, CancellationToken token = default)
 		where T : new()
 	{
+		var rows = new List<T>(listInitialCapacity);
 		await using var reader = await @this.ExecuteReaderAsync(token);
-		var rows = await reader.ReadModelsAsync<T>(initialCapacity, token);
+		await reader.ReadModelsAsync<T>(rows, token);
+		await reader.CloseAsync();
+		@this.AddInputParameter(nameof(reader.RecordsAffected), reader.RecordsAffected);
+		return rows;
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    var"/> rows = <see langword="new"/> List&lt;<see cref="object"/>&gt;(<paramref name="listInitialCapacity"/>);<br/>
+	/// <see langword="    await using var"/> reader = <see langword="await"/> @<paramref name="this"/>.ExecuteReaderAsync(<paramref name="token"/>);<br/>
+	/// <see langword="    await"/> reader.ReadModelsAsync(modelType, rows, <paramref name="token"/>);<br/>
+	/// <see langword="    await"/> reader.CloseAsync();<br/>
+	/// <see langword="    "/>@<paramref name="this"/>.AddInputParameter(<see langword="nameof"/>(reader.RecordsAffected), reader.RecordsAffected);<br/>
+	/// <see langword="    return"/> rows;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	public static async Task<IList<object>> GetModelsAsync(this DbCommand @this, Type modelType, int listInitialCapacity, CancellationToken token = default)
+	{
+		var rows = new List<object>(listInitialCapacity);
+		await using var reader = await @this.ExecuteReaderAsync(token);
+		await reader.ReadModelsAsync(modelType, rows, token);
 		await reader.CloseAsync();
 		@this.AddInputParameter(nameof(reader.RecordsAffected), reader.RecordsAffected);
 		return rows;

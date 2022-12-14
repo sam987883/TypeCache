@@ -2,7 +2,7 @@
 
 using TypeCache.Extensions;
 
-namespace TypeCache.Business;
+namespace TypeCache.Mediation;
 
 public sealed class ValidationException : Exception
 {

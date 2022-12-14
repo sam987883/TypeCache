@@ -40,13 +40,12 @@ public static class DbDataReaderExtensions
 	/// <summary>
 	/// <code>
 	/// {<br/>
-	/// <see langword="    var"/> rows = <see langword="new"/> <see cref="List{T}"/>(<paramref name="initialCapacity"/>);<br/>
-	/// <see langword="    "/>propertyMap = <see cref="TypeOf{T}.Properties"/>.ToDictionary(property =&gt; property.Name, property =&gt; property);<br/>
-	/// <see langword="    "/>properties = @<paramref name="this"/>.GetColumns().Select(column =&gt; propertyMap[column]).ToArray();<br/>
-	/// <see langword="    "/>values = <see langword="new"/> <see cref="object"/>[@<paramref name="this"/>.VisibleFieldCount];<br/>
+	/// <see langword="    var"/> propertyMap = <see cref="TypeOf{T}.Properties"/>.ToDictionary(property =&gt; property.Name, property =&gt; property);<br/>
+	/// <see langword="    var"/> properties = @<paramref name="this"/>.GetColumns().Select(column =&gt; propertyMap[column]).ToArray();<br/>
+	/// <see langword="    var"/> values = <see langword="new"/> <see cref="object"/>[@<paramref name="this"/>.VisibleFieldCount];<br/>
 	/// <see langword="    while"/> (<see langword="await"/> @<paramref name="this"/>.ReadAsync(<paramref name="token"/>))<br/>
 	/// <see langword="    "/>{<br/>
-	/// <see langword="        var"/> model = <see cref="TypeOf{T}"/>.Create()!;<br/>
+	/// <see langword="        var"/> model = <see cref="TypeOf{T}"/>.Create();<br/>
 	/// <see langword="        "/>@<paramref name="this"/>.GetValues(values);<br/>
 	/// <see langword="        "/>properties.ForEach((property, columnIndex) =&gt; property.SetValue(model, values[columnIndex]));<br/>
 	/// <see langword="        "/>rows.Add(model);<br/>
@@ -55,10 +54,9 @@ public static class DbDataReaderExtensions
 	/// }
 	/// </code>
 	/// </summary>
-	public static async Task<IList<T>> ReadModelsAsync<T>(this DbDataReader @this, int initialCapacity = 0, CancellationToken token = default)
+	public static async Task ReadModelsAsync<T>(this DbDataReader @this, IList<T> rows, CancellationToken token = default)
 		where T : new()
 	{
-		var rows = new List<T>(initialCapacity);
 		var propertyMap = TypeOf<T>.Properties.ToDictionary(property => property.Name, property => property);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 		var values = new object[@this.VisibleFieldCount];
@@ -69,7 +67,39 @@ public static class DbDataReaderExtensions
 			properties.ForEach((property, columnIndex) => property.SetValue(model, values[columnIndex]));
 			rows.Add(model);
 		}
-		return rows;
+	}
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    var"/> typeMember = <paramref name="modelType"/>.GetTypeMember();<br/>
+	/// <see langword="    var"/> propertyMap = typeMember.Properties.ToDictionary(property =&gt; property.Name, property =&gt; property);<br/>
+	/// <see langword="    var"/> properties = @<paramref name="this"/>.GetColumns().Select(column =&gt; propertyMap[column]).ToArray();<br/>
+	/// <see langword="    var"/> values = <see langword="new"/> <see cref="object"/>[@<paramref name="this"/>.VisibleFieldCount];<br/>
+	/// <see langword="    while"/> (<see langword="await"/> @<paramref name="this"/>.ReadAsync(<paramref name="token"/>))<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        var"/> model = typeMember.Create();<br/>
+	/// <see langword="        "/>@<paramref name="this"/>.GetValues(values);<br/>
+	/// <see langword="        "/>properties.ForEach((property, columnIndex) =&gt; property.SetValue(model, values[columnIndex]));<br/>
+	/// <see langword="        "/>rows.Add(model);<br/>
+	/// <see langword="    "/>}<br/>
+	/// <see langword="    return"/> rows;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
+	{
+		var typeMember = modelType.GetTypeMember();
+		var propertyMap = typeMember.Properties.ToDictionary(property => property.Name, property => property);
+		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
+		var values = new object[@this.VisibleFieldCount];
+		while (await @this.ReadAsync(token))
+		{
+			var model = typeMember.Create()!;
+			@this.GetValues(values);
+			properties.ForEach((property, columnIndex) => property.SetValue(model, values[columnIndex]));
+			rows.Add(model);
+		}
 	}
 
 	/// <summary>

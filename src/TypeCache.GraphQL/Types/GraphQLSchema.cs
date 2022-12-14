@@ -11,7 +11,6 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
-using TypeCache.Business;
 using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Extensions;
@@ -19,6 +18,7 @@ using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
+using TypeCache.Mediation;
 using TypeCache.Reflection;
 using static System.FormattableString;
 

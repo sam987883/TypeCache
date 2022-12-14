@@ -2,14 +2,12 @@
 
 using System.Data;
 using System.Data.Common;
-using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Attributes;
-using TypeCache.Business;
 using TypeCache.Data;
-using TypeCache.Data.Business;
+using TypeCache.Data.Mediation;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Mediation;
 using TypeCache.Security;
 
 namespace TypeCache.Extensions;
@@ -19,7 +17,7 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// Registers singleton <c><see cref="IDataSource"/></c> to be available via: <c>IAccessor&lt;<see cref="IDataSource"/>&gt;</c><br/>
 	/// </summary>
-	public static IServiceCollection RegisterDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
+	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
 		=> @this.AddSingleton<IDataSource>(new DataSource(name, dbProviderFactory, connectionString, type));
 
 	/// <summary>
@@ -27,7 +25,7 @@ public static class ServiceCollectionExtensions
 	/// <i><b>Requires call to:</b></i>
 	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
 	/// </summary>
-	public static IServiceCollection RegisterDataSourceAccessor(this IServiceCollection @this)
+	public static IServiceCollection AddDataSourceAccessor(this IServiceCollection @this)
 		=> @this.AddSingleton<IAccessor<IDataSource>, Accessor<IDataSource>>();
 
 	/// <summary>
@@ -38,7 +36,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	/// <param name="rgbKey">Any random 16 bytes</param>
 	/// <param name="rgbIV">Any random 16 bytes</param>
-	public static IServiceCollection RegisterHashMaker(this IServiceCollection @this, byte[] rgbKey, byte[] rgbIV)
+	public static IServiceCollection AddHashMaker(this IServiceCollection @this, byte[] rgbKey, byte[] rgbIV)
 		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
@@ -49,7 +47,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	/// <param name="rgbKey">Any random decimal value (gets converted to a 16 byte array)</param>
 	/// <param name="rgbIV">Any random decimal value (gets converted to a 16 byte array)</param>
-	public static IServiceCollection RegisterHashMaker(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
+	public static IServiceCollection AddHashMaker(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
 		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
@@ -60,69 +58,29 @@ public static class ServiceCollectionExtensions
 	/// <item><term><c><see cref="DefaultRuleIntermediary{REQUEST, RESPONSE}"/></c></term> Default implementation of <c><see cref="IRuleIntermediary{REQUEST, RESPONSE}"/></c>.</item>
 	/// </list>
 	/// </summary>
-	public static IServiceCollection RegisterMediator(this IServiceCollection @this)
+	public static IServiceCollection AddMediation(this IServiceCollection @this)
 		=> @this.AddSingleton<IMediator, Mediator>()
 			.AddSingleton(typeof(DefaultProcessIntermediary<>), typeof(DefaultProcessIntermediary<>))
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 	/// <summary>
-	/// Registers Singleton Rules for the generic SQL API Commands.<br/>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    foreach"/> (<see langword="var"/> type <see langword="in"/> typeAssembly.DefinedTypes.Where(type =&gt; type.IsDefined(typeof(SqlApiAttribute), <see langword="false"/>)))<br/>
-	/// <see langword="        "/>@this.AddSingleton(<br/>
-	/// <see langword="            "/><see langword="typeof"/>(IRule&lt;,&gt;).MakeGenericType(<see langword="typeof"/>(<see cref="SqlCommand"/>), typeof(IList&lt;&gt;).MakeGenericType(type)),<br/>
-	/// <see langword="            "/><see langword="typeof"/>(SqlCommandModelsRule&lt;&gt;).MakeGenericType(type));<br/>
-	/// <br/>
-	/// <see langword="    return"/> @<paramref name="this"/>;<br/>
-	/// }
-	/// </code>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code>
-	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
-	/// <see cref="RegisterSqlCommandRules(IServiceCollection)"/><br/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection RegisterSqlApiRules(this IServiceCollection @this, Assembly typeAssembly)
-	{
-		foreach (var type in typeAssembly.DefinedTypes.Where(type => type.IsDefined(typeof(SqlApiAttribute), false)))
-			@this.AddSingleton(
-				typeof(IRule<,>).MakeGenericType(typeof(SqlCommand), typeof(IList<>).MakeGenericType(type)),
-				typeof(SqlCommandModelsRule<>).MakeGenericType(type));
-
-		return @this;
-	}
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="IList{T}"/>&gt;, <see cref="SqlCommandModelsRule{T}"/>&gt;();</c>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code>
-	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
-	/// <see cref="RegisterSqlCommandRules(IServiceCollection)"/><br/>
-	/// </code>
-	/// </summary>
-	public static void RegisterSqlCommandRule<T>(this IServiceCollection @this)
-		where T : new()
-		=> @this.AddSingleton<IRule<SqlCommand, IList<T>>, SqlCommandModelsRule<T>>();
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IValidationRule&lt;<see cref="SqlCommand"/>, <see cref="SqlCommandValidationRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="DataSet"/>&gt;, <see cref="SqlCommandDataSetRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="DataTable"/>&gt;, <see cref="SqlCommandDataTableRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlCommandJsonArrayRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IProcess&lt;<see cref="SqlCommand"/>, <see cref="SqlCommandProcess"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlCommand"/>, <see cref="object"/>&gt;, <see cref="SqlCommandScalarRule"/>&gt;()<br/>
+	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataSetRequest"/>, <see cref="DataSet"/>&gt;, <see cref="SqlDataSetRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataTableRequest"/>, <see cref="DataTable"/>&gt;, <see cref="SqlDataTableRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlExecuteRequest"/>, <see cref="SqlExecuteRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlJsonArrayRequest"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlJsonArrayRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlModelsRequest"/>, IList&lt;<see cref="object"/>&gt;&gt;, <see cref="SqlModelsRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlScalarRequest"/>, <see cref="object"/>&gt;, <see cref="SqlScalarRule"/>&gt;()<br/>
 	/// </c>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="RegisterMediator(IServiceCollection)"/><br/>
+	/// <see cref="AddMediation(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
-	public static IServiceCollection RegisterSqlCommandRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IValidationRule<SqlCommand>, SqlCommandValidationRule>()
-			.AddSingleton<IRule<SqlCommand, DataSet>, SqlCommandDataSetRule>()
-			.AddSingleton<IRule<SqlCommand, DataTable>, SqlCommandDataTableRule>()
-			.AddSingleton<IRule<SqlCommand, JsonArray>, SqlCommandJsonArrayRule>()
-			.AddSingleton<IProcess<SqlCommand>, SqlCommandProcess>()
-			.AddSingleton<IRule<SqlCommand, object?>, SqlCommandScalarRule>();
+	public static IServiceCollection AddSqlCommandRules(this IServiceCollection @this)
+		=> @this.AddSingleton<IRule<SqlDataSetRequest, DataSet>, SqlDataSetRule>()
+			.AddSingleton<IRule<SqlDataTableRequest, DataTable>, SqlDataTableRule>()
+			.AddSingleton<IRule<SqlExecuteRequest>, SqlExecuteRule>()
+			.AddSingleton<IRule<SqlJsonArrayRequest, JsonArray>, SqlJsonArrayRule>()
+			.AddSingleton<IRule<SqlModelsRequest, IList<object>>, SqlModelsRule>()
+			.AddSingleton<IRule<SqlScalarRequest, object?>, SqlScalarRule>();
 }

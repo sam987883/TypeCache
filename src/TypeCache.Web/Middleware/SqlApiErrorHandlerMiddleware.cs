@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Business;
+using TypeCache.Mediation;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.Web.Middleware;

@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Types.Relay.DataObjects;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Business;
 using TypeCache.Data;
+using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
+using TypeCache.Mediation;
 using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 
@@ -48,12 +49,15 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Items)}."))
 			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}."))))
 		{
-			var result = await mediator.ApplyRuleAsync<SqlCommand, DataTable>(sqlCommand, context.CancellationToken);
+			var request = new SqlDataTableRequest { Command = sqlCommand };
+			var result = await mediator.MapAsync(request, context.CancellationToken);
 			var totalCount = result.Rows.Count;
 			if (select.Fetch == totalCount)
 			{
 				var countSql = objectSchema.CreateCountSQL(null, select.Where);
-				totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);
+				var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
+				var countRequest = new SqlScalarRequest { Command = sqlCommand };
+				totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			}
 
 			return new()
@@ -76,7 +80,9 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
-			var totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);
+			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
+			var countRequest = new SqlScalarRequest { Command = sqlCommand };
+			var totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			return new()
 			{
 				DataSource = objectSchema.DataSource.Name,
@@ -133,12 +139,15 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<T>.Items)}."))
 			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
 		{
-			var result = await mediator.ApplyRuleAsync<SqlCommand, IList<T>>(sqlCommand, context.CancellationToken);
+			var request = new SqlDataTableRequest { Command = sqlCommand };
+			var result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
 			var totalCount = result.Count;
 			if (select.Fetch == totalCount)
 			{
 				var countSql = objectSchema.CreateCountSQL(null, select.Where);
-				totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);
+				var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
+				var countRequest = new SqlScalarRequest { Command = sqlCommand };
+				totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			}
 
 			return new()
@@ -161,7 +170,9 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 			|| _.Left(Invariant($"{nameof(SelectResponse<T>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
-			var totalCount = await mediator.ApplyRuleAsync<SqlCommand, int>(sqlCommand, context.CancellationToken);
+			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
+			var countRequest = new SqlScalarRequest { Command = sqlCommand };
+			var totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			return new()
 			{
 				DataSource = objectSchema.DataSource.Name,

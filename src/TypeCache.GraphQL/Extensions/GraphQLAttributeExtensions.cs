@@ -85,7 +85,7 @@ public static class GraphQLAttributeExtensions
 	{
 		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
 		var type = attribute is not null
-			? ((Type)attribute.TypeId).GenericTypeArguments[0]
+			? attribute.GetType().GenericTypeArguments[0]
 			: @this.Type!.GraphQLType(true);
 
 		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
@@ -98,7 +98,7 @@ public static class GraphQLAttributeExtensions
 	{
 		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
 		var type = attribute is not null
-			? ((Type)attribute.TypeId).GenericTypeArguments[0]
+			? attribute.GetType().GenericTypeArguments[0]
 			: @this.PropertyType.GraphQLType(isInputType);
 
 		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())

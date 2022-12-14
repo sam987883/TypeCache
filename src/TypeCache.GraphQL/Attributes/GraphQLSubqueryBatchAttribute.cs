@@ -6,7 +6,7 @@ using TypeCache.GraphQL.Types;
 namespace TypeCache.GraphQL.Attributes;
 
 /// <summary>
-/// <b>GraphQL</b><br />
+/// <b>GraphQL</b><br/>
 /// Marks a method to be used as a Subquery endpoint in the specified parent type.<br />
 /// Establishes a parent-child relationship based on key which is matched against the GraphKey of the parent and child models.
 /// </summary>

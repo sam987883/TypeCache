@@ -3,8 +3,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Business;
-using TypeCache.Extensions;
+using TypeCache.Mediation;
 
 namespace TypeCache.Web.Middleware
 {

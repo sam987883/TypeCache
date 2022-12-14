@@ -171,10 +171,12 @@ public sealed class TypeMember : IMember, IEquatable<TypeMember>
 		=> this.Constructors.FirstOrDefault(constructor => constructor.Parameters.IsCallableWith(arguments));
 
 	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>) &amp;&amp; method.Parameters.IsCallableWith(<paramref name="arguments"/>));</c>
+	/// <c>=&gt; <see langword="this"/>.Methods.FirstOrDefault(method =&gt; method.Name.Is(<paramref name="name"/>, <paramref name="comparison"/>)<br/>
+	/// <see langword="    "/>&amp;&amp; method.Parameters.IsCallableWith(method.Static ? <paramref name="arguments"/> : <paramref name="arguments"/>?.Skip(1).ToArray()));</c>
 	/// </summary>
 	public MethodMember? FindMethod(string name, object?[]? arguments, StringComparison comparison = StringComparison.Ordinal)
-		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison) && method.Parameters.IsCallableWith(arguments));
+		=> this.Methods.FirstOrDefault(method => method.Name.Is(name, comparison)
+			&& method.Parameters.IsCallableWith(method.Static ? arguments : arguments?.Skip(1).ToArray()));
 
 	/// <summary>
 	/// <c>=&gt; <see langword="this"/>.Constructors.Select(constructor =&gt; constructor.Method).FirstOrDefault&lt;<typeparamref name="D"/>&gt;();</c>

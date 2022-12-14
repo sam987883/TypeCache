@@ -5,7 +5,7 @@ using System;
 namespace TypeCache.GraphQL.Attributes;
 
 /// <summary>
-/// <b>GraphQL</b><br />
+/// <b>GraphQL</b><br/>
 /// Marks a property with a key to be used in a Subquery endpoint in a parent-child relationship.
 /// </summary>
 /// <remarks>
