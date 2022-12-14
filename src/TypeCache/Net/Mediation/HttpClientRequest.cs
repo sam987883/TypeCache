@@ -4,7 +4,7 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Net.Mediation;
 
-public class HttpClientRequest : IRequest<HttpResponseMessage>
+public sealed class HttpClientRequest : IRequest<HttpResponseMessage>
 {
 	public string HttpClientName { get; set; } = string.Empty;
 

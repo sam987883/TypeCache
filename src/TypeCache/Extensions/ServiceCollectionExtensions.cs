@@ -2,12 +2,16 @@
 
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Data.Mediation;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Mediation;
+using TypeCache.Net.Mediation;
 using TypeCache.Security;
 
 namespace TypeCache.Extensions;
@@ -51,6 +55,13 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="HttpClientRequest"/>, <see cref="HttpResponseMessage"/>&gt;, <see cref="HttpClientRule"/>&gt;()</c>
+	/// </summary>
+	/// <remarks>Requires call to: <c><see cref="IServiceCollection.AddHttpClient()"/></c></remarks>
+	public static IServiceCollection AddHttpClientRule(this IServiceCollection @this)
+		=> @this.AddSingleton<IRule<HttpClientRequest, HttpResponseMessage>, HttpClientRule>();
+
+	/// <summary>
 	/// Registers Singletons:
 	/// <list type="bullet">
 	/// <item><c><see cref="IMediator"/></c></item>
@@ -62,6 +73,75 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IMediator, Mediator>()
 			.AddSingleton(typeof(DefaultProcessIntermediary<>), typeof(DefaultProcessIntermediary<>))
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
+
+	/// <summary>
+	/// <code>
+	/// {<br/>
+	/// <see langword="    var"/> mediationTypes = <see langword="new"/>[]<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        typeof"/>(<see cref="IAfterRule{REQUEST}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IAfterRule{REQUEST, RESPONSE}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IProcessIntermediary{REQUEST}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IRule{REQUEST}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IRule{REQUEST, RESPONSE}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IRuleIntermediary{REQUEST}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IRuleIntermediary{REQUEST, RESPONSE}"/>),<br/>
+	/// <see langword="        typeof"/>(<see cref="IValidationRule{REQUEST}"/>)<br/>
+	/// <see langword="    "/>};<br/>
+	/// <see langword="    var"/> types = fromAssembly.GetTypes().Where(type =&gt;<br/>
+	/// <see langword="        "/>!type.IsAbstract &amp;&amp; !type.IsArray &amp;&amp; !type.IsEnum &amp;&amp; !type.IsGenericType &amp;&amp; !type.IsInterface &amp;&amp; !type.IsPointer &amp;&amp; !type.IsPrimitive<br/>
+	/// <see langword="        "/>&amp;&amp; type.GetInterfaces().Any(_ =&gt; _.IsGenericType &amp;&amp; mediationTypes.Contains(_.ToGenericType())));<br/>
+	/// <see langword="    foreach"/> (<see langword="var"/> serviceType <see langword="in"/> types)<br/>
+	/// <see langword="    "/>{<br/>
+	/// <see langword="        var"/> contractType = serviceType.GetInterfaces().First(_ =&gt; mediationTypes.Contains(_.ToGenericType()));<br/>
+	/// <see langword="        var"/> attribute = serviceType.GetCustomAttribute&lt;<see cref="ServiceLifetimeAttribute"/>&gt;();<br/>
+	/// <see langword="        var"/> serviceLifetime = attribute?.ServiceLifetime ?? <see cref="ServiceLifetime.Singleton"/>;<br/>
+	/// <br/>
+	/// <see langword="        if"/> (serviceLifetime <see langword="is"/> <see cref="ServiceLifetime.Scoped"/>)<br/>
+	/// <see langword="            "/>@<paramref name="this"/>.TryAddScoped(contractType, serviceType);<br/>
+	/// <see langword="        else if"/> (serviceLifetime <see langword="is"/> <see cref="ServiceLifetime.Transient"/>)<br/>
+	/// <see langword="            "/>@<paramref name="this"/>.TryAddTransient(contractType, serviceType);<br/>
+	/// <see langword="        else"/><br/>
+	/// <see langword="            "/>@<paramref name="this"/>.TryAddSingleton(contractType, serviceType);<br/>
+	/// <see langword="    "/>}<br/>
+	/// <br/>
+	/// <see langword="    return"/> @<paramref name="this"/>;<br/>
+	/// }
+	/// </code>
+	/// </summary>
+	/// <param name="fromAssembly">The assembly to register the types from.</param>
+	public static IServiceCollection AddMediationRules(this IServiceCollection @this, Assembly fromAssembly)
+	{
+		var mediationTypes = new[]
+		{
+			typeof(IAfterRule<>),
+			typeof(IAfterRule<,>),
+			typeof(IProcessIntermediary<>),
+			typeof(IRule<>),
+			typeof(IRule<,>),
+			typeof(IRuleIntermediary<>),
+			typeof(IRuleIntermediary<,>),
+			typeof(IValidationRule<>)
+		};
+		var types = fromAssembly.GetTypes().Where(type =>
+			!type.IsAbstract && !type.IsArray && !type.IsEnum && !type.IsGenericType && !type.IsInterface && !type.IsPointer && !type.IsPrimitive
+			&& type.GetInterfaces().Any(_ => _.IsGenericType && mediationTypes.Contains(_.ToGenericType())));
+		foreach (var serviceType in types)
+		{
+			var contractType = serviceType.GetInterfaces().First(_ => mediationTypes.Contains(_.ToGenericType()));
+			var attribute = serviceType.GetCustomAttribute<ServiceLifetimeAttribute>();
+			var serviceLifetime = attribute?.ServiceLifetime ?? ServiceLifetime.Singleton;
+
+			if (serviceLifetime is ServiceLifetime.Scoped)
+				@this.TryAddScoped(contractType, serviceType);
+			else if (serviceLifetime is ServiceLifetime.Transient)
+				@this.TryAddTransient(contractType, serviceType);
+			else
+				@this.TryAddSingleton(contractType, serviceType);
+		}
+
+		return @this;
+	}
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataSetRequest"/>, <see cref="DataSet"/>&gt;, <see cref="SqlDataSetRule"/>&gt;()<br/>

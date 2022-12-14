@@ -6,7 +6,6 @@ using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.TestApp.Tables;
 using static System.Math;
 
 const string DATASOURCE = "Default";
@@ -18,20 +17,20 @@ builder.Services
 	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, DataSourceType.SqlServer)
 	.AddDataSourceAccessor()
 	.AddSqlCommandRules()
-	.RegisterGraphQL()
-	.RegisterGraphQLSchema("AdventureWorks2019Data", schema =>
+	.AddGraphQL()
+	.AddGraphQLSchema("AdventureWorks2019Data", schema =>
 	{
 		schema.AddVersion("1.0");
 		schema.AddDatabaseEndpoints(DATASOURCE, SqlApiAction.CRUD, "AdventureWorks2019", "Person");
 	})
-	//.RegisterGraphQLSchema("AdventureWorks2019Data", schema =>
+	//.AddGraphQLSchema("AdventureWorks2019Data", schema =>
 	//{
 	//	schema.AddVersion("1.0");
 	//	schema.AddSqlApiEndpoints<Person>(DATASOURCE, "Person.Person");
 	//	schema.AddSqlApiEndpoints<Product>(DATASOURCE, "Production.Product");
 	//	schema.AddSqlApiEndpoints<WorkOrder>(DATASOURCE, "Production.WorkOrder");
 	//})
-	.RegisterGraphQLSchema("AdventureWorks2019Schema", schema =>
+	.AddGraphQLSchema("AdventureWorks2019Schema", schema =>
 	{
 		schema.AddVersion("1.0");
 		schema.AddDatabaseSchemaQueries(DATASOURCE);

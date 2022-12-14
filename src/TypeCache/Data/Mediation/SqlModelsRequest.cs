@@ -4,7 +4,7 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public class SqlModelsRequest : IRequest<IList<object>>
+public sealed class SqlModelsRequest : IRequest<IList<object>>
 {
 	public required SqlCommand Command { get; set; }
 

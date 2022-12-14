@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
 	/// <item><term><see cref="GraphQLObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>
 	/// </list>
 	/// </summary>
-	public static IServiceCollection RegisterGraphQL(this IServiceCollection @this)
+	public static IServiceCollection AddGraphQL(this IServiceCollection @this)
 		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
 			.AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
@@ -50,7 +50,7 @@ public static class ServiceCollectionExtensions
 	/// </param>
 	/// <param name="initializeSchema"></param>
 	/// <returns></returns>
-	public static IServiceCollection RegisterGraphQLSchema(this IServiceCollection @this, string name, Action<GraphQLSchema> initializeSchema)
+	public static IServiceCollection AddGraphQLSchema(this IServiceCollection @this, string name, Action<GraphQLSchema> initializeSchema)
 		=> @this.AddSingleton<GraphQLSchema>(provider => new GraphQLSchema(provider, name, initializeSchema));
 
 	/// <summary>
@@ -58,7 +58,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	/// <param name="name">
 	/// The name of the <c><see cref="GraphQLSchema"/></c> registered by a call to:<br/>
-	/// <c><see cref="RegisterGraphQLSchema(IServiceCollection, string, Action{GraphQLSchema})"/></c>.
+	/// <c><see cref="AddGraphQLSchema(IServiceCollection, string, Action{GraphQLSchema})"/></c>.
 	/// </param>
 	/// <param name="route">The route to use for this <c><see cref="GraphQLSchema"/></c>.</param>
 	public static IApplicationBuilder UseGraphQLSchema(this IApplicationBuilder @this, string name, PathString route)
