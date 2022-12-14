@@ -11,10 +11,9 @@
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
     <Description>A library containing various useful utilities such as:
-TypeCache.Business - Simplified Mediator Pattern.
 TypeCache.Data - Simplified database access (SQL Server &amp; PostGre SQL).
 TypeCache.Extensions - A bunch of extensions you didn't know you needed.
-TypeCache.Mappers - Simplified object mapping that can utilize .NET's IoC.
+TypeCache.Mediation - Simplified Mediator Pattern.
 TypeCache.Reflection - High performance System.Reflection alternative.
 </Description>
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
