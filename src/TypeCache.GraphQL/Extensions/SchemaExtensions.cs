@@ -420,7 +420,7 @@ public static class SchemaExtensions
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLMutationAttribute>()).Select(@this.AddMutation));
 		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Select(method =>
 		{
-			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First().ParentType;
+			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First().GetType().GenericTypeArguments[0];
 			var fieldType = method.ToFieldType();
 			fieldType.Resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method)!;
 

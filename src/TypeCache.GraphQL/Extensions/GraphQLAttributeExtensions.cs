@@ -111,7 +111,7 @@ public static class GraphQLAttributeExtensions
 	{
 		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
 		var type = attribute is not null
-			? ((Type)attribute.TypeId).GenericTypeArguments[0]
+			? attribute.GetType().GenericTypeArguments[0]
 			: @this.Type!.GraphQLType(false);
 
 		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
@@ -177,6 +177,7 @@ public static class GraphQLAttributeExtensions
 		{ SystemType.UInt64, typeof(ULongGraphType).TypeHandle },
 		{ SystemType.UIntPtr, typeof(ULongGraphType).TypeHandle },
 		{ SystemType.BigInteger, typeof(BigIntGraphType).TypeHandle },
+		{ SystemType.Half, typeof(HalfGraphType).TypeHandle },
 		{ SystemType.Single, typeof(FloatGraphType).TypeHandle },
 		{ SystemType.Double, typeof(FloatGraphType).TypeHandle },
 		{ SystemType.Decimal, typeof(DecimalGraphType).TypeHandle },
