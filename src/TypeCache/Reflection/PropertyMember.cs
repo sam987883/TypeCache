@@ -50,26 +50,6 @@ public sealed class PropertyMember	: IMember, IEquatable<PropertyMember>
 	/// </summary>
 	public TypeMember Type { get; }
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    if"/> (<see langword="this"/>.Getter <see langword="is null"/>)<br/>
-	/// <see langword="        return null"/>;<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!<see langword="this"/>.Getter.Static)<br/>
-	/// <see langword="        "/><paramref name="instance"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    return"/> <paramref name="instance"/> <see langword="switch"/><br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        not null when"/> <paramref name="indexers"/>?.Any() <see langword="is true"/> =&gt; <see langword="this"/>.Getter.Invoke(<paramref name="indexers"/>.Prepend(<paramref name="instance"/>).ToArray()),<br/>
-	/// <see langword="        not null"/> =&gt; <see langword="this"/>.Getter.Invoke(<paramref name="instance"/>),<br/>
-	/// <see langword="        "/>_ <see langword="when"/> <paramref name="indexers"/>?.Any() <see langword="is true"/> =&gt; <see langword="this"/>.Getter.Invoke(<paramref name="indexers"/>),<br/>
-	/// <see langword="        "/>_ =&gt; <see langword="this"/>.Getter.Invoke()<br/>
-	/// <see langword="    "/>};<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <param name="instance">Pass null if the property getter is static.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
 	/// <exception cref="ArgumentNullException"/>
@@ -90,27 +70,6 @@ public sealed class PropertyMember	: IMember, IEquatable<PropertyMember>
 		};
 	}
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    if"/> (<see langword="this"/>.Setter <see langword="is null"/>)<br/>
-	/// <see langword="        return null"/>;<br/>
-	/// <br/>
-	/// <see langword="    if"/> (!<see langword="this"/>.Setter.Static)<br/>
-	/// <see langword="        "/><paramref name="instance"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="    var"/> arguments = <paramref name="instance"/> <see langword="switch"/><br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        not null when"/> <paramref name="indexers"/>?.Any() <see langword="is true"/> =&gt; <paramref name="indexers"/>.Prepend(<paramref name="instance"/>).Append(<paramref name="value"/>).ToArray(),<br/>
-	/// <see langword="        not null"/> =&gt; <see langword="new"/>[] { <paramref name="instance"/>, <paramref name="value"/> },<br/>
-	/// <see langword="        "/>_ <see langword="when"/> <paramref name="indexers"/>?.Any() <see langword="is true"/> =&gt; <paramref name="indexers"/>).Append(<paramref name="value"/>).ToArray(),<br/>
-	/// <see langword="        "/>_ =&gt; <see langword="new"/>[] { <paramref name="value"/> }<br/>
-	/// <see langword="    "/>};<br/>
-	/// <see langword="    this"/>.Setter.Invoke(arguments)<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <remarks>FirstOrDefault item in <paramref name="arguments"/> must be the instance of the type that the methode belongs to, unless the method is <c><see langword="static"/></c>.</remarks>
 	/// <param name="instance">Pass null if the property getter is static.</param>
 	/// <param name="indexers">Ignore if property is not an indexer.</param>
 	/// <exception cref="ArgumentNullException"/>
@@ -132,10 +91,16 @@ public sealed class PropertyMember	: IMember, IEquatable<PropertyMember>
 		this.Setter.Invoke(arguments);
 	}
 
+	/// <summary>
+	/// <c>=&gt; (<see langword="this"/>.Getter?.Handle, <see langword="this"/>.Setter?.Handle).Equals((<paramref name="other"/>?.Getter?.Handle, <paramref name="other"/>?.Setter?.Handle));</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] PropertyMember? other)
 		=> (this.Getter?.Handle, this.Setter?.Handle).Equals((other?.Getter?.Handle, other?.Setter?.Handle));
 
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.Equals(<paramref name="item"/> <see langword="as"/> <see cref="PropertyMember"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
 		=> this.Equals(item as PropertyMember);

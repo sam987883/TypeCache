@@ -56,6 +56,10 @@ public enum ObjectType
 	/// </summary>
 	Exception,
 	/// <summary>
+	/// Is: <c><see cref="ImmutableArray{T}"/></c>
+	/// </summary>
+	ImmutableArray,
+	/// <summary>
 	/// Implements: <c><see cref="IImmutableDictionary{TKey, TValue}"/></c>
 	/// </summary>
 	ImmutableDictionary,

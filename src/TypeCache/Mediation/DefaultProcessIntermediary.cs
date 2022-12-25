@@ -2,6 +2,8 @@
 
 using Microsoft.Extensions.Logging;
 using TypeCache.Collections;
+using TypeCache.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.Mediation;
 
@@ -25,13 +27,17 @@ internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary
 		this._AfterRules = afterRules ?? Array<IAfterRule<REQUEST>>.Empty;
 	}
 
-	public async ValueTask RunAsync(REQUEST request, Action onComplete, CancellationToken token)
+	public ValueTask RunAsync(REQUEST request, Action onComplete, CancellationToken token)
 	{
 		var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 		if (validationMessages.Any())
-			await ValueTask.FromException(new ValidationException(validationMessages));
+		{
+			validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Process.GetType().Name} validation rule failure: {message}")));
+			throw new ValidationException(validationMessages);
+		}
 
-		this._Process.PublishAsync(request, token).GetAwaiter().OnCompleted(onComplete);
+		var task = this._Process.PublishAsync(request, token);
+		task.GetAwaiter().OnCompleted(onComplete);
 
 		if (this._AfterRules.Any())
 		{
@@ -41,9 +47,10 @@ internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary
 			}
 			catch (Exception error)
 			{
-				if (this._Logger is not null)
-					this._Logger.LogError(error, null);
+				this._Logger?.LogError(error, error.Message);
 			}
 		}
+
+		return task;
 	}
 }

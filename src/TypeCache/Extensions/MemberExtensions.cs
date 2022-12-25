@@ -160,6 +160,13 @@ public static class MemberExtensions
 		=> @this is not null && (@this.TypeHandle.Equals(type.TypeHandle) || @this.GenericHandle.Equals(type.TypeHandle));
 
 	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Is(<paramref name="type"/>) || @<paramref name="this"/>.Implements(<paramref name="type"/>);</c>
+	/// </summary>
+	[DebuggerHidden]
+	public static bool IsOrImplements(this TypeMember? @this, Type type)
+		=> @this.Is(type) || @this.Implements(type);
+
+	/// <summary>
 	/// <code>
 	/// <see langword="if"/> (<paramref name="arguments"/>.Any() <see langword="is not true"/>)<br/>
 	/// <see langword="    return"/> !@<paramref name="this"/>.Any() || @<paramref name="this"/>.All(parameter =&gt; parameter!.HasDefaultValue || parameter.IsOptional);<br/>
@@ -209,5 +216,5 @@ public static class MemberExtensions
 	/// || (@<paramref name="this"/>.IsConvertible() &amp;&amp; <paramref name="typeMember"/>.IsConvertible());</c>
 	/// </summary>
 	public static bool Supports(this TypeMember @this, TypeMember typeMember)
-		=> @this.TypeHandle.Equals(typeMember.TypeHandle) || typeMember.IsSubclassOf(@this) || @this.IsConvertible() && typeMember.IsConvertible();
+		=> @this.TypeHandle.Equals(typeMember.TypeHandle) || typeMember.IsSubclassOf(@this) || (@this.IsConvertible() && typeMember.IsConvertible());
 }

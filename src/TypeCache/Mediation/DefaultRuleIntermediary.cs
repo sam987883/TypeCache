@@ -34,7 +34,10 @@ internal sealed class DefaultRuleIntermediary<REQUEST> : IRuleIntermediary<REQUE
 		{
 			var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 			if (validationMessages.Any())
+			{
+				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name} validation rule failure: {message}")));
 				throw new ValidationException(validationMessages);
+			}
 		}
 
 		await this._Rule.ApplyAsync(request, token);
@@ -47,8 +50,7 @@ internal sealed class DefaultRuleIntermediary<REQUEST> : IRuleIntermediary<REQUE
 			}
 			catch(Exception error)
 			{
-				if (this._Logger is not null)
-					this._Logger.LogError(error, "AfterRule failure.");
+				this._Logger?.LogError(error, "AfterRule failure.");
 			}
 		}
 	}
@@ -82,21 +84,24 @@ internal sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermed
 		{
 			var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 			if (validationMessages.Any())
+			{
+				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name} validation failure: {message}")));
 				throw new ValidationException(validationMessages);
+			}
 		}
 
 		var response = await this._Rule.ApplyAsync(request, token);
 
 		if (this._AfterRules.Any())
 		{
+			var action = () => Task.WaitAll(this._AfterRules.Select(rule => rule.ApplyAsync(request, response, token).AsTask()).ToArray(), token);
 			try
 			{
 				Task.WaitAll(this._AfterRules.Select(rule => rule.ApplyAsync(request, response, token).AsTask()).ToArray(), token);
 			}
 			catch (Exception error)
 			{
-				if (this._Logger is not null)
-					this._Logger.LogError(error, "AfterRule failure.");
+				this._Logger?.LogError(error, "AfterRule failure.");
 			}
 		}
 

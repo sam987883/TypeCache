@@ -62,46 +62,33 @@ public static class GraphQLExtensions
 		return connection;
 	}
 
+	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(GraphQLInputType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLInputType(this Type @this)
 		=> typeof(GraphQLInputType<>).MakeGenericType(@this);
 
+	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(GraphQLObjectType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
 		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
+	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(ListGraphType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToListGraphType(this Type @this)
 		=> typeof(ListGraphType<>).MakeGenericType(@this);
 
+	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(NonNullGraphType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
-
-	public static FieldType ToFieldType(this MethodMember @this, IFieldResolver resolver)
-	{
-		var fieldType = @this.ToFieldType();
-		fieldType.Resolver = resolver;
-		return fieldType;
-	}
-
-	public static FieldType ToFieldType(this MethodMember @this, ISourceStreamResolver resolver)
-	{
-		var fieldType = @this.ToFieldType();
-		fieldType.StreamResolver = resolver;
-		return fieldType;
-	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static FieldType ToFieldType(this MethodMember @this, object? controller)
-	{
-		var fieldType = @this.ToFieldType();
-		if (@this.Return.Type.Is(typeof(IObservable<>)) || @this.Return.Type.Implements(typeof(IObservable<>)))
-			fieldType.StreamResolver = new MethodSourceStreamResolver(@this, controller);
-		else
-			fieldType.Resolver = new MethodFieldResolver(@this, controller);
-		return fieldType;
-	}
 
 	internal static FieldType ToFieldType(this MethodMember @this)
 		=> new()

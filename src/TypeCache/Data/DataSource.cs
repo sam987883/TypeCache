@@ -13,24 +13,6 @@ namespace TypeCache.Data;
 
 internal sealed class DataSource : IDataSource
 {
-	private const string collectionName = nameof(collectionName);
-	private const string column_name = nameof(column_name);
-	private const string database_name = nameof(database_name);
-	private const string index_name = nameof(index_name);
-	private const string is_nullable = nameof(is_nullable);
-	private const string ordinal_position = nameof(ordinal_position);
-	private const string parameter_mode = nameof(parameter_mode);
-	private const string parameter_name = nameof(parameter_name);
-	private const string routine_name = nameof(routine_name);
-	private const string routine_schema = nameof(routine_schema);
-	private const string routine_type = nameof(routine_type);
-	private const string specific_name = nameof(specific_name);
-	private const string specific_schema = nameof(specific_schema);
-	private const string table_name = nameof(table_name);
-	private const string table_schema = nameof(table_schema);
-	private const string table_type = nameof(table_type);
-	private const string type_desc = nameof(type_desc);
-
 	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
 	{
 		this.Factory = dbProviderFactory;
@@ -142,7 +124,7 @@ internal sealed class DataSource : IDataSource
 
 		var table = await connection.GetSchemaAsync(schemaSet.DataSetName, token);
 		foreach (var row in table.Select())
-			schemaSet.Tables.Add(await connection.GetSchemaAsync(row[collectionName].ToString()!, token));
+			schemaSet.Tables.Add(await connection.GetSchemaAsync(row[SchemaColumn.collectionName].ToString()!, token));
 
 		return schemaSet;
 	}
@@ -170,7 +152,7 @@ internal sealed class DataSource : IDataSource
 
 		var table = connection.GetSchema(schemaSet.DataSetName);
 		table.Select().ForEach(row =>
-			schemaSet.Tables.Add(connection.GetSchema(row[collectionName].ToString()!)));
+			schemaSet.Tables.Add(connection.GetSchema(row[SchemaColumn.collectionName].ToString()!)));
 
 		return schemaSet;
 	}
@@ -207,11 +189,11 @@ internal sealed class DataSource : IDataSource
 		var table = this.GetDatabaseSchema(SchemaCollection.Databases, null);
 		var rows = this.Type switch
 		{
-			SqlServer => table?.Select(Invariant($"{database_name} NOT IN ('master', 'tempdb', 'model', 'msdb')")),
+			SqlServer => table?.Select(Invariant($"{SchemaColumn.database_name} NOT IN ('master', 'tempdb', 'model', 'msdb')")),
 			_ => table?.Select()
 		};
 
-		return rows?.Select(row => row[database_name].ToString()!).ToArray() ?? Array<string>.Empty;
+		return rows?.Select(row => row[SchemaColumn.database_name].ToString()!).ToArray() ?? Array<string>.Empty;
 	}
 
 	private IReadOnlyDictionary<DatabaseObject, ObjectSchema> GetObjectSchemas()
@@ -235,11 +217,11 @@ internal sealed class DataSource : IDataSource
 			connection.ChangeDatabase(databaseName);
 
 			var tables = connection.GetSchema(SchemaCollection.Tables.Name());
-			var tablesRows = tables.Select(Invariant($"{table_type} = 'BASE TABLE'"), Invariant($"{table_name} ASC"));
+			var tablesRows = tables.Select(Invariant($"{SchemaColumn.table_type} = 'BASE TABLE'"), Invariant($"{SchemaColumn.table_name} ASC"));
 			tablesRows.ForEach(tablesRow =>
 			{
-				var tableName = tablesRow[table_name].ToString()!;
-				var tableSchema = tablesRow[table_schema].ToString()!;
+				var tableName = tablesRow[SchemaColumn.table_name].ToString()!;
+				var tableSchema = tablesRow[SchemaColumn.table_schema].ToString()!;
 				var name = this.CreateName(databaseName, tableSchema, tableName);
 
 				command.CommandText = Invariant($"SELECT TOP 1 * FROM {name};");
@@ -261,11 +243,11 @@ internal sealed class DataSource : IDataSource
 			});
 
 			var views = connection.GetSchema(SchemaCollection.Views.Name());
-			var viewsRows = views?.Select(null, Invariant($"{table_name} ASC"));
+			var viewsRows = views?.Select(null, Invariant($"{SchemaColumn.table_name} ASC"));
 			viewsRows?.ForEach(viewsRow =>
 			{
-				var tableName = viewsRow[table_name].ToString()!;
-				var tableSchema = viewsRow[table_schema].ToString()!;
+				var tableName = viewsRow[SchemaColumn.table_name].ToString()!;
+				var tableSchema = viewsRow[SchemaColumn.table_schema].ToString()!;
 				var name = this.CreateName(databaseName, tableSchema, tableName);
 
 				command.CommandText = Invariant($"SELECT * FROM {name} WHERE 0 = 1;");
@@ -288,17 +270,17 @@ internal sealed class DataSource : IDataSource
 
 			var procedures = connection.GetSchema(SchemaCollection.Procedures.Name());
 			var procedureParameters = connection.GetSchema(SchemaCollection.ProcedureParameters.Name());
-			var proceduresRows = procedures?.Select(null, Invariant($"{routine_name} ASC"));
+			var proceduresRows = procedures?.Select(null, Invariant($"{SchemaColumn.routine_name} ASC"));
 			proceduresRows?.ForEach(proceduresRow =>
 			{
-				var routineName = proceduresRow[routine_name].ToString()!;
-				var routineSchema = proceduresRow[routine_schema].ToString()!;
-				var routineType = proceduresRow[routine_type].ToString()!;
+				var routineName = proceduresRow[SchemaColumn.routine_name].ToString()!;
+				var routineSchema = proceduresRow[SchemaColumn.routine_schema].ToString()!;
+				var routineType = proceduresRow[SchemaColumn.routine_type].ToString()!;
 
 				var procedureParametersRows = procedureParameters?.Select(
-					Invariant($"{specific_schema} = '{routineSchema}' AND {specific_name} = '{routineName}'")
-					, Invariant($"{ordinal_position} ASC"));
-				var parameters = procedureParametersRows?.Select(row => new ParameterSchema(row[parameter_name].ToString()!, row[parameter_mode].ToString() switch
+					Invariant($"{SchemaColumn.specific_schema} = '{routineSchema}' AND {SchemaColumn.specific_name} = '{routineName}'")
+					, Invariant($"{SchemaColumn.ordinal_position} ASC"));
+				var parameters = procedureParametersRows?.Select(row => new ParameterSchema(row[SchemaColumn.parameter_name].ToString()!, row[SchemaColumn.parameter_mode].ToString() switch
 				{
 					string value when value.Is("OUT") => ParameterDirection.Output,
 					string value when value.Is("INOUT") => ParameterDirection.InputOutput,

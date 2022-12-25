@@ -19,9 +19,11 @@ public static class TypeExtensions
 {
 	private const char GENERIC_TICKMARK = '`';
 
+	private static readonly IReadOnlyDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
+
 	static TypeExtensions()
 	{
-		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(159)
+		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(141)
 		{
 			{ typeof(Action).TypeHandle, SystemType.Action },
 			{ typeof(Action<>).TypeHandle, SystemType.Action },
@@ -167,27 +169,6 @@ public static class TypeExtensions
 		}.ToImmutableDictionary();
 	}
 
-	private static readonly IReadOnlyDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Any(this Type? @this, params Type[] types)
-		=> types.Any(@this.Is);
-
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>{ IsPointer: <see langword="true"/> } =&gt; <see cref="Kind.Pointer"/>,<br/>
-	/// <see langword="    "/>{ IsInterface: <see langword="true"/> } =&gt; <see cref="Kind.Interface"/>,<br/>
-	/// <see langword="    "/>{ IsClass: <see langword="true"/> } =&gt; <see cref="Kind.Class"/>,<br/>
-	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see cref="Kind.Struct"/>,<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="throw new"/> <see cref="UnreachableException"/>(Invariant($"Type [{@this.Name ?? "null"}] is not supported."))<br/>
-	/// };
-	/// </code>
-	/// </summary>
 	public static Kind GetKind(this Type @this)
 		=> @this switch
 		{
@@ -195,25 +176,21 @@ public static class TypeExtensions
 			{ IsInterface: true } => Kind.Interface,
 			{ IsClass: true } => Kind.Class,
 			{ IsValueType: true } => Kind.Struct,
-			_ => throw new UnreachableException(Invariant($"Type [{@this.Name ?? "null"}] is not supported."))
+			_ => throw new UnreachableException(Invariant($"{nameof(Type)} [{@this?.Name ?? "null"}] is not supported."))
 		};
 
-	public static ObjectType GetObjectType(this Type @this)
+	internal static ObjectType GetObjectType(this Type @this)
 		=> @this switch
 		{
 			{ IsArray: true } => ObjectType.Array,
 			{ IsEnum: true } => ObjectType.Enum,
-			{ IsClass: true } => @this switch
-			{
-				_ when @this.Implements<IAsyncResult>() => ObjectType.AsyncResult,
-				_ when @this.IsAssignableTo(typeof(Attribute)) => ObjectType.Attribute,
-				_ when @this.IsAssignableTo(typeof(Delegate)) => ObjectType.Delegate,
-				_ when @this.IsAssignableTo(typeof(Exception)) => ObjectType.Exception,
-				_ when @this.IsAssignableTo(typeof(JsonNode)) => ObjectType.JsonNode,
-				_ when @this.IsAssignableTo(typeof(OrderedDictionary)) => ObjectType.OrderedDictionary,
-				_ when @this.IsAssignableTo(typeof(Stream)) => ObjectType.Stream,
-				_ => ObjectType.Unknown
-			},
+			_ when @this.Implements<IAsyncResult>() => ObjectType.AsyncResult,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(Attribute)) => ObjectType.Attribute,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(Delegate)) => ObjectType.Delegate,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(Exception)) => ObjectType.Exception,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(JsonNode)) => ObjectType.JsonNode,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(OrderedDictionary)) => ObjectType.OrderedDictionary,
+			{ IsClass: true } when @this.IsAssignableTo(typeof(Stream)) => ObjectType.Stream,
 			{ IsGenericType: true } or { IsGenericTypeDefinition: true } => @this.ToGenericType()! switch
 			{
 				var genericType when genericType.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
@@ -241,34 +218,18 @@ public static class TypeExtensions
 		};
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="sbyte"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="short"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="int"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="long"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="byte"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="ushort"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="uint"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> @<paramref name="this"/> == <see langword="typeof"/>(<see cref="ulong"/>) =&gt; <see langword="true"/>,<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="false"/><br/>
-	/// };
-	/// <see cref="TypeCode.UInt16"/>, <see cref="TypeCode.Int32"/>, <see cref="TypeCode.UInt32"/>, <see cref="TypeCode.Int64"/>, <see cref="TypeCode.UInt64"/>);</c>
+	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
-	[DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny(this Type @this, params Type[] types)
+		=> types.Any(@this.Is);
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.GetSystemType().IsEnumUnderlyingType();</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsEnumUnderlyingType(this Type @this)
-		=> @this switch
-		{
-			_ when @this == typeof(sbyte) => true,
-			_ when @this == typeof(short) => true,
-			_ when @this == typeof(int) => true,
-			_ when @this == typeof(long) => true,
-			_ when @this == typeof(byte) => true,
-			_ when @this == typeof(ushort) => true,
-			_ when @this == typeof(uint) => true,
-			_ when @this == typeof(ulong) => true,
-			_ => false
-		};
+		=> @this.GetSystemType().IsEnumUnderlyingType();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name ?? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`'));</c>
@@ -277,19 +238,11 @@ public static class TypeExtensions
 	public static string Name(this MemberInfo @this)
 		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>{ IsEnum: true } =&gt; SystemTypes[<see cref="Enum"/>.GetUnderlyingType(@<paramref name="this"/>).TypeHandle],<br/>
-	/// <see langword="    "/>_ <see langword="when"/> SystemTypes.TryGetValue(@<paramref name="this"/>.ToGenericType()?.TypeHandle ?? @<paramref name="this"/>.TypeHandle, <see langword="out var"/> systemType) =&gt; systemType,<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="SystemType.None"/><br/>
-	/// };</c>
-	/// </summary>
 	[DebuggerHidden]
 	public static SystemType GetSystemType(this Type @this)
 		=> @this switch
 		{
-			{ IsEnum: true } => SystemTypes[Enum.GetUnderlyingType(@this).TypeHandle],
+			{ IsEnum: true } => SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
 			_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
 			_ => SystemType.None
 		};
@@ -308,24 +261,6 @@ public static class TypeExtensions
 	public static bool Implements<T>(this Type @this)
 		=> @this.Implements(typeof(T));
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    if"/> (<paramref name="type"/>.IsInterface)<br/>
-	/// <see langword="        return"/> @<paramref name="this"/>.GetInterfaces().Any(<paramref name="type"/>.Is);<br/>
-	/// <br/>
-	/// <see langword="    var"/> baseType = @<paramref name="this"/>.BaseType;<br/>
-	/// <see langword="    while"/> (baseType <see langword="is not null"/>)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        if"/> (baseType.Is(<paramref name="type"/>))<br/>
-	/// <see langword="             return true"/>;<br/>
-	/// <see langword="        "/>baseType = baseType.BaseType;<br/>
-	/// <see langword="    "/>}<br/>
-	/// <br/>
-	/// <see langword="    return false"/>;<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static bool Implements(this Type @this, Type type)
 	{
 		if (type.IsInterface)
@@ -349,18 +284,21 @@ public static class TypeExtensions
 	public static bool Is<T>(this Type? @this)
 		=> @this == typeof(T);
 
+	[DebuggerHidden]
+	public static bool Is(this Type @this, Type? type)
+		=> @this.IsGenericTypeDefinition || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+
 	/// <summary>
-	/// <c>=&gt; (@<paramref name="this"/> == <paramref name="type"/>
-	///		|| (<paramref name="type"/>.IsGenericTypeDefinition) &amp;&amp; <paramref name="type"/> == @<paramref name="this"/>.ToGenericType());</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || <see langword="typeof"/>(Nullable<>) == @<paramref name="this"/>.ToGenericType();</c>
 	/// </summary>
 	[DebuggerHidden]
-	public static bool Is(this Type? @this, Type? type)
-		=> @this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+	public static bool IsNullable(this Type @this, Type? type)
+		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericType();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<typeparamref name="T"/>&gt;() || @<paramref name="this"/>.Implements&lt;<typeparamref name="T"/>&gt;();</c>
 	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	[DebuggerHidden]
 	public static bool IsOrImplements<T>(this Type @this)
 		=> @this.Is<T>() || @this.Implements<T>();
 
@@ -371,23 +309,10 @@ public static class TypeExtensions
 	public static bool IsOrImplements(this Type @this, Type type)
 		=> @this.Is(type) || @this.Implements(type);
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
-	/// </summary>
 	[DebuggerHidden]
 	public static bool IsEnumerableOf<T>(this Type @this)
 		=> @this.Is<IEnumerable<T>>() || @this.Implements<IEnumerable<T>>();
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>{ IsGenericTypeDefinition: <see langword="true"/> } =&gt; @<paramref name="this"/>,<br/>
-	///	<see langword="    "/>{ IsGenericType: <see langword="true"/> } =&gt; @<paramref name="this"/>.GetGenericTypeDefinition(),<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// };
-	/// </code>
-	/// </summary>
 	[DebuggerHidden]
 	public static Type? ToGenericType(this Type? @this)
 		=> @this switch
@@ -406,18 +331,21 @@ public static class TypeExtensions
 	/// <remarks>
 	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable();</c>
 	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	internal static bool IsInvokable(this ConstructorInfo @this)
 		=> ((MethodBase)@this).IsInvokable();
 
 	/// <remarks>
 	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
 	/// </remarks>
+	[DebuggerHidden]
 	internal static bool IsInvokable(this MethodInfo @this)
 		=> ((MethodBase)@this).IsInvokable() && @this.ReturnType.IsInvokable();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
 	/// </remarks>
+	[DebuggerHidden]
 	internal static bool IsInvokable(this Type @this)
 		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 }

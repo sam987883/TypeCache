@@ -7,39 +7,47 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GraphQL;
+using GraphQL.DI;
+using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Types;
 using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
+using static System.StringSplitOptions;
 
 namespace TypeCache.GraphQL.Web;
 
 public sealed class GraphQLMiddleware
 {
+	private readonly JsonSerializerOptions _JsonOptions;
 	private readonly RequestDelegate _Next;
-	private readonly string _GraphQLSchemaName;
 	private readonly PathString _Route;
-	private readonly JsonSerializerOptions _JsonSerializerOptions;
+	private readonly ISchema _Schema;
 
-	public GraphQLMiddleware(RequestDelegate next, string graphQLSchemaName, PathString route)
+	public GraphQLMiddleware(RequestDelegate next, PathString route, IEnumerable<IConfigureSchema> configureSchemas, IServiceProvider provider, JsonSerializerOptions jsonOptions)
 	{
-		this._GraphQLSchemaName = graphQLSchemaName;
 		this._Next = next;
 		this._Route = route;
-		this._JsonSerializerOptions = new JsonSerializerOptions
+		this._JsonOptions = jsonOptions;
+		this._Schema = new Schema(provider, configureSchemas);
+	}
+
+	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider, JsonSerializerOptions jsonOptions)
+		: this(next, route, new[] { configureSchema }, provider, jsonOptions)
+	{
+	}
+
+	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider)
+		: this(next, route, configureSchema, provider, new()
 		{
 			PropertyNameCaseInsensitive = true,
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-		};
+		})
+	{
 	}
 
-	public async Task Invoke(HttpContext httpContext
-		, IServiceProvider provider
-		, IDocumentExecuter executer
-		, IGraphQLSerializer graphQLSerializer
-		, IAccessor<GraphQLSchema> graphQLSchemaAccessor)
+	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -47,7 +55,7 @@ public sealed class GraphQLMiddleware
 			return;
 		}
 
-		var request = await JsonSerializer.DeserializeAsync<GraphQLRequest>(httpContext.Request.Body, this._JsonSerializerOptions, httpContext.RequestAborted);
+		var request = await JsonSerializer.DeserializeAsync<GraphQLRequest>(httpContext.Request.Body, this._JsonOptions, httpContext.RequestAborted);
 		if (request is null)
 		{
 			await this._Next.Invoke(httpContext);
@@ -62,9 +70,7 @@ public sealed class GraphQLMiddleware
 			{ "RequestTime", requestTime },
 			{ nameof(httpContext.User), httpContext.User }
 		};
-		var graphQLSchema = graphQLSchemaAccessor[this._GraphQLSchemaName];
-		graphQLSchema.AssertNotNull();
-        graphQLSchema.Description = Invariant($"GraphQL schema `{this._GraphQLSchemaName}` route: {this._Route}");
+		this._Schema.Description = Invariant($"GraphQL schema route: {this._Route}");
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
@@ -72,24 +78,25 @@ public sealed class GraphQLMiddleware
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
-			Schema = graphQLSchema,
+			Schema = this._Schema,
 			UserContext = userContext,
 			ValidationRules = DocumentValidator.CoreRules
 		};
 		var result = await executer.ExecuteAsync(options);
+		result.Extensions ??= new(2, StringComparer.OrdinalIgnoreCase);
+
 		var error = result.Errors?[0].InnerException;
 		if (result.Extensions is not null)
 		{
 			result.Extensions["RequestId"] = requestId;
 			result.Extensions["RequestTime"] = requestTime;
 		}
-		else
-			result.Extensions = new Dictionary<string, object?>(2, StringComparer.OrdinalIgnoreCase);
 
 		if (error is not null)
 		{
-			result.Extensions["ErrorMessage"] = error.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(_ => _.Trim());
+			var separator = new[] { '\r', '\n' };
+			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
+			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
 		}
 
 		httpContext.Response.ContentType = Application.Json;

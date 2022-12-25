@@ -1,11 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 
 namespace TypeCache.Attributes;
 
 /// <summary>
-/// Rename any cached <see cref="Member"/> within the TypeCache.Reflection system.
+/// Rename any cached <see cref="IMember"/> within the TypeCache.Reflection system.
 /// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = false)]
 public sealed class NameAttribute : Attribute
@@ -17,7 +18,7 @@ public sealed class NameAttribute : Attribute
 	}
 
 	/// <summary>
-	/// The new name of the <see cref="Member"/>.
+	/// The new name of the <see cref="IMember"/>.
 	/// </summary>
 	public string Name { get; }
 }

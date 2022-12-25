@@ -15,5 +15,5 @@ public enum SqlApiAction
 	UpdateData = 64,
 	CRUD = Select | Delete | DeleteData | Insert | InsertData | Update | UpdateData,
 	Truncate = 128,
-	All = Select | Delete | DeleteData | Insert | InsertData | Update | UpdateData | Truncate
+	All = CRUD | Truncate
 }
