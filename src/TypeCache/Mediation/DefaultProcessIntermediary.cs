@@ -10,13 +10,13 @@ namespace TypeCache.Mediation;
 internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary<REQUEST>
 	where REQUEST : IRequest
 {
-	private readonly ILogger<DefaultProcessIntermediary<REQUEST>> _Logger;
+	private readonly ILogger<IProcessIntermediary<REQUEST>> _Logger;
 	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;
 	private readonly IProcess<REQUEST> _Process;
 	private readonly IEnumerable<IAfterRule<REQUEST>> _AfterRules;
 
 	public DefaultProcessIntermediary(
-		ILogger<DefaultProcessIntermediary<REQUEST>> logger
+		ILogger<IProcessIntermediary<REQUEST>> logger
 		, IEnumerable<IValidationRule<REQUEST>> validationRules
 		, IProcess<REQUEST> process
 		, IEnumerable<IAfterRule<REQUEST>> afterRules)

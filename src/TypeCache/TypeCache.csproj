@@ -6,7 +6,7 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>7.2.2</Version>
+    <Version>7.2.3</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>

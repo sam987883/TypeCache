@@ -11,7 +11,9 @@ using GraphQL.DI;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Types;
 using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 using static System.StringSplitOptions;
@@ -25,29 +27,19 @@ public sealed class GraphQLMiddleware
 	private readonly PathString _Route;
 	private readonly ISchema _Schema;
 
-	public GraphQLMiddleware(RequestDelegate next, PathString route, IEnumerable<IConfigureSchema> configureSchemas, IServiceProvider provider, JsonSerializerOptions jsonOptions)
+	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider)
 	{
 		this._Next = next;
 		this._Route = route;
-		this._JsonOptions = jsonOptions;
-		this._Schema = new Schema(provider, configureSchemas);
-	}
-
-	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider, JsonSerializerOptions jsonOptions)
-		: this(next, route, new[] { configureSchema }, provider, jsonOptions)
-	{
-	}
-
-	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider)
-		: this(next, route, configureSchema, provider, new()
+		this._JsonOptions = new()
 		{
 			PropertyNameCaseInsensitive = true,
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-		})
-	{
+		};
+		this._Schema = new Schema(provider, new[] { configureSchema });
 	}
 
-	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer)
+	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer, ILogger<GraphQLMiddleware> logger)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -94,6 +86,8 @@ public sealed class GraphQLMiddleware
 
 		if (error is not null)
 		{
+			logger?.LogError(error, result.Errors?[0].Message);
+
 			var separator = new[] { '\r', '\n' };
 			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
 			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());

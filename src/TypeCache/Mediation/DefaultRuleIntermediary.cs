@@ -9,13 +9,13 @@ namespace TypeCache.Mediation;
 internal sealed class DefaultRuleIntermediary<REQUEST> : IRuleIntermediary<REQUEST>
 	where REQUEST : IRequest
 {
-	private readonly ILogger<DefaultRuleIntermediary<REQUEST>> _Logger;
+	private readonly ILogger<IRuleIntermediary<REQUEST>> _Logger;
 	private readonly IEnumerable<IValidationRule<REQUEST>> _ValidationRules;
 	private readonly IRule<REQUEST> _Rule;
 	private readonly IEnumerable<IAfterRule<REQUEST>> _AfterRules;
 
 	public DefaultRuleIntermediary(
-		ILogger<DefaultRuleIntermediary<REQUEST>> logger
+		ILogger<IRuleIntermediary<REQUEST>> logger
 		, IEnumerable<IValidationRule<REQUEST>> validationRules
 		, IRule<REQUEST> rule
 		, IEnumerable<IAfterRule<REQUEST>> afterRules)
