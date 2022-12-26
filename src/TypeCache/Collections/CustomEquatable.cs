@@ -10,22 +10,6 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 	private readonly Func<T?, bool> _Equals;
 	private readonly int _HashCode;
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="customEquatableEquals"/>.AssertNotNull();<br/>
-	/// <see langword="    "/><paramref name="customEqualityFactors"/>.AssertNotEmpty();<br/>
-	/// <br/>
-	/// <see langword="    this"/>._Equals = <paramref name="customEquatableEquals"/>;<br/>
-	/// <br/>
-	/// <see langword="    var"/> hashCode = <see langword="new"/> <see cref="HashCode"/>();<br/>
-	/// <see langword="    "/><paramref name="customEqualityFactors"/>.ForEach(hashCode.Add);<br/>
-	/// <see langword="    this"/>._HashCode = hashCode.ToHashCode();<br/>
-	/// }
-	/// </code>
-	/// </summary>
-	/// <param name="customEquatableEquals">Implementation for <see cref="IEquatable{T}.Equals(T?)"/>.</param>
-	/// <param name="customEqualityFactors">Values to use for generating hashCode for <see cref="object.GetHashCode"/>.</param>
 	public CustomEquatable(Func<T?, bool> customEquatableEquals, params object[] customEqualityFactors)
 	{
 		customEquatableEquals.AssertNotNull();

@@ -14,8 +14,11 @@ public readonly struct CustomEnumerator<T> : IDisposable
 
 	public void Dispose()
 	{
-		(this.Enumerator as IDisposable)?.Dispose();
-		GC.SuppressFinalize(this);
+		var disposable = this.Enumerator as IDisposable;
+		if (disposable is not null)
+			disposable.Dispose();
+		else
+			GC.SuppressFinalize(this);
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]

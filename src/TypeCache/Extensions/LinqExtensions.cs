@@ -23,15 +23,6 @@ public static class LinqExtensions
 		where T : struct, Enum
 		=> @this.Contains(value, EnumOf<T>.Comparer);
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	/// <see langword="    "/><paramref name="first"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="rest"/> = enumerator.Rest();<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
 	{
 		using var enumerator = @this.GetEnumerator();
@@ -39,16 +30,6 @@ public static class LinqExtensions
 		rest = enumerator.Rest();
 	}
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	/// <see langword="    "/><paramref name="first"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="second"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="rest"/> = enumerator.Rest();<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out IEnumerable<T> rest)
 	{
 		using var enumerator = @this.GetEnumerator();
@@ -57,17 +38,6 @@ public static class LinqExtensions
 		rest = enumerator.Rest();
 	}
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	/// <see langword="    "/><paramref name="first"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="second"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="third"/> = enumerator.Next();<br/>
-	/// <see langword="    "/><paramref name="rest"/> = enumerator.Rest();<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out T? second, out T? third, out IEnumerable<T> rest)
 	{
 		using var enumerator = @this.GetEnumerator();
@@ -140,16 +110,6 @@ public static class LinqExtensions
 	public static IEnumerable<Task<T>> ToTasks<T>(this IEnumerable<ValueTask<T>> @this)
 		=> @this.Select(_ => _.AsTask());
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	/// <see langword="    var"/> success = enumerator.MoveNext();<br/>
-	/// <see langword="    "/>value = success ? enumerator.Current : <see langword="default"/>;<br/>
-	/// <see langword="    return"/> success;<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
 	{
 		using var enumerator = @this.GetEnumerator();
@@ -158,16 +118,6 @@ public static class LinqExtensions
 		return success;
 	}
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> success = <see langword="false"/>;<br/>
-	/// <see langword="    var"/> filter = <see langword="new"/> Func&lt;<typeparamref name="T"/>, <see cref="bool"/>&gt;(value =&gt; success = <paramref name="predicate"/>(value));<br/>
-	/// <see langword="    "/>value = @<paramref name="this"/>.FirstOrDefault(filter);<br/>
-	/// <see langword="    return"/> success;<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
 	{
 		var success = false;
@@ -176,15 +126,6 @@ public static class LinqExtensions
 		return success;
 	}
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    using var"/> enumerator = @<paramref name="this"/>.GetEnumerator();<br/>
-	/// <see langword="    "/>value = enumerator.Next();<br/>
-	/// <see langword="    return"/> enumerator.MoveNext();<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
 	{
 		using var enumerator = @this.GetEnumerator();

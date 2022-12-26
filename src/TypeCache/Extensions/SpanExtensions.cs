@@ -21,14 +21,6 @@ public static class SpanExtensions
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
 
-	/// <remarks>
-	/// <code>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; @<paramref name="this"/>.Length; ++i)<br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>[i] == <paramref name="existing"/>)<br/>
-	/// <see langword="        "/>@<paramref name="this"/>[i] = <paramref name="replacement"/>;<br/>
-	/// <see langword="return"/> @<paramref name="this"/>;
-	/// </code>
-	/// </remarks>
 	public static Span<char> Replace(this Span<char> @this, char existing, char replacement)
 	{
 		for (var i = 0; i < @this.Length; ++i)

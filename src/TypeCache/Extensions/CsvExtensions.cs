@@ -42,16 +42,6 @@ public static class CsvExtensions
 			_ => @this.ToString()?.EscapeCSV() ?? string.Empty
 		};
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    null"/> =&gt; <see cref="string.Empty"/>,<br/>
-	/// <see langword="    "/>_ <see langword="when"/> <paramref name="escape"/> =&gt; string.Join(',', @this.Select(text =&gt; text.Contains(',') ? Invariant($"\"{text.Replace("\"", "\"\"")}\"") : (text?.Replace("\"", "\"\"") ?? string.Empty))),<br/>
-	/// <see langword="    "/>_ =&gt; <see cref="string"/>.Join(", ", @<paramref name="this"/>)<br/>
-	/// };
-	/// </code>
-	/// </summary>
 	public static string ToCSV(this IEnumerable<string>? @this, bool escape = false)
 		=> @this switch
 		{
@@ -60,41 +50,6 @@ public static class CsvExtensions
 			_ => string.Join(", ", @this)
 		};
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> headerRow = <see cref="string.Empty"/>;<br/>
-	/// <see langword="    var"/> dataRows = Array&lt;<see cref="string"/>&gt;.Empty;<br/>
-	/// <br/>
-	/// <see langword="    if"/> (<paramref name="options"/>.MemberNames.Any())<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        var"/> memberMap = <see langword="new"/> Dictionary&lt;<see cref="string"/>, Func&lt;<typeparamref name="T"/>, <see cref="object"/>&gt;&gt;(<paramref name="options"/>.MemberNames.Select(name =&gt;<br/>
-	/// <see langword="        "/>{<br/>
-	/// <see langword="            var"/> property = <see cref="TypeOf{T}.Properties"/>.FirstOrDefault(_ =&gt; _.Name.Is(name));<br/>
-	/// <see langword="            if"/> (property <see langword="is not null"/>)<br/>
-	/// <see langword="                return"/> <see cref="KeyValuePair"/>.Create(name, <see langword="new"/> Func&lt;<typeparamref name="T"/>, <see cref="object"/>&gt;(_ =&gt; property.GetValue(_)));<br/>
-	/// <br/>
-	/// <see langword="            var"/> field = <see cref="TypeOf{T}.Fields"/>.FirstOrDefault(_ =&gt; _.Name.Is(name));<br/>
-	/// <see langword="            return"/> <see cref="KeyValuePair"/>.Create(name, <see langword="new"/> Func&lt;<typeparamref name="T"/>, <see cref="object"/>&gt;(_ =&gt; field.GetValue(_)));<br/>
-	/// <see langword="        "/>}), <see cref="StringComparer.OrdinalIgnoreCase"/>);<br/>
-	/// <see langword="        "/>headerRow = <see cref="string"/>.Join(',', <paramref name="options"/>.MemberNames.Where(memberMap.ContainsKey));<br/>
-	/// <see langword="        "/>dataRows = @<paramref name="this"/>.Select(row =&gt; <see cref="string"/>.Join(',', <paramref name="options"/>.MemberNames.Select(name =&gt; memberMap[name](row).EscapeCSV(options)))).ToArray();<br/>
-	/// <see langword="    "/>}<br/>
-	/// <see langword="    else if"/> (<see cref="TypeOf{T}.Properties"/>.Any())<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        "/>headerRow = <see cref="string"/>.Join(',', <see cref="TypeOf{T}.Properties"/>.Select(property =&gt; property.Name));<br/>
-	/// <see langword="        "/>dataRows = @<paramref name="this"/>.Select(row =&gt; <see cref="string"/>.Join(',', <see cref="TypeOf{T}.Properties"/>.Select(property =&gt; property.GetValue(row).EscapeCSV(<paramref name="options"/>)))).ToArray();<br/>
-	/// <see langword="    "/>}<br/>
-	/// <see langword="    else if"/> (<see cref="TypeOf{T}.Fields"/>.Any())<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        "/>headerRow = <see cref="string"/>.Join(',', <see cref="TypeOf{T}.Fields"/>.Select(field =&gt; field.Name));<br/>
-	/// <see langword="        "/>dataRows = @<paramref name="this"/>.Select(row =&gt; <see cref="string"/>.Join(',', <see cref="TypeOf{T}.Fields"/>.Select(field =&gt; field.GetValue(row).EscapeCSV(<paramref name="options"/>)))).ToArray();<br/>
-	/// <see langword="    "/>}<br/>
-	/// <br/>
-	/// <see langword="    return"/> dataRows.Prepend(headerRow).ToArray();<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static string[] ToCSV<T>(this IEnumerable<T> @this, CsvOptions options = default)
 	{
 		var headerRow = string.Empty;

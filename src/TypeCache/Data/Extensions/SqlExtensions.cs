@@ -10,6 +10,9 @@ namespace TypeCache.Data.Extensions;
 
 public static class SqlExtensions
 {
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Replace("'", "''");</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string EscapeValue([NotNull] this string @this)
 		=> @this.Replace("'", "''");

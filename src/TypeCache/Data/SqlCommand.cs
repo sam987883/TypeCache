@@ -2,9 +2,7 @@
 
 using System.Data;
 using System.Data.Common;
-using System.Transactions;
 using TypeCache.Extensions;
-using TransactionIsolationLevel = System.Transactions.IsolationLevel;
 
 namespace TypeCache.Data;
 
@@ -25,22 +23,8 @@ public sealed class SqlCommand
 	/// </summary>
 	public IDataSource DataSource { get; }
 
-	/// <summary>
-	/// <code>
-	/// DECLARE @ParameterName4 AS INTEGER;<br/>
-	/// DECLARE @ParameterName5 AS NVARCHAR(MAX);<br/>
-	/// DECLARE @ParameterName6 AS DATETIMEOFFSET;
-	/// </code>
-	/// </summary>
 	public IDictionary<string, DbType> OutputParameters { get; } = new Dictionary<string, DbType>(0, StringComparer.OrdinalIgnoreCase);
 
-	/// <summary>
-	/// <code>
-	/// SET @ParameterName1 = N'ParameterValue1';<br/>
-	/// SET @ParameterName2 = NULL;<br/>
-	/// SET @ParameterName3 = 123;
-	/// </code>
-	/// </summary>
 	public IDictionary<string, object?> Parameters { get; } = new Dictionary<string, object?>(0, StringComparer.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="DbDataReader.RecordsAffected"/>

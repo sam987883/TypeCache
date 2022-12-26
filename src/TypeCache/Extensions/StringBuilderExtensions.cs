@@ -21,30 +21,6 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, string trueValue, string falseValue)
 		=> @this.Append(condition ? trueValue : falseValue);
 
-	/// <summary>
-	/// <code>
-	/// =&gt; <paramref name="value"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/>_ <see langword="when"/> !<paramref name="condition"/> =&gt; @<paramref name="this"/>,<br/>
-	/// <see langword="    "/><see cref="char"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="bool"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="sbyte"/><see langword="  "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="byte"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="short"/><see langword="  "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="ushort"/><see langword=" "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="int"/><see langword="    "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="uint"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="long"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="ulong"/><see langword="  "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="float"/><see langword="  "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="double"/><see langword=" "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="decimal"/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="Enum"/><see langword="   "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/><see cref="string"/><see langword=" "/> item =&gt; @<paramref name="this"/>.Append(item),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Append(<paramref name="value"/>)<br/>
-	/// };
-	/// </code>
-	/// </summary>
 	[DebuggerHidden]
 	public static StringBuilder AppendIf<T>(this StringBuilder @this, bool condition, T value)
 		=> value switch

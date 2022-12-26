@@ -11,15 +11,6 @@ namespace TypeCache.Extensions;
 
 public static class ReadOnlySpanExtensions
 {
-	/// <remarks>
-	/// <code>
-	/// <paramref name="action"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/><paramref name="action"/>(@<paramref name="this"/>[i]);
-	/// </code>
-	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action)
 	{
@@ -33,15 +24,6 @@ public static class ReadOnlySpanExtensions
 			action(@this[i]);
 	}
 
-	/// <remarks>
-	/// <code>
-	/// <paramref name="action"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// <see langword="    "/><paramref name="action"/>(@<paramref name="this"/>[i], i);
-	/// </code>
-	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action)
 	{
@@ -55,24 +37,6 @@ public static class ReadOnlySpanExtensions
 			action(@this[i], i);
 	}
 
-	/// <remarks>
-	/// <code>
-	/// <paramref name="action"/>.AssertNotNull();<br/>
-	/// <paramref name="between"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
-	/// <see langword="    return"/>;<br/>
-	/// <br/>
-	/// <paramref name="action"/>(@<paramref name="this"/>[0])<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="between"/>();<br/>
-	/// <see langword="    "/><paramref name="action"/>(@<paramref name="this"/>[i]);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action, Action between)
 	{
@@ -92,24 +56,6 @@ public static class ReadOnlySpanExtensions
 		}
 	}
 
-	/// <remarks>
-	/// <code>
-	/// <paramref name="action"/>.AssertNotNull();<br/>
-	/// <paramref name="between"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="if"/> (@<paramref name="this"/>.IsEmpty)<br/>
-	/// <see langword="    return"/>;<br/>
-	/// <br/>
-	/// <paramref name="action"/>(@<paramref name="this"/>[0])<br/>
-	/// <br/>
-	/// <see langword="var"/> count = @<paramref name="this"/>.Length;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = 0; i &lt; count; ++i)<br/>
-	/// {<br/>
-	/// <see langword="    "/><paramref name="between"/>();<br/>
-	/// <see langword="    "/><paramref name="action"/>(@<paramref name="this"/>[i], i);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action, Action between)
 	{
@@ -129,32 +75,6 @@ public static class ReadOnlySpanExtensions
 		}
 	}
 
-	/// <remarks>
-	/// <code>
-	/// <see langword="if"/> (!<paramref name="values"/>.Any())<br/>
-	/// <see langword="    return new"/> <see cref="string"/>(@<paramref name="this"/>);<br/>
-	/// <br/>
-	/// <see langword="var"/> totalLength = (<see cref="int"/>)<paramref name="values"/>.Select(value =&gt; value.Length).Sum() + @<paramref name="this"/>.Length * (<paramref name="values"/>.Count() - 1);<br/>
-	/// Span&lt;<see cref="char"/>&gt; result = <see langword="stackalloc"/> <see cref="char"/>[totalLength];<br/>
-	/// <br/>
-	/// <see langword="var"/> offset = 0;<br/>
-	/// <see langword="foreach"/> (<see langword="var"/> value <see langword="in"/> <paramref name="values"/>)<br/>
-	/// {<br/>
-	/// <see langword="    if"/> (offset &gt; 0)<br/>
-	/// <see langword="    "/>{<br/>
-	/// <see langword="        "/>@<paramref name="this"/>.CopyTo(result.Slice(offset, @<paramref name="this"/>.Length));<br/>
-	/// <see langword="        "/>offset += @<paramref name="this"/>.Length;<br/>
-	/// <see langword="    "/>}<br/>
-	/// <br/>
-	/// <see langword="    var"/> span = value.AsSpan();<br/>
-	/// <see langword="    "/>span.CopyTo(result.Slice(offset, span.Length));<br/>
-	/// <see langword="    "/>offset += span.Length;<br/>
-	/// }<br/>
-	/// <br/>
-	/// <see langword="return new"/> <see cref="string"/>(result);
-	/// </code>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this scoped ReadOnlySpan<char> @this, IEnumerable<string> values)
 	{
 		if (!values.Any())
@@ -253,14 +173,6 @@ public static class ReadOnlySpanExtensions
 	public static string ToBase64(this scoped ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> Convert.ToBase64String(@this, options);
 
-	/// <remarks>
-	/// <code>
-	/// Span&lt;<see cref="char"/>&gt; chars = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length * <see langword="sizeof"/>(<see cref="int"/>)];<br/>
-	/// <see langword="return"/> Convert.TryToBase64Chars(@this, chars, out var length, options)<br/>
-	/// <see langword="    "/>? chars.Slice(0, length).ToArray()<br/>
-	/// <see langword="    "/>: Array&lt;<see cref="char"/>&gt;.Empty;
-	/// </code>
-	/// </remarks>
 	public static char[] ToBase64Chars(this scoped ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 	{
 		Span<char> chars = stackalloc char[@this.Length * sizeof(int)];

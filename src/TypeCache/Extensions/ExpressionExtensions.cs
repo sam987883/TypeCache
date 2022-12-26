@@ -14,9 +14,9 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.AndAlso(Expression, Expression)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.AndAlso(@<paramref name="this"/>, <paramref name="operand"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.AndAlso(@<paramref name="this"/>, <paramref name="operand"/>);</c><br/><br/>
+	/// <c>a &amp;&amp; b</c>
 	/// </remarks>
-	/// <remarks><c>a &amp;&amp; b</c></remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression And(this Expression @this, Expression operand)
 		=> Expression.AndAlso(@this, operand);
@@ -99,28 +99,6 @@ public static class ExpressionExtensions
 	public static Expression As(this Expression @this, Type type)
 		=> Expression.TypeAs(@this, type);
 
-	/// <remarks>
-	/// <code>
-	/// <paramref name="operation"/> <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Add"/>		=&gt; <see cref="Expression"/>.AddAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.AddChecked"/>	=&gt; <see cref="Expression"/>.AddAssignChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Divide"/>		=&gt; <see cref="Expression"/>.DivideAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Modulus"/>		=&gt; <see cref="Expression"/>.ModuloAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Multiply"/>		=&gt; <see cref="Expression"/>.MultiplyAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.MultiplyChecked"/>	=&gt; <see cref="Expression"/>.MultiplyAssignChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Power"/>		=&gt; <see cref="Expression"/>.PowerAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Subtract"/>		=&gt; <see cref="Expression"/>.SubtractAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.SubtractChecked"/>	=&gt; <see cref="Expression"/>.SubtractAssignChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.And"/>		=&gt; <see cref="Expression"/>.AndAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Or"/>		=&gt; <see cref="Expression"/>.OrAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.ExclusiveOr"/>	=&gt; <see cref="Expression"/>.ExclusiveOrAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.LeftShift"/>	=&gt; <see cref="Expression"/>.LeftShiftAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.RightShift"/>	=&gt; <see cref="Expression"/>.RightShiftAssign(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/>_					=&gt; <see langword="throw new"/> <see cref="NotSupportedException"/>($"{<see langword="nameof"/>(Assign)}: {<see langword="nameof"/>(<see cref="BinaryOperator"/>)} [{<paramref name="operation"/>:G}] is not supported.")
-	/// }<br/>
-	/// </code>
-	/// </remarks>
 	/// <exception cref="NotSupportedException" />
 	public static BinaryExpression Assign(this Expression @this, BinaryOperator operation, Expression operand)
 		=> operation switch
@@ -325,18 +303,6 @@ public static class ExpressionExtensions
 	public static Expression Convert<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Convert(typeof(T), overflowCheck);
 
-	/// <remarks>
-	/// <code>
-	/// =&gt; (@<paramref name="this"/>.Type.IsValueType, <paramref name="targetType"/>.IsValueType) <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>_ <see langword="when"/> <paramref name="targetType"/> == <see langword="typeof"/>(<see cref="string"/>) =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertToString", @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
-	/// <see langword="    "/>{ IsEnum: <see langword="true"/> } =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertToEnum", @@<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
-	/// <see langword="    "/>{ IsGenericType: <see langword="true"/> } <see langword="when"/> targetType.GetGenericTypeDefinition() == <see langword="typeof"/>(Nullable&lt;&gt;) =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertTo", <see langword="new"/>[] { <paramref name="targetType"/>.GenericTypeArguments[0] }, @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;(), <paramref name="targetType"/>.GenericTypeArguments[0].Constant(), <paramref name="overflowCheck"/>.Constant()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
-	/// <see langword="    "/>{ IsValueType: <see langword="true"/> } =&gt; <see langword="typeof"/>(<see cref="ExpressionExtensions"/>).CallStatic("ConvertTo", <see langword="new"/>[] { <paramref name="targetType"/> }, @<paramref name="this"/>.Cast&lt;<see cref="object"/>&gt;(), <paramref name="targetType"/>.Constant(), <paramref name="overflowCheck"/>.Constant()).Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>),<br/>
-	/// <see langword="    "/>_ =&gt; @<paramref name="this"/>.Cast(<paramref name="targetType"/>, <paramref name="overflowCheck"/>)<br/>
-	/// };
-	/// </code>
-	/// </remarks>
 	public static Expression Convert(this Expression @this, Type targetType, bool overflowCheck = false)
 		=> targetType switch
 		{
@@ -420,15 +386,6 @@ public static class ExpressionExtensions
 	public static MemberExpression Field(this Expression @this, string name)
 		=> Expression.Field(@this, name);
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <see langword="    var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
-	/// <see langword="    return"/> field.As&lt;<see cref="object"/>&gt;().Lambda&lt;<see cref="GetValue"/>&gt;(instance);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static Expression<Func<object?, object?>> FieldGetInvoke(this FieldInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).Parameter<object>();
@@ -436,30 +393,11 @@ public static class ExpressionExtensions
 		return field.As<object>().Lambda<Func<object?, object?>>(instance);
 	}
 
-	/// <remarks>
-	/// <c>=&gt; !@<paramref name="this"/>.IsStatic
-	///	? LambdaFactory.Create(<see langword="new"/>[] { @<paramref name="this"/>.DeclaringType! }, parameters =&gt; parameters[0].Field(@<paramref name="this"/>))
-	///	: @<paramref name="this"/>.StaticField().Lambda();</c>
-	/// </remarks>
 	public static LambdaExpression FieldGetMethod(this FieldInfo @this)
 		=> !@this.IsStatic
 			? LambdaFactory.Create(new[] { @this.DeclaringType! }, parameters => parameters[0].Field(@this))
 			: @this.StaticField().Lambda();
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.IsInitOnly.AssertEquals(<see langword="false"/>);<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.IsLiteral.AssertEquals(<see langword="false"/>);<br/>
-	/// <br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> value = <see langword="nameof"/>(value).Parameter&lt;<see cref="object"/>&gt;();<br/>
-	/// <br/>
-	/// <see langword="    var"/> field = !@<paramref name="this"/>.IsStatic ? instance.Cast(@<paramref name="this"/>.DeclaringType).Field(@<paramref name="this"/>) : @<paramref name="this"/>.StaticField();<br/>
-	/// <see langword="    return"/> field.Assign(value.Convert(@<paramref name="this"/>.FieldType)).Lambda&lt;<see cref="SetValue"/>&gt;(instance, value);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static Expression<Action<object?, object?>> FieldSetInvoke(this FieldInfo @this)
 	{
 		@this.IsInitOnly.AssertFalse();
@@ -472,18 +410,6 @@ public static class ExpressionExtensions
 		return field.Assign(value.Convert(@this.FieldType)).Lambda<Action<object?, object?>>(instance, value);
 	}
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.IsInitOnly.AssertEquals(<see langword="false"/>);<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.IsLiteral.AssertEquals(<see langword="false"/>);<br/>
-	/// <br/>
-	/// <see langword="    return"/> !@<paramref name="this"/>.IsStatic<br/>
-	///	<see langword="        "/>? <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.DeclaringType, @<paramref name="this"/>.FieldType }, parameters =&gt; parameters[0].Field(@<paramref name="this"/>).Assign(parameters[1]))<br/>
-	///	<see langword="        "/>: <see cref="LambdaFactory"/>.CreateAction(<see langword="new"/>[] { @<paramref name="this"/>.FieldType }, parameters =&gt; @<paramref name="this"/>.StaticField().Assign(parameters[0]));<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static LambdaExpression FieldSetMethod(this FieldInfo @this)
 	{
 		@this.IsInitOnly.AssertFalse();
@@ -650,21 +576,10 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>(<paramref name="parameter1"/>).<see cref="Expression"/>.Lambda(<paramref name="parameter1"/>);</c>
 	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LambdaExpression Lambda(this Func<ParameterExpression, Expression> @this, ParameterExpression parameter1)
 		=> @this(parameter1).Lambda(parameter1);
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
-	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
-	/// <see langword="        "/>.Select(parameterInfo =&gt; parameterInfo.Parameter())<br/>
-	/// <see langword="        "/>.ToArray();<br/>
-	/// <br/>
-	/// <see langword="    return"/> @<paramref name="this"/>.New(parameters).Lambda(parameters);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static LambdaExpression Lambda(this ConstructorInfo @this)
 	{
 		var parameters = @this.GetParameters()
@@ -675,21 +590,6 @@ public static class ExpressionExtensions
 		return @this.New(parameters).Lambda(parameters);
 	}
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> instance = <see langword="nameof"/>(instance).Parameter(@<paramref name="this"/>.DeclaringType!);<br/>
-	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
-	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
-	/// <see langword="        "/>.Select(parameterInfo =&gt; parameterInfo.Parameter())<br/>
-	/// <see langword="        "/>.ToArray();<br/>
-	/// <br/>
-	/// <see langword="    return"/> !@<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="        "/>? instance.Call(@<paramref name="this"/>, parameters).Lambda(<see langword="new"/>[] { instance }.And(parameters))<br/>
-	/// <see langword="        "/>: @<paramref name="this"/>.CallStatic(parameters).Lambda(parameters);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static LambdaExpression Lambda(this MethodInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).Parameter(@this.DeclaringType!);
@@ -703,33 +603,12 @@ public static class ExpressionExtensions
 			: @this.CallStatic(parameters).Lambda(parameters);
 	}
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
 		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
-	/// <see langword="    var"/> parameters = @<paramref name="this"/>.GetParameters()<br/>
-	/// <see langword="        "/>.OrderBy(parameterInfo =&gt; parameterInfo.Position)<br/>
-	/// <see langword="        "/>.Select(parameterInfo =&gt; arguments.Array()[i].Convert(parameterInfo.ParameterType))<br/>
-	/// <see langword="        "/>.ToArray();<br/>
-	/// <br/>
-	/// <see langword="    return"/> @<paramref name="this"/>.New(parameters).As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments);<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this ConstructorInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
@@ -742,24 +621,6 @@ public static class ExpressionExtensions
 		return @this.New(parameters).As<object>().Lambda<Func<object?[]?, object?>>(arguments);
 	}
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/><see cref="ParameterExpression"/> arguments = <see langword="nameof"/>(arguments).Parameter&lt;<see cref="object"/>[]&gt;();<br/>
-	/// <see langword="    var"/> parameterInfos = @<paramref name="this"/>.GetParameters().OrderBy(parameterInfo =&gt; parameterInfo.Position);<br/>
-	/// <see langword="    var"/> parameters = @<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="        "/>? parameterInfos.Select((parameterInfo, i) =&gt; arguments.Array()[i].Convert(parameterInfo.ParameterType));<br/>
-	/// <see langword="        "/>: parameterInfos.Select((parameterInfo, i) =&gt; arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));<br/>
-	/// <see langword="    var"/> call = @<paramref name="this"/>.IsStatic<br/>
-	/// <see langword="        "/>? @<paramref name="this"/>.CallStatic(parameters)<br/>
-	/// <see langword="        "/>: arguments.Array()[0].Cast(@<paramref name="this"/>.DeclaringType!).Call(@<paramref name="this"/>, parameters);<br/>
-	/// <br/>
-	/// <see langword="    return"/> @<paramref name="this"/>.ReturnType != <see langword="typeof"/>(<see langword="void"/>)<br/>
-	///	<see langword="        "/>? call.As&lt;<see cref="object"/>&gt;().Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments)<br/>
-	///	<see langword="        "/>: call.Block(<see cref="NullExpression"/>).Lambda&lt;Func&lt;<see cref="object"/>[], <see cref="object"/>&gt;&gt;(arguments);<br/>
-	/// }<br/>
-	/// </code>
-	/// </remarks>
 	public static Expression<Func<object?[]?, object?>> LambdaInvoke(this MethodInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).Parameter<object[]>();
@@ -776,31 +637,15 @@ public static class ExpressionExtensions
 			: call.Block(NullExpression).Lambda<Func<object?[]?, object?>>(arguments);
 	}
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
-	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter =&gt; parameter.Type).And(<paramref name="returnType"/>).ToArray()), @<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
@@ -868,36 +713,6 @@ public static class ExpressionExtensions
 	public static NewExpression New(this Type @this)
 		=> Expression.New(@this);
 
-	/// <remarks>
-	/// <code>
-	/// =&gt; <paramref name="operation"/> <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Add"/>			=&gt; <see cref="Expression"/>.Add(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.AddChecked"/>		=&gt; <see cref="Expression"/>.AddChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Divide"/>			=&gt; <see cref="Expression"/>.Divide(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Modulus"/>			=&gt; <see cref="Expression"/>.Modulus(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Multiply"/>			=&gt; <see cref="Expression"/>.Multiply(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.MultiplyChecked"/>		=&gt; <see cref="Expression"/>.MultiplyChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Power"/>			=&gt; <see cref="Expression"/>.Power(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Subtract"/>			=&gt; <see cref="Expression"/>.Subtract(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.SubtractChecked"/>		=&gt; <see cref="Expression"/>.SubtractChecked(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.And"/>			=&gt; <see cref="Expression"/>.And(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.Or"/>			=&gt; <see cref="Expression"/>.Or(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.ExclusiveOr"/>		=&gt; <see cref="Expression"/>.ExclusiveOr(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.LeftShift"/>		=&gt; <see cref="Expression"/>.LeftShift(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.RightShift"/>		=&gt; <see cref="Expression"/>.RightShift(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.EqualTo"/>			=&gt; <see cref="Expression"/>.EqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.ReferenceEqualTo"/>	=&gt; <see cref="Expression"/>.ReferenceEqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.NotEqualTo"/>		=&gt; <see cref="Expression"/>.NotEqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.ReferenceNotEqualTo"/>	=&gt; <see cref="Expression"/>.ReferenceNotEqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.GreaterThan"/>		=&gt; <see cref="Expression"/>.GreaterThan(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.GreaterThanOrEqualTo"/>	=&gt; <see cref="Expression"/>.GreaterThanOrEqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.LessThan"/>			=&gt; <see cref="Expression"/>.LessThan(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/><see cref="BinaryOperator.LessThanOrEqualTo"/>	=&gt; <see cref="Expression"/>.LessThanOrEqualTo(@<paramref name="this"/>, <paramref name="operand"/>),<br/>
-	///	<see langword="    "/>_						=&gt; <see langword="throw new"/> <see cref="NotSupportedException"/>($"Operation: {<see langword="nameof"/>(<see cref="BinaryOperator"/>)} [{<paramref name="operation"/>:G}] is not supported.")<br/>
-	/// };
-	/// </code>
-	/// </remarks>
 	/// <exception cref="NotSupportedException" />
 	public static BinaryExpression Operation(this Expression @this, BinaryOperator operation, Expression operand)
 		=> operation switch
@@ -927,25 +742,6 @@ public static class ExpressionExtensions
 			_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
 		};
 
-	/// <remarks>
-	/// <code>
-	/// =&gt; <paramref name="operation"/> <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.IsTrue"/>		=&gt; <see cref="Expression.IsTrue(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.IsFalse"/>		=&gt; <see cref="Expression.IsFalse(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.PreIncrement"/>	=&gt; <see cref="Expression.PreIncrementAssign(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.Increment"/>		=&gt; <see cref="Expression.Increment(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.PostIncrement"/>	=&gt; <see cref="Expression.PostIncrementAssign(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.PreDecrement"/>	=&gt; <see cref="Expression.PreDecrementAssign(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.Decrement"/>		=&gt; <see cref="Expression.Decrement(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.PostDecrement"/>	=&gt; <see cref="Expression.PostDecrementAssign(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.Negate"/>		=&gt; <see cref="Expression.Negate(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.NegateChecked"/>	=&gt; <see cref="Expression.NegateChecked(Expression)"/>,<br/>
-	/// <see langword="    "/><see cref="UnaryOperator.Complement"/>	=&gt; <see cref="Expression.OnesComplement(Expression)"/>,<br/>
-	///	<see langword="    "/>_					=&gt; <see langword="throw new"/> <see cref="NotSupportedException"/>($"Operation: {<see langword="nameof"/>(<see cref="UnaryOperator"/>)} [{<paramref name="operation"/>:G}] is not supported.")<br/>
-	/// };
-	/// </code>
-	/// </remarks>
 	/// <exception cref="NotSupportedException" />
 	public static UnaryExpression Operation(this Expression @this, UnaryOperator operation)
 		=> operation switch
@@ -966,9 +762,9 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.OrElse(Expression, Expression)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.OrElse(@<paramref name="this"/>, <paramref name="operand"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.OrElse(@<paramref name="this"/>, <paramref name="operand"/>);</c><br/><br/>
+	/// <c>a || b</c>
 	/// </remarks>
-	/// <remarks><c>a || b</c></remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression Or(this Expression @this, Expression operand)
 		=> Expression.OrElse(@this, operand);

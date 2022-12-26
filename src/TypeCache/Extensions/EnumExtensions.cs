@@ -71,50 +71,6 @@ public static class EnumExtensions
 	public static StringComparer ToStringComparer(this StringComparison @this)
 		=> StringComparer.FromComparison(@this);
 
-	/// <summary>
-	/// <b>Collections:</b><br/>
-	/// <c>
-	/// <see cref="Array"/>,
-	/// <see cref="System.Collections.ArrayList"/>,
-	/// <see cref="System.Collections.BitArray"/>,
-	/// <see cref="System.Collections.Concurrent.BlockingCollection{T}"/>,
-	/// <see cref="System.Collections.ObjectModel.Collection{T}"/>,
-	/// <see cref="System.Collections.Concurrent.ConcurrentBag{T}"/>,
-	/// <see cref="System.Collections.Concurrent.ConcurrentDictionary{TKey, TValue}"/>,
-	/// <see cref="System.Collections.Concurrent.ConcurrentQueue{T}"/>,
-	/// <see cref="System.Collections.Concurrent.ConcurrentStack{T}"/>,
-	/// <see cref="Dictionary{TKey, TValue}"/>,
-	/// <see cref="HashSet{T}"/>,
-	/// <see cref="System.Collections.Specialized.HybridDictionary"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableArray{T}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableDictionary{TKey, TValue}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableHashSet{T}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableList{T}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableQueue{T}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableSortedDictionary{TKey, TValue}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableSortedSet{T}"/>,
-	/// <see cref="System.Collections.Immutable.ImmutableStack{T}"/>,
-	/// <see cref="System.Collections.ObjectModel.KeyedCollection{TKey, TItem}"/>,
-	/// <see cref="LinkedList{T}"/>,
-	/// <see cref="List{T}"/>,
-	/// <see cref="System.Collections.Specialized.ListDictionary"/>,
-	/// <see cref="System.Collections.Specialized.NameObjectCollectionBase"/>,
-	/// <see cref="System.Collections.Specialized.NameValueCollection"/>,
-	/// <see cref="System.Collections.ObjectModel.ObservableCollection{T}"/>,
-	/// <see cref="System.Collections.Specialized.OrderedDictionary"/>,
-	/// <see cref="PriorityQueue{TElement, TPriority}"/>,
-	/// <see cref="System.Collections.Queue"/>, <see cref="Queue{T}"/>,
-	/// <see cref="System.Collections.ObjectModel.ReadOnlyCollection{T}"/>,
-	/// <see cref="System.Collections.ObjectModel.ReadOnlyDictionary{TKey, TValue}"/>,
-	/// <see cref="System.Collections.ObjectModel.ReadOnlyObservableCollection{T}"/>,
-	/// <see cref="SortedDictionary{TKey, TValue}"/>,
-	/// <see cref="System.Collections.SortedList"/>, <see cref="SortedList{TKey, TValue}"/>,
-	/// <see cref="SortedSet{T}"/>,
-	/// <see cref="System.Collections.Stack"/>, <see cref="Stack{T}"/>,
-	/// <see cref="System.Collections.Specialized.StringCollection"/>,
-	/// <see cref="System.Collections.Specialized.StringDictionary"/>,
-	/// </c>
-	/// </summary>
 	public static bool IsCollection(this SystemType @this) => @this switch
 	{
 		SystemType.Array => true,
@@ -160,15 +116,6 @@ public static class EnumExtensions
 		_ => false
 	};
 
-	/// <summary>
-	/// <b>Concurrent collections:</b><br/>
-	/// <c>
-	/// <see cref="ConcurrentBag{T}"/>,
-	/// <see cref="ConcurrentDictionary{TKey, TValue}"/>,
-	/// <see cref="ConcurrentQueue{T}"/>,
-	/// <see cref="ConcurrentStack{T}"/>,
-	/// </c>
-	/// </summary>
 	public static bool IsConcurrent(this SystemType @this) => @this switch
 	{
 		SystemType.ConcurrentBag => true,
@@ -178,26 +125,6 @@ public static class EnumExtensions
 		_ => false
 	};
 
-	/// <summary>
-	/// <b>Dictionary collections:</b><br/>
-	/// <c>
-	/// <see cref="ConcurrentDictionary{TKey, TValue}"/>,
-	/// <see cref="Dictionary{TKey, TValue}"/>,
-	/// <see cref="Hashtable"/>,
-	/// <see cref="HybridDictionary"/>,
-	/// <see cref="ImmutableDictionary{TKey, TValue}"/>,
-	/// <see cref="ImmutableSortedDictionary{TKey, TValue}"/>,
-	/// <see cref="KeyedCollection{TKey, TItem}"/>,
-	/// <see cref="ListDictionary"/>,
-	/// <see cref="NameObjectCollectionBase"/>,
-	/// <see cref="NameValueCollection"/>,
-	/// <see cref="OrderedDictionary"/>,
-	/// <see cref="ReadOnlyDictionary{TKey, TValue}"/>,
-	/// <see cref="SortedDictionary{TKey, TValue}"/>,
-	/// <see cref="SortedList"/>, <see cref="SortedList{TKey, TValue}"/>,
-	/// <see cref="StringDictionary"/>
-	/// </c>
-	/// </summary>
 	public static bool IsDictionary(this SystemType @this) => @this switch
 	{
 		SystemType.ConcurrentDictionary => true,
@@ -218,19 +145,6 @@ public static class EnumExtensions
 		_ => false
 	};
 
-	/// <summary>
-	/// <b>Immutable collections:</b><br/>
-	/// <c>
-	/// <see cref="ImmutableArray{T}"/>,
-	/// <see cref="ImmutableDictionary{TKey, TValue}"/>,
-	/// <see cref="ImmutableHashSet{T}"/>,
-	/// <see cref="ImmutableList{T}"/>,
-	/// <see cref="ImmutableQueue{T}"/>,
-	/// <see cref="ImmutableSortedDictionary{TKey, TValue}"/>,
-	/// <see cref="ImmutableSortedSet{T}"/>,
-	/// <see cref="ImmutableStack{T}"/>,
-	/// </c>
-	/// </summary>
 	public static bool IsImmutable(this SystemType @this) => @this switch
 	{
 		SystemType.ImmutableArray => true,
@@ -244,27 +158,6 @@ public static class EnumExtensions
 		_ => false
 	};
 
-	/// <summary>
-	/// <b>Primitive types:</b><br/>
-	/// <c>
-	/// <see cref="bool"/>,
-	/// <see cref="sbyte"/>,
-	/// <see cref="short"/>,
-	/// <see cref="int"/>,
-	/// <see cref="long"/>,
-	/// <see cref="Int128"/>,
-	/// <see cref="IntPtr"/>,
-	/// <see cref="byte"/>,
-	/// <see cref="ushort"/>,
-	/// <see cref="uint"/>,
-	/// <see cref="ulong"/>,
-	/// <see cref="UInt128"/>,
-	/// <see cref="UIntPtr"/>,
-	/// <see cref="char"/>,
-	/// <see cref="float"/>,
-	/// <see cref="double"/>
-	/// </c>
-	/// </summary>
 	public static bool IsPrimitive(this SystemType @this) => @this switch
 	{
 		SystemType.Boolean => true,
@@ -286,14 +179,6 @@ public static class EnumExtensions
 		_ => false
 	};
 
-	/// <summary>
-	/// <b>Read-only collections:</b><br/>
-	/// <c>
-	/// <see cref="ReadOnlyCollection{T}"/>
-	/// <see cref="ReadOnlyDictionary{TKey, TValue}"/>,
-	/// <see cref="ReadOnlyObservableCollection{T}"/>
-	/// </c>
-	/// </summary>
 	public static bool IsReadOnly(this SystemType @this) => @this switch
 	{
 		SystemType.ReadOnlyCollection => true,

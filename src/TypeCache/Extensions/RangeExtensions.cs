@@ -15,20 +15,6 @@ public static class RangeExtensions
 	public static bool? Any(this Range @this)
 		=> @this.Start.IsFromEnd == @this.End.IsFromEnd ? !@this.Start.Equals(@this.End) : null;
 
-	/// <summary>
-	/// <code>
-	/// <paramref name="action"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (!reverse.HasValue)<br/>
-	/// <see langword="    return"/>;<br/>
-	/// <br/>
-	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
-	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
-	/// <see langword="    "/> <paramref name="action"/>(i);
-	/// </code>
-	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach(this Range @this, Action<int> action)
 	{
@@ -44,16 +30,6 @@ public static class RangeExtensions
 			action(i);
 	}
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    true"/> =&gt; <paramref name="index"/>.Value &lt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="index"/>.Value &gt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    false"/> =&gt; <paramref name="index"/>.Value &gt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="index"/>.Value &lt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="false"/><br/>
-	/// };
-	/// </code>
-	/// </summary>
 	public static bool Has(this Range @this, Index index)
 		=> @this.IsReverse() switch
 		{
@@ -62,19 +38,6 @@ public static class RangeExtensions
 			_ => false
 		};
 
-	/// <summary>
-	/// <code>
-	/// =&gt; (@<paramref name="this"/>.IsReverse(), <paramref name="other"/>.IsReverse()) <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>_ <see langword="when"/> @this.Any() <see langword="is not true"/> &amp;&amp; other.Any() <see langword="is not true"/> =&gt; <see langword="false"/>,<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; <paramref name="other"/>.Start.Value &lt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &gt;= @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; <paramref name="other"/>.Start.Value &lt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &gt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="true"/>) =&gt; <paramref name="other"/>.Start.Value &gt; @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &lt;= @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; <paramref name="other"/>.Start.Value &gt;= @<paramref name="this"/>.Start.Value &amp;&amp; <paramref name="other"/>.End.Value &lt;= @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="false"/><br/>
-	/// };
-	/// </code>
-	/// </summary>
 	public static bool Has(this Range @this, Range other)
 		=> (@this.IsReverse(), other.IsReverse()) switch
 		{
@@ -86,18 +49,6 @@ public static class RangeExtensions
 			_ => false
 		};
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.Overlaps(<paramref name="other"/>) ? (@<paramref name="this"/>.IsReverse(), <paramref name="other"/>.IsReverse()) <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.Start).Minimum()..(@<paramref name="this"/>.End, <paramref name="other"/>.End).Maximum(),<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.End.Previous()).Minimum()..(@<paramref name="this"/>.End, <paramref name="other"/>.Start.Next()).Maximum(),<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="true"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.End.Next()).Maximum()..(@<paramref name="this"/>.End, <paramref name="other"/>.Start.Previous()).Minimum(),<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.Start).Maximum()..(@<paramref name="this"/>.End, <paramref name="other"/>.End).Minimum(),<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// } : <see langword="null"/>;
-	/// </code>
-	/// </summary>
 	public static Range? IntersectWith(this Range @this, Range other)
 		=> @this.Overlaps(other) ? (@this.IsReverse(), other.IsReverse()) switch
 		{
@@ -108,16 +59,6 @@ public static class RangeExtensions
 			_ => null
 		} : null;
 
-	/// <summary>
-	/// <code>
-	/// =&gt; (@<paramref name="this"/>.Start.IsFromEnd, @<paramref name="this"/>.End.IsFromEnd) <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value,<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// };
-	/// </code>
-	/// </summary>
 	/// <remarks>Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.</remarks>
 	public static bool? IsReverse(this Range @this)
 		=> (@this.Start.IsFromEnd, @this.End.IsFromEnd) switch
@@ -134,20 +75,6 @@ public static class RangeExtensions
 	public static int Length(this Range @this)
 		=> Abs(@this.End.Value - @this.Start.Value);
 
-	/// <summary>
-	/// <code>
-	/// <paramref name="map"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (!reverse.HasValue)<br/>
-	/// <see langword="    yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
-	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
-	/// <see langword="    yield return"/> <paramref name="map"/>(i);
-	/// </code>
-	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<T> Select<T>(this Range @this, Func<int, T> map)
 	{
@@ -167,16 +94,6 @@ public static class RangeExtensions
 				yield return map(i);
 	}
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    true when"/> @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.Start,<br/>
-	///	<see langword="    false when"/> @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.End.Previous(),<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	///	};
-	///	</code>
-	/// </summary>
 	public static Index? Maximum(this Range @this)
 		=> @this.IsReverse() switch
 		{
@@ -185,16 +102,6 @@ public static class RangeExtensions
 			_ => null
 		};
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    true when"/> @<paramref name="this"/>.Start.Value &gt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.End.Next(),<br/>
-	///	<see langword="    false when"/> @<paramref name="this"/>.Start.Value &lt; @<paramref name="this"/>.End.Value =&gt; @<paramref name="this"/>.Start,<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	///	};
-	///	</code>
-	/// </summary>
 	public static Index? Minimum(this Range @this)
 		=> @this.IsReverse() switch
 		{
@@ -211,16 +118,6 @@ public static class RangeExtensions
 	public static Range Normalize(this Range @this, int count)
 		=> @this.Start.FromStart(count)..@this.End.FromStart(count);
 
-	/// <summary>
-	/// <code>
-	/// =&gt; <paramref name="other"/>.IsReverse() <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    true"/> <see langword="when"/> @<paramref name="this"/>.Has(<paramref name="other"/>.Start) || @<paramref name="this"/>.Has(<paramref name="other"/>.End.Next()) =&gt; <see langword="true"/><br/>
-	///	<see langword="    false"/> <see langword="when"/> @<paramref name="this"/>.Has(<paramref name="other"/>.Start) || @<paramref name="this"/>.Has(<paramref name="other"/>.End.Previous()) =&gt; <see langword="true"/><br/>
-	///	<see langword="    "/>_ =&gt; <see langword="false"/><br/>
-	/// };
-	/// </code>
-	/// </summary>
 	public static bool Overlaps(this Range @this, Range other)
 		=> other.IsReverse() switch
 		{
@@ -232,21 +129,10 @@ public static class RangeExtensions
 	/// <summary>
 	/// <c>=&gt; <see langword="new"/> <see cref="Range"/>(@<paramref name="this"/>.End, @<paramref name="this"/>.Start);</c>
 	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Range Reverse(this Range @this)
 		=> new Range(@this.End, @this.Start);
 
-	/// <summary>
-	/// <code>
-	/// =&gt; @<paramref name="this"/>.Has(<paramref name="other"/>.Start) || @<paramref name="this"/>.Has(<paramref name="other"/>.End) || <paramref name="other"/>.Has(@<paramref name="this"/>.Start) || <paramref name="other"/>.Has(@<paramref name="this"/>.End) ? (@<paramref name="this"/>.IsReverse(), <paramref name="other"/>.IsReverse()) <see langword="switch"/><br/>
-	/// {<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="true"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.Start).Maximum()..(@<paramref name="this"/>.End, <paramref name="other"/>.End).Minimum(),<br/>
-	///	<see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.End.Previous()).Maximum()..(@<paramref name="this"/>.End, <paramref name="other"/>.Start.Next()).Minimum(),<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="true"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.End.Next()).Minimum()..(@<paramref name="this"/>.End, <paramref name="other"/>.Start.Previous()).Maximum(),<br/>
-	///	<see langword="    "/>(<see langword="false"/>, <see langword="false"/>) =&gt; (@<paramref name="this"/>.Start, <paramref name="other"/>.Start).Minimum()..(@<paramref name="this"/>.End, <paramref name="other"/>.End).Maximum(),<br/>
-	///	<see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// } : <see langword="null"/>;
-	/// </code>
-	/// </summary>
 	public static Range? UnionWith(this Range @this, Range other)
 		=> @this.Has(other.Start) || @this.Has(other.End) || other.Has(@this.Start) || other.Has(@this.End) ? (@this.IsReverse(), other.IsReverse()) switch
 		{
@@ -257,18 +143,6 @@ public static class RangeExtensions
 			_ => null
 		} : null;
 
-	/// <summary>
-	/// <code>
-	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (!reverse.HasValue)<br/>
-	/// <see langword="    yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
-	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value + increment;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
-	/// <see langword="    yield return"/> i;
-	/// </code>
-	/// </summary>
 	public static IEnumerable<int> Values(this Range @this)
 	{
 		var reverse = @this.IsReverse();
@@ -281,21 +155,6 @@ public static class RangeExtensions
 			yield return i;
 	}
 
-	/// <summary>
-	/// <code>
-	/// <paramref name="condition"/>.AssertNotNull();<br/>
-	/// <br/>
-	/// <see langword="var"/> reverse = @<paramref name="this"/>.IsReverse();<br/>
-	/// <see langword="if"/> (!reverse.HasValue)<br/>
-	/// <see langword="    yield break"/>;<br/>
-	/// <br/>
-	/// <see langword="var"/> end = @<paramref name="this"/>.End.Value;<br/>
-	/// <see langword="var"/> increment = reverse.Value ? -1 : 1;<br/>
-	/// <see langword="for"/> (<see langword="var"/> i = @<paramref name="this"/>.Start.Value; i != end; i += increment)<br/>
-	/// <see langword="    if"/> (<paramref name="condition"/>(i))<br/>
-	/// <see langword="        yield return"/> i;
-	/// </code>
-	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IEnumerable<int> Where(this Range @this, Predicate<int> condition)
 	{

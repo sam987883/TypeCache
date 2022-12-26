@@ -13,7 +13,6 @@ using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Types;
 using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 using static System.StringSplitOptions;

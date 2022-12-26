@@ -98,14 +98,6 @@ public static class StringExtensions
 	public static byte[] FromBase64(this string @this)
 		=> Convert.FromBase64String(@this);
 
-	/// <remarks>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    "/>Span&lt;<see cref="byte"/>&gt; span = <see langword="stackalloc"/> <see cref="byte"/>[@<paramref name="this"/>.Length * 4];<br/>
-	/// <see langword="    return"/> <see cref="Convert"/>.TryFromBase64String(@<paramref name="this"/>, span, <see langword="out var"/> count) ? <paramref name="encoding"/>.GetString(span.Slice(0, count)) : @<paramref name="this"/>;<br/>
-	/// }
-	/// </code>
-	/// </remarks>
 	public static string FromBase64(this string @this, Encoding encoding)
 	{
 		Span<byte> span = stackalloc byte[@this.Length * sizeof(char)];
@@ -196,23 +188,6 @@ public static class StringExtensions
 	public static bool Left(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.StartsWith(text, comparison);
 
-	/// <summary>
-	/// <code>
-	/// {<br/>
-	/// <see langword="    if"/> (@<paramref name="this"/>.IsBlank())<br/>
-	/// <see langword="        return"/> <see cref="string.Empty"/>;<br/>
-	/// <br/>
-	/// <see langword="    "/>Span&lt;<see cref="char"/>&gt; span = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
-	/// <see langword="    var"/> i = -1;<br/>
-	/// <see langword="    "/>@<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
-	/// <see langword="    while"/> (++i &lt; span.Length)<br/>
-	/// <see langword="        if"/> (span[i].IsLetterOrDigit())<br/>
-	/// <see langword="            "/>span[i] = mask;<br/>
-	/// <br/>
-	/// <see langword="    new"/> <see cref="string"/>(span);<br/>
-	/// }
-	/// </code>
-	/// </summary>
 	public static string Mask(this string @this, char mask = '*')
 	{
 		if (@this.IsBlank())
@@ -334,14 +309,6 @@ public static class StringExtensions
 	public static string RegexUnescape(this string @this)
 		=> Regex.Unescape(@this);
 
-	/// <remarks>
-	/// <code>
-	/// Span&lt;<see cref="char"/>&gt; span = <see langword="stackalloc"/> <see cref="char"/>[@<paramref name="this"/>.Length];<br/>
-	/// @<paramref name="this"/>.AsSpan().CopyTo(span);<br/>
-	/// span.Reverse();<br/>
-	/// <see langword="return new"/> <see cref="string"/>(span);
-	/// </code>
-	/// </remarks>
 	public static string Reverse(this string @this)
 	{
 		Span<char> span = stackalloc char[@this.Length];
@@ -366,17 +333,6 @@ public static class StringExtensions
 	public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.EndsWith(text, comparison);
 
-	/// <remarks>
-	/// <code>
-	/// Span&lt;<see cref="byte"/>&gt; bytes = <see langword="stackalloc"/> <see cref="byte"/>[<paramref name="encoding"/>.GetMaxByteCount(@<paramref name="this"/>.Length) - 1];<br/>
-	/// @<paramref name="this"/>.GetBytes(<paramref name="encoding"/>, bytes);<br/>
-	/// <br/>
-	/// Span&lt;<see cref="char"/>&gt; chars = <see langword="stackalloc"/> <see cref="char"/>[bytes.Length * <see langword="sizeof"/>(<see cref="char"/>)];<br/>
-	/// <see langword="return"/> <see cref="Convert"/>.TryToBase64Chars(bytes, chars, <see langword="out var"/> count)<br/>
-	/// <see langword="    "/>? <see langword="new"/> <see cref="string"/>(chars.Slice(0, <paramref name="stripPadding"/> ? count - 2 : count))<br/>
-	/// <see langword="    "/>: <see cref="string.Empty"/>;
-	/// </code>
-	/// </remarks>
 	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
 	{
 		Span<byte> bytes = stackalloc byte[encoding.GetMaxByteCount(@this.Length) - 1];
@@ -407,6 +363,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
+	[DebuggerHidden]
 	public static T? ToEnum<T>(this string? @this)
 		where T : struct, Enum
 		=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
@@ -425,19 +382,9 @@ public static class StringExtensions
 	public static Uri? ToUri(this string? @this, UriKind kind)
 		=> @this is not null ? new Uri(@this, kind) : null;
 
-	/// <remarks>
-	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Right(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
-	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(0, @<paramref name="this"/>.Length - <paramref name="text"/>.Length)<br/>
-	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
-	/// </remarks>
 	public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> text.IsNotBlank() && @this?.Right(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
 
-	/// <remarks>
-	/// <c>=&gt; <paramref name="text"/>.IsNotBlank() &amp;&amp; @<paramref name="this"/>?.Left(<paramref name="text"/>, <paramref name="comparison"/>) <see langword="is true"/><br/>
-	/// <see langword="    "/>? @<paramref name="this"/>.Sunstring(<paramref name="text"/>.Length)<br/>
-	/// <see langword="    "/>: (@<paramref name="this"/> ?? <see cref="string.Empty"/>);</c>
-	/// </remarks>
 	public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 

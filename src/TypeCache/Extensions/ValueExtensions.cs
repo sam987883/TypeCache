@@ -44,19 +44,6 @@ public static class ValueExtensions
 		where T : IFloatingPoint<T>
 		=> T.Ceiling(@this);
 
-	/// <remarks>
-	/// <code>
-	/// (@<paramref name="this"/> &gt;= 0).Assert(<see langword="true"/>);<br/>
-	/// <br/>
-	/// <see langword="var"/> result = 1UL;<br/>
-	/// <see langword="while"/> (@<paramref name="this"/> &gt; 0)<br/>
-	/// {<br/>
-	/// <see langword="    "/>result *= (ulong)@<paramref name="this"/>;<br/>
-	/// <see langword="    "/>--@<paramref name="this"/>;<br/>
-	/// }<br/>
-	/// <see langword="return"/> result;
-	/// </code>
-	/// </remarks>
 	public static ulong Factorial(this int @this)
 	{
 		(@this >= 0).AssertTrue();
@@ -113,12 +100,6 @@ public static class ValueExtensions
 	public static Index Minimum(this (Index, Index) @this)
 		=> int.Min(@this.Item1.Value, @this.Item2.Value);
 
-	/// <remarks>
-	/// <code>
-	/// <see langword="while"/> (--<paramref name="count"/> &gt; -1)<br/>
-	/// <see langword="    yield return"/> @<paramref name="this"/>;
-	/// </code>
-	/// </remarks>
 	public static IEnumerable<T> Repeat<T>(this T @this, int count)
 		where T : unmanaged
 	{

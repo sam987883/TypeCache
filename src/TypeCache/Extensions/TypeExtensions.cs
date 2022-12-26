@@ -310,6 +310,9 @@ public static class TypeExtensions
 	public static bool IsOrImplements(this Type @this, Type type)
 		=> @this.Is(type) || @this.Implements(type);
 
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
+	/// </summary>
 	[DebuggerHidden]
 	public static bool IsEnumerableOf<T>(this Type @this)
 		=> @this.Is<IEnumerable<T>>() || @this.Implements<IEnumerable<T>>();
@@ -326,6 +329,7 @@ public static class TypeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable());</c>
 	/// </remarks>
+	[DebuggerHidden]
 	private static bool IsInvokable(this MethodBase @this)
 		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
 

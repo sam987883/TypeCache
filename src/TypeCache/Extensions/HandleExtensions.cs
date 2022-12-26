@@ -55,15 +55,6 @@ public static class HandleExtensions
 	public static FieldInfo ToFieldInfo(this RuntimeFieldHandle @this, RuntimeTypeHandle typeHandle)
 		=> FieldInfo.GetFieldFromHandle(@this, typeHandle);
 
-	/// <remarks>
-	/// <c>=&gt; @this.ToType() <see langword="switch"/><br/>
-	/// {<br/>
-	/// <see langword="    null"/> =&gt; <see langword="null"/>,<br/>
-	/// <see langword="    var"/> type <see langword="when"/> type.IsGenericType =&gt; type.GetGenericTypeDefinition(),<br/>
-	/// <see langword="    "/>_ =&gt; <see langword="null"/><br/>
-	/// };
-	/// </c>
-	/// </remarks>
 	public static Type? ToGenericType(this RuntimeTypeHandle @this)
 		=> @this.ToType() switch
 		{
