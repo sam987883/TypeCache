@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
 using TypeCache.Extensions;
@@ -16,7 +15,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolver
+public sealed class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : FieldResolver
 {
 	private readonly MethodMember _Method;
 	private readonly Func<PARENT, KEY> _GetParentKey;
@@ -38,7 +37,7 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : IFieldResolve
 		this._GetChildKey = getChildKey;
 	}
 
-	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.RequestServices.AssertNotNull();
 		context.Source.AssertNotNull();

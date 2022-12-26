@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
@@ -12,7 +11,7 @@ using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class MethodFieldResolver : IFieldResolver
+public sealed class MethodFieldResolver : FieldResolver
 {
 	private readonly MethodMember _Method;
 
@@ -21,7 +20,7 @@ public sealed class MethodFieldResolver : IFieldResolver
 		this._Method = method;
 	}
 
-	public ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.RequestServices.AssertNotNull();
 

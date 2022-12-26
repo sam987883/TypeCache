@@ -15,7 +15,7 @@ public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
 		var fields = TypeOf<T>.Properties
-			.Where(property => property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
+			.Where(property => property.Public && property.Getter is not null && property.Setter is not null && !property.GraphQLIgnore())
 			.Select(property => new FieldType()
 			{
 				Type = property.GraphQLType(true),

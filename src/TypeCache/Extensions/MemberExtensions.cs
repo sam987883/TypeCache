@@ -22,12 +22,12 @@ public static class MemberExtensions
 	/// </code>
 	/// </summary>
 	public static TypeMember? CollectionType(this TypeMember? @this)
-		=> @this?.SystemType switch
+		=> @this switch
 		{
 			null => null,
-			SystemType.Array => @this.ElementType,
-			SystemType.Dictionary or SystemType.SortedDictionary or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
-				=> typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypes.Select(_ => (Type)_).ToArray()).GetTypeMember(),
+			{ ObjectType: ObjectType.Array } => @this.ElementType,
+			{ ObjectType: ObjectType.Enumerable } or { ObjectType: ObjectType.List } => @this.GenericTypes.First(),
+			{ ObjectType: ObjectType.Dictionary } => typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypes.Select(_ => (Type)_).ToArray()).GetTypeMember(),
 			_ when @this.SystemType.IsCollection() => @this.GenericTypes.First(),
 			_ => null
 		};

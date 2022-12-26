@@ -10,7 +10,7 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class PropertyFieldResolver<T> : FieldResolver<object>
+public sealed class PropertyFieldResolver<T> : FieldResolver
 {
 	private readonly PropertyMember _PropertyMember;
 

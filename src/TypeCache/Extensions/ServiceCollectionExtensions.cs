@@ -72,6 +72,7 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddMediation(this IServiceCollection @this)
 		=> @this.AddSingleton<IMediator, Mediator>()
 			.AddSingleton(typeof(DefaultProcessIntermediary<>), typeof(DefaultProcessIntermediary<>))
+			.AddSingleton(typeof(DefaultRuleIntermediary<>), typeof(DefaultRuleIntermediary<>))
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
 	/// <summary>

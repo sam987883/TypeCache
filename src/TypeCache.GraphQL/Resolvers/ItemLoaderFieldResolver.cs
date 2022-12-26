@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
@@ -14,7 +13,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class ItemLoaderFieldResolver<T> : IFieldResolver
+public sealed class ItemLoaderFieldResolver<T> : FieldResolver
 {
 	private readonly MethodMember _Method;
 
@@ -28,7 +27,7 @@ public sealed class ItemLoaderFieldResolver<T> : IFieldResolver
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.RequestServices.AssertNotNull();
 		context.Source.AssertNotNull();

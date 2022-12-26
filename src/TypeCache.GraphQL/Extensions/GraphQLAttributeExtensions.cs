@@ -126,14 +126,14 @@ public static class GraphQLAttributeExtensions
 			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
 			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
+			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
 			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First() switch
 			{
 				{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
 				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
 			},
-			_ when @this.SystemType.IsCollection() => @this.CollectionType()!.GraphQLType(isInputType).ToListGraphType(),
+			{ ObjectType: ObjectType.Array } or { ObjectType: ObjectType.Enumerable } or { ObjectType: ObjectType.List } => @this.CollectionType()!.GraphQLType(isInputType).ToListGraphType(),
 			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().GraphQLType(isInputType),
-			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
 			{ Kind: Kind.Class } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
 			{ Kind: Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType().ToNonNullGraphType(),
 			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
@@ -147,20 +147,16 @@ public static class GraphQLAttributeExtensions
 			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
 			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
 			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
-			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First()! switch
-			{
-				{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
-				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
-			},
-			_ when @this.SystemType.IsCollection() => @this.CollectionType()!.NullableGraphQLType().ToListGraphType(),
-			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().NullableGraphQLType(),
 			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
+			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First()!.NullableGraphQLType(),
+			{ ObjectType: ObjectType.Array } or { ObjectType: ObjectType.Enumerable } or { ObjectType: ObjectType.List } => @this.CollectionType()!.NullableGraphQLType().ToListGraphType(),
+			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().NullableGraphQLType(),
 			{ Kind: Kind.Class or Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
 			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
 			_ => ((Type)@this).ToGraphQLObjectType()
 		};
 
-	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes = new Dictionary<SystemType, RuntimeTypeHandle>(22, EnumOf<SystemType>.Comparer)
+	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes = new Dictionary<SystemType, RuntimeTypeHandle>(26, EnumOf<SystemType>.Comparer)
 	{
 		{ SystemType.String, typeof(StringGraphType).TypeHandle },
 		{ SystemType.Uri, typeof(UriGraphType).TypeHandle },
@@ -187,6 +183,6 @@ public static class GraphQLAttributeExtensions
 		{ SystemType.TimeOnly, typeof(TimeOnlyGraphType).TypeHandle },
 		{ SystemType.TimeSpan, typeof(TimeSpanSecondsGraphType).TypeHandle },
 		{ SystemType.Guid, typeof(GuidGraphType).TypeHandle },
-		{ SystemType.Range, typeof(StringGraphType).TypeHandle },
+		{ SystemType.Range, typeof(StringGraphType).TypeHandle }
 	}.ToImmutableDictionary();
 }

@@ -9,9 +9,9 @@ using TypeCache.Mediation;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public abstract class FieldResolver : IFieldResolver
+public abstract class SourceStreamResolver : ISourceStreamResolver
 {
-	ValueTask<object?> IFieldResolver.ResolveAsync(IResolveFieldContext context)
+	ValueTask<IObservable<object?>> ISourceStreamResolver.ResolveAsync(IResolveFieldContext context)
 	{
 		try
 		{
@@ -23,9 +23,9 @@ public abstract class FieldResolver : IFieldResolver
 				exception.ValidationMessages.ForEach(message => context.Errors.Add(new ExecutionError(message)));
 			else
 				context.Errors.Add(new ExecutionError(error.Message, error));
-			return ValueTask.FromResult<object?>(null);
+			return ValueTask.FromResult<IObservable<object?>>(default!);
 		}
 	}
 
-	protected abstract ValueTask<object?> ResolveAsync(IResolveFieldContext context);
+	protected abstract ValueTask<IObservable<object?>> ResolveAsync(IResolveFieldContext context);
 }

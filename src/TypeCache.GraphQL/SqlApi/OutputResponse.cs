@@ -8,7 +8,7 @@ using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SqlApi;
 
-[GraphQLDescription("Response for a DELETE/INSERT/UPDATE SQL action.")]
+[GraphQLDescription("Response for a DELETE/INSERT/UPDATE SQL API mutation action.")]
 public class OutputResponse<T>
 {
 	public string? DataSource { get; set; }

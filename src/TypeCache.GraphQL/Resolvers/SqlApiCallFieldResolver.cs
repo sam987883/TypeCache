@@ -12,9 +12,9 @@ using TypeCache.Mediation;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class SqlApiCallFieldResolver<T> : FieldResolver<OutputResponse<T>>
+public sealed class SqlApiCallFieldResolver<T> : FieldResolver
 {
-	protected override async ValueTask<OutputResponse<T>?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
@@ -29,7 +29,7 @@ public sealed class SqlApiCallFieldResolver<T> : FieldResolver<OutputResponse<T>
 		};
 		var result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
 
-		return new()
+		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected > 0 ? sqlCommand.RecordsAffected : result.Count,
 			DataSource = objectSchema.DataSource.Name,

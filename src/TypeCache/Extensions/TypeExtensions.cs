@@ -242,6 +242,7 @@ public static class TypeExtensions
 	public static SystemType GetSystemType(this Type @this)
 		=> @this switch
 		{
+			{ IsArray: true } => SystemType.Array,
 			{ IsEnum: true } => SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
 			_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
 			_ => SystemType.None

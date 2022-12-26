@@ -19,20 +19,20 @@ using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class SqlApiUpdateFieldResolver : FieldResolver<OutputResponse<DataRow>>
+public sealed class SqlApiUpdateFieldResolver : FieldResolver
 {
-	protected override async ValueTask<OutputResponse<DataRow>?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
-		var output = selections
-			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<DataRow>.Output)}.{column}"))))
+		var output = objectSchema.Columns
+			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
+				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
+				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
 			})
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
@@ -68,7 +68,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver<OutputResponse<Dat
 			await mediator.ExecuteAsync(request, context.CancellationToken);
 		}
 
-		return new()
+		return new OutputResponse<DataRow>()
 		{
 			TotalCount = sqlCommand.RecordsAffected,
 			DataSource = objectSchema.DataSource.Name,
@@ -79,21 +79,21 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver<OutputResponse<Dat
 	}
 }
 
-public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver<OutputResponse<T>>
+public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 	where T : new()
 {
-	protected override async ValueTask<OutputResponse<T>?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
-		var output = selections
-			.Where(column => selections.Any(_ => _.Left(Invariant($"{nameof(OutputResponse<T>.Output)}.{column}"))))
+		var output = objectSchema.Columns
+			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column)}")
+				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
+				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
 			})
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");
@@ -110,15 +110,16 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver<OutputResponse<
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var result = (IList<T>)Array<T>.Empty;
+		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
 		{
 			var request = new SqlModelsRequest
 			{
 				Command = sqlCommand,
-				ModelType = typeof(T)
+				ModelType = typeof(T),
+				ListInitialCapacity = data.Length
 			};
-			result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
+			result = await mediator.MapAsync(request, context.CancellationToken);
 		}
 		else
 		{
@@ -126,11 +127,11 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver<OutputResponse<
 			await mediator.ExecuteAsync(request, context.CancellationToken);
 		}
 
-		return new()
+		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected,
 			DataSource = objectSchema.DataSource.Name,
-			Output = result,
+			Output = result.OfType<T>().ToArray(),
 			Sql = sql,
 			Table = objectSchema.Name
 		};

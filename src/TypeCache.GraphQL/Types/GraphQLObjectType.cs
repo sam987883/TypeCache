@@ -16,7 +16,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
 
 		var fields = TypeOf<T>.Properties
-			.Where(property => property.Getter is not null && !property.GraphQLIgnore())
+			.Where(property => property.Public && property.Getter is not null && !property.GraphQLIgnore())
 			.Select(property => property.ToFieldType<T>());
 		foreach (var field in fields)
 			this.AddField(field);

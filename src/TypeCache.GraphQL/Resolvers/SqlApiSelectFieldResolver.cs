@@ -18,9 +18,9 @@ using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<DataRow>>
+public sealed class SqlApiSelectFieldResolver : FieldResolver
 {
-	protected override async ValueTask<SelectResponse<DataRow>?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
@@ -31,7 +31,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 			Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 			From = objectSchema.Name,
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
+			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
 				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Items)}.{column.Name}"))
 					|| _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
@@ -60,10 +60,16 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 				totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			}
 
-			return new()
+			var rows = result.Select();
+			return new SelectResponse<DataRow>()
 			{
 				DataSource = objectSchema.DataSource.Name,
-				Items = result.Select(),
+				Edges = rows.Select((row, i) => new Edge<DataRow>
+				{
+					Cursor = (select.Offset + i + 1).ToString(),
+					Node = row
+				}).ToArray(),
+				Items = rows,
 				PageInfo = new PageInfo
 				{
 					StartCursor = (select.Offset + 1).ToString(),
@@ -83,7 +89,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
 			var countRequest = new SqlScalarRequest { Command = sqlCommand };
 			var totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
-			return new()
+			return new SelectResponse<DataRow>()
 			{
 				DataSource = objectSchema.DataSource.Name,
 				PageInfo = new PageInfo
@@ -99,7 +105,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 			};
 		}
 		else
-			return new()
+			return new SelectResponse<DataRow>()
 			{
 				DataSource = objectSchema.DataSource.Name,
 				Table = objectSchema.Name
@@ -107,10 +113,10 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver<SelectResponse<Dat
 	}
 }
 
-public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<T>>
+public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 	where T : new()
 {
-	protected override async ValueTask<SelectResponse<T>?> ResolveAsync(IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
@@ -121,7 +127,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 			Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 			From = objectSchema.Name,
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-			OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
+			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
 				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<T>.Items)}.{column.Name}"))
 					|| _.Right(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
@@ -139,8 +145,13 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<T>.Items)}."))
 			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
 		{
-			var request = new SqlDataTableRequest { Command = sqlCommand };
-			var result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
+			var request = new SqlModelsRequest
+			{
+				Command = sqlCommand,
+				ModelType = typeof(T),
+				ListInitialCapacity = (int)select.Fetch
+			};
+			var result = await mediator.MapAsync(request, context.CancellationToken);
 			var totalCount = result.Count;
 			if (select.Fetch == totalCount)
 			{
@@ -150,10 +161,16 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 				totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
 			}
 
-			return new()
+			var items = result.OfType<T>().ToArray();
+			return new SelectResponse<T>()
 			{
 				DataSource = objectSchema.DataSource.Name,
-				Items = result,
+				Edges = items.Select((row, i) => new Edge<T>
+				{
+					Cursor = (select.Offset + i + 1).ToString(),
+					Node = row
+				}).ToArray(),
+				Items = items,
 				PageInfo = new PageInfo
 				{
 					StartCursor = (select.Offset + 1).ToString(),
@@ -173,7 +190,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
 			var countRequest = new SqlScalarRequest { Command = sqlCommand };
 			var totalCount = (int?)await mediator.MapAsync(countRequest, context.CancellationToken) ?? 0;
-			return new()
+			return new SelectResponse<T>()
 			{
 				DataSource = objectSchema.DataSource.Name,
 				PageInfo = new PageInfo
@@ -189,7 +206,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver<SelectResponse<
 			};
 		}
 		else
-			return new()
+			return new SelectResponse<T>()
 			{
 				DataSource = objectSchema.DataSource.Name,
 				Table = objectSchema.Name
