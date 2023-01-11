@@ -6,7 +6,7 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>7.2.6</Version>
+    <Version>7.3.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
@@ -19,7 +19,7 @@ TypeCache.Reflection - High performance System.Reflection alternative.
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
     <Product>TypeCache</Product>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://www.nuget.org/packages/TypeCache/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sam987883/TypeCache/</RepositoryUrl>
@@ -28,6 +28,7 @@ TypeCache.Reflection - High performance System.Reflection alternative.
     <PackageIcon>TypeCash.png</PackageIcon>
     <PackageTags>Reflection;Linq;GraphQL;WebAPI;MVC</PackageTags>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -60,6 +61,13 @@ TypeCache.Reflection - High performance System.Reflection alternative.
     <Using Include="System.Runtime.CompilerServices.MethodImplOptions">
       <Static>True</Static>
     </Using>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

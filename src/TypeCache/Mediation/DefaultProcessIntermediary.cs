@@ -32,7 +32,7 @@ internal sealed class DefaultProcessIntermediary<REQUEST> : IProcessIntermediary
 		var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 		if (validationMessages.Any())
 		{
-			validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Process.GetType().Name} validation rule failure: {message}")));
+			validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Process.GetType().Name()} validation rule failure: {message}")));
 			throw new ValidationException(validationMessages);
 		}
 

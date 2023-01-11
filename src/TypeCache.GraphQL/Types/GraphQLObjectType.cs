@@ -1,28 +1,33 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq;
-using GraphQL;
 using GraphQL.Types;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 
+/// <summary>
+/// <inheritdoc cref="ObjectGraphType{TSourceType}"/>
+/// </summary>
 public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
+	where T : notnull
 {
 	public GraphQLObjectType()
 	{
-		this.Name = TypeOf<T>.Member.GraphQLName();
-		this.Description = TypeOf<T>.Member.GraphQLDescription();
-		this.DeprecationReason = TypeOf<T>.Member.GraphQLDeprecationReason();
+		this.Name = typeof(T).GraphQLName();
+		this.Description = typeof(T).GraphQLDescription() ?? Invariant($"{typeof(T).Assembly.GetName().Name}: {typeof(T).Namespace}.{typeof(T).Name()}");
+		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 
 		var fields = TypeOf<T>.Properties
-			.Where(property => property.Public && property.Getter is not null && !property.GraphQLIgnore())
-			.Select(property => property.ToFieldType<T>());
+			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
+			.Select(propertyInfo => propertyInfo.ToFieldType<T>());
 		foreach (var field in fields)
 			this.AddField(field);
 
-		var nonGenericInterfaces = TypeOf<T>.InterfaceTypes
-			.Where(type => type.ElementType is null && !type.GenericHandle.HasValue);
+		var nonGenericInterfaces = typeof(T).GetInterfaces()
+			.Where(_ => !_.HasElementType && !_.IsGenericType);
 		foreach (var nonGenericInterface in nonGenericInterfaces)
 			this.Interfaces.Add(nonGenericInterface);
 	}

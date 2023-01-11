@@ -1,33 +1,31 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
-using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class MethodFieldResolver : FieldResolver
 {
-	private readonly MethodMember _Method;
+	private readonly MethodInfo _MethodInfo;
 
-	public MethodFieldResolver(MethodMember method)
+	public MethodFieldResolver(MethodInfo methodInfo)
 	{
-		this._Method = method;
+		this._MethodInfo = methodInfo;
 	}
 
-	protected override ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override ValueTask<object?> ResolveAsync(global::GraphQL.IResolveFieldContext context)
 	{
 		context.RequestServices.AssertNotNull();
 
-		var controller = !this._Method.Static ? context.RequestServices.GetRequiredService(this._Method.Type) : null;
-		var sourceType = !this._Method.Static ? (Type)this._Method.Type : null;
-		var arguments = context.GetArguments(sourceType, this._Method).ToArray();
-		var result = this._Method.Invoke(controller, arguments);
+		var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
+		var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
+		var arguments = context.GetArguments(sourceType, this._MethodInfo).ToArray();
+		var result = this._MethodInfo.Invoke(controller, arguments);
 
 		return result switch
 		{

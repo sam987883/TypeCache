@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Immutable;
+using System.Text;
 
 namespace TypeCache.Reflection;
 
@@ -88,6 +89,10 @@ public enum ObjectType
 	/// </summary>
 	List,
 	/// <summary>
+	/// Is: <c><see cref="object"/></c>
+	/// </summary>
+	Object,
+	/// <summary>
 	/// Implements: <c><see cref="IObservable{T}"/></c>
 	/// </summary>
 	Observable,
@@ -99,6 +104,10 @@ public enum ObjectType
 	/// Implements: <c><see cref="System.Collections.Specialized.IOrderedDictionary"/></c>
 	/// </summary>
 	OrderedDictionary,
+	/// <summary>
+	/// Is any: <c></c>
+	/// </summary>
+	Primitive,
 	/// <summary>
 	/// Implements: <c><see cref="IReadOnlyCollection{T}"/></c>
 	/// </summary>
@@ -122,5 +131,13 @@ public enum ObjectType
 	/// <summary>
 	/// Implements: <c><see cref="System.IO.Stream"/></c>
 	/// </summary>
-	Stream
+	Stream,
+	/// <summary>
+	/// Is: <c><see cref="string"/></c>
+	/// </summary>
+	String,
+	/// <summary>
+	/// Is: <c><see cref="System.Text.StringBuilder"/></c>
+	/// </summary>
+	StringBuilder
 }

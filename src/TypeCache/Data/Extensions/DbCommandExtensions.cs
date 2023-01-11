@@ -87,7 +87,7 @@ public static class DbCommandExtensions
 	}
 
 	public static async Task<IList<T>> GetModelsAsync<T>(this DbCommand @this, int listInitialCapacity, CancellationToken token = default)
-		where T : new()
+		where T : notnull, new()
 	{
 		var rows = new List<T>(listInitialCapacity);
 		await using var reader = await @this.ExecuteReaderAsync(token);

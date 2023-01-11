@@ -1,11 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Reflection;
 using TypeCache.Extensions;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
 
 public static partial class MapExtensions
 {
+	private const BindingFlags FIELD_BINDING_FLAGS = FlattenHierarchy | Instance | Public | NonPublic;
+	private const BindingFlags PROPERTY_BINDING_FLAGS = FlattenHierarchy | Instance | Public;
+
 	/// <exception cref="ArgumentNullException"/>
 	private static void Map<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source)
 	{
@@ -33,15 +38,15 @@ public static partial class MapExtensions
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
-		var targetFieldMap = @this.GetTypeMember()!.Fields
-			.Where(field => field.SetMethod is not null)
-			.ToDictionary(field => field.Name, field => field, nameComparison.ToStringComparer());
+		var targetFieldMap = @this.GetType()!.GetFields(FIELD_BINDING_FLAGS)
+			.Where(fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)
+			.ToDictionary(fieldInfo => fieldInfo.Name(), fieldInfo => fieldInfo, nameComparison.ToStringComparer());
 		foreach (var pair in source)
 		{
-			if (targetFieldMap.TryGetValue(pair.Key, out var field)
-				&& ((pair.Value is null && field.FieldType.Nullable)
-					|| (pair.Value is not null && field.FieldType.Supports(pair.Value.GetTypeMember()!))))
-				field.SetValue!(@this, pair.Value);
+			if (targetFieldMap.TryGetValue(pair.Key, out var fieldInfo)
+				&& ((pair.Value is null && fieldInfo.FieldType.IsNullable())
+					|| (pair.Value is not null && pair.Value.GetType().IsAssignableTo(fieldInfo.FieldType))))
+				fieldInfo.SetFieldValue(@this, pair.Value);
 		}
 	}
 
@@ -54,18 +59,17 @@ public static partial class MapExtensions
 		(@this, source).AssertNotSame();
 
 		var comparer = nameComparison.ToStringComparer();
-		var targetFieldMap = @this.GetTypeMember()!.Fields
-			.Where(field => field.SetMethod is not null)
-			.ToDictionary(_ => _.Name, _ => _, comparer);
-		foreach (var sourceField in source.GetTypeMember()!.Fields
-			.Where(field => field.GetMethod is not null))
+		var targetFieldMap = @this.GetType().GetFields(FIELD_BINDING_FLAGS)
+			.Where(fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)
+			.ToDictionary(fieldInfo => fieldInfo.Name(), fieldInfo => fieldInfo, comparer);
+		foreach (var sourceFieldInfo in source.GetType().GetFields(FIELD_BINDING_FLAGS))
 		{
-			if (targetFieldMap.TryGetValue(sourceField.Name, out var targetField))
+			if (targetFieldMap.TryGetValue(sourceFieldInfo.Name(), out var targetFieldInfo))
 			{
-				var value = sourceField.GetValue!(source);
-				if ((value is null && targetField.FieldType.Nullable)
-					|| (value is not null && targetField.FieldType.Supports(sourceField.FieldType)))
-					targetField.SetValue!(@this, value);
+				var value = sourceFieldInfo.GetFieldValue(source);
+				if ((value is null && targetFieldInfo.FieldType.IsNullable())
+					|| (value is not null && sourceFieldInfo.FieldType.IsAssignableTo(targetFieldInfo.FieldType)))
+					targetFieldInfo.SetFieldValue(@this, value);
 			}
 		}
 	}
@@ -80,18 +84,18 @@ public static partial class MapExtensions
 		(@this, source).AssertNotSame();
 
 		var comparer = nameComparison.ToStringComparer();
-		var targetFieldMap = @this.GetTypeMember()!.Fields
-			.Where(field => field.SetMethod is not null)
-			.ToDictionary(_ => _.Name, _ => _, comparer);
-		foreach (var sourceField in source.GetTypeMember()!.Fields
-			.Where(field => field.GetMethod is not null && fields.Contains(field.Name, comparer)))
+		var targetFieldMap = @this.GetType().GetFields(FIELD_BINDING_FLAGS)
+			.Where(fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)
+			.ToDictionary(fieldInfo => fieldInfo.Name(), fieldInfo => fieldInfo, comparer);
+		foreach (var sourceFieldInfo in source.GetType().GetFields(FIELD_BINDING_FLAGS)
+			.Where(fieldInfo => fields.Contains(fieldInfo.Name(), comparer)))
 		{
-			if (targetFieldMap.TryGetValue(sourceField.Name, out var targetField))
+			if (targetFieldMap.TryGetValue(sourceFieldInfo.Name(), out var targetFieldInfo))
 			{
-				var value = sourceField.GetValue!(source);
-				if ((value is null && targetField.FieldType.Nullable)
-					|| (value is not null && targetField.FieldType.Supports(sourceField.FieldType)))
-					targetField.SetValue!(@this, value);
+				var value = sourceFieldInfo.GetFieldValue(source);
+				if ((value is null && targetFieldInfo.FieldType.IsNullable())
+					|| (value is not null && sourceFieldInfo.FieldType.IsAssignableTo(targetFieldInfo.FieldType)))
+					targetFieldInfo.SetFieldValue(@this, value);
 			}
 		}
 	}
@@ -104,15 +108,15 @@ public static partial class MapExtensions
 		source.AssertNotNull();
 
 		var comparer = nameComparison.ToStringComparer();
-		var targetPropertyMap = @this.GetTypeMember()!.Properties
-			.Where(property => property.Setter is not null)
-			.ToDictionary(property => property.Name, property => property, comparer);
+		var targetPropertyMap = @this.GetType().GetProperties(PROPERTY_BINDING_FLAGS)
+			.Where(propertyInfo => propertyInfo.CanWrite && propertyInfo.SetMethod!.IsPublic)
+			.ToDictionary(propertyInfo => propertyInfo.Name(), propertyInfo => propertyInfo, comparer);
 		foreach (var pair in source)
 		{
-			if (targetPropertyMap.TryGetValue(pair.Key, out var property)
-				&& ((pair.Value is null && property.PropertyType.Nullable)
-					|| (pair.Value is not null && property.PropertyType.Supports(pair.Value.GetTypeMember()!))))
-				property.SetValue(@this, pair.Value);
+			if (targetPropertyMap.TryGetValue(pair.Key, out var propertyInfo)
+				&& ((pair.Value is null && propertyInfo.PropertyType.IsNullable())
+					|| (pair.Value is not null && pair.Value.GetType().IsAssignableTo(propertyInfo.PropertyType))))
+				propertyInfo.SetPropertyValue(@this, pair.Value);
 		}
 	}
 
@@ -125,18 +129,18 @@ public static partial class MapExtensions
 		(@this, source).AssertNotSame();
 
 		var comparer = nameComparison.ToStringComparer();
-		var targetPropertyMap = @this.GetTypeMember()!.Properties
-			.Where(property => property.Setter is not null)
-			.ToDictionary(property => property.Name, property => property, comparer);
-		foreach (var sourceProperty in source.GetTypeMember()!.Properties
-			.Where(property => property.Getter is not null))
+		var targetPropertyMap = @this.GetType().GetProperties(PROPERTY_BINDING_FLAGS)
+			.Where(propertyInfo => propertyInfo.CanWrite && propertyInfo.SetMethod!.IsPublic)
+			.ToDictionary(propertyInfo => propertyInfo.Name(), propertyInfo => propertyInfo, comparer);
+		foreach (var sourcePropertyInfo in source.GetType().GetProperties(PROPERTY_BINDING_FLAGS)
+			.Where(propertyInfo => propertyInfo.CanRead))
 		{
-			if (targetPropertyMap.TryGetValue(sourceProperty.Name, out var targetProperty))
+			if (targetPropertyMap.TryGetValue(sourcePropertyInfo.Name(), out var targetPropertyInfo))
 			{
-				var value = sourceProperty.GetValue(source);
-				if ((value is null && targetProperty.PropertyType.Nullable)
-					|| (value is not null && targetProperty.PropertyType.Supports(sourceProperty.PropertyType)))
-					targetProperty.SetValue(@this, value);
+				var value = sourcePropertyInfo.GetPropertyValue(source);
+				if ((value is null && targetPropertyInfo.PropertyType.IsNullable())
+					|| (value is not null && sourcePropertyInfo.PropertyType.IsAssignableTo(targetPropertyInfo.PropertyType)))
+					targetPropertyInfo.SetPropertyValue(@this, value);
 			}
 		}
 	}
@@ -150,18 +154,18 @@ public static partial class MapExtensions
 		(@this, source).AssertNotSame();
 
 		var comparer = nameComparison.ToStringComparer();
-		var targetPropertyMap = @this.GetTypeMember()!.Properties
-			.Where(property => property.Setter is not null)
-			.ToDictionary(property => property.Name, property => property, comparer);
-		foreach (var sourceProperty in source.GetTypeMember()!.Properties
-			.Where(property => property.Getter is not null && properties.Contains(property.Name, comparer)))
+		var targetPropertyMap = @this.GetType().GetProperties(PROPERTY_BINDING_FLAGS)
+			.Where(propertyInfo => propertyInfo.CanWrite && propertyInfo.SetMethod!.IsPublic)
+			.ToDictionary(propertyInfo => propertyInfo.Name(), propertyInfo => propertyInfo, comparer);
+		foreach (var sourcePropertyInfo in source.GetType().GetProperties(PROPERTY_BINDING_FLAGS)
+			.Where(propertyInfo => propertyInfo.CanRead && properties.Contains(propertyInfo.Name(), comparer)))
 		{
-			if (targetPropertyMap.TryGetValue(sourceProperty.Name, out var targetProperty))
+			if (targetPropertyMap.TryGetValue(sourcePropertyInfo.Name(), out var targetPropertyInfo))
 			{
-				var value = sourceProperty.GetValue(source);
-				if ((value is null && targetProperty.PropertyType.Nullable)
-					|| (value is not null && targetProperty.PropertyType.Supports(sourceProperty.PropertyType)))
-					targetProperty.SetValue(@this, value);
+				var value = sourcePropertyInfo.GetPropertyValue(source);
+				if ((value is null && targetPropertyInfo.PropertyType.IsNullable())
+					|| (value is not null && sourcePropertyInfo.PropertyType.IsAssignableTo(targetPropertyInfo.PropertyType)))
+					targetPropertyInfo.SetPropertyValue(@this, value);
 			}
 		}
 	}

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
+using TypeCache.Extensions;
 using TypeCache.Web.Requirements;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
@@ -20,7 +21,7 @@ public static class AuthorizationOptionsExtensions
 		builder.AddRequirements(requirement);
 
 		var policy = builder.Build();
-		@this.AddPolicy(requirement.GetType().Name, policy);
+		@this.AddPolicy(requirement.GetType().Name(), policy);
 		return policy;
 	}
 

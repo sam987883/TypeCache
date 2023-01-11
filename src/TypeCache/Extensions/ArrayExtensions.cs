@@ -328,7 +328,6 @@ public static class ArrayExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAll(@<paramref name="this"/>, <paramref name="token"/>);</c>
 	/// </remarks>
-	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAll(this Task[] @this, CancellationToken token)
 		=> Task.WaitAll(@this, token);
@@ -336,7 +335,6 @@ public static class ArrayExtensions
 	/// <inheritdoc cref="Task.WaitAll(Task[], CancellationToken)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Task"/>.WaitAll(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
-	/// </remarks>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void WaitAll(this Task[] @this, TimeSpan timeout, CancellationToken token)

@@ -4,6 +4,7 @@ using System.Data;
 using System.Text;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Extensions;
+using static System.Reflection.BindingFlags;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data.Extensions;
@@ -27,7 +28,8 @@ public static class StringBuilderExtensions
 
 	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, T[] input, StringValues columns)
 	{ 
-		var values = input.Select(row => Invariant($"({columns.Select<string, string>(column => (TypeOf<T>.Properties.Where(_ => _.Name.Is(column)).First()?.GetValue(row!)).ToSQL()).ToCSV()})")).ToArray();
+		var values = input.Select(row => Invariant($"({columns.Select<string, string>(column =>
+			(typeof(T).GetProperties(Instance | Public).Where(_ => _.Name().Is(column)).First()?.GetPropertyValue(row!)).ToSQL()).ToCSV()})")).ToArray();
 		@this.Append("VALUES ");
 		values.ForEach(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
 		return @this.AppendLine();

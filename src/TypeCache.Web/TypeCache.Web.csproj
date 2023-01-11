@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.Web</RootNamespace>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>7.2.0</Version>
+    <Version>7.3.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Web Library</Title>
@@ -13,13 +13,14 @@
     <Copyright>Copyright (c) 2021 Samuel Abraham</Copyright>
     <Product>TypeCache</Product>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://www.nuget.org/packages/TypeCache.Web/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sam987883/TypeCache/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageIcon>TypeCash.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -27,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="7.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="7.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -41,6 +42,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TypeCache\TypeCache.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

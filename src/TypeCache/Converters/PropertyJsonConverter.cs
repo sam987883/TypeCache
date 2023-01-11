@@ -19,10 +19,9 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 				if (!reader.Read() || name.IsBlank())
 					continue;
 
-				var property = TypeOf<T>.Properties.FirstOrDefault(_ => _.Name.Is(name));
-				property?.SetValue(output, reader.TokenType switch
+				typeof(T).SetPropertyValue(name, output, reader.TokenType switch
 				{
-					JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
+					JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, typeof(T).GetProperty(name)!.PropertyType, options),
 					_ => reader.GetValue()
 				});
 			}
@@ -41,10 +40,10 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		}
 
 		writer.WriteStartObject();
-		foreach (var property in TypeOf<T>.Properties.Where(property => property.Getter?.Static is false))
+		foreach (var property in TypeOf<T>.Properties.Where(property => property.GetMethod?.IsStatic is false))
 		{
-			writer.WritePropertyName(property.Name);
-			var value = property.GetValue(input);
+			writer.WritePropertyName(property.Name());
+			var value = property.GetPropertyValue(input);
 			writer.WriteValue(value, options);
 		}
 		writer.WriteEndObject();

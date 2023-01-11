@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
@@ -45,7 +46,6 @@ public static class SchemaExtensions
 	/// <summary>
 	/// Adds all of the queries for all of the database schema data made available by the data provider.
 	/// </summary>
-	/// <param name="dataSourceName">The name of the <see cref="DataSource"/></param>
 	/// <exception cref="ArgumentNullException"/>
 	public static FieldType[] AddDatabaseSchemaQueries(this ISchema @this, IDataSource dataSource)
 	{
@@ -58,7 +58,6 @@ public static class SchemaExtensions
 	/// <summary>
 	/// Adds a query for the specified collection of database schema data made available by the data provider.
 	/// </summary>
-	/// <param name="dataSourceName">The name of the <see cref="DataSource"/></param>
 	/// <exception cref="ArgumentNullException"/>
 	public static FieldType AddDatabaseSchemaQuery(this ISchema @this, IDataSource dataSource, SchemaCollection collection)
 	{
@@ -109,7 +108,7 @@ public static class SchemaExtensions
 				Type = column.DataType switch
 				{
 					_ when column.DataType == typeof(object) => typeof(StringGraphType),
-					_ => column.DataType.GetTypeMember().NullableGraphQLType()
+					_ => column.DataType.NullableGraphQLType()
 				}
 			});
 			field.Metadata.Add(nameof(DataColumn.ColumnName), column.ColumnName);
@@ -177,7 +176,7 @@ public static class SchemaExtensions
 					Type = columnDataType switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.GetTypeMember().NullableGraphQLType()
+						_ => columnDataType.NullableGraphQLType()
 					}
 				});
 
@@ -202,7 +201,7 @@ public static class SchemaExtensions
 					Type = column.DataTypeHandle switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.GetTypeMember().NullableGraphQLType()
+						_ => columnDataType.NullableGraphQLType()
 					}
 				});
 				field.Metadata.Add(ColumnName, column.Name);
@@ -400,7 +399,7 @@ public static class SchemaExtensions
 	}
 
 	/// <summary>
-	/// Adds GraphQL endpoints based on a <typeparamref name="T"/> controller methods decorated with the following attributes:
+	/// Adds GraphQL endpoints based on a <typeparamref name="T"/> controller methodInfos decorated with the following attributes:
 	/// <list type="bullet">
 	/// <item><see cref="GraphQLQueryAttribute"/></item>
 	/// <item><see cref="GraphQLMutationAttribute"/></item>
@@ -409,35 +408,36 @@ public static class SchemaExtensions
 	/// <item><see cref="GraphQLSubqueryCollectionAttribute"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class containing the decorated methods that will be converted into GraphQL endpoints.</typeparam>
+	/// <typeparam name="T">The class containing the decorated methodInfos that will be converted into GraphQL endpoints.</typeparam>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	public static FieldType[] AddEndpoints<T>(this ISchema @this)
+		where T : notnull
 	{
 		var fieldTypes = new List<FieldType>();
 
-		var methods = TypeOf<T>.Methods.ToArray();
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLQueryAttribute>()).Select(@this.AddQuery));
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLMutationAttribute>()).Select(@this.AddMutation));
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryAttribute>()).Select(method =>
+		var methodInfos = TypeOf<T>.Methods;
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLQueryAttribute>()).Select(@this.AddQuery));
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLMutationAttribute>()).Select(@this.AddMutation));
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubqueryAttribute>()).Select(methodInfo =>
 		{
-			var parentType = method.Attributes.OfType<GraphQLSubqueryAttribute>().First().GetType().GenericTypeArguments[0];
-			var fieldType = method.ToFieldType();
-			fieldType.Resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetTypeMember().Create(method)!;
+			var parentType = methodInfo.GetCustomAttribute<GraphQLSubqueryAttribute>()!.GetType().GenericTypeArguments[0];
+			var fieldType = methodInfo.ToFieldType();
+			fieldType.Resolver = (IFieldResolver)typeof(ItemLoaderFieldResolver<>).MakeGenericType(parentType).GetType().Create(methodInfo)!;
 
 			@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 			return @this.Query.AddField(fieldType);
 		}));
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryBatchAttribute>()).Select(method =>
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubqueryBatchAttribute>()).Select(methodInfo =>
 		{
-			var attribute = method.Attributes.OfType<GraphQLSubqueryBatchAttribute>().First();
-			return @this.AddSubqueryBatch(method, attribute.ParentType, attribute.Key);
+			var attribute = methodInfo.GetCustomAttribute<GraphQLSubqueryBatchAttribute>()!;
+			return @this.AddSubqueryBatch(methodInfo, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubqueryCollectionAttribute>()).Select(method =>
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubqueryCollectionAttribute>()).Select(methodInfo =>
 		{
-			var attribute = method.Attributes.OfType<GraphQLSubqueryCollectionAttribute>().First();
-			return @this.AddSubqueryCollection(method, attribute.ParentType, attribute.Key);
+			var attribute = methodInfo.GetCustomAttribute<GraphQLSubqueryCollectionAttribute>()!;
+			return @this.AddSubqueryCollection(methodInfo, attribute.ParentType, attribute.Key);
 		}));
-		fieldTypes.AddRange(methods.Where(method => method.Attributes.Any<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
+		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
 
 		return fieldTypes.ToArray();
 	}
@@ -448,17 +448,17 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <remarks>The methodInfo's type must be registered in the <see cref="IServiceCollection"/>, unless the methodInfo is static.</remarks>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddMutation(this ISchema @this, MethodMember method)
+	public static FieldType AddMutation(this ISchema @this, MethodInfo methodInfo)
 	{
-		if (method.Return.Void)
+		if (methodInfo.HasNoReturnValue())
 			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = new MethodFieldResolver(method);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = new MethodFieldResolver(methodInfo);
 
 		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
 		return @this.Mutation.AddField(fieldType);
@@ -470,12 +470,13 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static method to create a mutation endpoint from.</typeparam>
-	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a mutation endpoint from.</typeparam>
+	/// <param name="method">The name of the methodInfo or set of methodInfos to use (each methodInfo must have a unique GraphName).</param>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddMutations<T>(this ISchema @this, string method)
-		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(@this.AddMutation).ToArray();
+		where T : notnull
+		=> TypeOf<T>.Methods.Where(_ => _.Name().Is(method)).Select(@this.AddMutation).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -483,12 +484,13 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
-	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a query endpoint from.</typeparam>
+	/// <param name="method">The name of the methodInfo or set of methodInfos to use (each methodInfo must have a unique GraphName).</param>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddQueries<T>(this ISchema @this, string method)
-		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(@this.AddQuery).ToArray();
+		where T : notnull
+		=> TypeOf<T>.Methods.Where(_ => _.Name().Is(method)).Select(@this.AddQuery).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -497,12 +499,12 @@ public static class SchemaExtensions
 	/// </list>
 	/// </summary>
 	/// <param name="method">Graph endpoint implementation.</param>
-	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+	/// <remarks>The methodInfo's type must be registered in the <see cref="IServiceCollection"/>, unless the methodInfo is static.</remarks>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddQuery(this ISchema @this, MethodMember method)
+	public static FieldType AddQuery(this ISchema @this, MethodInfo method)
 	{
-		if (method.Return.Void)
+		if (method.ReturnType.IsAny(typeof(void), typeof(Task), typeof(ValueTask)))
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
 		var fieldType = method.ToFieldType();
@@ -518,12 +520,13 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
+	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a query endpoint from.</typeparam>
 	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddSubscriptions<T>(this ISchema @this, string method)
-		=> TypeOf<T>.Methods.Where(_ => _.Name.Is(method)).Select(@this.AddSubscription).ToArray();
+		where T : notnull
+		=> TypeOf<T>.Methods.Where(methodInfo => methodInfo.Name().Is(method)).Select(@this.AddSubscription).ToArray();
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -531,20 +534,20 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <param name="method">Graph endpoint implementation that returns <see cref="IObservable{T}"/> or a ValueTask or Task of one.</param>
+	/// <param name="methodInfo">Graph endpoint implementation that returns <see cref="IObservable{T}"/> or a ValueTask or Task of one.</param>
 	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddSubscription(this ISchema @this, MethodMember method)
+	public static FieldType AddSubscription(this ISchema @this, MethodInfo methodInfo)
 	{
-		var returnsObservable = method.Return.Type.IsOrImplements(typeof(IObservable<>));
-		if (!returnsObservable && method.Return.Type.SystemType.IsAny(SystemType.ValueTask, SystemType.Task))
-			returnsObservable = method.Return.Type.GenericTypes.Single().ObjectType == ObjectType.Observable;
+		var returnsObservable = methodInfo.ReturnType.IsOrImplements(typeof(IObservable<>));
+		if (!returnsObservable && methodInfo.ReturnType.GetSystemType().IsAny(SystemType.ValueTask, SystemType.Task))
+			returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() == ObjectType.Observable;
 
 		returnsObservable.AssertTrue();
 
-		var fieldType = method.ToFieldType();
-		fieldType.StreamResolver = new MethodSourceStreamResolver(method);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.StreamResolver = new MethodSourceStreamResolver(methodInfo);
 
 		@this.Subscription ??= new ObjectGraphType { Name = nameof(ISchema.Subscription) };
 		return @this.Subscription.AddField(fieldType);
@@ -559,14 +562,14 @@ public static class SchemaExtensions
 	/// </list>
 	/// </summary>
 	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static FieldType AddSubquery<T>(this ISchema @this, MethodMember method)
+	public static FieldType AddSubquery<T>(this ISchema @this, MethodInfo methodInfo)
 	{
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = new ItemLoaderFieldResolver<T>(method);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = new ItemLoaderFieldResolver<T>(methodInfo);
 
 		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 		return @this.Query.AddField(fieldType);
@@ -585,17 +588,17 @@ public static class SchemaExtensions
 	/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
 	/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
 	/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <param name="getParentKey">Gets the key value from the parent instance.</param>
 	/// <param name="getChildKey">Gets the key value from the child instance.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(this ISchema @this, MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+	public static FieldType AddSubqueryBatch<PARENT, CHILD, KEY>(this ISchema @this, MethodInfo methodInfo, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		where PARENT : class
 	{
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(method, getParentKey, getChildKey);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = new BatchLoaderFieldResolver<PARENT, CHILD, KEY>(methodInfo, getParentKey, getChildKey);
 
 		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 		return @this.Query.AddField(fieldType);
@@ -611,29 +614,27 @@ public static class SchemaExtensions
 	/// </list>
 	/// </summary>
 	/// <remarks>The method's containing type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <param name="parentType">Gets the parent instance type.</param>
 	/// <param name="key">The <see cref="GraphQLKeyAttribute"/> used to match parent and child type properties.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static FieldType AddSubqueryBatch(this ISchema @this, MethodMember method, Type parentType, string key)
+	public static FieldType AddSubqueryBatch(this ISchema @this, MethodInfo methodInfo, Type parentType, string key)
 	{
-		if (!method.Return.Type.SystemType.IsCollection())
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+		methodInfo.ReturnType.GetSystemType().IsCollection().AssertTrue();
+		parentType.GetProperties().Where(propertyInfo => propertyInfo.CanRead && propertyInfo.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty).AssertTrue();
+		parentKeyProperty!.GetMethod.AssertNotNull();
 
-		if (!parentType.GetTypeMember().Properties.Where(property => property.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty)
-			|| parentKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+		var childType = methodInfo.ReturnType.HasElementType ? methodInfo.ReturnType.GetElementType()! : methodInfo.ReturnType.GenericTypeArguments.First();
+		childType.GetProperties().Where(propertyInfo => propertyInfo.CanRead && propertyInfo.GraphQLKey()?.Is(key) is true).TryFirst(out var childKeyProperty).AssertTrue();
+		childKeyProperty!.GetMethod.AssertNotNull();
 
-		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First();
-		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
-			|| childKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryBatch)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
-
-		var resolverType = typeof(BatchLoaderFieldResolver<,,>).MakeGenericType(parentType, (Type)childType, (Type)childKeyProperty.PropertyType);
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, parentKeyProperty.Getter.Method, childKeyProperty.Getter.Method)!;
+		var resolverType = typeof(BatchLoaderFieldResolver<,,>).MakeGenericType(parentType, childType, childKeyProperty!.PropertyType);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = (IFieldResolver)resolverType.Create(methodInfo,
+			parentKeyProperty.GetMethod.CreateDelegate(typeof(Func<,>).MakeGenericType(parentType, childKeyProperty!.PropertyType)),
+			childKeyProperty.GetMethod.CreateDelegate(typeof(Func<,>).MakeGenericType(childType, childKeyProperty!.PropertyType)))!;
 
 		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 		return @this.Query.AddField(fieldType);
@@ -652,17 +653,17 @@ public static class SchemaExtensions
 	/// <typeparam name="PARENT">The parent type to add the endpount to.</typeparam>
 	/// <typeparam name="CHILD">The mapped child type to be returned.</typeparam>
 	/// <typeparam name="KEY">The type of the key mapping between the parent and child types.</typeparam>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <param name="getParentKey">Gets the key value from the parent instance.</param>
 	/// <param name="getChildKey">Gets the key value from the child instance.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(this ISchema @this, MethodMember method, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
+	public static FieldType AddSubqueryCollection<PARENT, CHILD, KEY>(this ISchema @this, MethodInfo methodInfo, Func<PARENT, KEY> getParentKey, Func<CHILD, KEY> getChildKey)
 		where PARENT : class
 	{
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(method, getParentKey, getChildKey);
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = new CollectionLoaderFieldResolver<PARENT, CHILD, KEY>(methodInfo, getParentKey, getChildKey);
 
 		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 		return @this.Query.AddField(fieldType);
@@ -678,30 +679,28 @@ public static class SchemaExtensions
 	/// </list>
 	/// </summary>
 	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <param name="parentType">Gets the parent instance type.</param>
 	/// <param name="key">The <see cref="GraphQLKeyAttribute"/> used to match parent and child type properties.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static FieldType AddSubqueryCollection(this ISchema @this, MethodMember method, Type parentType, string key)
+	public static FieldType AddSubqueryCollection(this ISchema @this, MethodInfo methodInfo, Type parentType, string key)
 	{
-		if (!method.Return.Type.SystemType.IsCollection())
-			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: [{nameof(method)}] must return a collection instead of [{method.Return.Type.Name}].");
+		methodInfo.ReturnType.GetSystemType().IsCollection().AssertTrue();
+		parentType.GetProperties().Where(propertyInfo => propertyInfo.CanRead && propertyInfo.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty).AssertTrue();
+		parentKeyProperty!.GetMethod.AssertNotNull();
 
-		if (!parentType.GetTypeMember().Properties.Where(property => property.GraphQLKey()?.Is(key) is true).TryFirst(out var parentKeyProperty)
-			|| parentKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The parent model [{parentType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+		var childType = methodInfo.ReturnType.HasElementType ? methodInfo.ReturnType.GetElementType()! : methodInfo.ReturnType.GenericTypeArguments.First();
+		childType.GetProperties().Where(property => property.CanRead && property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty).AssertTrue();
+		childKeyProperty!.GetMethod.AssertNotNull();
 
-		var childType = method.Return.Type.ElementType ?? method.Return.Type.GenericTypes.First();
-		if (!childType.Properties.Where(property => property.GraphQLKey().Is(key)).TryFirst(out var childKeyProperty)
-			|| childKeyProperty!.Getter is null)
-			throw new ArgumentException($"{nameof(AddSubqueryCollection)}: The child model [{childType.Name}] requires a readable property with [{nameof(GraphQLKeyAttribute)}] having a {nameof(key)} of \"{key}\".");
+		var resolverType = typeof(CollectionLoaderFieldResolver<,,>).MakeGenericType(parentType, childType, childKeyProperty.PropertyType);
 
-		var resolverType = typeof(CollectionLoaderFieldResolver<,,>).MakeGenericType(parentType, (Type)childType, (Type)childKeyProperty.PropertyType);
-
-		var fieldType = method.ToFieldType();
-		fieldType.Resolver = (IFieldResolver)resolverType.GetTypeMember().Create(method, parentKeyProperty.Getter.Method, childKeyProperty.Getter.Method)!;
+		var fieldType = methodInfo.ToFieldType();
+		fieldType.Resolver = (IFieldResolver)resolverType.GetType().Create(methodInfo,
+			parentKeyProperty.GetMethod.CreateDelegate(typeof(Func<,>).MakeGenericType(parentType, childKeyProperty!.PropertyType)),
+			childKeyProperty.GetMethod.CreateDelegate(typeof(Func<,>).MakeGenericType(childType, childKeyProperty!.PropertyType)))!;
 
 		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
 		return @this.Query.AddField(fieldType);
@@ -720,14 +719,14 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void AddSqlApiEndpoints<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
-		var action = TypeOf<T>.Attributes.FirstOrDefault<SqlApiAttribute>()?.Actions ?? SqlApiAction.CRUD;
+		var action = typeof(T).GetCustomAttribute<SqlApiAttribute>()?.Actions ?? SqlApiAction.CRUD;
 
 		if (action.HasFlag(SqlApiAction.DeleteData))
 			@this.AddSqlApiDeleteDataEndpoint<T>(dataSource, table, graphQlName is not null ? Invariant($"delete{graphQlName}") : null);
@@ -757,12 +756,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiCallProcedureEndpoint<T>(this ISchema @this, IDataSource dataSource, string procedure, bool mutation, string? graphQlName = null, IGraphType? graphQlType = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		procedure.AssertNotBlank();
@@ -784,7 +783,7 @@ public static class SchemaExtensions
 		if (graphQlType is not null)
 			fieldType.ResolvedType = graphQlType;
 		else
-			fieldType.Type = TypeOf<T>.Member.GraphQLType(false).ToNonNullGraphType();
+			fieldType.Type = typeof(T).GraphQLType(false).ToNonNullGraphType();
 
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -808,12 +807,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: delete{Table}Data</term> Deletes records passed in based on primary key value(s).</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiDeleteDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -844,12 +843,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiDeleteEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -881,12 +880,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiInsertDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -918,12 +917,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiInsertEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -932,9 +931,9 @@ public static class SchemaExtensions
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
-			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
+			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
 		};
-		foreach (var property in TypeOf<T>.Member.Properties.Where(property => !property.GraphQLIgnore()))
+		foreach (var property in TypeOf<T>.Properties.Where(property => !property.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();
@@ -976,12 +975,12 @@ public static class SchemaExtensions
 	/// <item><term>Query: select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiSelectEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -990,9 +989,9 @@ public static class SchemaExtensions
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
-			Name = Invariant($"{TypeOf<T>.Member.GraphQLName()}OrderBy"),
+			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
 		};
-		foreach (var property in TypeOf<T>.Member.Properties.Where(property => !property.GraphQLIgnore()))
+		foreach (var property in TypeOf<T>.Properties.Where(property => !property.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();
@@ -1033,12 +1032,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiUpdateDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
@@ -1069,12 +1068,12 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}</term> Updates records based on a WHERE clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.RegisterSqlApiRules"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static FieldType AddSqlApiUpdateEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
-		where T : new()
+		where T : notnull, new()
 	{
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();

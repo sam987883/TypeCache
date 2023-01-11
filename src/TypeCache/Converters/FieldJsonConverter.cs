@@ -19,11 +19,11 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 				var name = reader.GetString()!;
 				if (reader.Read())
 				{
-					var field = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name.Is(name));
-					if (field is not null && !field.Static && field.SetMethod is not null)
-						field.SetValue!(output!, reader.TokenType switch
+					var fieldInfo = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name().Is(name));
+					if (fieldInfo is not null && !fieldInfo.IsInitOnly)
+						fieldInfo.SetFieldValue(output!, reader.TokenType switch
 						{
-							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, field.FieldType, options),
+							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, fieldInfo.FieldType, options),
 							_ => reader.GetValue()
 						});
 				}
@@ -40,10 +40,10 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 		if (input is not null)
 		{
 			writer.WriteStartObject();
-			foreach (var field in TypeOf<T>.Fields.Where(field => !field.Static && field!.GetMethod is not null))
+			foreach (var field in TypeOf<T>.Fields)
 			{
-				writer.WritePropertyName(field!.Name);
-				var value = field.GetValue!(input);
+				writer.WritePropertyName(field!.Name());
+				var value = field.GetFieldValue(input);
 				writer.WriteValue(value, options);
 			}
 			writer.WriteEndObject();

@@ -8,12 +8,12 @@ namespace TypeCache.Extensions;
 public static class EnumExtensions
 {
 	/// <summary>
-	/// <c>=&gt; <see cref="EnumOf{T}.Member"/>[@<paramref name="this"/>]?.Attributes ?? Array&lt;Attribute&gt;.Empty;</c>
+	/// <c>=&gt; <see cref="EnumOf{T}"/>.GetToken(@<paramref name="this"/>)?.Attributes ?? Array&lt;Attribute&gt;.Empty;</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyList<Attribute> Attributes<T>(this T @this)
+	public static IReadOnlyCollection<Attribute> Attributes<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Member[@this]?.Attributes ?? Array<Attribute>.Empty;
+		=> EnumOf<T>.GetToken(@this)?.Attributes ?? Array<Attribute>.Empty;
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="flags"/>?.Any(flag =&gt; @<paramref name="this"/>.HasFlag(flag)) ?? <see langword="false"/>;</c>

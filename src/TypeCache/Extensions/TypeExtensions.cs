@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -7,167 +8,50 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Numerics;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TypeCache.Attributes;
+using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
+using static System.StringComparison;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
 
 public static class TypeExtensions
 {
-	private const char GENERIC_TICKMARK = '`';
+	private const BindingFlags BINDING_FLAGS = FlattenHierarchy | Instance | NonPublic | Public | Static;
+	private const BindingFlags INSTANCE_BINDING_FLAGS = FlattenHierarchy | Instance | NonPublic | Public;
+	private const BindingFlags STATIC_BINDING_FLAGS = FlattenHierarchy | NonPublic | Public | Static;
 
-	private static readonly IReadOnlyDictionary<RuntimeTypeHandle, SystemType> SystemTypes;
-
-	static TypeExtensions()
-	{
-		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(141)
+	/// <exception cref="MissingMethodException"></exception>
+	public static object? Create(this Type @this, params object?[]? parameters)
+		=> @this.FindConstructor(parameters) switch
 		{
-			{ typeof(Action).TypeHandle, SystemType.Action },
-			{ typeof(Action<>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(bool).TypeHandle, SystemType.Boolean },
-			{ typeof(byte).TypeHandle, SystemType.Byte },
-			{ typeof(char).TypeHandle, SystemType.Char },
-			{ typeof(DateOnly).TypeHandle, SystemType.DateOnly },
-			{ typeof(DateTime).TypeHandle, SystemType.DateTime },
-			{ typeof(DateTimeOffset).TypeHandle, SystemType.DateTimeOffset },
-			{ typeof(DBNull).TypeHandle, SystemType.DBNull },
-			{ typeof(decimal).TypeHandle, SystemType.Decimal },
-			{ typeof(double).TypeHandle, SystemType.Double },
-			{ typeof(Func<>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Guid).TypeHandle, SystemType.Guid },
-			{ typeof(Half).TypeHandle, SystemType.Half },
-			{ typeof(Index).TypeHandle, SystemType.Index },
-			{ typeof(Int128).TypeHandle, SystemType.Int128 },
-			{ typeof(short).TypeHandle, SystemType.Int16 },
-			{ typeof(int).TypeHandle, SystemType.Int32 },
-			{ typeof(long).TypeHandle, SystemType.Int64 },
-			{ typeof(IntPtr).TypeHandle, SystemType.IntPtr },
-			{ typeof(Lazy<>).TypeHandle, SystemType.Lazy },
-			{ typeof(Lazy<,>).TypeHandle, SystemType.Lazy },
-			{ typeof(Memory<>).TypeHandle, SystemType.Memory },
-			{ typeof(Nullable<>).TypeHandle, SystemType.Nullable },
-			{ typeof(object).TypeHandle, SystemType.Object },
-			{ typeof(Range).TypeHandle, SystemType.Range },
-			{ typeof(ReadOnlyMemory<>).TypeHandle, SystemType.ReadOnlyMemory },
-			{ typeof(ReadOnlySpan<>).TypeHandle, SystemType.ReadOnlySpan },
-			{ typeof(sbyte).TypeHandle, SystemType.SByte },
-			{ typeof(float).TypeHandle, SystemType.Single },
-			{ typeof(Span<>).TypeHandle, SystemType.Span },
-			{ typeof(string).TypeHandle, SystemType.String },
-			{ typeof(TimeOnly).TypeHandle, SystemType.TimeOnly },
-			{ typeof(TimeSpan).TypeHandle, SystemType.TimeSpan },
-			{ typeof(Tuple).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Type).TypeHandle, SystemType.Type },
-			{ typeof(UInt128).TypeHandle, SystemType.UInt128 },
-			{ typeof(ushort).TypeHandle, SystemType.UInt16 },
-			{ typeof(uint).TypeHandle, SystemType.UInt32 },
-			{ typeof(ulong).TypeHandle, SystemType.UInt64 },
-			{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr },
-			{ typeof(Uri).TypeHandle, SystemType.Uri },
-			{ typeof(ValueTuple).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(void).TypeHandle, SystemType.Void },
-			{ typeof(WeakReference).TypeHandle, SystemType.WeakReference },
-			{ typeof(WeakReference<>).TypeHandle, SystemType.WeakReference },
-			{ typeof(ArrayList).TypeHandle, SystemType.ArrayList },
-			{ typeof(BitArray).TypeHandle, SystemType.BitArray },
-			{ typeof(BlockingCollection<>).TypeHandle, SystemType.BlockingCollection },
-			{ typeof(Collection<>).TypeHandle, SystemType.Collection },
-			{ typeof(ConcurrentBag<>).TypeHandle, SystemType.ConcurrentBag },
-			{ typeof(ConcurrentDictionary<,>).TypeHandle, SystemType.ConcurrentDictionary },
-			{ typeof(ConcurrentQueue<>).TypeHandle, SystemType.ConcurrentQueue },
-			{ typeof(Dictionary<,>).TypeHandle, SystemType.Dictionary },
-			{ typeof(HashSet<>).TypeHandle, SystemType.HashSet },
-			{ typeof(Hashtable).TypeHandle, SystemType.Hashtable },
-			{ typeof(HybridDictionary).TypeHandle, SystemType.HybridDictionary },
-			{ typeof(ImmutableArray<>).TypeHandle, SystemType.ImmutableArray },
-			{ typeof(ImmutableDictionary<,>).TypeHandle, SystemType.ImmutableDictionary },
-			{ typeof(ImmutableHashSet<>).TypeHandle, SystemType.ImmutableHashSet },
-			{ typeof(ImmutableList<>).TypeHandle, SystemType.ImmutableList },
-			{ typeof(ImmutableQueue<>).TypeHandle, SystemType.ImmutableQueue },
-			{ typeof(ImmutableSortedDictionary<,>).TypeHandle, SystemType.ImmutableSortedDictionary },
-			{ typeof(ImmutableSortedSet<>).TypeHandle, SystemType.ImmutableSortedSet },
-			{ typeof(ImmutableStack<>).TypeHandle, SystemType.ImmutableStack },
-			{ typeof(KeyedCollection<,>).TypeHandle, SystemType.KeyedCollection },
-			{ typeof(LinkedList<>).TypeHandle, SystemType.LinkedList },
-			{ typeof(List<>).TypeHandle, SystemType.List },
-			{ typeof(ListDictionary).TypeHandle, SystemType.ListDictionary },
-			{ typeof(NameObjectCollectionBase).TypeHandle, SystemType.NameObjectCollectionBase },
-			{ typeof(NameValueCollection).TypeHandle, SystemType.NameValueCollection },
-			{ typeof(ObservableCollection<>).TypeHandle, SystemType.ObservableCollection },
-			{ typeof(OrderedDictionary).TypeHandle, SystemType.OrderedDictionary },
-			{ typeof(PriorityQueue<,>).TypeHandle, SystemType.PriorityQueue },
-			{ typeof(Queue<>).TypeHandle, SystemType.Queue },
-			{ typeof(ReadOnlyCollection<>).TypeHandle, SystemType.ReadOnlyCollection },
-			{ typeof(ReadOnlyDictionary<,>).TypeHandle, SystemType.ReadOnlyDictionary },
-			{ typeof(ReadOnlyObservableCollection<>).TypeHandle, SystemType.ReadOnlyObservableCollection },
-			{ typeof(SortedDictionary<,>).TypeHandle, SystemType.SortedDictionary },
-			{ typeof(SortedList<,>).TypeHandle, SystemType.SortedList },
-			{ typeof(SortedSet<>).TypeHandle, SystemType.SortedSet },
-			{ typeof(Stack<>).TypeHandle, SystemType.Stack },
-			{ typeof(StringCollection).TypeHandle, SystemType.StringCollection },
-			{ typeof(StringDictionary).TypeHandle, SystemType.StringDictionary },
-			{ typeof(BigInteger).TypeHandle, SystemType.BigInteger },
-			{ typeof(JsonDocument).TypeHandle, SystemType.JsonDocument },
-			{ typeof(JsonElement).TypeHandle, SystemType.JsonElement },
-			{ typeof(JsonArray).TypeHandle, SystemType.JsonArray },
-			{ typeof(JsonObject).TypeHandle, SystemType.JsonObject },
-			{ typeof(JsonValue).TypeHandle, SystemType.JsonValue },
-			{ typeof(Task).TypeHandle, SystemType.Task },
-			{ typeof(Task<>).TypeHandle, SystemType.Task },
-			{ typeof(ValueTask).TypeHandle, SystemType.ValueTask },
-			{ typeof(ValueTask<>).TypeHandle, SystemType.ValueTask },
-		}.ToImmutableDictionary();
-	}
+			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorInvokes[@this.TypeHandle].Invoke(),
+			null => throw new MissingMethodException(@this.Name(), @this.Name),
+			var constructorInfo => constructorInfo.InvokeMethod(parameters)
+		};
+
+	public static ConstructorInfo? FindConstructor(this Type @this, params object?[]? arguments)
+		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
+			.FirstOrDefault(constructor => constructor.GetParameters().IsCallableWith(arguments));
+
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] argumentTypes, bool nameIgnoreCase = false)
+		=> @this.GetMethod(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS, argumentTypes);
+
+	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
+		=> @this.GetMethods(INSTANCE_BINDING_FLAGS).FirstOrDefault(method =>
+			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.GetParameters().IsCallableWith(arguments));
+
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
+		=> @this.GetMethods(STATIC_BINDING_FLAGS).FirstOrDefault(method =>
+			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.GetParameters().IsCallableWith(arguments));
+
+	public static object? GetFieldValue(this Type @this, string name, object instance, bool nameIgnoreCase = false)
+		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+			.GetValue(instance);
 
 	public static Kind GetKind(this Type @this)
 		=> @this switch
@@ -176,107 +60,132 @@ public static class TypeExtensions
 			{ IsInterface: true } => Kind.Interface,
 			{ IsClass: true } => Kind.Class,
 			{ IsValueType: true } => Kind.Struct,
-			_ => throw new UnreachableException(Invariant($"{nameof(Type)} [{@this?.Name ?? "null"}] is not supported."))
+			_ => throw new UnreachableException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name() ?? "null"}] is not supported."))
 		};
 
-	internal static ObjectType GetObjectType(this Type @this)
-		=> @this switch
-		{
-			{ IsArray: true } => ObjectType.Array,
-			{ IsEnum: true } => ObjectType.Enum,
-			_ when @this.Implements<IAsyncResult>() => ObjectType.AsyncResult,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(Attribute)) => ObjectType.Attribute,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(Delegate)) => ObjectType.Delegate,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(Exception)) => ObjectType.Exception,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(JsonNode)) => ObjectType.JsonNode,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(OrderedDictionary)) => ObjectType.OrderedDictionary,
-			{ IsClass: true } when @this.IsAssignableTo(typeof(Stream)) => ObjectType.Stream,
-			{ IsGenericType: true } or { IsGenericTypeDefinition: true } => @this.ToGenericType()! switch
-			{
-				var genericType when genericType.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableSet<>)) => ObjectType.ImmutableSet,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableList<>)) => ObjectType.ImmutableList,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableQueue<>)) => ObjectType.ImmutableQueue,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableStack<>)) => ObjectType.ImmutableStack,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyDictionary<,>)) => ObjectType.ReadOnlyDictionary,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlySet<>)) => ObjectType.ReadOnlySet,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyList<>)) => ObjectType.ReadOnlyList,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyCollection<>)) => ObjectType.ReadOnlyCollection,
-				var genericType when genericType.IsOrImplements(typeof(IDictionary<,>)) => ObjectType.Dictionary,
-				var genericType when genericType.IsOrImplements(typeof(ISet<>)) => ObjectType.Set,
-				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
-				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
-				var genericType when genericType.IsOrImplements(typeof(IList<>)) => ObjectType.List,
-				var genericType when genericType.IsOrImplements(typeof(ICollection<>)) => ObjectType.Collection,
-				var genericType when genericType.IsOrImplements(typeof(IEnumerable<>)) => ObjectType.Enumerable,
-				var genericType when genericType.IsOrImplements(typeof(IEnumerator<>)) => ObjectType.Enumerator,
-				var genericType when genericType.IsOrImplements(typeof(IObservable<>)) => ObjectType.Observable,
-				var genericType when genericType.IsOrImplements(typeof(IObserver<>)) => ObjectType.Observer,
-				_ => ObjectType.Unknown
-			},
-			_ => ObjectType.Unknown
-		};
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
-	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool IsAny(this Type @this, params Type[] types)
-		=> types.Any(@this.Is);
+	public static ObjectType GetObjectType(this Type @this)
+		=> TypeStore.ObjectTypes[@this.TypeHandle];
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetSystemType().IsEnumUnderlyingType();</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool IsEnumUnderlyingType(this Type @this)
-		=> @this.GetSystemType().IsEnumUnderlyingType();
+	public static object? GetPropertyValue(this Type @this, string name, object instance, bool nameIgnoreCase = false, params object?[]? index)
+		=> @this.GetProperty(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+			.GetPropertyValue(instance, index);
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name ?? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`'));</c>
-	/// </summary>
-	[DebuggerHidden]
-	public static string Name(this MemberInfo @this)
-		=> @this.GetCustomAttribute<NameAttribute>()?.Name ?? @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
+	public static object? GetStaticFieldValue(this Type @this, string name, bool nameIgnoreCase = false)
+		=> @this.GetField(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+			.GetFieldValue(null);
 
-	[DebuggerHidden]
+	public static object? GetStaticPropertyValue(this Type @this, string name, bool nameIgnoreCase = false, params object?[]? index)
+		=> @this.GetProperty(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+			.GetPropertyValue(null, index);
+
 	public static SystemType GetSystemType(this Type @this)
 		=> @this switch
 		{
 			{ IsArray: true } => SystemType.Array,
-			{ IsEnum: true } => SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
-			_ when SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
+			{ IsEnum: true } => TypeStore.SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
+			_ when TypeStore.SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
 			_ => SystemType.None
 		};
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.TypeHandle.GetTypeMember();<br/></c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TypeMember GetTypeMember(this Type @this)
-		=> @this.TypeHandle.GetTypeMember();
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Implements(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Implements<T>(this Type @this)
-		=> @this.Implements(typeof(T));
-
 	public static bool Implements(this Type @this, Type type)
 	{
-		if (type.IsInterface)
-			return @this.GetInterfaces().Any(type.Is);
-
-		var baseType = @this.BaseType;
-		while (baseType is not null)
+		return type switch
 		{
-			if (baseType.Is(type))
-				return true;
-			baseType = baseType.BaseType;
-		}
+			{ IsGenericTypeDefinition: false } => @this.IsAssignableTo(type),
+			{ IsInterface: true } => @this.GetInterfaces().Any(_ => type.Is(_.ToGenericType())),
+			_ => isDescendantOf(@this.BaseType, type)
+		};
 
-		return false;
+		static bool isDescendantOf(Type? baseType, Type type)
+		{
+			while (baseType is not null)
+			{
+				if (baseType.Is(type))
+					return true;
+				baseType = baseType.BaseType;
+			}
+			return false;
+		}
 	}
+
+	public static object? InvokeMethod(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod(genericTypes)
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4, T5>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
+			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+
+	public static object? InvokeStaticMethod(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod(this Type @this, string name, Type[] genericTypes, params object?[]? arguments)
+		=> @this.FindMethod(name, arguments)?
+			.MakeGenericMethod(genericTypes)
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1>()
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1, T2>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2>()
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1, T2, T3>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3>()
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1, T2, T3, T4>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4>()
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4, T5>()
+			.InvokeMethod(null, arguments);
+
+	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, params object?[]? arguments)
+		=> @this.FindStaticMethod(name, arguments)?
+			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
+			.InvokeMethod(null, arguments);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
@@ -290,18 +199,117 @@ public static class TypeExtensions
 		=> @this.IsGenericTypeDefinition || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || <see langword="typeof"/>(Nullable<>) == @<paramref name="this"/>.ToGenericType();</c>
+	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
-	[DebuggerHidden]
-	public static bool IsNullable(this Type @this, Type? type)
-		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericType();
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny(this Type @this, params Type[] types)
+		=> types.Any(@this.Is);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<typeparamref name="T"/>&gt;() || @<paramref name="this"/>.Implements&lt;<typeparamref name="T"/>&gt;();</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1>(this Type @this)
+		=> @this.IsAny(typeof(T1));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1, T2>(this Type @this)
+		=> @this.IsAny(typeof(T1), typeof(T2));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T3"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1, T2, T3>(this Type @this)
+		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T4"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1, T2, T3, T4>(this Type @this)
+		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T4"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T5"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1, T2, T3, T4, T5>(this Type @this)
+		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T4"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T5"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T6"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAny<T1, T2, T3, T4, T5, T6>(this Type @this)
+		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
+
+	/// <inheritdoc cref="Type.IsAssignableFrom(Type?)"/>
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAssignableFrom(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAssignableFrom<T>(this Type @this)
+		=> @this.IsAssignableFrom(typeof(T));
+
+	/// <inheritdoc cref="Type.IsAssignableTo(Type?)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAssignableTo<T>(this Type @this)
+		=> @this.IsAssignableTo(typeof(T));
+
+	[DebuggerHidden]
+	public static bool IsConvertible(this Type @this)
+		=> @this.IsAssignableTo<IConvertible>()
+			|| (@this.ToGenericType() == typeof(Nullable<>) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsEnumerableOf<T>(this Type @this)
+		=> @this.IsAssignableTo<IEnumerable<T>>();
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.GetSystemType().IsEnumUnderlyingType();</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsEnumUnderlyingType(this Type @this)
+		=> @this.GetSystemType().IsEnumUnderlyingType();
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
+	/// </remarks>
+	[DebuggerHidden]
+	internal static bool IsInvokable(this Type @this)
+		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || <see langword="typeof"/>(Nullable&lt;&gt;) == @<paramref name="this"/>.ToGenericType();</c>
 	/// </summary>
 	[DebuggerHidden]
-	public static bool IsOrImplements<T>(this Type @this)
-		=> @this.Is<T>() || @this.Implements<T>();
+	public static bool IsNullable(this Type @this)
+		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericType();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is(<paramref name="type"/>) || @<paramref name="this"/>.Implements(<paramref name="type"/>);</c>
@@ -310,12 +318,25 @@ public static class TypeExtensions
 	public static bool IsOrImplements(this Type @this, Type type)
 		=> @this.Is(type) || @this.Implements(type);
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Is&lt;<see cref="IEnumerable{T}"/>&gt;() || @<paramref name="this"/>.Implements&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
-	/// </summary>
 	[DebuggerHidden]
-	public static bool IsEnumerableOf<T>(this Type @this)
-		=> @this.Is<IEnumerable<T>>() || @this.Implements<IEnumerable<T>>();
+	public static void SetFieldValue(this Type @this, string name, object instance, object? value, bool nameIgnoreCase = false)
+		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+			.SetFieldValue(instance, value);
+
+	[DebuggerHidden]
+	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, bool nameIgnoreCase = false, params object?[]? index)
+		=> @this.GetProperty(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+			.SetPropertyValue(instance, value, index);
+
+	[DebuggerHidden]
+	public static void SetStaticPropertyValue(this Type @this, string name, object? value, bool nameIgnoreCase = false, params object?[]? index)
+		=> @this.GetProperty(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+			.SetPropertyValue(null, value, index);
+
+	[DebuggerHidden]
+	public static void SetStaticFieldValue(this Type @this, string name, object? value, bool nameIgnoreCase = false)
+		=> @this.GetField(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+			.SetFieldValue(null, value);
 
 	[DebuggerHidden]
 	public static Type? ToGenericType(this Type? @this)
@@ -326,31 +347,7 @@ public static class TypeExtensions
 			_ => null
 		};
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetParameters().All(_ =&gt; !_.IsOut &amp;&amp; _.ParameterType.IsInvokable());</c>
-	/// </remarks>
 	[DebuggerHidden]
-	private static bool IsInvokable(this MethodBase @this)
-		=> @this.GetParameters().All(_ => !_.IsOut && _.ParameterType.IsInvokable());
-
-	/// <remarks>
-	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable();</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	internal static bool IsInvokable(this ConstructorInfo @this)
-		=> ((MethodBase)@this).IsInvokable();
-
-	/// <remarks>
-	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
-	/// </remarks>
-	[DebuggerHidden]
-	internal static bool IsInvokable(this MethodInfo @this)
-		=> ((MethodBase)@this).IsInvokable() && @this.ReturnType.IsInvokable();
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
-	/// </remarks>
-	[DebuggerHidden]
-	internal static bool IsInvokable(this Type @this)
-		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
+	public static MethodInfo ToMethodInfo(this Delegate @this)
+		=> @this.GetType().GetMethod("Invoke", INSTANCE_BINDING_FLAGS)!;
 }

@@ -10,6 +10,6 @@ public class EventOfTests
 	[Fact]
 	public void EventOfFileSystemWatcher()
 	{
-		Assert.Equal(6, EventOf<FileSystemWatcher>.Events.Count);
+		Assert.Equal(6, EventOf<FileSystemWatcher>.Events.Length);
 	}
 }

@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Data.Extensions;
 
@@ -27,9 +28,9 @@ public static class DbDataReaderExtensions
 	}
 
 	public static async Task ReadModelsAsync<T>(this DbDataReader @this, IList<T> rows, CancellationToken token = default)
-		where T : new()
+		where T : notnull, new()
 	{
-		var propertyMap = TypeOf<T>.Properties.ToDictionary(property => property.Name, property => property);
+		var propertyMap = TypeOf<T>.Properties.ToDictionary(property => property.Name(), property => property);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 		var values = new object[@this.VisibleFieldCount];
 
@@ -37,23 +38,22 @@ public static class DbDataReaderExtensions
 		{
 			var model = TypeOf<T>.Create()!;
 			@this.GetValues(values);
-			properties.ForEach((property, columnIndex) => property.SetValue(model, values[columnIndex]));
-			rows.Add(model);
+			properties.ForEach((property, columnIndex) => property.SetPropertyValue(model, values[columnIndex]));
+			rows.Add((T)model);
 		}
 	}
 
 	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
 	{
-		var typeMember = modelType.GetTypeMember();
-		var propertyMap = typeMember.Properties.ToDictionary(property => property.Name, property => property);
+		var propertyMap = modelType.GetProperties(Instance | Public).ToDictionary(property => property.Name(), property => property);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 		var values = new object[@this.VisibleFieldCount];
 
 		while (await @this.ReadAsync(token))
 		{
-			var model = typeMember.Create()!;
+			var model = modelType.Create()!;
 			@this.GetValues(values);
-			properties.ForEach((property, columnIndex) => property.SetValue(model, values[columnIndex]));
+			properties.ForEach((property, columnIndex) => property.SetPropertyValue(model, values[columnIndex]));
 			rows.Add(model);
 		}
 	}

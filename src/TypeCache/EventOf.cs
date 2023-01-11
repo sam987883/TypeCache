@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Reflection;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
@@ -8,11 +9,11 @@ namespace TypeCache;
 public static class EventOf<T>
 	where T : class
 {
-	private sealed record HandlerReference(WeakReference<T> Instance, EventMember EventMember, Delegate EventHandler);
+	private sealed record HandlerReference(WeakReference<T> Instance, EventInfo EventInfo, Delegate EventHandler);
 
 	private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
 
-	public static IReadOnlyList<EventMember> Events => TypeOf<T>.Member.Events;
+	public static EventInfo[] Events => TypeOf<T>.Events;
 
 	public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 	{
@@ -21,9 +22,9 @@ public static class EventOf<T>
 		handler.AssertNotNull();
 
 		var key = DateTime.UtcNow.Ticks;
-		var eventMember = Events.First(_ => _.Name.Is(eventMemberName));
-		var reference = new HandlerReference(new WeakReference<T>(instance), eventMember, handler);
-		eventMember.Add(instance!, handler);
+		var eventInfo = Events.First(_ => _.Name().Is(eventMemberName));
+		var reference = new HandlerReference(new WeakReference<T>(instance), eventInfo, handler);
+		eventInfo.AddMethod?.InvokeMethod(instance!, handler);
 		EventHandlers.Add(key, reference);
 		return key;
 	}
@@ -39,7 +40,7 @@ public static class EventOf<T>
 		if (EventHandlers.TryGetValue(key, out var handler))
 		{
 			if (handler.Instance.TryGetTarget(out var target))
-				handler.EventMember.Remove(target, handler.EventHandler);
+				handler.EventInfo.RemoveMethod?.InvokeMethod(target, handler.EventHandler);
 
 			return EventHandlers.Remove(key);
 		}

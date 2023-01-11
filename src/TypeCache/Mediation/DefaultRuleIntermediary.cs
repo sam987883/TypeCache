@@ -35,7 +35,7 @@ internal sealed class DefaultRuleIntermediary<REQUEST> : IRuleIntermediary<REQUE
 			var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 			if (validationMessages.Any())
 			{
-				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name} validation rule failure: {message}")));
+				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name()} validation rule failure: {message}")));
 				throw new ValidationException(validationMessages);
 			}
 		}
@@ -85,7 +85,7 @@ internal sealed class DefaultRuleIntermediary<REQUEST, RESPONSE> : IRuleIntermed
 			var validationMessages = this._ValidationRules.SelectMany(_ => _.Validate(request)).ToArray();
 			if (validationMessages.Any())
 			{
-				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name} validation failure: {message}")));
+				validationMessages.ForEach(message => this._Logger?.LogWarning(Invariant($"{this._Rule.GetType().Name()} validation failure: {message}")));
 				throw new ValidationException(validationMessages);
 			}
 		}

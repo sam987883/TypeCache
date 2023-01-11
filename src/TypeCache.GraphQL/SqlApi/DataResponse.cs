@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
@@ -13,17 +14,17 @@ using static System.FormattableString;
 namespace TypeCache.GraphQL.SqlApi;
 
 [GraphQLDescription("Response for a SELECT SQL action.")]
-public class SelectResponse<T>
+public class DataResponse
 {
-	public SelectResponse()
+	public DataResponse()
 	{
 	}
 
-	public SelectResponse(T[] items, int totalCount, uint offset)
+	public DataResponse(DataRow[] items, int totalCount, uint offset)
 	{
 		var start = offset + 1;
 		var end = start + items.Length;
-		this.Edges = items.Select((item, i) => new Edge<T>
+		this.Edges = items.Select((item, i) => new Edge<DataRow>
 		{
 			Cursor = (start + i).ToString(),
 			Node = item
@@ -40,9 +41,9 @@ public class SelectResponse<T>
 
 	public string? DataSource { get; set; }
 
-	public Edge<T>[]? Edges { get; set; }
+	public Edge<DataRow>[]? Edges { get; set; }
 
-	public IList<T>? Items { get; set; }
+	public IList<DataRow>? Items { get; set; }
 
 	public PageInfo? PageInfo { get; set; }
 
@@ -56,53 +57,52 @@ public class SelectResponse<T>
 	{
 		var graphType = new ObjectGraphType
 		{
-			Name = Invariant($"{name}{nameof(SelectResponse<T>)}"),
+			Name = Invariant($"{name}{nameof(DataResponse)}"),
 			Description = description
 		};
 		var edgeType = CreateEdgeGraphType(name, description, dataGraphType);
 
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.DataSource),
+			Name = nameof(DataResponse.DataSource),
 			Type = typeof(StringGraphType),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource)
+			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.DataSource)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.Edges),
+			Name = nameof(DataResponse.Edges),
 			ResolvedType = new ListGraphType(new NonNullGraphType(edgeType)),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, Edge<T>[]?>(context => context.Source.Edges)
+			Resolver = new FuncFieldResolver<DataResponse, Edge<DataRow>[]?>(context => context.Source.Edges)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.Items),
+			Name = nameof(DataResponse.Items),
 			ResolvedType = new ListGraphType(new NonNullGraphType(dataGraphType)),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, IList<T>?>(context => context.Source.Items!)
+			Resolver = new FuncFieldResolver<DataResponse, IList<DataRow>?>(context => context.Source.Items!)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.PageInfo),
-			//ResolvedType = new GraphQLObjectType<PageInfo>(),
+			Name = nameof(DataResponse.PageInfo),
 			Type = typeof(GraphQLObjectType<PageInfo>),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, PageInfo>(context => context.Source.PageInfo)
+			Resolver = new FuncFieldResolver<DataResponse, PageInfo>(context => context.Source.PageInfo)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.Sql),
+			Name = nameof(DataResponse.Sql),
 			Type = typeof(StringGraphType),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql)
+			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.Sql)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.Table),
+			Name = nameof(DataResponse.Table),
 			Type = typeof(StringGraphType),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table)
+			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.Table)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(SelectResponse<T>.TotalCount),
+			Name = nameof(DataResponse.TotalCount),
 			Type = typeof(IntGraphType),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, long?>(context => context.Source.TotalCount)
+			Resolver = new FuncFieldResolver<DataResponse, long?>(context => context.Source.TotalCount)
 		});
 
 		return graphType;
@@ -117,15 +117,15 @@ public class SelectResponse<T>
 		};
 		graphType.AddField(new()
 		{
-			Name = nameof(Edge<T>.Cursor),
+			Name = nameof(Edge<DataRow>.Cursor),
 			Type = typeof(StringGraphType),
-			Resolver = new FuncFieldResolver<Edge<T>, string>(context => context.Source.Cursor)
+			Resolver = new FuncFieldResolver<Edge<DataRow>, string>(context => context.Source.Cursor)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(Edge<T>.Node),
+			Name = nameof(Edge<DataRow>.Node),
 			ResolvedType = new NonNullGraphType(dataGraphType),
-			Resolver = new FuncFieldResolver<Edge<T>, T>(context => context.Source.Node)
+			Resolver = new FuncFieldResolver<Edge<DataRow>, DataRow>(context => context.Source.Node)
 		});
 		return graphType;
 	}

@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using GraphQL;
-using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Collections;
@@ -15,7 +15,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using TypeCache.Reflection;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -63,11 +62,25 @@ public static class GraphQLExtensions
 	}
 
 	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(GraphQLEnumType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Type ToGraphQLEnumType(this Type @this)
+		=> typeof(GraphQLEnumType<>).MakeGenericType(@this);
+
+	/// <summary>
 	/// <c>=&gt; <see langword="typeof"/>(GraphQLInputType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLInputType(this Type @this)
 		=> typeof(GraphQLInputType<>).MakeGenericType(@this);
+
+	/// <summary>
+	/// <c>=&gt; <see langword="typeof"/>(GraphQLInterfaceType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Type ToGraphQLInterfaceType(this Type @this)
+		=> typeof(GraphQLInterfaceType<>).MakeGenericType(@this);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="typeof"/>(GraphQLObjectType&lt;&gt;).MakeGenericType(@<paramref name="this"/>);</c>
@@ -90,22 +103,22 @@ public static class GraphQLExtensions
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
-	internal static FieldType ToFieldType(this MethodMember @this)
+	internal static FieldType ToFieldType(this MethodInfo @this)
 		=> new()
 		{
-			Arguments = @this.Parameters.ToQueryArguments(),
+			Arguments = @this.GetParameters().ToQueryArguments(),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Type = @this.Return.GraphQLType()
+			Type = @this.ReturnParameter.GraphQLType()
 		};
 
-	public static FieldType ToFieldType<T>(this PropertyMember @this)
+	public static FieldType ToFieldType<T>(this PropertyInfo @this)
 	{
 		var type = @this.GraphQLType(false);
 		var arguments = new QueryArguments();
 
-		if (type.Implements<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
+		if (type.IsAssignableTo<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
 		{
 			arguments.Add(new QueryArgument(type)
 			{
@@ -114,7 +127,7 @@ public static class GraphQLExtensions
 			});
 		}
 
-		if (@this.PropertyType.Implements<IFormattable>())
+		if (@this.PropertyType.IsAssignableTo<IFormattable>())
 		{
 			arguments.Add(new QueryArgument<StringGraphType>()
 			{
@@ -200,12 +213,12 @@ public static class GraphQLExtensions
 		return tokens;
 	}
 
-	private static QueryArguments ToQueryArguments(this IEnumerable<MethodParameter> @this)
+	private static QueryArguments ToQueryArguments(this ParameterInfo[] @this)
 		=> new QueryArguments(@this
-			.Where(parameter => !parameter.GraphQLIgnore() && !parameter.Type.TypeHandle.Is<IResolveFieldContext>())
-			.Select(parameter => new QueryArgument(parameter.GraphQLType())
+			.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
+			.Select(parameterInfo => new QueryArgument(parameterInfo.GraphQLType())
 			{
-				Name = parameter.GraphQLName(),
-				Description = parameter.GraphQLDescription(),
+				Name = parameterInfo.GraphQLName(),
+				Description = parameterInfo.GraphQLDescription(),
 			}));
 }

@@ -8,7 +8,7 @@ namespace TypeCache.Extensions;
 
 public static class ValueExtensions
 {
-	/// <inheritdoc cref="INumberBase.Abs(TSelf)"/>
+	/// <inheritdoc cref="INumberBase{TSelf}.Abs(TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>

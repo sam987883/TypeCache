@@ -103,7 +103,7 @@ public static class RuneExtensions
 	public static bool IsWhiteSpace(this Rune @this)
 		=> Rune.IsWhiteSpace(@this);
 
-	/// <inheritdoc cref="Rune.ToLower(Rune)"/>
+	/// <inheritdoc cref="Rune.ToLower(Rune, CultureInfo)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
@@ -127,7 +127,7 @@ public static class RuneExtensions
 	public static double ToNumber(this Rune @this)
 		=> Rune.GetNumericValue(@this);
 
-	/// <inheritdoc cref="Rune.ToUpper(Rune)"/>
+	/// <inheritdoc cref="Rune.ToUpper(Rune, CultureInfo)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Rune"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>

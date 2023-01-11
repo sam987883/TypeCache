@@ -388,7 +388,7 @@ public static class StringExtensions
 	public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> text.IsNotBlank() && @this?.Left(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
 
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
@@ -397,7 +397,7 @@ public static class StringExtensions
 		where T : ISpanParsable<T>
 		=> T.TryParse(@this, InvariantCulture, out value);
 
-	/// <inheritdoc cref="IParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="IParsable{TSelf}.TryParse(string, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
@@ -406,7 +406,7 @@ public static class StringExtensions
 		where T : IParsable<T>
 		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
 
-	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(string?, NumberStyles, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(string, NumberStyles, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>

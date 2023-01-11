@@ -4,6 +4,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using TypeCache.Extensions;
 using TypeCache.Mediation;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -29,7 +30,7 @@ public class SqlApiErrorHandlerMiddleware : WebMiddleware
 			var exception = aggregateException.InnerException ?? aggregateException;
 			await JsonSerializer.SerializeAsync(context.Response.Body, new
 			{
-				ErrorType = exception.GetType().Name,
+				ErrorType = exception.GetType().Name(),
 				ErrorMessage = exception.Message,
 				exception.StackTrace
 			});
@@ -40,7 +41,7 @@ public class SqlApiErrorHandlerMiddleware : WebMiddleware
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 			await JsonSerializer.SerializeAsync(context.Response.Body, new
 			{
-				ErrorType = exception.GetType().Name,
+				ErrorType = exception.GetType().Name(),
 				ErrorMessage = exception.Message,
 				exception.StackTrace
 			});

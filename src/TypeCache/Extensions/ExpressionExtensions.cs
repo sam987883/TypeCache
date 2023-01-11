@@ -322,7 +322,7 @@ public static class ExpressionExtensions
 			Enum when targetType.IsEnumUnderlyingType() => System.Convert.ChangeType(value, targetType, InvariantCulture),
 			Enum when targetType == typeof(string) => Enum.Format(value.GetType(), value, "G"),
 			string text when targetType == typeof(DateTime) => DateTime.Parse(text, InvariantCulture),
-			IConvertible convertible when targetType.Implements<IConvertible>() => System.Convert.ChangeType(value, targetType, InvariantCulture),
+			IConvertible convertible when targetType.IsAssignableTo<IConvertible>() => System.Convert.ChangeType(value, targetType, InvariantCulture),
 			string text when targetType == typeof(IntPtr) => IntPtr.Parse(text, InvariantCulture),
 			string text when targetType == typeof(UIntPtr) => UIntPtr.Parse(text, InvariantCulture),
 			string text when targetType == typeof(DateOnly) => DateOnly.Parse(text, InvariantCulture),
@@ -342,7 +342,7 @@ public static class ExpressionExtensions
 			string text => Enum.Parse(targetType, text, true),
 			_ when value.GetType() == targetType => value,
 			_ when value.GetType() == Enum.GetUnderlyingType(targetType) => Enum.ToObject(targetType, value),
-			_ => throw new InvalidCastException(Invariant($"Type [{value.GetType().Name}] cannot be converted to {nameof(Enum)} type [{targetType.Name}].")),
+			_ => throw new InvalidCastException(Invariant($"Type [{value.GetType().Name()}] cannot be converted to {nameof(Enum)} type [{targetType.Name()}].")),
 		};
 
 	private static object? ConvertToString(object value)

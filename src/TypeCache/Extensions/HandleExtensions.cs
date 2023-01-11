@@ -1,19 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Reflection;
-using TypeCache.Reflection;
 
 namespace TypeCache.Extensions;
 
 public static class HandleExtensions
 {
-	/// <remarks>
-	/// <c>=&gt; <see cref="TypeMember.Cache"/>[@<paramref name="this"/>];</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TypeMember GetTypeMember(this RuntimeTypeHandle @this)
-		=> TypeMember.Cache[@this];
-
 	/// <inheritdoc cref="RuntimeTypeHandle.Equals(RuntimeTypeHandle)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Equals(<see langword="typeof"/>(<typeparamref name="T"/>).TypeHandle);</c>

@@ -2,22 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TypeCache.Extensions;
 using Xunit;
 
 namespace TypeCache.Tests.Reflection.Extensions;
 
-public class ObjectExtensions
+public class MapExtensions
 {
-	[Fact]
-	public void GetTypeMember()
-	{
-		Assert.Equal(TypeOf<string>.Member, "AAA".GetTypeMember());
-		Assert.Equal(TypeOf<string>.Member, typeof(string).GetTypeMember());
-		Assert.Equal(TypeOf<string>.Member, typeof(string).GetMethods().First().GetTypeMember());
-	}
-
 	[Fact]
 	public void MapFields()
 	{
@@ -49,7 +40,7 @@ public class ObjectExtensions
 		};
 
 		var testModel2 = new TestModel2();
-		; testModel2.MapProperties(testModel1);
+		testModel2.MapProperties(testModel1);
 		Assert.Equal(1, testModel2.TestProperty1);
 		Assert.Equal('2', testModel2.TestProperty2);
 		Assert.Equal("333", testModel2.TestProperty3);

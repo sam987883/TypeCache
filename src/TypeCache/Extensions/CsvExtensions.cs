@@ -51,6 +51,7 @@ public static class CsvExtensions
 		};
 
 	public static string[] ToCSV<T>(this IEnumerable<T> @this, CsvOptions options = default)
+		where T : notnull
 	{
 		var headerRow = string.Empty;
 		var dataRows = Array<string>.Empty;
@@ -59,25 +60,25 @@ public static class CsvExtensions
 		{
 			var memberMap = new Dictionary<string, Func<T, object?>>(options.MemberNames.Select(name =>
 			{
-				var property = TypeOf<T>.Properties.FirstOrDefault(_ => _.Name.Is(name));
-				if (property is not null)
-					return KeyValuePair.Create<string, Func<T, object?>>(name, new Func<T, object?>(_ => property.GetValue(_!)));
+				var propertyInfo = TypeOf<T>.Properties.FirstOrDefault(_ => _.Name().Is(name));
+				if (propertyInfo is not null)
+					return KeyValuePair.Create<string, Func<T, object?>>(name, new Func<T, object?>(_ => propertyInfo.GetPropertyValue(_)));
 
-				var field = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name.Is(name));
-				return KeyValuePair.Create<string, Func<T, object?>>(name, new Func<T, object?>(_ => field?.GetValue!(_!)));
+				var fieldInfo = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name().Is(name));
+				return KeyValuePair.Create<string, Func<T, object?>>(name, new Func<T, object?>(_ => fieldInfo?.GetFieldValue(_)));
 			}), StringComparer.OrdinalIgnoreCase);
 			headerRow = string.Join(',', options.MemberNames.Where(memberMap.ContainsKey));
 			dataRows = @this.Select(row => string.Join(',', options.MemberNames.Select(name => memberMap[name]!(row).EscapeCSV(options)))).ToArray();
 		}
 		else if (TypeOf<T>.Properties.Any())
 		{
-			headerRow = string.Join(',', TypeOf<T>.Properties.Select(property => property.Name));
-			dataRows = @this.Select(row => string.Join(',', TypeOf<T>.Properties.Select(property => property.GetValue(row!).EscapeCSV(options)))).ToArray();
+			headerRow = string.Join(',', TypeOf<T>.Properties.Select(property => property.Name()));
+			dataRows = @this.Select(row => string.Join(',', TypeOf<T>.Properties.Select(property => property.GetValue(row).EscapeCSV(options)))).ToArray();
 		}
 		else if (TypeOf<T>.Fields.Any())
 		{
-			headerRow = string.Join(',', TypeOf<T>.Fields.Select(field => field.Name));
-			dataRows = @this.Select(row => string.Join(',', TypeOf<T>.Fields.Select(field => field.GetValue!(row!).EscapeCSV(options)))).ToArray();
+			headerRow = string.Join(',', TypeOf<T>.Fields.Select(field => field.Name()));
+			dataRows = @this.Select(row => string.Join(',', TypeOf<T>.Fields.Select(fieldInfo => fieldInfo.GetFieldValue(row).EscapeCSV(options)))).ToArray();
 		}
 
 		return dataRows.Prepend(headerRow).ToArray();

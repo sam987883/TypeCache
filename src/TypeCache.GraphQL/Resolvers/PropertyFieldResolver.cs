@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 
@@ -12,11 +12,11 @@ namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class PropertyFieldResolver<T> : FieldResolver
 {
-	private readonly PropertyMember _PropertyMember;
+	private readonly PropertyInfo _PropertyInfo;
 
-	public PropertyFieldResolver(PropertyMember propertyMember)
+	public PropertyFieldResolver(PropertyInfo propertyInfo)
 	{
-		this._PropertyMember = propertyMember;
+		this._PropertyInfo = propertyInfo;
 	}
 
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
@@ -29,7 +29,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			_ => context.Source
 		};
 
-		var value = this._PropertyMember.GetValue(source!);
+		var value = this._PropertyInfo.GetPropertyValue(source!);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 

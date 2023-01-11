@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,25 +22,24 @@ public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizati
 		this._HttpContextAccessor = httpContextAccessor;
 	}
 
-	protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HeaderAuthorizationRequirement requirement)
+	protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HeaderAuthorizationRequirement requirement)
 	{
 		var controller = context.GetControllerActionDescriptor();
 		if (controller is not null)
 		{
-			var type = controller.ControllerTypeInfo.GetTypeMember();
-			var method = type.GetMethod(controller.MethodInfo.MethodHandle)!;
+			var type = controller.ControllerTypeInfo.GetType();
 			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
-			var success = type
-				.Attributes.OfType<RequireHeaderAttribute>()
-				.Union(method.Attributes.OfType<RequireHeaderAttribute>())
-				.All(attribue => headers.TryGetValue(attribue!.Key, out var values)
-					&& (!attribue.AllowedValues.Any() || values.Any(value => attribue.AllowedValues.Contains(value, StringComparer.OrdinalIgnoreCase))));
+			var success = controller.ControllerTypeInfo
+				.GetCustomAttributes<RequireHeaderAttribute>()
+				.Append(controller.MethodInfo.GetCustomAttribute<RequireHeaderAttribute>())
+				.All(attribute => headers.TryGetValue(attribute!.Key, out var values)
+					&& (!attribute.AllowedValues.Any() || values.Any(value => attribute.AllowedValues.Contains(value, StringComparer.OrdinalIgnoreCase))));
 
 			if (success)
 				context.Succeed(requirement);
 			else
 				context.Fail();
 		}
-		await Task.CompletedTask;
+		return Task.CompletedTask;
 	}
 }

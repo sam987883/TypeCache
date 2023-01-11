@@ -33,5 +33,6 @@ public interface IMediator
 	/// Must register validation rules of type <see cref="IValidationRule{REQUEST}"/>.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	IEnumerable<string> Validate<REQUEST>(REQUEST request);
+	IEnumerable<string> Validate<REQUEST>(REQUEST request)
+		where REQUEST : notnull;
 }

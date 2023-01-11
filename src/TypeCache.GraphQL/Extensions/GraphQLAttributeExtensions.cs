@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using TypeCache.Extensions;
@@ -21,140 +23,144 @@ namespace TypeCache.GraphQL.Extensions;
 public static class GraphQLAttributeExtensions
 {
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLDeprecationReason(this IMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
+	public static string? GraphQLDeprecationReason(this MemberInfo @this)
+		=> @this.GetCustomAttribute<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
 
-	public static string? GraphQLDescription(this IMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description switch
+	public static string? GraphQLDescription(this MemberInfo @this)
+		=> @this.GetCustomAttribute<GraphQLDescriptionAttribute>()?.Description switch
 		{
 			null => null,
-			var description when @this is TypeMember type && type.GenericHandle.HasValue => string.Format(InvariantCulture, description, type.GenericTypes.Select(_ => _.GraphQLName()).ToArray()),
+			var description when @this is Type type && type.IsGenericType => string.Format(InvariantCulture, description, type.GenericTypeArguments.Select(_ => _.GraphQLName()).ToArray()),
 			var description => description
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLDescription(this MethodParameter @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description;
+	public static string? GraphQLDescription(this ParameterInfo @this)
+		=> @this.GetCustomAttribute<GraphQLDescriptionAttribute>()?.Description;
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool GraphQLIgnore(this IMember @this)
-		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
+	public static bool GraphQLIgnore(this MemberInfo @this)
+		=> @this.HasCustomAttribute<GraphQLIgnoreAttribute>();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool GraphQLIgnore(this MethodParameter @this)
-		=> @this.Attributes.Any<GraphQLIgnoreAttribute>();
+	public static bool GraphQLIgnore(this ParameterInfo @this)
+		=> @this.HasCustomAttribute<GraphQLIgnoreAttribute>();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLKey(this IMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLKeyAttribute>()?.Name;
+	public static string? GraphQLKey(this MemberInfo @this)
+		=> @this.GetCustomAttribute<GraphQLKeyAttribute>()?.Name;
 
-	public static string GraphQLInputName(this TypeMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLInputNameAttribute>()?.Name switch
+	public static string GraphQLInputName(this Type @this)
+		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name switch
 		{
 			null => Invariant($"{@this.GraphQLName()}Input"),
-			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Select(_ => _.Name).ToArray()),
+			var name when @this.IsGenericType => string.Format(InvariantCulture, name, @this.GenericTypeArguments.Select(_ => _.Name()).ToArray()),
 			var name => name
 		};
 
-	public static string GraphQLName(this IMember @this)
+	public static string GraphQLName(this MemberInfo @this)
 		=> @this switch
 		{
-			MethodMember method => method.GraphQLName(),
-			TypeMember type => type.GraphQLName(),
-			_ => @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name
+			MethodInfo methodInfo => methodInfo.GraphQLName(),
+			Type type => type.GraphQLName(),
+			_ => @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name()
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string GraphQLName(this MethodMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name.TrimEnd("Async");
+	public static string GraphQLName(this MethodInfo @this)
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name().TrimEnd("Async");
 
-	public static string GraphQLName(this TypeMember @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name switch
+	public static string GraphQLName(this Type @this)
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name switch
 		{
-			null when @this.GenericHandle.HasValue => Invariant($"{@this.GenericTypes.First().Name}{@this.Name}"),
-			null => @this.Name,
-			var name when @this.GenericHandle.HasValue => string.Format(InvariantCulture, name, @this.GenericTypes.Select(type => type.Name).ToArray()),
+			null when @this.IsGenericType => Invariant($"{@this.GenericTypeArguments.First().Name()}{@this.Name()}"),
+			null => @this.Name(),
+			var name when @this.IsGenericType => string.Format(InvariantCulture, name, @this.GenericTypeArguments.Select(type => type.Name()).ToArray()),
 			var name => name
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string GraphQLName(this MethodParameter @this)
-		=> @this.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? @this.Name;
+	public static string GraphQLName(this ParameterInfo @this)
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name();
 
-	public static Type GraphQLType(this MethodParameter @this)
+	public static Type GraphQLType(this ParameterInfo @this)
 	{
-		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
+		var attribute = @this.GetCustomAttribute<GraphQLTypeAttribute>();
 		var type = attribute is not null
 			? attribute.GetType().GenericTypeArguments[0]
-			: @this.Type!.GraphQLType(true);
+			: @this.ParameterType!.GraphQLType(true);
 
-		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
+		if (!type.Is(typeof(NonNullGraphType<>)) && @this.HasCustomAttribute<NotNullAttribute>())
 			type = type.ToNonNullGraphType();
 
 		return type;
 	}
 
-	public static Type GraphQLType(this PropertyMember @this, bool isInputType)
+	public static Type GraphQLType(this PropertyInfo @this, bool isInputType)
 	{
-		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
+		var attribute = @this.GetCustomAttribute<GraphQLTypeAttribute>();
 		var type = attribute is not null
 			? attribute.GetType().GenericTypeArguments[0]
 			: @this.PropertyType.GraphQLType(isInputType);
 
-		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
+		if (!type.Is(typeof(NonNullGraphType<>)) && @this.HasCustomAttribute<NotNullAttribute>())
 			type = type.ToNonNullGraphType();
 
 		return type;
 	}
 
-	public static Type GraphQLType(this ReturnParameter @this)
+	internal static Type GraphQLType(this Type @this, bool isInputType)
 	{
-		var attribute = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>();
-		var type = attribute is not null
-			? attribute.GetType().GenericTypeArguments[0]
-			: @this.Type!.GraphQLType(false);
+		var objectType = @this.GetObjectType();
+		(objectType is ObjectType.Delegate).AssertFalse();
+		(objectType is ObjectType.Object).AssertFalse();
 
-		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
-			type = type.ToNonNullGraphType();
+		var systemType = @this.GetSystemType();
+		if (systemType is SystemType.Nullable)
+		{
+			var type = @this.GenericTypeArguments.First();
+			return type switch
+			{
+				{ IsEnum: true } => type.ToGraphQLEnumType(),
+				_ when SystemGraphTypes.TryGetValue(type.GetSystemType(), out var handle) => handle.ToType(),
+				_ => throw new UnreachableException($"No GraphQL type could be found for type [{type.Name()}].")
+			};
+		}
 
-		return type;
+		return @this switch
+		{
+			{ IsEnum: true } => @this.ToGraphQLEnumType().ToNonNullGraphType(),
+			_ when SystemGraphTypes.TryGetValue(systemType, out var handle) => @this.IsValueType ? handle.ToType().ToNonNullGraphType() : handle.ToType(),
+			{ HasElementType: true } => @this.GetElementType()!.GraphQLType(isInputType).ToListGraphType(),
+			{ IsGenericType: true } when systemType.IsAny(SystemType.Task, SystemType.ValueTask) => @this.GenericTypeArguments.First().NullableGraphQLType(),
+			{ IsGenericType: true } when objectType is ObjectType.Dictionary => typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).GraphQLType(isInputType).ToListGraphType(),
+			{ IsGenericType: true } => @this.GenericTypeArguments.First().GraphQLType(isInputType).ToListGraphType(),
+			{ IsInterface: true } => @this.ToGraphQLInterfaceType(),
+			_ when isInputType => @this.ToGraphQLInputType(),
+			_ => @this.ToGraphQLObjectType()
+		};
 	}
 
-	internal static Type GraphQLType(this TypeMember @this, bool isInputType)
-		=> @this switch
-		{
-			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
-			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
-			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this).ToNonNullGraphType(),
-			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First() switch
-			{
-				{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
-				var genericTypeMember => SystemGraphTypes[genericTypeMember.SystemType].ToType()
-			},
-			{ ObjectType: ObjectType.Array } or { ObjectType: ObjectType.Enumerable } or { ObjectType: ObjectType.List } => @this.CollectionType()!.GraphQLType(isInputType).ToListGraphType(),
-			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().GraphQLType(isInputType),
-			{ Kind: Kind.Class } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
-			{ Kind: Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType().ToNonNullGraphType(),
-			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
-			_ when isInputType => ((Type)@this).ToGraphQLInputType(),
-			_ => ((Type)@this).ToGraphQLObjectType()
-		};
+	internal static Type NullableGraphQLType(this Type @this)
+	{
+		var objectType = @this.GetObjectType();
+		(objectType is ObjectType.Delegate).AssertFalse();
+		(objectType is ObjectType.Object).AssertFalse();
 
-	internal static Type NullableGraphQLType(this TypeMember @this)
-		=> @this switch
+		var systemType = @this.GetSystemType();
+		return @this switch
 		{
-			{ Kind: Kind.Pointer } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.Kind)}", $"No custom graph type was found that supports: {@this.Kind.Name()}"),
-			{ ObjectType: ObjectType.Delegate } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.ObjectType)}", $"No custom graph type was found that supports: {@this.ObjectType.Name()}"),
-			{ SystemType: SystemType.Object } => throw new ArgumentOutOfRangeException($"{nameof(TypeMember)}.{nameof(@this.SystemType)}", $"No custom graph type was found that supports: {@this.SystemType.Name()}"),
-			{ ObjectType: ObjectType.Enum } => typeof(GraphQLEnumType<>).MakeGenericType(@this),
-			{ SystemType: SystemType.Nullable } => @this.GenericTypes.First()!.NullableGraphQLType(),
-			{ ObjectType: ObjectType.Array } or { ObjectType: ObjectType.Enumerable } or { ObjectType: ObjectType.List } => @this.CollectionType()!.NullableGraphQLType().ToListGraphType(),
-			{ SystemType: SystemType.ValueTask or SystemType.Task } => @this.GenericTypes.First().NullableGraphQLType(),
-			{ Kind: Kind.Class or Kind.Struct } when SystemGraphTypes.TryGetValue(@this.SystemType, out var handle) => handle.ToType(),
-			{ Kind: Kind.Interface } => typeof(GraphQLInterfaceType<>).MakeGenericType(@this),
-			_ => ((Type)@this).ToGraphQLObjectType()
+			{ IsEnum: true } => @this.ToGraphQLEnumType(),
+			_ when systemType is SystemType.Nullable => @this.GenericTypeArguments.First().NullableGraphQLType(),
+			_ when SystemGraphTypes.TryGetValue(systemType, out var handle) => handle.ToType(),
+			{ HasElementType: true } => @this.GetElementType()!.NullableGraphQLType().ToListGraphType(),
+			{ IsGenericType: true } when systemType.IsAny(SystemType.Task, SystemType.ValueTask) => @this.GenericTypeArguments.First().NullableGraphQLType(),
+			{ IsGenericType: true } when objectType is ObjectType.Dictionary => typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).NullableGraphQLType().ToListGraphType(),
+			{ IsGenericType: true } => @this.GenericTypeArguments.First().NullableGraphQLType().ToListGraphType(),
+			{ IsInterface: true } => @this.ToGraphQLInterfaceType(),
+			_ => @this.ToGraphQLObjectType()
 		};
+	}
 
 	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes = new Dictionary<SystemType, RuntimeTypeHandle>(26, EnumOf<SystemType>.Comparer)
 	{

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Extensions;
@@ -12,16 +13,14 @@ namespace TypeCache.Web.Handlers;
 
 public class ClaimAuthorizationHandler : AuthorizationHandler<ClaimAuthorizationRequirement>
 {
-	protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, ClaimAuthorizationRequirement requirement)
+	protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ClaimAuthorizationRequirement requirement)
 	{
 		var controller = context.GetControllerActionDescriptor();
 		if (controller is not null)
 		{
-			var type = controller.ControllerTypeInfo.GetTypeMember();
-			var method = type.GetMethod(controller.MethodInfo.MethodHandle)!;
-			var success = type.Attributes
-				.OfType<RequireClaimAttribute>()
-				.Union(method.Attributes.OfType<RequireClaimAttribute>())
+			var success = controller.ControllerTypeInfo
+				.GetCustomAttributes<RequireClaimAttribute>()
+				.Append(controller.MethodInfo.GetCustomAttribute<RequireClaimAttribute>())
 				.All(attribute => attribute!.Claims.Any(pair => context.User.Any(pair.Key, pair.Value)));
 
 			if (success)
@@ -29,6 +28,6 @@ public class ClaimAuthorizationHandler : AuthorizationHandler<ClaimAuthorization
 			else
 				context.Fail();
 		}
-		await Task.CompletedTask;
+		return Task.CompletedTask;
 	}
 }

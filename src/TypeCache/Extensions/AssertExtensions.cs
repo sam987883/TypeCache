@@ -23,6 +23,7 @@ public static class AssertExtensions
 	public static void AssertEquals<T>(this T? @this, T? value, IEqualityComparer<T> comparer,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
+		where T : notnull
 	{
 		comparer.AssertNotNull(caller: caller);
 
@@ -75,6 +76,7 @@ public static class AssertExtensions
 	public static void AssertNotEmpty<T>([NotNull] this IEnumerable<T>? @this,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
+		where T : notnull
 	{
 		@this.AssertNotNull(argument, caller);
 
@@ -87,6 +89,7 @@ public static class AssertExtensions
 	public static void AssertNotEmpty<T>([NotNull] this T[]? @this,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
+		where T : notnull
 	{
 		@this.AssertNotNull(argument, caller);
 
@@ -98,6 +101,7 @@ public static class AssertExtensions
 	public static void AssertNotNull<T>([NotNull] this T? @this,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
+		where T : notnull
 	{
 		if (@this is null)
 			throw new ArgumentNullException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{TypeOf<T>.Name}>()."));
@@ -107,6 +111,7 @@ public static class AssertExtensions
 	public static void AssertNotSame<T>(this (T?, T?) @this,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
+		where T : notnull
 	{
 		if (object.ReferenceEquals(@this.Item1, @this.Item2))
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this.Item1?.ToString() ?? NULL}.{nameof(AssertNotSame)}<{TypeOf<T>.Name}>({@this.Item2?.ToString() ?? NULL})."));

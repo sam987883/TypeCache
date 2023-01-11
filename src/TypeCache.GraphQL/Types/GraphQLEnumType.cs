@@ -9,29 +9,32 @@ using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
+/// <summary>
+/// <inheritdoc cref="EnumerationGraphType"/>
+/// </summary>
 public sealed class GraphQLEnumType<T> : EnumerationGraphType
 	where T : struct, Enum
 {
 	public GraphQLEnumType()
 	{
-		this.Name = EnumOf<T>.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? EnumOf<T>.Name;
-		this.Description = EnumOf<T>.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description;
-		this.DeprecationReason = EnumOf<T>.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason;
+		this.Name = typeof(T).GraphQLName();
+		this.Description = typeof(T).GraphQLDescription();
+		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 
 		var changeEnumCase = EnumOf<T>.Attributes switch
 		{
-			var attributes when attributes.OfType<ConstantCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
-			var attributes when attributes.OfType<CamelCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
-			var attributes when attributes.OfType<PascalCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.OfType<ConstantCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.OfType<CamelCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.OfType<PascalCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
 			_ => new Func<string, string>(_ => _)
 		};
 
 		EnumOf<T>.Tokens
-			.Where(token => !token.GraphQLIgnore())
+			.Where(token => !token.Attributes.Any<GraphQLIgnoreAttribute>())
 			.Select(token => new EnumValueDefinition(token.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(token.Name), token.Value)
 			{
-				Description = token.GraphQLDescription(),
-				DeprecationReason = token.GraphQLDeprecationReason()
+				Description = token.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
+				DeprecationReason = token.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
 			})
 			.ToArray()
 			.ForEach(this.Add);

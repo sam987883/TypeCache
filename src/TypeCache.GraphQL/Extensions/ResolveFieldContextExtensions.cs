@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -38,37 +38,37 @@ public static class ResolveFieldContextExtensions
 		return table;
 	}
 
-	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodMember method, object? overrideValue = null)
+	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodInfo methodInfo, object? overrideValue = null)
 	{
-		foreach (var parameter in method.Parameters)
+		foreach (var parameterInfo in methodInfo.GetParameters())
 		{
-			var name = parameter.GraphQLName();
-			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.Type, name) : null;
+			var name = parameterInfo.GraphQLName();
+			var argument = @this.HasArgument(name) ? @this.GetArgument(parameterInfo.ParameterType, name) : null;
 			yield return argument switch
 			{
-				_ when parameter.GraphQLIgnore() => null,
-				_ when parameter.Type.Is<IResolveFieldContext>() => @this,
-				_ when parameter.Type.Is<TSource>() && !parameter.Type.Is<object>() => @this.Source,
-				_ when overrideValue is not null && parameter.Type.Is(overrideValue.GetType()) => overrideValue,
-				IDictionary<string, object?> dictionary when !parameter.Type.Is<IDictionary<string, object?>>() => parameter.Type.MapModel(dictionary),
+				_ when parameterInfo.GraphQLIgnore() => null,
+				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when parameterInfo.ParameterType.Is<TSource>() && !parameterInfo.ParameterType.Is<object>() => @this.Source,
+				_ when overrideValue is not null && parameterInfo.ParameterType.Is(overrideValue.GetType()) => overrideValue,
+				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() => parameterInfo.ParameterType.MapModel(dictionary),
 				_ => argument
 			};
 		}
 	}
 
-	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, Type? sourceType, MethodMember method, object? overrideValue = null)
+	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, Type? sourceType, MethodInfo methodInfo, object? overrideValue = null)
 	{
-		foreach (var parameter in method.Parameters)
+		foreach (var parameter in methodInfo.GetParameters())
 		{
 			var name = parameter.GraphQLName();
-			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.Type, name) : null;
+			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.ParameterType, name) : null;
 			yield return argument switch
 			{
 				_ when parameter.GraphQLIgnore() => null,
-				_ when parameter.Type.Is<IResolveFieldContext>() => @this,
-				_ when sourceType is not null && parameter.Type.Is(sourceType) && !parameter.Type.Is<object>() => @this.Source,
-				_ when overrideValue is not null && parameter.Type.Is(overrideValue.GetType()) => overrideValue,
-				IDictionary<string, object?> dictionary when !parameter.Type.Is<IDictionary<string, object?>>() => parameter.Type.MapModel(dictionary),
+				_ when parameter.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when sourceType is not null && parameter.ParameterType.Is(sourceType) && !parameter.ParameterType.Is<object>() => @this.Source,
+				_ when overrideValue is not null && parameter.ParameterType.Is(overrideValue.GetType()) => overrideValue,
+				IDictionary<string, object?> dictionary when !parameter.ParameterType.Is<IDictionary<string, object?>>() => parameter.ParameterType.MapModel(dictionary),
 				_ => argument
 			};
 		}
@@ -165,7 +165,7 @@ public static class ResolveFieldContextExtensions
 		}
 	}
 
-	private static object MapModel(this TypeMember @this, IDictionary<string, object?> source)
+	private static object MapModel(this Type @this, IDictionary<string, object?> source)
 	{
 		var model = @this.Create()!;
 		model.MapProperties(source, StringComparison.OrdinalIgnoreCase);

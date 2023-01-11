@@ -57,7 +57,7 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="HttpClientRequest"/>, <see cref="HttpResponseMessage"/>&gt;, <see cref="HttpClientRule"/>&gt;()</c>
 	/// </summary>
-	/// <remarks>Requires call to: <c><see cref="IServiceCollection.AddHttpClient()"/></c></remarks>
+	/// <remarks>Requires call to: <c>IServiceCollection.AddHttpClient</c></remarks>
 	public static IServiceCollection AddHttpClientRule(this IServiceCollection @this)
 		=> @this.AddSingleton<IRule<HttpClientRequest, HttpResponseMessage>, HttpClientRule>();
 
