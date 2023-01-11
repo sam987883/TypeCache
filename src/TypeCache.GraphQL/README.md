@@ -1,7 +1,5 @@
 ># TypeCache - GraphQL
-##### sam987883@gmail.com  
-
-![image](../../TypeCash.png)
+###### sam987883@gmail.com  
 
 [**Source Code**](https://github.com/sam987883/TypeCache/tree/master/src/TypeCache.GraphQL)
 
