@@ -21,9 +21,9 @@ public static class TypeOf<T>
 	public static SystemType SystemType { get; } = typeof(T).GetSystemType();
 
 	/// <summary>
-	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetConstructors(<see cref="Public"/>);</c>
+	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetConstructors(<see cref="FlattenHierarchy"/> | <see cref="Instance"/> | <see cref="Public"/>);</c>
 	/// </summary>
-	public static ConstructorInfo[] Constructors => typeof(T).GetConstructors(Public);
+	public static ConstructorInfo[] Constructors => typeof(T).GetConstructors(FlattenHierarchy | Instance | NonPublic | Public);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetEvents(<see cref="FlattenHierarchy"/> | <see cref="Instance"/> | <see cref="Public"/>);</c>

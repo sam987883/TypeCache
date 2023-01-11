@@ -1,98 +1,76 @@
-# TypeCache
-### sam987883@gmail.com
-<br/>
-<div align="left">
-  <a href="https://github.com/sam987883/TypeCache">
-    <img src="../../TypeCash.png" alt="{$}" width="128" height="128">
-  </a>
-  <br/>
-  <a href="https://github.com/sam987883/TypeCache/tree/master/src/TypeCache"><strong>Source Code</strong></a>
-  <br/>
-  <br/>
-  <a href="https://github.com/sam987883/TypeCache/issues">Request Features (or report a bug) (if any)</a>
-</div>
-<br/>
-<h3>Faster Reflection</h3>
-<br/>
-<ul>
-  <li>System.Type.Create(...)</li>
-  <li>System.Type.FindConstructor(...)</li>
-  <li>System.Type.FindMethod(...)</li>
-  <li>System.Type.FindStaticMethod(...)</li>
-  <li>System.Type.GetFieldValue(...)</li>
-  <li>System.Type.GetPropertyValue(...)</li>
-  <li>System.Type.GetStaticFieldValue(...)</li>
-  <li>System.Type.GetStaticPropertyValue(...)</li>
-  <li>System.Type.InvokeMethod(...)</li>
-  <li>System.Type.InvokeStaticMethod(...)</li>
-  <li>System.Type.SetFieldValue(...)</li>
-  <li>System.Type.SetPropertyValue(...)</li>
-  <li>System.Type.SetStaticFieldValue(...)</li>
-  <li>System.Type.SetStaticPropertyValue(...)</li>
-  <li>System.Reflection.FieldInfo.GetFieldValue(...)</li>
-  <li>System.Reflection.PropertyInfo.GetPropertyValue(...)</li>
-  <li>System.Reflection.MethodInfo.InvokeMethod(...)</li>
-  <li>System.Reflection.FieldInfo.SetFieldValue(...)</li>
-  <li>System.Reflection.PropertyInfo.SetPropertyValue(...)</li>
-</ul>
-<br/>
-<br/>
-<h3>Better Object Mapping</h3>
-<br/>
-<ul>
-  <li><i>dictionary</i>.Map(...)</li>
-  <li><i>dictionary</i>.MapBy(...)</li>
-  <li><i>model</i>.MapFields(...)</li>
-  <li><i>model</i>.MapProperties(...)</li>
-</ul>
-<br/>
-<br/>
-<h3>Better Performing Mediator/Mediation</h3>
-<br/>
-<ul>
-  <li>TypeCache.Mediation.IAfterRule</li>
-  <li>TypeCache.Mediation.IMediator</li>
-  <li>TypeCache.Mediation.IProcess</li>
-  <li>TypeCache.Mediation.IProcessIntermediary</li>
-  <li>TypeCache.Mediation.IRequest</li>
-  <li>TypeCache.Mediation.IRule</li>
-  <li>TypeCache.Mediation.IRuleIntermediary</li>
-  <li>TypeCache.Mediation.IValidationRule</li>
-</ul>
-<br/>
-<br/>
-<h3>Simple Robust Database CRUD Access</h3>
-<br/>
-<ul>
-  <li>System.Data.Common.DbCommand.ExecuteReaderAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetDataTableAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetJsonArrayAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetJsonAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetModelsAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetStringAsync(...)</li>
-  <li>System.Data.Common.DbCommand.GetValueAsync(...)</li>
-  <li>System.Data.Common.DbDataReader.GetColumns(...)</li>
-  <li>System.Data.Common.DbDataReader.ReadModelsAsync(...)</li>
-  <li>System.Data.Common.DbDataReader.ReadJsonArrayAsync(...)</li>
-  <li>System.Data.Common.DbDataReader.ReadJsonAsync(...)</li>
-</ul>
-<br/>
-<br/>
-<h3>Helpful Extensions</h3>
-<br/>
-<ul>
-  <li>Array/Linq/Enumerator extensions</li>
-  <li>Assertion extensions</li>
-  <li>System.Linq.Expressions extensions</li>
-  <li>System.BitConverter extensions</li>
-  <li>System.Char extensions</li>
-  <li>System.Enum extensions</li>
-  <li>System.ReadOnlySpan<> extensions</li>
-  <li>System.Reflection extensions</li>
-  <li>System.Span<> extensions</li>
-  <li>System.Text.Rune extensions</li>
-  <li>System.Text.StringBuilder extensions</li>
-  <li>Range/Index extensions</li>
-  <li>Time Zone extensions</li>
-  <li>And many more!</li>
-</ul>
+># TypeCache
+##### sam987883@gmail.com  
+
+![image](../../TypeCash.png)
+
+[**Source Code**](https://github.com/sam987883/TypeCache/tree/master/src/TypeCache.GraphQL)
+
+[Request Features (or report a bug) (if any)](https://github.com/sam987883/TypeCache/issues)
+
+---
+### Faster Reflection
+- `System.Type.`__`Create(...)`__
+- `System.Type.`__`FindConstructor(...)`__
+- `System.Type.`__`FindMethod(...)`__
+- `System.Type.`__`FindStaticMethod(...)`__
+- `System.Type.`__`GetFieldValue(...)`__
+- `System.Type.`__`GetPropertyValue(...)`__
+- `System.Type.`__`GetStaticFieldValue(...)`__
+- `System.Type.`__`GetStaticPropertyValue(...)`__
+- `System.Type.`__`InvokeMethod(...)`__
+- `System.Type.`__`InvokeStaticMethod(...)`__
+- `System.Type.`__`SetFieldValue(...)`__
+- `System.Type.`__`SetPropertyValue(...)`__
+- `System.Type.`__`SetStaticFieldValue(...)`__
+- `System.Type.`__`SetStaticPropertyValue(...)`__
+- `System.Reflection.FieldInfo.`__`GetFieldValue(...)`__
+- `System.Reflection.PropertyInfo.`__`GetPropertyValue(...)`__
+- `System.Reflection.MethodInfo.`__`InvokeMethod(...)`__
+- `System.Reflection.FieldInfo.`__`SetFieldValue(...)`__
+- `System.Reflection.PropertyInfo.`__`SetPropertyValue(...)`__
+---
+### Better Object Mapping
+
+- `dictionary.`__`Map(...)`__
+- `dictionary.`__`MapBy(...)`__
+- `model.`__`MapFields(...)`__
+- `model.`__`MapProperties(...)`__
+---
+### Better Performing Mediator/Mediation
+- `TypeCache.Mediation.`__`IAfterRule`__
+- `TypeCache.Mediation.`__`IMediator`__
+- `TypeCache.Mediation.`__`IProcess`__
+- `TypeCache.Mediation.`__`IProcessIntermediary`__
+- `TypeCache.Mediation.`__`IRequest`__
+- `TypeCache.Mediation.`__`IRule`__
+- `TypeCache.Mediation.`__`IRuleIntermediary`__
+- `TypeCache.Mediation.`__`IValidationRule`__
+---
+### Simple Robust Database CRUD Access
+- `System.Data.Common.DbCommand.`__`ExecuteReaderAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetDataTableAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetJsonArrayAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetJsonAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetModelsAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetStringAsync(...)`__
+- `System.Data.Common.DbCommand.`__`GetValueAsync(...)`__
+- `System.Data.Common.DbDataReader.`__`GetColumns(...)`__
+- `System.Data.Common.DbDataReader.`__`ReadModelsAsync(...)`__
+- `System.Data.Common.DbDataReader.`__`ReadJsonArrayAsync(...)`__
+- `System.Data.Common.DbDataReader.`__`ReadJsonAsync(...)`__
+---
+### Helpful Extensions
+- `Array/Linq/Enumerator` extensions
+- Assertion extensions
+- `System.Linq.Expressions` extensions
+- `System.BitConverter` extensions
+- `System.Char` extensions
+- `System.Enum` extensions
+- `System.ReadOnlySpan<>` extensions
+- `System.Reflection` extensions
+- `System.Span<>` extensions
+- `System.Text.Rune` extensions
+- `System.Text.StringBuilder` extensions
+- `Range/Index` extensions
+- Time Zone extensions
+- And many more!

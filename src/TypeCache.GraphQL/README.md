@@ -1,74 +1,63 @@
-# TypeCache - GraphQL
-### sam987883@gmail.com
-<br/>
-<div align="left">
-  <a href="https://github.com/sam987883/TypeCache">
-    <img src="../../TypeCash.png" alt="{$}" width="128" height="128">
-  </a>
-  <br/>
-  <a href="https://github.com/sam987883/TypeCache/tree/master/src/TypeCache.GraphQL"><strong>Source Code</strong></a>
-  <br/>
-  <br/>
-  <a href="https://github.com/sam987883/TypeCache/issues">Request Features (or report a bug) (if any)</a>
-</div>
-<br/>
-<h3>GraphQL Type Objects</h3>
-<br/>
-<ul>
-  <li>TypeCache.GraphQL.Types.GraphQLEnumType</li>
-  <li>TypeCache.GraphQL.Types.GraphQLHashIdType</li>
-  <li>TypeCache.GraphQL.Types.GraphQLInputType</li>
-  <li>TypeCache.GraphQL.Types.GraphQLInterfaceType</li>
-  <li>TypeCache.GraphQL.Types.GraphQLObjectType</li>
-  <li>TypeCache.GraphQL.Types.GraphQLUnionType</li>
-</ul>
-<br/>
-<br/>
-<h3>GraphQL Attributes</h3>
-<br/>
-<ul>
-  <li>TypeCache.GraphQL.Attributes.GraphQLDeprecationReasonAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLDescriptionAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLIgnoreAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLInputNameAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLKeyAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLMutationAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLNameAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLQueryAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLSubqueryAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLSubqueryBatchAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLSubqueryCollectionAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLSubscriptionAttribute</li>
-  <li>TypeCache.GraphQL.Attributes.GraphQLTypeAttribute</li>
-</ul>
-<br/>
-<br/>
-<h3>GraphQL ISchema Extensions</h3>
-<br/>
-<ul>
-  <li>GraphQL.Types.ISchema.AddVersion(...)</li>
-  <li>GraphQL.Types.ISchema.AddDatabaseSchemaQueries(...)</li>
-  <li>GraphQL.Types.ISchema.AddDatabaseSchemaQuery(...)</li>
-  <li>GraphQL.Types.ISchema.AddDatabaseEndpoints(...)</li>
-  <li>GraphQL.Types.ISchema.AddEndpoints<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddQuery(...)</li>
-  <li>GraphQL.Types.ISchema.AddQueries<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddMutation(...)</li>
-  <li>GraphQL.Types.ISchema.AddMutations<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubscription(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubscriptions<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubquery<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubqueryBatch(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubqueryBatch<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubqueryCollection(...)</li>
-  <li>GraphQL.Types.ISchema.AddSubqueryCollection<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiEndpoints<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiCallProcedureEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiDeleteDataEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiDeleteEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiInsertDataEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiInsertEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiSelectEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiUpdateDataEndpoint<>(...)</li>
-  <li>GraphQL.Types.ISchema.AddSqlApiUpdateEndpoint<>(...)</li>
-</ul>
+># TypeCache - GraphQL
+##### sam987883@gmail.com  
+
+![image](../../TypeCash.png)
+
+[**Source Code**](https://github.com/sam987883/TypeCache/tree/master/src/TypeCache.GraphQL)
+
+[Request Features (or report a bug) (if any)](https://github.com/sam987883/TypeCache/issues)
+
+---
+### GraphQL Type Objects
+
+- `TypeCache.GraphQL.Types.`__`GraphQLEnumType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLHashIdType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLInputType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLInterfaceType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLObjectType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLUnionType`__
+---
+### GraphQL Attributes
+
+- `TypeCache.GraphQL.Attributes.`__`GraphQLDeprecationReasonAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLDescriptionAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLIgnoreAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLInputNameAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLKeyAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLMutationAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLNameAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLQueryAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLSubqueryAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLSubqueryBatchAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLSubqueryCollectionAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLSubscriptionAttribute`__
+- `TypeCache.GraphQL.Attributes.`__`GraphQLTypeAttribute`__
+---
+### GraphQL ISchema Extensions
+
+
+- `GraphQL.Types.ISchema.`__`AddVersion(...)`__
+- `GraphQL.Types.ISchema.`__`AddDatabaseSchemaQueries(...)`__
+- `GraphQL.Types.ISchema.`__`AddDatabaseSchemaQuery(...)`__
+- `GraphQL.Types.ISchema.`__`AddDatabaseEndpoints(...)`__
+- `GraphQL.Types.ISchema.`__`AddEndpoints<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddQuery(...)`__
+- `GraphQL.Types.ISchema.`__`AddQueries<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddMutation(...)`__
+- `GraphQL.Types.ISchema.`__`AddMutations<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubscription(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubscriptions<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubquery<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubqueryBatch(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubqueryBatch<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubqueryCollection(...)`__
+- `GraphQL.Types.ISchema.`__`AddSubqueryCollection<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiEndpoints<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiCallProcedureEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiDeleteDataEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiDeleteEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiInsertDataEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiInsertEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiSelectEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiUpdateDataEndpoint<>(...)`__
+- `GraphQL.Types.ISchema.`__`AddSqlApiUpdateEndpoint<>(...)`__
