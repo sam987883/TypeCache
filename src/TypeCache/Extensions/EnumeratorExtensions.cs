@@ -14,37 +14,6 @@ public static class EnumeratorExtensions
 		return count;
 	}
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Move(<paramref name="index"/> + 1) ? @<paramref name="this"/>.Current : <see langword="default"/>;</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T? Get<T>(this IEnumerator<T> @this, int index)
-		=> @this.Move(index + 1) ? @this.Current : default;
-
-	public static bool IfGet(this IEnumerator @this, int index, [NotNullWhen(true)] out object? item)
-	{
-		if (@this.Move(index + 1))
-		{
-			item = @this.Current!;
-			return true;
-		}
-
-		item = null;
-		return false;
-	}
-
-	public static bool IfGet<T>(this IEnumerator<T> @this, int index, [NotNullWhen(true)] out T? item)
-	{
-		if (@this.Move(index + 1))
-		{
-			item = @this.Current!;
-			return true;
-		}
-
-		item = default;
-		return false;
-	}
-
 	public static bool IfNext(this IEnumerator @this, [NotNullWhen(true)] out object? item)
 	{
 		if (@this.MoveNext())

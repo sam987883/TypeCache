@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
 	/// <item><term><see cref="IGraphQLSerializer"/></term> A singleton instance of: <see cref="GraphQLSerializer"/>.</item>
 	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> A singleton instance of: <see cref="DataLoaderContextAccessor"/>.</item>
 	/// <item><term><see cref="IDocumentExecutionListener"/></term> A singleton instance of: <see cref="DataLoaderDocumentListener"/>.</item>
-	/// <item><term><see cref="GraphQLEnumType{T}"/></term> The <see cref="Enu"/> GraphQL EnumerationGraphType.</item>
+	/// <item><term><see cref="GraphQLEnumType{T}"/></term> The <see cref="EnumerationGraphType{TEnum}"/>.</item>
 	/// <item><term><see cref="GraphQLHashIdType"/></term> A <see cref="ScalarGraphType"/> that hashes and unhashes integer identifier types to prevent a sequential attack.</item>
 	/// <item><term><see cref="GraphQLInputType{T}"/></term> The GraphQL InputObjectGraphType.</item>
 	/// <item><term><see cref="GraphQLObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>

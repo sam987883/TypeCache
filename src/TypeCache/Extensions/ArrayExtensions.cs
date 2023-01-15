@@ -19,30 +19,11 @@ public static class ArrayExtensions
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 		=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
 
-	public static IEnumerable<(A, B)> Combine<A, B>((A[] A, B[] B) tuple)
-	{
-		if (tuple.A is null || tuple.B is null)
-			yield break;
-
-		var count = (tuple.A.Length, tuple.B.Length).Minimum();
-		for (var i = 0; i < count; ++i)
-			yield return (tuple.A[i], tuple.B[i]);
-	}
-
-	public static IEnumerable<(A, B, C)> Combine<A, B, C>((A[] A, B[] B, C[] C) tuple)
-	{
-		if (tuple.A is null || tuple.B is null || tuple.C is null)
-			yield break;
-
-		var count = ((tuple.A.Length, tuple.B.Length).Minimum(), tuple.C.Length).Minimum();
-		for (var i = 0; i < count; ++i)
-			yield return (tuple.A[i], tuple.B[i], tuple.C[i]);
-	}
-
 	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.ForEach(@<paramref name="this"/>, action);</c>
 	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void ForEach<T>(this T[] @this, Action<T> action)
 		=> Array.ForEach(@this, action);
 
@@ -51,7 +32,7 @@ public static class ArrayExtensions
 		between.AssertNotNull();
 
 		var first = true;
-		Array.ForEach(@this, value =>
+		@this.ForEach(value =>
 		{
 			if (first)
 				first = false;
@@ -85,7 +66,7 @@ public static class ArrayExtensions
 	public static void ForEach<T>(this T[] @this, Action<T, int> action)
 	{
 		var i = -1;
-		Array.ForEach(@this, value => action(value, ++i));
+		@this.ForEach(value => action(value, ++i));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -94,7 +75,7 @@ public static class ArrayExtensions
 		between.AssertNotNull();
 
 		var i = -1;
-		Array.ForEach(@this, value =>
+		@this.ForEach(value =>
 		{
 			if (++i > 0)
 				between();

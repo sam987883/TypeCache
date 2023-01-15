@@ -1,30 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Numerics;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static System.StringComparison;
 using static System.Reflection.BindingFlags;
+using static System.StringComparison;
 
 namespace TypeCache.Extensions;
 
-public static class TypeExtensions
+partial class ReflectionExtensions
 {
-	private const BindingFlags BINDING_FLAGS = FlattenHierarchy | Instance | NonPublic | Public | Static;
-	private const BindingFlags INSTANCE_BINDING_FLAGS = FlattenHierarchy | Instance | NonPublic | Public;
-	private const BindingFlags STATIC_BINDING_FLAGS = FlattenHierarchy | NonPublic | Public | Static;
-
 	/// <exception cref="MissingMethodException"></exception>
 	public static object? Create(this Type @this, params object?[]? parameters)
 		=> @this.FindConstructor(parameters) switch
@@ -36,23 +22,24 @@ public static class TypeExtensions
 
 	public static ConstructorInfo? FindConstructor(this Type @this, params object?[]? arguments)
 		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
-			.FirstOrDefault(constructor => constructor.GetParameters().IsCallableWith(arguments));
+			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
 
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] argumentTypes, bool nameIgnoreCase = false)
 		=> @this.GetMethod(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS, argumentTypes);
 
 	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.GetParameters().IsCallableWith(arguments));
+			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.IsCallableWith(arguments));
 
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
 		=> @this.GetMethods(STATIC_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.GetParameters().IsCallableWith(arguments));
+			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.IsCallableWith(arguments));
 
 	public static object? GetFieldValue(this Type @this, string name, object instance, bool nameIgnoreCase = false)
 		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
 			.GetValue(instance);
 
+	/// <exception cref="UnreachableException"></exception>
 	public static Kind GetKind(this Type @this)
 		=> @this switch
 		{
@@ -111,42 +98,42 @@ public static class TypeExtensions
 
 	public static object? InvokeMethod(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod(genericTypes)
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod(arguments?.Any() is true ? new[] { instance }.Concat(arguments).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeStaticMethod(this Type @this, string name, params object?[]? arguments)
 		=> @this.FindStaticMethod(name, arguments)?
@@ -338,7 +325,14 @@ public static class TypeExtensions
 		=> @this.GetField(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
 			.SetFieldValue(null, value);
 
-	[DebuggerHidden]
+	/// <inheritdoc cref="Expression.Default(Type)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Default(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static DefaultExpression ToDefaultExpression(this Type @this)
+		=> Expression.Default(@this);
+
 	public static Type? ToGenericType(this Type? @this)
 		=> @this switch
 		{
@@ -347,7 +341,59 @@ public static class TypeExtensions
 			_ => null
 		};
 
-	[DebuggerHidden]
-	public static MethodInfo ToMethodInfo(this Delegate @this)
-		=> @this.GetType().GetMethod("Invoke", INSTANCE_BINDING_FLAGS)!;
+	/// <inheritdoc cref="Expression.Label(Type)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this Type @this)
+		=> Expression.Label(@this);
+
+	/// <inheritdoc cref="Expression.Label(Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>, <paramref name="name"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this Type @this, string? name)
+		=> Expression.Label(@this, name);
+
+	/// <inheritdoc cref="Expression.New(Type)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static NewExpression ToNewExpression(this Type @this)
+		=> Expression.New(@this);
+
+	/// <inheritdoc cref="Expression.Field(Expression, Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Field(<see langword="null"/>, @<paramref name="this"/>, <paramref name="name"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MemberExpression ToStaticFieldExpression(this Type @this, string name)
+		=> Expression.Field(null, @this, name);
+
+	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, params Expression[]? arguments)
+		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
+
+	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, Type[]? genericTypes, params Expression[]? arguments)
+		=> Expression.Call(@this, method, genericTypes, arguments);
+
+	/// <inheritdoc cref="Expression.Property(Expression, Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>, <paramref name="name"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MemberExpression ToStaticPropertyExpression(this Type @this, string name)
+		=> Expression.Property(null, @this, name);
 }

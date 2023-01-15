@@ -1,11 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 
 namespace TypeCache.GraphQL.Extensions;

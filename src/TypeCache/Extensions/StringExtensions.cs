@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -367,6 +368,14 @@ public static class StringExtensions
 	public static T? ToEnum<T>(this string? @this)
 		where T : struct, Enum
 		=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
+
+	/// <inheritdoc cref="Expression.Label(string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this string? @this)
+		=> Expression.Label(@this);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>

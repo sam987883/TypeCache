@@ -33,6 +33,30 @@ public enum ObjectType
 	/// </summary>
 	Collection,
 	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataColumn"/></c>
+	/// </summary>
+	DataColumn,
+	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataRow"/></c>
+	/// </summary>
+	DataRow,
+	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataRowView"/></c>
+	/// </summary>
+	DataRowView,
+	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataSet"/></c>
+	/// </summary>
+	DataSet,
+	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataTable"/></c>
+	/// </summary>
+	DataTable,
+	/// <summary>
+	/// Implements: <c><see cref="System.Data.DataView"/></c>
+	/// </summary>
+	DataView,
+	/// <summary>
 	/// Implements: <c><see cref="System.Delegate"/></c>
 	/// </summary>
 	Delegate,

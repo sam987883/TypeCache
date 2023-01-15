@@ -39,20 +39,6 @@ public class EnumeratorExtensions
 	}
 
 	[Fact]
-	public void Get()
-	{
-		Assert.Equal("Aaa", this.GetStrings().GetEnumerator().Get(4));
-		Assert.Null(this.GetStrings().GetEnumerator().Get(10));
-	}
-
-	[Fact]
-	public void GetValue()
-	{
-		Assert.Equal(5, this.GetInts().GetEnumerator().Get(4));
-		Assert.Equal(default, this.GetInts().GetEnumerator().Get(10));
-	}
-
-	[Fact]
 	public void Move()
 	{
 		var enumerator = this.GetInts().GetEnumerator();

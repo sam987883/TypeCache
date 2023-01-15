@@ -3,7 +3,6 @@
 using Microsoft.Extensions.Logging;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.Mediation;
 

@@ -17,6 +17,7 @@ public static class SqlExtensions
 	public static string EscapeValue([NotNull] this string @this)
 		=> @this.Replace("'", "''");
 
+	/// <exception cref="UnreachableException"></exception>
 	public static string ToSQL(this object? @this) => @this switch
 	{
 		null or DBNull => "NULL",

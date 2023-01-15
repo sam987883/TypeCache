@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Data;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -20,14 +21,14 @@ internal static class TypeStore
 	static TypeStore()
 	{
 		DefaultValueTypeConstructorInvokes = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
-			handle.ToType().New().As<object>().Lambda<Func<object>>().Compile());
+			handle.ToType().ToNewExpression().As<object>().Lambda<Func<object>>().Compile());
 		FieldGetInvokes = new();
 		FieldSetInvokes = new();
 		MethodInvokes = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Func<object?[]?, object?>>(_ =>
 			_.MethodHandle.ToMethodBase(_.TypeHandle) switch
 			{
-				MethodInfo methodInfo => methodInfo.LambdaInvoke().Compile(),
-				ConstructorInfo constructorInfo => constructorInfo.LambdaInvoke().Compile(),
+				MethodInfo methodInfo => methodInfo.ToInvokeLambdaExpression().Compile(),
+				ConstructorInfo constructorInfo => constructorInfo.ToInvokeLambdaExpression().Compile(),
 				_ => throw new UnreachableException("Method or Constructor not found.")
 			});
 		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle => handle.ToType() switch
@@ -39,6 +40,11 @@ internal static class TypeStore
 			{ IsArray: true } => ObjectType.Array,
 			{ IsEnum: true } => ObjectType.Enum,
 			{ IsClass: true } type when type.IsAssignableTo<Attribute>() => ObjectType.Attribute,
+			{ IsClass: true } type when type.IsAssignableTo<DataColumn>() => ObjectType.DataColumn,
+			{ IsClass: true } type when type.IsAssignableTo<DataRow>() => ObjectType.DataRow,
+			{ IsClass: true } type when type.IsAssignableTo<DataRowView>() => ObjectType.DataRowView,
+			{ IsClass: true } type when type.IsAssignableTo<DataSet>() => ObjectType.DataSet,
+			{ IsClass: true } type when type.IsAssignableTo<DataTable>() => ObjectType.DataTable,
 			{ IsClass: true } type when type.IsAssignableTo<Delegate>() => ObjectType.Delegate,
 			{ IsClass: true } type when type.IsAssignableTo<Exception>() => ObjectType.Exception,
 			{ IsClass: true } type when type.IsAssignableTo<JsonNode>() => ObjectType.JsonNode,

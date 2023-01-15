@@ -31,9 +31,9 @@ public static class TypeOf<T>
 	public static EventInfo[] Events => typeof(T).GetEvents(FlattenHierarchy | Instance | Public);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetFields(<see cref="FlattenHierarchy"/> | <see cref="Instance"/> | <see cref="Public"/>);</c>
+	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetFields(<see cref="FlattenHierarchy"/> | <see cref="Instance"/> | <see cref="NonPublic"/> | <see cref="Public"/>);</c>
 	/// </summary>
-	public static FieldInfo[] Fields => typeof(T).GetFields(FlattenHierarchy | Instance | Public);
+	public static FieldInfo[] Fields => typeof(T).GetFields(FlattenHierarchy | Instance | NonPublic | Public | NonPublic);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetMethods(<see cref="FlattenHierarchy"/> | <see cref="Instance"/> | <see cref="Public"/>);</c>
@@ -46,9 +46,9 @@ public static class TypeOf<T>
 	public static PropertyInfo[] Properties => typeof(T).GetProperties(FlattenHierarchy | Instance | Public);
 
 	/// <summary>
-	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetFields(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/>);</c>
+	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetFields(<see cref="FlattenHierarchy"/> | <see cref="NonPublic"/> | <see cref="Public"/> | <see cref="Static"/>);</c>
 	/// </summary>
-	public static FieldInfo[] StaticFields => typeof(T).GetFields(FlattenHierarchy | Public | Static);
+	public static FieldInfo[] StaticFields => typeof(T).GetFields(FlattenHierarchy | NonPublic | Public | Static);
 
 	/// <summary>
 	/// <c>=&gt; <see langword="typeof"/>(<typeparamref name="T"/>).GetMethods(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/>);</c>
