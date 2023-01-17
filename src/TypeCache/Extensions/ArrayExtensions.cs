@@ -84,13 +84,14 @@ public static class ArrayExtensions
 		});
 	}
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
 		range = range.Normalize(@this.Length);
-		if (range.Any() is not true)
+		if (!range.Any())
 			return Array<T>.Empty;
 
-		var reverse = range.IsReverse() is true;
+		var reverse = range.IsReverse();
 		if (reverse)
 			range = range.Reverse();
 

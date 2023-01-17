@@ -7,10 +7,10 @@ namespace TypeCache.Extensions;
 public enum UnaryOperator
 {
 	/// <inheritdoc cref="Expression.IsTrue(Expression)"/>
-	/// <remarks><c>i <see langword="is true"/></c></remarks>
+	/// <remarks><c>i == <see langword="true"/></c></remarks>
 	IsTrue,
 	/// <inheritdoc cref="Expression.IsFalse(Expression)"/>
-	/// <remarks><c>i <see langword="is false"/></c></remarks>
+	/// <remarks><c>i == <see langword="false"/></c></remarks>
 	IsFalse,
 	/// <inheritdoc cref="Expression.PreIncrementAssign(Expression)"/>
 	/// <remarks><c>++i</c></remarks>

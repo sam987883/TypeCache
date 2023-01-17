@@ -6,7 +6,7 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
 
-public static class ValueExtensions
+public static class NumberExtensions
 {
 	/// <inheritdoc cref="INumberBase{TSelf}.Abs(TSelf)"/>
 	/// <remarks>
@@ -81,7 +81,7 @@ public static class ValueExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Maximum(this (Index, Index) @this)
-		=> int.Max(@this.Item1.Value, @this.Item2.Value);
+		=> (@this.Item1.Value, @this.Item2.Value).Maximum();
 
 	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
 	/// <remarks>
@@ -98,7 +98,7 @@ public static class ValueExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Minimum(this (Index, Index) @this)
-		=> int.Min(@this.Item1.Value, @this.Item2.Value);
+		=> (@this.Item1.Value, @this.Item2.Value).Minimum();
 
 	public static IEnumerable<T> Repeat<T>(this T @this, int count)
 		where T : unmanaged

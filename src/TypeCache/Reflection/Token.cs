@@ -13,10 +13,8 @@ public sealed class Token<T> : IEquatable<Token<T>>
 	internal Token(FieldInfo fieldInfo)
 	{
 		this.Attributes = fieldInfo.GetCustomAttributes<Attribute>().ToImmutableArray();
-		this.Internal = fieldInfo.IsAssembly;
 		this.Name = fieldInfo.Name();
-		this.Public = fieldInfo.IsPublic;
-		this.Value = (T)Enum.Parse<T>(fieldInfo.Name);
+		this.Value = (T)fieldInfo.GetFieldValue(null)!;
 		this.Hex = this.Value.ToString("X");
 		this.Number = this.Value.ToString("D");
 	}
@@ -24,14 +22,8 @@ public sealed class Token<T> : IEquatable<Token<T>>
 	/// <inheritdoc/>
 	public IReadOnlyCollection<Attribute> Attributes { get; }
 
-	/// <inheritdoc cref="FieldInfo.IsAssembly"/>
-	public bool Internal { get; }
-
 	/// <inheritdoc/>
 	public string Name { get; }
-
-	/// <inheritdoc cref="FieldInfo.IsPublic"/>
-	public bool Public { get; }
 
 	public string Hex { get; }
 
@@ -40,7 +32,7 @@ public sealed class Token<T> : IEquatable<Token<T>>
 	public T Value { get; }
 
 	public bool Equals([NotNullWhen(true)] Token<T>? other)
-		=> other is not null && EnumOf<T>.Comparer.Equals(this.Value, other.Value) && other.Name.Is(this.Name, StringComparison.Ordinal);
+		=> other is not null && EnumOf<T>.Comparer.Equals(this.Value, other.Value);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)

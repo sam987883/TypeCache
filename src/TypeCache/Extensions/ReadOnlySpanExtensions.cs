@@ -190,6 +190,15 @@ public static class ReadOnlySpanExtensions
 		where T : struct
 		=> MemoryMarshal.AsBytes(@this);
 
+	/// <inheritdoc cref="Enum.TryParse(Type, ReadOnlySpan{char}, bool, out object?)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// </remarks>
+	[DebuggerHidden]
+	public static T? ToEnum<T>(this ReadOnlySpan<char> @this, bool ignoreCase = true)
+		where T : struct, Enum
+		=> Enum.TryParse(@this, ignoreCase, out T result) ? (T?)result : null;
+
 	/// <inheritdoc cref="MemoryMarshal.ToEnumerable{T}(ReadOnlyMemory{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.ToEnumerable(@<paramref name="this"/>);</c>

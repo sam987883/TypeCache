@@ -361,13 +361,14 @@ public static class StringExtensions
 	public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
 		=> encoding.GetBytes(@this, bytes);
 
+	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
-	public static T? ToEnum<T>(this string? @this)
+	public static T? ToEnum<T>(this string? @this, bool ignoreCase = true)
 		where T : struct, Enum
-		=> Enum.TryParse(@this, true, out T result) ? (T?)result : null;
+		=> Enum.TryParse(@this, ignoreCase, out T result) ? (T?)result : null;
 
 	/// <inheritdoc cref="Expression.Label(string)"/>
 	/// <remarks>

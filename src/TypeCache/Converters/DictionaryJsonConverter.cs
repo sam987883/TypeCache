@@ -55,7 +55,10 @@ public class DictionaryJsonConverter<T> : JsonConverter<IDictionary<string, T>>
 			{
 				var name = reader.GetString()!;
 				if (reader.Read())
-					dictionary.Add(name, EnumOf<T>.GetToken(reader.GetString()!)!.Value);
+				{
+					var tokenName = reader.GetString()!;
+					dictionary.Add(name, EnumOf<T>.Tokens.First(token => token.Name.Is(tokenName)).Value);
+				}
 			}
 		}
 
