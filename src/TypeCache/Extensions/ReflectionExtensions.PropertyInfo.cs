@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Collections;
 
@@ -31,4 +32,20 @@ partial class ReflectionExtensions
 				_ => new[] { instance }.Append(value).ToArray()
 			});
 	}
+
+	/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MemberExpression ToStaticPropertyExpression(this PropertyInfo @this)
+		=> Expression.Property(null, @this);
+
+	/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo, Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>, <paramref name="index"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IndexExpression ToStaticPropertyExpression(this PropertyInfo @this, ParameterExpression index)
+		=> Expression.Property(null, @this, index);
 }

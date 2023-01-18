@@ -12,28 +12,33 @@ public static partial class MapExtensions
 	private const BindingFlags PROPERTY_BINDING_FLAGS = FlattenHierarchy | Instance | Public;
 
 	/// <exception cref="ArgumentNullException"/>
-	private static void Map<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source)
+	private static IDictionary<K, V> Map<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source)
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
 		foreach (var pair in source)
 			@this[pair.Key] = pair.Value;
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	private static void MapBy<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source, bool match = true)
+	private static IDictionary<K, V> MapBy<K, V>(this IDictionary<K, V> @this, IEnumerable<KeyValuePair<K, V>> source, bool match = true)
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
 
 		foreach (var pair in source.Where(pair => @this.ContainsKey(pair.Key) == match))
 			@this[pair.Key] = pair.Value;
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapFields(this object @this, IEnumerable<KeyValuePair<string, object?>> source, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapFields<T>(this T @this, IEnumerable<KeyValuePair<string, object?>> source, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -48,11 +53,14 @@ public static partial class MapExtensions
 					|| (pair.Value is not null && pair.Value.GetType().IsAssignableTo(fieldInfo.FieldType))))
 				fieldInfo.SetFieldValue(@this, pair.Value);
 		}
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapFields(this object @this, object source, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapFields<T>(this T @this, object source, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -72,11 +80,14 @@ public static partial class MapExtensions
 					targetFieldInfo.SetFieldValue(@this, value);
 			}
 		}
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapFields(this object @this, object source, string[] fields, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapFields<T>(this T @this, object source, string[] fields, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -98,11 +109,14 @@ public static partial class MapExtensions
 					targetFieldInfo.SetFieldValue(@this, value);
 			}
 		}
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapProperties(this object @this, IEnumerable<KeyValuePair<string, object?>> source, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapProperties<T>(this T @this, IEnumerable<KeyValuePair<string, object?>> source, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -118,11 +132,14 @@ public static partial class MapExtensions
 					|| (pair.Value is not null && pair.Value.GetType().IsAssignableTo(propertyInfo.PropertyType))))
 				propertyInfo.SetPropertyValue(@this, pair.Value);
 		}
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapProperties(this object @this, object source, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapProperties<T>(this T @this, object source, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -143,11 +160,14 @@ public static partial class MapExtensions
 					targetPropertyInfo.SetPropertyValue(@this, value);
 			}
 		}
+
+		return @this;
 	}
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public static void MapProperties(this object @this, object source, string[] properties, StringComparison nameComparison = StringComparison.Ordinal)
+	public static T MapProperties<T>(this T @this, object source, string[] properties, StringComparison nameComparison = StringComparison.Ordinal)
+		where T : notnull
 	{
 		@this.AssertNotNull();
 		source.AssertNotNull();
@@ -168,5 +188,7 @@ public static partial class MapExtensions
 					targetPropertyInfo.SetPropertyValue(@this, value);
 			}
 		}
+
+		return @this;
 	}
 }

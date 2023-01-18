@@ -197,15 +197,6 @@ public static class ExpressionExtensions
 	public static BinaryExpression Coalesce(this Expression @this, Expression expression)
 		=> Expression.Coalesce(@this, expression);
 
-	/// <inheritdoc cref="Expression.Constant(object?, Type)"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/>
-	///	? <see cref="Expression"/>.Constant(@<paramref name="this"/>, @<paramref name="this"/>.GetType())
-	///	: <see cref="Expression"/>.Constant(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static ConstantExpression Constant<T>(this T? @this)
-		=> @this is not null ? Expression.Constant(@this, @this.GetType()) : Expression.Constant(null);
-
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
 	/// </remarks>
@@ -217,9 +208,9 @@ public static class ExpressionExtensions
 		=> targetType switch
 		{
 			_ when targetType == typeof(string) => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertToString), @this.Cast<object>()).Cast(targetType, overflowCheck),
-			{ IsEnum: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertToEnum), @this.Cast<object>(), targetType.Constant()).Cast(targetType, overflowCheck),
-			{ IsGenericType: true } when targetType.GetGenericTypeDefinition() == typeof(Nullable<>) => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType.GenericTypeArguments[0] }, @this.Cast<object>(), targetType.GenericTypeArguments[0].Constant(), overflowCheck.Constant()).Cast(targetType, overflowCheck),
-			{ IsValueType: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType }, @this.Cast<object>(), targetType.Constant(), overflowCheck.Constant()).Cast(targetType, overflowCheck),
+			{ IsEnum: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertToEnum), @this.Cast<object>(), targetType.ToConstantExpression()).Cast(targetType, overflowCheck),
+			{ IsGenericType: true } when targetType.GetGenericTypeDefinition() == typeof(Nullable<>) => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType.GenericTypeArguments[0] }, @this.Cast<object>(), targetType.GenericTypeArguments[0].ToConstantExpression(), overflowCheck.ToConstantExpression()).Cast(targetType, overflowCheck),
+			{ IsValueType: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType }, @this.Cast<object>(), targetType.ToConstantExpression(), overflowCheck.ToConstantExpression()).Cast(targetType, overflowCheck),
 			_ => @this.Cast(targetType, overflowCheck)
 		};
 
@@ -287,40 +278,6 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Field(this Expression @this, string name)
 		=> Expression.Field(@this, name);
-
-	public static Expression<Func<object?, object?>> FieldGetInvoke(this FieldInfo @this)
-	{
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
-		return field.As<object>().Lambda<Func<object?, object?>>(instance);
-	}
-
-	public static LambdaExpression FieldGetMethod(this FieldInfo @this)
-		=> !@this.IsStatic
-			? LambdaFactory.Create(new[] { @this.DeclaringType! }, parameters => parameters[0].Field(@this))
-			: @this.ToStaticFieldExpression().Lambda();
-
-	public static Expression<Action<object?, object?>> FieldSetInvoke(this FieldInfo @this)
-	{
-		@this.IsInitOnly.AssertFalse();
-		@this.IsLiteral.AssertFalse();
-
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression value = nameof(value).ToParameterExpression<object>();
-
-		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
-		return field.Assign(value.Convert(@this.FieldType)).Lambda<Action<object?, object?>>(instance, value);
-	}
-
-	public static LambdaExpression FieldSetMethod(this FieldInfo @this)
-	{
-		@this.IsInitOnly.AssertFalse();
-		@this.IsLiteral.AssertFalse();
-
-		return !@this.IsStatic
-			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
-			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.ToStaticFieldExpression().Assign(parameters[0]));
-	}
 
 	/// <inheritdoc cref="Expression.IfThen(Expression, Expression)"/>
 	/// <remarks>
@@ -571,108 +528,6 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, Type type, string name)
 		=> Expression.Property(@this, type, name);
-
-	/// <inheritdoc cref="Expression.Lambda(Expression, ParameterExpression[])"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>(<paramref name="parameter1"/>).<see cref="Expression"/>.Lambda(<paramref name="parameter1"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static LambdaExpression ToLambdaExpression(this Func<ParameterExpression, Expression> @this, ParameterExpression parameter1)
-		=> @this(parameter1).Lambda(parameter1);
-
-	public static Expression<Func<object?[]?, object?>> ToInvokeLambdaExpression(this ConstructorInfo @this)
-	{
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object[]>();
-		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position);
-		var parameters = @this.GetParameters()
-			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
-			.ToArray();
-
-		return @this.ToNewExpression(parameters).As<object>().Lambda<Func<object?[]?, object?>>(arguments);
-	}
-
-	public static LambdaExpression ToLambdaExpression(this ConstructorInfo @this)
-	{
-		var parameters = @this.GetParameters()
-			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select(parameterInfo => parameterInfo!.ToParameterExpression())
-			.ToArray();
-
-		return @this.ToNewExpression(parameters).Lambda(parameters);
-	}
-
-	/// <inheritdoc cref="Expression.New(ConstructorInfo, IEnumerable{Expression})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToNewExpression(this ConstructorInfo @this, IEnumerable<Expression> parameters)
-		=> Expression.New(@this, parameters);
-
-	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToNewExpression(this ConstructorInfo @this, params Expression[]? parameters)
-		=> Expression.New(@this, parameters);
-
-	/// <inheritdoc cref="Expression.New(ConstructorInfo, IEnumerable{Expression}, IEnumerable{MemberInfo})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>, <paramref name="memberInfos"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToNewExpression(this ConstructorInfo @this, IEnumerable<Expression> parameters, IEnumerable<MemberInfo> memberInfos)
-		=> Expression.New(@this, parameters, memberInfos);
-
-	/// <inheritdoc cref="Expression.New(ConstructorInfo, IEnumerable{Expression}, MemberInfo[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>, <paramref name="memberInfos"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToNewExpression(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
-		=> Expression.New(@this, parameters, memberInfos);
-
-	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Parameter(<see langword="typeof"/>(<typeparamref name="T"/>), @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ParameterExpression ToParameterExpression<T>(this string @this)
-		=> Expression.Parameter(typeof(T), @this);
-
-	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Parameter(<paramref name="type"/>, @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ParameterExpression ToParameterExpression(this string @this, Type type)
-		=> Expression.Parameter(type, @this);
-
-	/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Field(<see langword="null"/>, @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MemberExpression ToStaticFieldExpression(this FieldInfo @this)
-		=> Expression.Field(null, @this);
-
-	/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MemberExpression ToStaticPropertyExpression(this PropertyInfo @this)
-		=> Expression.Property(null, @this);
-
-	/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo, Expression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Property(<see langword="null"/>, @<paramref name="this"/>, <paramref name="index"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IndexExpression ToStaticPropertyExpression(this PropertyInfo @this, ParameterExpression index)
-		=> Expression.Property(null, @this, index);
 
 	/// <inheritdoc cref="Expression.TypeEqual(Expression, Type)"/>
 	/// <remarks>

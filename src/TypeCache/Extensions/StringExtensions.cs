@@ -378,6 +378,22 @@ public static class StringExtensions
 	public static LabelTarget ToLabelTarget(this string? @this)
 		=> Expression.Label(@this);
 
+	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Parameter(<see langword="typeof"/>(<typeparamref name="T"/>), @<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ParameterExpression ToParameterExpression<T>(this string @this)
+		=> Expression.Parameter(typeof(T), @this);
+
+	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Parameter(<paramref name="type"/>, @<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ParameterExpression ToParameterExpression(this string @this, Type type)
+		=> Expression.Parameter(type, @this);
+
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>
 	/// </remarks>

@@ -3,13 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using static System.FormattableString;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -38,9 +41,21 @@ public static class ResolveFieldContextExtensions
 		return table;
 	}
 
-	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodInfo methodInfo, object? overrideValue = null)
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.GetArguments(<see langword="typeof"/>(<typeparamref name="TSource"/>), <paramref name="methodInfo"/>, <paramref name="overrideValue"/>);</c>
+	/// </summary>
+	/// <typeparam name="TSource">Source object type.</typeparam>
+	/// <param name="overrideValue"></param>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodInfo methodInfo)
+		=> @this.GetArguments(typeof(TSource), methodInfo);
+
+	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, Type? sourceType, MethodInfo methodInfo)
 	{
-		foreach (var parameterInfo in methodInfo.GetParameters())
+		var parameterInfos = methodInfo.GetParameters()
+			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
+			.OrderBy(parameterInfo => parameterInfo.Position);
+		foreach (var parameterInfo in parameterInfos)
 		{
 			var name = parameterInfo.GraphQLName();
 			var argument = @this.HasArgument(name) ? @this.GetArgument(parameterInfo.ParameterType, name) : null;
@@ -48,27 +63,9 @@ public static class ResolveFieldContextExtensions
 			{
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when parameterInfo.ParameterType.Is<TSource>() && !parameterInfo.ParameterType.Is<object>() => @this.Source,
-				_ when overrideValue is not null && parameterInfo.ParameterType.Is(overrideValue.GetType()) => overrideValue,
-				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() => parameterInfo.ParameterType.MapModel(dictionary),
-				_ => argument
-			};
-		}
-	}
-
-	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, Type? sourceType, MethodInfo methodInfo, object? overrideValue = null)
-	{
-		foreach (var parameter in methodInfo.GetParameters())
-		{
-			var name = parameter.GraphQLName();
-			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.ParameterType, name) : null;
-			yield return argument switch
-			{
-				_ when parameter.GraphQLIgnore() => null,
-				_ when parameter.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when sourceType is not null && parameter.ParameterType.Is(sourceType) && !parameter.ParameterType.Is<object>() => @this.Source,
-				_ when overrideValue is not null && parameter.ParameterType.Is(overrideValue.GetType()) => overrideValue,
-				IDictionary<string, object?> dictionary when !parameter.ParameterType.Is<IDictionary<string, object?>>() => parameter.ParameterType.MapModel(dictionary),
+				_ when parameterInfo.ParameterType.Is(sourceType) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
+				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
+					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
 				_ => argument
 			};
 		}
@@ -163,12 +160,5 @@ public static class ResolveFieldContextExtensions
 			else if (selection is GraphQLField)
 				yield return current;
 		}
-	}
-
-	private static object MapModel(this Type @this, IDictionary<string, object?> source)
-	{
-		var model = @this.Create()!;
-		model.MapProperties(source, StringComparison.OrdinalIgnoreCase);
-		return model;
 	}
 }

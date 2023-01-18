@@ -47,7 +47,7 @@ public sealed class CollectionLoaderFieldResolver<PARENT, CHILD, KEY> : FieldRes
 		var loaderKey = Invariant($"{typeof(PARENT).GraphQLName()}.{this._MethodInfo.GraphQLName()}");
 		var dataLoader = dataLoaderContext.GetOrAddCollectionBatchLoader<KEY, CHILD>(loaderKey, keys =>
 		{
-			var arguments = context.GetArguments<PARENT>(this._MethodInfo, keys).ToArray();
+			var arguments = context.GetArguments<PARENT>(this._MethodInfo).ToArray();
 			var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
 			var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
 			var result = this._MethodInfo.Invoke(controller, arguments);

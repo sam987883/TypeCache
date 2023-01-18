@@ -16,6 +16,14 @@ public static class QueryArgumentsExtensions
 			Description = description
 		});
 
+	public static void Add(this QueryArguments @this, string name, Type type, object? defaultValue = null, string? description = null)
+		=> @this.Add(new(type)
+		{
+			Name = name,
+			DefaultValue = defaultValue,
+			Description = description
+		});
+
 	public static void Add(this QueryArguments @this, string name, IGraphType resolvedType, object? defaultValue = null, string? description = null)
 		=> @this.Add(new(resolvedType)
 		{

@@ -152,21 +152,6 @@ public static class NumberExtensions
 		where T : INumber<T>
 		=> T.Sign(@this);
 
-	/// <remarks>
-	/// <c>=&gt; (@<paramref name="this"/>, <paramref name="value"/>) = (<paramref name="value"/>, @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void Swap<T>(this ref T @this, ref T value)
-		where T : struct
-		=> (@this, value) = (value, @this);
-
-	/// <remarks>
-	/// <c>=&gt; (@<paramref name="this"/>.Item2, @<paramref name="this"/>.Item1);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static (T, T) Swap<T>(this (T, T) @this)
-		=> (@this.Item2, @this.Item1);
-
 	public static IEnumerable<int> To(this int @this, int end, int increment = 0)
 	{
 		int? i = increment switch

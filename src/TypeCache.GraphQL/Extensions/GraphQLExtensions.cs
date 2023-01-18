@@ -9,12 +9,11 @@ using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
-using TypeCache.Collections;
-using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
+using static System.FormattableString;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -29,7 +28,7 @@ public static class GraphQLExtensions
 		});
 
 	/// <summary>
-	/// Use this to create a Graph QL Connection object to return in your endpoint to support paging.
+	/// Use this to create a GraphQL Connection object to return in your endpoint to support paging.
 	/// </summary>
 	/// <typeparam name="T">.</typeparam>
 	/// <param name="data">The data<see cref="IEnumerable{T}"/>.</param>
@@ -106,7 +105,13 @@ public static class GraphQLExtensions
 	internal static FieldType ToFieldType(this MethodInfo @this)
 		=> new()
 		{
-			Arguments = @this.GetParameters().ToQueryArguments(),
+			Arguments = new QueryArguments(@this.GetParameters()
+				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
+				.Select(parameterInfo => new QueryArgument(parameterInfo.GraphQLType())
+				{
+					Name = parameterInfo.GraphQLName(),
+					Description = parameterInfo.GraphQLDescription(),
+				})),
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
@@ -119,78 +124,23 @@ public static class GraphQLExtensions
 		var arguments = new QueryArguments();
 
 		if (type.IsAssignableTo<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
-		{
-			arguments.Add(new QueryArgument(type)
-			{
-				Name = "null",
-				Description = "Return this value instead of null."
-			});
-		}
+			arguments.Add("null", type, description: "Return this value instead of null.");
 
 		if (@this.PropertyType.IsAssignableTo<IFormattable>())
-		{
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "format",
-				Description = "Use .NET format specifiers to format the data."
-			});
-		}
+			arguments.Add<StringGraphType>("format", description: "Use .NET format specifiers to format the data.");
 
 		if (type.Is<DateTimeGraphType>() || type.Is<NonNullGraphType<DateTimeGraphType>>())
+			arguments.Add<StringGraphType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
+		else if (type.Is<DateTimeOffsetGraphType>() || type.Is<NonNullGraphType<DateTimeOffsetGraphType>>())
+			arguments.Add<StringGraphType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
+		else if (type.Is<StringGraphType>() || type.Is<NonNullGraphType<StringGraphType>>())
 		{
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "timeZone",
-				Description = "Converts the DateTime value to the specified time zone which must be supported by `System.TimeZoneInfo`.  Use a comma to separate `from,to` time zones otherwise UTC will be assumed for the from value."
-			});
-		}
-
-		if (type.Is<DateTimeOffsetGraphType>() || type.Is<NonNullGraphType<DateTimeOffsetGraphType>>())
-		{
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "timeZone",
-				Description = "Converts the DateTimeOffset value to the specified time zone which must be supported by `System.TimeZoneInfo`."
-			});
-		}
-		else if (type.Is<StringGraphType>()
-			|| type.Is<NonNullGraphType<StringGraphType>>())
-		{
-			arguments.Add(new QueryArgument<GraphQLEnumType<StringCase>>()
-			{
-				Name = "case",
-				Description = "Convert string value to upper or lower case."
-			});
-
-			arguments.Add(new QueryArgument<IntGraphType>()
-			{
-				Name = "length",
-				Description = "Exclude the rest of the string value if it exceeds this length."
-			});
-
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "match",
-				Description = "Returns the matching result based on the specified regular expression pattern, null if no match."
-			});
-
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "trim",
-				Description = "Use .NET string.Trim to trim the string value of specified chars, or whitespaces if empty."
-			});
-
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "trimEnd",
-				Description = "Use .NET string.TrimEnd to trim the string value of specified chars, or whitespaces if empty."
-			});
-
-			arguments.Add(new QueryArgument<StringGraphType>()
-			{
-				Name = "trimStart",
-				Description = "Use .NET string.TrimStart to trim the string value of specified chars, or whitespaces if empty."
-			});
+			arguments.Add<GraphQLEnumType<StringCase>>("case", description: "Convert string value to upper or lower case.");
+			arguments.Add<IntGraphType>("length", description: "Exclude the rest of the string value if it exceeds this length.");
+			arguments.Add<StringGraphType>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
+			arguments.Add<StringGraphType>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
+			arguments.Add<StringGraphType>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
+			arguments.Add<StringGraphType>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
 		}
 
 		return new()
@@ -203,22 +153,4 @@ public static class GraphQLExtensions
 			Resolver = new PropertyFieldResolver<T>(@this)
 		};
 	}
-
-	public static IEnumerable<OrderBy> ToOrderBy(this string[] @this)
-	{
-		var ascending = @this.Select(column => new OrderBy(column, Sort.Ascending));
-		var descending = @this.Select(column => new OrderBy(column, Sort.Descending));
-		var tokens = ascending.Union(descending).ToArray();
-		tokens.Sort(new CustomComparer<OrderBy>((orderBy1, orderBy2) => StringComparer.Ordinal.Compare(orderBy1.Display, orderBy2.Display)));
-		return tokens;
-	}
-
-	private static QueryArguments ToQueryArguments(this ParameterInfo[] @this)
-		=> new QueryArguments(@this
-			.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
-			.Select(parameterInfo => new QueryArgument(parameterInfo.GraphQLType())
-			{
-				Name = parameterInfo.GraphQLName(),
-				Description = parameterInfo.GraphQLDescription(),
-			}));
 }

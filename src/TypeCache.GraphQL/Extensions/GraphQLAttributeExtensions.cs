@@ -7,12 +7,10 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.Types;
 using TypeCache.Reflection;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
@@ -73,7 +71,7 @@ public static class GraphQLAttributeExtensions
 	public static string GraphQLName(this Type @this)
 		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name switch
 		{
-			null when @this.IsGenericType => Invariant($"{@this.GenericTypeArguments.First().Name()}{@this.Name()}"),
+			null when @this.IsGenericType => Invariant($"{@this.GenericTypeArguments.First().Name()}_{@this.Name()}"),
 			null => @this.Name(),
 			var name when @this.IsGenericType => string.Format(InvariantCulture, name, @this.GenericTypeArguments.Select(type => type.Name()).ToArray()),
 			var name => name

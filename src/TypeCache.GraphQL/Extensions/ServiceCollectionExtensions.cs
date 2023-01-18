@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Text.Json;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
 using GraphQL.SystemTextJson;
 using GraphQL.Types;
-using GraphQL.Types.Relay.DataObjects;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.GraphQL.Types;
 
@@ -26,9 +26,9 @@ public static class ServiceCollectionExtensions
 	/// <item><term><see cref="GraphQLObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>
 	/// </list>
 	/// </summary>
-	public static IServiceCollection AddGraphQL(this IServiceCollection @this)
+	public static IServiceCollection AddGraphQL(this IServiceCollection @this, JsonSerializerOptions? jsonOptions = null)
 		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-			.AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
+			.AddSingleton<IGraphQLSerializer>(provider => jsonOptions is not null ? new GraphQLSerializer(jsonOptions) : new GraphQLSerializer())
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
 			.AddTransient(typeof(GraphQLEnumType<>))

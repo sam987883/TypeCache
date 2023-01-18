@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DI;
+using GraphQL.Transport;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
@@ -21,7 +21,6 @@ namespace TypeCache.GraphQL.Web;
 
 public sealed class GraphQLMiddleware
 {
-	private readonly JsonSerializerOptions _JsonOptions;
 	private readonly RequestDelegate _Next;
 	private readonly PathString _Route;
 	private readonly ISchema _Schema;
@@ -30,11 +29,6 @@ public sealed class GraphQLMiddleware
 	{
 		this._Next = next;
 		this._Route = route;
-		this._JsonOptions = new()
-		{
-			PropertyNameCaseInsensitive = true,
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-		};
 		this._Schema = new Schema(provider, new[] { configureSchema });
 	}
 
@@ -46,7 +40,7 @@ public sealed class GraphQLMiddleware
 			return;
 		}
 
-		var request = await JsonSerializer.DeserializeAsync<GraphQLRequest>(httpContext.Request.Body, this._JsonOptions, httpContext.RequestAborted);
+		var request = await graphQLSerializer.ReadAsync<GraphQLRequest>(httpContext.Request.Body, httpContext.RequestAborted);
 		if (request is null)
 		{
 			await this._Next.Invoke(httpContext);

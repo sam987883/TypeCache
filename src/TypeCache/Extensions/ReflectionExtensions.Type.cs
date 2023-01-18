@@ -182,8 +182,8 @@ partial class ReflectionExtensions
 		=> @this == typeof(T);
 
 	[DebuggerHidden]
-	public static bool Is(this Type @this, Type? type)
-		=> @this.IsGenericTypeDefinition || type?.IsGenericTypeDefinition is true ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+	public static bool Is(this Type? @this, Type? type)
+		=> (@this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true) ? @this.ToGenericType() == type.ToGenericType() : @this == type;
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
