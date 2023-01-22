@@ -30,6 +30,22 @@ public static class DateTimeExtensions
 	public static DateTime ChangeTimeZone(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 		=> ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
 
+	/// <inheritdoc cref="DateOnly.DateOnly(int, int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>.Year, @<paramref name="this"/>.Month, @<paramref name="this"/>.Day);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static DateOnly ToDateOnly(this DateTime @this)
+		=> new(@this.Year, @this.Month, @this.Day);
+
+	/// <inheritdoc cref="DateOnly.DateOnly(int, int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>.TimeOfDay.Ticks);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static TimeOnly ToTimeOnly(this DateTime @this)
+		=> new(@this.TimeOfDay.Ticks);
+
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="UnreachableException"/>

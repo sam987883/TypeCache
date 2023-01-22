@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Reflection.Extensions;
+namespace TypeCache.Tests.Extensions;
 
 public class MapExtensions
 {

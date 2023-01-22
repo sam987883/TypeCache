@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.DI;
 using GraphQL.Server.Ui.Playground;
 using Microsoft.Data.SqlClient;
 using TypeCache;

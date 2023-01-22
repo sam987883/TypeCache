@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection ConfigureSqlApi(this IServiceCollection @this)
 		=> @this.Configure<JsonOptions>(options =>
 		{
-			options.SerializerOptions.Converters.Add(new DataRowsJsonConverter());
+			options.SerializerOptions.Converters.Add(new DataRowJsonConverter());
 			options.SerializerOptions.Converters.Add(new DataTableJsonConverter());
 			options.SerializerOptions.Converters.Add(new DataSetJsonConverter());
 		});

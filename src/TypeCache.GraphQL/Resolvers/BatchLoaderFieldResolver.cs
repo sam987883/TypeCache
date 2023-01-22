@@ -49,7 +49,7 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, KEY> : FieldResolver
 			var arguments = context.GetArguments<PARENT>(this._MethodInfo).ToArray();
 			var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
 			var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
-			var result = this._MethodInfo.Invoke(controller, arguments);
+			var result = this._MethodInfo.InvokeMethod(controller, arguments);
 			return result switch
 			{
 				ValueTask<IEnumerable<CHILD>> valueTask => valueTask.AsTask(),

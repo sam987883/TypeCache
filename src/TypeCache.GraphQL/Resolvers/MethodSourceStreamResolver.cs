@@ -35,7 +35,7 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 		var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
 		var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
 		var arguments = context.GetArguments<object>(this._MethodInfo).ToArray();
-		var result = this._MethodInfo.Invoke(controller, arguments);
+		var result = this._MethodInfo.InvokeMethod(controller, arguments);
 
 		return result switch
 		{

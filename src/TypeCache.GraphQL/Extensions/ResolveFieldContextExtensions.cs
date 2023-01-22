@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
@@ -42,10 +43,9 @@ public static class ResolveFieldContextExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetArguments(<see langword="typeof"/>(<typeparamref name="TSource"/>), <paramref name="methodInfo"/>, <paramref name="overrideValue"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetArguments(<see langword="typeof"/>(<typeparamref name="TSource"/>), <paramref name="methodInfo"/>);</c>
 	/// </summary>
 	/// <typeparam name="TSource">Source object type.</typeparam>
-	/// <param name="overrideValue"></param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodInfo methodInfo)
 		=> @this.GetArguments(typeof(TSource), methodInfo);
@@ -64,6 +64,28 @@ public static class ResolveFieldContextExtensions
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
 				_ when parameterInfo.ParameterType.Is(sourceType) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
+				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
+					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
+				_ => argument
+			};
+		}
+	}
+
+	public static IEnumerable<object?> GetArguments<TSource, KEY>(this IResolveFieldContext @this, MethodInfo methodInfo, IEnumerable<KEY> keys)
+	{
+		var parameterInfos = methodInfo.GetParameters()
+			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
+			.OrderBy(parameterInfo => parameterInfo.Position);
+		foreach (var parameterInfo in parameterInfos)
+		{
+			var name = parameterInfo.GraphQLName();
+			var argument = @this.HasArgument(name) ? @this.GetArgument(parameterInfo.ParameterType, name) : null;
+			yield return argument switch
+			{
+				_ when parameterInfo.GraphQLIgnore() => null,
+				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when parameterInfo.ParameterType.Is<TSource>() => @this.Source,
+				_ when parameterInfo.ParameterType.IsAssignableTo<IEnumerable<KEY>>() => keys,
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
 					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
 				_ => argument

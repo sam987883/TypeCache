@@ -4,7 +4,7 @@ using System;
 using TypeCache.Extensions;
 using Xunit;
 
-namespace TypeCache.Tests.Extenstions;
+namespace TypeCache.Tests.Extensions;
 
 public class ReadOnlySpanExtensions
 {

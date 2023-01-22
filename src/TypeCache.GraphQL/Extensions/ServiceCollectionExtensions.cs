@@ -1,38 +1,42 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Text.Json;
+using System.Text.Json.Serialization;
 using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Execution;
-using GraphQL.SystemTextJson;
-using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using TypeCache.GraphQL.Converters;
 using TypeCache.GraphQL.Types;
+using TypeCache.GraphQL.Web;
 
 namespace TypeCache.GraphQL.Extensions;
 
 public static class ServiceCollectionExtensions
 {
 	/// <summary>
-	/// Registers:
-	/// <list type="bullet">
-	/// <item><term><see cref="IDocumentExecuter"/></term> A singleton instance of: <see cref="DocumentExecuter"/>.</item>
-	/// <item><term><see cref="IGraphQLSerializer"/></term> A singleton instance of: <see cref="GraphQLSerializer"/>.</item>
-	/// <item><term><see cref="IDataLoaderContextAccessor"/></term> A singleton instance of: <see cref="DataLoaderContextAccessor"/>.</item>
-	/// <item><term><see cref="IDocumentExecutionListener"/></term> A singleton instance of: <see cref="DataLoaderDocumentListener"/>.</item>
-	/// <item><term><see cref="GraphQLEnumType{T}"/></term> The <see cref="EnumerationGraphType{TEnum}"/>.</item>
-	/// <item><term><see cref="GraphQLHashIdType"/></term> A <see cref="ScalarGraphType"/> that hashes and unhashes integer identifier types to prevent a sequential attack.</item>
-	/// <item><term><see cref="GraphQLInputType{T}"/></term> The GraphQL InputObjectGraphType.</item>
-	/// <item><term><see cref="GraphQLObjectType{T}"/></term> The GraphQL ObjectGraphType.</item>
-	/// </list>
+	/// Registers singletons for: <see cref="IDocumentExecuter"/>, <see cref="IGraphQLSerializer"/>, <see cref="IDataLoaderContextAccessor"/> and <see cref="IDocumentExecutionListener"/>.<br/>
+	/// Also registers transients: <see cref="GraphQLEnumType{T}"/>, <see cref="GraphQLHashIdType"/>, <see cref="GraphQLInputType{T}"/> and <see cref="GraphQLObjectType{T}"/>.
 	/// </summary>
-	public static IServiceCollection AddGraphQL(this IServiceCollection @this, JsonSerializerOptions? jsonOptions = null)
-		=> @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-			.AddSingleton<IGraphQLSerializer>(provider => jsonOptions is not null ? new GraphQLSerializer(jsonOptions) : new GraphQLSerializer())
+	/// <remarks>
+	/// You can override <b><see cref="IGraphQLSerializer"/></b> by registering a different implemntation before this call.<br/>
+	/// Other implementations for <b><see cref="IGraphQLSerializer"/></b> can be found at:
+	/// <list type="bullet">
+	/// <item><see href="https://github.com/graphql-dotnet/graphql-dotnet/pkgs/nuget/GraphQL.SystemTextJson"/></item>
+	/// <item><see href="https://github.com/graphql-dotnet/graphql-dotnet/pkgs/nuget/GraphQL.NewtonsoftJson"/></item>
+	/// </list>
+	/// To limit the information exposed in <see cref="ExecutionError"/>, register a JsonConverter&lt;<see cref="ExecutionError"/>&gt; that writes out only what is desired.
+	/// </remarks>
+	public static IServiceCollection AddGraphQL(this IServiceCollection @this)
+	{
+		@this.TryAddSingleton<IGraphQLSerializer, GraphQLJsonSerializer>();
+		@this.TryAddSingleton<JsonConverter<ExecutionError>, GraphQLExecutionErrorJsonConverter>();
+		return @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
 			.AddTransient(typeof(GraphQLEnumType<>))
 			.AddTransient<GraphQLHashIdType>()
 			.AddTransient(typeof(GraphQLInputType<>))
 			.AddTransient(typeof(GraphQLObjectType<>));
+	}
 }

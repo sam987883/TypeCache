@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DI;
-using GraphQL.Transport;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
@@ -59,7 +58,7 @@ public sealed class GraphQLMiddleware
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
-			Variables = request.Variables is not null ? new Inputs(request.Variables) : null,
+			Variables = request.Variables is not null ? new Inputs(request.Variables!) : null,
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
