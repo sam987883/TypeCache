@@ -33,7 +33,6 @@
 ---
 ### GraphQL ISchema Extensions
 
-
 - `GraphQL.Types.ISchema.`__`AddVersion(...)`__
 - `GraphQL.Types.ISchema.`__`AddDatabaseSchemaQueries(...)`__
 - `GraphQL.Types.ISchema.`__`AddDatabaseSchemaQuery(...)`__
@@ -45,11 +44,6 @@
 - `GraphQL.Types.ISchema.`__`AddMutations<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSubscription(...)`__
 - `GraphQL.Types.ISchema.`__`AddSubscriptions<>(...)`__
-- `GraphQL.Types.ISchema.`__`AddSubquery<>(...)`__
-- `GraphQL.Types.ISchema.`__`AddSubqueryBatch(...)`__
-- `GraphQL.Types.ISchema.`__`AddSubqueryBatch<>(...)`__
-- `GraphQL.Types.ISchema.`__`AddSubqueryCollection(...)`__
-- `GraphQL.Types.ISchema.`__`AddSubqueryCollection<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSqlApiEndpoints<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSqlApiCallProcedureEndpoint<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSqlApiDeleteDataEndpoint<>(...)`__
@@ -59,3 +53,9 @@
 - `GraphQL.Types.ISchema.`__`AddSqlApiSelectEndpoint<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSqlApiUpdateDataEndpoint<>(...)`__
 - `GraphQL.Types.ISchema.`__`AddSqlApiUpdateEndpoint<>(...)`__
+---
+### GraphQL GraphQLObject<T> Extensions
+
+- `TypeCache.GraphQL.Types.GraphQLObject<T>.`__`AddField(MethodInfo)`__
+- `TypeCache.GraphQL.Types.GraphQLObject<T>.`__`AddQueryItem<CHILD, MATCH>(MethodInfo, Func<T, MATCH>, Func<CHILD, MATCH>)`__
+- `TypeCache.GraphQL.Types.GraphQLObject<T>.`__`AddQueryCollection<CHILD, MATCH>(MethodInfo, Func<T, MATCH>, Func<CHILD, MATCH>)`__
