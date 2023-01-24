@@ -2,6 +2,7 @@
 
 using System.Linq;
 using GraphQL.Types;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.Types;
@@ -14,17 +15,8 @@ public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 		this.Name = typeof(T).GraphQLInputName();
 		this.Description = typeof(T).GraphQLDescription();
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
-
-		var fields = TypeOf<T>.Properties
+		this.AddFieldTypes(typeof(T).GetInstanceProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite && !propertyInfo.GraphQLIgnore())
-			.Select(propertyInfo => new FieldType()
-			{
-				Type = propertyInfo.GraphQLType(true),
-				Name = propertyInfo.GraphQLName(),
-				Description = propertyInfo.GraphQLDescription(),
-				DeprecationReason = propertyInfo.GraphQLDeprecationReason(),
-			});
-		foreach (var field in fields)
-			this.AddField(field);
+			.Select(propertyInfo => propertyInfo.ToInputFieldType()));
 	}
 }

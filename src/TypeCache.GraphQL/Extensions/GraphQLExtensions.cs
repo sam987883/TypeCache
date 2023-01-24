@@ -20,6 +20,9 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLExtensions
 {
+	public static FieldType[] AddFieldTypes<T>(this ComplexGraphType<T> @this, IEnumerable<FieldType> fieldTypes)
+		=> fieldTypes.Select(@this.AddField).ToArray();
+
 	public static void AddOrderBy(this EnumerationGraphType @this, OrderBy orderBy, string? deprecationReason = null)
 		=> @this.Add(new(orderBy.Display, orderBy.ToString())
 		{
@@ -115,7 +118,7 @@ public static class GraphQLExtensions
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Type = @this.ReturnParameter.GraphQLType()
+			Type = @this.ReturnType.GraphQLType(false)
 		};
 
 	public static FieldType ToFieldType<T>(this PropertyInfo @this)
@@ -153,4 +156,13 @@ public static class GraphQLExtensions
 			Resolver = new PropertyFieldResolver<T>(@this)
 		};
 	}
+
+	public static FieldType ToInputFieldType(this PropertyInfo @this)
+		=> new FieldType()
+		{
+			Type = @this.GraphQLType(true),
+			Name = @this.GraphQLName(),
+			Description = @this.GraphQLDescription(),
+			DeprecationReason = @this.GraphQLDeprecationReason()
+		};
 }

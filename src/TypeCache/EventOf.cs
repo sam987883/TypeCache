@@ -2,7 +2,7 @@
 
 using System.Reflection;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache;
 
@@ -13,7 +13,7 @@ public static class EventOf<T>
 
 	private static IDictionary<long, HandlerReference> EventHandlers { get; } = new Dictionary<long, HandlerReference>();
 
-	public static EventInfo[] Events => TypeOf<T>.Events;
+	public static EventInfo[] Events => typeof(T).GetEvents(FlattenHierarchy | Instance | Public);
 
 	public static long AddEventHandler(T instance, string eventMemberName, Delegate handler)
 	{

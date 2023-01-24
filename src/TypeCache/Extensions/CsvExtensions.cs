@@ -52,9 +52,9 @@ public static class CsvExtensions
 	public static string[] ToCSV<T>(this IEnumerable<T> @this, CsvOptions options = default)
 		where T : notnull
 	{
-		var propertyInfos = options.MemberNames.Any()
-			? TypeOf<T>.Properties.IntersectBy(options.MemberNames, propertyInfo => propertyInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray()
-			: TypeOf<T>.Properties;
+		var propertyInfos = typeof(T).GetInstanceProperties();
+		if (options.MemberNames.Any())
+			propertyInfos = propertyInfos.IntersectBy(options.MemberNames, propertyInfo => propertyInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray();
 		if (propertyInfos.Any())
 		{
 			var headerRow = string.Join(',', propertyInfos.Select(_ => _.Name().EscapeCSV()));
@@ -62,9 +62,9 @@ public static class CsvExtensions
 			return dataRows.Prepend(headerRow).ToArray();
 		}
 
-		var fieldInfos = options.MemberNames.Any()
-			? TypeOf<T>.Fields.IntersectBy(options.MemberNames, fieldInfo => fieldInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray()
-			: TypeOf<T>.Fields;
+		var fieldInfos = typeof(T).GetInstanceFields(true);
+		if (options.MemberNames.Any())
+			fieldInfos = fieldInfos.IntersectBy(options.MemberNames, fieldInfo => fieldInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray();
 		if (fieldInfos.Any())
 		{
 			var headerRow = string.Join(',', fieldInfos.Select(_ => _.Name()));

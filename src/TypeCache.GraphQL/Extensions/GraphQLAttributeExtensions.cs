@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using GraphQL;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -44,37 +46,17 @@ public static class GraphQLAttributeExtensions
 	public static bool GraphQLIgnore(this ParameterInfo @this)
 		=> @this.HasCustomAttribute<GraphQLIgnoreAttribute>();
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLKey(this MemberInfo @this)
-		=> @this.GetCustomAttribute<GraphQLKeyAttribute>()?.Name;
-
 	public static string GraphQLInputName(this Type @this)
-		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name switch
-		{
-			null => Invariant($"{@this.GraphQLName()}Input"),
-			var name when @this.IsGenericType => string.Format(InvariantCulture, name, @this.GenericTypeArguments.Select(_ => _.Name()).ToArray()),
-			var name => name
-		};
+		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name ?? (@this.IsGenericType
+			? Invariant($"{@this.Name()}{string.Join(string.Empty, @this.GenericTypeArguments.Select(_ => _.GraphQLName()))}")
+			: Invariant($"{@this.GraphQLName()}Input"));
 
 	public static string GraphQLName(this MemberInfo @this)
-		=> @this switch
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this switch
 		{
-			MethodInfo methodInfo => methodInfo.GraphQLName(),
-			Type type => type.GraphQLName(),
-			_ => @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name()
-		};
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string GraphQLName(this MethodInfo @this)
-		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name().TrimEnd("Async");
-
-	public static string GraphQLName(this Type @this)
-		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name switch
-		{
-			null when @this.IsGenericType => Invariant($"{@this.GenericTypeArguments.First().Name()}_{@this.Name()}"),
-			null => @this.Name(),
-			var name when @this.IsGenericType => string.Format(InvariantCulture, name, @this.GenericTypeArguments.Select(type => type.Name()).ToArray()),
-			var name => name
+			MethodInfo methodInfo => methodInfo.Name().TrimEnd("Async"),
+			Type type when type.IsGenericType => Invariant($"{type.Name()}{string.Join(string.Empty, type.GenericTypeArguments.Select(_ => _.GraphQLName()))}"),
+			_ => @this.Name()
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -114,6 +96,9 @@ public static class GraphQLAttributeExtensions
 		(objectType is ObjectType.Object).AssertFalse();
 
 		var systemType = @this.GetSystemType();
+		if (@this.IsGenericType && systemType.IsAny(SystemType.Task, SystemType.ValueTask))
+			return GraphQLType(@this.GenericTypeArguments[0], isInputType);
+
 		if (systemType is SystemType.Nullable)
 		{
 			var type = @this.GenericTypeArguments.First();

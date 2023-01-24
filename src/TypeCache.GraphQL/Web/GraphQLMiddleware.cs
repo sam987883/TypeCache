@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DI;
+using GraphQL.Execution;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,12 @@ public sealed class GraphQLMiddleware
 		this._Schema = new Schema(provider, new[] { configureSchema });
 	}
 
-	public async Task Invoke(HttpContext httpContext, IServiceProvider provider, IDocumentExecuter executer, IGraphQLSerializer graphQLSerializer, ILogger<GraphQLMiddleware> logger)
+	public async Task Invoke(HttpContext httpContext
+		, IServiceProvider provider
+		, IDocumentExecuter executer
+		, IDocumentExecutionListener listener
+		, IGraphQLSerializer graphQLSerializer
+		, ILogger<GraphQLMiddleware> logger)
 	{
 		if (!httpContext.Request.Path.Equals(this._Route))
 		{
@@ -66,6 +72,7 @@ public sealed class GraphQLMiddleware
 			UserContext = userContext,
 			ValidationRules = DocumentValidator.CoreRules
 		};
+		options.Listeners.Add(listener);
 		var result = await executer.ExecuteAsync(options);
 		result.Extensions ??= new(2, StringComparer.OrdinalIgnoreCase);
 

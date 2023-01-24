@@ -28,4 +28,10 @@ public class Person
 	public Guid Rowguid { get; set; }
 	[GraphQLType<NonNullGraphType<StringGraphType>>()]
 	public DateTime ModifiedDate { get; set; }
+
+	public IEnumerable<Person> GetPersons()
+		=> new Person[]
+		{
+			new() { FirstName = "John", LastName = "Smith" }
+		};
 }

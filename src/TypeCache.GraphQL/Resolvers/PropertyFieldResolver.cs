@@ -83,7 +83,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = RegexOf.SinglelinePattern(pattern).Match(text);
+				var match = RegexCache.SinglelinePattern(pattern).Match(text);
 				if (match.Success)
 					text = match.Value;
 				else

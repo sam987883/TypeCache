@@ -39,6 +39,102 @@ partial class ReflectionExtensions
 		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
 			.GetValue(instance);
 
+	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static FieldInfo[] GetInstanceFields(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Instance;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetFields(binding);
+	}
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static MethodInfo[] GetInstanceMethods(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Instance;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetMethods(binding);
+	}
+
+	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static PropertyInfo[] GetInstanceProperties(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Instance;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetProperties(binding);
+	}
+
+	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static FieldInfo[] GetStaticFields(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Static;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetFields(binding);
+	}
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static MethodInfo[] GetStaticMethods(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Static;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetMethods(binding);
+	}
+
+	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
+	/// <remarks>
+	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
+	/// </remarks>
+	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
+	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
+	public static PropertyInfo[] GetStaticProperties(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
+	{
+		var binding = FlattenHierarchy | Public | Static;
+		if (includeNonPublic)
+			binding |= NonPublic;
+		if (nameIgnoreCase)
+			binding |= IgnoreCase;
+		return @this.GetProperties(binding);
+	}
+
 	/// <exception cref="UnreachableException"></exception>
 	public static Kind GetKind(this Type @this)
 		=> @this switch

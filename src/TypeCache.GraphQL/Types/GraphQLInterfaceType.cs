@@ -13,14 +13,13 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 {
 	public GraphQLInterfaceType()
 	{
-		TypeOf<T>.Kind.AssertEquals(Kind.Interface);
+		typeof(T).GetKind().AssertEquals(Kind.Interface);
 
 		this.Name = typeof(T).GraphQLName();
 
-		var fields = TypeOf<T>.Properties
+		typeof(T).GetInstanceProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
-			.Select(propertyInfo => propertyInfo.ToFieldType<T>());
-		foreach (var field in fields)
-			this.AddField(field);
+			.Select(propertyInfo => this.AddField(propertyInfo.ToFieldType<T>()))
+			.ToArray();
 	}
 }

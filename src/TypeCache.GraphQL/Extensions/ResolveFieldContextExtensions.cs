@@ -71,7 +71,7 @@ public static class ResolveFieldContextExtensions
 		}
 	}
 
-	public static IEnumerable<object?> GetArguments<TSource, KEY>(this IResolveFieldContext @this, MethodInfo methodInfo, IEnumerable<KEY> keys)
+	public static IEnumerable<object?> GetArguments<TSource, MATCH>(this IResolveFieldContext @this, MethodInfo methodInfo, IEnumerable<MATCH> keys)
 	{
 		var parameterInfos = methodInfo.GetParameters()
 			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
@@ -85,7 +85,8 @@ public static class ResolveFieldContextExtensions
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
 				_ when parameterInfo.ParameterType.Is<TSource>() => @this.Source,
-				_ when parameterInfo.ParameterType.IsAssignableTo<IEnumerable<KEY>>() => keys,
+				_ when parameterInfo.ParameterType.Is<IEnumerable<MATCH>>() => keys,
+				_ when parameterInfo.ParameterType.Is<MATCH[]>() => keys.ToArray(),
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
 					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
 				_ => argument

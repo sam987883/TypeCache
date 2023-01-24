@@ -15,7 +15,7 @@ public static class AssertExtensions
 		where T : struct
 	{
 		if (!EqualityComparer<T>.Default.Equals(@this, value))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this}.{nameof(AssertEquals)}<{TypeOf<T>.Name}>({value})."));
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this}.{nameof(AssertEquals)}<{typeof(T).Name()}>({value})."));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -28,7 +28,7 @@ public static class AssertExtensions
 		comparer.AssertNotNull(caller: caller);
 
 		if (!comparer.Equals(@this, value))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertEquals)}<{TypeOf<T>.Name}>({value?.ToString() ?? NULL})."));
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertEquals)}<{typeof(T).Name()}>({value?.ToString() ?? NULL})."));
 	}
 
 	/// <summary>
@@ -81,7 +81,7 @@ public static class AssertExtensions
 		@this.AssertNotNull(argument, caller);
 
 		if (!@this.Any())
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotEmpty)}<IEnumerable<{TypeOf<T>.Name}>>()."));
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotEmpty)}<IEnumerable<{typeof(T).Name()}>>()."));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -94,7 +94,7 @@ public static class AssertExtensions
 		@this.AssertNotNull(argument, caller);
 
 		if (!@this.Any())
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotEmpty)}<{TypeOf<T>.Name}[]>()."));
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotEmpty)}<{typeof(T).Name()}[]>()."));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -104,7 +104,7 @@ public static class AssertExtensions
 		where T : notnull
 	{
 		if (@this is null)
-			throw new ArgumentNullException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{TypeOf<T>.Name}>()."));
+			throw new ArgumentNullException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{typeof(T).Name()}>()."));
 	}
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -114,7 +114,7 @@ public static class AssertExtensions
 		where T : notnull
 	{
 		if (object.ReferenceEquals(@this.Item1, @this.Item2))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this.Item1?.ToString() ?? NULL}.{nameof(AssertNotSame)}<{TypeOf<T>.Name}>({@this.Item2?.ToString() ?? NULL})."));
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this.Item1?.ToString() ?? NULL}.{nameof(AssertNotSame)}<{typeof(T).Name()}>({@this.Item2?.ToString() ?? NULL})."));
 	}
 
 	/// <exception cref="ArgumentOutOfRangeException"/>

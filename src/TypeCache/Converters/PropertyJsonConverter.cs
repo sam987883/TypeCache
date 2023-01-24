@@ -12,7 +12,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 	{
 		if (reader.TokenType is JsonTokenType.StartObject)
 		{
-			var output = TypeOf<T>.Create()!;
+			var output = (T)typeof(T).Create()!;
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();
@@ -40,7 +40,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		}
 
 		writer.WriteStartObject();
-		foreach (var property in TypeOf<T>.Properties.Where(property => property.GetMethod?.IsStatic is false))
+		foreach (var property in typeof(T).GetInstanceProperties().Where(property => property.GetMethod?.IsStatic is false))
 		{
 			writer.WritePropertyName(property.Name());
 			var value = property.GetPropertyValue(input);

@@ -13,13 +13,13 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 	{
 		if (reader.TokenType is JsonTokenType.StartObject)
 		{
-			var output = TypeOf<T>.Create();
+			var output = (T)typeof(T).Create()!;
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString()!;
 				if (reader.Read())
 				{
-					var fieldInfo = TypeOf<T>.Fields.FirstOrDefault(_ => _.Name().Is(name));
+					var fieldInfo = typeof(T).GetInstanceFields(true).FirstOrDefault(_ => _.Name().Is(name));
 					if (fieldInfo is not null && !fieldInfo.IsInitOnly)
 						fieldInfo.SetFieldValue(output!, reader.TokenType switch
 						{
@@ -40,7 +40,7 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 		if (input is not null)
 		{
 			writer.WriteStartObject();
-			foreach (var field in TypeOf<T>.Fields)
+			foreach (var field in typeof(T).GetInstanceFields(true))
 			{
 				writer.WritePropertyName(field!.Name());
 				var value = field.GetFieldValue(input);
