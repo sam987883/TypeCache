@@ -26,21 +26,24 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class SchemaExtensions
 {
+	public static IObjectGraphType Query(this ISchema @this)
+		=> @this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
+
+	public static IObjectGraphType Mutation(this ISchema @this)
+		=> @this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
+
+	public static IObjectGraphType Subscription(this ISchema @this)
+		=> @this.Subscription ??= new ObjectGraphType { Name = nameof(ISchema.Subscription) };
+
 	/// <summary>
 	/// Adds a GraphQL endpoint that returns the version of the GraphQL schema.
 	/// </summary>
 	/// <param name="version">The version of this GraphQL schema</param>
 	public static FieldType AddVersion(this ISchema @this, string version)
 	{
-		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
-		return @this.Query.AddField(new()
-		{
-			Name = "Version",
-			DefaultValue = "0",
-			Description = Invariant($"The version of this GraphQL Schema: {version}."),
-			Resolver = new FuncFieldResolver<string>(context => version),
-			Type = typeof(NonNullGraphType<StringGraphType>)
-		});
+		var field = @this.AddQuery("Version", () => version);
+		field.Description = Invariant($"The version of this GraphQL Schema: {version}.");
+		return field;
 	}
 
 	/// <summary>
@@ -108,15 +111,14 @@ public static class SchemaExtensions
 				Type = column.DataType switch
 				{
 					_ when column.DataType == typeof(object) => typeof(StringGraphType),
-					_ => column.DataType.NullableGraphQLType()
+					_ => column.DataType.ToGraphQLType(false, !column.AllowDBNull)
 				}
 			});
 			field.Metadata.Add(nameof(DataColumn.ColumnName), column.ColumnName);
 			field.Metadata.Add(nameof(DataColumn.DataType), column.DataType.TypeHandle);
 		}
 
-		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
-		var fieldType = @this.Query.AddField(new()
+		var fieldType = @this.Query().AddField(new()
 		{
 			Name = table.TableName,
 			Description = Invariant($"Database Schema: {table.TableName}"),
@@ -176,7 +178,7 @@ public static class SchemaExtensions
 					Type = columnDataType switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.NullableGraphQLType()
+						_ => columnDataType.ToGraphQLType(false, false)
 					}
 				});
 
@@ -201,7 +203,7 @@ public static class SchemaExtensions
 					Type = column.DataTypeHandle switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.NullableGraphQLType()
+						_ => columnDataType.ToGraphQLType(false, !column.Nullable)
 					}
 				});
 				field.Metadata.Add(ColumnName, column.Name);
@@ -236,8 +238,7 @@ public static class SchemaExtensions
 				};
 				field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-				@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
-				@this.Query.AddField(field);
+				@this.Query().AddField(field);
 			}
 
 			if (objectSchema.Type is DatabaseObjectType.Table)
@@ -266,8 +267,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 
 				if (actions.HasFlag(SqlApiAction.DeleteData))
@@ -297,8 +297,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 
 				if (actions.HasFlag(SqlApiAction.Insert))
@@ -325,8 +324,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 
 				if (actions.HasFlag(SqlApiAction.InsertData))
@@ -345,8 +343,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 
 				if (actions.HasFlag(SqlApiAction.Update))
@@ -366,8 +363,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 
 				if (actions.HasFlag(SqlApiAction.UpdateData))
@@ -391,8 +387,7 @@ public static class SchemaExtensions
 					};
 					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-					@this.Mutation.AddField(fieldType);
+					@this.Mutation().AddField(fieldType);
 				}
 			}
 		});
@@ -428,6 +423,129 @@ public static class SchemaExtensions
 	}
 
 	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<R>(this ISchema @this, string name, Func<R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler()),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true, true)) { Name = argument }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T1, T2, R>(this ISchema @this, string name, (string, string) arguments, Func<T1, T2, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T1, T2, T3, R>(this ISchema @this, string name, (string, string, string) arguments, Func<T1, T2, T3, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T1, T2, T3, T4, R>(this ISchema @this, string name, (string, string, string, string) arguments, Func<T1, T2, T3, T4, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T1, T2, T3, T4, T5, R>(this ISchema @this, string name, (string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4),
+				context.GetArgument<T5>(arguments.Item5))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddMutation<T1, T2, T3, T4, T5, T6, R>(this ISchema @this, string name, (string, string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, T6, R> handler)
+		=> @this.Mutation().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 },
+				new QueryArgument(typeof(T6).ToGraphQLType(true, true)) { Name = arguments.Item6 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4),
+				context.GetArgument<T5>(arguments.Item5),
+				context.GetArgument<T6>(arguments.Item6))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
 	/// <list type="bullet">
 	/// <item><see cref="IResolveFieldContext"/></item>
@@ -445,8 +563,7 @@ public static class SchemaExtensions
 		var fieldType = methodInfo.ToFieldType();
 		fieldType.Resolver = new MethodFieldResolver(methodInfo);
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -490,12 +607,135 @@ public static class SchemaExtensions
 			.ToArray();
 
 	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<R>(this ISchema @this, string name, Func<R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler()),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true, true)) { Name = argument }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T1, T2, R>(this ISchema @this, string name, (string, string) arguments, Func<T1, T2, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T1, T2, T3, R>(this ISchema @this, string name, (string, string, string) arguments, Func<T1, T2, T3, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T1, T2, T3, T4, R>(this ISchema @this, string name, (string, string, string, string) arguments, Func<T1, T2, T3, T4, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T1, T2, T3, T4, T5, R>(this ISchema @this, string name, (string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4),
+				context.GetArgument<T5>(arguments.Item5))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
+	/// <b>GraphQL Minimal API.</b>
+	/// </summary>
+	public static FieldType AddQuery<T1, T2, T3, T4, T5, T6, R>(this ISchema @this, string name, (string, string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, T6, R> handler)
+		=> @this.Query().AddField(new()
+		{
+			Arguments = new(
+				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 },
+				new QueryArgument(typeof(T6).ToGraphQLType(true, true)) { Name = arguments.Item6 }),
+			Name = name,
+			Resolver = new FuncFieldResolver<R>(context => handler(
+				context.GetArgument<T1>(arguments.Item1),
+				context.GetArgument<T2>(arguments.Item2),
+				context.GetArgument<T3>(arguments.Item3),
+				context.GetArgument<T4>(arguments.Item4),
+				context.GetArgument<T5>(arguments.Item5),
+				context.GetArgument<T6>(arguments.Item6))),
+			Type = typeof(R).ToGraphQLType(false, false)
+		});
+
+	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
 	/// <list type="bullet">
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <param name="method">Graph endpoint implementation.</param>
+	/// <param name="methodInfo">Graph endpoint implementation.</param>
 	/// <remarks>Any methodInfo's declaring type instance must be registered in the <see cref="IServiceCollection"/>, unless the methodInfo is <c>static</c>.</remarks>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
@@ -507,8 +747,7 @@ public static class SchemaExtensions
 		var fieldType = methodInfo.ToFieldType();
 		fieldType.Resolver = new MethodFieldResolver(methodInfo);
 
-		@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
-		return @this.Query.AddField(fieldType);
+		return @this.Query().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -552,8 +791,7 @@ public static class SchemaExtensions
 		var fieldType = methodInfo.ToFieldType();
 		fieldType.StreamResolver = new MethodSourceStreamResolver(methodInfo);
 
-		@this.Subscription ??= new ObjectGraphType { Name = nameof(ISchema.Subscription) };
-		return @this.Subscription.AddField(fieldType);
+		return @this.Subscription().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -633,20 +871,14 @@ public static class SchemaExtensions
 		if (graphQlType is not null)
 			fieldType.ResolvedType = graphQlType;
 		else
-			fieldType.Type = typeof(T).GraphQLType(false).ToNonNullGraphType();
+			fieldType.Type = typeof(T).ToGraphQLType(false, true);
 
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
 		if (mutation)
-		{
-			@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-			@this.Mutation.AddField(fieldType);
-		}
+			@this.Mutation().AddField(fieldType);
 		else
-		{
-			@this.Query ??= new ObjectGraphType { Name = nameof(ISchema.Query) };
-			@this.Query.AddField(fieldType);
-		}
+			@this.Query().AddField(fieldType);
 
 		return fieldType;
 	}
@@ -683,8 +915,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -720,8 +951,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -757,8 +987,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -815,8 +1044,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -872,8 +1100,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Query.AddField(fieldType);
+		return @this.Query().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -908,8 +1135,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	/// <summary>
@@ -946,8 +1172,7 @@ public static class SchemaExtensions
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		@this.Mutation ??= new ObjectGraphType { Name = nameof(ISchema.Mutation) };
-		return @this.Mutation.AddField(fieldType);
+		return @this.Mutation().AddField(fieldType);
 	}
 
 	private static string FixName(string name)

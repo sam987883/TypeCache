@@ -73,7 +73,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 			Arguments = new QueryArguments(methodInfo.GetParameters()
 				.Where(parameterInfo => !parameterInfo.GraphQLIgnore()
 					&& !parameterInfo.ParameterType.IsAny<IResolveFieldContext, MATCH[], IEnumerable<MATCH>>())
-				.Select(parameterInfo => new QueryArgument(parameterInfo.GraphQLType())
+				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
 				{
 					Name = parameterInfo.GraphQLName(),
 					Description = parameterInfo.GraphQLDescription(),
@@ -107,7 +107,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 			Arguments = new QueryArguments(methodInfo.GetParameters()
 				.Where(parameterInfo => !parameterInfo.GraphQLIgnore()
 					&& !parameterInfo.ParameterType.IsAny<IResolveFieldContext, MATCH[], IEnumerable<MATCH>>())
-				.Select(parameterInfo => new QueryArgument(parameterInfo.GraphQLType())
+				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
 				{
 					Name = parameterInfo.GraphQLName(),
 					Description = parameterInfo.GraphQLDescription(),
