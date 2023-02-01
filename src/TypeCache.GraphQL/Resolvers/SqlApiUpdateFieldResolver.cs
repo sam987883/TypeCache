@@ -59,12 +59,12 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
 		{
-			var request = new SqlDataTableRequest { Command = sqlCommand };
+			var request = new SqlDataTableRequest(sqlCommand);
 			result = (await mediator.MapAsync(request, context.CancellationToken)).Select();
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
+			var request = new SqlExecuteRequest(sqlCommand);
 			await mediator.ExecuteAsync(request, context.CancellationToken);
 		}
 
@@ -113,17 +113,15 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
 		{
-			var request = new SqlModelsRequest
+			var request = new SqlModelsRequest(sqlCommand, typeof(T))
 			{
-				Command = sqlCommand,
-				ModelType = typeof(T),
 				ListInitialCapacity = data.Length
 			};
 			result = await mediator.MapAsync(request, context.CancellationToken);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
+			var request = new SqlExecuteRequest(sqlCommand);
 			await mediator.ExecuteAsync(request, context.CancellationToken);
 		}
 

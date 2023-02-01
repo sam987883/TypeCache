@@ -42,7 +42,7 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 			ValueTask<IObservable<object?>> valueTask => valueTask,
 			Task<IObservable<object?>> task => new ValueTask<IObservable<object?>>(task),
 			IObservable<object?> item => ValueTask.FromResult(item),
-			_ => throw new UnreachableException(Invariant($"Method {this._MethodInfo.Name()} returned a null for {this._MethodInfo.ReturnType.Name()}."))
+			_ => throw new ArgumentException(Invariant($"Method {this._MethodInfo.Name()} returned a null for {this._MethodInfo.ReturnType.Name()}."))
 		};
 	}
 }

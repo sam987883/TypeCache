@@ -11,7 +11,7 @@ namespace TypeCache.GraphQL.TestApp.Tables;
 [SqlApi]
 public class Person
 {
-	[GraphQLType<GraphQLHashIdType>()]
+	[GraphQLType(typeof(GraphQLHashIdType))]
 	public int BusinessEntityID { get; set; }
 	public string? PersonType { get; set; }
 	public bool NameStyle { get; set; }
@@ -23,15 +23,19 @@ public class Person
 	public int EmailPromotion { get; set; }
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
-	[GraphQLType<GuidGraphType>()]
+	[GraphQLType(typeof(GuidGraphType))]
 	[Name("rowguid")]
 	public Guid Rowguid { get; set; }
-	[GraphQLType<NonNullGraphType<StringGraphType>>()]
+	[GraphQLType(typeof(NonNullGraphType<StringGraphType>))]
 	public DateTime ModifiedDate { get; set; }
 
 	public IEnumerable<Person> GetPersons()
 		=> new Person[]
 		{
-			new() { FirstName = "John", LastName = "Smith" }
+			new()
+			{
+				FirstName = "John",
+				LastName = "Smith"
+			}
 		};
 }

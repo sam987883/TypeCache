@@ -12,7 +12,7 @@ namespace TypeCache.Extensions;
 public static class ReadOnlySpanExtensions
 {
 	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action)
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T> action)
 	{
 		action.AssertNotNull();
 
@@ -25,7 +25,7 @@ public static class ReadOnlySpanExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action)
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T, int> action)
 	{
 		action.AssertNotNull();
 
@@ -38,7 +38,7 @@ public static class ReadOnlySpanExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action, Action between)
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T> action, Action between)
 	{
 		action.AssertNotNull();
 		between.AssertNotNull();
@@ -57,7 +57,7 @@ public static class ReadOnlySpanExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action, Action between)
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T, int> action, Action between)
 	{
 		action.AssertNotNull();
 		between.AssertNotNull();
@@ -75,7 +75,7 @@ public static class ReadOnlySpanExtensions
 		}
 	}
 
-	public static string Join(this scoped ReadOnlySpan<char> @this, IEnumerable<string> values)
+	public static string Join(this ReadOnlySpan<char> @this, IEnumerable<string> values)
 	{
 		if (!values.Any())
 			return new string(@this);
@@ -104,14 +104,14 @@ public static class ReadOnlySpanExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Join((<see cref="IEnumerable{T}"/>)<paramref name="values"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Join(this scoped ReadOnlySpan<char> @this, params string[] values)
+	public static string Join(this ReadOnlySpan<char> @this, params string[] values)
 		=> @this.Join((IEnumerable<string>)values);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>[0] == <paramref name="text"/>;</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this scoped ReadOnlySpan<char> @this, char text)
+	public static bool Left(this ReadOnlySpan<char> @this, char text)
 		=> @this[0] == text;
 
 	/// <remarks>
@@ -125,33 +125,15 @@ public static class ReadOnlySpanExtensions
 	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this scoped ReadOnlySpan<char> @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+	public static bool Left(this ReadOnlySpan<char> @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.StartsWith(text, comparison);
-
-	/// <inheritdoc cref="ISpanParsable{TSelf}.Parse(ReadOnlySpan{char}, IFormatProvider?)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Parse<T>(this scoped ReadOnlySpan<char> @this, IFormatProvider? formatProvider)
-		where T : ISpanParsable<T>
-		=> T.Parse(@this, formatProvider ?? InvariantCulture);
-
-	/// <inheritdoc cref="INumberBase{TSelf}.Parse(ReadOnlySpan{char}, NumberStyles, IFormatProvider?)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Parse<T>(this scoped ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider = null)
-		where T : INumberBase<T>
-		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
 
 	/// <inheritdoc cref="MemoryMarshal.Read{T}(ReadOnlySpan{byte})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T To<T>(this scoped ReadOnlySpan<byte> @this)
+	public static T To<T>(this ReadOnlySpan<byte> @this)
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
 
@@ -170,10 +152,10 @@ public static class ReadOnlySpanExtensions
 	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToBase64(this scoped ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
+	public static string ToBase64(this ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> Convert.ToBase64String(@this, options);
 
-	public static char[] ToBase64Chars(this scoped ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
+	public static char[] ToBase64Chars(this ReadOnlySpan<byte> @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 	{
 		Span<char> chars = stackalloc char[@this.Length * sizeof(int)];
 		return Convert.TryToBase64Chars(@this, chars, out var length, options)
@@ -208,7 +190,7 @@ public static class ReadOnlySpanExtensions
 		where T : struct
 		=> MemoryMarshal.ToEnumerable(@this);
 
-	public static string ToHex(this scoped ReadOnlySpan<byte> @this)
+	public static string ToHex(this ReadOnlySpan<byte> @this)
 	{
 		const string HEX_CHARS = "0123456789ABCDEF";
 
@@ -236,33 +218,6 @@ public static class ReadOnlySpanExtensions
 	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this scoped ReadOnlySpan<byte> @this, Encoding encoding)
+	public static string ToText(this ReadOnlySpan<byte> @this, Encoding encoding)
 		=> encoding.GetString(@this);
-
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, [MaybeNullWhen(false)] out T value)
-		where T : ISpanParsable<T>
-		=> T.TryParse(@this, InvariantCulture, out value);
-
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
-		where T : ISpanParsable<T>
-		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
-
-	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(ReadOnlySpan{char}, System.Globalization.NumberStyles, IFormatProvider?, out TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>(this scoped ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
-		where T : INumberBase<T>
-		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);
 }

@@ -22,11 +22,7 @@ public sealed class SqlApiCallFieldResolver<T> : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var request = new SqlModelsRequest
-		{
-			Command = sqlCommand,
-			ModelType = typeof(T)
-		};
+		var request = new SqlModelsRequest(sqlCommand, typeof(T));
 		var result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
 
 		return new OutputResponse<T>()

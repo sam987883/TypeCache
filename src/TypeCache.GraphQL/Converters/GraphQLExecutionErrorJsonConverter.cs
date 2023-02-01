@@ -5,10 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GraphQL;
-using GraphQL.Execution;
-using GraphQLParser;
 using TypeCache.Extensions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TypeCache.GraphQL.Converters;
 

@@ -59,8 +59,8 @@ public static class GraphQLAttributeExtensions
 		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name();
 
 	public static Type? GraphQLType(this MemberInfo @this)
-		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GetType().GenericTypeArguments[0];
+		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GraphQLType;
 
 	public static Type? GraphQLType(this ParameterInfo @this)
-		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GetType().GenericTypeArguments[0];
+		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GraphQLType;
 }

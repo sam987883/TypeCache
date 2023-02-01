@@ -48,7 +48,7 @@ public static class DateTimeExtensions
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="UnreachableException"/>
+	/// <exception cref="ArgumentException"/>
 	public static DateTime ToTimeZone(this DateTime @this, DateTimeKind kind)
 		=> kind switch
 		{
@@ -56,7 +56,7 @@ public static class DateTimeExtensions
 			DateTimeKind.Local => ConvertTimeFromUtc(@this, TimeZoneInfo.Local),
 			DateTimeKind.Unspecified => @this.As(kind),
 			DateTimeKind.Utc => ConvertTimeToUtc(@this),
-			_ => throw new UnreachableException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind:D} is not supported.")
+			_ => throw new ArgumentException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind:D} is not supported.")
 		};
 
 	/// <exception cref="TimeZoneNotFoundException">if: <c>@<paramref name="this"/>.Kind = <see cref="DateTimeKind.Unspecified"/></c></exception>

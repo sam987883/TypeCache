@@ -48,8 +48,8 @@ partial class ReflectionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Type"/>.GetTypeFromHandle(@<paramref name="this"/>);</c>
 	/// </remarks>
-	/// <exception cref="UnreachableException"></exception>
+	/// <exception cref="ArgumentException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToType(this RuntimeTypeHandle @this)
-		=> Type.GetTypeFromHandle(@this) ?? throw new UnreachableException("Type.GetTypeFromHandle(...) returned null.");
+		=> Type.GetTypeFromHandle(@this) ?? throw new ArgumentException("Type.GetTypeFromHandle(...) returned null.");
 }

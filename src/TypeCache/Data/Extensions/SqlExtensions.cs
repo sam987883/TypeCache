@@ -17,7 +17,7 @@ public static class SqlExtensions
 	public static string EscapeValue([NotNull] this string @this)
 		=> @this.Replace("'", "''");
 
-	/// <exception cref="UnreachableException"></exception>
+	/// <exception cref="ArgumentException"></exception>
 	public static string ToSQL(this object? @this) => @this switch
 	{
 		null or DBNull => "NULL",
@@ -33,7 +33,7 @@ public static class SqlExtensions
 		Guid guid => Invariant($"'{guid:D}'"),
 		LogicalOperator.And => "AND",
 		LogicalOperator.Or => "OR",
-		LogicalOperator _ => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL.")),
+		LogicalOperator _ => throw new ArgumentException(Invariant($"{nameof(LogicalOperator)}.{@this} is not implemented for SQL.")),
 		Sort.Ascending => "ASC",
 		Sort.Descending => "DESC",
 		Sort _ => string.Empty,

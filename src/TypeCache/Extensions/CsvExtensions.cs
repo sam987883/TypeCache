@@ -24,7 +24,7 @@ public static class CsvExtensions
 			',' or '"' => Invariant($"\"{@this}\""),
 			char character => character.ToString(),
 			sbyte or byte => ((IFormattable)@this).ToString(options.ByteFormatSpecifier, InvariantCulture),
-			short or int or nint or long or Int128 or ushort or uint or nuint or ulong => ((IFormattable)@this).ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			short or int or nint or long or ushort or uint or nuint or ulong => ((IFormattable)@this).ToString(options.IntegerFormatSpecifier, InvariantCulture),
 			float or double or Half or decimal => ((IFormattable)@this).ToString(options.DecimalFormatSpecifier, InvariantCulture),
 			DateOnly => ((IFormattable)@this).ToString(options.DateOnlyFormatSpecifier, InvariantCulture),
 			DateTime => ((IFormattable)@this).ToString(options.DateTimeFormatSpecifier, InvariantCulture),

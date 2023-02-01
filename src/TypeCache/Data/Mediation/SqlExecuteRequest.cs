@@ -4,7 +4,6 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlExecuteRequest : IRequest
+public sealed record class SqlExecuteRequest(SqlCommand Command) : IRequest
 {
-	public required SqlCommand Command { get; set; }
 }

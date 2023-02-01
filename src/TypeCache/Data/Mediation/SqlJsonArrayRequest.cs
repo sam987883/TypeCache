@@ -5,7 +5,6 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlJsonArrayRequest : IRequest<JsonArray>
+public sealed record class SqlJsonArrayRequest(SqlCommand Command) : IRequest<JsonArray>
 {
-	public required SqlCommand Command { get; set; }
 }

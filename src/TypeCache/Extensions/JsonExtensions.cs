@@ -50,7 +50,7 @@ public static class JsonExtensions
 	public static object? GetValue(this JsonElement @this)
 		=> @this.ValueKind switch
 		{
-			JsonValueKind.Undefined => throw new UnreachableException(),
+			JsonValueKind.Undefined => throw new ArgumentException(),
 			JsonValueKind.True => true,
 			JsonValueKind.False => false,
 			JsonValueKind.Number when @this.TryGetInt32(out var value) => value,

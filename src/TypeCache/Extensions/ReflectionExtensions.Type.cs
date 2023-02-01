@@ -135,7 +135,7 @@ partial class ReflectionExtensions
 		return @this.GetProperties(binding);
 	}
 
-	/// <exception cref="UnreachableException"></exception>
+	/// <exception cref="ArgumentException"></exception>
 	public static Kind GetKind(this Type @this)
 		=> @this switch
 		{
@@ -143,7 +143,7 @@ partial class ReflectionExtensions
 			{ IsInterface: true } => Kind.Interface,
 			{ IsClass: true } => Kind.Class,
 			{ IsValueType: true } => Kind.Struct,
-			_ => throw new UnreachableException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name() ?? "null"}] is not supported."))
+			_ => throw new ArgumentException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name() ?? "null"}] is not supported."))
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]

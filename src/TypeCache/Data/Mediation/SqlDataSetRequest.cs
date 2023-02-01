@@ -5,7 +5,6 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlDataSetRequest : IRequest<DataSet>
+public sealed record class SqlDataSetRequest(SqlCommand Command) : IRequest<DataSet>
 {
-	public required SqlCommand Command { get; set; }
 }

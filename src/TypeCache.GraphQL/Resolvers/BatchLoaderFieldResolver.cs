@@ -85,7 +85,6 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, MATCH> : FieldResolv
 			ValueTask<CHILD[]> valueTask => Task.Run<IEnumerable<CHILD>>(async () => (IEnumerable<CHILD>)await valueTask),
 			Task<IEnumerable<CHILD>> task => task,
 			Task<CHILD[]> valueTask => Task.Run<IEnumerable<CHILD>>(async () => (IEnumerable<CHILD>)await valueTask),
-			IAsyncEnumerable<CHILD> items => Task.FromResult(items.ToBlockingEnumerable()),
 			IEnumerable<CHILD> items => Task.FromResult(items),
 			_ => Task.FromResult((IEnumerable<CHILD>)Array<CHILD>.Empty)
 		};

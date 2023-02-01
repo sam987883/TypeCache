@@ -17,7 +17,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Read<T>(this scoped Span<byte> @this)
+	public static T Read<T>(this Span<byte> @this)
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
 
@@ -62,7 +62,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryRead(@<paramref name="this"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryRead<T>(this scoped Span<byte> @this, out T value)
+	public static bool TryRead<T>(this Span<byte> @this, out T value)
 		where T : struct
 		=> MemoryMarshal.TryRead(@this, out value);
 
@@ -71,7 +71,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryWrite(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryWrite<T>(this scoped Span<byte> @this, T value)
+	public static bool TryWrite<T>(this Span<byte> @this, T value)
 		where T : struct
 		=> MemoryMarshal.TryWrite(@this, ref value);
 
@@ -80,7 +80,7 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Write(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void Write<T>(this scoped Span<byte> @this, ref T value)
+	public static void Write<T>(this Span<byte> @this, ref T value)
 		where T : struct
 		=> MemoryMarshal.Write(@this, ref value);
 }

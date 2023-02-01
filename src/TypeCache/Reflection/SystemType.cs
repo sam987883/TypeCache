@@ -98,10 +98,6 @@ public enum SystemType
 	/// </summary>
 	Index,
 	/// <summary>
-	/// <c><see cref="System.Int128"/></c>
-	/// </summary>
-	Int128,
-	/// <summary>
 	/// <c><see cref="System.Int16"/></c>
 	/// </summary>
 	Int16,
@@ -189,10 +185,6 @@ public enum SystemType
 	/// <c><see cref="System.Type"/></c>
 	/// </summary>
 	Type,
-	/// <summary>
-	/// <c><see cref="System.UInt128"/></c>
-	/// </summary>
-	UInt128,
 	/// <summary>
 	/// <c><see cref="System.UInt16"/></c>
 	/// </summary>

@@ -29,7 +29,7 @@ internal static class TypeStore
 			{
 				MethodInfo methodInfo => methodInfo.ToInvokeLambdaExpression().Compile(),
 				ConstructorInfo constructorInfo => constructorInfo.ToInvokeLambdaExpression().Compile(),
-				_ => throw new UnreachableException("Method or Constructor not found.")
+				_ => throw new MissingMethodException("Method or Constructor not found.")
 			});
 		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle => handle.ToType() switch
 		{
@@ -76,7 +76,7 @@ internal static class TypeStore
 			},
 			_ => ObjectType.Unknown
 		});
-		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(141)
+		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(139)
 		{
 			{ typeof(Action).TypeHandle, SystemType.Action },
 			{ typeof(Action<>).TypeHandle, SystemType.Action },
@@ -124,7 +124,6 @@ internal static class TypeStore
 			{ typeof(Guid).TypeHandle, SystemType.Guid },
 			{ typeof(Half).TypeHandle, SystemType.Half },
 			{ typeof(Index).TypeHandle, SystemType.Index },
-			{ typeof(Int128).TypeHandle, SystemType.Int128 },
 			{ typeof(short).TypeHandle, SystemType.Int16 },
 			{ typeof(int).TypeHandle, SystemType.Int32 },
 			{ typeof(long).TypeHandle, SystemType.Int64 },
@@ -153,7 +152,6 @@ internal static class TypeStore
 			{ typeof(Tuple<,,,,,,>).TypeHandle, SystemType.Tuple },
 			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
 			{ typeof(Type).TypeHandle, SystemType.Type },
-			{ typeof(UInt128).TypeHandle, SystemType.UInt128 },
 			{ typeof(ushort).TypeHandle, SystemType.UInt16 },
 			{ typeof(uint).TypeHandle, SystemType.UInt32 },
 			{ typeof(ulong).TypeHandle, SystemType.UInt64 },

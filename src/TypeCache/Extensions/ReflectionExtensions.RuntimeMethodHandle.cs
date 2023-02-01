@@ -20,8 +20,8 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </remarks>
 	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method using a generic parameter of its declared type.</param>
-	/// <exception cref="UnreachableException"></exception>
+	/// <exception cref="ArgumentException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
-		=> MethodBase.GetMethodFromHandle(@this, typeHandle) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(..., ...) returned null.");
+		=> MethodBase.GetMethodFromHandle(@this, typeHandle) ?? throw new ArgumentException("MethodBase.GetMethodFromHandle(..., ...) returned null.");
 }

@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Numerics;
 using TypeCache.Extensions;
 using static System.Globalization.CultureInfo;
 
@@ -8,41 +7,125 @@ namespace TypeCache.Extensions;
 
 public static class NumberExtensions
 {
-	/// <inheritdoc cref="INumberBase{TSelf}.Abs(TSelf)"/>
+	/// <inheritdoc cref="Math.Abs(sbyte)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Abs(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T AbsoluteValue<T>(this T @this)
-		where T : INumberBase<T>
-		=> T.Abs(@this);
+	public static sbyte Abs(this sbyte @this)
+		=> Math.Abs(@this);
 
-	/// <inheritdoc cref="IFloatingPointIeee754{TSelf}.BitDecrement(TSelf)"/>
+	/// <inheritdoc cref="Math.Abs(short)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.BitDecrement(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T BitDecrement<T>(this T @this)
-		where T : IFloatingPointIeee754<T>
-		=> T.BitDecrement(@this);
+	public static short Abs(this short @this)
+		=> Math.Abs(@this);
 
-	/// <inheritdoc cref="IFloatingPointIeee754{TSelf}.BitIncrement(TSelf)"/>
+	/// <inheritdoc cref="Math.Abs(int)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.BitIncrement(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T BitIncrement<T>(this T @this)
-		where T : IFloatingPointIeee754<T>
-		=> T.BitIncrement(@this);
+	public static int Abs(this int @this)
+		=> Math.Abs(@this);
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Ceiling(TSelf)"/>
+	/// <inheritdoc cref="Math.Abs(nint)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Ceiling(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Ceiling<T>(this T @this)
-		where T : IFloatingPoint<T>
-		=> T.Ceiling(@this);
+	public static nint Abs(this nint @this)
+		=> Math.Abs(@this);
+
+	/// <inheritdoc cref="Math.Abs(long)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static long Abs(this long @this)
+		=> Math.Abs(@this);
+
+	/// <inheritdoc cref="MathF.Abs(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Abs(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Abs(this float @this)
+		=> MathF.Abs(@this);
+
+	/// <inheritdoc cref="Math.Abs(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Abs(this double @this)
+		=> Math.Abs(@this);
+
+	/// <inheritdoc cref="Math.Abs(decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Abs(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Abs(this decimal @this)
+		=> Math.Abs(@this);
+
+	/// <inheritdoc cref="MathF.BitDecrement(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.BitDecrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float BitDecrement(this float @this)
+		=> MathF.BitDecrement(@this);
+
+	/// <inheritdoc cref="Math.BitDecrement(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.BitDecrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double BitDecrement(this double @this)
+		=> Math.BitDecrement(@this);
+
+	/// <inheritdoc cref="MathF.BitIncrement(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.BitIncrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float BitIncrement(this float @this)
+		=> MathF.BitIncrement(@this);
+
+	/// <inheritdoc cref="Math.BitIncrement(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.BitIncrement(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double BitIncrement(this double @this)
+		=> Math.BitIncrement(@this);
+
+	/// <inheritdoc cref="MathF.Ceiling(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Ceiling(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Ceiling(this float @this)
+		=> MathF.Ceiling(@this);
+
+	/// <inheritdoc cref="Math.Ceiling(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Ceiling(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Ceiling(this double @this)
+		=> Math.Ceiling(@this);
+
+	/// <inheritdoc cref="Math.Ceiling(decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Ceiling(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Ceiling(this decimal @this)
+		=> Math.Ceiling(@this);
 
 	public static ulong Factorial(this int @this)
 	{
@@ -57,48 +140,251 @@ public static class NumberExtensions
 		return result;
 	}
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Floor(TSelf)"/>
+	/// <inheritdoc cref="MathF.Floor(float)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Floor(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="MathF"/>.Floor(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Floor<T>(this T @this)
-		where T : IFloatingPoint<T>
-		=> T.Floor(@this);
+	public static float Floor(this float @this)
+		=> MathF.Floor(@this);
 
-	/// <inheritdoc cref="INumber{TSelf}.Max(TSelf, TSelf)"/>
+	/// <inheritdoc cref="Math.Floor(double)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// <c>=&gt; <see cref="Math"/>.Floor(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Maximum<T>(this (T, T) @this)
-		where T : INumber<T>
-		=> T.Max(@this.Item1, @this.Item2);
+	public static double Floor(this double @this)
+		=> Math.Floor(@this);
 
-	/// <inheritdoc cref="INumber{TSelf}.Max(TSelf, TSelf)"/>
+	/// <inheritdoc cref="Math.Floor(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="int"/>.Max(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
+	/// <c>=&gt; <see cref="Math"/>.Floor(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Index Maximum(this (Index, Index) @this)
-		=> (@this.Item1.Value, @this.Item2.Value).Maximum();
+	public static decimal Floor(this decimal @this)
+		=> Math.Floor(@this);
 
-	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
+	/// <inheritdoc cref="Math.Max(sbyte, sbyte)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Minimum<T>(this (T, T) @this)
-		where T : INumber<T>
-		=> T.Min(@this.Item1, @this.Item2);
+	public static sbyte Max(this (sbyte, sbyte) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
 
-	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
+	/// <inheritdoc cref="Math.Max(short, short)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="int"/>.Min(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Index Minimum(this (Index, Index) @this)
-		=> (@this.Item1.Value, @this.Item2.Value).Minimum();
+	public static short Max(this (short, short) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Max(this (int, int) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(nint, nint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static nint Max(this (nint, nint) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(long, long)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static long Max(this (long, long) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(byte, byte)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static byte Max(this (byte, byte) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(ushort, ushort)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ushort Max(this (ushort, ushort) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(uint, uint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static uint Max(this (uint, uint) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(nuint, nuint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static nuint Max(this (nuint, nuint) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(ulong, ulong)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ulong Max(this (ulong, ulong) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="MathF.Max(float, float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Max(this (float, float) @this)
+		=> MathF.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(double, double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Max(this (double, double) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Max(decimal, decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Max(this (decimal, decimal) @this)
+		=> Math.Max(@this.Item1, @this.Item2);
+
+	/// <remarks>
+	/// <c>=&gt; (@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value).Max();</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Index Max(this (Index, Index) @this)
+		=> (@this.Item1.Value, @this.Item2.Value).Max();
+
+	/// <inheritdoc cref="Math.Min(sbyte, sbyte)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static sbyte Min(this (sbyte, sbyte) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(short, short)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static short Min(this (short, short) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Min(this (int, int) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(nint, nint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static nint Min(this (nint, nint) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(long, long)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static long Min(this (long, long) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(byte, byte)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static byte Min(this (byte, byte) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(ushort, ushort)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ushort Min(this (ushort, ushort) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(uint, uint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static uint Min(this (uint, uint) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(nuint, nuint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static nuint Min(this (nuint, nuint) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(ulong, ulong)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ulong Min(this (ulong, ulong) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="MathF.Min(float, float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Min(this (float, float) @this)
+		=> MathF.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(double, double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Min(this (double, double) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <inheritdoc cref="Math.Min(decimal, decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Min(this (decimal, decimal) @this)
+		=> Math.Min(@this.Item1, @this.Item2);
+
+	/// <remarks>
+	/// <c>=&gt; (@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value).Min();</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Index Min(this (Index, Index) @this)
+		=> (@this.Item1.Value, @this.Item2.Value).Min();
 
 	public static IEnumerable<T> Repeat<T>(this T @this, int count)
 		where T : unmanaged
@@ -107,50 +393,165 @@ public static class NumberExtensions
 			yield return @this;
 	}
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf)"/>
+	/// <inheritdoc cref="MathF.Round(float)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="MathF"/>.Round(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Round<T>(this T @this)
-		where T : IFloatingPoint<T>
-		=> T.Round(@this);
+	public static float Round(this float @this)
+		=> MathF.Round(@this);
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, int)"/>
+	/// <inheritdoc cref="Math.Round(double)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Round<T>(this T @this, int digits)
-		where T : IFloatingPoint<T>
-		=> T.Round(@this, digits);
+	public static double Round(this double @this)
+		=> Math.Round(@this);
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, MidpointRounding)"/>
+	/// <inheritdoc cref="Math.Round(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Round<T>(this T @this, MidpointRounding rounding)
-		where T : IFloatingPoint<T>
-		=> T.Round(@this, rounding);
+	public static decimal Round(this decimal @this)
+		=> Math.Round(@this);
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Round(TSelf, int, MidpointRounding)"/>
+	/// <inheritdoc cref="MathF.Round(float, int)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
+	/// <c>=&gt; <see cref="MathF"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Round<T>(this T @this, int digits, MidpointRounding rounding)
-		where T : IFloatingPoint<T>
-		=> T.Round(@this, digits, rounding);
+	public static float Round(this float @this, int digits)
+		=> MathF.Round(@this, digits);
 
-	/// <inheritdoc cref="INumber{TSelf}.Sign(TSelf)"/>
+	/// <inheritdoc cref="Math.Round(double, int)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Sign(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static int Sign<T>(this T @this)
-		where T : INumber<T>
-		=> T.Sign(@this);
+	public static double Round(this double @this, int digits)
+		=> Math.Round(@this, digits);
+
+	/// <inheritdoc cref="Math.Round(decimal, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Round(this decimal @this, int digits)
+		=> Math.Round(@this, digits);
+
+	/// <inheritdoc cref="MathF.Round(float, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Round(this float @this, MidpointRounding rounding)
+		=> MathF.Round(@this, rounding);
+
+	/// <inheritdoc cref="Math.Round(double, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Round(this double @this, MidpointRounding rounding)
+		=> Math.Round(@this, rounding);
+
+	/// <inheritdoc cref="Math.Round(decimal, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Round(this decimal @this, MidpointRounding rounding)
+		=> Math.Round(@this, rounding);
+
+	/// <inheritdoc cref="MathF.Round(float, int, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MathF"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float Round(this float @this, int digits, MidpointRounding rounding)
+		=> MathF.Round(@this, digits, rounding);
+
+	/// <inheritdoc cref="Math.Round(double, int, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Round(this double @this, int digits, MidpointRounding rounding)
+		=> Math.Round(@this, digits, rounding);
+
+	/// <inheritdoc cref="Math.Round(decimal, int, MidpointRounding)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Round(@<paramref name="this"/>, <paramref name="digits"/>, <paramref name="rounding"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Round(this decimal @this, int digits, MidpointRounding rounding)
+		=> Math.Round(@this, digits, rounding);
+
+	/// <inheritdoc cref="Math.Sign(sbyte)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this sbyte @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(short)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this short @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this int @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(nint)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this nint @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(long)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this long @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="MathF.Sign(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this float @this)
+		=> MathF.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this double @this)
+		=> Math.Sign(@this);
+
+	/// <inheritdoc cref="Math.Sign(decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Sign(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Sign(this decimal @this)
+		=> Math.Sign(@this);
 
 	public static IEnumerable<int> To(this int @this, int end, int increment = 0)
 	{
@@ -240,12 +641,27 @@ public static class NumberExtensions
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
 		=> @this.ToString("c", provider ?? InvariantCulture);
 
-	/// <inheritdoc cref="IFloatingPoint{TSelf}.Truncate(TSelf)"/>
+	/// <inheritdoc cref="MathF.Truncate(float)"/>
 	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.Truncate(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="MathF"/>.Truncate(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Truncate<T>(this T @this)
-		where T : IFloatingPoint<T>
-		=> T.Truncate(@this);
+	public static float Truncate(this float @this)
+		=> MathF.Truncate(@this);
+
+	/// <inheritdoc cref="Math.Truncate(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Truncate(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static double Truncate(this double @this)
+		=> Math.Truncate(@this);
+
+	/// <inheritdoc cref="Math.Truncate(decimal)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Math"/>.Truncate(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static decimal Truncate(this decimal @this)
+		=> Math.Truncate(@this);
 }

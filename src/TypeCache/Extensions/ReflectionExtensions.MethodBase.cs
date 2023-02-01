@@ -27,7 +27,7 @@ partial class ReflectionExtensions
 	}
 
 	/// <param name="arguments">The method arguments.</param>
-	/// <exception cref="UnreachableException"></exception>
+	/// <exception cref="ArgumentException"></exception>
 	public static object? InvokeMethod(this MethodBase @this, params object?[]? arguments)
 	{
 		@this.DeclaringType.AssertNotNull();
