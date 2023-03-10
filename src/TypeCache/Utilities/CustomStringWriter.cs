@@ -2,7 +2,7 @@
 
 using System.Text;
 
-namespace TypeCache.IO;
+namespace TypeCache.Utilities;
 
 public sealed class CustomStringWriter : StringWriter
 {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
-using TypeCache.Data.Mediation;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.Mediation;
@@ -22,13 +22,7 @@ public sealed class SqlApiCallFieldResolver<T> : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var request = new SqlModelsRequest
-		{
-			Command = sqlCommand,
-			ModelType = typeof(T)
-		};
-		var result = (IList<T>)await mediator.MapAsync(request, context.CancellationToken);
-
+		var result = (IList<T>)await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(), context.CancellationToken);
 		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected > 0 ? sqlCommand.RecordsAffected : result.Count,

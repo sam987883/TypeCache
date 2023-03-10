@@ -2,6 +2,7 @@
 
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,10 +10,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Data.Mediation;
-using TypeCache.GraphQL.Extensions;
 using TypeCache.Mediation;
 using TypeCache.Net.Mediation;
-using TypeCache.Security;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -75,40 +75,6 @@ public static class ServiceCollectionExtensions
 			.AddSingleton(typeof(DefaultRuleIntermediary<>), typeof(DefaultRuleIntermediary<>))
 			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
 
-	/// <param name="fromAssembly">The assembly to register the types from.</param>
-	public static IServiceCollection AddMediationRules(this IServiceCollection @this, Assembly fromAssembly)
-	{
-		var mediationTypes = new[]
-		{
-			typeof(IAfterRule<>),
-			typeof(IAfterRule<,>),
-			typeof(IProcessIntermediary<>),
-			typeof(IRule<>),
-			typeof(IRule<,>),
-			typeof(IRuleIntermediary<>),
-			typeof(IRuleIntermediary<,>),
-			typeof(IValidationRule<>)
-		};
-		var types = fromAssembly.GetTypes().Where(type =>
-			!type.IsAbstract && !type.IsArray && !type.IsEnum && !type.IsGenericType && !type.IsInterface && !type.IsPointer && !type.IsPrimitive
-			&& type.GetInterfaces().Any(_ => _.IsGenericType && mediationTypes.Contains(_.ToGenericType())));
-		foreach (var serviceType in types)
-		{
-			var contractType = serviceType.GetInterfaces().First(_ => mediationTypes.Contains(_.ToGenericType()));
-			var attribute = serviceType.GetCustomAttribute<ServiceLifetimeAttribute>();
-			var serviceLifetime = attribute?.ServiceLifetime ?? ServiceLifetime.Singleton;
-
-			if (serviceLifetime is ServiceLifetime.Scoped)
-				@this.TryAddScoped(contractType, serviceType);
-			else if (serviceLifetime is ServiceLifetime.Transient)
-				@this.TryAddTransient(contractType, serviceType);
-			else
-				@this.TryAddSingleton(contractType, serviceType);
-		}
-
-		return @this;
-	}
-
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataSetRequest"/>, <see cref="DataSet"/>&gt;, <see cref="SqlDataSetRule"/>&gt;()<br/>
 	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataTableRequest"/>, <see cref="DataTable"/>&gt;, <see cref="SqlDataTableRule"/>&gt;()<br/>
@@ -129,4 +95,24 @@ public static class ServiceCollectionExtensions
 			.AddSingleton<IRule<SqlJsonArrayRequest, JsonArray>, SqlJsonArrayRule>()
 			.AddSingleton<IRule<SqlModelsRequest, IList<object>>, SqlModelsRule>()
 			.AddSingleton<IRule<SqlScalarRequest, object?>, SqlScalarRule>();
+
+	/// <summary>
+	/// Registers all types in the specified assembly that have <see cref="ServiceLifetimeAttribute{T}"/> or <see cref="ServiceLifetimeAttribute{T}"/>.
+	/// </summary>
+	/// <param name="fromAssembly">The assembly to register the types from.</param>
+	public static IServiceCollection AddTypes(this IServiceCollection @this, Assembly fromAssembly)
+	{
+		var serviceDescriptors = fromAssembly.GetTypes()
+			.Where(type => !type.IsAbstract && !type.IsGenericType && !type.IsInterface && !type.IsPointer && !type.IsPrimitive
+				&& type.HasCustomAttribute<ServiceLifetimeAttribute>())
+			.Select(implementationType =>
+			{
+				var attribute = implementationType.GetCustomAttribute<ServiceLifetimeAttribute>()!;
+				return new ServiceDescriptor(attribute.ServiceType ?? implementationType, implementationType, attribute.ServiceLifetime);
+			})
+			.ToArray();
+		serviceDescriptors.ForEach(@this.Add);
+
+		return @this;
+	}
 }

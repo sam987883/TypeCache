@@ -1,16 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Introspection;
 using GraphQL.Server.Ui.Playground;
-using GraphQL.Types;
 using Microsoft.Data.SqlClient;
-using TypeCache;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
+using TypeCache.Utilities;
 using static System.Math;
 
 const string DATASOURCE = "Default";

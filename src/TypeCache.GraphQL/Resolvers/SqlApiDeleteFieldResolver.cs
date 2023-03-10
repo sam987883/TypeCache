@@ -8,7 +8,7 @@ using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
 using TypeCache.Data;
-using TypeCache.Data.Mediation;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
@@ -42,15 +42,9 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
-		{
-			var request = new SqlDataTableRequest { Command = sqlCommand };
-			result = (await mediator.MapAsync(request, context.CancellationToken)).Select();
-		}
+			result = (await mediator.MapAsync(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
 		else
-		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, context.CancellationToken);
-		}
+			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -88,20 +82,9 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver
 
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
-		{
-			var request = new SqlModelsRequest
-			{
-				Command = sqlCommand,
-				ModelType = typeof(T),
-				ListInitialCapacity = data.Length
-			};
-			result = await mediator.MapAsync(request, context.CancellationToken);
-		}
+			result = await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
 		else
-		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, context.CancellationToken);
-		}
+			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<T>()
 		{

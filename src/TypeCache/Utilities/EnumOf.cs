@@ -5,10 +5,8 @@ using System.Reflection;
 using TypeCache.Attributes;
 using TypeCache.Collections;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
-using static System.Reflection.BindingFlags;
 
-namespace TypeCache;
+namespace TypeCache.Utilities;
 
 public static class EnumOf<T>
 	where T : struct, Enum
@@ -21,7 +19,7 @@ public static class EnumOf<T>
 		Comparer = new EnumComparer<T>();
 		Flags = Attributes.Any<FlagsAttribute>();
 		Name = Attributes.FirstOrDefault<NameAttribute>()?.Name ?? type.Name;
-		Tokens = type.GetFields(Public | Static).Select(fieldInfo => new Token<T>(fieldInfo)).ToImmutableArray();
+		Tokens = Enum.GetValues<T>().ToImmutableDictionary(value => value, value => new Token<T>(value), Comparer);
 	}
 
 	public static IReadOnlyCollection<Attribute> Attributes { get; }
@@ -32,7 +30,7 @@ public static class EnumOf<T>
 
 	public static string Name { get; }
 
-	public static IReadOnlyCollection<Token<T>> Tokens { get; }
+	public static IReadOnlyDictionary<T, Token<T>> Tokens { get; }
 
 	public static Type UnderlyingType => typeof(T).GetEnumUnderlyingType();
 }

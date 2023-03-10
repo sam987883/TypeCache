@@ -14,7 +14,7 @@ using System.Text.Json.Nodes;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Utilities;
 
 internal static class TypeStore
 {

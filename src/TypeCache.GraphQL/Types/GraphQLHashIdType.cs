@@ -7,7 +7,7 @@ using GraphQL.Types;
 using GraphQLParser.AST;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
-using TypeCache.Security;
+using TypeCache.Utilities;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Types;

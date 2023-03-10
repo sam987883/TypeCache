@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.IO;
+using TypeCache.Utilities;
 using Xunit;
 
 namespace TypeCache.Tests;

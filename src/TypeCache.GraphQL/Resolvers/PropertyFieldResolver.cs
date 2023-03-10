@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 

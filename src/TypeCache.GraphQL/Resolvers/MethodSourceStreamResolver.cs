@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Reflection;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;

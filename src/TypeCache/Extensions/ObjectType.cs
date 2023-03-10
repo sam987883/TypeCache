@@ -3,7 +3,7 @@
 using System.Collections.Immutable;
 using System.Text;
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Extensions;
 
 public enum ObjectType
 {

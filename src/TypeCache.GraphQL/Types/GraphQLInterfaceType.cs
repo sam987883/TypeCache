@@ -4,7 +4,6 @@ using System.Linq;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types;
 

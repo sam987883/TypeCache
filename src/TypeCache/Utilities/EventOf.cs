@@ -4,7 +4,7 @@ using System.Reflection;
 using TypeCache.Extensions;
 using static System.Reflection.BindingFlags;
 
-namespace TypeCache;
+namespace TypeCache.Utilities;
 
 public static class EventOf<T>
 	where T : class
@@ -23,7 +23,7 @@ public static class EventOf<T>
 
 		var key = DateTime.UtcNow.Ticks;
 		var eventInfo = Events.First(_ => _.Name().Is(eventMemberName));
-		var reference = new HandlerReference(new WeakReference<T>(instance), eventInfo, handler);
+		var reference = new HandlerReference(instance.ToWeakReference(), eventInfo, handler);
 		eventInfo.AddMethod?.InvokeMethod(instance!, handler);
 		EventHandlers.Add(key, reference);
 		return key;

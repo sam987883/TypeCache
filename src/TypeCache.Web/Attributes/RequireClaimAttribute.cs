@@ -35,7 +35,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 				if (key.IsNotBlank())
 				{
 					if (this.Claims.TryGetValue(key, out var values))
-						this.Claims[key!] = values.Append(value).ToArray()!;
+						this.Claims[key] = values.Append(value).ToArray()!;
 					else
 						this.Claims.Add(key!, new[] { value! });
 				}

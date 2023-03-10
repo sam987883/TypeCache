@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.Security;
+namespace TypeCache.Utilities;
 
 public interface IHashMaker : IDisposable
 {

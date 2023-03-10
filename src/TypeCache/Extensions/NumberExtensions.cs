@@ -13,7 +13,7 @@ public static class NumberExtensions
 	/// <c>=&gt; <typeparamref name="T"/>.Abs(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T AbsoluteValue<T>(this T @this)
+	public static T Abs<T>(this T @this)
 		where T : INumberBase<T>
 		=> T.Abs(@this);
 
@@ -71,34 +71,38 @@ public static class NumberExtensions
 	/// <c>=&gt; <typeparamref name="T"/>.Max(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Maximum<T>(this (T, T) @this)
+	public static T Max<T>(this (T, T) @this)
 		where T : INumber<T>
 		=> T.Max(@this.Item1, @this.Item2);
 
-	/// <inheritdoc cref="INumber{TSelf}.Max(TSelf, TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="int"/>.Max(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Index Maximum(this (Index, Index) @this)
-		=> (@this.Item1.Value, @this.Item2.Value).Maximum();
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static Index Max(this (Index, Index) @this)
+	{
+		(@this.Item1.IsFromEnd == @this.Item2.IsFromEnd).AssertTrue();
+
+		return @this.Item1.IsFromEnd
+			? (@this.Item1.Value, @this.Item2.Value).Min()
+			: (@this.Item1.Value, @this.Item2.Value).Max();
+	}
 
 	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Min(@<paramref name="this"/>.Item1, @<paramref name="this"/>.Item2);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T Minimum<T>(this (T, T) @this)
+	public static T Min<T>(this (T, T) @this)
 		where T : INumber<T>
 		=> T.Min(@this.Item1, @this.Item2);
 
-	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="int"/>.Min(@<paramref name="this"/>.Item1.Value, @<paramref name="this"/>.Item2.Value);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Index Minimum(this (Index, Index) @this)
-		=> (@this.Item1.Value, @this.Item2.Value).Minimum();
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static Index Min(this (Index, Index) @this)
+	{
+		(@this.Item1.IsFromEnd == @this.Item2.IsFromEnd).AssertTrue();
+
+		return @this.Item1.IsFromEnd
+			? (@this.Item1.Value, @this.Item2.Value).Max()
+			: (@this.Item1.Value, @this.Item2.Value).Min();
+	}
 
 	public static IEnumerable<T> Repeat<T>(this T @this, int count)
 		where T : unmanaged
@@ -174,67 +178,67 @@ public static class NumberExtensions
 
 		if (@this < end)
 		{
-			while (@this <= end)
+			do
 			{
 				yield return @this;
 				@this += increment;
-			}
+			} while (@this <= end);
 		}
 		else if (@this > end)
 		{
-			while (@this >= end)
+			do
 			{
 				yield return @this;
 				@this += increment;
-			}
+			} while (@this >= end);
 		}
 	}
 
 	/// <inheritdoc cref="decimal.GetBits(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.GetBytes()).ToArray();</c>
+	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(_ =&gt; _.GetBytes()).ToArray();</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
 		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this Guid @this, IFormatProvider? provider = null)
 		=> @this.ToString("D", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)

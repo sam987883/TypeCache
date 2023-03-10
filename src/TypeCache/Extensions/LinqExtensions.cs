@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 

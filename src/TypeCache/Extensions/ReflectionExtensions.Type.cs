@@ -3,7 +3,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
+using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
 using static System.StringComparison;
 

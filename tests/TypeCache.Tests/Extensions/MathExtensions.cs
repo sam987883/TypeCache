@@ -11,13 +11,13 @@ public class MathExtensions
 	[Fact]
 	public void AbsoluteValue()
 	{
-		Assert.Equal(-(sbyte.MinValue + 1), (sbyte.MinValue + 1).AbsoluteValue());
-		Assert.Equal(-(short.MinValue + 1), (short.MinValue + 1).AbsoluteValue());
-		Assert.Equal(-(int.MinValue + 1), (int.MinValue + 1).AbsoluteValue());
-		Assert.Equal(-(long.MinValue + 1), (long.MinValue + 1).AbsoluteValue());
-		Assert.Equal(1F, (-1F).AbsoluteValue());
-		Assert.Equal(1D, (-1D).AbsoluteValue());
-		Assert.Equal(1M, (-1M).AbsoluteValue());
+		Assert.Equal(-(sbyte.MinValue + 1), (sbyte.MinValue + 1).Abs());
+		Assert.Equal(-(short.MinValue + 1), (short.MinValue + 1).Abs());
+		Assert.Equal(-(int.MinValue + 1), (int.MinValue + 1).Abs());
+		Assert.Equal(-(long.MinValue + 1), (long.MinValue + 1).Abs());
+		Assert.Equal(1F, (-1F).Abs());
+		Assert.Equal(1D, (-1D).Abs());
+		Assert.Equal(1M, (-1M).Abs());
 	}
 
 	[Fact]

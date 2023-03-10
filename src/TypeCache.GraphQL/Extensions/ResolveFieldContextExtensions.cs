@@ -65,7 +65,7 @@ public static class ResolveFieldContextExtensions
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
 				_ when parameterInfo.ParameterType.Is(sourceType) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
-					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
+					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
 				_ => argument
 			};
 		}
@@ -88,7 +88,7 @@ public static class ResolveFieldContextExtensions
 				_ when parameterInfo.ParameterType.Is<IEnumerable<MATCH>>() => keys,
 				_ when parameterInfo.ParameterType.Is<MATCH[]>() => keys.ToArray(),
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
-					parameterInfo.ParameterType.Create()!.MapProperties(dictionary, StringComparison.OrdinalIgnoreCase),
+					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
 				_ => argument
 			};
 		}

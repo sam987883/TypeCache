@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Data;
 using TypeCache.Mediation;
+using TypeCache.Utilities;
 using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;

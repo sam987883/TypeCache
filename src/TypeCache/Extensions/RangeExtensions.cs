@@ -4,13 +4,7 @@ namespace TypeCache.Extensions;
 
 public static class RangeExtensions
 {
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Start.IsFromEnd == @<paramref name="this"/>.End.IsFromEnd
-	/// ? !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End)
-	/// : <see langword="null"/>;</c>
-	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Any(this Range @this)
 	{
 		(@this.Start.IsFromEnd == @this.End.IsFromEnd).AssertTrue();
@@ -51,10 +45,10 @@ public static class RangeExtensions
 	public static Range? IntersectWith(this Range @this, Range other)
 		=> @this.Overlaps(other) ? (@this.IsReverse(), other.IsReverse()) switch
 		{
-			(true, true) => (@this.Start, other.Start).Minimum()..(@this.End, other.End).Maximum(),
-			(true, false) => (@this.Start, other.End.Previous()).Minimum()..(@this.End, other.Start.Next()).Maximum(),
-			(false, true) => (@this.Start, other.End.Next()).Maximum()..(@this.End, other.Start.Previous()).Minimum(),
-			(false, false) => (@this.Start, other.Start).Maximum()..(@this.End, other.End).Minimum()
+			(true, true) => (@this.Start, other.Start).Min()..(@this.End, other.End).Max(),
+			(true, false) => (@this.Start, other.End.Previous()).Min()..(@this.End, other.Start.Next()).Max(),
+			(false, true) => (@this.Start, other.End.Next()).Max()..(@this.End, other.Start.Previous()).Min(),
+			(false, false) => (@this.Start, other.Start).Max()..(@this.End, other.End).Min()
 		} : null;
 
 	/// <remarks>Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.</remarks>
@@ -71,7 +65,7 @@ public static class RangeExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Length(this Range @this)
-		=> (@this.End.Value - @this.Start.Value).AbsoluteValue();
+		=> (@this.End.Value - @this.Start.Value).Abs();
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -132,10 +126,10 @@ public static class RangeExtensions
 	public static Range? UnionWith(this Range @this, Range other)
 		=> @this.Has(other.Start) || @this.Has(other.End) || other.Has(@this.Start) || other.Has(@this.End) ? (@this.IsReverse(), other.IsReverse()) switch
 		{
-			(true, true) => (@this.Start, other.Start).Maximum()..(@this.End, other.End).Minimum(),
-			(true, false) => (@this.Start, other.End.Previous()).Maximum()..(@this.End, other.Start.Next()).Minimum(),
-			(false, true) => (@this.Start, other.End.Next()).Minimum()..(@this.End, other.Start.Previous()).Maximum(),
-			(false, false) => (@this.Start, other.Start).Minimum()..(@this.End, other.End).Maximum()
+			(true, true) => (@this.Start, other.Start).Max()..(@this.End, other.End).Min(),
+			(true, false) => (@this.Start, other.End.Previous()).Max()..(@this.End, other.Start.Next()).Min(),
+			(false, true) => (@this.Start, other.End.Next()).Min()..(@this.End, other.Start.Previous()).Max(),
+			(false, false) => (@this.Start, other.Start).Min()..(@this.End, other.End).Max()
 		} : null;
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
