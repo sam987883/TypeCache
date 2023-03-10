@@ -65,6 +65,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// <param name="getChildMatch">Gets the property value to match the child object on.</param>
 	public FieldType AddQueryItem<CHILD, MATCH>(MethodInfo methodInfo, Func<T, MATCH> getParentMatch, Func<CHILD, MATCH> getChildMatch)
 		where CHILD : notnull
+		where MATCH : notnull
 	{
 		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
 
@@ -99,6 +100,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// <param name="getChildMatch">Gets the property value to match the child object on.</param>
 	public FieldType AddQueryCollection<CHILD, MATCH>(MethodInfo methodInfo, Func<T, MATCH> getParentMatch, Func<CHILD, MATCH> getChildMatch)
 		where CHILD : notnull
+		where MATCH : notnull
 	{
 		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
 

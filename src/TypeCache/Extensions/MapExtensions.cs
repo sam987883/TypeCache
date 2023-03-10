@@ -58,7 +58,7 @@ public static partial class MapExtensions
 				foreach (var attribute in mapAttributes)
 				{
 					if (attribute.Type.IsAssignableTo<IDictionary<string, object?>>())
-						dictionary[attribute.Member] = value;
+						dictionary[attribute.Property] = value;
 				}
 			}
 		}
@@ -85,7 +85,7 @@ public static partial class MapExtensions
 
 					foreach (var attribute in mapAttributes)
 					{
-						var targetPropertyInfo = targetType.GetProperty(attribute.Member, bindings);
+						var targetPropertyInfo = targetType.GetProperty(attribute.Property, bindings);
 						if (targetPropertyInfo?.CanWrite is true)
 							targetPropertyInfo.SetPropertyValue(target, value);
 					}
@@ -109,7 +109,7 @@ public static partial class MapExtensions
 
 					foreach (var attribute in mapAttributes)
 					{
-						var targetPropertyInfo = targetType.GetProperty(attribute.Member, bindings);
+						var targetPropertyInfo = targetType.GetProperty(attribute.Property, bindings);
 						if (targetPropertyInfo?.CanWrite is true)
 							targetPropertyInfo.SetPropertyValue(target, value);
 					}
@@ -145,7 +145,7 @@ public static partial class MapExtensions
 					var value = sourcePropertyInfo.GetPropertyValue(@this);
 					foreach (var attribute in mapAttributes)
 					{
-						var targetPropertyInfo = targetType.GetProperty(attribute.Member, bindings);
+						var targetPropertyInfo = targetType.GetProperty(attribute.Property, bindings);
 						if (targetPropertyInfo?.CanWrite is true)
 							targetPropertyInfo.SetPropertyValue(target, value);
 					}
@@ -178,7 +178,7 @@ public static partial class MapExtensions
 					var value = sourcePropertyInfo.GetPropertyValue(@this);
 					foreach (var attribute in mapAttributes)
 					{
-						var targetPropertyInfo = targetType.GetProperty(attribute.Member, bindings);
+						var targetPropertyInfo = targetType.GetProperty(attribute.Property, bindings);
 						if (targetPropertyInfo?.CanWrite is true)
 							targetPropertyInfo.SetPropertyValue(target, value);
 					}

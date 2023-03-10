@@ -4,22 +4,22 @@ namespace TypeCache.Attributes;
 
 public abstract class MapToAttribute : Attribute
 {
-	public MapToAttribute(string member, Type type)
+	public MapToAttribute(Type type, string property)
 	{
-		this.Member = member;
+		this.Property = property;
 		this.Type = type;
 	}
 
-	public string Member { get; }
+	public string Property { get; }
 
 	public Type Type { get; }
 }
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
 public sealed class MapToAttribute<T> : MapToAttribute
 {
-	public MapToAttribute(string member)
-		: base(member, typeof(T))
+	public MapToAttribute(string property)
+		: base(typeof(T), property)
 	{
 	}
 }
