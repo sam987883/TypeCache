@@ -3,7 +3,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
 
 namespace TypeCache.Collections;
 
@@ -17,7 +16,7 @@ public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 	public LazyDictionary(Func<K, V> createValue, LazyThreadSafetyMode mode = LazyThreadSafetyMode.PublicationOnly, IEqualityComparer<K>? comparer = null)
 	{
 		createValue.AssertNotNull();
-		this._CreateValue = key => Lazy.Create(() => createValue(key), mode);
+		this._CreateValue = key => new Lazy<V>(() => createValue(key), mode);
 		this._Dictionary = new(comparer);
 	}
 
@@ -26,7 +25,7 @@ public sealed class LazyDictionary<K, V> : IReadOnlyDictionary<K, V>
 	{
 		createValue.AssertNotNull();
 
-		this._CreateValue = key => Lazy.Create(() => createValue(key), mode);
+		this._CreateValue = key => new Lazy<V>(() => createValue(key), mode);
 		this._Dictionary = new(concurrencyLevel, capacity, comparer);
 	}
 

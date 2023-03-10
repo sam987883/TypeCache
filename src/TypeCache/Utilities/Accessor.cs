@@ -3,7 +3,7 @@
 using System.Collections.Immutable;
 using TypeCache.Extensions;
 
-namespace TypeCache.GraphQL.Extensions;
+namespace TypeCache.Utilities;
 
 public sealed class Accessor<T> : IAccessor<T>
 	where T : class, IName

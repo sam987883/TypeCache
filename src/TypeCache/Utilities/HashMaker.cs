@@ -3,7 +3,7 @@
 using System.Security.Cryptography;
 using TypeCache.Extensions;
 
-namespace TypeCache.Security;
+namespace TypeCache.Utilities;
 
 public class HashMaker : IHashMaker
 {

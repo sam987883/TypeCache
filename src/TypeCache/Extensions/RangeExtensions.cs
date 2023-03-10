@@ -4,13 +4,7 @@ namespace TypeCache.Extensions;
 
 public static class RangeExtensions
 {
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Start.IsFromEnd == @<paramref name="this"/>.End.IsFromEnd
-	/// ? !@<paramref name="this"/>.Start.Equals(@<paramref name="this"/>.End)
-	/// : <see langword="null"/>;</c>
-	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Any(this Range @this)
 	{
 		(@this.Start.IsFromEnd == @this.End.IsFromEnd).AssertTrue();

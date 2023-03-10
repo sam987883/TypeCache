@@ -14,7 +14,7 @@ using System.Text.Json.Nodes;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Utilities;
 
 internal static class TypeStore
 {
@@ -29,7 +29,7 @@ internal static class TypeStore
 			{
 				MethodInfo methodInfo => methodInfo.ToInvokeLambdaExpression().Compile(),
 				ConstructorInfo constructorInfo => constructorInfo.ToInvokeLambdaExpression().Compile(),
-				_ => throw new MissingMethodException("Method or Constructor not found.")
+				_ => throw new ArgumentException("Method or Constructor not found.")
 			});
 		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle => handle.ToType() switch
 		{

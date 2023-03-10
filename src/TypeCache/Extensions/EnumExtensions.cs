@@ -1,7 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Collections;
-using TypeCache.Reflection;
+using TypeCache.Extensions;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -10,7 +11,7 @@ public static class EnumExtensions
 	[DebuggerHidden]
 	public static IReadOnlyCollection<Attribute> Attributes<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.FirstOrDefault(token => EnumOf<T>.Comparer.EqualTo(@this, token.Value))?.Attributes ?? Array<Attribute>.Empty;
+		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Attributes : Array<Attribute>.Empty;
 
 	[DebuggerHidden]
 	public static bool HasAnyFlag<T>(this T @this, params T[] flags)
@@ -20,7 +21,7 @@ public static class EnumExtensions
 	[DebuggerHidden]
 	public static string Hex<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.FirstOrDefault(token => EnumOf<T>.Comparer.EqualTo(@this, token.Value))?.Hex ?? @this.ToString("X");
+		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Hex : @this.ToString("X");
 
 	[DebuggerHidden]
 	public static bool IsAny<T>(this T @this, params T[] tokens)
@@ -30,17 +31,17 @@ public static class EnumExtensions
 	[DebuggerHidden]
 	public static bool IsDefined<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.Any(token => EnumOf<T>.Comparer.EqualTo(@this, token.Value));
+		=> EnumOf<T>.Tokens.ContainsKey(@this);
 
 	[DebuggerHidden]
 	public static string Name<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.FirstOrDefault(token => EnumOf<T>.Comparer.EqualTo(@this, token.Value))?.Name ?? @this.ToString();
+		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Name : @this.ToString();
 
 	[DebuggerHidden]
 	public static string Number<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.FirstOrDefault(token => EnumOf<T>.Comparer.EqualTo(@this, token.Value))?.Number ?? @this.ToString("D");
+		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Number : @this.ToString("D");
 
 	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
 	/// <remarks>

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Text;
-using TypeCache.IO;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 

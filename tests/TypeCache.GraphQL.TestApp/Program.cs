@@ -1,16 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Introspection;
 using GraphQL.Server.Ui.Playground;
-using GraphQL.Types;
 using Microsoft.Data.SqlClient;
-using TypeCache;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
+using TypeCache.Utilities;
 using static System.Math;
 
 const string DATASOURCE = "Default";
@@ -26,7 +24,7 @@ builder.Services
 	.AddGraphQLTypeExtensions<Person>(person =>
 	{
 		person.AddField(typeof(Detail).GetMethod(nameof(Detail.GetDetail))!);
-		person.AddQueryCollection<Detail, string>(typeof(Detail).GetMethod(nameof(Detail.GetDetails))!, person => person.FirstName!, detail => detail.FirstName);
+		person.AddQueryCollection<Detail, string>(typeof(Detail).GetMethod(nameof(Detail.GetDetails))!, person => person.FirstName!, detail => detail.FirstName!);
 	});
 
 var app = builder.Build();

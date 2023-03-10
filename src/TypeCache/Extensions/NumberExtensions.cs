@@ -575,67 +575,67 @@ public static class NumberExtensions
 
 		if (@this < end)
 		{
-			while (@this <= end)
+			do
 			{
 				yield return @this;
 				@this += increment;
-			}
+			} while (@this <= end);
 		}
 		else if (@this > end)
 		{
-			while (@this >= end)
+			do
 			{
 				yield return @this;
 				@this += increment;
-			}
+			} while (@this >= end);
 		}
 	}
 
 	/// <inheritdoc cref="decimal.GetBits(decimal)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(i => i.GetBytes()).ToArray();</c>
+	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(_ =&gt; _.GetBytes()).ToArray();</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static byte[] ToBytes(this decimal @this)
 		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("O", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this Guid @this, IFormatProvider? provider = null)
 		=> @this.ToString("D", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)

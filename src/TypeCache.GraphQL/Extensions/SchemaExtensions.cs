@@ -19,7 +19,6 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using TypeCache.Reflection;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -398,9 +397,7 @@ public static class SchemaExtensions
 	/// <list type="bullet">
 	/// <item><see cref="GraphQLQueryAttribute"/></item>
 	/// <item><see cref="GraphQLMutationAttribute"/></item>
-	/// <item><see cref="GraphQLSubqueryAttribute"/></item>
-	/// <item><see cref="GraphQLSubqueryBatchAttribute"/></item>
-	/// <item><see cref="GraphQLSubqueryCollectionAttribute"/></item>
+	/// <item><see cref="GraphQLSubscriptionAttribute"/></item>
 	/// </list>
 	/// </summary>
 	/// <typeparam name="T">The class containing the decorated methodInfos that will be converted into GraphQL endpoints.</typeparam>

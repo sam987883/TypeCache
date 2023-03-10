@@ -22,11 +22,14 @@ public static class GlobalExtensions
 		=> (@this.Item2, @this.Item1);
 
 	/// <inheritdoc cref="Expression.Constant(object?, Type)"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/>
-	///	? <see cref="Expression"/>.Constant(@<paramref name="this"/>, @<paramref name="this"/>.GetType())
-	///	: <see cref="Expression"/>.Constant(@<paramref name="this"/>);</c>
-	/// </remarks>
 	public static ConstantExpression ToConstantExpression<T>(this T? @this)
 		=> @this is not null ? Expression.Constant(@this, @this.GetType()) : Expression.Constant(null);
+
+	/// <inheritdoc cref="ToWeakReference{T}(T)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new "/> <see cref="WeakReference{T}"/>(@<paramref name="this"/>);</c>
+	/// </remarks>
+	public static WeakReference<T> ToWeakReference<T>(this T @this)
+		where T : class
+		=> new WeakReference<T>(@this);
 }

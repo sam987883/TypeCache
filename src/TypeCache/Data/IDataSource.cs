@@ -2,6 +2,7 @@
 
 using System.Data;
 using System.Data.Common;
+using TypeCache.Utilities;
 
 namespace TypeCache.Data;
 

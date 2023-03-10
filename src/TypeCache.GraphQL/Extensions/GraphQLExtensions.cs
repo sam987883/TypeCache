@@ -15,7 +15,7 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using TypeCache.Reflection;
+using TypeCache.Utilities;
 using static System.FormattableString;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 

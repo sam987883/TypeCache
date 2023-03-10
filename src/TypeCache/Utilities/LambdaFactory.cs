@@ -2,14 +2,15 @@
 
 using System.Linq.Expressions;
 using TypeCache.Extensions;
+using static System.FormattableString;
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Utilities;
 
 public static class LambdaFactory
 {
 	public static LambdaExpression Create(Type[] parameterTypes, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.Select((type, i) => $"parameter{i + 1}".ToParameterExpression(type)).ToArray();
+		var parameters = parameterTypes.Select((type, i) => Invariant($"parameter{i + 1}").ToParameterExpression(type)).ToArray();
 		return bodyFactory(parameters).Lambda(parameters);
 	}
 
@@ -22,7 +23,7 @@ public static class LambdaFactory
 
 	public static LambdaExpression CreateAction(Type[] parameterTypes, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.Select((type, i) => $"parameter{i + 1}".ToParameterExpression(type)).ToArray();
+		var parameters = parameterTypes.Select((type, i) => Invariant($"parameter{i + 1}").ToParameterExpression(type)).ToArray();
 		return bodyFactory(parameters).LambdaAction(parameters);
 	}
 
@@ -101,7 +102,7 @@ public static class LambdaFactory
 
 	public static LambdaExpression CreateFunc(Type[] parameterTypes, Type returnType, Func<ParameterExpression[], Expression> bodyFactory)
 	{
-		var parameters = parameterTypes.Select((type, i) => $"parameter{i + 1}".ToParameterExpression(type)).ToArray();
+		var parameters = parameterTypes.Select((type, i) => Invariant($"parameter{i + 1}").ToParameterExpression(type)).ToArray();
 		return bodyFactory(parameters).LambdaFunc(returnType, parameters);
 	}
 

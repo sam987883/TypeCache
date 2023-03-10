@@ -55,7 +55,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 
 	/// <summary>
 	/// Adds a field that is based on the results of the <paramref name="methodInfo"/>,
-	/// whose result objects are matched back to the parent object by matching the value of the properties on both objects with the same <c><see cref="GraphQLMatchAttribute"/></c>.<br/>
+	/// whose result objects are matched back to the parent object by matching the rault of <paramref name="getParentMatch"/> and <paramref name="getChildMatch"/>.<br/>
 	/// This subquery returns 0 or 1 child record for every 1 parent record of type <typeparamref name="T"/>.
 	/// </summary>
 	/// <param name="methodInfo">The method that loads the child data for all parent property values.  This method can contain user input query parameters,
@@ -65,6 +65,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// <param name="getChildMatch">Gets the property value to match the child object on.</param>
 	public FieldType AddQueryItem<CHILD, MATCH>(MethodInfo methodInfo, Func<T, MATCH> getParentMatch, Func<CHILD, MATCH> getChildMatch)
 		where CHILD : notnull
+		where MATCH : notnull
 	{
 		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
 
@@ -89,7 +90,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 
 	/// <summary>
 	/// Adds a field that is based on the results of the <paramref name="methodInfo"/>,
-	/// whose result objects are matched back to the parent object by matching the value of the properties on both objects with the same <c><see cref="GraphQLMatchAttribute"/></c>.<br/>
+	/// whose result objects are matched back to the parent object by matching the rault of <paramref name="getParentMatch"/> and <paramref name="getChildMatch"/>.<br/>
 	/// This subquery returns 0 or more child records for every 1 parent record of type <typeparamref name="T"/>.
 	/// </summary>
 	/// <param name="methodInfo">The method that loads the child data for all parent property values.  This method can contain user input query parameters,
@@ -99,6 +100,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// <param name="getChildMatch">Gets the property value to match the child object on.</param>
 	public FieldType AddQueryCollection<CHILD, MATCH>(MethodInfo methodInfo, Func<T, MATCH> getParentMatch, Func<CHILD, MATCH> getChildMatch)
 		where CHILD : notnull
+		where MATCH : notnull
 	{
 		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
 

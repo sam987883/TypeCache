@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using TypeCache.Collections;
 using static System.Text.RegularExpressions.RegexOptions;
 
-namespace TypeCache;
+namespace TypeCache.Utilities;
 
 public static class RegexCache
 {

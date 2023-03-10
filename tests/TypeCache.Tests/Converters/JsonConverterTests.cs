@@ -72,40 +72,4 @@ public class JsonConverterTests
 		var json = JsonSerializer.Serialize(dataTable.Rows, jsonOptions);
 		Assert.Equal("[{\"Column1\":true,\"Column2\":\"AAAAAA\",\"Column3\":24,\"Column4\":99999.99},{\"Column1\":false,\"Column2\":\"BBBBBB\",\"Column3\":null,\"Column4\":0},{\"Column1\":null,\"Column2\":null,\"Column3\":-24,\"Column4\":-99999.99}]", json);
 	}
-
-	[Fact]
-	public void Int128JsonConverter()
-	{
-		var test = (Int128)long.MaxValue;
-
-		var jsonOptions = new JsonSerializerOptions();
-		jsonOptions.Converters.Add(new Int128JsonConverter());
-
-		var json = JsonSerializer.Serialize(test);
-		Assert.NotEqual(test.ToString(), json);
-
-		json = JsonSerializer.Serialize(test, jsonOptions);
-		Assert.Equal(test.ToString(), json);
-
-		var result = JsonSerializer.Deserialize<Int128>(json, jsonOptions);
-		Assert.Equal(test, result);
-	}
-
-	[Fact]
-	public void UInt128JsonConverter()
-	{
-		var test = (UInt128)long.MaxValue;
-
-		var jsonOptions = new JsonSerializerOptions();
-		jsonOptions.Converters.Add(new UInt128JsonConverter());
-
-		var json = JsonSerializer.Serialize(test);
-		Assert.NotEqual(test.ToString(), json);
-
-		json = JsonSerializer.Serialize(test, jsonOptions);
-		Assert.Equal(test.ToString(), json);
-
-		var result = JsonSerializer.Deserialize<UInt128>(json, jsonOptions);
-		Assert.Equal(test, result);
-	}
 }

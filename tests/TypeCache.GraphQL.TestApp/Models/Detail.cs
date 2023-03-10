@@ -6,9 +6,9 @@ namespace TypeCache.GraphQL.TestApp.Models;
 
 public class Detail
 {
-	public required string Alias { get; set; }
+	public string? Alias { get; set; }
 
-	public required string FirstName { get; set; }
+	public string? FirstName { get; set; }
 
 	public int SomeValue { get; set; }
 

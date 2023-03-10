@@ -3,26 +3,26 @@
 using System.Collections.Immutable;
 using System.Reflection;
 using TypeCache.Extensions;
+using static System.Reflection.BindingFlags;
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Utilities;
 
-[DebuggerDisplay("{EnumOf<T>.Name}.{Name,nq}", Name = "{Name}")]
+[DebuggerDisplay("{Token<T>}.{Name,nq}", Name = "{Name}")]
 public sealed class Token<T> : IEquatable<Token<T>>
 	where T : struct, Enum
 {
-	internal Token(FieldInfo fieldInfo)
+	internal Token(T value)
 	{
+		var fieldInfo = typeof(T).GetField(value.ToString(), Public | Static)!;
 		this.Attributes = fieldInfo.GetCustomAttributes<Attribute>().ToImmutableArray();
 		this.Name = fieldInfo.Name();
-		this.Value = (T)fieldInfo.GetFieldValue(null)!;
-		this.Hex = this.Value.ToString("X");
-		this.Number = this.Value.ToString("D");
+		this.Value = value;
+		this.Hex = value.ToString("X");
+		this.Number = value.ToString("D");
 	}
 
-	/// <inheritdoc/>
 	public IReadOnlyCollection<Attribute> Attributes { get; }
 
-	/// <inheritdoc/>
 	public string Name { get; }
 
 	public string Hex { get; }

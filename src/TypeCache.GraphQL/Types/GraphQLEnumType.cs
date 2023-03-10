@@ -6,6 +6,7 @@ using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Utilities;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -29,7 +30,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 			_ => new Func<string, string>(_ => _)
 		};
 
-		EnumOf<T>.Tokens
+		EnumOf<T>.Tokens.Values
 			.Where(token => !token.Attributes.Any<GraphQLIgnoreAttribute>())
 			.Select(token => new EnumValueDefinition(token.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(token.Name), token.Value)
 			{
@@ -46,7 +47,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		{
 			null or T => true,
 			Enum token => token is T,
-			_ => Enum.IsDefined(typeof(T), value)
+			_ => false
 		};
 
 	/// <inheritdoc/>

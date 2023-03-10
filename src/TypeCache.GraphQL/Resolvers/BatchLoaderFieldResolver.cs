@@ -16,6 +16,7 @@ using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class BatchLoaderFieldResolver<PARENT, CHILD, MATCH> : FieldResolver
+	where MATCH : notnull
 {
 	private readonly string _DataLoaderKey;
 	private readonly MethodInfo _MethodInfo;

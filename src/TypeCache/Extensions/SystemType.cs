@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.Reflection;
+namespace TypeCache.Extensions;
 
 public enum SystemType
 {
@@ -8,35 +8,35 @@ public enum SystemType
 	/// <summary>
 	/// <code>
 	/// <see cref="System.Action"/><br/>
-	/// <see cref="System.Action{T}"/><br/>
-	/// <see cref="System.Action{T1, T2}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/><br/>
-	/// <see cref="System.Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
+	/// <see cref="Action{T}"/><br/>
+	/// <see cref="Action{T1, T2}"/><br/>
+	/// <see cref="Action{T1, T2, T3}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15}"/><br/>
+	/// <see cref="Action{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16}"/>
 	/// </code>
 	/// </summary>
 	Action,
 	/// <summary>
-	/// <c><see cref="System.Attribute"/></c>
+	/// <c><see cref="Attribute"/></c>
 	/// </summary>
 	Boolean,
 	/// <summary>
-	/// <c><see cref="System.Byte"/></c>
+	/// <c><see cref="byte"/></c>
 	/// </summary>
 	Byte,
 	/// <summary>
-	/// <c><see cref="System.Char"/></c>
+	/// <c><see cref="char"/></c>
 	/// </summary>
 	Char,
 	/// <summary>
@@ -56,32 +56,32 @@ public enum SystemType
 	/// </summary>
 	DBNull,
 	/// <summary>
-	/// <c><see cref="System.Decimal"/></c>
+	/// <c><see cref="decimal"/></c>
 	/// </summary>
 	Decimal,
 	/// <summary>
-	/// <c><see cref="System.Double"/></c>
+	/// <c><see cref="double"/></c>
 	/// </summary>
 	Double,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.Func{TResult}"/><br/>
-	/// <see cref="System.Func{T, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult}"/><br/>
-	/// <see cref="System.Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult}"/>
+	/// <see cref="Func{TResult}"/><br/>
+	/// <see cref="Func{T, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult}"/><br/>
+	/// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult}"/>
 	/// </code>
 	/// </summary>
 	Func,
@@ -98,15 +98,15 @@ public enum SystemType
 	/// </summary>
 	Index,
 	/// <summary>
-	/// <c><see cref="System.Int16"/></c>
+	/// <c><see cref="short"/></c>
 	/// </summary>
 	Int16,
 	/// <summary>
-	/// <c><see cref="System.Int32"/></c>
+	/// <c><see cref="int"/></c>
 	/// </summary>
 	Int32,
 	/// <summary>
-	/// <c><see cref="System.Int64"/></c>
+	/// <c><see cref="long"/></c>
 	/// </summary>
 	Int64,
 	/// <summary>
@@ -115,21 +115,21 @@ public enum SystemType
 	IntPtr,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.Lazy{T}"/><br/>
-	/// <see cref="System.Lazy{T, TMetadata}"/>
+	/// <see cref="Lazy{T}"/><br/>
+	/// <see cref="Lazy{T, TMetadata}"/>
 	/// </code>
 	/// </summary>
 	Lazy,
 	/// <summary>
-	/// <c><see cref="System.Memory{T}"/></c>
+	/// <c><see cref="Memory{T}"/></c>
 	/// </summary>
 	Memory,
 	/// <summary>
-	/// <c><see cref="System.Nullable{T}"/></c>
+	/// <c><see cref="Nullable{T}"/></c>
 	/// </summary>
 	Nullable,
 	/// <summary>
-	/// <c><see cref="System.Object"/></c>
+	/// <c><see cref="object"/></c>
 	/// </summary>
 	Object,
 	/// <summary>
@@ -137,27 +137,27 @@ public enum SystemType
 	/// </summary>
 	Range,
 	/// <summary>
-	/// <c><see cref="System.ReadOnlyMemory{T}"/></c>
+	/// <c><see cref="ReadOnlyMemory{T}"/></c>
 	/// </summary>
 	ReadOnlyMemory,
 	/// <summary>
-	/// <c><see cref="System.ReadOnlySpan{T}"/></c>
+	/// <c><see cref="ReadOnlySpan{T}"/></c>
 	/// </summary>
 	ReadOnlySpan,
 	/// <summary>
-	/// <c><see cref="System.SByte"/></c>
+	/// <c><see cref="sbyte"/></c>
 	/// </summary>
 	SByte,
 	/// <summary>
-	/// <c><see cref="System.Single"/></c>
+	/// <c><see cref="float"/></c>
 	/// </summary>
 	Single,
 	/// <summary>
-	/// <c><see cref="System.Span{T}"/></c>
+	/// <c><see cref="Span{T}"/></c>
 	/// </summary>
 	Span,
 	/// <summary>
-	/// <c><see cref="System.String"/></c>
+	/// <c><see cref="string"/></c>
 	/// </summary>
 	String,
 	/// <summary>
@@ -170,14 +170,14 @@ public enum SystemType
 	TimeSpan,
 	/// <summary>
 	/// <code>
-	/// <see cref="System.Tuple{T1}"/><br/>
-	/// <see cref="System.Tuple{T1, T2}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.Tuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
+	/// <see cref="Tuple{T1}"/><br/>
+	/// <see cref="Tuple{T1, T2}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3, T4}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="Tuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
 	/// </code>
 	/// </summary>
 	Tuple,
@@ -186,15 +186,15 @@ public enum SystemType
 	/// </summary>
 	Type,
 	/// <summary>
-	/// <c><see cref="System.UInt16"/></c>
+	/// <c><see cref="ushort"/></c>
 	/// </summary>
 	UInt16,
 	/// <summary>
-	/// <c><see cref="System.UInt32"/></c>
+	/// <c><see cref="uint"/></c>
 	/// </summary>
 	UInt32,
 	/// <summary>
-	/// <c><see cref="System.UInt64"/></c>
+	/// <c><see cref="ulong"/></c>
 	/// </summary>
 	UInt64,
 	/// <summary>
@@ -208,25 +208,25 @@ public enum SystemType
 	/// <summary>
 	/// <code>
 	/// <see cref="System.ValueTuple"/><br/>
-	/// <see cref="System.ValueTuple{T1}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
-	/// <see cref="System.ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
+	/// <see cref="ValueTuple{T1}"/><br/>
+	/// <see cref="ValueTuple{T1, T2}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3, T4}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3, T4, T5}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3, T4, T5, T6}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3, T4, T5, T6, T7}"/><br/>
+	/// <see cref="ValueTuple{T1, T2, T3, T4, T5, T6, T7, TRest}"/>
 	/// </code>
 	/// </summary>
 	ValueTuple,
 	/// <summary>
-	/// <c><see cref="System.Void"/></c>
+	/// <c><see cref="void"/></c>
 	/// </summary>
 	Void,
 	/// <summary>
 	/// <code>
 	/// <see cref="System.WeakReference"/><br/>
-	/// <see cref="System.WeakReference{T}"/>
+	/// <see cref="WeakReference{T}"/>
 	/// </code>
 	/// </summary>
 	WeakReference,
@@ -267,11 +267,11 @@ public enum SystemType
 	/// </summary>
 	ConcurrentStack,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.Dictionary{TKey, TValue}"/></c>
+	/// <c><see cref="Dictionary{TKey, TValue}"/></c>
 	/// </summary>
 	Dictionary,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.HashSet{T}"/></c>
+	/// <c><see cref="HashSet{T}"/></c>
 	/// </summary>
 	HashSet,
 	/// <summary>
@@ -319,11 +319,11 @@ public enum SystemType
 	/// </summary>
 	KeyedCollection,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.LinkedList{T}"/></c>
+	/// <c><see cref="LinkedList{T}"/></c>
 	/// </summary>
 	LinkedList,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.List{T}"/></c>
+	/// <c><see cref="List{T}"/></c>
 	/// </summary>
 	List,
 	/// <summary>
@@ -347,7 +347,7 @@ public enum SystemType
 	/// </summary>
 	OrderedDictionary,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.PriorityQueue{TElement, TPriority}"/></c>
+	/// <c><see cref="PriorityQueue{TElement, TPriority}"/></c>
 	/// </summary>
 	PriorityQueue,
 	/// <summary>
@@ -367,15 +367,15 @@ public enum SystemType
 	/// </summary>
 	ReadOnlyObservableCollection,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.SortedDictionary{TKey, TValue}"/></c>
+	/// <c><see cref="SortedDictionary{TKey, TValue}"/></c>
 	/// </summary>
 	SortedDictionary,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.SortedList{TKey, TValue}"/></c>
+	/// <c><see cref="SortedList{TKey, TValue}"/></c>
 	/// </summary>
 	SortedList,
 	/// <summary>
-	/// <c><see cref="System.Collections.Generic.SortedSet{T}"/></c>
+	/// <c><see cref="SortedSet{T}"/></c>
 	/// </summary>
 	SortedSet,
 	/// <summary>
@@ -417,14 +417,14 @@ public enum SystemType
 	/// <summary>
 	/// <code>
 	/// <see cref="System.Threading.Tasks.Task"/><br/>
-	/// <see cref="System.Threading.Tasks.Task{TResult}"/>
+	/// <see cref="Task{TResult}"/>
 	/// </code>
 	/// </summary>
 	Task,
 	/// <summary>
 	/// <code>
 	/// <see cref="System.Threading.Tasks.ValueTask"/><br/>
-	/// <see cref="System.Threading.Tasks.ValueTask{TResult}"/>
+	/// <see cref="ValueTask{TResult}"/>
 	/// </code>
 	/// </summary>
 	ValueTask
