@@ -55,7 +55,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 
 	/// <summary>
 	/// Adds a field that is based on the results of the <paramref name="methodInfo"/>,
-	/// whose result objects are matched back to the parent object by matching the value of the properties on both objects with the same <c><see cref="GraphQLMatchAttribute"/></c>.<br/>
+	/// whose result objects are matched back to the parent object by matching the result of <paramref name="getParentMatch"/> and <paramref name="getChildMatch"/>.<br/>
 	/// This subquery returns 0 or 1 child record for every 1 parent record of type <typeparamref name="T"/>.
 	/// </summary>
 	/// <param name="methodInfo">The method that loads the child data for all parent property values.  This method can contain user input query parameters,
@@ -90,7 +90,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 
 	/// <summary>
 	/// Adds a field that is based on the results of the <paramref name="methodInfo"/>,
-	/// whose result objects are matched back to the parent object by matching the value of the properties on both objects with the same <c><see cref="GraphQLMatchAttribute"/></c>.<br/>
+	/// whose result objects are matched back to the parent object by matching the result of <paramref name="getParentMatch"/> and <paramref name="getChildMatch"/>.<br/>
 	/// This subquery returns 0 or more child records for every 1 parent record of type <typeparamref name="T"/>.
 	/// </summary>
 	/// <param name="methodInfo">The method that loads the child data for all parent property values.  This method can contain user input query parameters,

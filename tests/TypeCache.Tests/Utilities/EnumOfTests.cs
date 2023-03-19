@@ -7,7 +7,7 @@ using TypeCache.Extensions;
 using TypeCache.Utilities;
 using Xunit;
 
-namespace TypeCache.Tests;
+namespace TypeCache.Tests.Utilities;
 
 public class EnumOfTests
 {

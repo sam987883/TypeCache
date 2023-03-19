@@ -3,8 +3,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Extensions;
-using TypeCache.Reflection;
-using static System.Globalization.CultureInfo;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -97,7 +96,7 @@ public static class ExpressionExtensions
 	public static Expression As(this Expression @this, Type type)
 		=> Expression.TypeAs(@this, type);
 
-	/// <exception cref="NotSupportedException" />
+	/// <exception cref="UnreachableException" />
 	public static BinaryExpression Assign(this Expression @this, BinaryOperator operation, Expression operand)
 		=> operation switch
 		{
@@ -115,7 +114,7 @@ public static class ExpressionExtensions
 			BinaryOperator.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
 			BinaryOperator.LeftShift => Expression.LeftShiftAssign(@this, operand),
 			BinaryOperator.RightShift => Expression.RightShiftAssign(@this, operand),
-			_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
+			_ => throw new UnreachableException($"{nameof(Assign)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
 		};
 
 	/// <inheritdoc cref="Expression.Assign(Expression, Expression)"/>
@@ -198,70 +197,20 @@ public static class ExpressionExtensions
 		=> Expression.Coalesce(@this, expression);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="overflowCheck"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Convert(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Expression Convert<T>(this Expression @this, bool overflowCheck = false)
-		=> @this.Convert(typeof(T), overflowCheck);
+	public static Expression Convert<T>(this Expression @this)
+		=> @this.Convert(typeof(T));
 
-	public static Expression Convert(this Expression @this, Type targetType, bool overflowCheck = false)
-		=> targetType switch
-		{
-			_ when targetType == typeof(string) => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertToString), @this.Cast<object>()).Cast(targetType, overflowCheck),
-			{ IsEnum: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertToEnum), @this.Cast<object>(), targetType.ToConstantExpression()).Cast(targetType, overflowCheck),
-			{ IsGenericType: true } when targetType.GetGenericTypeDefinition() == typeof(Nullable<>) => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType.GenericTypeArguments[0] }, @this.Cast<object>(), targetType.GenericTypeArguments[0].ToConstantExpression(), overflowCheck.ToConstantExpression()).Cast(targetType, overflowCheck),
-			{ IsValueType: true } => typeof(ExpressionExtensions).ToStaticMethodCallExpression(nameof(ExpressionExtensions.ConvertTo), new[] { targetType }, @this.Cast<object>(), targetType.ToConstantExpression(), overflowCheck.ToConstantExpression()).Cast(targetType, overflowCheck),
-			_ => @this.Cast(targetType, overflowCheck)
-		};
-
-	private static object? ConvertTo<T>(object value, Type targetType, bool overflowCheck)
-		where T : struct
-		=> value switch
-		{
-			null or DBNull => null,
-			_ when targetType == value.GetType() => value,
-			Enum when targetType.IsEnumUnderlyingType() => System.Convert.ChangeType(value, targetType, InvariantCulture),
-			Enum when targetType == typeof(string) => Enum.Format(value.GetType(), value, "G"),
-			string text when targetType == typeof(DateTime) => DateTime.Parse(text, InvariantCulture),
-			IConvertible convertible when targetType.IsAssignableTo<IConvertible>() => System.Convert.ChangeType(value, targetType, InvariantCulture),
-			string text when targetType == typeof(IntPtr) => IntPtr.Parse(text, InvariantCulture),
-			string text when targetType == typeof(UIntPtr) => UIntPtr.Parse(text, InvariantCulture),
-			string text when targetType == typeof(DateOnly) => DateOnly.Parse(text, InvariantCulture),
-			string text when targetType == typeof(DateTimeOffset) => DateTimeOffset.Parse(text, InvariantCulture),
-			string text when targetType == typeof(TimeOnly) => TimeOnly.Parse(text, InvariantCulture),
-			string text when targetType == typeof(TimeSpan) => TimeSpan.Parse(text, InvariantCulture),
-			string text when targetType == typeof(Guid) => Guid.Parse(text),
-			string text when targetType == typeof(Uri) => new Uri(text),
-			_ when overflowCheck => checked((T)value),
-			_ => (T)value,
-		};
-
-	private static object? ConvertToEnum(object value, Type targetType)
-		=> value switch
-		{
-			null or DBNull => null,
-			string text => Enum.Parse(targetType, text, true),
-			_ when value.GetType() == targetType => value,
-			_ when value.GetType() == Enum.GetUnderlyingType(targetType) => Enum.ToObject(targetType, value),
-			_ => throw new InvalidCastException(Invariant($"Type [{value.GetType().Name()}] cannot be converted to {nameof(Enum)} type [{targetType.Name()}].")),
-		};
-
-	private static object? ConvertToString(object value)
-		=> value switch
-		{
-			null or DBNull => null,
-			string => value,
-			Enum => Enum.GetName(value.GetType(), value),
-			Guid guid => guid.ToText(),
-			DateOnly dateOnly => dateOnly.ToISO8601(),
-			DateTime dateTime => dateTime.ToISO8601(),
-			DateTimeOffset dateTimeOffset => dateTimeOffset.ToISO8601(),
-			TimeOnly timeOnly => timeOnly.ToISO8601(),
-			TimeSpan timeSpan => timeSpan.ToText(),
-			IFormattable formattable => formattable.ToString(null, InvariantCulture),
-			Uri uri => uri.ToString(),
-			_ => (string)value,
-		};
+	/// <remarks>
+	/// <c>=&gt; <see langword="typeof"/>(<see cref="ValueConverters"/>).ToStaticMethodCallExpression(
+	/// <see langword="nameof"/>(<see cref="ValueConverters"/>.ConvertObject),
+	/// @<paramref name="this"/>.Cast&lt;<see langword="object"/>&gt;(),
+	/// <paramref name="targetType"/>.ToConstantExpression()).Cast(<paramref name="targetType"/>);</c>
+	/// </remarks>
+	public static Expression Convert(this Expression @this, Type targetType)
+		=> typeof(ValueConverters).ToStaticMethodCallExpression(nameof(ValueConverters.ConvertObject), @this.Cast<object>(), targetType.ToConstantExpression()).Cast(targetType);
 
 	/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>
 	/// <remarks>
@@ -383,21 +332,51 @@ public static class ExpressionExtensions
 	public static Expression<T> Lambda<T>(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda<T>(@this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter => parameter.Type).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter => parameter.Type).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
 		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<paramref name="returnType"/>).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
+	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<paramref name="returnType"/>).ToArray(),
+	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
+	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[]? parameters)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
@@ -425,7 +404,7 @@ public static class ExpressionExtensions
 	public static MemberInitExpression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
 		=> Expression.MemberInit(@this, bindings);
 
-	/// <exception cref="NotSupportedException" />
+	/// <exception cref="UnreachableException" />
 	public static BinaryExpression Operation(this Expression @this, BinaryOperator operation, Expression operand)
 		=> operation switch
 		{
@@ -451,10 +430,10 @@ public static class ExpressionExtensions
 			BinaryOperator.GreaterThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
 			BinaryOperator.LessThan => Expression.LessThan(@this, operand),
 			BinaryOperator.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
-			_ => throw new NotSupportedException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
+			_ => throw new UnreachableException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
 		};
 
-	/// <exception cref="NotSupportedException" />
+	/// <exception cref="UnreachableException" />
 	public static UnaryExpression Operation(this Expression @this, UnaryOperator operation)
 		=> operation switch
 		{
@@ -469,7 +448,7 @@ public static class ExpressionExtensions
 			UnaryOperator.Negate => Expression.Negate(@this),
 			UnaryOperator.NegateChecked => Expression.NegateChecked(@this),
 			UnaryOperator.Complement => Expression.OnesComplement(@this),
-			_ => throw new NotSupportedException($"{nameof(Assign)}: {nameof(UnaryOperator)} [{operation:G}] is not supported.")
+			_ => throw new UnreachableException($"{nameof(Assign)}: {nameof(UnaryOperator)} [{operation:G}] is not supported.")
 		};
 
 	/// <inheritdoc cref="Expression.OrElse(Expression, Expression)"/>
