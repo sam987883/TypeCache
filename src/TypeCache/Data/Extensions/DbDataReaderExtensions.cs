@@ -16,7 +16,7 @@ public static class DbDataReaderExtensions
 	/// </summary>
 	[DebuggerHidden]
 	public static string[] GetColumns(this DbDataReader @this)
-		=> (0..@this.VisibleFieldCount).Select(@this.GetName).ToArray();
+		=> (0..@this.VisibleFieldCount).ToEnumerable().Select(@this.GetName).ToArray();
 
 	public static DataTable ReadDataTable(this DbDataReader @this)
 	{
@@ -95,7 +95,11 @@ public static class DbDataReaderExtensions
 			range.ForEach(i =>
 			{
 				writer.WritePropertyName(columns[i]);
-				writer.WriteValue(values[i] switch { DBNull => null, object value => value }, options);
+				writer.WriteValue(values[i] switch
+				{
+					DBNull => null,
+					var value => value
+				}, options);
 			});
 			writer.WriteEndObject();
 		}

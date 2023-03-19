@@ -30,21 +30,45 @@ public static class DateTimeExtensions
 	public static DateTime ChangeTimeZone(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 		=> ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
 
-	/// <inheritdoc cref="DateOnly.DateOnly(int, int, int)"/>
+	/// <inheritdoc cref="DateOnly.FromDateTime(DateTime)"/>
 	/// <remarks>
-	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>.Year, @<paramref name="this"/>.Month, @<paramref name="this"/>.Day);</c>
+	/// <c>=&gt; <see cref="DateOnly"/>.FromDateTime(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateOnly ToDateOnly(this DateTime @this)
-		=> new(@this.Year, @this.Month, @this.Day);
+		=> DateOnly.FromDateTime(@this);
 
-	/// <inheritdoc cref="DateOnly.DateOnly(int, int, int)"/>
+	/// <inheritdoc cref="DateOnly.FromDateTime(DateTime)"/>
 	/// <remarks>
-	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>.TimeOfDay.Ticks);</c>
+	/// <c>=&gt; <see cref="DateOnly"/>.FromDateTime(@<paramref name="this.DateTime"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static DateOnly ToDateOnly(this DateTimeOffset @this)
+		=> DateOnly.FromDateTime(@this.DateTime);
+
+	public static DateTimeOffset ToDateTimeOffset(this DateTime @this)
+		=> @this.Kind switch
+		{
+			DateTimeKind.Local => new DateTimeOffset(@this, TimeZoneInfo.Local.BaseUtcOffset),
+			DateTimeKind.Utc => new DateTimeOffset(@this, TimeZoneInfo.Utc.BaseUtcOffset),
+			_ => new DateTimeOffset(@this)
+		};
+
+	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="TimeOnly"/>.FromDateTime(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TimeOnly ToTimeOnly(this DateTime @this)
-		=> new(@this.TimeOfDay.Ticks);
+		=> TimeOnly.FromDateTime(@this);
+
+	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="TimeOnly"/>.FromDateTime(@<paramref name="this"/>.DateTime);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static TimeOnly ToTimeOnly(this DateTimeOffset @this)
+		=> TimeOnly.FromDateTime(@this.DateTime);
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>

@@ -1,5 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Utilities;
+
 namespace TypeCache.Extensions;
 
 public static class RangeExtensions
@@ -13,16 +15,19 @@ public static class RangeExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void ForEach(this Range @this, Action<int> action)
 	{
 		action.AssertNotNull();
 
-		var end = @this.End.Value;
-		var increment = @this.IsReverse() ? -1 : 1;
-		for (var i = @this.Start.Value; i != end; i += increment)
+		foreach (var i in @this)
 			action(i);
 	}
+
+	/// <summary>
+	/// <c>=&gt; <see langword="new"/> <see cref="RangeEnumerator"/>(@<paramref name="this"/>);</c>
+	/// </summary>
+	public static RangeEnumerator GetEnumerator(this Range @this)
+		=> new RangeEnumerator(@this);
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static bool Has(this Range @this, Index index)
@@ -67,22 +72,6 @@ public static class RangeExtensions
 	public static int Length(this Range @this)
 		=> (@this.End.Value - @this.Start.Value).Abs();
 
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static IEnumerable<T> Select<T>(this Range @this, Func<int, T> map)
-	{
-		map.AssertNotNull();
-
-		var start = @this.Start.Value;
-		var end = @this.End.Value;
-		if (@this.IsReverse())
-			for (var i = start - 1; i >= end; --i)
-				yield return map(i);
-		else
-			for (var i = start; i < end; ++i)
-				yield return map(i);
-	}
-
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Index? Maximum(this Range @this)
 		=> @this.IsReverse() switch
@@ -122,6 +111,12 @@ public static class RangeExtensions
 	public static Range Reverse(this Range @this)
 		=> new Range(@this.End, @this.Start);
 
+	public static IEnumerable<int> ToEnumerable(this Range @this)
+	{
+		foreach (var i in @this)
+			yield return i;
+	}
+
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Range? UnionWith(this Range @this, Range other)
 		=> @this.Has(other.Start) || @this.Has(other.End) || other.Has(@this.Start) || other.Has(@this.End) ? (@this.IsReverse(), other.IsReverse()) switch
@@ -131,26 +126,4 @@ public static class RangeExtensions
 			(false, true) => (@this.Start, other.End.Next()).Min()..(@this.End, other.Start.Previous()).Max(),
 			(false, false) => (@this.Start, other.Start).Min()..(@this.End, other.End).Max()
 		} : null;
-
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static IEnumerable<int> Values(this Range @this)
-	{
-		var increment = @this.IsReverse() ? -1 : 1;
-		var end = @this.End.Value + increment;
-		for (var i = @this.Start.Value; i != end; i += increment)
-			yield return i;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static IEnumerable<int> Where(this Range @this, Predicate<int> condition)
-	{
-		condition.AssertNotNull();
-
-		var end = @this.End.Value;
-		var increment = @this.IsReverse() ? -1 : 1;
-		for (var i = @this.Start.Value; i != end; i += increment)
-			if (condition(i))
-				yield return i;
-	}
 }

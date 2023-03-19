@@ -109,6 +109,15 @@ public class RangeExtensions
 	}
 
 	[Fact]
+	public void ToEnumerable()
+	{
+		Assert.Equal(new[] { 5, 6, 7 }, (5..8).ToEnumerable().ToArray());
+		Assert.Equal(new[] { 7, 6, 5 }, (7..4).ToEnumerable().ToArray());
+		Assert.Equal(new[] { 0, 1, 2, 3 }, (0..4).ToEnumerable().ToArray());
+		Assert.Equal(new[] { 4, 3, 2, 1 }, (4..0).ToEnumerable().ToArray());
+	}
+
+	[Fact]
 	public void UnionWith()
 	{
 		Assert.Equal(20..3, (20..3).UnionWith(20..3));
@@ -131,14 +140,5 @@ public class RangeExtensions
 		Assert.Equal(3..25, (15..25).UnionWith(3..15));
 		Assert.Null((15..15).UnionWith(15..15));
 		Assert.Null((0..0).UnionWith(1..1));
-	}
-
-	[Fact]
-	public void Values()
-	{
-		Assert.Equal(new[] { 5, 6, 7, 8 }, (5..8).Values().ToArray());
-		Assert.Equal(new[] { 7, 6, 5, 4 }, (7..4).Values().ToArray());
-		Assert.Equal(new[] { 0, 1, 2, 3, 4 }, (0..4).Values().ToArray());
-		Assert.Equal(new[] { 4, 3, 2, 1, 0 }, (4..0).Values().ToArray());
 	}
 }

@@ -76,7 +76,7 @@ public class EnumeratorExtensions
 	[Fact]
 	public void Rest()
 	{
-		var enumerator = (1..7).Values().GetEnumerator();
+		var enumerator = (1..8).ToEnumerable().GetEnumerator();
 
 		Assert.True(enumerator.Move(4));
 		Assert.Equal(new[] { 5, 6, 7 }, enumerator.Rest().ToArray());

@@ -553,44 +553,6 @@ public static class NumberExtensions
 	public static int Sign(this decimal @this)
 		=> Math.Sign(@this);
 
-	public static IEnumerable<int> To(this int @this, int end, int increment = 0)
-	{
-		int? i = increment switch
-		{
-			0 when @this < end => 1,
-			0 when @this > end => -1,
-			< 0 when @this < end => null,
-			> 0 when @this > end => null,
-			_ when @this == end => 0,
-			_ => increment
-		};
-
-		if (!i.HasValue)
-			yield break;
-
-		if (i == 0)
-			yield return @this;
-
-		increment = i.Value;
-
-		if (@this < end)
-		{
-			do
-			{
-				yield return @this;
-				@this += increment;
-			} while (@this <= end);
-		}
-		else if (@this > end)
-		{
-			do
-			{
-				yield return @this;
-				@this += increment;
-			} while (@this >= end);
-		}
-	}
-
 	/// <inheritdoc cref="decimal.GetBits(decimal)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="decimal"/>.GetBits(@<paramref name="this"/>).SelectMany(_ =&gt; _.GetBytes()).ToArray();</c>
