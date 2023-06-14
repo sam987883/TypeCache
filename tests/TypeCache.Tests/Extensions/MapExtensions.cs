@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
 using Xunit;
@@ -23,7 +25,7 @@ public class MapExtensions
 			{ nameof(TestModel1.TestProperty6), "ABCdef" },
 		};
 
-		var dictionary2 = dictionary1.MapTo(new Dictionary<string, object>(StringComparer.Ordinal));
+		var dictionary2 = dictionary1.MapToDictionary(new Dictionary<string, object>(StringComparer.Ordinal));
 
 		Assert.Equal(-1, dictionary2[nameof(TestModel1.TestProperty1)]);
 		Assert.Equal(' ', dictionary2[nameof(TestModel1.TestProperty2)]);
@@ -46,7 +48,7 @@ public class MapExtensions
 			{ nameof(TestModel1.TestProperty6), "ABCdef" },
 		};
 
-		var testModel2 = dictionary.MapTo(new TestModel2());
+		var testModel2 = dictionary.MapToModel(new TestModel2());
 
 		Assert.Equal(-1, testModel2.TestProperty1);
 		Assert.Equal(' ', testModel2.TestProperty2);
@@ -81,11 +83,11 @@ public class MapExtensions
 
 	private class TestModel1
 	{
-		[MapToAttribute<TestModel2>(nameof(TestModel2.TestProperty4))]
+		[MapAttribute<TestModel2>(nameof(TestModel2.TestProperty4))]
 		public int TestProperty1 { get; set; }
 		public char TestProperty2 { get; set; }
 		public string TestProperty3 { get; set; }
-		[MapToAttribute<TestModel2>(nameof(TestModel2.TestProperty1))]
+		[MapAttribute<TestModel2>(nameof(TestModel2.TestProperty1))]
 		public int TestProperty4 { get; set; }
 		public char TestProperty5 { get; set; }
 		public string TestProperty6 { get; set; }

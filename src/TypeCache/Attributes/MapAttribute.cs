@@ -2,9 +2,9 @@
 
 namespace TypeCache.Attributes;
 
-public abstract class MapToAttribute : Attribute
+public abstract class MapAttribute : Attribute
 {
-	public MapToAttribute(Type type, string property)
+	public MapAttribute(Type type, string property)
 	{
 		this.Property = property;
 		this.Type = type;
@@ -16,9 +16,9 @@ public abstract class MapToAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
-public sealed class MapToAttribute<T> : MapToAttribute
+public sealed class MapAttribute<T> : MapAttribute
 {
-	public MapToAttribute(string property)
+	public MapAttribute(string property)
 		: base(typeof(T), property)
 	{
 	}

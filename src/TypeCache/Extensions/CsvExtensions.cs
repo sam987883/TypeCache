@@ -52,7 +52,7 @@ public static class CsvExtensions
 	public static string[] ToCSV<T>(this IEnumerable<T> @this, CsvOptions options = default)
 		where T : notnull
 	{
-		var propertyInfos = typeof(T).GetInstanceProperties();
+		var propertyInfos = typeof(T).GetPublicProperties();
 		if (options.MemberNames.Any())
 			propertyInfos = propertyInfos.IntersectBy(options.MemberNames, propertyInfo => propertyInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray();
 		if (propertyInfos.Any())
@@ -62,7 +62,7 @@ public static class CsvExtensions
 			return dataRows.Prepend(headerRow).ToArray();
 		}
 
-		var fieldInfos = typeof(T).GetInstanceFields(true);
+		var fieldInfos = typeof(T).GetPublicFields();
 		if (options.MemberNames.Any())
 			fieldInfos = fieldInfos.IntersectBy(options.MemberNames, fieldInfo => fieldInfo.Name, options.MemberNameComparison.ToStringComparer()).ToArray();
 		if (fieldInfos.Any())

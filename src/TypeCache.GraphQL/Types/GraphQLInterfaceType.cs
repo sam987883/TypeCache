@@ -16,7 +16,7 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 
 		this.Name = typeof(T).GraphQLName();
 
-		typeof(T).GetInstanceProperties()
+		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
 			.Select(propertyInfo => this.AddField(propertyInfo.ToFieldType<T>()))
 			.ToArray();

@@ -405,13 +405,13 @@ public static class SchemaExtensions
 	public static FieldType[] AddEndpoints<T>(this ISchema @this)
 		where T : notnull
 	{
-		var methodInfos = typeof(T).GetInstanceMethods();
+		var methodInfos = typeof(T).GetPublicMethods();
 		var fieldTypes = new List<FieldType>();
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLQueryAttribute>()).Select(@this.AddQuery));
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLMutationAttribute>()).Select(@this.AddMutation));
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
 
-		methodInfos = typeof(T).GetStaticMethods();
+		methodInfos = typeof(T).GetPublicStaticMethods();
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLQueryAttribute>()).Select(@this.AddQuery));
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLMutationAttribute>()).Select(@this.AddMutation));
 		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
@@ -575,10 +575,10 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddMutations<T>(this ISchema @this, string method)
 		where T : notnull
-		=> typeof(T).GetInstanceMethods()
+		=> typeof(T).GetPublicMethods()
 			.Where(_ => _.Name().Is(method))
 			.Select(@this.AddMutation)
-			.Concat(typeof(T).GetStaticMethods()
+			.Concat(typeof(T).GetPublicStaticMethods()
 				.Where(_ => _.Name().Is(method))
 				.Select(@this.AddMutation))
 			.ToArray();
@@ -595,10 +595,10 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddQueries<T>(this ISchema @this, string method)
 		where T : notnull
-		=> typeof(T).GetInstanceMethods()
+		=> typeof(T).GetPublicMethods()
 			.Where(_ => _.Name().Is(method))
 			.Select(@this.AddQuery)
-			.Concat(typeof(T).GetStaticMethods()
+			.Concat(typeof(T).GetPublicStaticMethods()
 				.Where(_ => _.Name().Is(method))
 				.Select(@this.AddQuery))
 			.ToArray();
@@ -759,10 +759,10 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddSubscriptions<T>(this ISchema @this, string method)
 		where T : notnull
-		=> typeof(T).GetInstanceMethods()
+		=> typeof(T).GetPublicMethods()
 			.Where(_ => _.Name().Is(method))
 			.Select(@this.AddSubscription)
-			.Concat(typeof(T).GetStaticMethods()
+			.Concat(typeof(T).GetPublicStaticMethods()
 				.Where(_ => _.Name().Is(method))
 				.Select(@this.AddSubscription))
 			.ToArray();
@@ -1009,7 +1009,7 @@ public static class SchemaExtensions
 		{
 			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
 		};
-		foreach (var property in typeof(T).GetInstanceProperties().Where(property => !property.GraphQLIgnore()))
+		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();
@@ -1066,7 +1066,7 @@ public static class SchemaExtensions
 		{
 			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
 		};
-		foreach (var property in typeof(T).GetInstanceProperties().Where(property => !property.GraphQLIgnore()))
+		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
 		{
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();

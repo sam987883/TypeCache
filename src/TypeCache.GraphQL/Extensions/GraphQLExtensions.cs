@@ -119,12 +119,13 @@ public static class GraphQLExtensions
 		(objectType is ObjectType.Object).AssertFalse();
 
 		var systemType = @this.GetSystemType();
+		var systemGraphType = systemType.ToGraphType();
 		return @this switch
 		{
 			{ IsGenericType: true } when systemType is SystemType.Nullable => @this.GenericTypeArguments.First().ToGraphQLType(isInputType, false),
 			{ IsGenericType: true } when systemType.IsAny(SystemType.Task, SystemType.ValueTask) => @this.GenericTypeArguments.First().ToGraphQLType(false, isNonNull),
 			{ IsEnum: true } => @this.ToGraphQLEnumType(isNonNull),
-			_ when SystemGraphTypes.TryGetValue(systemType, out var handle) => isNonNull ? handle.ToType().ToNonNullGraphType() : handle.ToType(),
+			_ when systemGraphType is not null => isNonNull ? systemGraphType.ToNonNullGraphType() : systemGraphType,
 			{ HasElementType: true } => @this.GetElementType()!.ToGraphQLType(isInputType, true).ToListGraphType(isNonNull),
 			{ IsGenericType: true } when objectType is ObjectType.Dictionary => typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType, true).ToListGraphType(),
 			{ IsGenericType: true } => @this.GenericTypeArguments.First().ToGraphQLType(isInputType, true).ToListGraphType(isNonNull),
@@ -208,36 +209,4 @@ public static class GraphQLExtensions
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason()
 		};
-
-	private static readonly IReadOnlyDictionary<SystemType, RuntimeTypeHandle> SystemGraphTypes = new Dictionary<SystemType, RuntimeTypeHandle>(26, EnumOf<SystemType>.Comparer)
-	{
-		{ SystemType.String, typeof(StringGraphType).TypeHandle },
-		{ SystemType.Uri, typeof(UriGraphType).TypeHandle },
-		{ SystemType.Boolean, typeof(BooleanGraphType).TypeHandle },
-		{ SystemType.SByte, typeof(SByteGraphType).TypeHandle },
-		{ SystemType.Int16, typeof(ShortGraphType).TypeHandle },
-		{ SystemType.Int32, typeof(IntGraphType).TypeHandle },
-		{ SystemType.Index, typeof(IntGraphType).TypeHandle },
-		{ SystemType.Int64, typeof(LongGraphType).TypeHandle },
-		{ SystemType.IntPtr, typeof(LongGraphType).TypeHandle },
-		{ SystemType.Int128, typeof(BigIntGraphType).TypeHandle },
-		{ SystemType.Byte, typeof(ByteGraphType).TypeHandle },
-		{ SystemType.UInt16, typeof(UShortGraphType).TypeHandle },
-		{ SystemType.UInt32, typeof(UIntGraphType).TypeHandle },
-		{ SystemType.UInt64, typeof(ULongGraphType).TypeHandle },
-		{ SystemType.UIntPtr, typeof(ULongGraphType).TypeHandle },
-		{ SystemType.UInt128, typeof(BigIntGraphType).TypeHandle },
-		{ SystemType.BigInteger, typeof(BigIntGraphType).TypeHandle },
-		{ SystemType.Half, typeof(HalfGraphType).TypeHandle },
-		{ SystemType.Single, typeof(FloatGraphType).TypeHandle },
-		{ SystemType.Double, typeof(FloatGraphType).TypeHandle },
-		{ SystemType.Decimal, typeof(DecimalGraphType).TypeHandle },
-		{ SystemType.DateOnly, typeof(DateOnlyGraphType).TypeHandle },
-		{ SystemType.DateTime, typeof(DateTimeGraphType).TypeHandle },
-		{ SystemType.DateTimeOffset, typeof(DateTimeOffsetGraphType).TypeHandle },
-		{ SystemType.TimeOnly, typeof(TimeOnlyGraphType).TypeHandle },
-		{ SystemType.TimeSpan, typeof(TimeSpanSecondsGraphType).TypeHandle },
-		{ SystemType.Guid, typeof(GuidGraphType).TypeHandle },
-		{ SystemType.Range, typeof(StringGraphType).TypeHandle }
-	}.ToImmutableDictionary();
 }

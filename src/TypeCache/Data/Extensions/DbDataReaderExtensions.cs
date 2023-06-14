@@ -30,7 +30,7 @@ public static class DbDataReaderExtensions
 	public static async Task ReadModelsAsync<T>(this DbDataReader @this, IList<T> rows, CancellationToken token = default)
 		where T : notnull, new()
 	{
-		var propertyMap = typeof(T).GetInstanceProperties().ToDictionary(property => property.Name(), property => property);
+		var propertyMap = typeof(T).GetPublicProperties().ToDictionary(property => property.Name(), property => property);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
 		var values = new object[@this.VisibleFieldCount];
 

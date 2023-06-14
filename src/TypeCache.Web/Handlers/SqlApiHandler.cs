@@ -136,19 +136,18 @@ internal static class SqlApiHandler
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(result);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> InsertTableBatch(
@@ -421,19 +420,18 @@ internal static class SqlApiHandler
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(result);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> UpdateTableBatch(
@@ -450,18 +448,18 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(result);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
 
-		return Results.Ok(result);
 	}
 }

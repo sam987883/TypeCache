@@ -16,124 +16,91 @@ partial class ReflectionExtensions
 		=> @this.FindConstructor(parameters) switch
 		{
 			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorInvokes[@this.TypeHandle].Invoke(),
-			null => throw new MissingMethodException(@this.Name(), @this.Name),
+			null => throw new MissingMethodException(@this.Name, "Consatructor"),
 			var constructorInfo => constructorInfo.InvokeMethod(parameters)
 		};
 
+	[DebuggerHidden]
 	public static ConstructorInfo? FindConstructor(this Type @this, params object?[]? arguments)
 		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
 			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
 
-	public static MethodInfo? FindMethod(this Type @this, string name, Type[] argumentTypes, bool nameIgnoreCase = false)
-		=> @this.GetMethod(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS, argumentTypes);
+	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodInfo? FindMethod(this Type @this, string name, params Type[] argumentTypes)
+		=> @this.GetMethod(name, INSTANCE_BINDING_FLAGS, argumentTypes);
 
-	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	[DebuggerHidden]
+	public static MethodInfo? FindMethod(this Type @this, string name, params object?[]? arguments)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.IsCallableWith(arguments));
+			method.Name.Is(name) && method.IsCallableWith(arguments));
 
-	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments, bool nameIgnoreCase = false)
+	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, params Type[] argumentTypes)
+		=> @this.GetMethod(name, STATIC_BINDING_FLAGS, argumentTypes);
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	[DebuggerHidden]
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, params object?[]? arguments)
 		=> @this.GetMethods(STATIC_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name().Is(name, nameIgnoreCase ? OrdinalIgnoreCase : Ordinal) && method.IsCallableWith(arguments));
+			method.Name.Is(name) && method.IsCallableWith(arguments));
 
-	public static object? GetFieldValue(this Type @this, string name, object instance, bool nameIgnoreCase = false)
-		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
-			.GetValue(instance);
+	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
+	[DebuggerHidden]
+	public static object? GetFieldValue(this Type @this, string name, object instance)
+		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
+			.GetFieldValue(instance);
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
-	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
+	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static FieldInfo[] GetInstanceFields(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Instance;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetFields(binding);
-	}
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static FieldInfo[] GetPublicFields(this Type @this)
+		=> @this.GetFields(FlattenHierarchy | Public | Instance);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <remarks>
-	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
+	/// <c>=&gt; @<paramref name="this"/>.GetMethods(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static MethodInfo[] GetInstanceMethods(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Instance;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetMethods(binding);
-	}
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodInfo[] GetPublicMethods(this Type @this)
+		=> @this.GetMethods(FlattenHierarchy | Public | Instance);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
-	/// <remarks>
-	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/></c>
-	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static PropertyInfo[] GetInstanceProperties(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Instance;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetProperties(binding);
-	}
+	[DebuggerHidden]
+	public static PropertyInfo[] GetPublicProperties(this Type @this)
+		=> @this.GetProperties(FlattenHierarchy | Public | Instance)
+			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is not true && propertyInfo.SetMethod?.IsStatic is not true)
+			.ToArray();
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
 	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
 	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static FieldInfo[] GetStaticFields(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Static;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetFields(binding);
-	}
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static FieldInfo[] GetPublicStaticFields(this Type @this)
+		=> @this.GetFields(FlattenHierarchy | Public | Static);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <remarks>
 	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
 	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static MethodInfo[] GetStaticMethods(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Static;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetMethods(binding);
-	}
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodInfo[] GetPublicStaticMethods(this Type @this)
+		=> @this.GetMethods(FlattenHierarchy | Public | Static);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
 	/// <remarks>
 	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
 	/// </remarks>
-	/// <param name="includeNonPublic">Includes <c><see cref="NonPublic"/></c> among the bindings.</param>
-	/// <param name="nameIgnoreCase">Includes <c><see cref="IgnoreCase"/></c> among the bindings.</param>
-	public static PropertyInfo[] GetStaticProperties(this Type @this, bool includeNonPublic = false, bool nameIgnoreCase = false)
-	{
-		var binding = FlattenHierarchy | Public | Static;
-		if (includeNonPublic)
-			binding |= NonPublic;
-		if (nameIgnoreCase)
-			binding |= IgnoreCase;
-		return @this.GetProperties(binding);
-	}
+	[DebuggerHidden]
+	public static PropertyInfo[] GetPublicStaticProperties(this Type @this)
+		=> @this.GetProperties(FlattenHierarchy | Public | Static)
+			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
+			.ToArray();
 
 	/// <exception cref="UnreachableException"></exception>
 	public static Kind GetKind(this Type @this)
@@ -143,23 +110,23 @@ partial class ReflectionExtensions
 			{ IsInterface: true } => Kind.Interface,
 			{ IsClass: true } => Kind.Class,
 			{ IsValueType: true } => Kind.Struct,
-			_ => throw new UnreachableException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name() ?? "null"}] is not supported."))
+			_ => throw new UnreachableException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name ?? "null"}] is not supported."))
 		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ObjectType GetObjectType(this Type @this)
 		=> TypeStore.ObjectTypes[@this.TypeHandle];
 
-	public static object? GetPropertyValue(this Type @this, string name, object instance, bool nameIgnoreCase = false, params object?[]? index)
-		=> @this.GetProperty(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+	public static object? GetPropertyValue(this Type @this, string name, object instance, params object?[]? index)
+		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
 			.GetPropertyValue(instance, index);
 
-	public static object? GetStaticFieldValue(this Type @this, string name, bool nameIgnoreCase = false)
-		=> @this.GetField(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+	public static object? GetStaticFieldValue(this Type @this, string name)
+		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
 			.GetFieldValue(null);
 
-	public static object? GetStaticPropertyValue(this Type @this, string name, bool nameIgnoreCase = false, params object?[]? index)
-		=> @this.GetProperty(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
+	public static object? GetStaticPropertyValue(this Type @this, string name, params object?[]? index)
+		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
 			.GetPropertyValue(null, index);
 
 	public static SystemType GetSystemType(this Type @this)
@@ -279,7 +246,11 @@ partial class ReflectionExtensions
 
 	[DebuggerHidden]
 	public static bool Is(this Type? @this, Type? type)
-		=> (@this?.IsGenericTypeDefinition is true || type?.IsGenericTypeDefinition is true) ? @this.ToGenericType() == type.ToGenericType() : @this == type;
+		=> (@this, type) switch
+		{
+			({ IsGenericType: true }, _) or (_, { IsGenericType: true }) => @this.ToGenericType() == type.ToGenericType(),
+			_ => @this == type
+		};
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
@@ -366,6 +337,117 @@ partial class ReflectionExtensions
 		=> @this.IsAssignableTo<IConvertible>()
 			|| (@this.ToGenericType() == typeof(Nullable<>) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
 
+	public static bool IsConvertibleTo(this Type @this, Type targetType)
+		=> @this switch
+		{
+			null => false,
+			_ when @this == targetType => true,
+			_ when targetType == typeof(string) => true,
+			_ when @this.IsConvertible() && targetType.IsConvertible() => true,
+			_ when @this == typeof(DateOnly) => targetType switch
+			{
+				_ when targetType == typeof(DateTime) => true,
+				_ when targetType == typeof(DateTimeOffset) => true,
+				_ when targetType == typeof(TimeSpan) => true,
+				_ when targetType == typeof(string) => true,
+				_ when targetType == typeof(int) => true,
+				_ => false
+			},
+			_ when @this == typeof(DateTime) => targetType switch
+			{
+				_ when targetType == typeof(DateOnly) => true,
+				_ when targetType == typeof(DateTimeOffset) => true,
+				_ when targetType == typeof(TimeOnly) => true,
+				_ when targetType == typeof(string) => true,
+				_ when targetType == typeof(long) => true,
+				_ => false
+			},
+			_ when @this == typeof(DateTimeOffset) => targetType switch
+			{
+				_ when targetType == typeof(DateOnly) => true,
+				_ when targetType == typeof(DateTime) => true,
+				_ when targetType == typeof(TimeOnly) => true,
+				_ when targetType == typeof(string) => true,
+				_ when targetType == typeof(long) => true,
+				_ => false
+			},
+			_ when @this == typeof(Enum) => targetType switch
+			{
+				_ when targetType == typeof(string) => true,
+				_ when targetType.IsEnumUnderlyingType() => true,
+				_ => false
+			},
+			_ when @this == typeof(Int128) => targetType switch
+			{
+				_ when targetType == typeof(int) => true,
+				_ when targetType == typeof(uint) => true,
+				_ when targetType == typeof(long) => true,
+				_ when targetType == typeof(ulong) => true,
+				_ when targetType == typeof(UInt128) => true,
+				_ when targetType == typeof(string) => true,
+				_ => false
+			},
+			_ when @this == typeof(nint) => targetType switch
+			{
+				_ when targetType == typeof(nuint) => true,
+				_ when targetType == typeof(int) => true,
+				_ when targetType == typeof(long) => true,
+				_ when targetType == typeof(string) => true,
+				_ => false
+			},
+			_ when @this == typeof(string) => targetType switch
+			{
+				_ when targetType == typeof(char) => true,
+				_ when targetType.IsEnum => true,
+				_ when targetType == typeof(Guid) => true,
+				_ when targetType == typeof(Uri) => true,
+				_ when targetType == typeof(DateOnly) => true,
+				_ when targetType == typeof(DateTime) => true,
+				_ when targetType == typeof(DateTimeOffset) => true,
+				_ when targetType == typeof(Int128) => true,
+				_ when targetType == typeof(UInt128) => true,
+				_ when targetType == typeof(nint) => true,
+				_ when targetType == typeof(nuint) => true,
+				_ when targetType == typeof(TimeOnly) => true,
+				_ when targetType == typeof(TimeSpan) => true,
+				_ when targetType.IsAssignableTo<IConvertible>() => true,
+				_ => false
+			},
+			_ when @this == typeof(TimeOnly) => targetType switch
+			{
+				_ when targetType == typeof(TimeSpan) => true,
+				_ when targetType == typeof(string) => true,
+				_ when targetType == typeof(long) => true,
+				_ => false
+			},
+			_ when @this == typeof(TimeSpan) => targetType switch
+			{
+				_ when targetType == typeof(TimeOnly) => true,
+				_ when targetType == typeof(string) => true,
+				_ when targetType == typeof(long) => true,
+				_ => false
+			},
+			_ when @this == typeof(UInt128) => targetType switch
+			{
+				_ when targetType == typeof(int) => true,
+				_ when targetType == typeof(uint) => true,
+				_ when targetType == typeof(long) => true,
+				_ when targetType == typeof(ulong) => true,
+				_ when targetType == typeof(Int128) => true,
+				_ when targetType == typeof(string) => true,
+				_ => false
+			},
+			_ when @this == typeof(nuint) => targetType switch
+			{
+				_ when targetType == typeof(nint) => true,
+				_ when targetType == typeof(uint) => true,
+				_ when targetType == typeof(ulong) => true,
+				_ when targetType == typeof(string) => true,
+				_ => false
+			},
+			_ => false
+		};
+
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
 	/// </summary>
@@ -402,24 +484,24 @@ partial class ReflectionExtensions
 		=> @this.Is(type) || @this.Implements(type);
 
 	[DebuggerHidden]
-	public static void SetFieldValue(this Type @this, string name, object instance, object? value, bool nameIgnoreCase = false)
-		=> @this.GetField(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+	public static void SetFieldValue(this Type @this, string name, object instance, object? value)
+		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
 			.SetFieldValue(instance, value);
 
 	[DebuggerHidden]
-	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, bool nameIgnoreCase = false, params object?[]? index)
-		=> @this.GetProperty(name, nameIgnoreCase ? INSTANCE_BINDING_FLAGS | IgnoreCase : INSTANCE_BINDING_FLAGS)?
+	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, params object?[]? index)
+		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
 			.SetPropertyValue(instance, value, index);
 
 	[DebuggerHidden]
-	public static void SetStaticPropertyValue(this Type @this, string name, object? value, bool nameIgnoreCase = false, params object?[]? index)
-		=> @this.GetProperty(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
-			.SetPropertyValue(null, value, index);
+	public static void SetStaticFieldValue(this Type @this, string name, object? value)
+		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
+			.SetFieldValue(null, value);
 
 	[DebuggerHidden]
-	public static void SetStaticFieldValue(this Type @this, string name, object? value, bool nameIgnoreCase = false)
-		=> @this.GetField(name, nameIgnoreCase ? STATIC_BINDING_FLAGS | IgnoreCase : STATIC_BINDING_FLAGS)?
-			.SetFieldValue(null, value);
+	public static void SetStaticPropertyValue(this Type @this, string name, object? value, params object?[]? index)
+		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
+			.SetPropertyValue(null, value, index);
 
 	/// <inheritdoc cref="Expression.Default(Type)"/>
 	/// <remarks>
@@ -429,6 +511,7 @@ partial class ReflectionExtensions
 	public static DefaultExpression ToDefaultExpression(this Type @this)
 		=> Expression.Default(@this);
 
+	[DebuggerHidden]
 	public static Type? ToGenericType(this Type? @this)
 		=> @this switch
 		{

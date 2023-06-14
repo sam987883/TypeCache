@@ -40,7 +40,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		}
 
 		writer.WriteStartObject();
-		foreach (var property in typeof(T).GetInstanceProperties().Where(property => property.GetMethod?.IsStatic is false))
+		foreach (var property in typeof(T).GetPublicProperties())
 		{
 			writer.WritePropertyName(property.Name());
 			var value = property.GetPropertyValue(input);

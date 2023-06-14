@@ -28,7 +28,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		this.Name = typeof(T).GraphQLName();
 		this.Description = typeof(T).GraphQLDescription() ?? Invariant($"{typeof(T).Assembly.GetName().Name}: {typeof(T).Namespace}.{typeof(T).Name()}");
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
-		this.AddFieldTypes(typeof(T).GetInstanceProperties()
+		this.AddFieldTypes(typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
 			.Select(propertyInfo => propertyInfo.ToFieldType<T>()));
 

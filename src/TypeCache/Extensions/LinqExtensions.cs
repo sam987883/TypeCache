@@ -64,6 +64,44 @@ public static class LinqExtensions
 	public static T? FirstOrDefault<T>(this IEnumerable @this)
 		=> @this.OfType<T>().FirstOrDefault();
 
+	/// <exception cref="ArgumentNullException"/>
+	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action action)
+		where K : notnull
+	{
+		@this.AssertNotNull();
+
+		var success = @this.ContainsKey(key);
+		if (success)
+			action();
+		return success;
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<V> action)
+		where K : notnull
+	{
+		@this.AssertNotNull();
+
+		var success = @this.TryGetValue(key, out var value);
+		if (success)
+			action(value!);
+
+		return success;
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<K, V> action)
+		where K : notnull
+	{
+		@this.AssertNotNull();
+
+		var success = @this.TryGetValue(key, out var value);
+		if (success)
+			action(key, value!);
+
+		return success;
+	}
+
 	/// <inheritdoc cref="System.Linq.Enumerable.Single{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().Single();</c>
@@ -133,4 +171,28 @@ public static class LinqExtensions
 		value = enumerator.Next();
 		return enumerator.MoveNext();
 	}
+
+	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
+	/// <remarks>
+	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.Where(<paramref name="predicate"/>) : <paramref name="this"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> @this, bool condition, Func<T, bool> predicate)
+		=> condition ? @this.Where(predicate) : @this;
+
+	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, int, bool})"/>
+	/// <remarks>
+	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.Where(<paramref name="predicate"/>) : <paramref name="this"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> @this, bool condition, Func<T, int, bool> predicate)
+		=> condition ? @this.Where(predicate) : @this;
+
+	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Where((_ =&gt; _ <see langword="is not null"/>));</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> @this)
+		=> @this.Where(_ => _ is not null)!;
 }

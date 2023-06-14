@@ -2,7 +2,6 @@
 
 using System.Linq.Expressions;
 using System.Reflection;
-using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;

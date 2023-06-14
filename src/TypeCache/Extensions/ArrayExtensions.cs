@@ -27,6 +27,7 @@ public static class ArrayExtensions
 	public static void ForEach<T>(this T[] @this, Action<T> action)
 		=> Array.ForEach(@this, action);
 
+	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T> action, Action between)
 	{
 		between.AssertNotNull();
