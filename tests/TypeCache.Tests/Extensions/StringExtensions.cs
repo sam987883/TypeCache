@@ -134,30 +134,6 @@ public class StringExtensions
 	}
 
 	[Fact]
-	public void ToBytes()
-	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
-		Assert.Equal(TEST_STRING, TEST_STRING.ToBytes(Encoding.UTF8).ToText(Encoding.UTF8));
-
-		Assert.Equal("BbCc 1", TEST_STRING.ToBytes(Encoding.UTF8).ToText(Encoding.UTF8, 2, 6));
-
-		Assert.Equal(TEST_STRING, ((ReadOnlySpan<byte>)TEST_STRING.ToBytes(Encoding.UTF8).AsSpan()).ToText(Encoding.UTF8));
-	}
-
-	[Fact]
-	public void ToText()
-	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
-		Assert.Equal(TEST_STRING, TEST_STRING.ToBytes(Encoding.UTF8).ToText(Encoding.UTF8));
-
-		Assert.Equal("BbCc 1", TEST_STRING.ToBytes(Encoding.UTF8).ToText(Encoding.UTF8, 2, 6));
-
-		Assert.Equal(TEST_STRING, ((ReadOnlySpan<byte>)TEST_STRING.ToBytes(Encoding.UTF8).AsSpan()).ToText(Encoding.UTF8));
-	}
-
-	[Fact]
 	public void ToEnum()
 	{
 		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());

@@ -7,7 +7,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlModelsRule : IRule<SqlModelsRequest, IList<object>>
 {
-	public async ValueTask<IList<object>> ApplyAsync(SqlModelsRequest request, CancellationToken token)
+	public async Task<IList<object>> MapAsync(SqlModelsRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

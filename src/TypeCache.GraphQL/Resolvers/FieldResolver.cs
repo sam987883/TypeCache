@@ -1,29 +1,31 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
-using TypeCache.Extensions;
-using TypeCache.Mediation;
 
 namespace TypeCache.GraphQL.Resolvers;
 
 public abstract class FieldResolver : IFieldResolver
 {
-	ValueTask<object?> IFieldResolver.ResolveAsync(IResolveFieldContext context)
+	async ValueTask<object?> IFieldResolver.ResolveAsync(IResolveFieldContext context)
 	{
 		try
 		{
-			return this.ResolveAsync(context);
+			return await this.ResolveAsync(context);
+		}
+		catch (AggregateException error)
+		{
+			var executionErrors = error.InnerExceptions.Select(exception => new ExecutionError(exception.Message, exception));
+			context.Errors.AddRange(executionErrors);
+			return null;
 		}
 		catch (Exception error)
 		{
-			if (error is ValidationException exception)
-				exception.ValidationMessages.ForEach(message => context.Errors.Add(new ExecutionError(message)));
-			else
-				context.Errors.Add(new ExecutionError(error.Message, error));
-			return ValueTask.FromResult<object?>(null);
+			context.Errors.Add(new ExecutionError(error.Message, error));
+			return null;
 		}
 	}
 

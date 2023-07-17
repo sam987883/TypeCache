@@ -9,37 +9,24 @@ public static class AssertExtensions
 	private const string NULL = "null";
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertEquals<T>(this T @this, T value,
+	public static void AssertEquals(this string? @this, string? value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
-		where T : struct
 	{
-		if (!EqualityComparer<T>.Default.Equals(@this, value))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this}.{nameof(AssertEquals)}<{typeof(T).Name}>({value})."));
+		if (!string.Equals(@this, value, comparisonType))
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this ?? NULL}.{nameof(AssertEquals)}({value ?? NULL})."));
 	}
 
-	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertEquals<T>(this T? @this, T? value, IEqualityComparer<T> comparer,
+	public static void AssertEquals<T>(this T? @this, T? value, IEqualityComparer<T>? comparer = null,
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
-		where T : notnull
 	{
-		comparer.AssertNotNull(caller: caller);
+		comparer ??= EqualityComparer<T>.Default;
 
 		if (!comparer.Equals(@this, value))
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertEquals)}<{typeof(T).Name}>({value?.ToString() ?? NULL})."));
 	}
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.AssertEquals(<paramref name="value"/>, <paramref name="comparison"/>.ToStringComparer(), <paramref name="argument"/>, <paramref name="caller"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertEquals(this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,
-		[CallerArgumentExpression("this")] string? argument = null,
-		[CallerMemberName] string? caller = null)
-		=> @this.AssertEquals(value, comparison.ToStringComparer(), argument, caller);
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void AssertFalse(this bool @this,

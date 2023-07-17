@@ -30,19 +30,18 @@
 ### Better Object Mapping
 
 - `dictionary.`__`Map(...)`__
-- `dictionary.`__`MapBy(...)`__
-- `model.`__`MapFields(...)`__
-- `model.`__`MapProperties(...)`__
+- `dictionary.`__`MapToModel(...)`__
+- `model.`__`MapTo(...)`__
+- `model.`__`MapToDictionary(...)`__
 ---
 ### Better Performing Mediator/Mediation
 - `TypeCache.Mediation.`__`IAfterRule`__
 - `TypeCache.Mediation.`__`IMediator`__
-- `TypeCache.Mediation.`__`IProcess`__
-- `TypeCache.Mediation.`__`IProcessIntermediary`__
 - `TypeCache.Mediation.`__`IRequest`__
 - `TypeCache.Mediation.`__`IRule`__
-- `TypeCache.Mediation.`__`IRuleIntermediary`__
 - `TypeCache.Mediation.`__`IValidationRule`__
+- `TypeCache.Mediation.`__`RuleFactory`__
+- `TypeCache.Mediation.`__`RulesBuilder`__
 ---
 ### Simple Robust Database CRUD Access
 - `System.Data.Common.DbCommand.`__`ExecuteReaderAsync(...)`__

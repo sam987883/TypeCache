@@ -15,8 +15,10 @@ public sealed class GraphQLInputType<T> : InputObjectGraphType<T>
 		this.Name = typeof(T).GraphQLInputName();
 		this.Description = typeof(T).GraphQLDescription();
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
-		this.AddFieldTypes(typeof(T).GetPublicProperties()
+
+		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite && !propertyInfo.GraphQLIgnore())
-			.Select(propertyInfo => propertyInfo.ToInputFieldType()));
+			.ToArray()
+			.ForEach(propertyInfo => this.AddField(propertyInfo.ToInputFieldType()));
 	}
 }

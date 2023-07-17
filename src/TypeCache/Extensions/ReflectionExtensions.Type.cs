@@ -16,7 +16,7 @@ partial class ReflectionExtensions
 		=> @this.FindConstructor(parameters) switch
 		{
 			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorInvokes[@this.TypeHandle].Invoke(),
-			null => throw new MissingMethodException(@this.Name, "Consatructor"),
+			null => throw new MissingMethodException(@this.Name, "Constructor"),
 			var constructorInfo => constructorInfo.InvokeMethod(parameters)
 		};
 
@@ -33,8 +33,15 @@ partial class ReflectionExtensions
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, params object?[]? arguments)
-		=> @this.GetMethods(INSTANCE_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name.Is(name) && method.IsCallableWith(arguments));
+		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
+			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	[DebuggerHidden]
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, params object?[]? arguments)
+		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
+			.Where(method => method.Name.Is(name) && method.IsGenericMethod)
+			.FirstOrDefault(method => method.MakeGenericMethod(genericTypes)?.IsCallableWith(arguments) is true);
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -44,8 +51,8 @@ partial class ReflectionExtensions
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, params object?[]? arguments)
-		=> @this.GetMethods(STATIC_BINDING_FLAGS).FirstOrDefault(method =>
-			method.Name.Is(name) && method.IsCallableWith(arguments));
+		=> @this.GetMethods(STATIC_BINDING_FLAGS)
+			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
 	[DebuggerHidden]
@@ -102,17 +109,6 @@ partial class ReflectionExtensions
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
 			.ToArray();
 
-	/// <exception cref="UnreachableException"></exception>
-	public static Kind GetKind(this Type @this)
-		=> @this switch
-		{
-			{ IsPointer: true } => Kind.Pointer,
-			{ IsInterface: true } => Kind.Interface,
-			{ IsClass: true } => Kind.Class,
-			{ IsValueType: true } => Kind.Struct,
-			_ => throw new UnreachableException(Invariant($"{nameof(GetKind)}({nameof(Type)}): [{@this?.Name ?? "null"}] is not supported."))
-		};
-
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ObjectType GetObjectType(this Type @this)
 		=> TypeStore.ObjectTypes[@this.TypeHandle];
@@ -164,7 +160,7 @@ partial class ReflectionExtensions
 			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 
 	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, params object?[]? arguments)
-		=> @this.FindMethod(name, arguments)?
+		=> @this.FindMethod(name, genericTypes, arguments)?
 			.MakeGenericMethod(genericTypes)
 			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
 

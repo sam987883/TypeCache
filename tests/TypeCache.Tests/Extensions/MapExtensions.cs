@@ -48,7 +48,7 @@ public class MapExtensions
 			{ nameof(TestModel1.TestProperty6), "ABCdef" },
 		};
 
-		var testModel2 = dictionary.MapToModel(new TestModel2());
+		var testModel2 = dictionary.MapTo<TestModel2>(new TestModel2());
 
 		Assert.Equal(-1, testModel2.TestProperty1);
 		Assert.Equal(' ', testModel2.TestProperty2);

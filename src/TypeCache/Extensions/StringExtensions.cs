@@ -336,30 +336,15 @@ public static class StringExtensions
 
 	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
 	{
-		Span<byte> bytes = stackalloc byte[encoding.GetMaxByteCount(@this.Length) - 1];
-		@this.ToBytes(encoding, bytes);
+		var length = encoding.GetMaxByteCount(@this.Length) - 1;
+		Span<byte> bytes = stackalloc byte[length];
+		encoding.GetBytes(@this, bytes);
 
-		Span<char> chars = stackalloc char[bytes.Length * sizeof(char)];
+		Span<char> chars = stackalloc char[length * sizeof(char)];
 		return Convert.TryToBase64Chars(bytes, chars, out var count)
 			? new string(chars.Slice(0, stripPadding ? count - 2 : count))
 			: string.Empty;
 	}
-
-	/// <inheritdoc cref="Encoding.GetBytes(string)"/>
-	/// <remarks>
-	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static byte[] ToBytes(this string @this, Encoding encoding)
-		=> encoding.GetBytes(@this);
-
-	/// <inheritdoc cref="Encoding.GetBytes(ReadOnlySpan{char}, Span{byte})"/>
-	/// <remarks>
-	/// <c>=&gt; <paramref name="encoding"/>.GetBytes(@<paramref name="this"/>, <paramref name="bytes"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static int ToBytes(this string @this, Encoding encoding, Span<byte> bytes)
-		=> encoding.GetBytes(@this, bytes);
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/>
 	/// <remarks>

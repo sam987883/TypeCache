@@ -11,6 +11,25 @@ namespace TypeCache.Extensions;
 
 public static class ReadOnlySpanExtensions
 {
+	/// <inheritdoc cref="MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ReadOnlySpan<byte> AsBytes<T>(this ReadOnlySpan<T> @this)
+		where T : struct
+		=> MemoryMarshal.AsBytes(@this);
+
+	/// <inheritdoc cref="MemoryMarshal.Cast{TFrom, TTo}(ReadOnlySpan{TFrom})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="MemoryMarshal"/>.Cast&lt;<typeparamref name="T"/>, <typeparamref name="R"/>&gt;(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ReadOnlySpan<R> Cast<T, R>(this ReadOnlySpan<T> @this)
+		where T : struct
+		where R : struct
+		=> MemoryMarshal.Cast<T, R>(@this);
+
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action)
 	{
@@ -155,16 +174,6 @@ public static class ReadOnlySpanExtensions
 		where T : struct
 		=> MemoryMarshal.Read<T>(@this);
 
-	/// <inheritdoc cref="MemoryMarshal.Cast{TFrom, TTo}(ReadOnlySpan{TFrom})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="MemoryMarshal"/>.Cast&lt;<typeparamref name="T"/>, <typeparamref name="R"/>&gt;(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ReadOnlySpan<R> To<T, R>(this ReadOnlySpan<T> @this)
-		where T : struct
-		where R : struct
-		=> MemoryMarshal.Cast<T, R>(@this);
-
 	/// <inheritdoc cref="Convert.ToBase64String(ReadOnlySpan{byte}, Base64FormattingOptions)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
@@ -180,15 +189,6 @@ public static class ReadOnlySpanExtensions
 			? chars.Slice(0, length).ToArray()
 			: Array<char>.Empty;
 	}
-
-	/// <inheritdoc cref="MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="MemoryMarshal"/>.AsBytes&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ReadOnlySpan<byte> ToBytes<T>(this ReadOnlySpan<T> @this)
-		where T : struct
-		=> MemoryMarshal.AsBytes(@this);
 
 	/// <inheritdoc cref="Enum.TryParse(Type, ReadOnlySpan{char}, bool, out object?)"/>
 	/// <remarks>
@@ -230,14 +230,6 @@ public static class ReadOnlySpanExtensions
 	public static ref readonly T ToRef<T>(this ReadOnlySpan<byte> @this)
 		where T : struct
 		=> ref MemoryMarshal.AsRef<T>(@this);
-
-	/// <inheritdoc cref="Encoding.GetString(ReadOnlySpan{byte})"/>
-	/// <remarks>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this scoped ReadOnlySpan<byte> @this, Encoding encoding)
-		=> encoding.GetString(@this);
 
 	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
 	/// <remarks>

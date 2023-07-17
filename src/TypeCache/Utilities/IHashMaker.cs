@@ -4,11 +4,15 @@ namespace TypeCache.Utilities;
 
 public interface IHashMaker : IDisposable
 {
+	byte[] Decrypt(ReadOnlySpan<byte> data);
+
 	byte[] Decrypt(byte[] data);
 
-	long Decrypt(string hashId);
+	long Decrypt(ReadOnlySpan<char> hashId);
+
+	byte[] Encrypt(ReadOnlySpan<byte> data);
 
 	byte[] Encrypt(byte[] data);
 
-	string Encrypt(long id);
+	ReadOnlySpan<char> Encrypt(long id);
 }

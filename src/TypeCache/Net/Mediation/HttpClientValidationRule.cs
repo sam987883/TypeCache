@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Extensions;
 using TypeCache.Mediation;
 
 namespace TypeCache.Net.Mediation;
@@ -7,14 +8,9 @@ namespace TypeCache.Net.Mediation;
 internal sealed class HttpClientValidationRule
 	: IValidationRule<HttpClientRequest>
 {
-	public IEnumerable<string> Validate(HttpClientRequest request)
+	public async Task ValidateAsync(HttpClientRequest request, CancellationToken token)
 	{
-		var validator = new Validator();
-		validator.AssertNotNull(request?.Message?.RequestUri);
-
-		if (validator.Success)
-			validator.AssertEquals(request!.Message.RequestUri!.IsAbsoluteUri, true);
-
-		return validator.Fails;
+		request?.Message?.RequestUri.AssertNotNull();
+		request!.Message.RequestUri!.IsAbsoluteUri.AssertTrue();
 	}
 }

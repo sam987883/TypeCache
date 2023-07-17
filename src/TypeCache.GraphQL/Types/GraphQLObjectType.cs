@@ -28,9 +28,11 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		this.Name = typeof(T).GraphQLName();
 		this.Description = typeof(T).GraphQLDescription() ?? Invariant($"{typeof(T).Assembly.GetName().Name}: {typeof(T).Namespace}.{typeof(T).Name()}");
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
-		this.AddFieldTypes(typeof(T).GetPublicProperties()
+
+		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
-			.Select(propertyInfo => propertyInfo.ToFieldType<T>()));
+			.ToArray()
+			.ForEach(propertyInfo => this.AddField(propertyInfo, new PropertyFieldResolver<T>(propertyInfo)));
 
 		typeof(T).GetInterfaces()
 			.Where(_ => !_.HasElementType && !_.IsGenericType)
@@ -44,13 +46,13 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// </summary>
 	public FieldType AddField(MethodInfo methodInfo)
 	{
-		var fieldType = methodInfo.ToFieldType();
 		var type = methodInfo.ReturnType;
 		if (type.IsGenericType && type.IsAny(typeof(Task<>), typeof(ValueTask<>)))
 			type = type.GenericTypeArguments[0];
+
 		var resolverType = typeof(ItemLoaderFieldResolver<>).MakeGenericType(type);
-		fieldType.Resolver = (IFieldResolver)resolverType.Create(methodInfo)!;
-		return this.AddField(fieldType);
+		var resolver = (IFieldResolver)resolverType.Create(methodInfo)!;
+		return this.AddField(methodInfo, resolver);
 	}
 
 	/// <summary>

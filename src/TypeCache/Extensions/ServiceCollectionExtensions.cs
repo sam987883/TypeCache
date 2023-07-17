@@ -13,6 +13,7 @@ using TypeCache.Data.Mediation;
 using TypeCache.Mediation;
 using TypeCache.Net.Mediation;
 using TypeCache.Utilities;
+using static System.FormattableString;
 
 namespace TypeCache.Extensions;
 
@@ -52,7 +53,18 @@ public static class ServiceCollectionExtensions
 	/// <param name="rgbKey">Any random decimal value (gets converted to a 16 byte array)</param>
 	/// <param name="rgbIV">Any random decimal value (gets converted to a 16 byte array)</param>
 	public static IServiceCollection AddHashMaker(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
-		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
+		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey.ToBytes(), rgbIV.ToBytes()));
+
+	/// <summary>
+	/// Registers Singletons:
+	/// <list type="bullet">
+	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
+	/// </list>
+	/// </summary>
+	/// <param name="rgbKey">Any random 8 characters</param>
+	/// <param name="rgbIV">Any random 8 characters</param>
+	public static IServiceCollection AddHashMaker(this IServiceCollection @this, ReadOnlySpan<char> rgbKey, ReadOnlySpan<char> rgbIV)
+		=> @this.AddHashMaker(rgbKey.AsBytes().ToArray(), rgbIV.AsBytes().ToArray());
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="HttpClientRequest"/>, <see cref="HttpResponseMessage"/>&gt;, <see cref="HttpClientRule"/>&gt;()</c>
@@ -62,39 +74,15 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IRule<HttpClientRequest, HttpResponseMessage>, HttpClientRule>();
 
 	/// <summary>
-	/// Registers Singletons:
-	/// <list type="bullet">
-	/// <item><c><see cref="IMediator"/></c></item>
-	/// <item><term><c><see cref="DefaultProcessIntermediary{REQUEST}"/></c></term> Default implementation of <c><see cref="IProcessIntermediary{REQUEST}"/></c>.</item>
-	/// <item><term><c><see cref="DefaultRuleIntermediary{REQUEST, RESPONSE}"/></c></term> Default implementation of <c><see cref="IRuleIntermediary{REQUEST, RESPONSE}"/></c>.</item>
-	/// </list>
+	/// Registers Singleton: <c><see cref="IMediator"/></c><br/>
+	/// Optionally can register Rules and After Rules.
 	/// </summary>
-	public static IServiceCollection AddMediation(this IServiceCollection @this)
-		=> @this.AddSingleton<IMediator, Mediator>()
-			.AddSingleton(typeof(DefaultProcessIntermediary<>), typeof(DefaultProcessIntermediary<>))
-			.AddSingleton(typeof(DefaultRuleIntermediary<>), typeof(DefaultRuleIntermediary<>))
-			.AddSingleton(typeof(DefaultRuleIntermediary<,>), typeof(DefaultRuleIntermediary<,>));
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataSetRequest"/>, <see cref="DataSet"/>&gt;, <see cref="SqlDataSetRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataTableRequest"/>, <see cref="DataTable"/>&gt;, <see cref="SqlDataTableRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlExecuteRequest"/>, <see cref="SqlExecuteRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlJsonArrayRequest"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlJsonArrayRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlModelsRequest"/>, IList&lt;<see cref="object"/>&gt;&gt;, <see cref="SqlModelsRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlScalarRequest"/>, <see cref="object"/>&gt;, <see cref="SqlScalarRule"/>&gt;()<br/>
-	/// </c>
-	/// <i><b>Requires calls to:</b></i>
-	/// <code>
-	/// <see cref="AddMediation(IServiceCollection)"/><br/>
-	/// </code>
-	/// </summary>
-	public static IServiceCollection AddSqlCommandRules(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<SqlDataSetRequest, DataSet>, SqlDataSetRule>()
-			.AddSingleton<IRule<SqlDataTableRequest, DataTable>, SqlDataTableRule>()
-			.AddSingleton<IRule<SqlExecuteRequest>, SqlExecuteRule>()
-			.AddSingleton<IRule<SqlJsonArrayRequest, JsonArray>, SqlJsonArrayRule>()
-			.AddSingleton<IRule<SqlModelsRequest, IList<object>>, SqlModelsRule>()
-			.AddSingleton<IRule<SqlScalarRequest, object?>, SqlScalarRule>();
+	public static IServiceCollection AddMediation(this IServiceCollection @this, Action<RulesBuilder>? rulesBuilder = null)
+	{
+		@this.AddSingleton<IMediator, Mediator>();
+		rulesBuilder?.Invoke(new RulesBuilder(@this));
+		return @this;
+	}
 
 	/// <summary>
 	/// Registers all types in the specified assembly that have <see cref="ServiceLifetimeAttribute{T}"/> or <see cref="ServiceLifetimeAttribute{T}"/>.

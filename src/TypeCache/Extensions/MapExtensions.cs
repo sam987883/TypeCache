@@ -39,6 +39,38 @@ public static partial class MapExtensions
 		return @this.TryGetValue(key, out var value) ? map(key, value) : keyNotFoundValue;
 	}
 
+	/// <exception cref="ArgumentNullException"/>
+	public static T MapTo<T>(this IEnumerable<KeyValuePair<string, object?>> @this, T target, bool ignoreCase = true)
+		where T : notnull
+	{
+		@this.AssertNotNull();
+		target.AssertNotNull();
+
+		var targetType = target.GetType();
+		var bindings = ignoreCase switch
+		{
+			true => FlattenHierarchy | Instance | Public | IgnoreCase,
+			_ => FlattenHierarchy | Instance | Public
+		};
+
+		foreach (var pair in @this)
+		{
+			var targetPropertyInfo = targetType.GetProperty(pair.Key, bindings);
+			if (targetPropertyInfo?.CanWrite is not true)
+				continue;
+
+			if (pair.Value is null && !targetPropertyInfo.PropertyType.IsNullable())
+				continue;
+
+			if (pair.Value is not null && !pair.Value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
+				continue;
+
+			targetPropertyInfo.SetPropertyValue(target, pair.Value);
+		}
+
+		return target;
+	}
+
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -91,7 +123,7 @@ public static partial class MapExtensions
 		=> @this switch
 		{
 			IEnumerable<KeyValuePair<string, object?>> pairs when target is IDictionary<string, object?> dictionary => (T)(object)pairs.MapToDictionary(dictionary),
-			IEnumerable<KeyValuePair<string, object?>> pairs => pairs.MapToModel(target, ignoreCase),
+			IEnumerable<KeyValuePair<string, object?>> pairs => pairs.MapTo(target, ignoreCase),
 			_ when target is IDictionary<string, object?> dictionary => (T)(object)@this.MapToDictionary(dictionary),
 			_ when typeof(S) == typeof(T) => (T)(object)@this.MapTo((S)(object)target),
 			_ when ignoreCase => MapModel(@this, target, FlattenHierarchy | Instance | Public | IgnoreCase),
@@ -133,38 +165,6 @@ public static partial class MapExtensions
 
 			foreach (var attribute in mapAttributes)
 				target[attribute.Property] = value;
-		}
-
-		return target;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static T MapToModel<T>(this IEnumerable<KeyValuePair<string, object?>> @this, T target, bool ignoreCase = true)
-		where T : notnull
-	{
-		@this.AssertNotNull();
-		target.AssertNotNull();
-
-		var targetType = target.GetType();
-		var bindings = ignoreCase switch
-		{
-			true => FlattenHierarchy | Instance | Public | IgnoreCase,
-			_ => FlattenHierarchy | Instance | Public
-		};
-
-		foreach (var pair in @this)
-		{
-			var targetPropertyInfo = targetType.GetProperty(pair.Key, bindings);
-			if (targetPropertyInfo?.CanWrite is not true)
-				continue;
-
-			if (pair.Value is null && !targetPropertyInfo.PropertyType.IsNullable())
-				continue;
-
-			if (pair.Value is not null && !pair.Value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
-				continue;
-
-			targetPropertyInfo.SetPropertyValue(target, pair.Value);
 		}
 
 		return target;

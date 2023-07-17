@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -15,6 +16,27 @@ public static class LinqExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Any<T>(this IEnumerable @this)
 		=> @this.OfType<T>().Any();
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <typeparamref name="T"/>[] ?? @<paramref name="this"/>?.ToArray() ?? <see cref="Array{T}.Empty"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static T[] AsArray<T>(this IEnumerable<T>? @this)
+		=> @this as T[] ?? @this?.ToArray() ?? Array<T>.Empty;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="HashSet{T}"/> ?? @<paramref name="this"/>?.ToHashSet() ?? <see langword="new"/> <see cref="HashSet{T}"/>(0);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static HashSet<T> AsHashSet<T>(this IEnumerable<T>? @this)
+		=> @this as HashSet<T> ?? @this?.ToHashSet() ?? new HashSet<T>(0);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="List{T}"/> ?? @<paramref name="this"/>?.ToList() ?? <see langword="new"/> <see cref="List{T}"/>(0);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static List<T> AsList<T>(this IEnumerable<T>? @this)
+		=> @this as List<T> ?? @this?.ToList() ?? new List<T>(0);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="EnumOf{T}.Comparer"/>);</c>
@@ -73,6 +95,7 @@ public static class LinqExtensions
 		var success = @this.ContainsKey(key);
 		if (success)
 			action();
+
 		return success;
 	}
 

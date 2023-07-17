@@ -110,7 +110,8 @@ public static class SchemaExtensions
 				Type = column.DataType switch
 				{
 					_ when column.DataType == typeof(object) => typeof(StringGraphType),
-					_ => column.DataType.ToGraphQLType(false, !column.AllowDBNull)
+					_ when column.AllowDBNull => column.DataType.ToGraphQLType(false),
+					_ => column.DataType.ToGraphQLType(false).ToNonNullGraphType()
 				}
 			});
 			field.Metadata.Add(nameof(DataColumn.ColumnName), column.ColumnName);
@@ -177,7 +178,7 @@ public static class SchemaExtensions
 					Type = columnDataType switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.ToGraphQLType(false, false)
+						_ => columnDataType.ToGraphQLType(false)
 					}
 				});
 
@@ -202,7 +203,8 @@ public static class SchemaExtensions
 					Type = column.DataTypeHandle switch
 					{
 						_ when columnDataType == typeof(object) => typeof(StringGraphType),
-						_ => columnDataType.ToGraphQLType(false, !column.Nullable)
+						_ when column.Nullable => columnDataType.ToGraphQLType(false),
+						_ => columnDataType.ToGraphQLType(false).ToNonNullGraphType()
 					}
 				});
 				field.Metadata.Add(ColumnName, column.Name);
@@ -427,7 +429,7 @@ public static class SchemaExtensions
 		{
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler()),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -436,10 +438,10 @@ public static class SchemaExtensions
 	public static FieldType AddMutation<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
 		=> @this.Mutation().AddField(new()
 		{
-			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true, true)) { Name = argument }),
+			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true).ToNonNullGraphType()) { Name = argument }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -449,13 +451,13 @@ public static class SchemaExtensions
 		=> @this.Mutation().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -465,15 +467,15 @@ public static class SchemaExtensions
 		=> @this.Mutation().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -483,17 +485,17 @@ public static class SchemaExtensions
 		=> @this.Mutation().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -503,11 +505,11 @@ public static class SchemaExtensions
 		=> @this.Mutation().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
@@ -515,7 +517,7 @@ public static class SchemaExtensions
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -525,12 +527,12 @@ public static class SchemaExtensions
 		=> @this.Mutation().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 },
-				new QueryArgument(typeof(T6).ToGraphQLType(true, true)) { Name = arguments.Item6 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 },
+				new QueryArgument(typeof(T6).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item6 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
@@ -539,7 +541,7 @@ public static class SchemaExtensions
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5),
 				context.GetArgument<T6>(arguments.Item6))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -557,10 +559,7 @@ public static class SchemaExtensions
 		if (methodInfo.HasNoReturnValue())
 			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		var fieldType = methodInfo.ToFieldType();
-		fieldType.Resolver = new MethodFieldResolver(methodInfo);
-
-		return @this.Mutation().AddField(fieldType);
+		return @this.Mutation().AddField(methodInfo, new MethodFieldResolver(methodInfo));
 	}
 
 	/// <summary>
@@ -611,7 +610,7 @@ public static class SchemaExtensions
 		{
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler()),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -620,10 +619,10 @@ public static class SchemaExtensions
 	public static FieldType AddQuery<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
 		=> @this.Query().AddField(new()
 		{
-			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true, true)) { Name = argument }),
+			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true).ToNonNullGraphType()) { Name = argument }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -633,13 +632,13 @@ public static class SchemaExtensions
 		=> @this.Query().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -649,15 +648,15 @@ public static class SchemaExtensions
 		=> @this.Query().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -667,17 +666,17 @@ public static class SchemaExtensions
 		=> @this.Query().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -687,11 +686,11 @@ public static class SchemaExtensions
 		=> @this.Query().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
@@ -699,7 +698,7 @@ public static class SchemaExtensions
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -709,12 +708,12 @@ public static class SchemaExtensions
 		=> @this.Query().AddField(new()
 		{
 			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true, true)) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true, true)) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true, true)) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true, true)) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true, true)) { Name = arguments.Item5 },
-				new QueryArgument(typeof(T6).ToGraphQLType(true, true)) { Name = arguments.Item6 }),
+				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
+				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
+				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
+				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
+				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 },
+				new QueryArgument(typeof(T6).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item6 }),
 			Name = name,
 			Resolver = new FuncFieldResolver<R>(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
@@ -723,7 +722,7 @@ public static class SchemaExtensions
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5),
 				context.GetArgument<T6>(arguments.Item6))),
-			Type = typeof(R).ToGraphQLType(false, false)
+			Type = typeof(R).ToGraphQLType(false)
 		});
 
 	/// <summary>
@@ -741,10 +740,7 @@ public static class SchemaExtensions
 		if (methodInfo.ReturnType.IsAny(typeof(void), typeof(Task), typeof(ValueTask)))
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		var fieldType = methodInfo.ToFieldType();
-		fieldType.Resolver = new MethodFieldResolver(methodInfo);
-
-		return @this.Query().AddField(fieldType);
+		return @this.Query().AddField(methodInfo, new MethodFieldResolver(methodInfo));
 	}
 
 	/// <summary>
@@ -785,10 +781,7 @@ public static class SchemaExtensions
 
 		returnsObservable.AssertTrue();
 
-		var fieldType = methodInfo.ToFieldType();
-		fieldType.StreamResolver = new MethodSourceStreamResolver(methodInfo);
-
-		return @this.Subscription().AddField(fieldType);
+		return @this.Subscription().AddField(methodInfo, new MethodSourceStreamResolver(methodInfo));
 	}
 
 	/// <summary>
@@ -868,7 +861,7 @@ public static class SchemaExtensions
 		if (graphQlType is not null)
 			fieldType.ResolvedType = graphQlType;
 		else
-			fieldType.Type = typeof(T).ToGraphQLType(false, true);
+			fieldType.Type = typeof(T).ToGraphQLType(false).ToNonNullGraphType();
 
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 

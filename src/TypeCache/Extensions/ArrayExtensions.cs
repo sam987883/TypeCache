@@ -85,6 +85,22 @@ public static class ArrayExtensions
 		});
 	}
 
+	/// <inheritdoc cref="Convert.FromBase64CharArray(char[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Convert"/>.FromBase64CharArray(@<paramref name="this"/>, 0, @<paramref name="this"/>.Length);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static byte[] FromBase64(this char[] @this)
+		=> Convert.FromBase64CharArray(@this, 0, @this.Length);
+
+	/// <inheritdoc cref="Convert.FromBase64CharArray(char[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Convert"/>.FromBase64CharArray(@<paramref name="this"/>, <paramref name="offset"/>, <paramref name="length"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static byte[] FromBase64(this char[] @this, int offset, int length)
+		=> Convert.FromBase64CharArray(@this, offset, length);
+
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
@@ -258,22 +274,6 @@ public static class ArrayExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
-
-	/// <inheritdoc cref="Encoding.GetString(byte[])"/>
-	/// <remarks>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this byte[] @this, Encoding encoding)
-		=> encoding.GetString(@this);
-
-	/// <inheritdoc cref="Encoding.GetString(byte[], int, int)"/>
-	/// <remarks>
-	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>, <paramref name="index"/>, <paramref name="count"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this byte[] @this, Encoding encoding, int index, int count)
-		=> encoding.GetString(@this, index, count);
 
 	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
 	/// <remarks>

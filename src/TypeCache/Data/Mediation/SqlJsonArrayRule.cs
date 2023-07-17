@@ -8,7 +8,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlJsonArrayRule : IRule<SqlJsonArrayRequest, JsonArray>
 {
-	public async ValueTask<JsonArray> ApplyAsync(SqlJsonArrayRequest request, CancellationToken token)
+	public async Task<JsonArray> MapAsync(SqlJsonArrayRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

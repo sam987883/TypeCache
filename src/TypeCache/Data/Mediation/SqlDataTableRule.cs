@@ -8,7 +8,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlDataTableRule : IRule<SqlDataTableRequest, DataTable>
 {
-	public async ValueTask<DataTable> ApplyAsync(SqlDataTableRequest request, CancellationToken token)
+	public async Task<DataTable> MapAsync(SqlDataTableRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

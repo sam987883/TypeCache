@@ -14,7 +14,7 @@ internal sealed class HttpClientRule : IRule<HttpClientRequest, HttpResponseMess
 		this._Factory = factory;
 	}
 
-	public async ValueTask<HttpResponseMessage> ApplyAsync(HttpClientRequest request, CancellationToken token = default)
+	public async Task<HttpResponseMessage> MapAsync(HttpClientRequest request, CancellationToken token = default)
 	{
 		var httpClient = request.HttpClientName.IsNotBlank() ? this._Factory.CreateClient(request.HttpClientName) : this._Factory.CreateClient();
 		using var httpResponse = await httpClient.SendAsync(request.Message, HttpCompletionOption.ResponseContentRead, token);

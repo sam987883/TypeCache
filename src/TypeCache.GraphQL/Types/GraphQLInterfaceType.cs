@@ -4,6 +4,7 @@ using System.Linq;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Resolvers;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -12,13 +13,13 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 {
 	public GraphQLInterfaceType()
 	{
-		typeof(T).GetKind().AssertEquals(Kind.Interface);
+		typeof(T).IsInterface.AssertTrue();
 
 		this.Name = typeof(T).GraphQLName();
 
 		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
-			.Select(propertyInfo => this.AddField(propertyInfo.ToFieldType<T>()))
-			.ToArray();
+			.ToArray()
+			.ForEach(propertyInfo => this.AddField(propertyInfo, new PropertyFieldResolver<T>(propertyInfo)));
 	}
 }

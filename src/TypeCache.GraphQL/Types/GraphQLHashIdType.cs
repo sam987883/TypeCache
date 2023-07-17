@@ -54,8 +54,8 @@ public sealed class GraphQLHashIdType : ScalarGraphType
 	public override object? Serialize(object? value)
 		=> value switch
 		{
-			int id => this._HashMaker.Encrypt(id),
-			long id => this._HashMaker.Encrypt(id),
+			int id => this._HashMaker.Encrypt(id).ToString(),
+			long id => this._HashMaker.Encrypt(id).ToString(),
 			_ => value
 		};
 }

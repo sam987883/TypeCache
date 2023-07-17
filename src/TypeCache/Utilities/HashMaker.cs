@@ -7,53 +7,76 @@ namespace TypeCache.Utilities;
 
 public class HashMaker : IHashMaker
 {
-	private readonly Aes _Provider;
+	private readonly PaddingMode _PaddingMode;
+	private readonly Aes _Provider = Aes.Create();
 
-	public HashMaker(byte[] rgbKey, byte[] rgbIV)
+	/// <exception cref="ArgumentNullException"/>
+	public HashMaker(byte[] rgbKey, byte[] rgbIV, PaddingMode paddingMode = PaddingMode.PKCS7)
 	{
-		this._Provider = Aes.Create();
 		this._Provider.Key = rgbKey;
 		this._Provider.IV = rgbIV;
+		this._PaddingMode = paddingMode;
 	}
 
-	public HashMaker(decimal rgbKey, decimal rgbIV)
-		: this(rgbKey.ToBytes(), rgbIV.ToBytes())
-	{
-	}
+	/// <inheritdoc cref="SymmetricAlgorithm.DecryptCbc(ReadOnlySpan{byte}, ReadOnlySpan{byte}, PaddingMode)"/>
+	public byte[] Decrypt(ReadOnlySpan<byte> data)
+		=> this._Provider
+			.DecryptCbc(data, this._Provider.IV, this._PaddingMode);
 
+	/// <inheritdoc cref="SymmetricAlgorithm.DecryptCbc(byte[], byte[], PaddingMode)"/>
 	public byte[] Decrypt(byte[] data)
-	{
-		data.AssertNotNull();
-		return this._Provider.DecryptCbc(data, this._Provider.IV);
-	}
+		=> this._Provider
+			.DecryptCbc(data, this._Provider.IV, this._PaddingMode);
 
-	public long Decrypt(string hashId)
+	/// <inheritdoc cref="SymmetricAlgorithm.DecryptCbc(byte[], byte[], PaddingMode)"/>
+	/// <param name="hashId">A base 64 encoded string.</param>
+	public long Decrypt(ReadOnlySpan<char> hashId)
 	{
-		var hasPadding = hashId[^1] == '=' && hashId[^2] == '=';
-		var length = hashId.Length;
-		if (!hasPadding)
-			length += 2;
+		var length = (hashId[^2], hashId[^1]) switch
+		{
+			('=', '=') => hashId.Length,
+			_ => hashId.Length + 2
+		};
 		Span<char> span = stackalloc char[length];
 		hashId.CopyTo(span);
-		if (!hasPadding)
-		{
-			span[^1] = '=';
-			span[^2] = '=';
-		}
-		var bytes = new string(span.Replace('-', '+').Replace('_', '/').ToArray()).FromBase64();
-		return this.Decrypt(bytes).ToInt64();
+		span[^1] = '=';
+		span[^2] = '=';
+
+		var data = span
+			.Replace('-', '+')
+			.Replace('_', '/')
+			.ToArray()
+			.FromBase64();
+		return this._Provider
+			.DecryptCbc(data, this._Provider.IV, this._PaddingMode)
+			.ToInt64();
 	}
 
+	public byte[] Encrypt(ReadOnlySpan<byte> data)
+		=> this._Provider
+			.EncryptCbc(data, this._Provider.IV, this._PaddingMode);
+
+	/// <exception cref="ArgumentNullException"/>
 	public byte[] Encrypt(byte[] data)
 	{
 		data.AssertNotNull();
-		return this._Provider.EncryptCbc(data, this._Provider.IV);
+
+		return this._Provider
+			.EncryptCbc(data, this._Provider.IV, this._PaddingMode);
 	}
 
-	public string Encrypt(long id)
+	/// <inheritdoc cref="SymmetricAlgorithm.EncryptCbc(byte[], byte[], PaddingMode)"/>
+	/// <remarks>Returns a base 64 encoded string.</remarks>
+	public ReadOnlySpan<char> Encrypt(long id)
 	{
-		var chars = this.Encrypt(id.GetBytes()).ToBase64Chars().AsSpan().Replace('+', '-').Replace('/', '_');
-		return new string(chars.Slice(0, chars.Length - 2).ToArray());
+		var data = id.GetBytes();
+		var chars = this._Provider
+			.EncryptCbc(data, this._Provider.IV, this._PaddingMode)
+			.ToBase64Chars()
+			.AsSpan()
+			.Replace('+', '-')
+			.Replace('/', '_');
+		return chars.Slice(0, chars.Length - 2);
 	}
 
 	public void Dispose()
