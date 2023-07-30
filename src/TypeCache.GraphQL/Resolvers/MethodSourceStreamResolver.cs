@@ -18,13 +18,17 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 
 	public MethodSourceStreamResolver(MethodInfo methodInfo)
 	{
-		var returnsObservable = methodInfo.ReturnType.GetObjectType() == ObjectType.Observable;
-		if (!returnsObservable && methodInfo.ReturnType.GetSystemType().IsAny(SystemType.ValueTask, SystemType.Task))
-			returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() == ObjectType.Observable;
+		var returnsObservable = methodInfo.ReturnType.IsOrImplements(typeof(IObservable<>));
+		if (!returnsObservable)
+		{
+			var returnType = methodInfo.ReturnType.GetSystemType();
+			if (returnType is SystemType.Task || returnType is SystemType.ValueTask)
+				returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() is ObjectType.Observable;
 
-		returnsObservable.AssertTrue();
+			returnsObservable.AssertTrue();
+		}
 
- 		this._MethodInfo = methodInfo;
+		this._MethodInfo = methodInfo;
 	}
 
 	protected override ValueTask<IObservable<object?>> ResolveAsync(global::GraphQL.IResolveFieldContext context)
@@ -39,7 +43,7 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 		return result switch
 		{
 			ValueTask<IObservable<object?>> valueTask => valueTask,
-			Task<IObservable<object?>> task => new ValueTask<IObservable<object?>>(task),
+			Task<IObservable<object?>> task => new(task),
 			IObservable<object?> item => ValueTask.FromResult(item),
 			_ => throw new UnreachableException(Invariant($"Method {this._MethodInfo.Name()} returned a null for {this._MethodInfo.ReturnType.Name()}."))
 		};

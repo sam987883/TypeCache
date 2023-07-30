@@ -38,7 +38,8 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(procedure);
 		sqlCommand.Type = CommandType.StoredProcedure;
 
-		foreach (var parameter in objectSchema.Parameters.Where(parameter => parameter.Direction.IsAny(ParameterDirection.Input, ParameterDirection.InputOutput)))
+		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
+			parameter.Direction is ParameterDirection.Input || parameter.Direction is ParameterDirection.InputOutput))
 		{
 			if (httpContext.Request.Query.TryGetValue(parameter.Name, out var values))
 				sqlCommand.Parameters.Add(parameter.Name, values.First());
@@ -48,7 +49,8 @@ internal static class SqlApiHandler
 		var request = new SqlDataSetRequest { Command = sqlCommand };
 		var result = await mediator.MapAsync(request, httpContext.RequestAborted);
 
-		foreach (var parameter in objectSchema.Parameters.Where(parameter => parameter.Direction.IsAny(ParameterDirection.Output, ParameterDirection.InputOutput)))
+		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
+			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
 		{
 			if (sqlCommand.Parameters.TryGetValue(parameter.Name, out var value))
 				httpContext.Items[parameter.Name] = value;

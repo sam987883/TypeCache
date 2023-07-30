@@ -22,12 +22,11 @@ partial class ReflectionExtensions
 	public static bool HasCustomAttribute(this MemberInfo @this, Type attributeType, bool inherit = true)
 		=> @this.GetCustomAttribute(attributeType, inherit) is not null;
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name<br/>
-	/// <see langword="    "/>?? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`'));</c>
-	/// </summary>
 	[DebuggerHidden]
 	public static string Name(this MemberInfo @this)
-		=> @this.GetCustomAttribute<NameAttribute>()?.Name
-			?? @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
+		=> @this.Name.IndexOf(GENERIC_TICKMARK) switch
+		{
+			var index when index > -1 => @this.Name.Left(index),
+			_ => @this.Name
+		};
 }

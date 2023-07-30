@@ -22,7 +22,7 @@ partial class ReflectionExtensions
 	{
 		var parameters = @this.GetParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select(parameterInfo => parameterInfo!.ToParameterExpression())
+			.Select(parameterInfo => parameterInfo!.ToExpression())
 			.ToArray();
 
 		return @this.ToNewExpression(parameters).Lambda(parameters);

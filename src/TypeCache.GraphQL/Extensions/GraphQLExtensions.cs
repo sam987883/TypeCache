@@ -7,11 +7,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
-using GraphQL.Types.Relay.DataObjects;
+using GraphQLParser.AST;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
@@ -51,31 +53,18 @@ public static class GraphQLExtensions
 	/// </summary>
 	/// <typeparam name="T">.</typeparam>
 	/// <param name="data">The data<see cref="IEnumerable{T}"/>.</param>
-	/// <param name="totalCount">The total record count of the record set being paged.</param>
 	/// <param name="offset">The number of records to skip.</param>
+	/// <param name="totalCount">The total record count of the record set being paged.</param>
 	/// <returns>The <see cref="Connection{T}"/>.</returns>
-	public static Connection<T> ToConnection<T>(this IEnumerable<T> data, int totalCount, uint offset)
+	public static Connection<T> ToConnection<T>(this IEnumerable<T> data, uint offset, int totalCount)
+		where T : notnull
 	{
 		var items = data.AsArray();
-		var start = offset + 1;
-		var end = start + items.Length;
-		var connection = new Connection<T>
+		return new(offset, items)
 		{
-			Edges = items.Select((item, i) => new Edge<T>
-			{
-				Cursor = (start + i).ToString(),
-				Node = item
-			}).ToList(),
-			PageInfo = new()
-			{
-				StartCursor = start.ToString(),
-				EndCursor = end.ToString(),
-				HasNextPage = end < totalCount,
-				HasPreviousPage = offset > 0
-			},
+			PageInfo = new(offset, offset + (uint)items.Length, totalCount),
 			TotalCount = totalCount
 		};
-		return connection;
 	}
 
 	/// <summary>
@@ -130,39 +119,36 @@ public static class GraphQLExtensions
 		(objectType is ObjectType.Delegate).AssertFalse();
 		(objectType is ObjectType.Object).AssertFalse();
 
-		if (objectType.IsAny(ObjectType.Dictionary, ObjectType.ReadOnlyDictionary))
+		if (objectType is ObjectType.Dictionary || objectType is ObjectType.ReadOnlyDictionary)
 			return typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType();
 
 		if (@this.IsEnum)
 			return @this.ToGraphQLEnumType();
 
 		var systemType = @this.GetSystemType();
+		if (systemType is SystemType.Task || systemType is SystemType.ValueTask)
+			return @this.IsGenericType
+				? @this.GenericTypeArguments.First()!.ToGraphQLType(false)
+				: throw new ArgumentOutOfRangeException(nameof(@this), Invariant($"{nameof(Task)} and {nameof(ValueTask)} are not allowed as GraphQL types."));
+
+		if (systemType is SystemType.Nullable)
+			return @this.GenericTypeArguments.First()!.ToGraphQLType(isInputType);
+
 		var systemGraphType = systemType.ToGraphType();
 		if (systemGraphType is not null)
 			return systemGraphType;
 
 		if (@this.HasElementType)
 		{
-			var elementType = @this.GetElementType()!;
-			elementType = elementType.GetSystemType() is not SystemType.Nullable && elementType.IsValueType
-				? elementType.ToGraphQLType(isInputType).ToNonNullGraphType()
-				: elementType.ToGraphQLType(isInputType);
+			var elementType = @this.GetElementType()!.ToGraphQLType(isInputType);
+			if (elementType.IsValueType && elementType.GetSystemType() is not SystemType.Nullable)
+				elementType = elementType.ToNonNullGraphType();
+
 			return elementType.ToListGraphType();
 		}
 
-		if (@this.IsGenericType)
-		{
-			@this.GenericTypeArguments.Length.AssertEquals(1);
-
-			var genericType = @this.GenericTypeArguments.First()!;
-			return (systemType, genericType.GetSystemType()) switch
-			{
-				(SystemType.Nullable, _) => genericType.GetSystemType().ToGraphType()!,
-				(SystemType.Task or SystemType.ValueTask, _) => genericType.ToGraphQLType(false),
-				(_, not SystemType.Nullable) when genericType.IsValueType => genericType.ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType(),
-				_ => genericType.ToGraphQLType(isInputType).ToListGraphType(),
-			};
-		}
+		if (@this.IsGenericType && @this.IsOrImplements(typeof(IEnumerable<>)))
+			return @this.GenericTypeArguments.First()!.ToGraphQLType(isInputType).ToListGraphType();
 
 		if (@this.IsInterface)
 			return @this.ToGraphQLInterfaceType();

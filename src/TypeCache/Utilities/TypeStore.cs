@@ -35,45 +35,12 @@ internal static class TypeStore
 		{
 			var type when type == typeof(object) => ObjectType.Object,
 			var type when type == typeof(string) => ObjectType.String,
-			var type when type == typeof(StringBuilder) => ObjectType.StringBuilder,
 			{ IsPrimitive: true } => ObjectType.Primitive,
 			{ IsArray: true } => ObjectType.Array,
 			{ IsEnum: true } => ObjectType.Enum,
-			{ IsClass: true } type when type.IsAssignableTo<Attribute>() => ObjectType.Attribute,
-			{ IsClass: true } type when type.IsAssignableTo<DataColumn>() => ObjectType.DataColumn,
-			{ IsClass: true } type when type.IsAssignableTo<DataRow>() => ObjectType.DataRow,
-			{ IsClass: true } type when type.IsAssignableTo<DataRowView>() => ObjectType.DataRowView,
-			{ IsClass: true } type when type.IsAssignableTo<DataSet>() => ObjectType.DataSet,
-			{ IsClass: true } type when type.IsAssignableTo<DataTable>() => ObjectType.DataTable,
-			{ IsClass: true } type when type.IsAssignableTo<Delegate>() => ObjectType.Delegate,
-			{ IsClass: true } type when type.IsAssignableTo<Exception>() => ObjectType.Exception,
-			{ IsClass: true } type when type.IsAssignableTo<JsonNode>() => ObjectType.JsonNode,
-			{ IsClass: true } type when type.IsAssignableTo<OrderedDictionary>() => ObjectType.OrderedDictionary,
-			{ IsClass: true } type when type.IsAssignableTo<Stream>() => ObjectType.Stream,
+			{ IsClass: true } type when tryGetClassObjectType(type, out var objectType) => objectType,
 			var type when type.IsAssignableTo<IAsyncResult>() => ObjectType.AsyncResult,
-			var type when type.IsGenericType || type.IsGenericTypeDefinition => type.ToGenericType()! switch
-			{
-				var genericType when genericType.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableSet<>)) => ObjectType.ImmutableSet,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableList<>)) => ObjectType.ImmutableList,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableQueue<>)) => ObjectType.ImmutableQueue,
-				var genericType when genericType.IsOrImplements(typeof(IImmutableStack<>)) => ObjectType.ImmutableStack,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyDictionary<,>)) => ObjectType.ReadOnlyDictionary,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlySet<>)) => ObjectType.ReadOnlySet,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyList<>)) => ObjectType.ReadOnlyList,
-				var genericType when genericType.IsOrImplements(typeof(IReadOnlyCollection<>)) => ObjectType.ReadOnlyCollection,
-				var genericType when genericType.IsOrImplements(typeof(IDictionary<,>)) => ObjectType.Dictionary,
-				var genericType when genericType.IsOrImplements(typeof(ISet<>)) => ObjectType.Set,
-				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
-				var genericType when genericType.IsOrImplements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
-				var genericType when genericType.IsOrImplements(typeof(IList<>)) => ObjectType.List,
-				var genericType when genericType.IsOrImplements(typeof(ICollection<>)) => ObjectType.Collection,
-				var genericType when genericType.IsOrImplements(typeof(IEnumerable<>)) => ObjectType.Enumerable,
-				var genericType when genericType.IsOrImplements(typeof(IEnumerator<>)) => ObjectType.Enumerator,
-				var genericType when genericType.IsOrImplements(typeof(IObservable<>)) => ObjectType.Observable,
-				var genericType when genericType.IsOrImplements(typeof(IObserver<>)) => ObjectType.Observer,
-				_ => ObjectType.Unknown
-			},
+			{ IsGenericType: true } type => getGenericObjectType(type.ToGenericTypeDefinition()!),
 			_ => ObjectType.Unknown
 		});
 		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(141)
@@ -220,6 +187,52 @@ internal static class TypeStore
 			{ typeof(ValueTask).TypeHandle, SystemType.ValueTask },
 			{ typeof(ValueTask<>).TypeHandle, SystemType.ValueTask },
 		}.ToImmutableDictionary();
+
+		static bool tryGetClassObjectType(Type type, out ObjectType objectType)
+		{
+			objectType = type switch
+			{
+				_ when type.IsAssignableTo<StringBuilder>() => ObjectType.StringBuilder,
+				_ when type.IsAssignableTo<Attribute>() => ObjectType.Attribute,
+				_ when type.IsAssignableTo<DataColumn>() => ObjectType.DataColumn,
+				_ when type.IsAssignableTo<DataRow>() => ObjectType.DataRow,
+				_ when type.IsAssignableTo<DataRowView>() => ObjectType.DataRowView,
+				_ when type.IsAssignableTo<DataSet>() => ObjectType.DataSet,
+				_ when type.IsAssignableTo<DataTable>() => ObjectType.DataTable,
+				_ when type.IsAssignableTo<Delegate>() => ObjectType.Delegate,
+				_ when type.IsAssignableTo<Exception>() => ObjectType.Exception,
+				_ when type.IsAssignableTo<JsonNode>() => ObjectType.JsonNode,
+				_ when type.IsAssignableTo<OrderedDictionary>() => ObjectType.OrderedDictionary,
+				_ when type.IsAssignableTo<Stream>() => ObjectType.Stream,
+				_ => ObjectType.Unknown
+			};
+			return objectType == ObjectType.Unknown;
+		}
+
+		static ObjectType getGenericObjectType(Type type) => type switch
+		{
+			null => ObjectType.Unknown,
+			_ when type.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
+			_ when type.IsOrImplements(typeof(IImmutableSet<>)) => ObjectType.ImmutableSet,
+			_ when type.IsOrImplements(typeof(IImmutableList<>)) => ObjectType.ImmutableList,
+			_ when type.IsOrImplements(typeof(IImmutableQueue<>)) => ObjectType.ImmutableQueue,
+			_ when type.IsOrImplements(typeof(IImmutableStack<>)) => ObjectType.ImmutableStack,
+			_ when type.IsOrImplements(typeof(IReadOnlyDictionary<,>)) => ObjectType.ReadOnlyDictionary,
+			_ when type.IsOrImplements(typeof(IReadOnlySet<>)) => ObjectType.ReadOnlySet,
+			_ when type.IsOrImplements(typeof(IReadOnlyList<>)) => ObjectType.ReadOnlyList,
+			_ when type.IsOrImplements(typeof(IReadOnlyCollection<>)) => ObjectType.ReadOnlyCollection,
+			_ when type.IsOrImplements(typeof(IDictionary<,>)) => ObjectType.Dictionary,
+			_ when type.IsOrImplements(typeof(ISet<>)) => ObjectType.Set,
+			_ when type.IsOrImplements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
+			_ when type.IsOrImplements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
+			_ when type.IsOrImplements(typeof(IList<>)) => ObjectType.List,
+			_ when type.IsOrImplements(typeof(ICollection<>)) => ObjectType.Collection,
+			_ when type.IsOrImplements(typeof(IEnumerable<>)) => ObjectType.Enumerable,
+			_ when type.IsOrImplements(typeof(IEnumerator<>)) => ObjectType.Enumerator,
+			_ when type.IsOrImplements(typeof(IObservable<>)) => ObjectType.Observable,
+			_ when type.IsOrImplements(typeof(IObserver<>)) => ObjectType.Observer,
+			_ => ObjectType.Unknown
+		};
 	}
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorInvokes { get; }

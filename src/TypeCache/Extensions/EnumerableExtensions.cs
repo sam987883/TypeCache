@@ -2,13 +2,12 @@
 
 using System.Collections;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
-public static class LinqExtensions
+public static class EnumerableExtensions
 {
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().Any();</c>
@@ -46,6 +45,22 @@ public static class LinqExtensions
 		where T : struct, Enum
 		=> @this.Contains(value, EnumOf<T>.Comparer);
 
+	/// <inheritdoc cref="string.Concat(IEnumerable{string})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.Concat(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Concat(this IEnumerable<string> @this)
+		=> string.Concat(@this);
+
+	/// <inheritdoc cref="string.Concat(IEnumerable{char})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.Concat(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Concat(this IEnumerable<char> @this)
+		=> string.Concat(@this);
+
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
 	{
 		using var enumerator = @this.GetEnumerator();
@@ -70,7 +85,7 @@ public static class LinqExtensions
 		rest = enumerator.Rest();
 	}
 
-	/// <inheritdoc cref="System.Linq.Enumerable.First{TSource}(IEnumerable{TSource})"/>
+	/// <inheritdoc cref="Enumerable.First{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().First();</c>
 	/// </remarks>
@@ -78,7 +93,7 @@ public static class LinqExtensions
 	public static T? First<T>(this IEnumerable @this)
 		=> @this.OfType<T>().First();
 
-	/// <inheritdoc cref="System.Linq.Enumerable.FirstOrDefault{TSource}(IEnumerable{TSource})"/>
+	/// <inheritdoc cref="Enumerable.FirstOrDefault{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().FirstOrDefault();</c>
 	/// </remarks>
@@ -86,46 +101,7 @@ public static class LinqExtensions
 	public static T? FirstOrDefault<T>(this IEnumerable @this)
 		=> @this.OfType<T>().FirstOrDefault();
 
-	/// <exception cref="ArgumentNullException"/>
-	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action action)
-		where K : notnull
-	{
-		@this.AssertNotNull();
-
-		var success = @this.ContainsKey(key);
-		if (success)
-			action();
-
-		return success;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<V> action)
-		where K : notnull
-	{
-		@this.AssertNotNull();
-
-		var success = @this.TryGetValue(key, out var value);
-		if (success)
-			action(value!);
-
-		return success;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<K, V> action)
-		where K : notnull
-	{
-		@this.AssertNotNull();
-
-		var success = @this.TryGetValue(key, out var value);
-		if (success)
-			action(key, value!);
-
-		return success;
-	}
-
-	/// <inheritdoc cref="System.Linq.Enumerable.Single{TSource}(IEnumerable{TSource})"/>
+	/// <inheritdoc cref="Enumerable.Single{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().Single();</c>
 	/// </remarks>
@@ -133,7 +109,7 @@ public static class LinqExtensions
 	public static T? Single<T>(this IEnumerable @this)
 		=> @this.OfType<T>().Single();
 
-	/// <inheritdoc cref="System.Linq.Enumerable.SingleOrDefault{TSource}(IEnumerable{TSource})"/>
+	/// <inheritdoc cref="Enumerable.SingleOrDefault{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().SingleOrDefault();</c>
 	/// </remarks>
@@ -149,14 +125,6 @@ public static class LinqExtensions
 	public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> @this, IEqualityComparer<TKey>? comparer = null)
 		where TKey : notnull
 		=> new Dictionary<TKey, TValue>(@this, comparer);
-
-	/// <summary>
-	/// <c>=&gt; <see langword="new"/> ReadOnlyDictionary&lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt;(@<paramref name="this"/>);</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<K, V> ToReadOnly<K, V>(this IDictionary<K, V> @this)
-		where K : notnull
-		=> new ReadOnlyDictionary<K, V>(@this);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Select(_ =&gt; _.AsTask());</c>

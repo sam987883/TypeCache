@@ -24,21 +24,17 @@ partial class ReflectionExtensions
 		=> @this.GetCustomAttribute(attributeType, inherit) is not null;
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetCustomAttribute&lt;<see cref="NameAttribute"/>&gt;()?.Name<br/>
-	/// <see langword="    "/>?? @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`'))<br/>
-	/// <see langword="    "/>?? Invariant($"Parameter{@<paramref name="this"/>.Position}");</c>
+	/// <c>=&gt; @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) ?? <see cref="string.Empty"/>;</c>
 	/// </summary>
-	[DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Name(this ParameterInfo @this)
-		=> @this.GetCustomAttribute<NameAttribute>()?.Name
-			?? @this.Name?.Left(@this.Name.IndexOf(GENERIC_TICKMARK))
-			?? Invariant($"Parameter{@this.Position}");
+		=> @this.Name?.Left(@this.Name.IndexOf(GENERIC_TICKMARK)) ?? string.Empty;
 
 	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Parameter(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ParameterExpression ToParameterExpression(this ParameterInfo @this)
+	public static ParameterExpression ToExpression(this ParameterInfo @this)
 		=> Expression.Parameter(@this.ParameterType, @this.Name);
 }

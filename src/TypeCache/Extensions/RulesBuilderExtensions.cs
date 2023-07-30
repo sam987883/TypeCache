@@ -2,6 +2,7 @@
 
 using System.Data;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data.Mediation;
 using TypeCache.Mediation;
 
@@ -19,7 +20,7 @@ public static class RulesBuilderExtensions
 	/// </c>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="AddMediation(IServiceCollection)"/><br/>
+	/// <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection, Action{RulesBuilder}?)"/><br/>
 	/// </code>
 	/// </summary>
 	public static RulesBuilder AddSqlCommandRules(this RulesBuilder @this)

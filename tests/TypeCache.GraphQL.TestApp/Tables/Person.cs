@@ -4,7 +4,6 @@ using GraphQL.Types;
 using TypeCache.Attributes;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Types;
-using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.TestApp.Tables;
 
@@ -24,7 +23,7 @@ public class Person
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
 	[GraphQLType<GuidGraphType>()]
-	[Name("rowguid")]
+	[GraphQLName("rowguid")]
 	public Guid Rowguid { get; set; }
 	[GraphQLType<NonNullGraphType<StringGraphType>>()]
 	public DateTime ModifiedDate { get; set; }

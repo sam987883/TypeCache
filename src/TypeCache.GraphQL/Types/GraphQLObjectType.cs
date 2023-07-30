@@ -18,14 +18,19 @@ using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 namespace TypeCache.GraphQL.Types;
 
 /// <summary>
-/// <inheritdoc cref="ObjectGraphType{TSourceType}"/>
+/// <inheritdoc cref="GraphType"/>
 /// </summary>
 public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	where T : notnull
 {
 	public GraphQLObjectType()
+		: this(typeof(T).GraphQLName())
 	{
-		this.Name = typeof(T).GraphQLName();
+	}
+
+	public GraphQLObjectType(string name)
+	{
+		this.Name = name;
 		this.Description = typeof(T).GraphQLDescription() ?? Invariant($"{typeof(T).Assembly.GetName().Name}: {typeof(T).Namespace}.{typeof(T).Name()}");
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 

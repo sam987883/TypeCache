@@ -4,11 +4,11 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.Types.Relay.DataObjects;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.Mediation;
@@ -32,8 +32,8 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
-				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Items)}.{column.Name}"))
-					|| _.Right(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
+				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(Connection<DataRow>.Items)}.{column.Name}"))
+					|| _.Right(Invariant($"{nameof(Connection<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
@@ -45,8 +45,8 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Items)}."))
-			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}."))))
+		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.Items)}."))
+			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}."))))
 		{
 			var result = await mediator.MapAsync(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken);
 			var totalCount = result.Rows.Count;
@@ -58,46 +58,29 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 			}
 
 			var rows = result.Select();
-			return new SelectResponse<DataRow>()
+			return new SelectResponse<DataRow>(rows, totalCount, select.Offset)
 			{
 				DataSource = objectSchema.DataSource.Name,
-				Edges = rows.Select((row, i) => new Edge<DataRow>
-				{
-					Cursor = (select.Offset + i + 1).ToString(),
-					Node = row
-				}).ToArray(),
-				Items = rows,
-				PageInfo = new PageInfo
-				{
-					StartCursor = (select.Offset + 1).ToString(),
-					EndCursor = (select.Fetch + select.Offset).ToString(),
-					HasNextPage = (select.Fetch + select.Offset) < result.Rows.Count,
-					HasPreviousPage = select.Offset > 0
-				},
 				Sql = sql,
 				Table = objectSchema.Name,
-				TotalCount = totalCount
 			};
 		}
-		else if (selections.Any(_ => _.Is(nameof(SelectResponse<DataRow>.TotalCount))
-			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.PageInfo)}."))))
+		else if (selections.Any(_ => _.Is(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.TotalCount)}"))
+			|| _.Left(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
 			var totalCount = (int?)await mediator.MapAsync(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
 			return new SelectResponse<DataRow>()
 			{
-				DataSource = objectSchema.DataSource.Name,
-				PageInfo = new PageInfo
+				Data = new()
 				{
-					StartCursor = (select.Offset + 1).ToString(),
-					EndCursor = (select.Fetch + select.Offset).ToString(),
-					HasNextPage = (select.Fetch + select.Offset) < totalCount,
-					HasPreviousPage = select.Offset > 0
+					PageInfo = new(select.Offset, select.Fetch, totalCount),
+					TotalCount = totalCount
 				},
+				DataSource = objectSchema.DataSource.Name,
 				Sql = countSql,
-				Table = objectSchema.Name,
-				TotalCount = totalCount
+				Table = objectSchema.Name
 			};
 		}
 		else
@@ -110,7 +93,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 }
 
 public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
-	where T : new()
+	where T : notnull, new()
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
@@ -125,8 +108,8 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
-				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(SelectResponse<T>.Items)}.{column.Name}"))
-					|| _.Right(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
+				.Where(column => selections.Any(_ => _.Right(Invariant($"{nameof(Connection<T>.Items)}.{column.Name}"))
+					|| _.Right(Invariant($"{nameof(Connection<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
@@ -138,8 +121,8 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<T>.Items)}."))
-			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
+		if (selections.Any(_ => _.Left(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.Items)}."))
+			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
 		{
 			var result = await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>((int)select.Fetch), context.CancellationToken);
 			var totalCount = result.Count;
@@ -151,46 +134,29 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 			}
 
 			var items = result.OfType<T>().ToArray();
-			return new SelectResponse<T>()
+			return new SelectResponse<T>(items, totalCount, select.Offset)
 			{
 				DataSource = objectSchema.DataSource.Name,
-				Edges = items.Select((row, i) => new Edge<T>
-				{
-					Cursor = (select.Offset + i + 1).ToString(),
-					Node = row
-				}).ToArray(),
-				Items = items,
-				PageInfo = new PageInfo
-				{
-					StartCursor = (select.Offset + 1).ToString(),
-					EndCursor = (select.Fetch + select.Offset).ToString(),
-					HasNextPage = (select.Fetch + select.Offset) < result.Count,
-					HasPreviousPage = select.Offset > 0
-				},
 				Sql = sql,
-				Table = objectSchema.Name,
-				TotalCount = totalCount
+				Table = objectSchema.Name
 			};
 		}
-		else if (selections.Any(_ => _.Is(nameof(SelectResponse<T>.TotalCount))
-			|| _.Left(Invariant($"{nameof(SelectResponse<T>.PageInfo)}."))))
+		else if (selections.Any(_ => _.Is(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.TotalCount)}"))
+			|| _.Left(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
 			var totalCount = (int?)await mediator.MapAsync(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
 			return new SelectResponse<T>()
 			{
-				DataSource = objectSchema.DataSource.Name,
-				PageInfo = new PageInfo
+				Data = new()
 				{
-					StartCursor = (select.Offset + 1).ToString(),
-					EndCursor = (select.Fetch + select.Offset).ToString(),
-					HasNextPage = (select.Fetch + select.Offset) < totalCount,
-					HasPreviousPage = select.Offset > 0
+					PageInfo = new(select.Offset, select.Fetch, totalCount),
+					TotalCount = totalCount
 				},
+				DataSource = objectSchema.DataSource.Name,
 				Sql = countSql,
-				Table = objectSchema.Name,
-				TotalCount = totalCount
+				Table = objectSchema.Name
 			};
 		}
 		else

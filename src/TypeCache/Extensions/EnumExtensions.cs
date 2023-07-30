@@ -24,11 +24,6 @@ public static class EnumExtensions
 		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Hex : @this.ToString("X");
 
 	[DebuggerHidden]
-	public static bool IsAny<T>(this T @this, params T[] tokens)
-		where T : struct, Enum
-		=> tokens.Any(token => EnumOf<T>.Comparer.EqualTo(@this, token));
-
-	[DebuggerHidden]
 	public static bool IsDefined<T>(this T @this)
 		where T : struct, Enum
 		=> EnumOf<T>.Tokens.ContainsKey(@this);
@@ -53,131 +48,96 @@ public static class EnumExtensions
 
 	public static bool IsCollection(this SystemType @this) => @this switch
 	{
-		SystemType.Array => true,
-		SystemType.ArrayList => true,
-		SystemType.BitArray => true,
-		SystemType.BlockingCollection => true,
-		SystemType.Collection => true,
-		SystemType.ConcurrentBag => true,
-		SystemType.ConcurrentDictionary => true,
-		SystemType.ConcurrentQueue => true,
-		SystemType.ConcurrentStack => true,
-		SystemType.Dictionary => true,
-		SystemType.HashSet => true,
-		SystemType.Hashtable => true,
-		SystemType.HybridDictionary => true,
-		SystemType.ImmutableArray => true,
-		SystemType.ImmutableDictionary => true,
-		SystemType.ImmutableHashSet => true,
-		SystemType.ImmutableList => true,
-		SystemType.ImmutableQueue => true,
-		SystemType.ImmutableSortedDictionary => true,
-		SystemType.ImmutableSortedSet => true,
-		SystemType.ImmutableStack => true,
-		SystemType.KeyedCollection => true,
-		SystemType.LinkedList => true,
-		SystemType.List => true,
-		SystemType.ListDictionary => true,
-		SystemType.NameObjectCollectionBase => true,
-		SystemType.NameValueCollection => true,
-		SystemType.ObservableCollection => true,
-		SystemType.OrderedDictionary => true,
-		SystemType.PriorityQueue => true,
-		SystemType.Queue => true,
-		SystemType.ReadOnlyCollection => true,
-		SystemType.ReadOnlyDictionary => true,
-		SystemType.ReadOnlyObservableCollection => true,
-		SystemType.SortedDictionary => true,
-		SystemType.SortedList => true,
-		SystemType.SortedSet => true,
-		SystemType.Stack => true,
-		SystemType.StringCollection => true,
-		SystemType.StringDictionary => true,
+		SystemType.Array
+		or SystemType.BitArray
+		or SystemType.BlockingCollection
+		or SystemType.Collection
+		or SystemType.ConcurrentBag or SystemType.ConcurrentDictionary or SystemType.ConcurrentQueue or SystemType.ConcurrentStack
+		or SystemType.Dictionary
+		or SystemType.HashSet
+		or SystemType.Hashtable
+		or SystemType.HybridDictionary
+		or SystemType.ImmutableArray or SystemType.ImmutableDictionary or SystemType.ImmutableHashSet or SystemType.ImmutableList
+		or SystemType.ImmutableQueue or SystemType.ImmutableSortedDictionary or SystemType.ImmutableSortedSet or SystemType.ImmutableStack
+		or SystemType.KeyedCollection
+		or SystemType.List or SystemType.LinkedList or SystemType.ArrayList
+		or SystemType.ListDictionary
+		or SystemType.NameObjectCollectionBase or SystemType.NameValueCollection
+		or SystemType.ObservableCollection
+		or SystemType.OrderedDictionary
+		or SystemType.PriorityQueue
+		or SystemType.Queue
+		or SystemType.ReadOnlyCollection or SystemType.ReadOnlyDictionary or SystemType.ReadOnlyObservableCollection
+		or SystemType.SortedDictionary or SystemType.SortedList or SystemType.SortedSet
+		or SystemType.Stack
+		or SystemType.StringCollection
+		or SystemType.StringDictionary => true,
 		_ => false
 	};
 
 	public static bool IsConcurrent(this SystemType @this) => @this switch
 	{
-		SystemType.ConcurrentBag => true,
-		SystemType.ConcurrentDictionary => true,
-		SystemType.ConcurrentQueue => true,
-		SystemType.ConcurrentStack => true,
+		SystemType.ConcurrentBag or SystemType.ConcurrentDictionary
+		or SystemType.ConcurrentQueue or SystemType.ConcurrentStack => true,
 		_ => false
 	};
 
 	public static bool IsDictionary(this SystemType @this) => @this switch
 	{
-		SystemType.ConcurrentDictionary => true,
-		SystemType.Dictionary => true,
-		SystemType.Hashtable => true,
-		SystemType.HybridDictionary => true,
-		SystemType.ImmutableDictionary => true,
-		SystemType.ImmutableSortedDictionary => true,
-		SystemType.KeyedCollection => true,
-		SystemType.ListDictionary => true,
-		SystemType.NameObjectCollectionBase => true,
-		SystemType.NameValueCollection => true,
-		SystemType.OrderedDictionary => true,
-		SystemType.ReadOnlyDictionary => true,
-		SystemType.SortedDictionary => true,
-		SystemType.SortedList => true,
-		SystemType.StringDictionary => true,
+		SystemType.Dictionary or SystemType.ConcurrentDictionary or SystemType.SortedDictionary
+		or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
+		or SystemType.Hashtable or SystemType.HybridDictionary or SystemType.OrderedDictionary or SystemType.ReadOnlyDictionary
+		or SystemType.KeyedCollection or SystemType.ListDictionary or SystemType.StringDictionary
+		or SystemType.NameObjectCollectionBase or SystemType.NameValueCollection or SystemType.SortedList => true,
+		_ => false
+	};
+
+	public static bool IsEnumUnderlyingType(this SystemType @this) => @this switch
+	{
+		SystemType.SByte or SystemType.Byte
+		or SystemType.Int16 or SystemType.Int32 or SystemType.Int64
+		or SystemType.UInt16 or SystemType.UInt32 or SystemType.UInt64 => true,
 		_ => false
 	};
 
 	public static bool IsImmutable(this SystemType @this) => @this switch
 	{
-		SystemType.ImmutableArray => true,
-		SystemType.ImmutableDictionary => true,
-		SystemType.ImmutableHashSet => true,
-		SystemType.ImmutableList => true,
-		SystemType.ImmutableQueue => true,
-		SystemType.ImmutableSortedDictionary => true,
-		SystemType.ImmutableSortedSet => true,
-		SystemType.ImmutableStack => true,
+		SystemType.ImmutableArray
+		or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
+		or SystemType.ImmutableHashSet or SystemType.ImmutableSortedSet
+		or SystemType.ImmutableList
+		or SystemType.ImmutableQueue
+		or SystemType.ImmutableStack => true,
 		_ => false
 	};
 
 	public static bool IsPrimitive(this SystemType @this) => @this switch
 	{
-		SystemType.Boolean => true,
-		SystemType.SByte => true,
-		SystemType.Int16 => true,
-		SystemType.Int32 => true,
-		SystemType.Int64 => true,
-		SystemType.Int128 => true,
-		SystemType.IntPtr => true,
-		SystemType.Byte => true,
-		SystemType.UInt16 => true,
-		SystemType.UInt32 => true,
-		SystemType.UInt64 => true,
-		SystemType.UInt128 => true,
-		SystemType.UIntPtr => true,
-		SystemType.Char => true,
-		SystemType.Single => true,
-		SystemType.Double => true,
+		SystemType.Boolean
+		or SystemType.SByte or SystemType.Byte
+		or SystemType.Int16 or SystemType.Int32 or SystemType.Int64 or SystemType.Int128
+		or SystemType.IntPtr or SystemType.UIntPtr
+		or SystemType.UInt16 or SystemType.UInt32 or SystemType.UInt64 or SystemType.UInt128
+		or SystemType.Single or SystemType.Double
+		or SystemType.Char => true,
+		_ => false
+	};
+
+	public static bool IsQueue(this SystemType @this) => @this switch
+	{
+		SystemType.ConcurrentQueue or SystemType.ImmutableQueue or SystemType.PriorityQueue or SystemType.Queue => true,
 		_ => false
 	};
 
 	public static bool IsReadOnly(this SystemType @this) => @this switch
 	{
-		SystemType.ReadOnlyCollection => true,
-		SystemType.ReadOnlyDictionary => true,
-		SystemType.ReadOnlyObservableCollection => true,
+		SystemType.ReadOnlyCollection or SystemType.ReadOnlyDictionary or SystemType.ReadOnlyObservableCollection => true,
 		_ => false
 	};
 
-	public static bool IsEnumUnderlyingType(this SystemType @this)
-		=> @this switch
-		{
-			SystemType.SByte => true,
-			SystemType.Int16 => true,
-			SystemType.Int32 => true,
-			SystemType.Int64 => true,
-			SystemType.Byte => true,
-			SystemType.UInt16 => true,
-			SystemType.UInt32 => true,
-			SystemType.UInt64 => true,
-			_ => false
-		};
+	public static bool IsStack(this SystemType @this) => @this switch
+	{
+		SystemType.ConcurrentStack or SystemType.ImmutableStack or SystemType.Stack => true,
+		_ => false
+	};
 }

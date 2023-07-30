@@ -113,11 +113,11 @@ public static class StringExtensions
 		=> @this.Contains(value, comparison);
 
 	/// <remarks>
-	/// <c>=&gt; <paramref name="comparison"/>.ToStringComparer().Equals(@<paramref name="this"/>, <paramref name="value"/>);</c>
+	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <paramref name="comparison"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Is(this string? @this, string? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> comparison.ToStringComparer().Equals(@this, value);
+		=> string.Equals(@this, value, comparison);
 
 	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
 	/// <remarks>

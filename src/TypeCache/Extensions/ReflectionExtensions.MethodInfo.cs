@@ -105,7 +105,7 @@ partial class ReflectionExtensions
 		ParameterExpression instance = nameof(instance).ToParameterExpression(@this.DeclaringType!);
 		var parameters = @this.GetParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select(parameterInfo => parameterInfo!.ToParameterExpression())
+			.Select(parameterInfo => parameterInfo!.ToExpression())
 			.ToArray();
 
 		return !@this.IsStatic

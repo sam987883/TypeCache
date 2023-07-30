@@ -14,34 +14,26 @@ partial class ReflectionExtensions
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Equals(<paramref name="type"/>.TypeHandle)
-	/// || (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; @<paramref name="this"/>.ToGenericType() == <paramref name="type"/>);</c>
+	/// || (<paramref name="type"/>.IsGenericTypeDefinition &amp;&amp; @<paramref name="this"/>.ToType().ToGenericType() == <paramref name="type"/>);</c>
 	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	[DebuggerHidden]
 	public static bool Is(this RuntimeTypeHandle @this, Type type)
-		=> @this.Equals(type.TypeHandle) || type.IsGenericTypeDefinition && @this.ToGenericType() == type;
+		=> @this.Equals(type.TypeHandle) || type.IsGenericTypeDefinition && @this.ToType().ToGenericTypeDefinition() == type;
 
 	/// <inheritdoc cref="Type.MakeArrayType(int)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeArrayType(<paramref name="rank"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Type? ToArrayTypeOf(this RuntimeTypeHandle @this, int rank = 1)
+	public static Type ToArrayTypeOf(this RuntimeTypeHandle @this, int rank = 1)
 		=> @this.ToType().MakeArrayType(rank);
-
-	public static Type? ToGenericType(this RuntimeTypeHandle @this)
-		=> @this.ToType() switch
-		{
-			null => null,
-			var type when type.IsGenericType => type.GetGenericTypeDefinition(),
-			_ => null
-		};
 
 	/// <inheritdoc cref="Type.MakeGenericType(Type[])"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToType().MakeGenericType(<paramref name="typeArguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Type? ToGenericTypeOf(this RuntimeTypeHandle @this, params Type[] typeArguments)
+	public static Type ToGenericTypeOf(this RuntimeTypeHandle @this, params Type[] typeArguments)
 		=> @this.ToType().MakeGenericType(typeArguments);
 
 	/// <inheritdoc cref="Type.GetTypeFromHandle(RuntimeTypeHandle)"/>
@@ -50,6 +42,7 @@ partial class ReflectionExtensions
 	/// </remarks>
 	/// <exception cref="UnreachableException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	[return: NotNull]
 	public static Type ToType(this RuntimeTypeHandle @this)
 		=> Type.GetTypeFromHandle(@this) ?? throw new UnreachableException("Type.GetTypeFromHandle(...) returned null.");
 }

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using TypeCache.Extensions;
@@ -130,7 +131,8 @@ partial class ReflectionExtensions
 		{
 			{ IsArray: true } => SystemType.Array,
 			{ IsEnum: true } => TypeStore.SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
-			_ when TypeStore.SystemTypes.TryGetValue(@this.ToGenericType()?.TypeHandle ?? @this.TypeHandle, out var systemType) => systemType,
+			{ IsGenericType: true } when TypeStore.SystemTypes.TryGetValue(@this.ToGenericTypeDefinition()!.TypeHandle, out var systemType) => systemType,
+			_ when TypeStore.SystemTypes.TryGetValue(@this.TypeHandle, out var systemType) => systemType,
 			_ => SystemType.None
 		};
 
@@ -139,7 +141,7 @@ partial class ReflectionExtensions
 		return type switch
 		{
 			{ IsGenericTypeDefinition: false } => @this.IsAssignableTo(type),
-			{ IsInterface: true } => @this.GetInterfaces().Any(_ => type.Is(_.ToGenericType())),
+			{ IsInterface: true } => @this.GetInterfaces().Any(_ => type.Is(_.ToGenericTypeDefinition())),
 			_ => isDescendantOf(@this.BaseType, type)
 		};
 
@@ -244,7 +246,7 @@ partial class ReflectionExtensions
 	public static bool Is(this Type? @this, Type? type)
 		=> (@this, type) switch
 		{
-			({ IsGenericType: true }, _) or (_, { IsGenericType: true }) => @this.ToGenericType() == type.ToGenericType(),
+			({ IsGenericType: true }, _) or (_, { IsGenericType: true }) => @this.ToGenericTypeDefinition() == type.ToGenericTypeDefinition(),
 			_ => @this == type
 		};
 
@@ -331,118 +333,130 @@ partial class ReflectionExtensions
 	[DebuggerHidden]
 	public static bool IsConvertible(this Type @this)
 		=> @this.IsAssignableTo<IConvertible>()
-			|| (@this.ToGenericType() == typeof(Nullable<>) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
+			|| (@this.ToGenericTypeDefinition() == typeof(Nullable<>) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
 
-	public static bool IsConvertibleTo(this Type @this, Type targetType)
-		=> @this switch
+	public static bool IsConvertibleTo(this Type @this, Type targetType) => @this?.GetSystemType() switch
+	{
+		null => false,
+		_ when @this == targetType => true,
+		_ when @this.IsConvertible() && targetType.IsConvertible() => true,
+		SystemType.DateOnly => targetType.GetSystemType() switch
 		{
-			null => false,
-			_ when @this == targetType => true,
-			_ when targetType == typeof(string) => true,
-			_ when @this.IsConvertible() && targetType.IsConvertible() => true,
-			_ when @this == typeof(DateOnly) => targetType switch
-			{
-				_ when targetType == typeof(DateTime) => true,
-				_ when targetType == typeof(DateTimeOffset) => true,
-				_ when targetType == typeof(TimeSpan) => true,
-				_ when targetType == typeof(string) => true,
-				_ when targetType == typeof(int) => true,
-				_ => false
-			},
-			_ when @this == typeof(DateTime) => targetType switch
-			{
-				_ when targetType == typeof(DateOnly) => true,
-				_ when targetType == typeof(DateTimeOffset) => true,
-				_ when targetType == typeof(TimeOnly) => true,
-				_ when targetType == typeof(string) => true,
-				_ when targetType == typeof(long) => true,
-				_ => false
-			},
-			_ when @this == typeof(DateTimeOffset) => targetType switch
-			{
-				_ when targetType == typeof(DateOnly) => true,
-				_ when targetType == typeof(DateTime) => true,
-				_ when targetType == typeof(TimeOnly) => true,
-				_ when targetType == typeof(string) => true,
-				_ when targetType == typeof(long) => true,
-				_ => false
-			},
-			_ when @this == typeof(Enum) => targetType switch
-			{
-				_ when targetType == typeof(string) => true,
-				_ when targetType.IsEnumUnderlyingType() => true,
-				_ => false
-			},
-			_ when @this == typeof(Int128) => targetType switch
-			{
-				_ when targetType == typeof(int) => true,
-				_ when targetType == typeof(uint) => true,
-				_ when targetType == typeof(long) => true,
-				_ when targetType == typeof(ulong) => true,
-				_ when targetType == typeof(UInt128) => true,
-				_ when targetType == typeof(string) => true,
-				_ => false
-			},
-			_ when @this == typeof(nint) => targetType switch
-			{
-				_ when targetType == typeof(nuint) => true,
-				_ when targetType == typeof(int) => true,
-				_ when targetType == typeof(long) => true,
-				_ when targetType == typeof(string) => true,
-				_ => false
-			},
-			_ when @this == typeof(string) => targetType switch
-			{
-				_ when targetType == typeof(char) => true,
-				_ when targetType.IsEnum => true,
-				_ when targetType == typeof(Guid) => true,
-				_ when targetType == typeof(Uri) => true,
-				_ when targetType == typeof(DateOnly) => true,
-				_ when targetType == typeof(DateTime) => true,
-				_ when targetType == typeof(DateTimeOffset) => true,
-				_ when targetType == typeof(Int128) => true,
-				_ when targetType == typeof(UInt128) => true,
-				_ when targetType == typeof(nint) => true,
-				_ when targetType == typeof(nuint) => true,
-				_ when targetType == typeof(TimeOnly) => true,
-				_ when targetType == typeof(TimeSpan) => true,
-				_ when targetType.IsAssignableTo<IConvertible>() => true,
-				_ => false
-			},
-			_ when @this == typeof(TimeOnly) => targetType switch
-			{
-				_ when targetType == typeof(TimeSpan) => true,
-				_ when targetType == typeof(string) => true,
-				_ when targetType == typeof(long) => true,
-				_ => false
-			},
-			_ when @this == typeof(TimeSpan) => targetType switch
-			{
-				_ when targetType == typeof(TimeOnly) => true,
-				_ when targetType == typeof(string) => true,
-				_ when targetType == typeof(long) => true,
-				_ => false
-			},
-			_ when @this == typeof(UInt128) => targetType switch
-			{
-				_ when targetType == typeof(int) => true,
-				_ when targetType == typeof(uint) => true,
-				_ when targetType == typeof(long) => true,
-				_ when targetType == typeof(ulong) => true,
-				_ when targetType == typeof(Int128) => true,
-				_ when targetType == typeof(string) => true,
-				_ => false
-			},
-			_ when @this == typeof(nuint) => targetType switch
-			{
-				_ when targetType == typeof(nint) => true,
-				_ when targetType == typeof(uint) => true,
-				_ when targetType == typeof(ulong) => true,
-				_ when targetType == typeof(string) => true,
-				_ => false
-			},
+			SystemType.DateTime
+			or SystemType.DateTimeOffset
+			or SystemType.TimeSpan
+			or SystemType.String
+			or SystemType.Int32
+			or SystemType.UInt32
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.Int128
+			or SystemType.UInt128 => true,
 			_ => false
-		};
+		},
+		SystemType.DateTime or SystemType.DateTimeOffset => targetType.GetSystemType() switch
+		{
+			SystemType.DateTime
+			or SystemType.DateTimeOffset
+			or SystemType.TimeOnly
+			or SystemType.String
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.Int128
+			or SystemType.UInt128 => true,
+			_ => false
+		},
+		_ when @this.IsEnum => targetType.GetSystemType() switch
+		{
+			SystemType.String => true,
+			var targetSystemType when targetSystemType.IsEnumUnderlyingType() => true,
+			_ => false
+		},
+		SystemType.Int128 => targetType.GetSystemType() switch
+		{
+			SystemType.Int32
+			or SystemType.UInt32
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.UInt128
+			or SystemType.String => true,
+			_ => false
+		},
+		SystemType.IntPtr => targetType.GetSystemType() switch
+		{
+			SystemType.UIntPtr
+			or SystemType.Int32
+			or SystemType.Int64
+			or SystemType.Int128
+			or SystemType.String => true,
+			_ => false
+		},
+		SystemType.String => targetType.GetSystemType() switch
+		{
+			SystemType.Char
+			or SystemType.Guid
+			or SystemType.Uri
+			or SystemType.DateOnly
+			or SystemType.DateTime
+			or SystemType.DateTimeOffset
+			or SystemType.TimeOnly
+			or SystemType.TimeSpan
+			or SystemType.IntPtr
+			or SystemType.UIntPtr
+			or SystemType.Int128
+			or SystemType.UInt128 => true,
+			_ when targetType.IsEnum => true,
+			_ when targetType.IsAssignableTo<IConvertible>() => true,
+			_ => false
+		},
+		SystemType.TimeOnly => targetType.GetSystemType() switch
+		{
+			SystemType.TimeSpan
+			or SystemType.String
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.Int128
+			or SystemType.UInt128 => true,
+			_ => false
+		},
+		SystemType.TimeSpan => targetType.GetSystemType() switch
+		{
+			SystemType.TimeOnly
+			or SystemType.String
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.Int128
+			or SystemType.UInt128 => true,
+			_ => false
+		},
+		SystemType.UInt128 => targetType.GetSystemType() switch
+		{
+			SystemType.Int32
+			or SystemType.UInt32
+			or SystemType.Int64
+			or SystemType.UInt64
+			or SystemType.Int128
+			or SystemType.String => true,
+			_ => false
+		},
+		SystemType.UIntPtr => targetType.GetSystemType() switch
+		{
+			SystemType.IntPtr
+			or SystemType.Int32
+			or SystemType.Int64
+			or SystemType.Int128
+			or SystemType.String => true,
+			_ => false
+		},
+		_ => false
+	};
+
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo&lt;<see cref="IEnumerable"/>&gt;();</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsEnumerable(this Type @this)
+		=> @this.IsAssignableTo<IEnumerable>();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo&lt;<see cref="IEnumerable{T}"/>&gt;();</c>
@@ -470,7 +484,7 @@ partial class ReflectionExtensions
 	/// </summary>
 	[DebuggerHidden]
 	public static bool IsNullable(this Type @this)
-		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericType();
+		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericTypeDefinition();
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Is(<paramref name="type"/>) || @<paramref name="this"/>.Implements(<paramref name="type"/>);</c>
@@ -508,7 +522,7 @@ partial class ReflectionExtensions
 		=> Expression.Default(@this);
 
 	[DebuggerHidden]
-	public static Type? ToGenericType(this Type? @this)
+	public static Type? ToGenericTypeDefinition(this Type? @this)
 		=> @this switch
 		{
 			{ IsGenericTypeDefinition: true } => @this,

@@ -16,10 +16,8 @@ public class SqlExtensions
 	{
 		public int ID { get; set; }
 
-		[Name("First Name")]
 		public string FirstName { get; set; }
 
-		[Name("Last_Name")]
 		public string LastName { get; set; }
 
 		public int Age { get; set; }
@@ -133,8 +131,8 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
-			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
-			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
 		});
 		var data = new[]
 		{
@@ -144,13 +142,13 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		};
 
 		var expected = Invariant($@"INSERT INTO {table}
-([First Name], [Last_Name])
-OUTPUT INSERTED.ID, INSERTED.[Last Name]
+([FirstName], [LastName])
+OUTPUT INSERTED.ID, INSERTED.[LastName]
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
 	, (N'FirstName3', N'LastName3');
 ");
-		var actual = objectSchema.CreateInsertSQL<Person>(new[] { "First Name", "Last_Name" }, data, "INSERTED.ID", "INSERTED.[Last Name]");
+		var actual = objectSchema.CreateInsertSQL<Person>(new[] { "FirstName", "LastName" }, data, "INSERTED.ID", "INSERTED.[LastName]");
 
 		Assert.Equal(expected, actual);
 	}
@@ -197,26 +195,26 @@ ORDER BY [First Name] ASC, Last_Name DESC;
 		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, new DatabaseObject("db.dbo.Test"), "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
-			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
-			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
 		});
 		var selectQuery = new SelectQuery
 		{
-			Select = new[] { "ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
+			Select = new[] { "ID", "TRIM([FirstName]) AS [FirstName]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount" },
 			From = new("[dbo].[NonCustomers]"),
 			Having = "MAX([Age]) > 40",
-			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
-			OrderBy = new[] { "[First Name] ASC", "Last_Name DESC" },
+			Where = "[FirstName] = N'Sarah' AND [LastName] = N'Marshal'",
+			OrderBy = new[] { "[FirstName] ASC", "LastName DESC" },
 			Fetch = 100,
 			Offset = 0,
 			TableHints = "WITH(NOLOCK)"
 		};
 
-		var expected = Invariant($@"SELECT ID, TRIM([First Name]) AS [First Name], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
+		var expected = Invariant($@"SELECT ID, TRIM([FirstName]) AS [FirstName], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
-WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
+WHERE [FirstName] = N'Sarah' AND [LastName] = N'Marshal'
 HAVING MAX([Age]) > 40
-ORDER BY [First Name] ASC, Last_Name DESC
+ORDER BY [FirstName] ASC, LastName DESC
 FETCH NEXT 100 ROWS ONLY;
 ");
 		var actual = objectSchema.CreateSelectSQL(selectQuery);
@@ -232,8 +230,8 @@ FETCH NEXT 100 ROWS ONLY;
 		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test", new[]
 		{
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
-			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
-			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
+			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
 		});
 		var data = new[]
 		{
@@ -243,19 +241,19 @@ FETCH NEXT 100 ROWS ONLY;
 		};
 
 		var expected = Invariant($@"UPDATE {table} WITH(UPDLOCK)
-SET [First Name] = data.[First Name], [Last_Name] = data.[Last_Name]
-OUTPUT INSERTED.[First Name] AS [First Name], DELETED.Last_Name AS Last_Name, INSERTED.[ID] AS [ID]
+SET [FirstName] = data.[FirstName], [LastName] = data.[LastName]
+OUTPUT INSERTED.[FirstName] AS [FirstName], DELETED.LastName AS LastName, INSERTED.[ID] AS [ID]
 FROM {table} AS _
 INNER JOIN
 (
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
 	, (N'FirstName3', N'LastName3')
-) AS data ([First Name], [Last_Name])
+) AS data ([FirstName], [LastName])
 ON data.[ID] = _.[ID];
 ");
-		var actual = objectSchema.CreateUpdateSQL<Person>(new[] { "First Name", "Last_Name" }, data
-			, "INSERTED.[First Name] AS [First Name]", "DELETED.Last_Name AS Last_Name", "INSERTED.[ID] AS [ID]");
+		var actual = objectSchema.CreateUpdateSQL<Person>(new[] { "FirstName", "LastName" }, data
+			, "INSERTED.[FirstName] AS [FirstName]", "DELETED.LastName AS LastName", "INSERTED.[ID] AS [ID]");
 
 		Assert.Equal(expected, actual);
 	}

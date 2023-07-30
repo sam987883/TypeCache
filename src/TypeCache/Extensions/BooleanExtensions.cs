@@ -1,10 +1,17 @@
-﻿namespace TypeCache.Extensions;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+namespace TypeCache.Extensions;
 
 public static class BooleanExtensions
 {
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	[DebuggerHidden]
 	public static bool Else(this bool @this, Action doIfFalse)
-		=> (!@this).Then(doIfFalse);
+	{
+		if (!@this)
+			doIfFalse();
+
+		return @this;
+	}
 
 	[DebuggerHidden]
 	public static bool Then(this bool @this, Action doIfTrue)

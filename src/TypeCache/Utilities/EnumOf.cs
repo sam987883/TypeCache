@@ -2,7 +2,6 @@
 
 using System.Collections.Immutable;
 using System.Reflection;
-using TypeCache.Attributes;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 
@@ -18,7 +17,7 @@ public static class EnumOf<T>
 		Attributes = type.GetCustomAttributes<Attribute>().ToImmutableArray();
 		Comparer = new EnumComparer<T>();
 		Flags = Attributes.Any<FlagsAttribute>();
-		Name = Attributes.FirstOrDefault<NameAttribute>()?.Name ?? type.Name;
+		Name = type.Name;
 		Tokens = Enum.GetValues<T>().ToImmutableDictionary(value => value, value => new Token<T>(value), Comparer);
 	}
 

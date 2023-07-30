@@ -19,6 +19,7 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
+using TypeCache.Mediation;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -214,9 +215,9 @@ public static class SchemaExtensions
 				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
 			}
 
-			if (objectSchema.Type.IsAny(DatabaseObjectType.Table, DatabaseObjectType.View) && actions.HasFlag(SqlApiAction.Select))
+			if ((objectSchema.Type is DatabaseObjectType.Table || objectSchema.Type is DatabaseObjectType.View) && actions.HasFlag(SqlApiAction.Select))
 			{
-				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, $"{objectSchema.Type.Name()}: `{objectSchema.Name}`", resolvedType);
+				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`"), resolvedType);
 				var arguments = new QueryArguments();
 				arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
 				if (dataSource.Type is DataSourceType.SqlServer)
@@ -774,15 +775,7 @@ public static class SchemaExtensions
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType AddSubscription(this ISchema @this, MethodInfo methodInfo)
-	{
-		var returnsObservable = methodInfo.ReturnType.IsOrImplements(typeof(IObservable<>));
-		if (!returnsObservable && methodInfo.ReturnType.GetSystemType().IsAny(SystemType.ValueTask, SystemType.Task))
-			returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() == ObjectType.Observable;
-
-		returnsObservable.AssertTrue();
-
-		return @this.Subscription().AddField(methodInfo, new MethodSourceStreamResolver(methodInfo));
-	}
+		=> @this.Subscription().AddField(methodInfo, new MethodSourceStreamResolver(methodInfo));
 
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
@@ -797,7 +790,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -834,7 +827,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -879,7 +872,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: delete{Table}Data</term> Deletes records passed in based on primary key value(s).</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -914,7 +907,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -950,7 +943,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -986,7 +979,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1043,7 +1036,7 @@ public static class SchemaExtensions
 	/// <item><term>Query: select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1099,7 +1092,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1134,7 +1127,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}</term> Updates records based on a WHERE clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
+	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1170,6 +1163,6 @@ public static class SchemaExtensions
 		if (!name.Contains('_'))
 			return name;
 
-		return string.Join(string.Empty, name.ToLowerInvariant().Split('_').Select(_ => _.ToPascalCase()));
+		return name.ToLowerInvariant().Split('_').Select(_ => _.ToPascalCase()).Concat();
 	}
 }

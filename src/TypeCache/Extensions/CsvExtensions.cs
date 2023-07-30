@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Numerics;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 using static System.Globalization.CultureInfo;
@@ -24,8 +25,8 @@ public static class CsvExtensions
 			',' or '"' => Invariant($"\"{@this}\""),
 			char character => character.ToString(),
 			sbyte or byte => ((IFormattable)@this).ToString(options.ByteFormatSpecifier, InvariantCulture),
-			short or int or nint or long or Int128 or ushort or uint or nuint or ulong or UInt128 => ((IFormattable)@this).ToString(options.IntegerFormatSpecifier, InvariantCulture),
-			float or double or Half or decimal => ((IFormattable)@this).ToString(options.DecimalFormatSpecifier, InvariantCulture),
+			IFormattable formattable when @this.GetType().Implements(typeof(IBinaryInteger<>)) => formattable.ToString(options.IntegerFormatSpecifier, InvariantCulture),
+			IFormattable formattable when @this.GetType().Implements(typeof(IFloatingPoint<>)) => formattable.ToString(options.DecimalFormatSpecifier, InvariantCulture),
 			DateOnly => ((IFormattable)@this).ToString(options.DateOnlyFormatSpecifier, InvariantCulture),
 			DateTime => ((IFormattable)@this).ToString(options.DateTimeFormatSpecifier, InvariantCulture),
 			DateTimeOffset => ((IFormattable)@this).ToString(options.DateTimeOffsetFormatSpecifier, InvariantCulture),

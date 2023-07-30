@@ -20,7 +20,7 @@ public class AssertExtensions
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals("bbb"));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertEquals("bbb"));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals("bbb", StringComparer.Ordinal));
-		Xunit.Assert.Throws<ArgumentNullException>(() => "AAA".AssertEquals(null, null));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals(null, null));
 	}
 
 	[Fact]

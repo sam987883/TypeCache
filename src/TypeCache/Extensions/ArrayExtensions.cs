@@ -101,9 +101,12 @@ public static class ArrayExtensions
 	public static byte[] FromBase64(this char[] @this, int offset, int length)
 		=> Convert.FromBase64CharArray(@this, offset, length);
 
+	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
 	{
+		@this.AssertNotNull();
+
 		range = range.Normalize(@this.Length);
 		if (!range.Any())
 			return Array<T>.Empty;
@@ -126,6 +129,8 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentException"/>
 	public static T[] GetCopy<T>(this T[] @this)
 	{
+		@this.AssertNotNull();
+
 		if (!@this.Any())
 			return Array<T>.Empty;
 
@@ -209,9 +214,12 @@ public static class ArrayExtensions
 	public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null)
 		=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
 
+	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="IndexOutOfRangeException"/>
 	public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
 	{
+		@this.AssertNotNull();
+
 		if (sourceIndex + length > @this.Length)
 			throw new IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");
 
@@ -255,18 +263,18 @@ public static class ArrayExtensions
 	/// <c>=&gt; <see cref="ImmutableQueue"/>.Create(@<paramref name="this"/> ?? <see cref="Array{T}.Empty"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ImmutableQueue<T> ToImmutableQueue<T>(this T[]? @this)
+	public static ImmutableQueue<T> ToImmutableQueue<T>(this T[] @this)
 		where T : notnull
-		=> ImmutableQueue.Create(@this ?? Array<T>.Empty);
+		=> ImmutableQueue.Create(@this);
 
 	/// <inheritdoc cref="ImmutableStack.Create{T}(T[])"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="ToImmutableStack"/>.Create(@<paramref name="this"/> ?? <see cref="Array{T}.Empty"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ImmutableStack<T> ToImmutableStack<T>(this T[]? @this)
+	public static ImmutableStack<T> ToImmutableStack<T>(this T[] @this)
 		where T : notnull
-		=> ImmutableStack.Create(@this ?? Array<T>.Empty);
+		=> ImmutableStack.Create(@this);
 
 	/// <remarks>
 	/// <c>=&gt; <see cref="JsonSerializer"/>.SerializeToNode(@<paramref name="this"/>, <paramref name="options"/>) <see langword="as"/> <see cref="JsonArray"/>;</c>
