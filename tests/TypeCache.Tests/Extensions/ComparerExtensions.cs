@@ -24,6 +24,34 @@ public class ComparerExtensions
 	}
 
 	[Fact]
+	public void GreaterThan()
+	{
+		var comparer = (IComparer)Comparer<int>.Default;
+		var comparerInt = (IComparer<int>)Comparer<int>.Default;
+
+		Assert.True(comparer.GreaterThan(2, 1));
+		Assert.False(comparer.GreaterThan(2, 2));
+		Assert.False(comparer.GreaterThan(2, 3));
+		Assert.True(comparerInt.GreaterThan(2, 1));
+		Assert.False(comparerInt.GreaterThan(2, 2));
+		Assert.False(comparerInt.GreaterThan(2, 3));
+	}
+
+	[Fact]
+	public void GreaterThanOrEqualTo()
+	{
+		var comparer = (IComparer)Comparer<int>.Default;
+		var comparerInt = (IComparer<int>)Comparer<int>.Default;
+
+		Assert.True(comparer.GreaterThanOrEqualTo(2, 1));
+		Assert.True(comparer.GreaterThanOrEqualTo(2, 2));
+		Assert.False(comparer.GreaterThanOrEqualTo(2, 3));
+		Assert.True(comparerInt.GreaterThanOrEqualTo(2, 1));
+		Assert.True(comparerInt.GreaterThanOrEqualTo(2, 2));
+		Assert.False(comparerInt.GreaterThanOrEqualTo(2, 3));
+	}
+
+	[Fact]
 	public void LessThan()
 	{
 		var comparer = (IComparer)Comparer<int>.Default;
@@ -49,34 +77,6 @@ public class ComparerExtensions
 		Assert.False(comparerInt.LessThanOrEqualTo(2, 1));
 		Assert.True(comparerInt.LessThanOrEqualTo(2, 2));
 		Assert.True(comparerInt.LessThanOrEqualTo(2, 3));
-	}
-
-	[Fact]
-	public void MoreThan()
-	{
-		var comparer = (IComparer)Comparer<int>.Default;
-		var comparerInt = (IComparer<int>)Comparer<int>.Default;
-
-		Assert.True(comparer.GreaterThan(2, 1));
-		Assert.False(comparer.GreaterThan(2, 2));
-		Assert.False(comparer.GreaterThan(2, 3));
-		Assert.True(comparerInt.GreaterThan(2, 1));
-		Assert.False(comparerInt.GreaterThan(2, 2));
-		Assert.False(comparerInt.GreaterThan(2, 3));
-	}
-
-	[Fact]
-	public void MoreThanOrEqualTo()
-	{
-		var comparer = (IComparer)Comparer<int>.Default;
-		var comparerInt = (IComparer<int>)Comparer<int>.Default;
-
-		Assert.True(comparer.GreaterThanOrEqualTo(2, 1));
-		Assert.True(comparer.GreaterThanOrEqualTo(2, 2));
-		Assert.False(comparer.GreaterThanOrEqualTo(2, 3));
-		Assert.True(comparerInt.GreaterThanOrEqualTo(2, 1));
-		Assert.True(comparerInt.GreaterThanOrEqualTo(2, 2));
-		Assert.False(comparerInt.GreaterThanOrEqualTo(2, 3));
 	}
 
 	[Fact]

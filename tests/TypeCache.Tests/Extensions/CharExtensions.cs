@@ -1,144 +1,71 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
 using TypeCache.Extensions;
 using Xunit;
+using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Tests.Extensions;
 
 public class CharExtensions
 {
 	[Fact]
-	public void IsControl()
-	{
-		Assert.False('f'.IsControl());
-	}
-
-	[Fact]
-	public void IsDigit()
-	{
-		Assert.False('f'.IsDigit());
-		Assert.True('6'.IsDigit());
-	}
-
-	[Fact]
-	public void IsHighSurrogate()
-	{
-		Assert.False('f'.IsHighSurrogate());
-	}
-
-	[Fact]
-	public void IsLetter()
-	{
-		Assert.False('6'.IsLetter());
-		Assert.True('f'.IsLetter());
-	}
-
-	[Fact]
-	public void IsLetterOrDigit()
-	{
-		Assert.True('f'.IsLetterOrDigit());
-		Assert.True('6'.IsLetterOrDigit());
-	}
-
-	[Fact]
-	public void IsLower()
-	{
-		Assert.True('f'.IsLower());
-		Assert.False('F'.IsLower());
-	}
-
-	[Fact]
-	public void IsLowSurrogate()
-	{
-		Assert.False('f'.IsLowSurrogate());
-	}
-
-	[Fact]
-	public void IsNumber()
-	{
-		Assert.True('6'.IsNumber());
-		Assert.False('f'.IsNumber());
-	}
-
-	[Fact]
-	public void IsPunctuation()
-	{
-		Assert.False('6'.IsPunctuation());
-		Assert.True('!'.IsPunctuation());
-	}
-
-	[Fact]
-	public void IsSeparator()
-	{
-		Assert.False('f'.IsSeparator());
-		Assert.True(' '.IsSeparator());
-	}
-
-	[Fact]
-	public void IsSurrogate()
-	{
-		Assert.False('f'.IsSurrogate());
-	}
-
-	[Fact]
-	public void IsSymbol()
-	{
-		Assert.False('f'.IsSymbol());
-		Assert.False('#'.IsSymbol());
-	}
-
-	[Fact]
-	public void IsUpper()
-	{
-		Assert.False('f'.IsUpper());
-		Assert.True('F'.IsUpper());
-	}
-
-	[Fact]
-	public void IsWhiteSpace()
-	{
-		Assert.False('f'.IsWhiteSpace());
-		Assert.True(' '.IsWhiteSpace());
-	}
-
-	[Fact]
 	public void Join()
 	{
-
 		Assert.Equal("A,b,C,1,2,3", ','.Join("A", "b", "C", "1", "2", "3"));
-
-		Assert.Equal("A.b.C.1.2.3", '.'.Join((IEnumerable<string>)new[] { "A", "b", "C", "1", "2", "3" }));
-
+		Assert.Equal("A.b.C.1.2.3", '.'.Join(new[] { "A", "b", "C", "1", "2", "3" }.AsEnumerable()));
 		Assert.Equal("A;b;C;1;2;3", ';'.Join('A', 'b', 'C', 1, 2, 3));
-
-		Assert.Equal("A|b|C|1|2|3", '|'.Join((IEnumerable<object>)new object[] { 'A', 'b', 'C', 1, 2, 3 }));
+		Assert.Equal("A|b|C|1|2|3", '|'.Join(new object[] { 'A', 'b', 'C', 1, 2, 3 }.AsEnumerable()));
 	}
 
-	[Fact]
-	public void ToLower()
+	[Theory]
+	[InlineData(' ')]
+	[InlineData('1')]
+	[InlineData('0')]
+	[InlineData('A')]
+	[InlineData('z')]
+	[InlineData('.')]
+	[InlineData('/')]
+	[InlineData('\\')]
+	[InlineData('\n')]
+	[InlineData('`')]
+	[InlineData('~')]
+	[InlineData('\t')]
+	[InlineData('?')]
+	[InlineData('*')]
+	public void TestExtensionsFor(char value)
 	{
-		Assert.Equal('f', 'F'.ToLowerInvariant());
-	}
-
-	[Fact]
-	public void ToNumber()
-	{
-		Assert.Equal(0D, '0'.ToNumber());
-	}
-
-	[Fact]
-	public void ToUpper()
-	{
-		Assert.Equal('F', 'f'.ToUpperInvariant());
-	}
-
-	[Fact]
-	public void ToUnicodeCategory()
-	{
-		Assert.Equal(UnicodeCategory.LowercaseLetter, 'f'.GetUnicodeCategory());
-		Assert.Equal(UnicodeCategory.UppercaseLetter, 'F'.GetUnicodeCategory());
+		Assert.Equal(char.GetUnicodeCategory(value), value.GetUnicodeCategory());
+		Assert.Equal(char.IsAscii(value), value.IsAscii());
+		Assert.Equal(char.IsAsciiDigit(value), value.IsAsciiDigit());
+		Assert.Equal(char.IsAsciiHexDigit(value), value.IsAsciiHexDigit());
+		Assert.Equal(char.IsAsciiHexDigitLower(value), value.IsAsciiHexDigitLower());
+		Assert.Equal(char.IsAsciiHexDigitUpper(value), value.IsAsciiHexDigitUpper());
+		Assert.Equal(char.IsAsciiLetter(value), value.IsAsciiLetter());
+		Assert.Equal(char.IsAsciiLetterLower(value), value.IsAsciiLetterLower());
+		Assert.Equal(char.IsAsciiLetterOrDigit(value), value.IsAsciiLetterOrDigit());
+		Assert.Equal(char.IsAsciiLetterUpper(value), value.IsAsciiLetterUpper());
+		Assert.Equal(char.IsControl(value), value.IsControl());
+		Assert.Equal(char.IsDigit(value), value.IsDigit());
+		Assert.Equal(char.IsHighSurrogate(value), value.IsHighSurrogate());
+		Assert.Equal(char.IsLetter(value), value.IsLetter());
+		Assert.Equal(char.IsLetterOrDigit(value), value.IsLetterOrDigit());
+		Assert.Equal(char.IsLower(value), value.IsLower());
+		Assert.Equal(char.IsLowSurrogate(value), value.IsLowSurrogate());
+		Assert.Equal(char.IsNumber(value), value.IsNumber());
+		Assert.Equal(char.IsPunctuation(value), value.IsPunctuation());
+		Assert.Equal(char.IsSeparator(value), value.IsSeparator());
+		Assert.Equal(char.IsSurrogate(value), value.IsSurrogate());
+		Assert.Equal(char.IsSymbol(value), value.IsSymbol());
+		Assert.Equal(char.IsUpper(value), value.IsUpper());
+		Assert.Equal(char.IsWhiteSpace(value), value.IsWhiteSpace());
+		Assert.Equal(char.ToLower(value), value.ToLower());
+		Assert.Equal(char.ToLower(value, InvariantCulture), value.ToLower(InvariantCulture));
+		Assert.Equal(char.ToLowerInvariant(value), value.ToLowerInvariant());
+		Assert.Equal(char.GetNumericValue(value), value.ToNumber());
+		Assert.Equal(char.ToUpper(value), value.ToUpper());
+		Assert.Equal(char.ToUpper(value, InvariantCulture), value.ToUpper(InvariantCulture));
+		Assert.Equal(char.ToUpperInvariant(value), value.ToUpperInvariant());
 	}
 }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Utilities;
+using System;
+using System.Text;
+using TypeCache.Collections;
 
 namespace TypeCache.Extensions;
 
@@ -14,6 +16,27 @@ public static class RangeExtensions
 		return !@this.Start.Equals(@this.End);
 	}
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static bool Contains(this Range @this, Index index)
+		=> @this.IsReverse()
+			? index.Value < @this.Start.Value && index.Value >= @this.End.Value
+			: index.Value >= @this.Start.Value && index.Value < @this.End.Value;
+
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static bool Contains(this Range @this, Range other) => other.IsReverse() switch
+	{
+		_ when !@this.Any() && !other.Any() => false,
+		false => @this.Contains(other.Start) && @this.Contains(other.End.Previous()),
+		_ => @this.Contains(other.Start.Previous()) && @this.Contains(other.End)
+	};
+
+	/// <summary>
+	/// <c>=&gt; (@<paramref name="this"/>.End.Value - @<paramref name="this"/>.Start.Value).AbsoluteValue();</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int Count(this Range @this)
+		=> (@this.End.Value - @this.Start.Value).Abs();
+
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach(this Range @this, Action<int> action)
 	{
@@ -24,39 +47,20 @@ public static class RangeExtensions
 	}
 
 	/// <summary>
-	/// <c>=&gt; <see langword="new"/> <see cref="RangeEnumerator"/>(@<paramref name="this"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Start.FromStart(<paramref name="count"/>)..@<paramref name="this"/>.End.FromStart(<paramref name="count"/>);</c>
 	/// </summary>
-	public static RangeEnumerator GetEnumerator(this Range @this)
-		=> new RangeEnumerator(@this);
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Range FromStart(this Range @this, int count)
+		=> @this.Start.FromStart(count)..@this.End.FromStart(count);
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static bool Has(this Range @this, Index index)
-		=> @this.IsReverse()
-			? index.Value <= @this.Start.Value && index.Value > @this.End.Value
-			: index.Value >= @this.Start.Value && index.Value < @this.End.Value;
+	public static IEnumerator<int> GetEnumerator(this Range @this)
+		=> !@this.IsReverse() ? @this.ToEnumerable().GetEnumerator() : @this.ToEnumerable().Reverse().GetEnumerator();
 
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static bool Has(this Range @this, Range other)
-		=> (@this.IsReverse(), other.IsReverse()) switch
-		{
-			_ when !@this.Any() && !other.Any() => false,
-			(true, true) => other.Start.Value <= @this.Start.Value && other.End.Value >= @this.End.Value,
-			(true, false) => other.End.Value <= @this.Start.Value && other.Start.Value > @this.End.Value,
-			(false, true) => other.Start.Value > @this.End.Value && other.End.Value <= @this.Start.Value,
-			(false, false) => other.Start.Value >= @this.Start.Value && other.End.Value <= @this.End.Value
-		};
-
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static Range? IntersectWith(this Range @this, Range other)
-		=> @this.Overlaps(other) ? (@this.IsReverse(), other.IsReverse()) switch
-		{
-			(true, true) => (@this.Start, other.Start).Min()..(@this.End, other.End).Max(),
-			(true, false) => (@this.Start, other.End.Previous()).Min()..(@this.End, other.Start.Next()).Max(),
-			(false, true) => (@this.Start, other.End.Next()).Max()..(@this.End, other.Start.Previous()).Min(),
-			(false, false) => (@this.Start, other.Start).Max()..(@this.End, other.End).Min()
-		} : null;
-
-	/// <remarks>Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.</remarks>
+	/// <remarks>
+	/// Reversal can only be determined if both Range Indexes have the same <c>IsFromEnd</c> value.
+	/// </remarks>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static bool IsReverse(this Range @this)
 	{
@@ -65,65 +69,43 @@ public static class RangeExtensions
 		return @this.Start.IsFromEnd ? @this.Start.Value <= @this.End.Value : @this.Start.Value > @this.End.Value;
 	}
 
-	/// <summary>
-	/// <c>=&gt; (@<paramref name="this"/>.End.Value - @<paramref name="this"/>.Start.Value).AbsoluteValue();</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static int Length(this Range @this)
-		=> (@this.End.Value - @this.Start.Value).Abs();
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static Index Maximum(this Range @this)
+	{
+		@this.Start.IsFromEnd.AssertFalse();
+		@this.End.IsFromEnd.AssertFalse();
+		@this.Start.AssertNotEquals(@this.End);
+
+		return @this.IsReverse() ? @this.Start : @this.End.Previous();
+	}
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static Index? Maximum(this Range @this)
-		=> @this.IsReverse() switch
-		{
-			true when @this.Start.Value > @this.End.Value => @this.Start,
-			false when @this.Start.Value < @this.End.Value => @this.End.Previous(),
-			_ => null
-		};
+	public static Index Minimum(this Range @this)
+	{
+		@this.Start.IsFromEnd.AssertFalse();
+		@this.End.IsFromEnd.AssertFalse();
+		@this.Start.AssertNotEquals(@this.End);
 
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static Index? Minimum(this Range @this)
-		=> @this.IsReverse() switch
-		{
-			true when @this.Start.Value > @this.End.Value => @this.End.Next(),
-			false when @this.Start.Value < @this.End.Value => @this.Start,
-			_ => null
-		};
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Start.FromStart(<paramref name="count"/>)..@<paramref name="this"/>.End.FromStart(<paramref name="count"/>);</c>
-	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Range Normalize(this Range @this, int count)
-		=> @this.Start.FromStart(count)..@this.End.FromStart(count);
+		return @this.IsReverse() ? @this.End.Next() : @this.Start;
+	}
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static bool Overlaps(this Range @this, Range other)
 		=> other.IsReverse()
-			? @this.Has(other.Start) || @this.Has(other.End.Next())
-			: @this.Has(other.Start) || @this.Has(other.End.Previous());
+			? @this.Contains(other.Start.Next()) || @this.Contains(other.End)
+			: @this.Contains(other.Start) || @this.Contains(other.End.Previous());
 
 	/// <summary>
 	/// <c>=&gt; <see langword="new"/> <see cref="Range"/>(@<paramref name="this"/>.End, @<paramref name="this"/>.Start);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Range Reverse(this Range @this)
-		=> new Range(@this.End, @this.Start);
-
-	public static IEnumerable<int> ToEnumerable(this Range @this)
-	{
-		foreach (var i in @this)
-			yield return i;
-	}
+		=> new(@this.End, @this.Start);
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static Range? UnionWith(this Range @this, Range other)
-		=> @this.Has(other.Start) || @this.Has(other.End) || other.Has(@this.Start) || other.Has(@this.End) ? (@this.IsReverse(), other.IsReverse()) switch
-		{
-			(true, true) => (@this.Start, other.Start).Max()..(@this.End, other.End).Min(),
-			(true, false) => (@this.Start, other.End.Previous()).Max()..(@this.End, other.Start.Next()).Min(),
-			(false, true) => (@this.Start, other.End.Next()).Min()..(@this.End, other.Start.Previous()).Max(),
-			(false, false) => (@this.Start, other.Start).Min()..(@this.End, other.End).Max()
-		} : null;
+	[DebuggerHidden]
+	public static IEnumerable<int> ToEnumerable(this Range @this)
+		=> !@this.IsReverse()
+			? Enumerable.Range(@this.Start.Value, @this.Count())
+			: Enumerable.Range(@this.End.Value, @this.Count()).Reverse();
 }

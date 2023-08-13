@@ -208,7 +208,7 @@ public static class ReadOnlySpanExtensions
 		where T : struct
 		=> MemoryMarshal.ToEnumerable(@this);
 
-	public static string ToHex(this scoped ReadOnlySpan<byte> @this)
+	public static string ToHexString(this scoped ReadOnlySpan<byte> @this)
 	{
 		const string HEX_CHARS = "0123456789ABCDEF";
 

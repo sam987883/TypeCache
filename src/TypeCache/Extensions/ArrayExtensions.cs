@@ -19,6 +19,20 @@ public static class ArrayExtensions
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 		=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
 
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	public static T[] Copy<T>(this T[] @this)
+	{
+		@this.AssertNotNull();
+
+		if (@this.Length == 0)
+			return Array<T>.Empty;
+
+		var copy = new T[@this.Length];
+		@this.AsSpan().CopyTo(copy);
+		return copy;
+	}
+
 	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Array"/>.ForEach(@<paramref name="this"/>, action);</c>
@@ -54,20 +68,20 @@ public static class ArrayExtensions
 			action(ref @this![i]);
 	}
 
+	public static void ForEach<T>(this T[] @this, Action<T, int> action)
+	{
+		var i = -1;
+		@this.ForEach(value => action(value, ++i));
+	}
+
 	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this T[]? @this, ActionRef<T, int> action)
+	public static void ForEach<T>(this T[]? @this, ActionIndexRef<T> action)
 	{
 		action.AssertNotNull();
 
 		var count = @this?.Length ?? 0;
 		for (var i = 0; i < count; ++i)
-			action(ref @this![i], ref i);
-	}
-
-	public static void ForEach<T>(this T[] @this, Action<T, int> action)
-	{
-		var i = -1;
-		@this.ForEach(value => action(value, ++i));
+			action(ref @this![i], i);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -101,44 +115,6 @@ public static class ArrayExtensions
 	public static byte[] FromBase64(this char[] @this, int offset, int length)
 		=> Convert.FromBase64CharArray(@this, offset, length);
 
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static IEnumerable<T> Get<T>(this T[] @this, Range range)
-	{
-		@this.AssertNotNull();
-
-		range = range.Normalize(@this.Length);
-		if (!range.Any())
-			return Array<T>.Empty;
-
-		var reverse = range.IsReverse();
-		if (reverse)
-			range = range.Reverse();
-
-		var span = @this.AsSpan(range);
-		var copy = new T[span.Length];
-		var copySpan = copy.AsSpan();
-		span.CopyTo(copySpan);
-		if (reverse)
-			copySpan.Reverse();
-
-		return copy;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="ArgumentException"/>
-	public static T[] GetCopy<T>(this T[] @this)
-	{
-		@this.AssertNotNull();
-
-		if (!@this.Any())
-			return Array<T>.Empty;
-
-		var copy = new T[@this.Length];
-		@this.AsSpan().CopyTo(copy);
-		return copy;
-	}
-
 	/// <inheritdoc cref="Parallel.Invoke(Action[])"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Parallel"/>.Invoke(@<paramref name="this"/>);</c>
@@ -156,11 +132,11 @@ public static class ArrayExtensions
 		=> Parallel.Invoke(options, @this);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetUpperBound(<paramref name="dimension"/>) - @<paramref name="this"/>.GetLowerBound(<paramref name="dimension"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetUpperBound(<paramref name="dimension"/>) - @<paramref name="this"/>.GetLowerBound(<paramref name="dimension"/>) + 1;</c>
 	/// </remarks>
 	/// <exception cref="IndexOutOfRangeException"/>
-	public static int Length<T>(this T[,] @this, int dimension)
-		=> @this.GetUpperBound(dimension) - @this.GetLowerBound(dimension);
+	public static int Length(this Array @this, int dimension)
+		=> @this.GetUpperBound(dimension) - @this.GetLowerBound(dimension) + 1;
 
 	/// <inheritdoc cref="Array.Reverse{T}(T[])"/>
 	/// <remarks>
@@ -230,11 +206,11 @@ public static class ArrayExtensions
 
 	/// <inheritdoc cref="Convert.ToBase64String(ReadOnlySpan{byte}, Base64FormattingOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; ((ReadOnlySpan&lt;<see cref="byte"/>&gt;)@<paramref name="this"/>).ToBase64(<paramref name="options"/>);</c>
+	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToBase64(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
-		=> ((ReadOnlySpan<byte>)@this).ToBase64(options);
+		=> Convert.ToBase64String(@this, options);
 
 	/// <remarks>
 	/// <c>=&gt; ((ReadOnlySpan&lt;<see cref="byte"/>&gt;)@<paramref name="this"/>).ToBase64Chars(<paramref name="options"/>);</c>
@@ -243,20 +219,12 @@ public static class ArrayExtensions
 	public static char[] ToBase64Chars(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> ((ReadOnlySpan<byte>)@this).ToBase64Chars(options);
 
-	public static string ToHex(this byte[] @this)
-	{
-		const string HEX_CHARS = "0123456789ABCDEF";
-
-		Span<char> chars = stackalloc char[@this.Length * sizeof(char)];
-		var bytes = @this.AsSpan().AsReadOnly();
-		for (var i = 0; i < bytes.Length; ++i)
-		{
-			var c = i * 2;
-			chars[c] = HEX_CHARS[(bytes[i] & 0xf0) >> 4];
-			chars[c + 1] = HEX_CHARS[bytes[i] & 0x0f];
-		}
-		return new string(chars);
-	}
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.AsSpan().AsReadOnly().ToHex();</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToHexString(this byte[] @this)
+		=> @this.AsSpan().AsReadOnly().ToHexString();
 
 	/// <inheritdoc cref="ImmutableQueue.Create{T}(T[])"/>
 	/// <remarks>
@@ -282,30 +250,6 @@ public static class ArrayExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
-
-	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void WaitAny<T>(this Task[] @this)
-		=> Task.WaitAny(@this);
-
-	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, <paramref name="token"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void WaitAny<T>(this Task[] @this, CancellationToken token)
-		=> Task.WaitAny(@this, token);
-
-	/// <inheritdoc cref="Task.WaitAny(Task[], int, CancellationToken)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void WaitAny<T>(this Task[] @this, TimeSpan timeout, CancellationToken token)
-		=> Task.WaitAny(@this, (int)timeout.TotalMilliseconds, token);
 
 	/// <inheritdoc cref="Task.WaitAll(Task[])"/>
 	/// <remarks>
@@ -346,6 +290,30 @@ public static class ArrayExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Task<T[]> WhenAllAsync<T>(this Task<T>[] @this)
 		=> Task.WhenAll(@this);
+
+	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static void WaitAny<T>(this Task[] @this)
+		=> Task.WaitAny(@this);
+
+	/// <inheritdoc cref="Task.WaitAny(Task[], CancellationToken)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, <paramref name="token"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static void WaitAny<T>(this Task[] @this, CancellationToken token)
+		=> Task.WaitAny(@this, token);
+
+	/// <inheritdoc cref="Task.WaitAny(Task[], int, CancellationToken)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Task"/>.WaitAny(@<paramref name="this"/>, (<see cref="int"/>)<paramref name="timeout"/>.TotalMilliseconds, <paramref name="token"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static void WaitAny<T>(this Task[] @this, TimeSpan timeout, CancellationToken token)
+		=> Task.WaitAny(@this, (int)timeout.TotalMilliseconds, token);
 
 	/// <inheritdoc cref="Task.WhenAny(Task[])"/>
 	/// <remarks>

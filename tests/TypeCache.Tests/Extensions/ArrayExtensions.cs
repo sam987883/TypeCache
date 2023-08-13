@@ -4,10 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 using Xunit;
+using static System.FormattableString;
 
 namespace TypeCache.Tests.Extensions;
 
@@ -16,126 +19,213 @@ public class ArrayExtensions
 	[Fact]
 	public void Clear()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var expected = Enumerable.Range(1, 10).ToArray();
+		var actual = Enumerable.Range(1, 10).ToArray();
 
-		intArray.Clear(2, 2);
-		Assert.Equal(new[] { 1, 2, 0, 0, 5, 6 }, intArray);
-		intArray.Clear();
-		Assert.Equal(new[] { 0, 0, 0, 0, 0, 0 }, intArray);
+		Array.Clear(expected, 4, 3);
+		actual.Clear(4, 3);
+
+		Assert.Equal(expected, actual);
+
+		Array.Clear(expected);
+		actual.Clear();
 	}
 
 	[Fact]
 	public void Copy()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var expected = new[] { 1, 2, 3, 4, 5, 6 };
+		var actual = expected.Copy();
 
-		Assert.Equal(intArray, intArray.GetCopy());
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
-	public void Get()
+	public void ForEach()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var expected = Enumerable.Range(0, 10).ToArray();
+		var actual = Enumerable.Range(0, 10).ToArray();
 
-		Assert.Equal(new[] { 3, 4 }, intArray.Get(2..4));
-		Assert.Equal(new[] { 3, 2 }, intArray.Get(3..1));
-		Assert.Empty(intArray.Get(2..2));
-		Assert.Equal(new[] { 3, 4, 5 }, intArray.Get(2..^1));
-		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, intArray.Get(^0..0).ToArray());
-		Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray.Get(0..^0));
+		Array.ForEach(expected, i => expected[i] += 1);
+		actual.ForEach(i => actual[i] += 1);
+
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
-	public void ToArray()
+	public void ForEach_Between()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var expected = Enumerable.Range(1, 10).ToArray();
+		var expectedCount = expected.Length - 1;
+		var actualCount = 0;
+		expected.ForEach(i => expected[i] = i, () => ++actualCount);
 
-		Assert.Equal(new[] { "1", "2", "3", "4", "5", "6" }, intArray.Select(i => i.ToString()));
-		Assert.Equal(new[] { '1', '2', '3', '4', '5', '6' }, intArray.Select(i => char.Parse(i.ToString())));
-		Assert.Equal(Array<char>.Empty, Array<int>.Empty.Select(i => char.Parse(i.ToString())));
+		Assert.Equal(expectedCount, actualCount);
+	}
+
+	[Fact]
+	public void ForEach_ActionRef()
+	{
+		var expected = Enumerable.Range(1, 10).Select(i => i + 1).ToArray();
+		var actual = Enumerable.Range(1, 10).ToArray();
+
+		actual.ForEach(new ActionRef<int>((ref int i) => ++i));
+
+		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void ForEach_ActionRefIndex()
+	{
+		var expected = Enumerable.Range(0, 10).ToArray();
+		var actual = Enumerable.Range(1, 10).ToArray();
+
+		actual.ForEach(new ActionIndexRef<int>((ref int value, int i) => value = i));
+
+		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void ForEach_Index()
+	{
+		var values = Enumerable.Range(0, 10).ToArray();
+
+		values.ForEach((expected, actual) => Assert.Equal(expected, actual));
+	}
+
+	[Fact]
+	public void ForEach_IndexBetween()
+	{
+		var expected = Enumerable.Range(0, 10).ToArray();
+		var expectedCount = expected.Length - 1;
+		var actualCount = 0;
+
+		expected.ForEach((expected, actual) => Assert.Equal(expected, actual), () => ++actualCount);
+		Assert.Equal(expectedCount, actualCount);
+	}
+
+	[Fact]
+	public void FromBase64()
+	{
+		var values = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4\r\nOTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3Bx\r\ncnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmq\r\nq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj\r\n5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==".ToCharArray();
+		var expected = Convert.FromBase64CharArray(values, 0, values.Length);
+		var actual = values.FromBase64();
+
+		Assert.Equal(expected, actual);
+
+		expected = Convert.FromBase64CharArray(values, 12, 20);
+		actual = values.FromBase64(12, 20);
+
+		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void InParallel()
+	{
+		var expected = 0;
+		var actual = 0;
+
+		Parallel.Invoke(() => ++expected, () => expected += 2, () => expected += 3);
+		var actions = new Action[] { () => ++actual, () => actual += 2, () => actual += 3 };
+		actions.InParallel();
+
+		Assert.Equal(expected, actual);
+	}
+
+
+	[Fact]
+	public void Length()
+	{
+		var expected = new[] { 3, 0, 1, 2 };
+		var array = new int[expected[0], expected[1], expected[2], expected[3]];
+		var actual = Enumerable.Range(0, array.Rank).Select(i => array.Length(i)).ToArray();
+
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
 	public void Reverse()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var values = Enumerable.Range(0, 10);
+		var expected = values.Reverse().ToArray();
+		var actual = values.ToArray();
 
-		intArray.Reverse();
-		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, intArray);
+		Array.Reverse(actual);
+
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
 	public void Search()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var array = Enumerable.Range(0, 10).ToArray();
 
-		Assert.Equal(2, intArray.Search(3));
-		Assert.Equal(-1, intArray.Search(-3, Comparer<int>.Default));
-		Assert.Equal(2, intArray.Search(3, 1, 4, Comparer<int>.Default));
-		Assert.Equal(-7, intArray.Search(10));
+		Assert.Equal(Array.BinarySearch(array, 3), array.Search(3));
+		Assert.Equal(Array.BinarySearch(array, 3, Comparer<int>.Default), array.Search(3, Comparer<int>.Default));
+		Assert.Equal(Array.BinarySearch(array, -3), array.Search(-3));
+		Assert.Equal(Array.BinarySearch(array, -3, Comparer<int>.Default), array.Search(-3, Comparer<int>.Default));
+		Assert.Equal(Array.BinarySearch(array, 1, 4, 3), array.Search(3, 1, 4));
+		Assert.Equal(Array.BinarySearch(array, 1, 4, 3, Comparer<int>.Default), array.Search(3, 1, 4, Comparer<int>.Default));
 	}
 
 	[Fact]
 	public void Sort()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var expected = Enumerable.Range(1, 10).ToArray();
+		var actual = Enumerable.Range(1, 10).Reverse().ToArray();
 
-		intArray.Sort();
-		Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, intArray);
-		intArray.Sort(new Comparison<int>((a, b) => a < b ? 1 : a > b ? -1 : 0));
-		Assert.Equal(new[] { 6, 5, 4, 3, 2, 1 }, intArray);
-		intArray.Sort(2, 3, Comparer<int>.Default);
-		Assert.Equal(new[] { 6, 5, 2, 3, 4, 1 }, intArray);
+		Array.Sort(expected);
+		actual.Sort();
+		Assert.Equal(expected, actual);
+
+		var comparison = new Comparison<int>((a, b) => a < b ? 1 : a > b ? -1 : 0);
+		Array.Sort(expected, comparison);
+		actual.Sort(comparison);
+		Assert.Equal(expected, actual);
+
+		Array.Sort(expected, Comparer<int>.Default);
+		actual.Sort(Comparer<int>.Default);
+		Assert.Equal(expected, actual);
+
+		Array.Sort(expected, 3, 5, Comparer<int>.Default);
+		actual.Sort(3, 5, Comparer<int>.Default);
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
 	public void Subarray()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var array = Enumerable.Range(1, 10).ToArray();
 
-		Assert.Equal(new[] { 4, 5, 6 }, intArray.Subarray(3));
-		Assert.Equal(new[] { 4, 5 }, intArray.Subarray(3, 2));
+		Assert.Equal(new[] { 4, 5, 6, 7, 8, 9, 10 }, array.Subarray(3));
+		Assert.Equal(new[] { 4, 5 }, array.Subarray(3, 2));
+		Assert.Throws<IndexOutOfRangeException>(() => array.Subarray(11, 2));
+		Assert.Throws<IndexOutOfRangeException>(() => array.Subarray(9, 2));
+		Assert.Throws<IndexOutOfRangeException>(() => array.Subarray(0, 22));
 	}
 
 	[Fact]
-	public void To()
+	public void ToHexString()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
-		var stringArray = new[] { "1", "2", "3", "4", "5", "6" };
+		var bytes = Encoding.ASCII.GetBytes("ABC abc 123");
+		var expected = Convert.ToHexString(bytes);
+		var actual = bytes.ToHexString();
 
-		Assert.Equal(stringArray, intArray.Select(i => i.ToString()));
-		Assert.Equal(stringArray, intArray.Select((x, i) => (i + 1).ToString()));
-	}
-
-	[Fact]
-	public void ToBoolean()
-	{
-		Assert.True(true.GetBytes().ToBoolean());
-		Assert.False(false.GetBytes().ToBoolean());
-	}
-
-	[Fact]
-	public void ToChar()
-	{
-		Assert.Equal(char.MinValue, char.MinValue.GetBytes().ToChar());
-		Assert.Equal(char.MaxValue, char.MaxValue.GetBytes().ToChar());
-	}
-
-	[Fact]
-	public void ToDouble()
-	{
-		Assert.Equal(double.MinValue, double.MinValue.GetBytes().ToDouble());
-		Assert.Equal(double.MaxValue, double.MaxValue.GetBytes().ToDouble());
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
 	public void ToImmutableQueue()
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var intQueue = intArray.ToImmutableQueue();
 		var stringArray = new[] { "123", "abc", "def" };
+		var stringQueue = stringArray.ToImmutableQueue();
 
-		Assert.False(intArray.ToImmutableQueue().IsEmpty);
-		Assert.False(stringArray.ToImmutableQueue().IsEmpty);
+		Assert.False(intQueue.IsEmpty);
+		Assert.False(stringQueue.IsEmpty);
+		Assert.Equal(intArray, intQueue);
+		Assert.Equal(stringArray, stringQueue);
 		Assert.Equal(ImmutableQueue<int>.Empty, Array<int>.Empty.ToImmutableQueue());
 	}
 
@@ -143,78 +233,37 @@ public class ArrayExtensions
 	public void ToImmutableStack()
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		var intStack = intArray.ToImmutableStack();
 		var stringArray = new[] { "123", "abc", "def" };
+		var stringStack = stringArray.ToImmutableStack();
+		intArray.Reverse();
+		stringArray.Reverse();
 
-		Assert.Equal(intArray[^1], intArray.ToImmutableStack().First());
-		Assert.Equal(stringArray[^1], stringArray.ToImmutableStack().First());
+		Assert.False(intStack.IsEmpty);
+		Assert.False(stringStack.IsEmpty);
+		Assert.Equal(intArray, intStack);
+		Assert.Equal(stringArray, stringStack);
 		Assert.Equal(ImmutableStack<int>.Empty, Array<int>.Empty.ToImmutableStack());
 	}
 
 	[Fact]
-	public void ToInt16()
+	public void ToJSON()
 	{
-		Assert.Equal(short.MinValue, short.MinValue.GetBytes().ToInt16());
-		Assert.Equal(short.MaxValue, short.MaxValue.GetBytes().ToInt16());
+		var array = Enumerable.Range(1, 10).ToArray();
+		var expected = Invariant($"[{string.Join(',', array)}]");
+		var actual = array.ToJSON().ToJsonString();
+
+		Assert.Equal(expected, actual);
 	}
 
 	[Fact]
-	public void ToInt32()
-	{
-		Assert.Equal(int.MinValue, int.MinValue.GetBytes().ToInt32());
-		Assert.Equal(int.MaxValue, int.MaxValue.GetBytes().ToInt32());
-	}
-
-	[Fact]
-	public void ToInt64()
-	{
-		Assert.Equal(long.MinValue, long.MinValue.GetBytes().ToInt64());
-		Assert.Equal(long.MaxValue, long.MaxValue.GetBytes().ToInt64());
-	}
-
-	[Fact]
-	public void ToSingle()
-	{
-		Assert.Equal(float.MinValue, float.MinValue.GetBytes().ToSingle());
-		Assert.Equal(float.MaxValue, float.MaxValue.GetBytes().ToSingle());
-	}
-
-	[Fact]
-	public void ToUInt16()
-	{
-		Assert.Equal(ushort.MinValue, ushort.MinValue.GetBytes().ToUInt16());
-		Assert.Equal(ushort.MaxValue, ushort.MaxValue.GetBytes().ToUInt16());
-	}
-
-	[Fact]
-	public void ToUInt32()
-	{
-		Assert.Equal(uint.MinValue, uint.MinValue.GetBytes().ToUInt32());
-		Assert.Equal(uint.MaxValue, uint.MaxValue.GetBytes().ToUInt32());
-	}
-
-	[Fact]
-	public void ToUInt64()
-	{
-		Assert.Equal(ulong.MinValue, ulong.MinValue.GetBytes().ToUInt64());
-		Assert.Equal(ulong.MaxValue, ulong.MaxValue.GetBytes().ToUInt64());
-	}
-
-	[Fact]
-	public void WaitForAll()
+	public void WaitAll()
 	{
 		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
 
 		arrayOfTasks.WaitAll();
-	}
-
-	[Fact]
-	public void WaitForAny()
-	{
-		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
-		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
-
-		arrayOfTasks.WaitAny<Task>();
-		arrayOfIntTasks.WaitAny<int>();
+		arrayOfTasks.WaitAll(CancellationToken.None);
+		arrayOfTasks.WaitAll(TimeSpan.FromMilliseconds(1), CancellationToken.None);
 	}
 
 	[Fact]
@@ -225,8 +274,17 @@ public class ArrayExtensions
 
 		await arrayOfTasks.WhenAllAsync<Task>();
 		await arrayOfIntTasks.WhenAllAsync();
+	}
 
-		await Task.CompletedTask;
+	[Fact]
+	public void WaitAny()
+	{
+		var arrayOfTasks = new[] { Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask, Task.CompletedTask };
+		var arrayOfIntTasks = new[] { Task.FromResult(1), Task.FromResult(2), Task.FromResult(3), Task.FromResult(4), Task.FromResult(5), Task.FromResult(6) };
+
+		arrayOfTasks.WaitAny<Task>();
+		arrayOfIntTasks.WaitAny<Task>(CancellationToken.None);
+		arrayOfIntTasks.WaitAny<int>(TimeSpan.FromMilliseconds(1), CancellationToken.None);
 	}
 
 	[Fact]
@@ -237,7 +295,5 @@ public class ArrayExtensions
 
 		await arrayOfTasks.WhenAnyAsync<Task>();
 		await arrayOfIntTasks.WhenAnyAsync();
-
-		await Task.CompletedTask;
 	}
 }

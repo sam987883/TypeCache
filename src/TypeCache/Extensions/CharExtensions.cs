@@ -14,6 +14,78 @@ public static class CharExtensions
 	public static UnicodeCategory GetUnicodeCategory(this char @this)
 		=> char.GetUnicodeCategory(@this);
 
+	/// <inheritdoc cref="char.IsAscii(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAscii(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAscii(this char @this)
+		=> char.IsAscii(@this);
+
+	/// <inheritdoc cref="char.IsAsciiDigit(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiDigit(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiDigit(this char @this)
+		=> char.IsAsciiDigit(@this);
+
+	/// <inheritdoc cref="char.IsAsciiHexDigit(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiHexDigit(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiHexDigit(this char @this)
+		=> char.IsAsciiHexDigit(@this);
+
+	/// <inheritdoc cref="char.IsAsciiHexDigitLower(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiHexDigitLower(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiHexDigitLower(this char @this)
+		=> char.IsAsciiHexDigitLower(@this);
+
+	/// <inheritdoc cref="char.IsAsciiHexDigitUpper(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiHexDigitUpper(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiHexDigitUpper(this char @this)
+		=> char.IsAsciiHexDigitUpper(@this);
+
+	/// <inheritdoc cref="char.IsAsciiLetter(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiLetter(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiLetter(this char @this)
+		=> char.IsAsciiLetter(@this);
+
+	/// <inheritdoc cref="char.IsAsciiLetterLower(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiLetterLower(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiLetterLower(this char @this)
+		=> char.IsAsciiLetterLower(@this);
+
+	/// <inheritdoc cref="char.IsAsciiLetterOrDigit(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiLetterOrDigit(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiLetterOrDigit(this char @this)
+		=> char.IsAsciiLetterOrDigit(@this);
+
+	/// <inheritdoc cref="char.IsAsciiLetterUpper(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.IsAsciiLetterUpper(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsAsciiLetterUpper(this char @this)
+		=> char.IsAsciiLetterUpper(@this);
+
 	/// <inheritdoc cref="char.IsControl(char)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.IsControl(@<paramref name="this"/>);</c>
@@ -160,6 +232,14 @@ public static class CharExtensions
 
 	/// <inheritdoc cref="char.ToLower(char)"/>
 	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.ToLower(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static char ToLower(this char @this)
+		=> char.ToLower(@this);
+
+	/// <inheritdoc cref="char.ToLower(char, CultureInfo)"/>
+	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToLower(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -183,6 +263,14 @@ public static class CharExtensions
 		=> char.GetNumericValue(@this);
 
 	/// <inheritdoc cref="char.ToUpper(char)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="char"/>.ToUpper(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static char ToUpper(this char @this)
+		=> char.ToUpper(@this);
+
+	/// <inheritdoc cref="char.ToUpper(char, CultureInfo)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.ToUpper(@<paramref name="this"/>, <paramref name="culture"/>);</c>
 	/// </remarks>

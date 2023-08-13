@@ -10,17 +10,25 @@ namespace TypeCache.Tests.Extensions;
 public class AssertExtensions
 {
 	[Fact]
-	public void Assert()
+	public void AssertEquals()
 	{
 		123456.AssertEquals(123456);
 		"AAA".AssertEquals("AAA");
 		(null as string).AssertEquals(null);
 		"AAA".AssertEquals("AAA", StringComparer.Ordinal);
+		"AAA".AssertEquals("aaa", StringComparison.OrdinalIgnoreCase);
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => 123.AssertEquals(456));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals("bbb"));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertEquals("bbb"));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals("bbb", StringComparer.Ordinal));
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertEquals(null, null));
+	}
+
+	[Fact]
+	public void AssertFalse()
+	{
+		false.AssertFalse();
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => true.AssertFalse());
 	}
 
 	[Fact]
@@ -42,6 +50,21 @@ public class AssertExtensions
 	}
 
 	[Fact]
+	public void AssertNotEquals()
+	{
+		123456.AssertNotEquals(12345);
+		"AAA".AssertNotEquals("AA");
+		(null as string).AssertNotEquals(string.Empty);
+		"AAA".AssertNotEquals("BBB", StringComparer.Ordinal);
+		"AAA".AssertNotEquals("bbb", StringComparison.OrdinalIgnoreCase);
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => 123.AssertNotEquals(123));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "bbb".AssertNotEquals("bbb"));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).AssertNotEquals(null as string));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertNotEquals("AAA", StringComparer.Ordinal));
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => "AAA".AssertNotEquals("AAA", null));
+	}
+
+	[Fact]
 	public void AssertNotNull()
 	{
 		((int?)123456).AssertNotNull();
@@ -58,5 +81,12 @@ public class AssertExtensions
 
 		(a, b).AssertNotSame();
 		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => (a, a).AssertNotSame());
+	}
+
+	[Fact]
+	public void AssertTrue()
+	{
+		true.AssertTrue();
+		Xunit.Assert.Throws<ArgumentOutOfRangeException>(() => false.AssertTrue());
 	}
 }

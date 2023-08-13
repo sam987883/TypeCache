@@ -40,19 +40,27 @@ public static class DateTimeExtensions
 
 	/// <inheritdoc cref="DateOnly.FromDateTime(DateTime)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="DateOnly"/>.FromDateTime(@<paramref name="this.DateTime"/>);</c>
+	/// <c>=&gt; <see cref="DateOnly"/>.FromDateTime(@<paramref name="this"/>.DateTime);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateOnly ToDateOnly(this DateTimeOffset @this)
 		=> DateOnly.FromDateTime(@this.DateTime);
 
+	/// <inheritdoc cref="DateTimeOffset.DateTimeOffset(DateTime)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/> <see cref="DateTimeOffset"/>(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToDateTimeOffset(this DateTime @this)
-		=> @this.Kind switch
-		{
-			DateTimeKind.Local => new DateTimeOffset(@this, TimeZoneInfo.Local.BaseUtcOffset),
-			DateTimeKind.Utc => new DateTimeOffset(@this, TimeZoneInfo.Utc.BaseUtcOffset),
-			_ => new DateTimeOffset(@this)
-		};
+		=> new DateTimeOffset(@this);
+
+	/// <inheritdoc cref="DateTimeOffset.DateTimeOffset(DateTime, TimeSpan)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/> <see cref="DateTimeOffset"/>(@<paramref name="this"/>, <paramref name="offset"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static DateTimeOffset ToDateTimeOffset(this DateTime @this, TimeSpan offset)
+		=> new DateTimeOffset(@this, offset);
 
 	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
 	/// <remarks>

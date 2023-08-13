@@ -37,15 +37,6 @@ public static class AssertExtensions
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {nameof(AssertFalse)}({argument})."));
 	}
 
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void AssertNotSame(this object? @this, object? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,
-		[CallerArgumentExpression("this")] string? argument = null,
-		[CallerMemberName] string? caller = null)
-	{
-		if (object.ReferenceEquals(@this, value))
-			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertNotSame)}({value?.ToString() ?? NULL})."));
-	}
-
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void AssertNotBlank([NotNull] this string? @this,
@@ -71,6 +62,26 @@ public static class AssertExtensions
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotEmpty)}<IEnumerable<{typeof(T).Name}>>()."));
 	}
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void AssertNotEquals(this string? @this, string? value, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+	{
+		if (string.Equals(@this, value, comparisonType))
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this ?? NULL}.{nameof(AssertEquals)}({value ?? NULL})."));
+	}
+
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void AssertNotEquals<T>(this T? @this, T? value, IEqualityComparer<T>? comparer = null,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+	{
+		comparer ??= EqualityComparer<T>.Default;
+
+		if (comparer.Equals(@this, value))
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertNotEquals)}<{typeof(T).Name}>({value?.ToString() ?? NULL})."));
+	}
+
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void AssertNotEmpty<T>([NotNull] this T[]? @this,
@@ -92,6 +103,15 @@ public static class AssertExtensions
 	{
 		if (@this is null)
 			throw new ArgumentNullException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{typeof(T).Name}>()."));
+	}
+
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void AssertNotSame(this object? @this, object? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+	{
+		if (object.ReferenceEquals(@this, value))
+			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {@this?.ToString() ?? NULL}.{nameof(AssertNotSame)}({value?.ToString() ?? NULL})."));
 	}
 
 	/// <exception cref="ArgumentOutOfRangeException"/>

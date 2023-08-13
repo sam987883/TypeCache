@@ -13,6 +13,7 @@ public class EnumExtensions
 	{
 	}
 
+	[Flags]
 	private enum TestEnum
 	{
 		TestValue1 = 1,
@@ -20,7 +21,8 @@ public class EnumExtensions
 		[TestAttribute]
 		[TestAttribute]
 		TestValue2 = 2,
-		TestValue3 = 3,
+		TestValue3 = 4,
+		TestValue4 = 8,
 	}
 
 	[Fact]
@@ -38,7 +40,8 @@ public class EnumExtensions
 	[Fact]
 	public void Name()
 	{
-		Assert.Equal(TestEnum.TestValue2.ToString("G"), TestEnum.TestValue2.Name());
+		Assert.Equal(TestEnum.TestValue2.ToString("F"), TestEnum.TestValue2.Name());
+		Assert.Equal((TestEnum.TestValue2 | TestEnum.TestValue3).ToString("F"), (TestEnum.TestValue2 | TestEnum.TestValue3).Name());
 	}
 
 	[Fact]

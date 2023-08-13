@@ -148,19 +148,26 @@ public static class BitConverterExtensions
 	public static double ToDouble(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToDouble(@this, startIndex);
 
+	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(ushort)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.Int16BitsToHalf(@<paramref name="this"/>);</c>
+	/// </remarks>
+	public static Half ToHalf(this short @this)
+		=> BitConverter.Int16BitsToHalf(@this);
+
+	/// <inheritdoc cref="BitConverter.UInt16BitsToHalf(ushort)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.UInt16BitsToHalf(@<paramref name="this"/>);</c>
+	/// </remarks>
+	public static Half ToHalf(this ushort @this)
+		=> BitConverter.UInt16BitsToHalf(@this);
+
 	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(short)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.Int16BitsToHalf(@<paramref name="this"/>);</c>
 	/// </remarks>
 	public static Half ToInt16(this short @this)
 		=> BitConverter.Int16BitsToHalf(@this);
-
-	/// <inheritdoc cref="BitConverter.HalfToInt16Bits(Half)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.HalfToInt16Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static short ToInt16(this Half @this)
-		=> BitConverter.HalfToInt16Bits(@this);
 
 	/// <inheritdoc cref="BitConverter.ToInt16(ReadOnlySpan{byte})"/>
 	/// <remarks>
@@ -177,6 +184,13 @@ public static class BitConverterExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static short ToInt16(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToInt16(@this, startIndex);
+
+	/// <inheritdoc cref="BitConverter.HalfToInt16Bits(Half)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.HalfToInt16Bits(@<paramref name="this"/>);</c>
+	/// </remarks>
+	public static short ToInt16(this Half @this)
+		=> BitConverter.HalfToInt16Bits(@this);
 
 	/// <inheritdoc cref="BitConverter.SingleToInt32Bits(float)"/>
 	/// <remarks>
@@ -281,20 +295,6 @@ public static class BitConverterExtensions
 	public static string ToText(this byte[] @this, int startIndex, int length)
 		=> BitConverter.ToString(@this, startIndex, length);
 
-	/// <inheritdoc cref="BitConverter.UInt16BitsToHalf(ushort)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.UInt16BitsToHalf(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static Half ToUInt16(this ushort @this)
-		=> BitConverter.UInt16BitsToHalf(@this);
-
-	/// <inheritdoc cref="BitConverter.HalfToUInt16Bits(Half)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.HalfToUInt16Bits(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static ushort ToUInt16(this Half @this)
-		=> BitConverter.HalfToUInt16Bits(@this);
-
 	/// <inheritdoc cref="BitConverter.ToUInt16(ReadOnlySpan{byte})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt16(@<paramref name="this"/>.Span);</c>
@@ -310,6 +310,13 @@ public static class BitConverterExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ushort ToUInt16(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt16(@this, startIndex);
+
+	/// <inheritdoc cref="BitConverter.HalfToUInt16Bits(Half)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.HalfToUInt16Bits(@<paramref name="this"/>);</c>
+	/// </remarks>
+	public static ushort ToUInt16(this Half @this)
+		=> BitConverter.HalfToUInt16Bits(@this);
 
 	/// <inheritdoc cref="BitConverter.ToUInt32(ReadOnlySpan{byte})"/>
 	/// <remarks>
@@ -327,6 +334,14 @@ public static class BitConverterExtensions
 	public static uint ToUInt32(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt32(@this, startIndex);
 
+	/// <inheritdoc cref="BitConverter.SingleToUInt32Bits(float)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.SingleToUInt32Bits(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static uint ToUInt32(this float @this)
+		=> BitConverter.SingleToUInt32Bits(@this);
+
 	/// <inheritdoc cref="BitConverter.ToUInt64(ReadOnlySpan{byte})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.ToUInt64(@<paramref name="this"/>.Span);</c>
@@ -342,4 +357,12 @@ public static class BitConverterExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static ulong ToUInt64(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToUInt64(@this, startIndex);
+
+	/// <inheritdoc cref="BitConverter.DoubleToUInt64Bits(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.DoubleToUInt64Bits(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ulong ToUInt64(this double @this)
+		=> BitConverter.DoubleToUInt64Bits(@this);
 }

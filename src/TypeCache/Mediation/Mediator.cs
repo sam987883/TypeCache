@@ -4,9 +4,6 @@ using System.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
-using static System.Formats.Asn1.AsnWriter;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TypeCache.Mediation;
 
@@ -24,7 +21,7 @@ internal sealed class Mediator : IMediator
 	public async Task ExecuteAsync<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest
 	{
-		var scope = this._ServiceProvider.CreateAsyncScope();
+		await using var scope = this._ServiceProvider.CreateAsyncScope();
 
 		await this.ValidateAsync<REQUEST>(request, token);
 
@@ -34,30 +31,25 @@ internal sealed class Mediator : IMediator
 		try
 		{
 			await rule.ExecuteAsync(request, token);
-
 			if (afterRules?.Any() is true)
 				Task.WaitAll(afterRules.Select(afterRule => afterRule.HandleAsync(request, token)).ToArray(), token);
 		}
 		catch (AggregateException error)
 		{
-			if (this._Logger is not null)
-				error.InnerExceptions
-					.AsArray()
-					.ForEach(exception => this._Logger.LogError(exception, "{mediator}.{function} after rule failure: {message}", nameof(Mediator), nameof(Mediator.ExecuteAsync), exception.Message));
-
-			throw error.InnerExceptions.Count == 1 ? error.InnerException! : error;
+			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ExecuteAsync));
+			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
 			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ExecuteAsync), error.Message);
-			throw;
+			await Task.FromException(error);
 		}
 	}
 
 	public async Task<RESPONSE> MapAsync<REQUEST, RESPONSE>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		var scope = this._ServiceProvider.CreateAsyncScope();
+		await using var scope = this._ServiceProvider.CreateAsyncScope();
 
 		await this.ValidateAsync<REQUEST>(request, token);
 
@@ -75,18 +67,16 @@ internal sealed class Mediator : IMediator
 		}
 		catch (AggregateException error)
 		{
-			if (this._Logger is not null)
-				error.InnerExceptions
-					.AsArray()
-					.ForEach(exception => this._Logger.LogError(exception, "{mediator}.{function} after rule failure: {message}", nameof(Mediator), nameof(Mediator.MapAsync), exception.Message));
-
-			throw error.InnerExceptions.Count == 1 ? error.InnerException! : error;
+			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.MapAsync));
+			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
 			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.MapAsync), error.Message);
-			throw;
+			await Task.FromException(error);
 		}
+
+		return default!;
 	}
 
 	public Task<RESPONSE> MapAsync<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default)
@@ -101,7 +91,8 @@ internal sealed class Mediator : IMediator
 	{
 		request.AssertNotNull();
 
-		var scope = this._ServiceProvider.CreateAsyncScope();
+		await using var scope = this._ServiceProvider.CreateAsyncScope();
+
 		var validationRules = scope.ServiceProvider.GetService<IEnumerable<IValidationRule<REQUEST>>>();
 		if (validationRules?.Any() is not true)
 			await Task.CompletedTask;
@@ -112,16 +103,13 @@ internal sealed class Mediator : IMediator
 		}
 		catch (AggregateException error)
 		{
-			if (this._Logger is not null)
-				error.InnerExceptions
-					.AsArray()
-					.ForEach(exception => this._Logger.LogError(exception, "{mediator}.{function} after rule failure: {message}", nameof(Mediator), nameof(Mediator.ValidateAsync), exception.Message));
-			throw error.InnerExceptions.Count == 1 ? error.InnerException! : error;
+			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ValidateAsync));
+			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
 			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ValidateAsync), error.Message);
-			throw;
+			await Task.FromException(error);
 		}
 	}
 }

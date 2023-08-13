@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections;
 using TypeCache.Extensions;
 
 namespace TypeCache.Collections;
 
-public readonly struct CustomEnumerable<T> : IEnumerable<T>
+public readonly struct CustomEnumerable<T>
 {
 	private readonly Func<IEnumerator<T>> _GetEnumerator;
 
@@ -19,9 +18,5 @@ public readonly struct CustomEnumerable<T> : IEnumerable<T>
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public IEnumerator<T> GetEnumerator()
-		=> this._GetEnumerator();
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	IEnumerator IEnumerable.GetEnumerator()
 		=> this._GetEnumerator();
 }
