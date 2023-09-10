@@ -10,7 +10,6 @@ using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 
@@ -18,8 +17,133 @@ namespace TypeCache.Utilities;
 
 internal static class TypeStore
 {
+	public static IReadOnlyList<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
+	{
+		(typeof(Array).TypeHandle, CollectionType.Array),
+		(typeof(ArrayList).TypeHandle, CollectionType.ArrayList),
+		(typeof(BitArray).TypeHandle, CollectionType.BitArray),
+		(typeof(BlockingCollection<>).TypeHandle, CollectionType.BlockingCollection),
+		(typeof(ConcurrentBag<>).TypeHandle, CollectionType.ConcurrentBag),
+		(typeof(ConcurrentDictionary<,>).TypeHandle, CollectionType.ConcurrentDictionary),
+		(typeof(ConcurrentQueue<>).TypeHandle, CollectionType.ConcurrentQueue),
+		(typeof(ConcurrentStack<>).TypeHandle, CollectionType.ConcurrentStack),
+		(typeof(Hashtable).TypeHandle, CollectionType.Hashtable),
+		(typeof(HybridDictionary).TypeHandle, CollectionType.HybridDictionary),
+		(typeof(ImmutableArray<>).TypeHandle, CollectionType.ImmutableArray),
+		(typeof(ImmutableSortedDictionary<,>).TypeHandle, CollectionType.ImmutableSortedDictionary),
+		(typeof(IImmutableDictionary<,>).TypeHandle, CollectionType.ImmutableDictionary),
+		(typeof(ImmutableSortedSet<>).TypeHandle, CollectionType.ImmutableSortedSet),
+		(typeof(IImmutableSet<>).TypeHandle, CollectionType.ImmutableSet),
+		(typeof(IImmutableList<>).TypeHandle, CollectionType.ImmutableList),
+		(typeof(IImmutableQueue<>).TypeHandle, CollectionType.ImmutableQueue),
+		(typeof(IImmutableStack<>).TypeHandle, CollectionType.ImmutableStack),
+		(typeof(KeyedCollection<,>).TypeHandle, CollectionType.KeyedCollection),
+		(typeof(LinkedList<>).TypeHandle, CollectionType.LinkedList),
+		(typeof(ListDictionary).TypeHandle, CollectionType.ListDictionary),
+		(typeof(NameObjectCollectionBase).TypeHandle, CollectionType.NameObjectCollection),
+		(typeof(NameValueCollection).TypeHandle, CollectionType.NameValueCollection),
+		(typeof(ObservableCollection<>).TypeHandle, CollectionType.ObservableCollection),
+		(typeof(IOrderedDictionary).TypeHandle, CollectionType.OrderedDictionary),
+		(typeof(PriorityQueue<,>).TypeHandle, CollectionType.PriorityQueue),
+		(typeof(Queue<>).TypeHandle, CollectionType.Queue),
+		(typeof(Queue).TypeHandle, CollectionType.Queue),
+		(typeof(ReadOnlyObservableCollection<>).TypeHandle, CollectionType.ReadOnlyObservableCollection),
+		(typeof(ReadOnlyCollection<>).TypeHandle, CollectionType.ReadOnlyCollection),
+		(typeof(ReadOnlyCollectionBase).TypeHandle, CollectionType.ReadOnlyCollection),
+		(typeof(SortedDictionary<,>).TypeHandle, CollectionType.SortedDictionary),
+		(typeof(SortedList<,>).TypeHandle, CollectionType.SortedList),
+		(typeof(SortedList).TypeHandle, CollectionType.SortedList),
+		(typeof(SortedSet<>).TypeHandle, CollectionType.SortedSet),
+		(typeof(Stack<>).TypeHandle, CollectionType.Stack),
+		(typeof(Stack).TypeHandle, CollectionType.Stack),
+		(typeof(StringCollection).TypeHandle, CollectionType.StringCollection),
+		(typeof(Collection<>).TypeHandle, CollectionType.Collection),
+		(typeof(CollectionBase).TypeHandle, CollectionType.Collection),
+		(typeof(IReadOnlySet<>).TypeHandle, CollectionType.ReadOnlySet),
+		(typeof(ISet<>).TypeHandle, CollectionType.Set),
+		(typeof(IDictionary<,>).TypeHandle, CollectionType.Dictionary),
+		(typeof(IReadOnlyDictionary<,>).TypeHandle, CollectionType.ReadOnlyDictionary),
+		(typeof(IList<>).TypeHandle, CollectionType.List),
+		(typeof(IReadOnlyList<>).TypeHandle, CollectionType.ReadOnlyList),
+		(typeof(IReadOnlyCollection<>).TypeHandle, CollectionType.ReadOnlyCollection),
+		(typeof(ICollection<>).TypeHandle, CollectionType.Collection)
+	}.ToImmutableArray();
+
+	public static IReadOnlyList<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
+	{
+		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
+		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
+		(typeof(DataRow).TypeHandle, ObjectType.DataRow),
+		(typeof(DataRowView).TypeHandle, ObjectType.DataRowView),
+		(typeof(DataSet).TypeHandle, ObjectType.DataSet),
+		(typeof(DataTable).TypeHandle, ObjectType.DataTable),
+		(typeof(Delegate).TypeHandle, ObjectType.Delegate),
+		(typeof(Exception).TypeHandle, ObjectType.Exception),
+		(typeof(IAsyncResult).TypeHandle, ObjectType.AsyncResult),
+		(typeof(JsonDocument).TypeHandle, ObjectType.JsonDocument),
+		(typeof(StringBuilder).TypeHandle, ObjectType.StringBuilder),
+		(typeof(Stream).TypeHandle, ObjectType.Stream),
+		(typeof(Task).TypeHandle, ObjectType.Task),
+		(typeof(Type).TypeHandle, ObjectType.Type),
+		(typeof(WeakReference).TypeHandle, ObjectType.WeakReference),
+		(typeof(void).TypeHandle, ObjectType.Void),
+		(typeof(Memory<>).TypeHandle, ObjectType.Memory),
+		(typeof(ReadOnlyMemory<>).TypeHandle, ObjectType.ReadOnlyMemory),
+		(typeof(ReadOnlySpan<>).TypeHandle, ObjectType.ReadOnlySpan),
+		(typeof(Span<>).TypeHandle, ObjectType.Span),
+		(typeof(ValueTask<>).TypeHandle, ObjectType.ValueTask),
+		(typeof(WeakReference<>).TypeHandle, ObjectType.WeakReference),
+		(typeof(IAsyncEnumerable<>).TypeHandle, ObjectType.AsyncEnumerable),
+		(typeof(IAsyncEnumerator<>).TypeHandle, ObjectType.AsyncEnumerator),
+		(typeof(IEnumerable).TypeHandle, ObjectType.Enumerable),
+		(typeof(IEnumerator).TypeHandle, ObjectType.Enumerator),
+		(typeof(IObservable<>).TypeHandle, ObjectType.Observable),
+		(typeof(IObserver<>).TypeHandle, ObjectType.Observer),
+		(typeof(Lazy<>).TypeHandle, ObjectType.Lazy),
+		(typeof(Lazy<,>).TypeHandle, ObjectType.Lazy),
+		(typeof(Range).TypeHandle, ObjectType.Range),
+		(typeof(Task).TypeHandle, ObjectType.Task),
+		(typeof(Task<>).TypeHandle, ObjectType.Task),
+		(typeof(Tuple<>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,,,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Tuple<,,,,,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(ValueTask).TypeHandle, ObjectType.ValueTask),
+		(typeof(ValueTask<>).TypeHandle, ObjectType.ValueTask),
+		(typeof(ValueTuple).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,,,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,,,,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,,,,,>).TypeHandle, ObjectType.ValueTuple),
+		(typeof(ValueTuple<,,,,,,,>).TypeHandle, ObjectType.ValueTuple)
+	};
+
 	static TypeStore()
 	{
+		CollectionTypes = new LazyDictionary<RuntimeTypeHandle, CollectionType>(handle =>
+		{
+			var type = handle.ToType();
+
+			if (type.IsArray)
+				return CollectionType.Array;
+
+			var count = CollectionTypeMap.Count;
+			for (var i = 0; i < count; ++i)
+			{
+				var map = CollectionTypeMap[i];
+				if (type.Implements(map.Handle.ToType()))
+					return map.CollectionType;
+			}
+
+			return CollectionType.None;
+		});
 		DefaultValueTypeConstructorInvokes = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
 			handle.ToType().ToNewExpression().As<object>().Lambda<Func<object>>().Compile());
 		FieldGetInvokes = new();
@@ -31,208 +155,62 @@ internal static class TypeStore
 				ConstructorInfo constructorInfo => constructorInfo.ToInvokeLambdaExpression().Compile(),
 				_ => throw new UnreachableException("Method or Constructor not found.")
 			});
-		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle => handle.ToType() switch
+		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle =>
 		{
-			var type when type == typeof(object) => ObjectType.Object,
-			var type when type == typeof(string) => ObjectType.String,
-			{ IsPrimitive: true } => ObjectType.Primitive,
-			{ IsArray: true } => ObjectType.Array,
-			{ IsEnum: true } => ObjectType.Enum,
-			{ IsClass: true } type when tryGetClassObjectType(type, out var objectType) => objectType,
-			var type when type.IsAssignableTo<IAsyncResult>() => ObjectType.AsyncResult,
-			{ IsGenericType: true } type => getGenericObjectType(type.ToGenericTypeDefinition()!),
-			_ => ObjectType.Unknown
-		});
-		SystemTypes = new Dictionary<RuntimeTypeHandle, SystemType>(141)
-		{
-			{ typeof(Action).TypeHandle, SystemType.Action },
-			{ typeof(Action<>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(Action<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Action },
-			{ typeof(bool).TypeHandle, SystemType.Boolean },
-			{ typeof(byte).TypeHandle, SystemType.Byte },
-			{ typeof(char).TypeHandle, SystemType.Char },
-			{ typeof(DateOnly).TypeHandle, SystemType.DateOnly },
-			{ typeof(DateTime).TypeHandle, SystemType.DateTime },
-			{ typeof(DateTimeOffset).TypeHandle, SystemType.DateTimeOffset },
-			{ typeof(DBNull).TypeHandle, SystemType.DBNull },
-			{ typeof(decimal).TypeHandle, SystemType.Decimal },
-			{ typeof(double).TypeHandle, SystemType.Double },
-			{ typeof(Func<>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Func<,,,,,,,,,,,,,,,,>).TypeHandle, SystemType.Func },
-			{ typeof(Guid).TypeHandle, SystemType.Guid },
-			{ typeof(Half).TypeHandle, SystemType.Half },
-			{ typeof(Index).TypeHandle, SystemType.Index },
-			{ typeof(Int128).TypeHandle, SystemType.Int128 },
-			{ typeof(short).TypeHandle, SystemType.Int16 },
-			{ typeof(int).TypeHandle, SystemType.Int32 },
-			{ typeof(long).TypeHandle, SystemType.Int64 },
-			{ typeof(IntPtr).TypeHandle, SystemType.IntPtr },
-			{ typeof(Lazy<>).TypeHandle, SystemType.Lazy },
-			{ typeof(Lazy<,>).TypeHandle, SystemType.Lazy },
-			{ typeof(Memory<>).TypeHandle, SystemType.Memory },
-			{ typeof(Nullable<>).TypeHandle, SystemType.Nullable },
-			{ typeof(object).TypeHandle, SystemType.Object },
-			{ typeof(Range).TypeHandle, SystemType.Range },
-			{ typeof(ReadOnlyMemory<>).TypeHandle, SystemType.ReadOnlyMemory },
-			{ typeof(ReadOnlySpan<>).TypeHandle, SystemType.ReadOnlySpan },
-			{ typeof(sbyte).TypeHandle, SystemType.SByte },
-			{ typeof(float).TypeHandle, SystemType.Single },
-			{ typeof(Span<>).TypeHandle, SystemType.Span },
-			{ typeof(string).TypeHandle, SystemType.String },
-			{ typeof(TimeOnly).TypeHandle, SystemType.TimeOnly },
-			{ typeof(TimeSpan).TypeHandle, SystemType.TimeSpan },
-			{ typeof(Tuple).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Tuple<,,,,,,,>).TypeHandle, SystemType.Tuple },
-			{ typeof(Type).TypeHandle, SystemType.Type },
-			{ typeof(UInt128).TypeHandle, SystemType.UInt128 },
-			{ typeof(ushort).TypeHandle, SystemType.UInt16 },
-			{ typeof(uint).TypeHandle, SystemType.UInt32 },
-			{ typeof(ulong).TypeHandle, SystemType.UInt64 },
-			{ typeof(UIntPtr).TypeHandle, SystemType.UIntPtr },
-			{ typeof(Uri).TypeHandle, SystemType.Uri },
-			{ typeof(ValueTuple).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(ValueTuple<,,,,,,,>).TypeHandle, SystemType.ValueTuple },
-			{ typeof(void).TypeHandle, SystemType.Void },
-			{ typeof(WeakReference).TypeHandle, SystemType.WeakReference },
-			{ typeof(WeakReference<>).TypeHandle, SystemType.WeakReference },
-			{ typeof(ArrayList).TypeHandle, SystemType.ArrayList },
-			{ typeof(BitArray).TypeHandle, SystemType.BitArray },
-			{ typeof(BlockingCollection<>).TypeHandle, SystemType.BlockingCollection },
-			{ typeof(Collection<>).TypeHandle, SystemType.Collection },
-			{ typeof(ConcurrentBag<>).TypeHandle, SystemType.ConcurrentBag },
-			{ typeof(ConcurrentDictionary<,>).TypeHandle, SystemType.ConcurrentDictionary },
-			{ typeof(ConcurrentQueue<>).TypeHandle, SystemType.ConcurrentQueue },
-			{ typeof(Dictionary<,>).TypeHandle, SystemType.Dictionary },
-			{ typeof(HashSet<>).TypeHandle, SystemType.HashSet },
-			{ typeof(Hashtable).TypeHandle, SystemType.Hashtable },
-			{ typeof(HybridDictionary).TypeHandle, SystemType.HybridDictionary },
-			{ typeof(ImmutableArray<>).TypeHandle, SystemType.ImmutableArray },
-			{ typeof(ImmutableDictionary<,>).TypeHandle, SystemType.ImmutableDictionary },
-			{ typeof(ImmutableHashSet<>).TypeHandle, SystemType.ImmutableHashSet },
-			{ typeof(ImmutableList<>).TypeHandle, SystemType.ImmutableList },
-			{ typeof(ImmutableQueue<>).TypeHandle, SystemType.ImmutableQueue },
-			{ typeof(ImmutableSortedDictionary<,>).TypeHandle, SystemType.ImmutableSortedDictionary },
-			{ typeof(ImmutableSortedSet<>).TypeHandle, SystemType.ImmutableSortedSet },
-			{ typeof(ImmutableStack<>).TypeHandle, SystemType.ImmutableStack },
-			{ typeof(KeyedCollection<,>).TypeHandle, SystemType.KeyedCollection },
-			{ typeof(LinkedList<>).TypeHandle, SystemType.LinkedList },
-			{ typeof(List<>).TypeHandle, SystemType.List },
-			{ typeof(ListDictionary).TypeHandle, SystemType.ListDictionary },
-			{ typeof(NameObjectCollectionBase).TypeHandle, SystemType.NameObjectCollectionBase },
-			{ typeof(NameValueCollection).TypeHandle, SystemType.NameValueCollection },
-			{ typeof(ObservableCollection<>).TypeHandle, SystemType.ObservableCollection },
-			{ typeof(OrderedDictionary).TypeHandle, SystemType.OrderedDictionary },
-			{ typeof(PriorityQueue<,>).TypeHandle, SystemType.PriorityQueue },
-			{ typeof(Queue<>).TypeHandle, SystemType.Queue },
-			{ typeof(ReadOnlyCollection<>).TypeHandle, SystemType.ReadOnlyCollection },
-			{ typeof(ReadOnlyDictionary<,>).TypeHandle, SystemType.ReadOnlyDictionary },
-			{ typeof(ReadOnlyObservableCollection<>).TypeHandle, SystemType.ReadOnlyObservableCollection },
-			{ typeof(SortedDictionary<,>).TypeHandle, SystemType.SortedDictionary },
-			{ typeof(SortedList<,>).TypeHandle, SystemType.SortedList },
-			{ typeof(SortedSet<>).TypeHandle, SystemType.SortedSet },
-			{ typeof(Stack<>).TypeHandle, SystemType.Stack },
-			{ typeof(StringCollection).TypeHandle, SystemType.StringCollection },
-			{ typeof(StringDictionary).TypeHandle, SystemType.StringDictionary },
-			{ typeof(BigInteger).TypeHandle, SystemType.BigInteger },
-			{ typeof(JsonDocument).TypeHandle, SystemType.JsonDocument },
-			{ typeof(JsonElement).TypeHandle, SystemType.JsonElement },
-			{ typeof(JsonArray).TypeHandle, SystemType.JsonArray },
-			{ typeof(JsonObject).TypeHandle, SystemType.JsonObject },
-			{ typeof(JsonValue).TypeHandle, SystemType.JsonValue },
-			{ typeof(Task).TypeHandle, SystemType.Task },
-			{ typeof(Task<>).TypeHandle, SystemType.Task },
-			{ typeof(ValueTask).TypeHandle, SystemType.ValueTask },
-			{ typeof(ValueTask<>).TypeHandle, SystemType.ValueTask },
-		}.ToImmutableDictionary();
+			var type = handle.ToType();
 
-		static bool tryGetClassObjectType(Type type, out ObjectType objectType)
-		{
-			objectType = type switch
+			if (type.IsPointer)
+				return ObjectType.Pointer;
+
+			if (type == typeof(object))
+				return ObjectType.Object;
+
+			if (type.IsPrimitive || type.GetDataType() is not ScalarType.None)
+				return ObjectType.DataType;
+
+			var count = ObjectTypeMap.Count;
+			for (var i = 0; i < count; ++i)
 			{
-				_ when type.IsAssignableTo<StringBuilder>() => ObjectType.StringBuilder,
-				_ when type.IsAssignableTo<Attribute>() => ObjectType.Attribute,
-				_ when type.IsAssignableTo<DataColumn>() => ObjectType.DataColumn,
-				_ when type.IsAssignableTo<DataRow>() => ObjectType.DataRow,
-				_ when type.IsAssignableTo<DataRowView>() => ObjectType.DataRowView,
-				_ when type.IsAssignableTo<DataSet>() => ObjectType.DataSet,
-				_ when type.IsAssignableTo<DataTable>() => ObjectType.DataTable,
-				_ when type.IsAssignableTo<Delegate>() => ObjectType.Delegate,
-				_ when type.IsAssignableTo<Exception>() => ObjectType.Exception,
-				_ when type.IsAssignableTo<JsonNode>() => ObjectType.JsonNode,
-				_ when type.IsAssignableTo<OrderedDictionary>() => ObjectType.OrderedDictionary,
-				_ when type.IsAssignableTo<Stream>() => ObjectType.Stream,
-				_ => ObjectType.Unknown
-			};
-			return objectType == ObjectType.Unknown;
-		}
+				var map = ObjectTypeMap[i];
+				if (type.Implements(map.Handle.ToType()))
+					return map.ObjectType;
+			}
 
-		static ObjectType getGenericObjectType(Type type) => type switch
+			return ObjectType.Unknown;
+		});
+		DataTypes = new Dictionary<RuntimeTypeHandle, ScalarType>(30)
 		{
-			null => ObjectType.Unknown,
-			_ when type.IsOrImplements(typeof(IImmutableDictionary<,>)) => ObjectType.ImmutableDictionary,
-			_ when type.IsOrImplements(typeof(IImmutableSet<>)) => ObjectType.ImmutableSet,
-			_ when type.IsOrImplements(typeof(IImmutableList<>)) => ObjectType.ImmutableList,
-			_ when type.IsOrImplements(typeof(IImmutableQueue<>)) => ObjectType.ImmutableQueue,
-			_ when type.IsOrImplements(typeof(IImmutableStack<>)) => ObjectType.ImmutableStack,
-			_ when type.IsOrImplements(typeof(IReadOnlyDictionary<,>)) => ObjectType.ReadOnlyDictionary,
-			_ when type.IsOrImplements(typeof(IReadOnlySet<>)) => ObjectType.ReadOnlySet,
-			_ when type.IsOrImplements(typeof(IReadOnlyList<>)) => ObjectType.ReadOnlyList,
-			_ when type.IsOrImplements(typeof(IReadOnlyCollection<>)) => ObjectType.ReadOnlyCollection,
-			_ when type.IsOrImplements(typeof(IDictionary<,>)) => ObjectType.Dictionary,
-			_ when type.IsOrImplements(typeof(ISet<>)) => ObjectType.Set,
-			_ when type.IsOrImplements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
-			_ when type.IsOrImplements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
-			_ when type.IsOrImplements(typeof(IList<>)) => ObjectType.List,
-			_ when type.IsOrImplements(typeof(ICollection<>)) => ObjectType.Collection,
-			_ when type.IsOrImplements(typeof(IEnumerable<>)) => ObjectType.Enumerable,
-			_ when type.IsOrImplements(typeof(IEnumerator<>)) => ObjectType.Enumerator,
-			_ when type.IsOrImplements(typeof(IObservable<>)) => ObjectType.Observable,
-			_ when type.IsOrImplements(typeof(IObserver<>)) => ObjectType.Observer,
-			_ => ObjectType.Unknown
-		};
+			{ typeof(BigInteger).TypeHandle, ScalarType.BigInteger },
+			{ typeof(bool).TypeHandle, ScalarType.Boolean },
+			{ typeof(byte).TypeHandle, ScalarType.Byte },
+			{ typeof(char).TypeHandle, ScalarType.Char },
+			{ typeof(DateOnly).TypeHandle, ScalarType.DateOnly },
+			{ typeof(DateTime).TypeHandle, ScalarType.DateTime },
+			{ typeof(DateTimeOffset).TypeHandle, ScalarType.DateTimeOffset },
+			{ typeof(DBNull).TypeHandle, ScalarType.DBNull },
+			{ typeof(decimal).TypeHandle, ScalarType.Decimal },
+			{ typeof(double).TypeHandle, ScalarType.Double },
+			{ typeof(Enum).TypeHandle, ScalarType.Enum },
+			{ typeof(Guid).TypeHandle, ScalarType.Guid },
+			{ typeof(Half).TypeHandle, ScalarType.Half },
+			{ typeof(Index).TypeHandle, ScalarType.Index },
+			{ typeof(Int128).TypeHandle, ScalarType.Int128 },
+			{ typeof(short).TypeHandle, ScalarType.Int16 },
+			{ typeof(int).TypeHandle, ScalarType.Int32 },
+			{ typeof(long).TypeHandle, ScalarType.Int64 },
+			{ typeof(IntPtr).TypeHandle, ScalarType.IntPtr },
+			{ typeof(sbyte).TypeHandle, ScalarType.SByte },
+			{ typeof(float).TypeHandle, ScalarType.Single },
+			{ typeof(string).TypeHandle, ScalarType.String },
+			{ typeof(TimeOnly).TypeHandle, ScalarType.TimeOnly },
+			{ typeof(TimeSpan).TypeHandle, ScalarType.TimeSpan },
+			{ typeof(UInt128).TypeHandle, ScalarType.UInt128 },
+			{ typeof(ushort).TypeHandle, ScalarType.UInt16 },
+			{ typeof(uint).TypeHandle, ScalarType.UInt32 },
+			{ typeof(ulong).TypeHandle, ScalarType.UInt64 },
+			{ typeof(UIntPtr).TypeHandle, ScalarType.UIntPtr },
+			{ typeof(Uri).TypeHandle, ScalarType.Uri }
+		}.ToImmutableDictionary();
 	}
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorInvokes { get; }
@@ -243,7 +221,9 @@ internal static class TypeStore
 
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object?[]?, object?>> MethodInvokes { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
+	internal static IReadOnlyDictionary<RuntimeTypeHandle, CollectionType> CollectionTypes { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, SystemType> SystemTypes { get; }
+	internal static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> DataTypes { get; }
+
+	internal static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
 }

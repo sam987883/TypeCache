@@ -8,16 +8,16 @@ namespace TypeCache.Data.Extensions;
 public static class EnumExtensions
 {
 	[DebuggerHidden]
-	public static bool IsSQLType(this SystemType @this) => @this switch
+	public static bool IsSQLType(this ScalarType @this) => @this switch
 	{
-		SystemType.Boolean
-		or SystemType.SByte or SystemType.Byte
-		or SystemType.Int16 or SystemType.Int32 or SystemType.Int64
-		or SystemType.UInt16 or SystemType.UInt32 or SystemType.UInt64
-		or SystemType.Single or SystemType.Double or SystemType.Decimal
-		or SystemType.DateOnly or SystemType.DateTime or SystemType.DateTimeOffset
-		or SystemType.TimeOnly or SystemType.TimeSpan
-		or SystemType.Guid or SystemType.Char or SystemType.String => true,
+		ScalarType.Boolean
+		or ScalarType.SByte or ScalarType.Byte
+		or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
+		or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64
+		or ScalarType.Single or ScalarType.Double or ScalarType.Decimal
+		or ScalarType.DateOnly or ScalarType.DateTime or ScalarType.DateTimeOffset
+		or ScalarType.TimeOnly or ScalarType.TimeSpan
+		or ScalarType.Guid or ScalarType.Char or ScalarType.String => true,
 		_ => false
 	};
 

@@ -16,7 +16,7 @@ public enum BinaryOperator
 	/// <remarks><c>a / b</c></remarks>
 	Divide,
 	/// <inheritdoc cref="Expression.Modulo(Expression, Expression)"/>
-	/// <remarks><c>a % 6</c></remarks>
+	/// <remarks><c>a % b</c></remarks>
 	Modulus,
 	/// <inheritdoc cref="Expression.Multiply(Expression, Expression)"/>
 	/// <remarks><c>a * b</c></remarks>
@@ -52,13 +52,13 @@ public enum BinaryOperator
 	/// <remarks><c>a == b</c></remarks>
 	EqualTo,
 	/// <inheritdoc cref="Expression.ReferenceEqual(Expression, Expression)"/>
-	/// <remarks><c>a === b</c></remarks>
+	/// <remarks><c>a is b</c></remarks>
 	ReferenceEqualTo,
 	/// <inheritdoc cref="Expression.NotEqual(Expression, Expression)"/>
 	/// <remarks><c>a != b</c></remarks>
 	NotEqualTo,
 	/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
-	/// <remarks><c>a !== b</c></remarks>
+	/// <remarks><c>a is not b</c></remarks>
 	ReferenceNotEqualTo,
 	/// <inheritdoc cref="Expression.GreaterThan(Expression, Expression)"/>
 	/// <remarks><c>a &gt; b</c></remarks>

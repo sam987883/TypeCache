@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Primitives;
 using TypeCache.Collections;
 using static System.Globalization.CultureInfo;
 
@@ -333,6 +334,22 @@ public static class StringExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool Right(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
 		=> @this.EndsWith(text, comparison);
+
+	/// <inheritdoc cref="StringSegment.StringSegment(string?)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringSegment Segment(this string? @this)
+		=> new(@this);
+
+	/// <inheritdoc cref="StringSegment.StringSegment(string, int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, <paramref name="offset"/>, <paramref name="count"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringSegment Segment(this string @this, int offset, int count)
+		=> new(@this, offset, count);
 
 	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
 	{

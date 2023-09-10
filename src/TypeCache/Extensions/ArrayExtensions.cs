@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Immutable;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Collections;
-using TypeCache.Extensions;
 
 namespace TypeCache.Extensions;
 
@@ -203,6 +201,22 @@ public static class ArrayExtensions
 		Array.Copy(@this, sourceIndex, array, 0, array.Length);
 		return array;
 	}
+
+	/// <inheritdoc cref="ArraySegment{T}.ArraySegment(T[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ArraySegment<T> Segment<T>(this T[] @this)
+		=> new(@this);
+
+	/// <inheritdoc cref="ArraySegment{T}.ArraySegment(T[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, <paramref name="offset"/>, <paramref name="count"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ArraySegment<T> Segment<T>(this T[] @this, int offset, int count)
+		=> new(@this, offset, count);
 
 	/// <inheritdoc cref="Convert.ToBase64String(ReadOnlySpan{byte}, Base64FormattingOptions)"/>
 	/// <remarks>

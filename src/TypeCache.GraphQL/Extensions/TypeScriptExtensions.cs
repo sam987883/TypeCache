@@ -1,9 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using GraphQL.Types;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Types;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
@@ -15,16 +18,16 @@ public static class TypeScriptExtensions
 		{
 			NonNullGraphType graphType => graphType.ResolvedType!.GetTypeScriptType(list),
 			ListGraphType graphType => graphType.ResolvedType!.GetTypeScriptType(true),
-			BooleanGraphType when list => "boolean[]",
-			BooleanGraphType => "boolean",
-			SByteGraphType or ShortGraphType or IntGraphType or ByteGraphType or UShortGraphType
-			or FloatGraphType or DecimalGraphType or TimeSpanMillisecondsGraphType or TimeSpanSecondsGraphType when list => "number[]",
-			SByteGraphType or ShortGraphType or IntGraphType or ByteGraphType or UShortGraphType
-			or FloatGraphType or DecimalGraphType or TimeSpanMillisecondsGraphType or TimeSpanSecondsGraphType => "number",
-			UIntGraphType or LongGraphType or ULongGraphType or BigIntGraphType when list => "bigint[]",
-			UIntGraphType or LongGraphType or ULongGraphType or BigIntGraphType => "bigint",
-			StringGraphType or IdGraphType or GuidGraphType or DateGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType when list => "string[]",
-			StringGraphType or IdGraphType or GuidGraphType or DateGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType => "string",
+			GraphQLBooleanType when list => "boolean[]",
+			GraphQLBooleanType => "boolean",
+			GraphQLNumberType<sbyte> or GraphQLNumberType<short> or GraphQLNumberType<int> or GraphQLNumberType<byte> or GraphQLNumberType<ushort>
+			or GraphQLNumberType<Half> or GraphQLNumberType<float> or GraphQLNumberType<double> or GraphQLNumberType<decimal> when list => "number[]",
+			GraphQLNumberType<sbyte> or GraphQLNumberType<short> or GraphQLNumberType<int> or GraphQLNumberType<byte> or GraphQLNumberType<ushort>
+			or GraphQLNumberType<Half> or GraphQLNumberType<float> or GraphQLNumberType<double> or GraphQLNumberType<decimal> => "number",
+			GraphQLNumberType<int> or GraphQLNumberType<long> or GraphQLNumberType<ulong> or GraphQLNumberType<BigInteger> when list => "bigint[]",
+			GraphQLNumberType<int> or GraphQLNumberType<long> or GraphQLNumberType<ulong> or GraphQLNumberType<BigInteger> => "bigint",
+			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLStringType<DateOnly> or GraphQLStringType<DateTime> or GraphQLStringType<DateTimeOffset> or GraphQLUriType when list => "string[]",
+			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLStringType<DateOnly> or GraphQLStringType<DateTime> or GraphQLStringType<DateTimeOffset> or GraphQLUriType => "string",
 			_ when list => Invariant($"{@this.Name}[]"),
 			_ => @this.Name
 		};

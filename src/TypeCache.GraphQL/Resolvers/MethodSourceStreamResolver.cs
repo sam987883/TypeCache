@@ -18,11 +18,11 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 
 	public MethodSourceStreamResolver(MethodInfo methodInfo)
 	{
-		var returnsObservable = methodInfo.ReturnType.IsOrImplements(typeof(IObservable<>));
+		var returnsObservable = methodInfo.ReturnType.Is(typeof(IObservable<>)) || methodInfo.ReturnType.Implements(typeof(IObservable<>));
 		if (!returnsObservable)
 		{
-			var returnType = methodInfo.ReturnType.GetSystemType();
-			if (returnType is SystemType.Task || returnType is SystemType.ValueTask)
+			var returnType = methodInfo.ReturnType.GetObjectType();
+			if (returnType is ObjectType.Task || returnType is ObjectType.ValueTask)
 				returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() is ObjectType.Observable;
 
 			returnsObservable.AssertTrue();

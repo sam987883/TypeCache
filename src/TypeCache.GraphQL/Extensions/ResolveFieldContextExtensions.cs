@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
@@ -63,7 +62,7 @@ public static class ResolveFieldContextExtensions
 			{
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when parameterInfo.ParameterType.Is(sourceType) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
+				_ when parameterInfo.ParameterType.Is(sourceType!) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
 					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
 				_ => argument
@@ -100,7 +99,7 @@ public static class ResolveFieldContextExtensions
 	public static IDictionary<string, object?> GetInputs(this IResolveFieldContext @this)
 	{
 		var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-		if (!@this.Operation.SelectionSet.Selections.OfType<GraphQLField>().TryFirst(out var root) || root.Arguments?.Any() is not true)
+		if (!@this.Operation.SelectionSet.Selections.TryFirst<GraphQLField>(out var root) || root.Arguments?.Any() is not true)
 			return dictionary;
 
 		foreach (var argument in root.Arguments)
@@ -147,11 +146,11 @@ public static class ResolveFieldContextExtensions
 	private static object? GetScalarValue(this GraphQLValue @this)
 		=> @this switch
 		{
-			GraphQLBooleanValue booleanValue => booleanValue.BoolValue,
-			GraphQLEnumValue enumValue => enumValue.Name,
-			GraphQLFloatValue floatValue => double.Parse(floatValue.Value.Span),
-			GraphQLIntValue intValue => int.Parse(intValue.Value.Span),
-			GraphQLStringValue stringValue => new string(stringValue.Value.Span),
+			GraphQLBooleanValue value => value.BoolValue,
+			GraphQLEnumValue value => value.Name,
+			GraphQLFloatValue value => decimal.Parse(value.Value.Span),
+			GraphQLIntValue value => long.Parse(value.Value.Span),
+			GraphQLStringValue value => new string(value.Value.Span),
 			_ => null
 		};
 

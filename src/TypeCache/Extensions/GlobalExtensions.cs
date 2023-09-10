@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions;
 
@@ -25,11 +26,21 @@ public static class GlobalExtensions
 	public static ConstantExpression ToConstantExpression<T>(this T? @this)
 		=> @this is not null ? Expression.Constant(@this, @this.GetType()) : Expression.Constant(null);
 
+	/// <inheritdoc cref="StrongBox{T}.StrongBox(T)"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StrongBox<T> ToStrongBox<T>(this T @this)
+		where T : struct
+		=> new(@this);
+
 	/// <inheritdoc cref="ToWeakReference{T}(T)"/>
 	/// <remarks>
-	/// <c>=&gt; <see langword="new "/> <see cref="WeakReference{T}"/>(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
 	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static WeakReference<T> ToWeakReference<T>(this T @this)
 		where T : class
-		=> new WeakReference<T>(@this);
+		=> new(@this);
 }

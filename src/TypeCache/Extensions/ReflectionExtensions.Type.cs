@@ -6,7 +6,6 @@ using System.Reflection;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
-using static System.StringComparison;
 
 namespace TypeCache.Extensions;
 
@@ -61,6 +60,31 @@ partial class ReflectionExtensions
 		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
 			.GetFieldValue(instance);
 
+	/// <summary>
+	/// <c>=&gt; <see cref="TypeStore.CollectionTypes"/>[@<paramref name="this"/>.TypeHandle];</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static CollectionType GetCollectionType(this Type @this)
+		=> TypeStore.CollectionTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
+
+	public static ScalarType GetDataType(this Type @this)
+	{
+		if (@this.IsGenericTypeDefinition)
+			return ScalarType.None;
+
+		if (@this.IsEnum)
+			return ScalarType.Enum;
+
+		if (@this.IsGenericType && @this.IsNullable())
+			@this = @this.GenericTypeArguments[0];
+
+		return TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var dataType) ? dataType : ScalarType.None;
+	}
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ObjectType GetObjectType(this Type @this)
+		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
+
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
@@ -110,10 +134,6 @@ partial class ReflectionExtensions
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
 			.ToArray();
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ObjectType GetObjectType(this Type @this)
-		=> TypeStore.ObjectTypes[@this.TypeHandle];
-
 	public static object? GetPropertyValue(this Type @this, string name, object instance, params object?[]? index)
 		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
 			.GetPropertyValue(instance, index);
@@ -126,22 +146,14 @@ partial class ReflectionExtensions
 		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
 			.GetPropertyValue(null, index);
 
-	public static SystemType GetSystemType(this Type @this)
-		=> @this switch
-		{
-			{ IsArray: true } => SystemType.Array,
-			{ IsEnum: true } => TypeStore.SystemTypes[@this.GetEnumUnderlyingType().TypeHandle],
-			{ IsGenericType: true } when TypeStore.SystemTypes.TryGetValue(@this.ToGenericTypeDefinition()!.TypeHandle, out var systemType) => systemType,
-			_ when TypeStore.SystemTypes.TryGetValue(@this.TypeHandle, out var systemType) => systemType,
-			_ => SystemType.None
-		};
-
 	public static bool Implements(this Type @this, Type type)
 	{
 		return type switch
 		{
+			_ when @this.Is(type) => true,
+			{ IsValueType: true } or { IsSealed: true } => false,
 			{ IsGenericTypeDefinition: false } => @this.IsAssignableTo(type),
-			{ IsInterface: true } => @this.GetInterfaces().Any(_ => type.Is(_.ToGenericTypeDefinition())),
+			{ IsInterface: true } => type.IsAny(@this.GetInterfaces()),
 			_ => isDescendantOf(@this.BaseType, type)
 		};
 
@@ -151,8 +163,10 @@ partial class ReflectionExtensions
 			{
 				if (baseType.Is(type))
 					return true;
+
 				baseType = baseType.BaseType;
 			}
+
 			return false;
 		}
 	}
@@ -239,16 +253,16 @@ partial class ReflectionExtensions
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Is<T>(this Type? @this)
+	public static bool Is<T>(this Type @this)
 		=> @this == typeof(T);
 
 	[DebuggerHidden]
-	public static bool Is(this Type? @this, Type? type)
-		=> (@this, type) switch
-		{
-			({ IsGenericType: true }, _) or (_, { IsGenericType: true }) => @this.ToGenericTypeDefinition() == type.ToGenericTypeDefinition(),
-			_ => @this == type
-		};
+	public static bool Is(this Type @this, Type type) => (@this, type) switch
+	{
+		({ IsGenericType: true }, { IsGenericTypeDefinition: true }) or ({ IsGenericTypeDefinition: true }, { IsGenericType: true }) => @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition(),
+		_ => @this == type
+	};
+		//=> (@this.IsGenericTypeDefinition || type.IsGenericTypeDefinition) ? @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition() : @this == type;
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
@@ -258,11 +272,11 @@ partial class ReflectionExtensions
 		=> types.Any(@this.Is);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Is(<see langword="typeof"/>(<typeparamref name="T1"/>));</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1>(this Type @this)
-		=> @this.IsAny(typeof(T1));
+		=> @this.Is(typeof(T1));
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
@@ -330,126 +344,23 @@ partial class ReflectionExtensions
 	public static bool IsAssignableTo<T>(this Type @this)
 		=> @this.IsAssignableTo(typeof(T));
 
+	/// <summary>
+	/// Whether the type implements <c><see cref="IConvertible"/></c>.<br/>
+	/// If the type is <c><see cref="Nullable{T}"/></c>, then whether the type parameter <c>T</c> implements <c><see cref="IConvertible"/></c>.
+	/// </summary>
 	[DebuggerHidden]
 	public static bool IsConvertible(this Type @this)
 		=> @this.IsAssignableTo<IConvertible>()
-			|| (@this.ToGenericTypeDefinition() == typeof(Nullable<>) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
+			|| (@this.Is(typeof(Nullable<>)) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
 
-	public static bool IsConvertibleTo(this Type @this, Type targetType) => @this?.GetSystemType() switch
+	/// <exception cref=""/>
+	public static bool IsConvertibleTo(this Type @this, Type targetType)
 	{
-		null => false,
-		_ when @this == targetType => true,
-		_ when @this.IsConvertible() && targetType.IsConvertible() => true,
-		SystemType.DateOnly => targetType.GetSystemType() switch
-		{
-			SystemType.DateTime
-			or SystemType.DateTimeOffset
-			or SystemType.TimeSpan
-			or SystemType.String
-			or SystemType.Int32
-			or SystemType.UInt32
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.Int128
-			or SystemType.UInt128 => true,
-			_ => false
-		},
-		SystemType.DateTime or SystemType.DateTimeOffset => targetType.GetSystemType() switch
-		{
-			SystemType.DateTime
-			or SystemType.DateTimeOffset
-			or SystemType.TimeOnly
-			or SystemType.String
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.Int128
-			or SystemType.UInt128 => true,
-			_ => false
-		},
-		_ when @this.IsEnum => targetType.GetSystemType() switch
-		{
-			SystemType.String => true,
-			var targetSystemType when targetSystemType.IsEnumUnderlyingType() => true,
-			_ => false
-		},
-		SystemType.Int128 => targetType.GetSystemType() switch
-		{
-			SystemType.Int32
-			or SystemType.UInt32
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.UInt128
-			or SystemType.String => true,
-			_ => false
-		},
-		SystemType.IntPtr => targetType.GetSystemType() switch
-		{
-			SystemType.UIntPtr
-			or SystemType.Int32
-			or SystemType.Int64
-			or SystemType.Int128
-			or SystemType.String => true,
-			_ => false
-		},
-		SystemType.String => targetType.GetSystemType() switch
-		{
-			SystemType.Char
-			or SystemType.Guid
-			or SystemType.Uri
-			or SystemType.DateOnly
-			or SystemType.DateTime
-			or SystemType.DateTimeOffset
-			or SystemType.TimeOnly
-			or SystemType.TimeSpan
-			or SystemType.IntPtr
-			or SystemType.UIntPtr
-			or SystemType.Int128
-			or SystemType.UInt128 => true,
-			_ when targetType.IsEnum => true,
-			_ when targetType.IsAssignableTo<IConvertible>() => true,
-			_ => false
-		},
-		SystemType.TimeOnly => targetType.GetSystemType() switch
-		{
-			SystemType.TimeSpan
-			or SystemType.String
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.Int128
-			or SystemType.UInt128 => true,
-			_ => false
-		},
-		SystemType.TimeSpan => targetType.GetSystemType() switch
-		{
-			SystemType.TimeOnly
-			or SystemType.String
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.Int128
-			or SystemType.UInt128 => true,
-			_ => false
-		},
-		SystemType.UInt128 => targetType.GetSystemType() switch
-		{
-			SystemType.Int32
-			or SystemType.UInt32
-			or SystemType.Int64
-			or SystemType.UInt64
-			or SystemType.Int128
-			or SystemType.String => true,
-			_ => false
-		},
-		SystemType.UIntPtr => targetType.GetSystemType() switch
-		{
-			SystemType.IntPtr
-			or SystemType.Int32
-			or SystemType.Int64
-			or SystemType.Int128
-			or SystemType.String => true,
-			_ => false
-		},
-		_ => false
-	};
+		@this.AssertNotNull();
+		targetType.AssertNotNull();
+
+		return @this.GetDataType().IsConvertibleTo(targetType.GetDataType());
+	}
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.IsAssignableTo&lt;<see cref="IEnumerable"/>&gt;();</c>
@@ -470,7 +381,7 @@ partial class ReflectionExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsEnumUnderlyingType(this Type @this)
-		=> @this.GetSystemType().IsEnumUnderlyingType();
+		=> @this.GetDataType().IsEnumUnderlyingType();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
@@ -480,18 +391,11 @@ partial class ReflectionExtensions
 		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || <see langword="typeof"/>(Nullable&lt;&gt;) == @<paramref name="this"/>.ToGenericType();</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || @<paramref name="this"/>.Is(<see langword="typeof"/>(Nullable&lt;&gt;));</c>
 	/// </summary>
 	[DebuggerHidden]
 	public static bool IsNullable(this Type @this)
-		=> @this.IsClass || @this.IsPointer || typeof(Nullable<>) == @this.ToGenericTypeDefinition();
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Is(<paramref name="type"/>) || @<paramref name="this"/>.Implements(<paramref name="type"/>);</c>
-	/// </summary>
-	[DebuggerHidden]
-	public static bool IsOrImplements(this Type @this, Type type)
-		=> @this.Is(type) || @this.Implements(type);
+		=> @this.IsClass || @this.IsPointer || @this.Is(typeof(Nullable<>));
 
 	[DebuggerHidden]
 	public static void SetFieldValue(this Type @this, string name, object instance, object? value)
@@ -521,15 +425,6 @@ partial class ReflectionExtensions
 	public static DefaultExpression ToDefaultExpression(this Type @this)
 		=> Expression.Default(@this);
 
-	[DebuggerHidden]
-	public static Type? ToGenericTypeDefinition(this Type? @this)
-		=> @this switch
-		{
-			{ IsGenericTypeDefinition: true } => @this,
-			{ IsGenericType: true } => @this.GetGenericTypeDefinition(),
-			_ => null
-		};
-
 	/// <inheritdoc cref="Expression.Label(Type)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
@@ -546,13 +441,13 @@ partial class ReflectionExtensions
 	public static LabelTarget ToLabelTarget(this Type @this, string? name)
 		=> Expression.Label(@this, name);
 
-	/// <inheritdoc cref="Expression.New(Type)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToNewExpression(this Type @this)
-		=> Expression.New(@this);
+	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[]?)"/>
+	[DebuggerHidden]
+	public static NewExpression ToNewExpression(this Type @this, params Expression[] parameters) => parameters switch
+	{
+		null or { Length: 0 } => Expression.New(@this),
+		_ => @this.GetConstructor(parameters.Select(parameter => parameter.Type).ToArray())!.ToNewExpression(parameters)
+	};
 
 	/// <inheritdoc cref="Expression.Field(Expression, Type, string)"/>
 	/// <remarks>

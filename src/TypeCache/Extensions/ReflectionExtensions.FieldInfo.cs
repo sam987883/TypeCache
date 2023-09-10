@@ -23,7 +23,7 @@ partial class ReflectionExtensions
 	public static Expression<Func<object?, object?>> GetFieldValueFuncLambdaExpression(this FieldInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
+		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
 		return field.As<object>().Lambda<Func<object?, object?>>(instance);
 	}
 

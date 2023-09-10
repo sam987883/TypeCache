@@ -140,6 +140,12 @@ public static class EnumerableExtensions
 	public static IEnumerable<Task<T>> ToTasks<T>(this IEnumerable<ValueTask<T>> @this)
 		=> @this.Select(_ => _.AsTask());
 
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, [NotNullWhen(true)] out T? value)
+	{
+		value = @this.OfType<T>().FirstOrDefault();
+		return value is not null;
+	}
+
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
 	{
 		using var enumerator = @this.GetEnumerator();

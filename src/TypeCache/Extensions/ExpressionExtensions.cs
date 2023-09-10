@@ -2,7 +2,6 @@
 
 using System.Linq.Expressions;
 using System.Reflection;
-using TypeCache.Extensions;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -181,12 +180,22 @@ public static class ExpressionExtensions
 	public static Expression Cast<T>(this Expression @this, bool overflowCheck = false)
 		=> @this.Cast(typeof(T), overflowCheck);
 
-	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 	/// <remarks>
-	/// <c>=&gt; <paramref name="overflowCheck"/> ? <see cref="Expression"/>.ConvertChecked(@<paramref name="this"/>, <paramref name="type"/>) : <see cref="Expression"/>.Convert(@<paramref name="this"/>, <paramref name="type"/>);</c>
+	/// <code>
+	/// =&gt; (@<paramref name="this"/>.Type.IsValueType, <paramref name="type"/>.IsValueType) <see langword="switch"/><br/>
+	/// {<br/>
+	/// <see langword="    "/>(<see langword="true"/>, <see langword="false"/>) =&gt; @<paramref name="this"/>.Unbox(<paramref name="type"/>),<br/>
+	/// <see langword="    "/>_ <see langword="when"/> <paramref name="overflowCheck"/> =&gt; <see cref="Expression"/>.ConvertChecked(@<paramref name="this"/>, <paramref name="type"/>),<br/>
+	/// <see langword="    "/>_ =&gt; <see cref="Expression"/>.Convert(@<paramref name="this"/>, <paramref name="type"/>),<br/>
+	/// };
+	/// </code>
 	/// </remarks>
-	public static UnaryExpression Cast(this Expression @this, Type type, bool overflowCheck = false)
-		=> overflowCheck ? Expression.ConvertChecked(@this, type) : Expression.Convert(@this, type);
+	public static UnaryExpression Cast(this Expression @this, Type type, bool overflowCheck = false) => (@this.Type.IsValueType, type.IsValueType) switch
+	{
+		(true, false) => @this.Unbox(type),
+		_ when overflowCheck => Expression.ConvertChecked(@this, type),
+		_ => Expression.Convert(@this, type)
+	};
 
 	/// <inheritdoc cref="Expression.Coalesce(Expression, Expression)"/>
 	/// <remarks>
@@ -203,14 +212,63 @@ public static class ExpressionExtensions
 	public static Expression Convert<T>(this Expression @this)
 		=> @this.Convert(typeof(T));
 
-	/// <remarks>
-	/// <c>=&gt; <see langword="typeof"/>(<see cref="ValueConverters"/>).ToStaticMethodCallExpression(
-	/// <see langword="nameof"/>(<see cref="ValueConverters"/>.ConvertObject),
-	/// @<paramref name="this"/>.Cast&lt;<see langword="object"/>&gt;(),
-	/// <paramref name="targetType"/>.ToConstantExpression()).Cast(<paramref name="targetType"/>);</c>
-	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="InvalidOperationException"/>
 	public static Expression Convert(this Expression @this, Type targetType)
-		=> typeof(ValueConverters).ToStaticMethodCallExpression(nameof(ValueConverters.ConvertObject), @this.Cast<object>(), targetType.ToConstantExpression()).Cast(targetType);
+	{
+		@this.AssertNotNull();
+		targetType.AssertNotNull();
+
+		if (@this.Type == targetType)
+			return @this;
+
+		if (@this.Type.IsAssignableTo(targetType))
+			return @this.Cast(targetType);
+
+		if (@this.Type != typeof(object))
+			return ValueConverter.CreateConversionExpression(@this, targetType);
+
+		var targetScalarType = targetType.GetDataType();
+		var expression = targetScalarType switch
+		{
+			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBigInteger), @this),
+			ScalarType.Boolean => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBoolean), @this),
+			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToByte), @this),
+			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToChar), @this),
+			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), @this),
+			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), @this),
+			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), @this),
+			ScalarType.DBNull => DBNull.Value.ToConstantExpression(),
+			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDecimal), @this),
+			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDouble), @this),
+			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), @this),
+			ScalarType.Guid => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToGuid), @this),
+			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToHalf), @this),
+			ScalarType.Index => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIndex), @this),
+			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt16), @this),
+			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt32), @this),
+			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt64), @this),
+			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt128), @this),
+			ScalarType.IntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIntPtr), @this),
+			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSByte), @this),
+			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSingle), @this),
+			ScalarType.String => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToString), @this),
+			ScalarType.TimeOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeOnly), @this),
+			ScalarType.TimeSpan => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeSpan), @this),
+			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt16), @this),
+			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt32), @this),
+			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt64), @this),
+			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt128), @this),
+			ScalarType.UIntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUIntPtr), @this),
+			ScalarType.Uri => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUri), @this),
+			_ => @this.Cast(targetType)
+		};
+
+		if (targetScalarType is not ScalarType.None && targetType.IsValueType && !targetType.IsNullable())
+			expression = expression.Property(nameof(Nullable<int>.Value));
+
+		return expression;
+	}
 
 	/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>
 	/// <remarks>

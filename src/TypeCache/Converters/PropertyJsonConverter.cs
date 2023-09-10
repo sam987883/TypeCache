@@ -25,6 +25,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 					_ => reader.GetValue()
 				});
 			}
+
 			return output;
 		}
 

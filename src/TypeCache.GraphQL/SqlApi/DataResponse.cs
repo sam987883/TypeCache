@@ -65,7 +65,7 @@ public class DataResponse
 		graphType.AddField(new()
 		{
 			Name = nameof(DataResponse.DataSource),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.DataSource)
 		});
 		graphType.AddField(new()
@@ -89,19 +89,19 @@ public class DataResponse
 		graphType.AddField(new()
 		{
 			Name = nameof(DataResponse.Sql),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.Sql)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(DataResponse.Table),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<DataResponse, string>(context => context.Source.Table)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(DataResponse.TotalCount),
-			Type = typeof(IntGraphType),
+			Type = typeof(GraphQLNumberType<int>),
 			Resolver = new FuncFieldResolver<DataResponse, long?>(context => context.Source.TotalCount)
 		});
 
@@ -118,7 +118,7 @@ public class DataResponse
 		graphType.AddField(new()
 		{
 			Name = nameof(Edge<DataRow>.Cursor),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<Edge<DataRow>, string>(context => context.Source.Cursor)
 		});
 		graphType.AddField(new()

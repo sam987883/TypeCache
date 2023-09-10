@@ -1,7 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Linq;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 using TypeCache.Extensions;
 using Xunit;
 
@@ -9,11 +11,11 @@ namespace TypeCache.Tests.Extensions;
 
 public class StringExtensions
 {
+	private const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
+
 	[Fact]
 	public void FromBase64()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.UTF8));
 	}
@@ -21,8 +23,6 @@ public class StringExtensions
 	[Fact]
 	public void ToBase64()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n2";
-
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.UTF8));
 	}
@@ -30,8 +30,6 @@ public class StringExtensions
 	[Fact]
 	public void Has()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.True(TEST_STRING.Has("BCC 1"));
 		Assert.False(TEST_STRING.Has("BCC 1", StringComparison.Ordinal));
 	}
@@ -39,8 +37,6 @@ public class StringExtensions
 	[Fact]
 	public void Is()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.True(TEST_STRING.Is("AABBCC 123 `~!#$%^\t\r\n"));
 		Assert.False(TEST_STRING.Is("AABBCC 123 `~!#$%^\t\r\n", StringComparison.Ordinal));
 	}
@@ -48,8 +44,6 @@ public class StringExtensions
 	[Fact]
 	public void IsBlank()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.True(string.Empty.IsBlank());
 		Assert.True(" \t \r \n ".IsBlank());
 		Assert.True((null as string).IsBlank());
@@ -59,8 +53,6 @@ public class StringExtensions
 	[Fact]
 	public void IsNotBlank()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.False(string.Empty.IsNotBlank());
 		Assert.False(" \t \r \n ".IsNotBlank());
 		Assert.False((null as string).IsNotBlank());
@@ -70,8 +62,6 @@ public class StringExtensions
 	[Fact]
 	public void Join()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal(TEST_STRING, " ".Join("AaBbCc", "123", "`~!#$%^\t\r\n"));
 		Assert.Equal(TEST_STRING, " ".Join(TEST_STRING));
 	}
@@ -79,8 +69,6 @@ public class StringExtensions
 	[Fact]
 	public void Left()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal("AaBbCc 1", TEST_STRING.Left(8));
 		Assert.Equal(string.Empty, TEST_STRING.Left(0));
 
@@ -94,8 +82,6 @@ public class StringExtensions
 	[Fact]
 	public void Mask()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal(string.Empty, (null as string).Mask());
 		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.Mask('+'));
 	}
@@ -103,16 +89,12 @@ public class StringExtensions
 	[Fact]
 	public void MaskHide()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal("--Bb-- 123 `~!#$%^\t\r\n", TEST_STRING.MaskHide('-', StringComparison.OrdinalIgnoreCase, "A", "C", "\t\r\n"));
 	}
 
 	[Fact]
 	public void MaskShow()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal("ooBboo 123 `~!#$%^\t\r\n", TEST_STRING.MaskShow('o', StringComparison.Ordinal, "Bb", " ", "123", "`~!#$%^"));
 	}
 
@@ -134,6 +116,15 @@ public class StringExtensions
 	}
 
 	[Fact]
+	public void Segment()
+	{
+		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.Segment());
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.Segment(2, 0));
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.Segment(2, 3));
+		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.Segment(9, 1));
+	}
+
+	[Fact]
 	public void ToEnum()
 	{
 		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
@@ -143,8 +134,6 @@ public class StringExtensions
 	[Fact]
 	public void TrimEnd()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n"));
 		Assert.NotEqual("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n", StringComparison.Ordinal));
 		Assert.Equal(TEST_STRING, TEST_STRING.TrimEnd("******"));
@@ -153,8 +142,6 @@ public class StringExtensions
 	[Fact]
 	public void TrimStart()
 	{
-		const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
-
 		Assert.Equal(" `~!#$%^\t\r\n", TEST_STRING.TrimStart("aabbcc 123"));
 		Assert.NotEqual(" `~!#$%^\t\r\n", TEST_STRING.TrimStart("aabbcc 123", StringComparison.Ordinal));
 		Assert.Equal(TEST_STRING, TEST_STRING.TrimStart("******"));

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
-using GraphQLParser.AST;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
@@ -93,7 +92,9 @@ public static class GraphQLExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
-		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
+		=> @this.IsValueType && @this.IsNullable()
+			? typeof(GraphQLObjectType<>).MakeGenericType(@this.GenericTypeArguments[0])
+			: typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
 	public static Type ToGraphQLType(this ParameterInfo @this)
 	{
@@ -119,35 +120,32 @@ public static class GraphQLExtensions
 		(objectType is ObjectType.Delegate).AssertFalse();
 		(objectType is ObjectType.Object).AssertFalse();
 
-		if (objectType is ObjectType.Dictionary || objectType is ObjectType.ReadOnlyDictionary)
+		var collectionType = @this.GetCollectionType();
+		if (collectionType.IsDictionary())
 			return typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType();
 
 		if (@this.IsEnum)
 			return @this.ToGraphQLEnumType();
 
-		var systemType = @this.GetSystemType();
-		if (systemType is SystemType.Task || systemType is SystemType.ValueTask)
+		if (objectType is ObjectType.Task || objectType is ObjectType.ValueTask)
 			return @this.IsGenericType
 				? @this.GenericTypeArguments.First()!.ToGraphQLType(false)
 				: throw new ArgumentOutOfRangeException(nameof(@this), Invariant($"{nameof(Task)} and {nameof(ValueTask)} are not allowed as GraphQL types."));
 
-		if (systemType is SystemType.Nullable)
-			return @this.GenericTypeArguments.First()!.ToGraphQLType(isInputType);
-
-		var systemGraphType = systemType.ToGraphType();
-		if (systemGraphType is not null)
-			return systemGraphType;
+		var scalarGraphType = @this.GetDataType().ToGraphType();
+		if (scalarGraphType is not null)
+			return scalarGraphType;
 
 		if (@this.HasElementType)
 		{
 			var elementType = @this.GetElementType()!.ToGraphQLType(isInputType);
-			if (elementType.IsValueType && elementType.GetSystemType() is not SystemType.Nullable)
+			if (elementType.IsValueType && !elementType.Is(typeof(Nullable<>)))
 				elementType = elementType.ToNonNullGraphType();
 
 			return elementType.ToListGraphType();
 		}
 
-		if (@this.IsGenericType && @this.IsOrImplements(typeof(IEnumerable<>)))
+		if (@this.Is(typeof(IEnumerable<>)) || @this.Implements(typeof(IEnumerable<>)))
 			return @this.GenericTypeArguments.First()!.ToGraphQLType(isInputType).ToListGraphType();
 
 		if (@this.IsInterface)
@@ -195,20 +193,20 @@ public static class GraphQLExtensions
 			arguments.Add("null", type, description: "Return this value instead of null.");
 
 		if (@this.PropertyType.IsAssignableTo<IFormattable>())
-			arguments.Add<StringGraphType>("format", description: "Use .NET format specifiers to format the data.");
+			arguments.Add<GraphQLStringType>("format", description: "Use .NET format specifiers to format the data.");
 
-		if (type.Is<DateTimeGraphType>() || type.Is<NonNullGraphType<DateTimeGraphType>>())
-			arguments.Add<StringGraphType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
-		else if (type.Is<DateTimeOffsetGraphType>() || type.Is<NonNullGraphType<DateTimeOffsetGraphType>>())
-			arguments.Add<StringGraphType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
-		else if (type.Is<StringGraphType>() || type.Is<NonNullGraphType<StringGraphType>>())
+		if (type.Is<GraphQLStringType<DateTime>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTime>>>())
+			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
+		else if (type.Is<GraphQLStringType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTimeOffset>>>())
+			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
+		else if (type.Is<GraphQLStringType>() || type.Is<NonNullGraphType<GraphQLStringType>>())
 		{
 			arguments.Add<GraphQLEnumType<StringCase>>("case", description: "Convert string value to upper or lower case.");
-			arguments.Add<IntGraphType>("length", description: "Exclude the rest of the string value if it exceeds this length.");
-			arguments.Add<StringGraphType>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
-			arguments.Add<StringGraphType>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
-			arguments.Add<StringGraphType>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
-			arguments.Add<StringGraphType>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
+			arguments.Add<GraphQLNumberType<int>>("length", description: "Exclude the rest of the string value if it exceeds this length.");
+			arguments.Add<GraphQLStringType>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
+			arguments.Add<GraphQLStringType>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
+			arguments.Add<GraphQLStringType>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
+			arguments.Add<GraphQLStringType>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
 		}
 
 		return new()

@@ -8,12 +8,17 @@
 ---
 ### GraphQL Type Objects
 
+- `TypeCache.GraphQL.Types.`__`GraphQLBooleanType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLDecimalType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLEnumType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLHashIdType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLIntegerType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLInputType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLInterfaceType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLObjectType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLStringType`__
 - `TypeCache.GraphQL.Types.`__`GraphQLUnionType`__
+- `TypeCache.GraphQL.Types.`__`GraphQLUriType`__
 ---
 ### GraphQL Attributes
 

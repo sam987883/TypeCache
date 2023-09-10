@@ -169,6 +169,17 @@ public class ArrayExtensions
 	}
 
 	[Fact]
+	public void Segment()
+	{
+		var array = Enumerable.Range(0, 10).ToArray();
+
+		Assert.Equal(new ArraySegment<int>(array), array.Segment());
+		Assert.Equal(new ArraySegment<int>(array, 2, 0), array.Segment(2, 0));
+		Assert.Equal(new ArraySegment<int>(array, 2, 3), array.Segment(2, 3));
+		Assert.Equal(new ArraySegment<int>(array, 9, 1), array.Segment(9, 1));
+	}
+
+	[Fact]
 	public void Sort()
 	{
 		var expected = Enumerable.Range(1, 10).ToArray();

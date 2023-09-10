@@ -46,98 +46,119 @@ public static class EnumExtensions
 	public static StringComparer ToStringComparer(this StringComparison @this)
 		=> StringComparer.FromComparison(@this);
 
-	public static bool IsCollection(this SystemType @this) => @this switch
+	public static bool IsConcurrent(this CollectionType @this) => @this switch
 	{
-		SystemType.Array
-		or SystemType.BitArray
-		or SystemType.BlockingCollection
-		or SystemType.Collection
-		or SystemType.ConcurrentBag or SystemType.ConcurrentDictionary or SystemType.ConcurrentQueue or SystemType.ConcurrentStack
-		or SystemType.Dictionary
-		or SystemType.HashSet
-		or SystemType.Hashtable
-		or SystemType.HybridDictionary
-		or SystemType.ImmutableArray or SystemType.ImmutableDictionary or SystemType.ImmutableHashSet or SystemType.ImmutableList
-		or SystemType.ImmutableQueue or SystemType.ImmutableSortedDictionary or SystemType.ImmutableSortedSet or SystemType.ImmutableStack
-		or SystemType.KeyedCollection
-		or SystemType.List or SystemType.LinkedList or SystemType.ArrayList
-		or SystemType.ListDictionary
-		or SystemType.NameObjectCollectionBase or SystemType.NameValueCollection
-		or SystemType.ObservableCollection
-		or SystemType.OrderedDictionary
-		or SystemType.PriorityQueue
-		or SystemType.Queue
-		or SystemType.ReadOnlyCollection or SystemType.ReadOnlyDictionary or SystemType.ReadOnlyObservableCollection
-		or SystemType.SortedDictionary or SystemType.SortedList or SystemType.SortedSet
-		or SystemType.Stack
-		or SystemType.StringCollection
-		or SystemType.StringDictionary => true,
+		CollectionType.ConcurrentBag or CollectionType.ConcurrentDictionary
+		or CollectionType.ConcurrentQueue or CollectionType.ConcurrentStack => true,
 		_ => false
 	};
 
-	public static bool IsConcurrent(this SystemType @this) => @this switch
+	public static bool IsConvertibleTo(this ScalarType @this, ScalarType target) => (@this, target) switch
 	{
-		SystemType.ConcurrentBag or SystemType.ConcurrentDictionary
-		or SystemType.ConcurrentQueue or SystemType.ConcurrentStack => true,
+		_ when target == @this => true,
+		(ScalarType.String, _) or (_, ScalarType.Boolean or ScalarType.String) => true,
+		(ScalarType.Boolean, ScalarType.Char or ScalarType.SByte or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
+			or ScalarType.Byte or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64) => true,
+		(ScalarType.Byte, ScalarType.Boolean or ScalarType.Char
+			or ScalarType.SByte or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.Char, ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.DateOnly, ScalarType.DateTime or ScalarType.DateTimeOffset or Extensions.ScalarType.TimeSpan
+			or ScalarType.Int32 or ScalarType.Int64 or ScalarType.UInt32 or ScalarType.UInt64) => true,
+		(ScalarType.DateTime, ScalarType.DateOnly or ScalarType.DateTimeOffset or ScalarType.TimeOnly or ScalarType.Int64 or ScalarType.UInt64) => true,
+		(ScalarType.DateTimeOffset, ScalarType.DateOnly or ScalarType.DateTime or ScalarType.TimeOnly or ScalarType.Int64 or ScalarType.UInt64) => true,
+		(ScalarType.SByte, ScalarType.Char
+			or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.Byte or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.Int16, ScalarType.Char
+			or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.Int32, ScalarType.DateOnly or ScalarType.Index
+			or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.Int64, ScalarType.DateTime or ScalarType.DateTimeOffset or ScalarType.TimeOnly or ScalarType.TimeSpan
+			or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.Int128, ScalarType.UInt128 or ScalarType.BigInteger or ScalarType.Decimal) => true,
+		(ScalarType.IntPtr, ScalarType.Int32 or ScalarType.Int64) => true,
+		(ScalarType.TimeOnly, ScalarType.TimeSpan or ScalarType.Int64 or ScalarType.UInt64) => true,
+		(ScalarType.TimeSpan, ScalarType.TimeOnly or ScalarType.Int64 or ScalarType.UInt64) => true,
+		(ScalarType.UInt16, ScalarType.Char
+			or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger
+			or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.UInt32, ScalarType.DateOnly or ScalarType.Index
+			or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger or ScalarType.UInt64 or ScalarType.UInt128
+			or ScalarType.Single or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.UInt64, ScalarType.DateTime or ScalarType.DateTimeOffset or ScalarType.TimeOnly or ScalarType.TimeSpan
+			or ScalarType.Int64 or ScalarType.Int128 or ScalarType.BigInteger or ScalarType.UInt128 or ScalarType.Double or ScalarType.Decimal) => true,
+		(ScalarType.UInt128, ScalarType.Int128 or ScalarType.BigInteger or ScalarType.Decimal) => true,
+		(ScalarType.UIntPtr, ScalarType.UInt32 or ScalarType.UInt64) => true,
 		_ => false
 	};
 
-	public static bool IsDictionary(this SystemType @this) => @this switch
+	public static bool IsDictionary(this CollectionType @this) => @this switch
 	{
-		SystemType.Dictionary or SystemType.ConcurrentDictionary or SystemType.SortedDictionary
-		or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
-		or SystemType.Hashtable or SystemType.HybridDictionary or SystemType.OrderedDictionary or SystemType.ReadOnlyDictionary
-		or SystemType.KeyedCollection or SystemType.ListDictionary or SystemType.StringDictionary
-		or SystemType.NameObjectCollectionBase or SystemType.NameValueCollection or SystemType.SortedList => true,
+		CollectionType.Dictionary or CollectionType.ConcurrentDictionary or CollectionType.SortedDictionary
+		or CollectionType.ImmutableDictionary or CollectionType.ImmutableSortedDictionary
+		or CollectionType.Hashtable or CollectionType.HybridDictionary or CollectionType.OrderedDictionary or CollectionType.ReadOnlyDictionary
+		or CollectionType.KeyedCollection or CollectionType.ListDictionary or CollectionType.StringDictionary
+		or CollectionType.NameObjectCollection or CollectionType.NameValueCollection or CollectionType.SortedList => true,
 		_ => false
 	};
 
-	public static bool IsEnumUnderlyingType(this SystemType @this) => @this switch
+	public static bool IsEnumUnderlyingType(this ScalarType @this) => @this switch
 	{
-		SystemType.SByte or SystemType.Byte
-		or SystemType.Int16 or SystemType.Int32 or SystemType.Int64
-		or SystemType.UInt16 or SystemType.UInt32 or SystemType.UInt64 => true,
+		ScalarType.SByte or ScalarType.Byte
+		or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
+		or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 => true,
 		_ => false
 	};
 
-	public static bool IsImmutable(this SystemType @this) => @this switch
+	public static bool IsImmutable(this CollectionType @this) => @this switch
 	{
-		SystemType.ImmutableArray
-		or SystemType.ImmutableDictionary or SystemType.ImmutableSortedDictionary
-		or SystemType.ImmutableHashSet or SystemType.ImmutableSortedSet
-		or SystemType.ImmutableList
-		or SystemType.ImmutableQueue
-		or SystemType.ImmutableStack => true,
+		CollectionType.ImmutableArray
+		or CollectionType.ImmutableDictionary or CollectionType.ImmutableSortedDictionary
+		or CollectionType.ImmutableSet or CollectionType.ImmutableSortedSet
+		or CollectionType.ImmutableList
+		or CollectionType.ImmutableQueue
+		or CollectionType.ImmutableStack => true,
 		_ => false
 	};
 
-	public static bool IsPrimitive(this SystemType @this) => @this switch
+	public static bool IsPrimitive(this ScalarType @this) => @this switch
 	{
-		SystemType.Boolean
-		or SystemType.SByte or SystemType.Byte
-		or SystemType.Int16 or SystemType.Int32 or SystemType.Int64 or SystemType.Int128
-		or SystemType.IntPtr or SystemType.UIntPtr
-		or SystemType.UInt16 or SystemType.UInt32 or SystemType.UInt64 or SystemType.UInt128
-		or SystemType.Single or SystemType.Double
-		or SystemType.Char => true,
+		ScalarType.Boolean
+		or ScalarType.SByte or ScalarType.Byte
+		or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128
+		or ScalarType.IntPtr or ScalarType.UIntPtr
+		or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+		or ScalarType.Single or ScalarType.Double
+		or ScalarType.Char => true,
 		_ => false
 	};
 
-	public static bool IsQueue(this SystemType @this) => @this switch
+	public static bool IsQueue(this CollectionType @this) => @this switch
 	{
-		SystemType.ConcurrentQueue or SystemType.ImmutableQueue or SystemType.PriorityQueue or SystemType.Queue => true,
+		CollectionType.ConcurrentQueue or CollectionType.ImmutableQueue or CollectionType.PriorityQueue or CollectionType.Queue => true,
 		_ => false
 	};
 
-	public static bool IsReadOnly(this SystemType @this) => @this switch
+	public static bool IsReadOnly(this CollectionType @this) => @this switch
 	{
-		SystemType.ReadOnlyCollection or SystemType.ReadOnlyDictionary or SystemType.ReadOnlyObservableCollection => true,
+		CollectionType.ReadOnlyCollection or CollectionType.ReadOnlyDictionary or CollectionType.ReadOnlyObservableCollection => true,
 		_ => false
 	};
 
-	public static bool IsStack(this SystemType @this) => @this switch
+	public static bool IsStack(this CollectionType @this) => @this switch
 	{
-		SystemType.ConcurrentStack or SystemType.ImmutableStack or SystemType.Stack => true,
+		CollectionType.ConcurrentStack or CollectionType.ImmutableStack or CollectionType.Stack => true,
 		_ => false
 	};
 }

@@ -1,17 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Immutable;
-using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions;
 
 public enum ObjectType
 {
 	Unknown = 0,
-	/// <summary>
-	/// <c><see cref="Type.IsArray"/> <see langword="is true"/></c>
-	/// </summary>
-	Array,
 	/// <summary>
 	/// Implements: <c><see cref="IAsyncEnumerable{T}"/></c>
 	/// </summary>
@@ -28,10 +23,6 @@ public enum ObjectType
 	/// Implements: <c><see cref="System.Attribute"/></c>
 	/// </summary>
 	Attribute,
-	/// <summary>
-	/// Implements: <c><see cref="ICollection{T}"/></c>
-	/// </summary>
-	Collection,
 	/// <summary>
 	/// Implements: <c><see cref="System.Data.DataColumn"/></c>
 	/// </summary>
@@ -53,6 +44,10 @@ public enum ObjectType
 	/// </summary>
 	DataTable,
 	/// <summary>
+	/// Is any type part of <see cref="DataType"/>.
+	/// </summary>
+	DataType,
+	/// <summary>
 	/// Implements: <c><see cref="System.Data.DataView"/></c>
 	/// </summary>
 	DataView,
@@ -60,14 +55,6 @@ public enum ObjectType
 	/// Implements: <c><see cref="System.Delegate"/></c>
 	/// </summary>
 	Delegate,
-	/// <summary>
-	/// Implements: <c><see cref="IDictionary{TKey, TValue}"/></c>
-	/// </summary>
-	Dictionary,
-	/// <summary>
-	/// <c><see cref="Type.IsEnum"/> <see langword="is true"/></c>
-	/// </summary>
-	Enum,
 	/// <summary>
 	/// Implements: <c><see cref="IEnumerable{T}"/></c>
 	/// </summary>
@@ -81,39 +68,19 @@ public enum ObjectType
 	/// </summary>
 	Exception,
 	/// <summary>
-	/// Is: <c><see cref="ImmutableArray{T}"/></c>
+	/// is: <c><see cref="System.Text.Json.JsonDocument"/></c>
 	/// </summary>
-	ImmutableArray,
+	JsonDocument,
 	/// <summary>
-	/// Implements: <c><see cref="IImmutableDictionary{TKey, TValue}"/></c>
+	/// Implements: <c><see cref="Lazy{T}"/></c> or <c><see cref="Lazy{T, TMetadata}"/></c>
 	/// </summary>
-	ImmutableDictionary,
+	Lazy,
 	/// <summary>
-	/// Implements: <c><see cref="IImmutableList{T}"/></c>
+	/// Is: <c><see cref="Memory{T}"/></c>
 	/// </summary>
-	ImmutableList,
+	Memory,
 	/// <summary>
-	/// Implements: <c><see cref="IImmutableQueue{T}"/></c>
-	/// </summary>
-	ImmutableQueue,
-	/// <summary>
-	/// Implements: <c><see cref="IImmutableSet{T}"/></c>
-	/// </summary>
-	ImmutableSet,
-	/// <summary>
-	/// Implements: <c><see cref="IImmutableStack{T}"/></c>
-	/// </summary>
-	ImmutableStack,
-	/// <summary>
-	/// Implements: <c><see cref="System.Text.Json.Nodes.JsonNode"/></c>
-	/// </summary>
-	JsonNode,
-	/// <summary>
-	/// Implements: <c><see cref="IList{T}"/></c>
-	/// </summary>
-	List,
-	/// <summary>
-	/// Is: <c><see cref="object"/></c>
+	/// Implements: <c><see cref="object"/></c>
 	/// </summary>
 	Object,
 	/// <summary>
@@ -125,43 +92,59 @@ public enum ObjectType
 	/// </summary>
 	Observer,
 	/// <summary>
-	/// Implements: <c><see cref="System.Collections.Specialized.IOrderedDictionary"/></c>
+	/// Is: <c><see cref="IntPtr"/></c> or <c><see cref="UIntPtr"/></c>
 	/// </summary>
-	OrderedDictionary,
+	Pointer,
 	/// <summary>
-	/// Is any: <c></c>
+	/// Implements: <c><see cref="System.Range"/></c>
 	/// </summary>
-	Primitive,
+	Range,
 	/// <summary>
-	/// Implements: <c><see cref="IReadOnlyCollection{T}"/></c>
+	/// Is: <c><see cref="ReadOnlyMemory{T}"/></c>
 	/// </summary>
-	ReadOnlyCollection,
+	ReadOnlyMemory,
 	/// <summary>
-	/// Implements: <c><see cref="IReadOnlyDictionary{TKey, TValue}"/></c>
+	/// Is: <c><see cref="ReadOnlySpan{T}"/></c>
 	/// </summary>
-	ReadOnlyDictionary,
+	ReadOnlySpan,
 	/// <summary>
-	/// Implements: <c><see cref="IReadOnlyList{T}"/></c>
+	/// Is: <c><see cref="Span{T}"/></c>
 	/// </summary>
-	ReadOnlyList,
-	/// <summary>
-	/// Implements: <c><see cref="IReadOnlySet{T}"/></c>
-	/// </summary>
-	ReadOnlySet,
-	/// <summary>
-	/// Implements: <c><see cref="ISet{T}"/></c>
-	/// </summary>
-	Set,
+	Span,
 	/// <summary>
 	/// Implements: <c><see cref="System.IO.Stream"/></c>
 	/// </summary>
 	Stream,
 	/// <summary>
-	/// Is: <c><see cref="string"/></c>
-	/// </summary>
-	String,
-	/// <summary>
 	/// Is: <c><see cref="System.Text.StringBuilder"/></c>
 	/// </summary>
-	StringBuilder
+	StringBuilder,
+	/// <summary>
+	/// Is: <c><see cref="System.Threading.Tasks.Task"/></c> or <c><see cref="Task{TResult}"/></c>
+	/// </summary>
+	Task,
+	/// <summary>
+	/// Implements: <c><see cref="System.Type"/></c>
+	/// </summary>
+	Type,
+	/// <summary>
+	/// <c><see langword="class"/></c> type that implements: <c><see cref="ITuple"/></c>
+	/// </summary>
+	Tuple,
+	/// <summary>
+	/// Is: <c><see cref="System.Threading.Tasks.ValueTask"/></c> or <c><see cref="ValueTask{TResult}"/></c>
+	/// </summary>
+	ValueTask,
+	/// <summary>
+	/// <c><see langword="struct"/></c> type that implements: <c><see cref="ITuple"/></c>
+	/// </summary>
+	ValueTuple,
+	/// <summary>
+	/// Is: <c><see cref="System.Void"/></c>
+	/// </summary>
+	Void,
+	/// <summary>
+	/// Is: <c><see cref="WeakReference{T}"/></c> or <c><see cref="System.WeakReference"/></c>
+	/// </summary>
+	WeakReference
 }

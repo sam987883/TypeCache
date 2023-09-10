@@ -4,6 +4,7 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Data;
+using TypeCache.GraphQL.Types;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SqlApi;
@@ -51,19 +52,19 @@ public class SelectResponse<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.DataSource),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.Sql),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.Table),
-			Type = typeof(StringGraphType),
+			Type = typeof(GraphQLStringType),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table)
 		});
 

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using Moq;
-using TypeCache.Attributes;
+using NSubstitute;
+using NSubstitute.Extensions;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using Xunit;
@@ -21,40 +21,6 @@ public class SqlExtensions
 		public string LastName { get; set; }
 
 		public int Age { get; set; }
-	}
-
-	[Fact]
-	public void EscapeIdentifier()
-	{
-		var sqlServerDataSource = CreateDataSourceMock(SqlServer);
-
-		Assert.Equal("[First Name]", sqlServerDataSource.EscapeIdentifier("First Name"));
-		Assert.Equal("[[First Name]]]]]]]", sqlServerDataSource.EscapeIdentifier("[First Name]]]"));
-		Assert.Equal("[Last[Name]", sqlServerDataSource.EscapeIdentifier("Last[Name"));
-		Assert.Equal("[Last]]Name]", sqlServerDataSource.EscapeIdentifier("Last]Name"));
-
-		var postGreDataSource = CreateDataSourceMock(PostgreSql);
-		Assert.Equal("\"First Name\"", postGreDataSource.EscapeIdentifier("First Name"));
-	}
-
-	[Fact]
-	public void EscapeLikeValue()
-	{
-		var dataSource = CreateDataSourceMock(SqlServer);
-
-		Assert.Equal("aaa", dataSource.EscapeLikeValue("aaa"));
-		Assert.Equal("aa[%]a", dataSource.EscapeLikeValue("aa%a"));
-		Assert.Equal("[%]bbb[%]", dataSource.EscapeLikeValue("%bbb%"));
-		Assert.Equal("[[]aaa[_]bbb[%]ccc''", dataSource.EscapeLikeValue("[aaa_bbb%ccc'"));
-		Assert.Equal("[[][[][[][_][_][_][%][%][%]''''''", dataSource.EscapeLikeValue("[[[___%%%'''"));
-	}
-
-	[Fact]
-	public void EscapeValue()
-	{
-		Assert.Equal("aaa", "aaa".EscapeValue());
-		Assert.Equal("''a%a%a''", "'a%a%a'".EscapeValue());
-		Assert.Equal("''''''", "'''".EscapeValue());
 	}
 
 	[Fact]
@@ -93,8 +59,8 @@ INNER JOIN
 VALUES (1)
 	, (2)
 	, (3)
-) AS data ([ID])
-ON data.[ID] = _.[ID];
+) AS data (EscapeIdentifier)
+ON data.EscapeIdentifier = _.EscapeIdentifier;
 ");
 		var data = new[] { new Person { ID = 1 }, new Person { ID = 2 }, new Person { ID = 3 } };
 		var actual = objectSchema.CreateDeleteSQL<Person>(data, new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.ID" });
@@ -142,7 +108,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		};
 
 		var expected = Invariant($@"INSERT INTO {table}
-([FirstName], [LastName])
+(EscapeIdentifier, EscapeIdentifier)
 OUTPUT INSERTED.ID, INSERTED.[LastName]
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
@@ -175,7 +141,7 @@ VALUES (N'FirstName1', N'LastName1')
 		};
 
 		var expected = Invariant($@"INSERT INTO {table}
-([[First Name]]], [[Last_Name]]], [Age], [Amount])
+(EscapeIdentifier, EscapeIdentifier, EscapeIdentifier, EscapeIdentifier)
 OUTPUT INSERTED.[First Name] AS [First Name], INSERTED.[ID] AS [ID]
 SELECT ID, TRIM([First Name]) AS [First Name], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
@@ -241,7 +207,7 @@ FETCH NEXT 100 ROWS ONLY;
 		};
 
 		var expected = Invariant($@"UPDATE {table} WITH(UPDLOCK)
-SET [FirstName] = data.[FirstName], [LastName] = data.[LastName]
+SET EscapeIdentifier = data.EscapeIdentifier, EscapeIdentifier = data.EscapeIdentifier
 OUTPUT INSERTED.[FirstName] AS [FirstName], DELETED.LastName AS LastName, INSERTED.[ID] AS [ID]
 FROM {table} AS _
 INNER JOIN
@@ -249,8 +215,8 @@ INNER JOIN
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
 	, (N'FirstName3', N'LastName3')
-) AS data ([FirstName], [LastName])
-ON data.[ID] = _.[ID];
+) AS data (EscapeIdentifier, EscapeIdentifier)
+ON data.EscapeIdentifier = _.EscapeIdentifier;
 ");
 		var actual = objectSchema.CreateUpdateSQL<Person>(new[] { "FirstName", "LastName" }, data
 			, "INSERTED.[FirstName] AS [FirstName]", "DELETED.LastName AS LastName", "INSERTED.[ID] AS [ID]");
@@ -284,18 +250,11 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 
 	private static IDataSource CreateDataSourceMock(DataSourceType dataSourceType)
 	{
-		var dataSourceMock = new Mock<IDataSource>();
-		dataSourceMock.Setup(dataSource => dataSource.Type).Returns(dataSourceType);
-		dataSourceMock.Setup(dataSource => dataSource.EscapeIdentifier(It.IsAny<string>()))
-			.Returns((string identifier) => dataSourceType switch
-			{
-				PostgreSql => Invariant($"\"{identifier}\""),
-				_ => Invariant($"[{identifier.Replace("]", "]]")}]")
-			});
-		dataSourceMock.Setup(dataSource => dataSource.EscapeLikeValue(It.IsAny<string>()))
-			.Returns((string text) => text.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]"));
-		dataSourceMock.Setup(dataSource => dataSource.EscapeValue(It.IsAny<string>()))
-			.Returns((string text) => text.Replace("'", "''"));
-		return dataSourceMock.Object;
+		var dataSourceMock = Substitute.For<IDataSource>();
+		dataSourceMock.Type.Returns(dataSourceType);
+		dataSourceMock.EscapeIdentifier(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeIdentifier));
+		dataSourceMock.EscapeLikeValue(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeLikeValue));
+		dataSourceMock.EscapeValue(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeValue));
+		return dataSourceMock;
 	}
 }

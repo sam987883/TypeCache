@@ -24,9 +24,9 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 
 		var changeEnumCase = EnumOf<T>.Attributes switch
 		{
-			_ when EnumOf<T>.Attributes.OfType<ConstantCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
-			_ when EnumOf<T>.Attributes.OfType<CamelCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
-			_ when EnumOf<T>.Attributes.OfType<PascalCaseAttribute>().TryFirst(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.TryFirst<ConstantCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.TryFirst<CamelCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
+			_ when EnumOf<T>.Attributes.TryFirst<PascalCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
 			_ => new Func<string, string>(_ => _)
 		};
 

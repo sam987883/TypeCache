@@ -67,7 +67,7 @@ public class Connection<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.TotalCount),
-			Type = typeof(IntGraphType),
+			Type = typeof(GraphQLNumberType<int>),
 			Resolver = new FuncFieldResolver<Connection<T>, int?>(context => context.Source.TotalCount)
 		});
 

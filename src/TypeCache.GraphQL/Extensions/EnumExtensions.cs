@@ -1,36 +1,43 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using GraphQL.Types;
+using System.Numerics;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Extensions;
 
 public static class EnumExtensions
 {
-	public static Type? ToGraphType(this SystemType @this) => @this switch
+	public static Type? ToGraphType(this ScalarType @this) => @this switch
 	{
-		SystemType.String or SystemType.Char or SystemType.Range => typeof(StringGraphType),
-		SystemType.Uri => typeof(UriGraphType),
-		SystemType.Boolean => typeof(BooleanGraphType),
-		SystemType.SByte => typeof(SByteGraphType),
-		SystemType.Int16 => typeof(ShortGraphType),
-		SystemType.Int32 or SystemType.Index => typeof(IntGraphType),
-		SystemType.Int64 or SystemType.IntPtr => typeof(LongGraphType),
-		SystemType.Int128 or SystemType.UInt128 or SystemType.BigInteger => typeof(BigIntGraphType),
-		SystemType.Byte => typeof(ByteGraphType),
-		SystemType.UInt16 => typeof(UShortGraphType),
-		SystemType.UInt32 => typeof(UIntGraphType),
-		SystemType.UInt64 or SystemType.UIntPtr => typeof(ULongGraphType),
-		SystemType.Half => typeof(HalfGraphType),
-		SystemType.Single or SystemType.Double => typeof(FloatGraphType),
-		SystemType.Decimal => typeof(DecimalGraphType),
-		SystemType.DateOnly => typeof(DateOnlyGraphType),
-		SystemType.DateTime => typeof(DateTimeGraphType),
-		SystemType.DateTimeOffset => typeof(DateTimeOffsetGraphType),
-		SystemType.TimeOnly => typeof(TimeOnlyGraphType),
-		SystemType.TimeSpan => typeof(TimeSpanSecondsGraphType),
-		SystemType.Guid => typeof(GuidGraphType),
+		ScalarType.Boolean => typeof(GraphQLBooleanType),
+		ScalarType.Byte => typeof(GraphQLNumberType<byte>),
+		ScalarType.Decimal => typeof(GraphQLNumberType<decimal>),
+		ScalarType.DateOnly => typeof(GraphQLStringType<DateOnly>),
+		ScalarType.DateTime => typeof(GraphQLStringType<DateTime>),
+		ScalarType.DateTimeOffset => typeof(GraphQLStringType<DateTimeOffset>),
+		ScalarType.Guid => typeof(GraphQLStringType<Guid>),
+		ScalarType.Half => typeof(GraphQLNumberType<Half>),
+		ScalarType.Int16 => typeof(GraphQLNumberType<short>),
+		ScalarType.Int32 or ScalarType.Index => typeof(GraphQLNumberType<int>),
+		ScalarType.Int64 => typeof(GraphQLNumberType<long>),
+		ScalarType.IntPtr => typeof(GraphQLNumberType<nint>),
+		ScalarType.Int128 => typeof(GraphQLNumberType<Int128>),
+		ScalarType.UInt128 => typeof(GraphQLNumberType<UInt128>),
+		ScalarType.BigInteger => typeof(GraphQLNumberType<BigInteger>),
+		ScalarType.UInt16 => typeof(GraphQLNumberType<ushort>),
+		ScalarType.UInt32 => typeof(GraphQLNumberType<uint>),
+		ScalarType.UInt64 => typeof(GraphQLNumberType<ulong>),
+		ScalarType.UIntPtr => typeof(GraphQLNumberType<UIntPtr>),
+		ScalarType.SByte => typeof(GraphQLNumberType<sbyte>),
+		ScalarType.Single => typeof(GraphQLNumberType<float>),
+		ScalarType.Double => typeof(GraphQLNumberType<char>),
+		ScalarType.Char => typeof(GraphQLStringType<char>),
+		ScalarType.String => typeof(GraphQLStringType),
+		ScalarType.TimeOnly => typeof(GraphQLStringType<TimeOnly>),
+		ScalarType.TimeSpan => typeof(GraphQLStringType<TimeSpan>),
+		ScalarType.Uri => typeof(GraphQLUriType),
 		_ => null
 	};
 }

@@ -197,8 +197,8 @@ public static partial class MapExtensions
 				if (value is null && !targetPropertyInfo.PropertyType.IsNullable())
 					continue;
 
-				if (value is not null && !value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
-					continue;
+				//if (value is not null && !value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
+				//	continue;
 
 				targetPropertyInfo.SetPropertyValue(target, value);
 			}
