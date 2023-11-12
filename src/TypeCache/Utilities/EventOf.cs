@@ -44,6 +44,7 @@ public static class EventOf<T>
 
 			return EventHandlers.Remove(key);
 		}
+
 		return false;
 	}
 }

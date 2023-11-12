@@ -8,19 +8,12 @@ namespace TypeCache.Utilities;
 
 public static class RegexCache
 {
-	private static readonly TimeSpan RegexTimeout = TimeSpan.FromMinutes(1);
+	private static readonly TimeSpan DefaultMatchTimeout = TimeSpan.FromMinutes(1);
 
-	private static readonly IReadOnlyDictionary<string, Regex> MultilineRegex = new LazyDictionary<string, Regex>(pattern =>
-		new Regex(pattern, Compiled | CultureInvariant | Multiline, RegexTimeout), comparer: StringComparer.Ordinal);
-
-	private static readonly IReadOnlyDictionary<string, Regex> SinglelineRegex = new LazyDictionary<string, Regex>(pattern =>
-		new Regex(pattern, Compiled | CultureInvariant | Singleline, RegexTimeout), comparer: StringComparer.Ordinal);
+	private static readonly IReadOnlyDictionary<(string Pattern, RegexOptions Options), Regex> Cache =
+		new LazyDictionary<(string Pattern, RegexOptions Options), Regex>(_ => new(_.Pattern, _.Options, DefaultMatchTimeout));
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Regex MultilinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
-		=> MultilineRegex[@this];
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Regex SinglelinePattern([StringSyntax(StringSyntaxAttribute.Regex)] this string @this)
-		=> SinglelineRegex[@this];
+	public static Regex Regex([StringSyntax(StringSyntaxAttribute.Regex)] this string @this, RegexOptions options = Compiled | CultureInvariant | Singleline)
+		=> Cache[(@this, options)];
 }

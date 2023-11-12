@@ -144,6 +144,8 @@ internal static class TypeStore
 
 			return CollectionType.None;
 		});
+		DefaultValueFactory = new LazyDictionary<RuntimeTypeHandle, Func<object?>>(handle =>
+			handle.ToType().ToDefaultExpression().As<object>().Lambda<Func<object?>>().Compile());
 		DefaultValueTypeConstructorInvokes = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
 			handle.ToType().ToNewExpression().As<object>().Lambda<Func<object>>().Compile());
 		FieldGetInvokes = new();
@@ -165,7 +167,7 @@ internal static class TypeStore
 			if (type == typeof(object))
 				return ObjectType.Object;
 
-			if (type.IsPrimitive || type.GetDataType() is not ScalarType.None)
+			if (type.IsPrimitive || type.GetScalarType() is not ScalarType.None)
 				return ObjectType.DataType;
 
 			var count = ObjectTypeMap.Count;
@@ -212,6 +214,8 @@ internal static class TypeStore
 			{ typeof(Uri).TypeHandle, ScalarType.Uri }
 		}.ToImmutableDictionary();
 	}
+
+	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object?>> DefaultValueFactory { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorInvokes { get; }
 

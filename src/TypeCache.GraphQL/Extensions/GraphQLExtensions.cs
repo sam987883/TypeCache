@@ -132,7 +132,7 @@ public static class GraphQLExtensions
 				? @this.GenericTypeArguments.First()!.ToGraphQLType(false)
 				: throw new ArgumentOutOfRangeException(nameof(@this), Invariant($"{nameof(Task)} and {nameof(ValueTask)} are not allowed as GraphQL types."));
 
-		var scalarGraphType = @this.GetDataType().ToGraphType();
+		var scalarGraphType = @this.GetScalarType().ToGraphType();
 		if (scalarGraphType is not null)
 			return scalarGraphType;
 

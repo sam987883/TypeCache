@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Extensions;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Collections;
 
@@ -8,18 +9,12 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 	where T : class
 {
 	private readonly Func<T?, bool> _Equals;
-	private readonly int _HashCode;
 
-	public CustomEquatable(Func<T?, bool> customEquatableEquals, params object[] customEqualityFactors)
+	public CustomEquatable(Func<T?, bool> equals)
 	{
-		customEquatableEquals.AssertNotNull();
-		customEqualityFactors.AssertNotEmpty();
+		equals.AssertNotNull();
 
-		this._Equals = customEquatableEquals;
-
-		var hashCode = new HashCode();
-		customEqualityFactors.ForEach(hashCode.Add);
-		this._HashCode = hashCode.ToHashCode();
+		this._Equals = equals;
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -30,7 +25,15 @@ public abstract class CustomEquatable<T> : IEquatable<T>
 	public override bool Equals(object? other)
 		=> this._Equals(other as T);
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
-		=> this._HashCode;
+	{
+		var fieldInfos = this.GetType().GetFields(DeclaredOnly | Instance | NonPublic | Public);
+		if (fieldInfos.Length == 0)
+			return base.GetHashCode();
+
+		var values = fieldInfos.Select(fieldInfo => fieldInfo.GetFieldValue(this)).ToArray();
+		var hashCode = new HashCode();
+		values.ForEach(hashCode.Add);
+		return hashCode.ToHashCode();
+	}
 }

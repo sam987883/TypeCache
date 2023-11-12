@@ -228,7 +228,7 @@ public static class ExpressionExtensions
 		if (@this.Type != typeof(object))
 			return ValueConverter.CreateConversionExpression(@this, targetType);
 
-		var targetScalarType = targetType.GetDataType();
+		var targetScalarType = targetType.GetScalarType();
 		var expression = targetScalarType switch
 		{
 			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBigInteger), @this),

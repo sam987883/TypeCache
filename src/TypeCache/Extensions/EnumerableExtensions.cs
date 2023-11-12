@@ -38,12 +38,12 @@ public static class EnumerableExtensions
 		=> @this as List<T> ?? @this?.ToList() ?? new List<T>(0);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="EnumOf{T}.Comparer"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see langword="new"/> <see cref="EnumComparer{T}"/>());</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool ContainsEnum<T>(this IEnumerable<T> @this, T value)
 		where T : struct, Enum
-		=> @this.Contains(value, EnumOf<T>.Comparer);
+		=> @this.Contains(value, new EnumComparer<T>());
 
 	/// <inheritdoc cref="string.Concat(IEnumerable{string})"/>
 	/// <remarks>

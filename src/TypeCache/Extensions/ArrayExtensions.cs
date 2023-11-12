@@ -7,6 +7,9 @@ using TypeCache.Collections;
 
 namespace TypeCache.Extensions;
 
+public delegate void ActionRef<T>(ref T item);
+public delegate void ActionIndexRef<T>(ref T item, int index);
+
 public static class ArrayExtensions
 {
 	/// <inheritdoc cref="Array.Clear(Array, int, int)"/>

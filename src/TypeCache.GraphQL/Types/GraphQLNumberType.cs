@@ -15,7 +15,7 @@ public sealed class GraphQLNumberType<T> : GraphQLScalarType<GraphQLIntValue>
 		typeof(T).Name,
 		value => T.TryParse(value.Value.Span, CultureInfo.InvariantCulture, out _),
 		value => T.Parse(value.Value.Span, CultureInfo.InvariantCulture),
-		value => typeof(T).GetDataType() switch
+		value => typeof(T).GetScalarType() switch
 		{
 			ScalarType.SByte => ValueConverter.ConvertToSByte(value),
 			ScalarType.Int16 => ValueConverter.ConvertToInt16(value),

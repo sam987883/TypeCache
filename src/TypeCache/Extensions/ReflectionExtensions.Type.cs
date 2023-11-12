@@ -67,7 +67,11 @@ partial class ReflectionExtensions
 	public static CollectionType GetCollectionType(this Type @this)
 		=> TypeStore.CollectionTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
-	public static ScalarType GetDataType(this Type @this)
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ObjectType GetObjectType(this Type @this)
+		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
+
+	public static ScalarType GetScalarType(this Type @this)
 	{
 		if (@this.IsGenericTypeDefinition)
 			return ScalarType.None;
@@ -80,10 +84,6 @@ partial class ReflectionExtensions
 
 		return TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var dataType) ? dataType : ScalarType.None;
 	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ObjectType GetObjectType(this Type @this)
-		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
@@ -359,7 +359,7 @@ partial class ReflectionExtensions
 		@this.AssertNotNull();
 		targetType.AssertNotNull();
 
-		return @this.GetDataType().IsConvertibleTo(targetType.GetDataType());
+		return @this.GetScalarType().IsConvertibleTo(targetType.GetScalarType());
 	}
 
 	/// <summary>
@@ -381,7 +381,7 @@ partial class ReflectionExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsEnumUnderlyingType(this Type @this)
-		=> @this.GetDataType().IsEnumUnderlyingType();
+		=> @this.GetScalarType().IsEnumUnderlyingType();
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>

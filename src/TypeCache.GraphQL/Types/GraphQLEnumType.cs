@@ -22,20 +22,20 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		this.Description = typeof(T).GraphQLDescription();
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 
-		var changeEnumCase = EnumOf<T>.Attributes switch
+		var changeEnumCase = Enum<T>.Tokens switch
 		{
-			_ when EnumOf<T>.Attributes.TryFirst<ConstantCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
-			_ when EnumOf<T>.Attributes.TryFirst<CamelCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
-			_ when EnumOf<T>.Attributes.TryFirst<PascalCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
+			_ when Enum<T>.Attributes.TryFirst<ConstantCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
+			_ when Enum<T>.Attributes.TryFirst<CamelCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
+			_ when Enum<T>.Attributes.TryFirst<PascalCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
 			_ => new Func<string, string>(_ => _)
 		};
 
-		EnumOf<T>.Tokens.Values
-			.Where(token => !token.Attributes.Any<GraphQLIgnoreAttribute>())
-			.Select(token => new EnumValueDefinition(token.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(token.Name), token.Value)
+		Enum<T>.Tokens
+			.Where(_ => !_.Attributes.Any<GraphQLIgnoreAttribute>())
+			.Select(_ => new EnumValueDefinition(_.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(_.Name), _.Value)
 			{
-				Description = token.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
-				DeprecationReason = token.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
+				Description = _.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
+				DeprecationReason = _.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
 			})
 			.ToArray()
 			.ForEach(this.Add);

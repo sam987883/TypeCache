@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Collections;
+using System.Collections.Immutable;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 
@@ -9,34 +9,46 @@ namespace TypeCache.Extensions;
 public static class EnumExtensions
 {
 	[DebuggerHidden]
-	public static IReadOnlyCollection<Attribute> Attributes<T>(this T @this)
+	public static IReadOnlyList<Attribute> Attributes<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Attributes : Array<Attribute>.Empty;
+		=> Enum<T>.Tokens[@this]?.Attributes ?? ImmutableArray<Attribute>.Empty;
 
 	[DebuggerHidden]
 	public static bool HasAnyFlag<T>(this T @this, params T[] flags)
 		where T : struct, Enum
 		=> flags?.Any(flag => @this.HasFlag(flag)) ?? false;
 
-	[DebuggerHidden]
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("X");</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Hex<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Hex : @this.ToString("X");
+		=> @this.ToString("X");
 
-	[DebuggerHidden]
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>.IsDefined(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsDefined<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.ContainsKey(@this);
+		=> Enum.IsDefined(@this);
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>
+	/// </remarks>
 	[DebuggerHidden]
 	public static string Name<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Name : @this.ToString();
+		=> @this.ToString("F");
 
-	[DebuggerHidden]
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D");</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Number<T>(this T @this)
 		where T : struct, Enum
-		=> EnumOf<T>.Tokens.TryGetValue(@this, out var token) ? token.Number : @this.ToString("D");
+		=> @this.ToString("D");
 
 	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
 	/// <remarks>

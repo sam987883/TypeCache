@@ -2,12 +2,13 @@
 
 using System;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
+using static System.Text.RegularExpressions.RegexOptions;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -57,17 +58,19 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 				dateTime = dateTime.ChangeTimeZone(currentTimeZone, timeZone!);
 			}
 
-			value = format.IsNotBlank() ? dateTime.ToString(format, InvariantCulture) : dateTime;
+			return format.IsNotBlank() ? dateTime.ToString(format, InvariantCulture) : dateTime;
 		}
-		else if (value is DateTimeOffset dateTimeOffset)
+
+		if (value is DateTimeOffset dateTimeOffset)
 		{
 			var timeZone = context.GetArgument<string>("timeZone");
 			if (timeZone.IsNotBlank())
 				dateTimeOffset = dateTimeOffset.ToTimeZone(timeZone);
 
-			value = format.IsNotBlank() ? dateTimeOffset.ToString(format, InvariantCulture) : dateTimeOffset;
+			return format.IsNotBlank() ? dateTimeOffset.ToString(format, InvariantCulture) : dateTimeOffset;
 		}
-		else if (value is string text)
+
+		if (value is string text)
 		{
 			var trim = context.GetArgument<string>("trim");
 			if (trim is not null)
@@ -84,7 +87,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = RegexCache.SinglelinePattern(pattern).Match(text);
+				var match = Regex.Match(text, pattern, Compiled | Singleline);
 				if (match.Success)
 					text = match.Value;
 				else
@@ -95,7 +98,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			if (text.Length > length)
 				text = text.Left(length.Value);
 
-			text = context.GetArgument<StringCase?>("case") switch
+			return context.GetArgument<StringCase?>("case") switch
 			{
 				StringCase.Lower => text.ToLower(),
 				StringCase.LowerInvariant => text.ToLowerInvariant(),
@@ -103,11 +106,10 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 				StringCase.UpperInvariant => text.ToUpperInvariant(),
 				_ => text
 			};
-
-			value = text;
 		}
-		else if (format.IsNotBlank())
-			value = string.Format(InvariantCulture, Invariant($"{{0:{format}}}"), value);
+
+		if (format.IsNotBlank())
+			return string.Format(InvariantCulture, Invariant($"{{0:{format}}}"), value);
 
 		return value;
 	}

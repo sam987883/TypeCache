@@ -100,10 +100,7 @@ public static class AssertExtensions
 		[CallerArgumentExpression("this")] string? argument = null,
 		[CallerMemberName] string? caller = null)
 		where T : notnull
-	{
-		if (@this is null)
-			throw new ArgumentNullException(argument, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{typeof(T).Name}>()."));
-	}
+		=> ArgumentNullException.ThrowIfNull(@this, Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{typeof(T).Name}>()."));
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static void AssertNotSame(this object? @this, object? value, StringComparison comparison = StringComparison.OrdinalIgnoreCase,

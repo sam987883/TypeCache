@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Linq;
 using TypeCache.Extensions;
 using Xunit;
 
@@ -28,7 +29,7 @@ public class EnumExtensions
 	[Fact]
 	public void Attributes()
 	{
-		Assert.Equal(3, TestEnum.TestValue2.Attributes().Count);
+		Assert.Equal(3, TestEnum.TestValue2.Attributes().Count());
 	}
 
 	[Fact]

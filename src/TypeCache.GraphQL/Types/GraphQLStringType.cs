@@ -26,7 +26,7 @@ public sealed class GraphQLStringType<T> : GraphQLScalarType<GraphQLStringValue>
 		typeof(T).Name,
 		value => T.TryParse(value.Value.Span, CultureInfo.InvariantCulture, out _),
 		value => T.Parse(value.Value.Span, CultureInfo.InvariantCulture),
-		value => typeof(T).GetDataType() switch
+		value => typeof(T).GetScalarType() switch
 		{
 			ScalarType.Char => ValueConverter.ConvertToChar(value),
 			ScalarType.DateOnly => ValueConverter.ConvertToDateOnly(value),

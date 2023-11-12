@@ -28,6 +28,7 @@ public sealed class ValueJsonConverter : JsonConverter<object?>
 				dictionary.Add(name!, value!);
 			}
 		}
+
 		return dictionary;
 	}
 
@@ -39,6 +40,7 @@ public sealed class ValueJsonConverter : JsonConverter<object?>
 			var value = JsonSerializer.Deserialize<object>(ref reader, options);
 			list.Add(value!);
 		}
+
 		return list.ToArray();
 	}
 }
