@@ -5,17 +5,11 @@ using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Collections;
 
-public abstract class CustomEquatable<T> : IEquatable<T>
+public abstract class CustomEquatable<T>(Func<T?, bool> equals)
+	: IEquatable<T>
 	where T : class
 {
-	private readonly Func<T?, bool> _Equals;
-
-	public CustomEquatable(Func<T?, bool> equals)
-	{
-		equals.AssertNotNull();
-
-		this._Equals = equals;
-	}
+	private readonly Func<T?, bool> _Equals = equals ?? equals.ThrowArgumentNullException();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(T? other)

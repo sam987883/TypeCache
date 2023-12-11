@@ -7,16 +7,10 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Mediation;
 
-internal sealed class Mediator : IMediator
+internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediator> logger)
+	: IMediator
 {
-	private readonly IServiceProvider _ServiceProvider;
-	private readonly ILogger<IMediator> _Logger;
-
-	public Mediator(IServiceProvider serviceProvider, ILogger<IMediator> logger)
-	{
-		this._ServiceProvider = serviceProvider;
-		this._Logger = logger;
-	}
+	private readonly IServiceProvider _ServiceProvider = serviceProvider ?? serviceProvider.ThrowArgumentNullException();
 
 	public async Task ExecuteAsync<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest
@@ -36,12 +30,12 @@ internal sealed class Mediator : IMediator
 		}
 		catch (AggregateException error)
 		{
-			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ExecuteAsync));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ExecuteAsync));
 			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
-			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ExecuteAsync), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ExecuteAsync), error.Message);
 			await Task.FromException(error);
 		}
 	}
@@ -67,12 +61,12 @@ internal sealed class Mediator : IMediator
 		}
 		catch (AggregateException error)
 		{
-			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.MapAsync));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.MapAsync));
 			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
-			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.MapAsync), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.MapAsync), error.Message);
 			await Task.FromException(error);
 		}
 
@@ -83,7 +77,7 @@ internal sealed class Mediator : IMediator
 	{
 		request.AssertNotNull();
 
-		return (Task<RESPONSE>)this.GetType().InvokeMethod(nameof(Mediator.MapAsync), new[] { request.GetType(), typeof(RESPONSE) }, this, request, token)!;
+		return (Task<RESPONSE>)this.GetType().InvokeMethod(nameof(Mediator.MapAsync), [request.GetType(), typeof(RESPONSE)], this, request, token)!;
 	}
 
 	public async Task ValidateAsync<REQUEST>(REQUEST request, CancellationToken token = default)
@@ -103,12 +97,12 @@ internal sealed class Mediator : IMediator
 		}
 		catch (AggregateException error)
 		{
-			this._Logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ValidateAsync));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.ValidateAsync));
 			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
-			this._Logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ValidateAsync), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.ValidateAsync), error.Message);
 			await Task.FromException(error);
 		}
 	}

@@ -45,7 +45,6 @@ public static class SqlExtensions
 		byte[] binary => Invariant($"0x{binary.ToHexString()}"),
 		JsonElement json => json.ValueKind switch
 		{
-			JsonValueKind.String => Invariant($"N'{json.GetString()!.EscapeValue()}'"),
 			JsonValueKind.Number => json.ToString()!,
 			JsonValueKind.True => "1",
 			JsonValueKind.False => "0",

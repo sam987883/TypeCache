@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -17,7 +18,7 @@ namespace TypeCache.Utilities;
 
 internal static class TypeStore
 {
-	public static IReadOnlyList<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
+	public static IReadOnlySet<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
 	{
 		(typeof(Array).TypeHandle, CollectionType.Array),
 		(typeof(ArrayList).TypeHandle, CollectionType.ArrayList),
@@ -27,6 +28,8 @@ internal static class TypeStore
 		(typeof(ConcurrentDictionary<,>).TypeHandle, CollectionType.ConcurrentDictionary),
 		(typeof(ConcurrentQueue<>).TypeHandle, CollectionType.ConcurrentQueue),
 		(typeof(ConcurrentStack<>).TypeHandle, CollectionType.ConcurrentStack),
+		(typeof(FrozenDictionary<,>).TypeHandle, CollectionType.FrozenDictionary),
+		(typeof(FrozenSet<>).TypeHandle, CollectionType.FrozenSet),
 		(typeof(Hashtable).TypeHandle, CollectionType.Hashtable),
 		(typeof(HybridDictionary).TypeHandle, CollectionType.HybridDictionary),
 		(typeof(ImmutableArray<>).TypeHandle, CollectionType.ImmutableArray),
@@ -67,10 +70,10 @@ internal static class TypeStore
 		(typeof(IReadOnlyList<>).TypeHandle, CollectionType.ReadOnlyList),
 		(typeof(IReadOnlyCollection<>).TypeHandle, CollectionType.ReadOnlyCollection),
 		(typeof(ICollection<>).TypeHandle, CollectionType.Collection)
-	}.ToImmutableArray();
+	}.ToFrozenSet();
 
-	public static IReadOnlyList<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
-	{
+	public static IReadOnlyList<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap =>
+	[
 		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
 		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
 		(typeof(DataRow).TypeHandle, ObjectType.DataRow),
@@ -123,7 +126,7 @@ internal static class TypeStore
 		(typeof(ValueTuple<,,,,,>).TypeHandle, ObjectType.ValueTuple),
 		(typeof(ValueTuple<,,,,,,>).TypeHandle, ObjectType.ValueTuple),
 		(typeof(ValueTuple<,,,,,,,>).TypeHandle, ObjectType.ValueTuple)
-	};
+	];
 
 	static TypeStore()
 	{
@@ -134,10 +137,8 @@ internal static class TypeStore
 			if (type.IsArray)
 				return CollectionType.Array;
 
-			var count = CollectionTypeMap.Count;
-			for (var i = 0; i < count; ++i)
+			foreach (var map in CollectionTypeMap)
 			{
-				var map = CollectionTypeMap[i];
 				if (type.Implements(map.Handle.ToType()))
 					return map.CollectionType;
 			}
@@ -212,7 +213,7 @@ internal static class TypeStore
 			{ typeof(ulong).TypeHandle, ScalarType.UInt64 },
 			{ typeof(UIntPtr).TypeHandle, ScalarType.UIntPtr },
 			{ typeof(Uri).TypeHandle, ScalarType.Uri }
-		}.ToImmutableDictionary();
+		}.ToFrozenDictionary();
 	}
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object?>> DefaultValueFactory { get; }

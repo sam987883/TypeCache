@@ -27,7 +27,7 @@ public sealed class GraphQLMiddleware
 	{
 		this._Next = next;
 		this._Route = route;
-		this._Schema = new Schema(provider, new[] { configureSchema });
+		this._Schema = new Schema(provider, [configureSchema]);
 	}
 
 	public async Task Invoke(HttpContext httpContext
@@ -85,7 +85,7 @@ public sealed class GraphQLMiddleware
 		{
 			logger?.LogError(error, result.Errors?[0].Message);
 
-			var separator = new[] { '\r', '\n' };
+			char[] separator = ['\r', '\n'];
 			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
 			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
 		}

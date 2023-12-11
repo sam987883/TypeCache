@@ -19,7 +19,7 @@ partial class ReflectionExtensions
 			null when index?.Any() is true => index,
 			null => Array<object>.Empty,
 			_ when index?.Any() is true => index.Prepend(instance).ToArray(),
-			_ => new[] { instance }
+			_ => [instance]
 		};
 		return @this.GetMethod!.InvokeMethod(arguments);
 	}
@@ -33,9 +33,9 @@ partial class ReflectionExtensions
 		var arguments = instance switch
 		{
 			null when index?.Any() is true => index.Append(value).ToArray(),
-			null => new[] { value },
+			null => [value],
 			_ when index?.Any() is true => index.Prepend(instance).Append(value).ToArray(),
-			_ => new[] { instance, value }
+			_ => [instance, value]
 		};
 		@this.SetMethod!.InvokeMethod(arguments);
 	}

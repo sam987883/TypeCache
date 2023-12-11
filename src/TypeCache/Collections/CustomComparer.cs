@@ -1,33 +1,15 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Extensions;
+
 namespace TypeCache.Collections;
 
-public readonly struct CustomComparer<T> : IComparer<T>, IEqualityComparer<T>
+public readonly struct CustomComparer<T>(Comparison<T?> compare, Func<T?, T?, bool>? equals, Func<T, int>? getHashCode)
+	: IComparer<T>, IEqualityComparer<T>
 {
-	private readonly Comparison<T?> _Compare;
-	private readonly Func<T?, T?, bool> _Equals;
-	private readonly Func<T, int> _GetHashCode;
-
-	public CustomComparer(Comparison<T?> compare)
-	{
-		this._Compare = compare;
-		this._Equals = (x, y) => compare(x, y) == 0;
-		this._GetHashCode = _ => _?.GetHashCode() ?? 0;
-	}
-
-	public CustomComparer(Comparison<T?> compare, Func<T?, T?, bool> equals)
-	{
-		this._Compare = compare;
-		this._Equals = equals;
-		this._GetHashCode = _ => _?.GetHashCode() ?? 0;
-	}
-
-	public CustomComparer(Comparison<T?> compare, Func<T?, T?, bool> equals, Func<T, int> getHashCode)
-	{
-		this._Compare = compare;
-		this._Equals = equals;
-		this._GetHashCode = getHashCode;
-	}
+	private readonly Comparison<T?> _Compare = compare ?? compare.ThrowArgumentNullException();
+	private readonly Func<T?, T?, bool> _Equals = equals ?? ((x, y) => compare(x, y) == 0);
+	private readonly Func<T, int> _GetHashCode = getHashCode ?? (_ => _?.GetHashCode() ?? 0);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public int Compare([AllowNull] T x, [AllowNull] T y)

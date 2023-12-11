@@ -22,7 +22,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		this.Description = typeof(T).GraphQLDescription();
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 
-		var changeEnumCase = Enum<T>.Tokens switch
+		var changeEnumCase = Enum<T>.Attributes switch
 		{
 			_ when Enum<T>.Attributes.TryFirst<ConstantCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
 			_ when Enum<T>.Attributes.TryFirst<CamelCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
@@ -30,12 +30,12 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 			_ => new Func<string, string>(_ => _)
 		};
 
-		Enum<T>.Tokens
-			.Where(_ => !_.Attributes.Any<GraphQLIgnoreAttribute>())
-			.Select(_ => new EnumValueDefinition(_.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(_.Name), _.Value)
+		Enum<T>.Values
+			.Where(_ => !_.Attributes().Any<GraphQLIgnoreAttribute>())
+			.Select(_ => new EnumValueDefinition(_.Attributes().FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(_.Name()), _)
 			{
-				Description = _.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
-				DeprecationReason = _.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
+				Description = _.Attributes().FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
+				DeprecationReason = _.Attributes().FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
 			})
 			.ToArray()
 			.ForEach(this.Add);

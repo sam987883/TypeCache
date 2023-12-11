@@ -28,6 +28,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{4E2B
 		.github\FUNDING.yml = .github\FUNDING.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{E42595E8-9088-4A82-85D5-D0DF1029A332}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +65,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4E2BA105-60BD-4BC8-91DA-D440A69CAC30} = {2BAE05AE-EA32-46C0-B8FD-58E253C62DF5}
+		{E42595E8-9088-4A82-85D5-D0DF1029A332} = {4E2BA105-60BD-4BC8-91DA-D440A69CAC30}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C45D4B27-7124-4A8E-9DDA-3A8CB31FA1A3}

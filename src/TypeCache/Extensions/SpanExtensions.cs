@@ -71,16 +71,16 @@ public static class SpanExtensions
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryWrite(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryWrite<T>(this scoped Span<byte> @this, ref T value)
+	public static bool TryWrite<T>(this scoped Span<byte> @this, in T value)
 		where T : struct
-		=> MemoryMarshal.TryWrite(@this, ref value);
+		=> MemoryMarshal.TryWrite(@this, in value);
 
 	/// <inheritdoc cref="MemoryMarshal.Write{T}(Span{byte}, ref T)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Write(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void Write<T>(this scoped Span<byte> @this, ref T value)
+	public static void Write<T>(this scoped Span<byte> @this, in T value)
 		where T : struct
-		=> MemoryMarshal.Write(@this, ref value);
+		=> MemoryMarshal.Write(@this, in value);
 }

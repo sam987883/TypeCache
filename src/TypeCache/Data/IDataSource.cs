@@ -12,7 +12,7 @@ public interface IDataSource : IName, IEquatable<IDataSource>
 
 	string ConnectionString { get; }
 
-	IReadOnlyList<string> Databases { get; }
+	IReadOnlySet<string> Databases { get; }
 
 	string DefaultDatabase { get; }
 

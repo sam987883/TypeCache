@@ -173,42 +173,42 @@ partial class ReflectionExtensions
 
 	public static object? InvokeMethod(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, genericTypes, arguments)?
 			.MakeGenericMethod(genericTypes)
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, params object?[]? arguments)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : new[] { instance });
+			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
 
 	public static object? InvokeStaticMethod(this Type @this, string name, params object?[]? arguments)
 		=> @this.FindStaticMethod(name, arguments)?

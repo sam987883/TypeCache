@@ -8,23 +8,11 @@ namespace TypeCache.Attributes;
 /// Used to automatically register types.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
-public class ServiceLifetimeAttribute : Attribute
+public class ServiceLifetimeAttribute(ServiceLifetime serviceLifetime, Type? serviceType = null) : Attribute
 {
-	public ServiceLifetimeAttribute(ServiceLifetime serviceLifetime)
-	{
-		this.ServiceLifetime = serviceLifetime;
-		this.ServiceType = null;
-	}
+	public ServiceLifetime ServiceLifetime { get; } = serviceLifetime;
 
-	public ServiceLifetimeAttribute(ServiceLifetime serviceLifetime, Type serviceType)
-	{
-		this.ServiceLifetime = serviceLifetime;
-		this.ServiceType = serviceType;
-	}
-
-	public ServiceLifetime ServiceLifetime { get; }
-
-	public Type? ServiceType { get; }
+	public Type? ServiceType { get; } = serviceType;
 }
 
 /// <summary>
@@ -34,7 +22,8 @@ public class ServiceLifetimeAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public sealed class ServiceLifetimeAttribute<T> : ServiceLifetimeAttribute
 {
-	public ServiceLifetimeAttribute(ServiceLifetime serviceLifetime) : base(serviceLifetime, typeof(T))
+	public ServiceLifetimeAttribute(ServiceLifetime serviceLifetime)
+		: base(serviceLifetime, typeof(T))
 	{
 	}
 }

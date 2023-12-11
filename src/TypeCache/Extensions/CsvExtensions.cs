@@ -9,7 +9,7 @@ namespace TypeCache.Extensions;
 
 public static class CsvExtensions
 {
-	private static readonly char[] ESCAPE_CHARS = new[] { '"', ',', '\r', '\n' };
+	private static readonly char[] ESCAPE_CHARS = ['"', ',', '\r', '\n'];
 
 	/// <remarks>
 	/// <c>=&gt; <see cref="ESCAPE_CHARS"/>.Contains(@<paramref name="this"/>) ? Invariant($"\"{@<paramref name="this"/>}\"") : @<paramref name="this"/>.ToString();</c>

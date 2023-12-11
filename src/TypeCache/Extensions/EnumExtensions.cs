@@ -1,17 +1,19 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Immutable;
+using TypeCache.Collections;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
+using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
 
 public static class EnumExtensions
 {
 	[DebuggerHidden]
-	public static IReadOnlyList<Attribute> Attributes<T>(this T @this)
+	public static Attribute[] Attributes<T>(this T @this)
 		where T : struct, Enum
-		=> Enum<T>.Tokens[@this]?.Attributes ?? ImmutableArray<Attribute>.Empty;
+		=> Enum.IsDefined(@this)
+			? typeof(T).GetField(@this.Name(), Public | Static)!.GetCustomAttributes(false).Cast<Attribute>().ToArray()
+			: Array<Attribute>.Empty;
 
 	[DebuggerHidden]
 	public static bool HasAnyFlag<T>(this T @this, params T[] flags)
@@ -130,6 +132,12 @@ public static class EnumExtensions
 		ScalarType.SByte or ScalarType.Byte
 		or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
 		or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 => true,
+		_ => false
+	};
+
+	public static bool IsFrozen(this CollectionType @this) => @this switch
+	{
+		CollectionType.FrozenDictionary or CollectionType.FrozenSet => true,
 		_ => false
 	};
 

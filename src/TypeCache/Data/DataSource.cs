@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Immutable;
+using System.Collections.Frozen;
 using System.Data;
 using System.Data.Common;
 using TypeCache.Collections;
@@ -30,7 +30,7 @@ internal sealed class DataSource : IDataSource
 			_ => string.Empty
 		};
 
-		this.Databases = this.GetDatabases().ToImmutableArray();
+		this.Databases = this.GetDatabases().ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 		this.ObjectSchemas = this.GetObjectSchemas();
 	}
 
@@ -39,7 +39,7 @@ internal sealed class DataSource : IDataSource
 
 	public string ConnectionString { get; }
 
-	public IReadOnlyList<string> Databases { get; }
+	public IReadOnlySet<string> Databases { get; }
 
 	public string DefaultDatabase { get; }
 
@@ -298,6 +298,6 @@ internal sealed class DataSource : IDataSource
 			});
 		});
 
-		return objectSchemas.ToImmutableDictionary();
+		return objectSchemas.ToFrozenDictionary();
 	}
 }

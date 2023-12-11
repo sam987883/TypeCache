@@ -5,16 +5,9 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Mediation;
 
-public readonly struct RulesBuilder
+public readonly struct RulesBuilder(IServiceCollection services)
 {
-	private readonly IServiceCollection _Services;
-
-	public RulesBuilder(IServiceCollection services)
-	{
-		services.AssertNotNull();
-
-		this._Services = services;
-	}
+	private readonly IServiceCollection _Services = services ?? services.ThrowArgumentNullException();
 
 	/// <summary>
 	/// Registers Singleton: <c><see cref="IAfterRule{REQUEST}"/></c>.

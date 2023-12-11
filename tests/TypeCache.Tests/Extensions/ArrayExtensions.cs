@@ -34,7 +34,7 @@ public class ArrayExtensions
 	[Fact]
 	public void Copy()
 	{
-		var expected = new[] { 1, 2, 3, 4, 5, 6 };
+		int[] expected = [1, 2, 3, 4, 5, 6];
 		var actual = expected.Copy();
 
 		Assert.Equal(expected, actual);
@@ -136,7 +136,7 @@ public class ArrayExtensions
 	[Fact]
 	public void Length()
 	{
-		var expected = new[] { 3, 0, 1, 2 };
+		int[] expected = [3, 0, 1, 2];
 		var array = new int[expected[0], expected[1], expected[2], expected[3]];
 		var actual = Enumerable.Range(0, array.Rank).Select(i => array.Length(i)).ToArray();
 
@@ -228,9 +228,9 @@ public class ArrayExtensions
 	[Fact]
 	public void ToImmutableQueue()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		int[] intArray = [1, 2, 3, 4, 5, 6];
 		var intQueue = intArray.ToImmutableQueue();
-		var stringArray = new[] { "123", "abc", "def" };
+		string[] stringArray = ["123", "abc", "def"];
 		var stringQueue = stringArray.ToImmutableQueue();
 
 		Assert.False(intQueue.IsEmpty);
@@ -243,9 +243,9 @@ public class ArrayExtensions
 	[Fact]
 	public void ToImmutableStack()
 	{
-		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
+		int[] intArray = [1, 2, 3, 4, 5, 6];
 		var intStack = intArray.ToImmutableStack();
-		var stringArray = new[] { "123", "abc", "def" };
+		string[] stringArray = ["123", "abc", "def"];
 		var stringStack = stringArray.ToImmutableStack();
 		intArray.Reverse();
 		stringArray.Reverse();

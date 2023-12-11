@@ -29,7 +29,7 @@ partial class ReflectionExtensions
 
 	public static LambdaExpression GetFieldValueLambdaExpression(this FieldInfo @this)
 		=> !@this.IsStatic
-			? LambdaFactory.Create(new[] { @this.DeclaringType! }, parameters => parameters[0].Field(@this))
+			? LambdaFactory.Create([@this.DeclaringType!], parameters => parameters[0].Field(@this))
 			: @this.ToStaticFieldExpression().Lambda();
 
 	/// <inheritdoc cref="FieldInfo.SetValue(object, object)"/>
@@ -62,8 +62,8 @@ partial class ReflectionExtensions
 		@this.IsLiteral.AssertFalse();
 
 		return !@this.IsStatic
-			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
-			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.ToStaticFieldExpression().Assign(parameters[0]));
+			? LambdaFactory.CreateAction([@this.DeclaringType!, @this.FieldType], parameters => parameters[0].Field(@this).Assign(parameters[1]))
+			: LambdaFactory.CreateAction([@this.FieldType], parameters => @this.ToStaticFieldExpression().Assign(parameters[0]));
 	}
 
 	/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>

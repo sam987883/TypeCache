@@ -48,6 +48,14 @@ public enum CollectionType
 	/// </summary>
 	Dictionary,
 	/// <summary>
+	/// <c><see cref="System.Collections.Frozen.FrozenDictionary{TKey, TValue}"/></c>
+	/// </summary>
+	FrozenDictionary,
+	/// <summary>
+	/// <c><see cref="System.Collections.Frozen.FrozenSet{T}"/></c>
+	/// </summary>
+	FrozenSet,
+	/// <summary>
 	/// <c><see cref="System.Collections.Hashtable"/></c>
 	/// </summary>
 	Hashtable,

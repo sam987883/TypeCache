@@ -4,8 +4,10 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Data;
 
-public readonly record struct DatabaseObject(string Name) : IEquatable<DatabaseObject>
+public readonly struct DatabaseObject(string name) : IEquatable<DatabaseObject>
 {
+	public string Name { get; } = name;
+
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(DatabaseObject other)
 		=> this.Name.Is(other.Name);

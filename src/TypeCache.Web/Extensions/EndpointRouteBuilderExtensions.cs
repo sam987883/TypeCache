@@ -235,7 +235,7 @@ public static class EndpointRouteBuilderExtensions
 	/// </code>
 	/// </summary>
 	public static RouteHandlerBuilder MapSqlApiCallProcedure(this IEndpointRouteBuilder @this)
-		=> @this.MapMethods(Invariant($"/{{dataSource:string}}/procedure/{{database:string}}/{{schema:string}}/{{procedure:string}}"), new[] { HttpMethods.Get, HttpMethods.Post }, SqlApiHandler.CallProcedure)
+		=> @this.MapMethods(Invariant($"/{{dataSource:string}}/procedure/{{database:string}}/{{schema:string}}/{{procedure:string}}"), [HttpMethods.Get, HttpMethods.Post], SqlApiHandler.CallProcedure)
 			.AddEndpointFilter<SqlApiEndpointFilter>()
 			.WithName("Call Procedure");
 

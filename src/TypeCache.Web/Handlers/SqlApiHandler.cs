@@ -47,7 +47,7 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlDataSetRequest { Command = sqlCommand };
-		var result = await mediator.MapAsync(request, httpContext.RequestAborted);
+		var response = await mediator.MapAsync(request, httpContext.RequestAborted);
 
 		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
 			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
@@ -56,7 +56,7 @@ internal static class SqlApiHandler
 				httpContext.Items[parameter.Name] = value;
 		}
 
-		return Results.Ok(result);
+		return Results.Ok(response);
 	}
 
 	public static async Task<IResult> DeleteTable(
@@ -76,19 +76,18 @@ internal static class SqlApiHandler
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> DeleteTableBatch(
@@ -105,19 +104,18 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> InsertTable(
@@ -141,8 +139,8 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
@@ -166,19 +164,18 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static IResult GetDeleteSQL(
@@ -204,7 +201,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateDeleteSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateDeleteSQL(data, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetInsertSQL(
@@ -255,7 +253,8 @@ internal static class SqlApiHandler
 			Top = top,
 			Where = where
 		};
-		return Results.Text(objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetInsertBatchSQL(
@@ -268,7 +267,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateInsertSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateInsertSQL(data, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static async Task<IResult> GetSchema(
@@ -281,7 +281,8 @@ internal static class SqlApiHandler
 	{
 		var dataSource = httpContext.GetDataSource();
 		var table = await dataSource.GetDatabaseSchemaAsync(collection, database, httpContext.RequestAborted);
-		return Results.Ok(table?.Select(where, orderBy));
+		var response = table?.Select(where, orderBy);
+		return Results.Ok(response);
 	}
 
 	public static IResult GetSelectSQL(
@@ -323,7 +324,8 @@ internal static class SqlApiHandler
 			Top = top,
 			Where = where
 		};
-		return Results.Text(objectSchema.CreateSelectSQL(selectQuery), Text.Plain, UTF8);
+		var sql = objectSchema.CreateSelectSQL(selectQuery);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetUpdateSQL(
@@ -337,7 +339,8 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateUpdateSQL(set.Split(','), where, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetUpdateBatchSQL(
@@ -350,7 +353,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateUpdateSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateUpdateSQL(data, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static async Task<IResult> Select(
@@ -400,8 +404,8 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlJsonArrayRequest { Command = sqlCommand };
-		var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-		return Results.Ok(result);
+		var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+		return Results.Ok(response);
 	}
 
 	public static async Task<IResult> UpdateTable(
@@ -425,8 +429,8 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
@@ -453,8 +457,8 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
@@ -462,6 +466,5 @@ internal static class SqlApiHandler
 			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
-
 	}
 }

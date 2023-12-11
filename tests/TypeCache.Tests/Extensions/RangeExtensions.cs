@@ -86,9 +86,9 @@ public class RangeExtensions
 	[Fact]
 	public void ToEnumerable()
 	{
-		var expected1 = new[] { 0 };
-		var expected2 = new[] { 0, 1 };
-		var expected3 = new[] { 0, 1, 2 };
+		int[] expected1 = [0];
+		int[] expected2 = [0, 1];
+		int[] expected3 = [0, 1, 2];
 
 		Assert.Equal(expected1, (0..1).ToEnumerable().ToArray());
 		Assert.Equal(expected2, (0..2).ToEnumerable().ToArray());

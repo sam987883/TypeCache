@@ -1,17 +1,17 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Extensions;
+
 namespace TypeCache.Attributes;
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class MapIgnoreAttribute : Attribute
+public class MapIgnoreAttribute() : Attribute
 {
-	public MapIgnoreAttribute()
-	{
-		this.Type = null;
-	}
-
 	protected MapIgnoreAttribute(Type type)
+		: this()
 	{
+		type.AssertNotNull();
+
 		this.Type = type;
 	}
 
@@ -19,10 +19,6 @@ public class MapIgnoreAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
-public class MapIgnoreAttribute<T> : MapIgnoreAttribute
+public sealed class MapIgnoreAttribute<T>() : MapIgnoreAttribute(typeof(T))
 {
-	public MapIgnoreAttribute(string property)
-		: base(typeof(T))
-	{
-	}
 }
