@@ -53,6 +53,7 @@ public abstract class GraphQLScalarType<T> : ScalarGraphType
 		null => _GraphQLNullValue,
 		true => _GraphQLTrueBooleanValue,
 		false => _GraphQLFalseBooleanValue,
+		Enum x => new GraphQLEnumValue(new GraphQLName(x.ToString("F"))),
 		sbyte x => new GraphQLIntValue(x),
 		short x => new GraphQLIntValue(x),
 		int x => new GraphQLIntValue(x),
@@ -75,7 +76,6 @@ public abstract class GraphQLScalarType<T> : ScalarGraphType
 		DateTimeOffset x => new GraphQLStringValue(x.ToISO8601()),
 		TimeOnly x => new GraphQLStringValue(x.ToISO8601()),
 		TimeSpan x => new GraphQLStringValue(x.ToText()),
-		Enum x => new GraphQLEnumValue(new GraphQLName(x.ToString("F"))),
 		char x => new GraphQLStringValue(x.ToString()),
 		string x => new GraphQLStringValue(x),
 		_ => ThrowASTConversionError(value)

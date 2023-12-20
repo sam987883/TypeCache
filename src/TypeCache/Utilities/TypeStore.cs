@@ -72,8 +72,8 @@ internal static class TypeStore
 		(typeof(ICollection<>).TypeHandle, CollectionType.Collection)
 	}.ToFrozenSet();
 
-	public static IReadOnlyList<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap =>
-	[
+	public static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
+	{
 		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
 		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
 		(typeof(DataRow).TypeHandle, ObjectType.DataRow),
@@ -126,25 +126,16 @@ internal static class TypeStore
 		(typeof(ValueTuple<,,,,,>).TypeHandle, ObjectType.ValueTuple),
 		(typeof(ValueTuple<,,,,,,>).TypeHandle, ObjectType.ValueTuple),
 		(typeof(ValueTuple<,,,,,,,>).TypeHandle, ObjectType.ValueTuple)
-	];
+	}.ToFrozenSet();
 
 	static TypeStore()
 	{
 		CollectionTypes = new LazyDictionary<RuntimeTypeHandle, CollectionType>(handle =>
-		{
-			var type = handle.ToType();
-
-			if (type.IsArray)
-				return CollectionType.Array;
-
-			foreach (var map in CollectionTypeMap)
+			handle.ToType() switch
 			{
-				if (type.Implements(map.Handle.ToType()))
-					return map.CollectionType;
-			}
-
-			return CollectionType.None;
-		});
+				{ IsArray: true } => CollectionType.Array,
+				Type type => CollectionTypeMap.FirstOrDefault(_ => type.Implements(_.Handle.ToType())).CollectionType
+			});
 		DefaultValueFactory = new LazyDictionary<RuntimeTypeHandle, Func<object?>>(handle =>
 			handle.ToType().ToDefaultExpression().As<object>().Lambda<Func<object?>>().Compile());
 		DefaultValueTypeConstructorInvokes = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
@@ -159,28 +150,14 @@ internal static class TypeStore
 				_ => throw new UnreachableException("Method or Constructor not found.")
 			});
 		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle =>
-		{
-			var type = handle.ToType();
-
-			if (type.IsPointer)
-				return ObjectType.Pointer;
-
-			if (type == typeof(object))
-				return ObjectType.Object;
-
-			if (type.IsPrimitive || type.GetScalarType() is not ScalarType.None)
-				return ObjectType.DataType;
-
-			var count = ObjectTypeMap.Count;
-			for (var i = 0; i < count; ++i)
+			handle.ToType() switch
 			{
-				var map = ObjectTypeMap[i];
-				if (type.Implements(map.Handle.ToType()))
-					return map.ObjectType;
-			}
-
-			return ObjectType.Unknown;
-		});
+				{ IsPointer: true } => ObjectType.Pointer,
+				{ IsPrimitive: true } => ObjectType.DataType,
+				Type type when type == typeof(object) => ObjectType.Object,
+				Type type when type.GetScalarType() is not ScalarType.None => ObjectType.DataType,
+				Type type => ObjectTypeMap.FirstOrDefault(_ => type.Implements(_.Handle.ToType())).ObjectType
+			});
 		DataTypes = new Dictionary<RuntimeTypeHandle, ScalarType>(30)
 		{
 			{ typeof(BigInteger).TypeHandle, ScalarType.BigInteger },
