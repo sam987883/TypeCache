@@ -26,13 +26,13 @@ internal sealed class DataSource : IDataSource
 		this.Server = connection.DataSource;
 		this.Version = connection.ServerVersion;
 
-		var @namespace = dbProviderFactory.GetType().Namespace;
+		var @namespace = dbProviderFactory.GetType().Namespace ?? string.Empty;
 		this.Type = @namespace switch
 		{
-			_ when @namespace.Is("Microsoft.Data.SqlClient") || @namespace.Is("System.Data.SqlClient") => DataSourceType.SqlServer,
-			_ when @namespace.Is("Oracle.DataAccess.Client") => DataSourceType.Oracle,
-			_ when @namespace.Is("Npgsql") => DataSourceType.PostgreSql,
-			_ when @namespace.Is("MySql.Data.MySqlClient") => DataSourceType.MySql,
+			_ when @namespace.Has("SqlClient") => DataSourceType.SqlServer,
+			_ when @namespace.Has("Oracle") => DataSourceType.Oracle,
+			_ when @namespace.Is("Npgsql") || @namespace.Has("Postgre") => DataSourceType.PostgreSql,
+			_ when @namespace.Has("MySql") => DataSourceType.MySql,
 			_ => DataSourceType.Unknown
 		};
 
