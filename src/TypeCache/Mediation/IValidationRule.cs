@@ -4,5 +4,5 @@ namespace TypeCache.Mediation;
 
 public interface IValidationRule<in REQUEST>
 {
-	Task ValidateAsync(REQUEST request, CancellationToken token = default);
+	Task Validate(REQUEST request, CancellationToken token = default);
 }

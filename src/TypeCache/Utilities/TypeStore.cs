@@ -16,9 +16,9 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;
 
-internal static class TypeStore
+public static class TypeStore
 {
-	public static IReadOnlySet<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
+	internal static IReadOnlySet<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
 	{
 		(typeof(Array).TypeHandle, CollectionType.Array),
 		(typeof(ArrayList).TypeHandle, CollectionType.ArrayList),
@@ -72,7 +72,7 @@ internal static class TypeStore
 		(typeof(ICollection<>).TypeHandle, CollectionType.Collection)
 	}.ToFrozenSet();
 
-	public static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
+	internal static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
 	{
 		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
 		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
@@ -138,15 +138,15 @@ internal static class TypeStore
 			});
 		DefaultValueFactory = new LazyDictionary<RuntimeTypeHandle, Func<object?>>(handle =>
 			handle.ToType().ToDefaultExpression().As<object>().Lambda<Func<object?>>().Compile());
-		DefaultValueTypeConstructorInvokes = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
+		DefaultValueTypeConstructorFuncs = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
 			handle.ToType().ToNewExpression().As<object>().Lambda<Func<object>>().Compile());
-		FieldGetInvokes = new();
-		FieldSetInvokes = new();
-		MethodInvokes = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Func<object?[]?, object?>>(_ =>
+		FieldGetFuncs = new();
+		FieldSetActions = new();
+		MethodFuncs = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Func<object?[]?, object?>>(_ =>
 			_.MethodHandle.ToMethodBase(_.TypeHandle) switch
 			{
-				MethodInfo methodInfo => methodInfo.ToInvokeLambdaExpression().Compile(),
-				ConstructorInfo constructorInfo => constructorInfo.ToInvokeLambdaExpression().Compile(),
+				MethodInfo methodInfo => methodInfo.ToFuncExpression().Compile(),
+				ConstructorInfo constructorInfo => constructorInfo.ToFuncExpression().Compile(),
 				_ => throw new UnreachableException("Method or Constructor not found.")
 			});
 		ObjectTypes = new LazyDictionary<RuntimeTypeHandle, ObjectType>(handle =>
@@ -167,7 +167,6 @@ internal static class TypeStore
 			{ typeof(DateOnly).TypeHandle, ScalarType.DateOnly },
 			{ typeof(DateTime).TypeHandle, ScalarType.DateTime },
 			{ typeof(DateTimeOffset).TypeHandle, ScalarType.DateTimeOffset },
-			{ typeof(DBNull).TypeHandle, ScalarType.DBNull },
 			{ typeof(decimal).TypeHandle, ScalarType.Decimal },
 			{ typeof(double).TypeHandle, ScalarType.Double },
 			{ typeof(Enum).TypeHandle, ScalarType.Enum },
@@ -193,19 +192,19 @@ internal static class TypeStore
 		}.ToFrozenDictionary();
 	}
 
+	public static IReadOnlyDictionary<RuntimeTypeHandle, CollectionType> CollectionTypes { get; }
+
+	public static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> DataTypes { get; }
+
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object?>> DefaultValueFactory { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorInvokes { get; }
+	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorFuncs { get; }
 
-	public static ConcurrentDictionary<RuntimeFieldHandle, Func<object?, object?>> FieldGetInvokes { get; }
+	public static ConcurrentDictionary<RuntimeFieldHandle, Func<object?, object?>> FieldGetFuncs { get; }
 
-	public static ConcurrentDictionary<RuntimeFieldHandle, Action<object?, object?>> FieldSetInvokes { get; }
+	public static ConcurrentDictionary<RuntimeFieldHandle, Action<object?, object?>> FieldSetActions { get; }
 
-	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object?[]?, object?>> MethodInvokes { get; }
+	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object?[]?, object?>> MethodFuncs { get; }
 
-	internal static IReadOnlyDictionary<RuntimeTypeHandle, CollectionType> CollectionTypes { get; }
-
-	internal static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> DataTypes { get; }
-
-	internal static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
+	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
 }

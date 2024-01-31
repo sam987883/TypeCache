@@ -34,10 +34,6 @@ public enum ScalarType
 	/// </summary>
 	DateTimeOffset,
 	/// <summary>
-	/// <c><see cref="System.DBNull"/></c>
-	/// </summary>
-	DBNull,
-	/// <summary>
 	/// <c><see cref="System.Decimal"/></c>
 	/// </summary>
 	Decimal,

@@ -8,9 +8,9 @@ namespace TypeCache.GraphQL.SqlApi;
 
 public class Parameter
 {
-	[GraphQLType<NonNullGraphType<GraphQLStringType>>()]
+	[GraphQLType<NonNullGraphType<GraphQLScalarType<string>>>()]
 	public string Name { get; set; } = string.Empty;
 
-	[GraphQLType<NonNullGraphType<GraphQLStringType>>()]
+	[GraphQLType<NonNullGraphType<GraphQLScalarType<string>>>()]
 	public string Value { get; set; } = string.Empty;
 }

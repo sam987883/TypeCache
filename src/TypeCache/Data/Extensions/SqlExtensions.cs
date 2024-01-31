@@ -18,7 +18,7 @@ public static class SqlExtensions
 		=> @this.Replace("'", "''");
 
 	/// <exception cref="UnreachableException"></exception>
-	public static string ToSQL(this object? @this) => @this switch
+	public static string ToSQL<T>(this T? @this) => @this switch
 	{
 		null or DBNull => "NULL",
 		true => "1",

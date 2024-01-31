@@ -18,9 +18,9 @@ partial class ReflectionExtensions
 	public static object? GetFieldValue(this FieldInfo @this, object? instance)
 		=> @this.IsLiteral
 			? @this.GetRawConstantValue()
-			: TypeStore.FieldGetInvokes.GetOrAdd(@this.FieldHandle, handle => @this.GetFieldValueFuncLambdaExpression().Compile())(instance);
+			: TypeStore.FieldGetFuncs.GetOrAdd(@this.FieldHandle, handle => @this.GetFieldValueFuncExpression().Compile())(instance);
 
-	public static Expression<Func<object?, object?>> GetFieldValueFuncLambdaExpression(this FieldInfo @this)
+	public static Expression<Func<object?, object?>> GetFieldValueFuncExpression(this FieldInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
@@ -41,10 +41,10 @@ partial class ReflectionExtensions
 	public static void SetFieldValue(this FieldInfo @this, object? instance, object? value)
 	{
 		if (!@this.IsInitOnly && !@this.IsLiteral)
-			TypeStore.FieldSetInvokes.GetOrAdd(@this.FieldHandle, handle => @this.SetFieldValueActionLambdaExpression().Compile())(instance, value);
+			TypeStore.FieldSetActions.GetOrAdd(@this.FieldHandle, handle => @this.SetFieldValueActionExpression().Compile())(instance, value);
 	}
 
-	public static Expression<Action<object?, object?>> SetFieldValueActionLambdaExpression(this FieldInfo @this)
+	public static Expression<Action<object?, object?>> SetFieldValueActionExpression(this FieldInfo @this)
 	{
 		@this.IsInitOnly.AssertFalse();
 		@this.IsLiteral.AssertFalse();

@@ -84,7 +84,7 @@ partial class ReflectionExtensions
 	public static MethodInfo MakeGenericMethod<T1, T2, T3, T4, T5, T6>(this MethodInfo @this)
 		=> @this.MakeGenericMethod(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
 
-	public static Expression<Func<object?[]?, object?>> ToInvokeLambdaExpression(this MethodInfo @this)
+	public static Expression<Func<object?[]?, object?>> ToFuncExpression(this MethodInfo @this)
 	{
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object[]>();
 		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position);

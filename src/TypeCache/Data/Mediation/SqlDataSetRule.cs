@@ -8,7 +8,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlDataSetRule : IRule<SqlDataSetRequest, DataSet>
 {
-	public async Task<DataSet> MapAsync(SqlDataSetRequest request, CancellationToken token)
+	public async Task<DataSet> Map(SqlDataSetRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

@@ -4,14 +4,15 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
 using TypeCache.Mediation;
-using TypeCache.Utilities;
 using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;
 
-public sealed class SqlApiEndpointFilter : IEndpointFilter
+public sealed class SqlApiEndpointFilter(IServiceProvider serviceProvider, IMediator mediator)
+	: IEndpointFilter
 {
 	private const string DATASOURCE = "dataSource";
 	private const string DATABASE = "database";
@@ -20,20 +21,13 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 	private const string VIEW = "view";
 	private const string PROCEDURE = "procedure";
 
-	private readonly IAccessor<IDataSource> _DataSourceAccessor;
-	private readonly IMediator _Mediator;
-
-	public SqlApiEndpointFilter(IAccessor<IDataSource> dataSourceAccessor, IMediator mediator)
-	{
-		this._DataSourceAccessor = dataSourceAccessor;
-		this._Mediator = mediator;
-	}
-
 	public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
 	{
 		var routeValues = context.HttpContext.Request.RouteValues;
 		var dataSourceName = (string)routeValues[DATASOURCE]!;
-		var dataSource = this._DataSourceAccessor[dataSourceName];
+
+		await using var serviceScope = serviceProvider.CreateAsyncScope();
+		var dataSource = serviceScope.ServiceProvider.GetKeyedService<IDataSource>(dataSourceName);
 		if (dataSource is null)
 			return Results.NotFound(Invariant($"{nameof(IDataSource)} [{dataSourceName}] was not found."));
 
@@ -81,7 +75,7 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 		if (objectSchema is not null)
 			context.HttpContext.Items.Add(nameof(ObjectSchema), objectSchema);
 
-		context.HttpContext.Items.Add(nameof(IMediator), this._Mediator);
+		context.HttpContext.Items.Add(nameof(IMediator), mediator);
 
 		return await next(context);
 	}

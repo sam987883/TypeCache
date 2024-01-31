@@ -193,20 +193,20 @@ public static class GraphQLExtensions
 			arguments.Add("null", type, description: "Return this value instead of null.");
 
 		if (@this.PropertyType.IsAssignableTo<IFormattable>())
-			arguments.Add<GraphQLStringType>("format", description: "Use .NET format specifiers to format the data.");
+			arguments.Add<GraphQLScalarType<string>>("format", description: "Use .NET format specifiers to format the data.");
 
-		if (type.Is<GraphQLStringType<DateTime>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTime>>>())
-			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
-		else if (type.Is<GraphQLStringType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTimeOffset>>>())
-			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
-		else if (type.Is<GraphQLStringType>() || type.Is<NonNullGraphType<GraphQLStringType>>())
+		if (type.Is<GraphQLScalarType<DateTime>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTime>>>())
+			arguments.Add<GraphQLScalarType<string>>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
+		else if (type.Is<GraphQLScalarType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTimeOffset>>>())
+			arguments.Add<GraphQLScalarType<string>>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
+		else if (type.Is<GraphQLScalarType<string>>() || type.Is<NonNullGraphType<GraphQLScalarType<string>>>())
 		{
 			arguments.Add<GraphQLEnumType<StringCase>>("case", description: "Convert string value to upper or lower case.");
-			arguments.Add<GraphQLNumberType<int>>("length", description: "Exclude the rest of the string value if it exceeds this length.");
-			arguments.Add<GraphQLStringType>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
-			arguments.Add<GraphQLStringType>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
-			arguments.Add<GraphQLStringType>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
-			arguments.Add<GraphQLStringType>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
+			arguments.Add<GraphQLScalarType<int>>("length", description: "Exclude the rest of the string value if it exceeds this length.");
+			arguments.Add<GraphQLScalarType<string>>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
+			arguments.Add<GraphQLScalarType<string>>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
+			arguments.Add<GraphQLScalarType<string>>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
+			arguments.Add<GraphQLScalarType<string>>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
 		}
 
 		return new()

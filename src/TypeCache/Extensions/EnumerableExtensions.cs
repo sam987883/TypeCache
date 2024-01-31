@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Collections;
 using TypeCache.Collections;
 
@@ -139,9 +140,17 @@ public static class EnumerableExtensions
 		=> @this.Select(_ => _.AsTask());
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, [NotNullWhen(true)] out T? value)
+		where T : class
 	{
 		value = @this.OfType<T>().FirstOrDefault();
 		return value is not null;
+	}
+
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, T defaultValue, [NotNullWhen(true)] out T value)
+		where T : struct
+	{
+		value = @this.OfType<T>().FirstOrDefault(defaultValue);
+		return !value.Equals(defaultValue);
 	}
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
@@ -153,18 +162,49 @@ public static class EnumerableExtensions
 	}
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
+		where T : class
 	{
-		var success = false;
-		var filter = new Func<T, bool>(value => success = predicate(value));
-		value = @this.FirstOrDefault(filter);
-		return success;
+		value = @this.FirstOrDefault(predicate);
+		return value is not null;
 	}
 
-	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
+		where T : struct
 	{
-		using var enumerator = @this.GetEnumerator();
-		value = enumerator.Next();
-		return enumerator.MoveNext();
+		value = @this.FirstOrDefault(predicate, defaultValue);
+		return !value.Equals(defaultValue);
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
+		where T : class
+	{
+		value = @this.SingleOrDefault();
+		return value is not null;
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, [NotNullWhen(true)] out T? value)
+		where T : struct
+	{
+		value = @this.SingleOrDefault(defaultValue);
+		return !value.Equals(defaultValue);
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
+		where T : class
+	{
+		value = @this.SingleOrDefault(predicate);
+		return value is not null;
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
+		where T : struct
+	{
+		value = @this.SingleOrDefault(predicate, defaultValue);
+		return !value.Equals(defaultValue);
 	}
 
 	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>

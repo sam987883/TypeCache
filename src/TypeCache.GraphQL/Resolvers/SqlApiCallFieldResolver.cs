@@ -22,7 +22,7 @@ public sealed class SqlApiCallFieldResolver<T> : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var result = (IList<T>)await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(), context.CancellationToken);
+		var result = (IList<T>)await mediator.Map(sqlCommand.ToSqlModelsRequest<T>(), context.CancellationToken);
 		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected > 0 ? sqlCommand.RecordsAffected : result.Count,

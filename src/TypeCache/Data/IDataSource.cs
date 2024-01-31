@@ -2,30 +2,38 @@
 
 using System.Data;
 using System.Data.Common;
-using TypeCache.Utilities;
 
 namespace TypeCache.Data;
 
-public interface IDataSource : IName, IEquatable<IDataSource>
+public interface IDataSource : IEquatable<IDataSource>
 {
-	ObjectSchema? this[string objectName] { get; }
-
 	string ConnectionString { get; }
 
 	IReadOnlySet<string> Databases { get; }
 
 	string DefaultDatabase { get; }
 
-	string DefaultSchema { get; }
+	public string DefaultSchema { get; }
 
 	DbProviderFactory Factory { get; }
 
-	DataSourceType Type { get; }
+	string Name { get; }
 
 	IReadOnlyDictionary<DatabaseObject, ObjectSchema> ObjectSchemas { get; }
 
+	public string Server { get; }
+
+	IReadOnlySet<SchemaCollection> SupportedMetadataCollections { get; }
+
+	DataSourceType Type { get; }
+
+	public string Version { get; }
+
+	ObjectSchema? this[string objectName] { get; }
+
 	DbConnection CreateDbConnection();
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	DatabaseObject CreateName(string databaseObject);
 
 	/// <summary>
@@ -36,6 +44,7 @@ public interface IDataSource : IName, IEquatable<IDataSource>
 	/// <summary>
 	/// <c>=&gt; <see langword="new"/>(<see cref="Invariant"/>($"{<see langword="this"/>.EscapeIdentifier(<paramref name="database"/>)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="schema"/>)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="objectName"/>)}"));</c>
 	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	DatabaseObject CreateName(string database, string schema, string objectName);
 
 	SqlCommand CreateSqlCommand(string sql);
@@ -52,9 +61,9 @@ public interface IDataSource : IName, IEquatable<IDataSource>
 	/// </summary>
 	string EscapeValue([NotNull] string text);
 
-	ValueTask<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default);
+	Task<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default);
 
-	ValueTask<DataTable> GetDatabaseSchemaAsync(SchemaCollection collection, string? database = null, CancellationToken token = default);
+	Task<DataTable> GetDatabaseSchemaAsync(SchemaCollection collection, string? database = null, CancellationToken token = default);
 
 	DataSet GetDatabaseSchema(string? database = null);
 

@@ -4,7 +4,6 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TypeCache.Extensions;
 using TypeCache.Mediation;
 using static System.Net.Mime.MediaTypeNames;
 

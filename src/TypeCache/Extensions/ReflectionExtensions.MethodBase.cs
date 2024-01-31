@@ -31,7 +31,7 @@ partial class ReflectionExtensions
 	public static object? InvokeMethod(this MethodBase @this, params object?[]? arguments)
 	{
 		@this.DeclaringType.AssertNotNull();
-		var method = TypeStore.MethodInvokes[(@this.DeclaringType.TypeHandle, @this.MethodHandle)];
+		var method = TypeStore.MethodFuncs[(@this.DeclaringType.TypeHandle, @this.MethodHandle)];
 		return method.Invoke(arguments);
 	}
 

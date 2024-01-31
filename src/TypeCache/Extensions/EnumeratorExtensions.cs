@@ -18,7 +18,7 @@ public static class EnumeratorExtensions
 	{
 		if (@this.MoveNext())
 		{
-			item = @this.Current!;
+			item = @this.Current;
 			return true;
 		}
 

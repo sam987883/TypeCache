@@ -15,7 +15,7 @@ partial class ReflectionExtensions
 	public static object? Create(this Type @this, params object?[]? parameters)
 		=> @this.FindConstructor(parameters) switch
 		{
-			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorInvokes[@this.TypeHandle].Invoke(),
+			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorFuncs[@this.TypeHandle].Invoke(),
 			null => throw new MissingMethodException(@this.Name, "Constructor"),
 			var constructorInfo => constructorInfo.InvokeMethod(parameters)
 		};
@@ -72,18 +72,15 @@ partial class ReflectionExtensions
 		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
 	public static ScalarType GetScalarType(this Type @this)
-	{
-		if (@this.IsGenericTypeDefinition)
-			return ScalarType.None;
-
-		if (@this.IsEnum)
-			return ScalarType.Enum;
-
-		if (@this.IsGenericType && @this.IsNullable())
-			@this = @this.GenericTypeArguments[0];
-
-		return TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var dataType) ? dataType : ScalarType.None;
-	}
+		=> @this switch
+		{
+			{ IsGenericTypeDefinition: true } => ScalarType.None,
+			{ IsEnum: true } => ScalarType.Enum,
+			{ IsGenericType: true } when @this.IsNullable() && TypeStore.DataTypes.TryGetValue(@this.GenericTypeArguments[0].TypeHandle, out var scalarType)
+				=> scalarType,
+			_ when TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
+			_ => ScalarType.None
+		};
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
@@ -257,12 +254,14 @@ partial class ReflectionExtensions
 		=> @this == typeof(T);
 
 	[DebuggerHidden]
-	public static bool Is(this Type @this, Type type) => (@this, type) switch
-	{
-		({ IsGenericType: true }, { IsGenericTypeDefinition: true }) or ({ IsGenericTypeDefinition: true }, { IsGenericType: true }) => @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition(),
-		_ => @this == type
-	};
-		//=> (@this.IsGenericTypeDefinition || type.IsGenericTypeDefinition) ? @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition() : @this == type;
+	public static bool Is(this Type @this, Type type)
+		=> (@this, type) switch
+		{
+			({ IsGenericType: true, IsGenericTypeDefinition: false }, { IsGenericTypeDefinition: true })
+				or ({ IsGenericTypeDefinition: true }, { IsGenericType: true, IsGenericTypeDefinition: false })
+				=> @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition(),
+			_ => @this == type
+		};
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
@@ -446,7 +445,7 @@ partial class ReflectionExtensions
 	public static NewExpression ToNewExpression(this Type @this, params Expression[] parameters) => parameters switch
 	{
 		null or { Length: 0 } => Expression.New(@this),
-		_ => @this.GetConstructor(parameters.Select(parameter => parameter.Type).ToArray())!.ToNewExpression(parameters)
+		_ => @this.GetConstructor(parameters.Select(parameter => parameter.Type).ToArray())!.ToExpression(parameters)
 	};
 
 	/// <inheritdoc cref="Expression.Field(Expression, Type, string)"/>

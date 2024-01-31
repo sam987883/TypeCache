@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using static System.FormattableString;
 
 namespace TypeCache.Extensions;
 
@@ -14,7 +15,7 @@ public static class JsonExtensions
 		return @this.EnumerateArrayValues().ToArray();
 	}
 
-	public static object?[]? GetArrayValues(this JsonElement @this)
+	public static object?[] GetArrayValues(this JsonElement @this)
 	{
 		@this.ValueKind.AssertEquals(JsonValueKind.Array);
 
@@ -50,7 +51,7 @@ public static class JsonExtensions
 	public static object? GetValue(this JsonElement @this)
 		=> @this.ValueKind switch
 		{
-			JsonValueKind.Undefined => throw new UnreachableException(),
+			JsonValueKind.Undefined => throw new UnreachableException(Invariant($"{nameof(@this.ValueKind)} == {JsonValueKind.Undefined:F}")),
 			JsonValueKind.True => true,
 			JsonValueKind.False => false,
 			JsonValueKind.Number when @this.TryGetInt32(out var value) => value,

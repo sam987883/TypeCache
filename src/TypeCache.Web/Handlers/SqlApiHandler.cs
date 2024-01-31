@@ -47,7 +47,7 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlDataSetRequest { Command = sqlCommand };
-		var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+		var response = await mediator.Map(request, httpContext.RequestAborted);
 
 		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
 			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
@@ -79,13 +79,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -107,13 +107,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -139,13 +139,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -167,13 +167,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -404,7 +404,7 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlJsonArrayRequest { Command = sqlCommand };
-		var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+		var response = await mediator.Map(request, httpContext.RequestAborted);
 		return Results.Ok(response);
 	}
 
@@ -429,13 +429,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -457,13 +457,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var response = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}

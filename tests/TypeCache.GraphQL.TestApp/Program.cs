@@ -2,6 +2,7 @@
 
 using GraphQL.Server.Ui.Playground;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;
@@ -17,8 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
 	.AddMediation(builder => builder.AddSqlCommandRules())
 	.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2 * E))
-	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, DataSourceType.SqlServer)
-	.AddDataSourceAccessor()
+	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!)
 	.AddGraphQL()
 	.AddGraphQLTypeExtensions<Person>(person =>
 	{
@@ -31,8 +31,7 @@ app
 	.UseRouting()
 	.UseGraphQLSchema("/graphql/custom", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSource = provider.GetRequiredKeyedService<IDataSource>(DATASOURCE);
 
 		schema.AddVersion("1.0");
 		schema.AddSqlApiEndpoints<Person>(dataSource, "Person.Person");
@@ -41,16 +40,14 @@ app
 	})
 	.UseGraphQLSchema("/graphql/data", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSource = provider.GetRequiredKeyedService<IDataSource>(DATASOURCE);
 
 		schema.AddVersion("1.0");
 		schema.AddDatabaseEndpoints(dataSource, SqlApiAction.CRUD, "AdventureWorks2019", "Person");
 	})
 	.UseGraphQLSchema("/graphql/schema", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSource = provider.GetRequiredKeyedService<IDataSource>(DATASOURCE);
 
 		schema.AddVersion("1.0");
 		schema.AddDatabaseSchemaQueries(dataSource);

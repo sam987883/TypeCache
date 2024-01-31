@@ -10,7 +10,7 @@ public interface IMediator
 	/// May register rules of type <see cref="IAfterRule{REQUEST}"/> that run in parallel after the <see cref="IRule{REQUEST}"/> rules run.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	Task ExecuteAsync<REQUEST>(REQUEST request, CancellationToken token = default)
+	Task Execute<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest;
 
 	/// <summary>
@@ -19,13 +19,13 @@ public interface IMediator
 	/// May register rules of type <see cref="IAfterRule{REQUEST, RESPONSE}"/> that run in parallel after the <see cref="IRule{REQUEST, RESPONSE}"/> rules run.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	Task<RESPONSE> MapAsync<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default);
+	Task<RESPONSE> Map<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default);
 
 	/// <summary>
 	/// Retrieve validation messages for a rule request.
 	/// Must register validation rules of type <see cref="IValidationRule{REQUEST}"/>.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	Task ValidateAsync<REQUEST>(REQUEST request, CancellationToken token = default)
+	void Validate<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : notnull;
 }

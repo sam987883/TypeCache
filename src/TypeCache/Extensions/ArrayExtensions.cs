@@ -18,7 +18,7 @@ public static class ArrayExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
-		=> Array.Clear(@this, start, length == 0 ? @this.Length : length);
+		=> Array.Clear(@this, start, length is 0 ? @this.Length : length);
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
@@ -26,7 +26,7 @@ public static class ArrayExtensions
 	{
 		@this.AssertNotNull();
 
-		if (@this.Length == 0)
+		if (@this.Length is 0)
 			return Array<T>.Empty;
 
 		var copy = new T[@this.Length];
@@ -163,7 +163,7 @@ public static class ArrayExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static int Search<T>(this T[] @this, T value, int start, int length = 0, IComparer<T>? comparer = null)
-		=> Array.BinarySearch(@this, start, length > 0 ? length : @this.Length, value, comparer);
+		=> Array.BinarySearch(@this, start, length is 0 ? @this.Length : length, value, comparer);
 
 	/// <inheritdoc cref="Array.Sort{T}(T[], Comparison{T})"/>
 	/// <remarks>
@@ -189,7 +189,7 @@ public static class ArrayExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void Sort<T>(this T[] @this, int start, int length = 0, IComparer<T>? comparer = null)
-		=> Array.Sort(@this, start, length > 0 ? length : @this.Length, comparer);
+		=> Array.Sort(@this, start, length is 0 ? @this.Length : length, comparer);
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="IndexOutOfRangeException"/>
@@ -200,7 +200,7 @@ public static class ArrayExtensions
 		if (sourceIndex + length > @this.Length)
 			throw new IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");
 
-		var array = new T[length > 0 ? length : @this.Length - sourceIndex];
+		var array = new T[length is 0 ? @this.Length - sourceIndex : length];
 		Array.Copy(@this, sourceIndex, array, 0, array.Length);
 		return array;
 	}

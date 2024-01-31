@@ -9,35 +9,36 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class EnumExtensions
 {
-	public static Type? ToGraphType(this ScalarType @this) => @this switch
-	{
-		ScalarType.Boolean => typeof(GraphQLBooleanType),
-		ScalarType.Byte => typeof(GraphQLNumberType<byte>),
-		ScalarType.Decimal => typeof(GraphQLNumberType<decimal>),
-		ScalarType.DateOnly => typeof(GraphQLStringType<DateOnly>),
-		ScalarType.DateTime => typeof(GraphQLStringType<DateTime>),
-		ScalarType.DateTimeOffset => typeof(GraphQLStringType<DateTimeOffset>),
-		ScalarType.Guid => typeof(GraphQLStringType<Guid>),
-		ScalarType.Half => typeof(GraphQLNumberType<Half>),
-		ScalarType.Int16 => typeof(GraphQLNumberType<short>),
-		ScalarType.Int32 or ScalarType.Index => typeof(GraphQLNumberType<int>),
-		ScalarType.Int64 => typeof(GraphQLNumberType<long>),
-		ScalarType.IntPtr => typeof(GraphQLNumberType<nint>),
-		ScalarType.Int128 => typeof(GraphQLNumberType<Int128>),
-		ScalarType.UInt128 => typeof(GraphQLNumberType<UInt128>),
-		ScalarType.BigInteger => typeof(GraphQLNumberType<BigInteger>),
-		ScalarType.UInt16 => typeof(GraphQLNumberType<ushort>),
-		ScalarType.UInt32 => typeof(GraphQLNumberType<uint>),
-		ScalarType.UInt64 => typeof(GraphQLNumberType<ulong>),
-		ScalarType.UIntPtr => typeof(GraphQLNumberType<UIntPtr>),
-		ScalarType.SByte => typeof(GraphQLNumberType<sbyte>),
-		ScalarType.Single => typeof(GraphQLNumberType<float>),
-		ScalarType.Double => typeof(GraphQLNumberType<char>),
-		ScalarType.Char => typeof(GraphQLStringType<char>),
-		ScalarType.String => typeof(GraphQLStringType),
-		ScalarType.TimeOnly => typeof(GraphQLStringType<TimeOnly>),
-		ScalarType.TimeSpan => typeof(GraphQLStringType<TimeSpan>),
-		ScalarType.Uri => typeof(GraphQLUriType),
-		_ => null
-	};
+	public static Type? ToGraphType(this ScalarType @this)
+		=> @this switch
+		{
+			ScalarType.Boolean => typeof(GraphQLScalarType<bool>),
+			ScalarType.Byte => typeof(GraphQLScalarType<byte>),
+			ScalarType.Int16 => typeof(GraphQLScalarType<short>),
+			ScalarType.Int32 or ScalarType.Index => typeof(GraphQLScalarType<int>),
+			ScalarType.Int64 => typeof(GraphQLScalarType<long>),
+			ScalarType.IntPtr => typeof(GraphQLScalarType<nint>),
+			ScalarType.Int128 => typeof(GraphQLScalarType<Int128>),
+			ScalarType.BigInteger => typeof(GraphQLScalarType<BigInteger>),
+			ScalarType.UInt16 => typeof(GraphQLScalarType<ushort>),
+			ScalarType.UInt32 => typeof(GraphQLScalarType<uint>),
+			ScalarType.UInt64 => typeof(GraphQLScalarType<ulong>),
+			ScalarType.UIntPtr => typeof(GraphQLScalarType<UIntPtr>),
+			ScalarType.UInt128 => typeof(GraphQLScalarType<UInt128>),
+			ScalarType.SByte => typeof(GraphQLScalarType<sbyte>),
+			ScalarType.Half => typeof(GraphQLScalarType<Half>),
+			ScalarType.Single => typeof(GraphQLScalarType<float>),
+			ScalarType.Double => typeof(GraphQLScalarType<char>),
+			ScalarType.Decimal => typeof(GraphQLScalarType<decimal>),
+			ScalarType.DateOnly => typeof(GraphQLScalarType<DateOnly>),
+			ScalarType.DateTime => typeof(GraphQLScalarType<DateTime>),
+			ScalarType.DateTimeOffset => typeof(GraphQLScalarType<DateTimeOffset>),
+			ScalarType.TimeOnly => typeof(GraphQLScalarType<TimeOnly>),
+			ScalarType.TimeSpan => typeof(GraphQLScalarType<TimeSpan>),
+			ScalarType.Guid => typeof(GraphQLScalarType<Guid>),
+			ScalarType.Char => typeof(GraphQLScalarType<char>),
+			ScalarType.String => typeof(GraphQLScalarType<string>),
+			ScalarType.Uri => typeof(GraphQLUriType),
+			_ => null
+		};
 }

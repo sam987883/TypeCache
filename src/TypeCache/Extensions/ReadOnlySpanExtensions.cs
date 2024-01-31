@@ -3,7 +3,6 @@
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
 using TypeCache.Collections;
 using static System.Globalization.CultureInfo;
 

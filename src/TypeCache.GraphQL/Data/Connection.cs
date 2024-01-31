@@ -3,6 +3,7 @@
 using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Types;
@@ -67,7 +68,7 @@ public class Connection<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.TotalCount),
-			Type = typeof(GraphQLNumberType<int>),
+			Type = ScalarType.Int32.ToGraphType(),
 			Resolver = new FuncFieldResolver<Connection<T>, int?>(context => context.Source.TotalCount)
 		});
 

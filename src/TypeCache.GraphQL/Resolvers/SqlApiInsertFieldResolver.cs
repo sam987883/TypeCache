@@ -59,9 +59,9 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
-			result = (await mediator.MapAsync(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
+			result = (await mediator.Map(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -116,9 +116,9 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
-			result = await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
+			result = await mediator.Map(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<T>()
 		{

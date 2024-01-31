@@ -3,21 +3,11 @@
 using System;
 using GraphQL.DI;
 using GraphQL.Types;
-using TypeCache.Extensions;
 
 namespace TypeCache.GraphQL.Types;
 
-internal class ConfigureSchema : IConfigureSchema
+internal sealed class ConfigureSchema(Action<ISchema, IServiceProvider> configure) : IConfigureSchema
 {
-	private readonly Action<ISchema, IServiceProvider> _Configure;
-
-	public ConfigureSchema(Action<ISchema, IServiceProvider> configure)
-	{
-		configure.AssertNotNull();
-
-		this._Configure = configure;
-	}
-
 	public void Configure(ISchema schema, IServiceProvider serviceProvider)
-		=> this._Configure(schema, serviceProvider);
+		=> configure?.Invoke(schema, serviceProvider);
 }

@@ -21,11 +21,20 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, string trueValue, string falseValue)
 		=> @this.Append(condition ? trueValue : falseValue);
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, ReadOnlySpan<char> value)
+		=> condition ? @this.Append(value) : @this;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, ReadOnlySpan<char> trueValue, ReadOnlySpan<char> falseValue)
+		=> condition ? @this.Append(trueValue) : @this.Append(falseValue);
+
 	[DebuggerHidden]
 	public static StringBuilder AppendIf<T>(this StringBuilder @this, bool condition, T value)
 		=> value switch
 		{
 			_ when !condition => @this,
+			ReadOnlyMemory<char> item => @this.Append(item),
 			char item => @this.Append(item),
 			bool item => @this.Append(item),
 			sbyte item => @this.Append(item),
@@ -39,8 +48,10 @@ public static class StringBuilderExtensions
 			float item => @this.Append(item),
 			double item => @this.Append(item),
 			decimal item => @this.Append(item),
-			Enum item => @this.Append(item.ToString()),
+			Enum item => @this.Append(item.ToString("F")),
+			char[] item => @this.Append(item),
 			string item => @this.Append(item),
+			StringBuilder item => @this.Append(item),
 			_ => @this.Append(value)
 		};
 
@@ -50,13 +61,6 @@ public static class StringBuilderExtensions
 	[DebuggerHidden]
 	public static StringBuilder AppendIf<T>(this StringBuilder @this, bool condition, T trueValue, T falseValue)
 		=> @this.AppendIf(condition, trueValue).AppendIf(!condition, falseValue);
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.Append(<paramref name="value"/>) : @<paramref name="this"/>;</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, object value)
-		=> condition ? @this.Append(value) : @this;
 
 	/// <summary>
 	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.AppendLine() : @<paramref name="this"/>;</c>

@@ -16,18 +16,10 @@ namespace TypeCache.Extensions;
 public static class ServiceCollectionExtensions
 {
 	/// <summary>
-	/// Registers singleton <c><see cref="IDataSource"/></c> to be available via: <c>IAccessor&lt;<see cref="IDataSource"/>&gt;</c><br/>
+	/// Registers keyed singleton <c><see cref="IDataSource"/></c>.<br/>
 	/// </summary>
-	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, DataSourceType type)
-		=> @this.AddSingleton<IDataSource>(new DataSource(name, dbProviderFactory, connectionString, type));
-
-	/// <summary>
-	/// Provides data source related information: <c>IAccessor&lt;<see cref="IDataSource"/>&gt;</c><br/>
-	/// <i><b>Requires call to:</b></i>
-	/// <code><see cref="DbProviderFactories.RegisterFactory(string, DbProviderFactory)"/></code>
-	/// </summary>
-	public static IServiceCollection AddDataSourceAccessor(this IServiceCollection @this)
-		=> @this.AddSingleton<IAccessor<IDataSource>, Accessor<IDataSource>>();
+	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString)
+		=> @this.AddKeyedSingleton<IDataSource>(name, new DataSource(name, dbProviderFactory, connectionString));
 
 	/// <summary>
 	/// Registers Singletons:

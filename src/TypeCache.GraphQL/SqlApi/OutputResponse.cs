@@ -33,7 +33,7 @@ public class OutputResponse<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(OutputResponse<T>.DataSource),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.DataSource)
 		});
 		graphType.AddField(new()
@@ -45,13 +45,13 @@ public class OutputResponse<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(OutputResponse<T>.Sql),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Sql)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(OutputResponse<T>.Table),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Table)
 		});
 		graphType.AddField(new()

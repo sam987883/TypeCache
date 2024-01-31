@@ -238,7 +238,6 @@ public static class ExpressionExtensions
 			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), @this),
 			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), @this),
 			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), @this),
-			ScalarType.DBNull => DBNull.Value.ToConstantExpression(),
 			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDecimal), @this),
 			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDouble), @this),
 			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), @this),

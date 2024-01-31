@@ -52,19 +52,19 @@ public class SelectResponse<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.DataSource),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.Sql),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(SelectResponse<T>.Table),
-			Type = typeof(GraphQLStringType),
+			Type = typeof(GraphQLScalarType<string>),
 			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table)
 		});
 

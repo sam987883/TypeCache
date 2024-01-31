@@ -7,7 +7,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlScalarRule : IRule<SqlScalarRequest, object?>
 {
-	public async Task<object?> MapAsync(SqlScalarRequest request, CancellationToken token)
+	public async Task<object?> Map(SqlScalarRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
@@ -17,10 +17,6 @@ internal sealed class SqlScalarRule : IRule<SqlScalarRequest, object?>
 
 		dbCommand.CopyOutputParameters(request.Command);
 
-		return result switch
-		{
-			DBNull => null,
-			_ => result
-		};
+		return result is not DBNull ? result : null;
 	}
 }

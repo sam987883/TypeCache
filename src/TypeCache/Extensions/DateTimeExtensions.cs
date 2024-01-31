@@ -114,7 +114,7 @@ public static class DateTimeExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, string targetSystemTimeZoneId)
-		=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
+		=> ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
 
 	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/>
 	/// <remarks>

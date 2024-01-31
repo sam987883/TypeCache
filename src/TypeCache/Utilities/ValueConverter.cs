@@ -20,12 +20,6 @@ public static class ValueConverter
 		var sourceScalarType = @this.Type.GetScalarType();
 		var targetScalarType = targetType.GetScalarType();
 
-		if (targetScalarType == ScalarType.DBNull)
-			return DBNull.Value.ToConstantExpression();
-
-		if (sourceScalarType == ScalarType.DBNull)
-			return Expression.Constant(null);
-
 		var expression = (sourceScalarType, targetScalarType) switch
 		{
 			(ScalarType.Boolean, ScalarType.Char) => LambdaFactory.CreateFunc((bool _) => _ ? '1' : '0'),
