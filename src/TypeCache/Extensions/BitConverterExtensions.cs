@@ -148,7 +148,7 @@ public static class BitConverterExtensions
 	public static double ToDouble(this byte[] @this, int startIndex = 0)
 		=> BitConverter.ToDouble(@this, startIndex);
 
-	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(ushort)"/>
+	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(short)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="BitConverter"/>.Int16BitsToHalf(@<paramref name="this"/>);</c>
 	/// </remarks>
@@ -161,13 +161,6 @@ public static class BitConverterExtensions
 	/// </remarks>
 	public static Half ToHalf(this ushort @this)
 		=> BitConverter.UInt16BitsToHalf(@this);
-
-	/// <inheritdoc cref="BitConverter.Int16BitsToHalf(short)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="BitConverter"/>.Int16BitsToHalf(@<paramref name="this"/>);</c>
-	/// </remarks>
-	public static Half ToInt16(this short @this)
-		=> BitConverter.Int16BitsToHalf(@this);
 
 	/// <inheritdoc cref="BitConverter.ToInt16(ReadOnlySpan{byte})"/>
 	/// <remarks>

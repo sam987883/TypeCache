@@ -2,14 +2,12 @@
 
 using GraphQL.Server.Ui.Playground;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
-using TypeCache.Utilities;
 using static System.Math;
 
 const string DATASOURCE = "Default";
@@ -18,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
 	.AddMediation(builder => builder.AddSqlCommandRules())
 	.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2 * E))
-	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!)
+	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, ["AdventureWorks2019"])
 	.AddGraphQL()
 	.AddGraphQLTypeExtensions<Person>(person =>
 	{

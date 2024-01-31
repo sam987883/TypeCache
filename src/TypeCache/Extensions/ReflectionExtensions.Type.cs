@@ -352,7 +352,7 @@ partial class ReflectionExtensions
 		=> @this.IsAssignableTo<IConvertible>()
 			|| (@this.Is(typeof(Nullable<>)) && @this.GenericTypeArguments.First().IsAssignableTo<IConvertible>());
 
-	/// <exception cref=""/>
+	/// <exception cref="ArgumentNullException"/>
 	public static bool IsConvertibleTo(this Type @this, Type targetType)
 	{
 		@this.AssertNotNull();
@@ -440,7 +440,7 @@ partial class ReflectionExtensions
 	public static LabelTarget ToLabelTarget(this Type @this, string? name)
 		=> Expression.Label(@this, name);
 
-	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[]?)"/>
+	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[])"/>
 	[DebuggerHidden]
 	public static NewExpression ToNewExpression(this Type @this, params Expression[] parameters) => parameters switch
 	{

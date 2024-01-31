@@ -18,8 +18,8 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// Registers keyed singleton <c><see cref="IDataSource"/></c>.<br/>
 	/// </summary>
-	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString)
-		=> @this.AddKeyedSingleton<IDataSource>(name, new DataSource(name, dbProviderFactory, connectionString));
+	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, string[] databases)
+		=> @this.AddKeyedSingleton<IDataSource>(name, new DataSource(name, dbProviderFactory, connectionString, databases));
 
 	/// <summary>
 	/// Registers Singletons:

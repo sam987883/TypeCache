@@ -52,7 +52,7 @@ public static class EnumerableExtensions
 	public static string Concat(this IEnumerable<string> @this)
 		=> string.Concat(@this);
 
-	/// <inheritdoc cref="string.Concat(IEnumerable{char})"/>
+	/// <inheritdoc cref="string.Concat{T}(IEnumerable{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Concat(@<paramref name="this"/>);</c>
 	/// </remarks>

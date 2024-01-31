@@ -13,7 +13,7 @@ namespace TypeCache.Data;
 
 internal sealed class DataSource : IDataSource
 {
-	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString)
+	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString, string[] databases)
 	{
 		this.Factory = dbProviderFactory;
 		this.Name = name;
@@ -66,7 +66,12 @@ internal sealed class DataSource : IDataSource
 			.WhereNotNull()
 			.ToFrozenSet();
 
-		this.Databases = this.GetDatabases().ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+		if (databases?.Length > 0)
+			this.Databases = new HashSet<string>(databases, StringComparer.OrdinalIgnoreCase)
+				.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+		else
+			this.Databases = this.GetDatabases().ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
 		this.ObjectSchemas = this.GetObjectSchemas();
 	}
 

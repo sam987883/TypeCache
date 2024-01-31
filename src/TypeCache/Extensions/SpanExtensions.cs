@@ -66,7 +66,7 @@ public static class SpanExtensions
 		where T : struct
 		=> MemoryMarshal.TryRead(@this, out value);
 
-	/// <inheritdoc cref="MemoryMarshal.TryWrite{T}(Span{byte}, ref T)"/>
+	/// <inheritdoc cref="MemoryMarshal.TryWrite{T}(Span{byte}, in T)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.TryWrite(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
@@ -75,7 +75,7 @@ public static class SpanExtensions
 		where T : struct
 		=> MemoryMarshal.TryWrite(@this, in value);
 
-	/// <inheritdoc cref="MemoryMarshal.Write{T}(Span{byte}, ref T)"/>
+	/// <inheritdoc cref="MemoryMarshal.Write{T}(Span{byte}, in T)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Write(@<paramref name="this"/>, <see langword="ref"/> <paramref name="value"/>);</c>
 	/// </remarks>
