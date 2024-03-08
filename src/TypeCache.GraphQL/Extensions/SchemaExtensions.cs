@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
 using TypeCache.Collections;
 using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
@@ -218,16 +220,16 @@ public static class SchemaExtensions
 			{
 				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`"), resolvedType);
 				var arguments = new QueryArguments();
-				arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+				arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 				if (dataSource.Type is DataSourceType.SqlServer)
-					arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
+					arguments.Add<string>(nameof(SelectQuery.Top));
 
-				arguments.Add<GraphQLScalarType<bool>>(nameof(SelectQuery.Distinct), false);
-				arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+				arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
+				arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
 				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
-				arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Fetch), 0U);
-				arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Offset), 0U);
-				arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null);
+				arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
+				arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
+				arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
 
 				var field = new FieldType
 				{
@@ -259,6 +261,7 @@ public static class SchemaExtensions
 						new QueryArgument<TimeSpanSecondsGraphType>
 						{
 							Name = nameof(SqlCommand.Timeout),
+							DefaultValue = 120U,
 							Description = "The SQL command timeout in seconds."
 						}),
 						Name = Invariant($"delete{table}"),
@@ -289,6 +292,7 @@ public static class SchemaExtensions
 							new QueryArgument<TimeSpanSecondsGraphType>
 							{
 								Name = nameof(SqlCommand.Timeout),
+								DefaultValue = 120U,
 								Description = "The SQL command timeout in seconds."
 							}),
 						Name = Invariant($"delete{table}Data"),
@@ -304,16 +308,16 @@ public static class SchemaExtensions
 				if (actions.HasFlag(SqlApiAction.Insert))
 				{
 					var arguments = new QueryArguments();
-					arguments.Add<ListGraphType<GraphQLInputType<Parameter>>>("parameters", null, "Used to reference user input values from the where clause.");
+					arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 					if (dataSource.Type is DataSourceType.SqlServer)
 						arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
 
-					arguments.Add<GraphQLScalarType<bool>>(nameof(SelectQuery.Distinct), false);
-					arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+					arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
+					arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
 					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
-					arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Fetch), 0U);
-					arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Offset), 0U);
-					arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null);
+					arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
+					arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
+					arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
 
 					var fieldType = new FieldType
 					{
@@ -331,7 +335,7 @@ public static class SchemaExtensions
 				if (actions.HasFlag(SqlApiAction.InsertData))
 				{
 					var arguments = new QueryArguments();
-					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLScalarType<string>>>>>("columns", null, "The columns to insert data into.");
+					arguments.Add<string[]>("columns", description: "The columns to insert data into.");
 					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), null, "The data to be inserted.");
 
 					var fieldType = new FieldType
@@ -350,9 +354,9 @@ public static class SchemaExtensions
 				if (actions.HasFlag(SqlApiAction.Update))
 				{
 					var arguments = new QueryArguments();
-					arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
-					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLScalarType<string>>>>>("set", null, "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
-					arguments.Add<GraphQLScalarType<string>>("where", null, "If `where` is omitted, all records will be updated.");
+					arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+					arguments.Add<string[]>("set", description: "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
+					arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be updated.");
 
 					var fieldType = new FieldType
 					{
@@ -370,8 +374,8 @@ public static class SchemaExtensions
 				if (actions.HasFlag(SqlApiAction.UpdateData))
 				{
 					var arguments = new QueryArguments();
-					arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLScalarType<string>>>>>("columns", null, "The columns to be updated.");
-					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), null, "The data to be inserted.");
+					arguments.Add<string[]>("columns", description: "The columns to be updated.");
+					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), description: "The data to be inserted.");
 
 					var fieldType = new FieldType
 					{
@@ -574,13 +578,15 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddMutations<T>(this ISchema @this, string method)
 		where T : notnull
-		=> typeof(T).GetPublicMethods()
+	{
+		var publicMethods = typeof(T).GetPublicMethods()
 			.Where(_ => _.Name().Is(method))
-			.Select(@this.AddMutation)
-			.Concat(typeof(T).GetPublicStaticMethods()
-				.Where(_ => _.Name().Is(method))
-				.Select(@this.AddMutation))
-			.ToArray();
+			.Select(@this.AddMutation);
+		var publicStaticMethods = typeof(T).GetPublicStaticMethods()
+			.Where(_ => _.Name().Is(method))
+			.Select(@this.AddMutation);
+		return [..publicMethods, ..publicStaticMethods];
+	}
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -737,7 +743,7 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentException"/>
 	public static FieldType AddQuery(this ISchema @this, MethodInfo methodInfo)
 	{
-		if (methodInfo.ReturnType.IsAny(typeof(void), typeof(Task), typeof(ValueTask)))
+		if (methodInfo.ReturnType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]))
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
 		return @this.Query().AddField(methodInfo, new MethodFieldResolver(methodInfo));
@@ -884,8 +890,8 @@ public static class SchemaExtensions
 		var name = dataSource.CreateName(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
-		arguments.Add<ListGraphType<GraphQLInputType<T>>>("data", null, "The data to be deleted.");
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<T[]>("data", description: "The data to be deleted.");
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -919,9 +925,9 @@ public static class SchemaExtensions
 		var name = dataSource.CreateName(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
-		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
-		arguments.Add<GraphQLScalarType<string>>("where", null, "If `where` is omitted, all records will be deleted!");
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+		arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be deleted!");
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -955,9 +961,9 @@ public static class SchemaExtensions
 		var name = dataSource.CreateName(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
-		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLScalarType<string>>>>>("columns", null, "The columns to insert data into.");
-		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("data", null, "The data to be inserted.");
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<string[]>("columns", description: "The columns to insert data into.");
+		arguments.Add<T[]>("data", description: "The data to be inserted.");
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -999,22 +1005,24 @@ public static class SchemaExtensions
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();
 
+			var ascending = Sort.Ascending.ToSQL();
+			graphOrderByEnum.Add(Invariant($"{propertyName}_{ascending}"), Invariant($"{propertyName} {ascending}"), Invariant($"{propertyName} {ascending}"), propertyDeprecationReason);
 			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
 			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
 		}
 
 		var arguments = new QueryArguments();
-		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
+			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true);
 
-		arguments.Add<GraphQLScalarType<bool>>(nameof(SelectQuery.Distinct), false);
-		arguments.Add<NonNullGraphType<GraphQLScalarType<string>>>(nameof(SelectQuery.From), null, "The table or view to pull the data from to insert.");
-		arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
+		arguments.Add<string>(nameof(SelectQuery.From), description: "The table or view to pull the data from to insert.");
+		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
 		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Fetch), 0U);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Offset), 0U);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
+		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1061,16 +1069,16 @@ public static class SchemaExtensions
 		}
 
 		var arguments = new QueryArguments();
-		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
+		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 		if (dataSource.Type is DataSourceType.SqlServer)
 			arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
 
-		arguments.Add<GraphQLScalarType<bool>>(nameof(SelectQuery.Distinct), false);
-		arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Where), null, "If `where` is omitted, all records will be returned.");
+		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
+		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
 		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Fetch), 0U);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SelectQuery.Offset), 0U);
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
+		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1104,8 +1112,8 @@ public static class SchemaExtensions
 		var name = dataSource.CreateName(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
-		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLInputType<T>>>>>("set", null, "The columns to be updated.");
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<T[]>("set", description: "The columns to be updated.");
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{
@@ -1139,10 +1147,10 @@ public static class SchemaExtensions
 		var name = dataSource.CreateName(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
-		arguments.Add<ListGraphType<NonNullGraphType<GraphQLInputType<Parameter>>>>("parameters", null, "Used to reference user input values from the where clause.");
-		arguments.Add<NonNullGraphType<ListGraphType<NonNullGraphType<GraphQLScalarType<string>>>>>("set", null, "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
-		arguments.Add<GraphQLScalarType<string>>("where", null, "If `where` is omitted, all records will be updated.");
-		arguments.Add<GraphQLScalarType<uint>>(nameof(SqlCommand.Timeout), null, "SQL Command timeout in seconds.");
+		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+		arguments.Add<string[]>("set", description: "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
+		arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be updated.");
+		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
 
 		var fieldType = new FieldType
 		{

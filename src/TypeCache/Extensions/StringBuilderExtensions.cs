@@ -21,13 +21,26 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, string trueValue, string falseValue)
 		=> @this.Append(condition ? trueValue : falseValue);
 
+	/// <summary>
+	/// <c>=&gt; <paramref name="condition"/> ? @<paramref name="this"/>.Append(<paramref name="value"/>) : @<paramref name="this"/>;</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, ReadOnlySpan<char> value)
 		=> condition ? @this.Append(value) : @this;
 
+	/// <summary>
+	/// <c>=&gt; @<paramref name="this"/>.Append(<paramref name="condition"/> ? <paramref name="trueValue"/> : <paramref name="falseValue"/>);</c>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, ReadOnlySpan<char> trueValue, ReadOnlySpan<char> falseValue)
 		=> condition ? @this.Append(trueValue) : @this.Append(falseValue);
+
+	/// <summary>
+	/// <c>=&gt; <paramref name="condition"/> ? action(@<paramref name="this"/>) : @<paramref name="this"/>;</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringBuilder AppendIf(this StringBuilder @this, bool condition, Func<StringBuilder, StringBuilder> action)
+		=> condition ? action(@this) : @this;
 
 	[DebuggerHidden]
 	public static StringBuilder AppendIf<T>(this StringBuilder @this, bool condition, T value)

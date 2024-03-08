@@ -8,7 +8,7 @@ namespace TypeCache.Web.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-	public static bool Any(this ClaimsPrincipal @this, string claimType, params string[] values)
+	public static bool Any(this ClaimsPrincipal @this, string claimType, string[] values)
 	{
 		claimType.AssertNotBlank();
 

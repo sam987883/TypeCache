@@ -29,8 +29,8 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"DELETED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
@@ -69,8 +69,8 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"DELETED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");

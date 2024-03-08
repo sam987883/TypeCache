@@ -62,8 +62,8 @@ public class StringExtensions
 	[Fact]
 	public void Join()
 	{
-		Assert.Equal(TEST_STRING, " ".Join("AaBbCc", "123", "`~!#$%^\t\r\n"));
-		Assert.Equal(TEST_STRING, " ".Join(TEST_STRING));
+		Assert.Equal(TEST_STRING, " ".Join(["AaBbCc", "123", "`~!#$%^\t\r\n"]));
+		Assert.Equal(TEST_STRING, " ".Join([TEST_STRING]));
 	}
 
 	[Fact]
@@ -89,13 +89,13 @@ public class StringExtensions
 	[Fact]
 	public void MaskHide()
 	{
-		Assert.Equal("--Bb-- 123 `~!#$%^\t\r\n", TEST_STRING.MaskHide('-', StringComparison.OrdinalIgnoreCase, "A", "C", "\t\r\n"));
+		Assert.Equal("--Bb-- 123 `~!#$%^\t\r\n", TEST_STRING.MaskHide('-', StringComparison.OrdinalIgnoreCase, ["A", "C", "\t\r\n"]));
 	}
 
 	[Fact]
 	public void MaskShow()
 	{
-		Assert.Equal("ooBboo 123 `~!#$%^\t\r\n", TEST_STRING.MaskShow('o', StringComparison.Ordinal, "Bb", " ", "123", "`~!#$%^"));
+		Assert.Equal("ooBboo 123 `~!#$%^\t\r\n", TEST_STRING.MaskShow('o', StringComparison.Ordinal, ["Bb", " ", "123", "`~!#$%^"]));
 	}
 
 	[Fact]

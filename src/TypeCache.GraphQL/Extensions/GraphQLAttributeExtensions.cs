@@ -24,7 +24,8 @@ public static class GraphQLAttributeExtensions
 		=> @this.GetCustomAttribute<GraphQLDescriptionAttribute>()?.Description switch
 		{
 			null => null,
-			var description when @this is Type type && type.IsGenericType => string.Format(InvariantCulture, description, type.GenericTypeArguments.Select(_ => _.GraphQLName()).ToArray()),
+			var description when @this is Type type && type.IsGenericType =>
+				string.Format(InvariantCulture, description, type.GenericTypeArguments.Select(_ => _.GraphQLName()).ToArray()),
 			var description => description
 		};
 
@@ -57,9 +58,11 @@ public static class GraphQLAttributeExtensions
 	public static string GraphQLName(this ParameterInfo @this)
 		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name();
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type? GraphQLType(this MemberInfo @this)
 		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GetType().GenericTypeArguments[0];
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type? GraphQLType(this ParameterInfo @this)
 		=> @this.GetCustomAttribute<GraphQLTypeAttribute>()?.GetType().GenericTypeArguments[0];
 }

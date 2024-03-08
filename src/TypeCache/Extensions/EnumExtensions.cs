@@ -2,6 +2,7 @@
 
 using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
@@ -11,12 +12,12 @@ public static class EnumExtensions
 	[DebuggerHidden]
 	public static Attribute[] Attributes<T>(this T @this)
 		where T : struct, Enum
-		=> Enum.IsDefined(@this)
+		=> Enum<T>.IsValid(@this)
 			? typeof(T).GetField(@this.Name(), Public | Static)!.GetCustomAttributes(false).Cast<Attribute>().ToArray()
 			: Array<Attribute>.Empty;
 
 	[DebuggerHidden]
-	public static bool HasAnyFlag<T>(this T @this, params T[] flags)
+	public static bool HasAnyFlag<T>(this T @this, T[] flags)
 		where T : struct, Enum
 		=> flags?.Any(flag => @this.HasFlag(flag)) ?? false;
 
@@ -35,6 +36,14 @@ public static class EnumExtensions
 	public static bool IsDefined<T>(this T @this)
 		where T : struct, Enum
 		=> Enum.IsDefined(@this);
+
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>&lt;<typeparamref name="T"/>&gt;.IsValid(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsValid<T>(this T @this)
+		where T : struct, Enum
+		=> Enum<T>.IsValid(@this);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>

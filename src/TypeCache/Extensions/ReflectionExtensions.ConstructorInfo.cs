@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	public static Expression<Func<object?[]?, object?>> ToFuncExpression(this ConstructorInfo @this)
 	{
@@ -15,7 +15,7 @@ partial class ReflectionExtensions
 			.Select((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
 			.ToArray();
 
-		return @this.ToExpression(parameters).As<object>().Lambda<Func<object?[]?, object?>>(arguments);
+		return @this.ToExpression(parameters).As<object>().Lambda<Func<object?[]?, object?>>([arguments]);
 	}
 
 	public static LambdaExpression ToLambdaExpression(this ConstructorInfo @this)
@@ -41,7 +41,7 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToExpression(this ConstructorInfo @this, params Expression[]? parameters)
+	public static NewExpression ToExpression(this ConstructorInfo @this, Expression[]? parameters = null)
 		=> Expression.New(@this, parameters);
 
 	/// <inheritdoc cref="Expression.New(ConstructorInfo, IEnumerable{Expression}, IEnumerable{MemberInfo})"/>
@@ -57,6 +57,6 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.New(@<paramref name="this"/>, <paramref name="parameters"/>, <paramref name="memberInfos"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static NewExpression ToExpression(this ConstructorInfo @this, IEnumerable<Expression> parameters, params MemberInfo[]? memberInfos)
+	public static NewExpression ToExpression(this ConstructorInfo @this, IEnumerable<Expression> parameters, MemberInfo[]? memberInfos = null)
 		=> Expression.New(@this, parameters, memberInfos);
 }

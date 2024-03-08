@@ -52,7 +52,7 @@ public static class EndpointRouteBuilderExtensions
 				var responseBuilder = new StringBuilder();
 				foreach (var pair in context.Request.Headers)
 				{
-					responseBuilder.Append(Invariant($"{pair.Key}: {pair.Value.ToString()}<br>"));
+					responseBuilder.Append(Invariant($"{pair.Key}: {pair.Value}<br>"));
 				}
 
 				response = responseBuilder.ToString();
@@ -119,9 +119,9 @@ public static class EndpointRouteBuilderExtensions
 			};
 			response = (context.Response.StatusCode, acceptRequestHeader) switch
 			{
-				(StatusCodes.Status200OK, Text.Plain) => Invariant($"{key}: {value.ToString()}"),
+				(StatusCodes.Status200OK, Text.Plain) => Invariant($"{key}: {value}"),
 				(StatusCodes.Status204NoContent, Text.Plain) => Invariant($"{key}: "),
-				(StatusCodes.Status200OK, Text.Html) => Invariant($"<h1>{key}</h1><br><b>{value.ToString()}<b/>"),
+				(StatusCodes.Status200OK, Text.Html) => Invariant($"<h1>{key}</h1><br><b>{value}<b/>"),
 				(StatusCodes.Status204NoContent, Text.Html) => Invariant($"<h1>{key}</h1><br>"),
 				(StatusCodes.Status200OK, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'), value.ToString())).ToString(),
 				(StatusCodes.Status204NoContent, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'))).ToString(),

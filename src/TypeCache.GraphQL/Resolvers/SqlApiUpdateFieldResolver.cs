@@ -31,8 +31,8 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
@@ -86,8 +86,8 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");

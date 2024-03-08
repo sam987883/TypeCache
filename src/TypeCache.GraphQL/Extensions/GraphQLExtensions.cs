@@ -92,9 +92,7 @@ public static class GraphQLExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
-		=> @this.IsValueType && @this.IsNullable()
-			? typeof(GraphQLObjectType<>).MakeGenericType(@this.GenericTypeArguments[0])
-			: typeof(GraphQLObjectType<>).MakeGenericType(@this);
+		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
 	public static Type ToGraphQLType(this ParameterInfo @this)
 	{
@@ -116,25 +114,28 @@ public static class GraphQLExtensions
 
 	public static Type ToGraphQLType(this Type @this, bool isInputType)
 	{
+		if (@this.Is(typeof(Nullable<>)))
+			return @this.GenericTypeArguments[0].ToGraphQLType(isInputType);
+
+		if (@this.IsEnum)
+			return @this.ToGraphQLEnumType();
+
 		var objectType = @this.GetObjectType();
 		(objectType is ObjectType.Delegate).AssertFalse();
 		(objectType is ObjectType.Object).AssertFalse();
+
+		var scalarGraphType = @this.GetScalarType().ToGraphType();
+		if (scalarGraphType is not null)
+			return scalarGraphType;
 
 		var collectionType = @this.GetCollectionType();
 		if (collectionType.IsDictionary())
 			return typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType();
 
-		if (@this.IsEnum)
-			return @this.ToGraphQLEnumType();
-
 		if (objectType is ObjectType.Task || objectType is ObjectType.ValueTask)
 			return @this.IsGenericType
 				? @this.GenericTypeArguments.First()!.ToGraphQLType(false)
 				: throw new ArgumentOutOfRangeException(nameof(@this), Invariant($"{nameof(Task)} and {nameof(ValueTask)} are not allowed as GraphQL types."));
-
-		var scalarGraphType = @this.GetScalarType().ToGraphType();
-		if (scalarGraphType is not null)
-			return scalarGraphType;
 
 		if (@this.HasElementType)
 		{
@@ -193,20 +194,20 @@ public static class GraphQLExtensions
 			arguments.Add("null", type, description: "Return this value instead of null.");
 
 		if (@this.PropertyType.IsAssignableTo<IFormattable>())
-			arguments.Add<GraphQLScalarType<string>>("format", description: "Use .NET format specifiers to format the data.");
+			arguments.Add<string>("format", nullable: true, description: "Use .NET format specifiers to format the data.");
 
 		if (type.Is<GraphQLScalarType<DateTime>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTime>>>())
-			arguments.Add<GraphQLScalarType<string>>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
+			arguments.Add<string>("timeZone", nullable: true, description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
 		else if (type.Is<GraphQLScalarType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTimeOffset>>>())
-			arguments.Add<GraphQLScalarType<string>>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
+			arguments.Add<string>("timeZone", nullable: true, description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
 		else if (type.Is<GraphQLScalarType<string>>() || type.Is<NonNullGraphType<GraphQLScalarType<string>>>())
 		{
-			arguments.Add<GraphQLEnumType<StringCase>>("case", description: "Convert string value to upper or lower case.");
-			arguments.Add<GraphQLScalarType<int>>("length", description: "Exclude the rest of the string value if it exceeds this length.");
-			arguments.Add<GraphQLScalarType<string>>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
-			arguments.Add<GraphQLScalarType<string>>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
-			arguments.Add<GraphQLScalarType<string>>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
-			arguments.Add<GraphQLScalarType<string>>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
+			arguments.Add<StringCase>("case", nullable: true, description: "Convert string value to upper or lower case.");
+			arguments.Add<int>("length", nullable: true, description: "Exclude the rest of the string value if it exceeds this length.");
+			arguments.Add<string>("match", nullable: true, description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
+			arguments.Add<string>("trim", nullable: true, description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
+			arguments.Add<string>("trimEnd", nullable: true, description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
+			arguments.Add<string>("trimStart", nullable: true, description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
 		}
 
 		return new()

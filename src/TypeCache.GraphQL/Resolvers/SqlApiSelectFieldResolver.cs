@@ -36,7 +36,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 					|| _.Right(Invariant($"{nameof(Connection<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
-			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
 			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
@@ -112,7 +112,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 					|| _.Right(Invariant($"{nameof(Connection<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
-			TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
 			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};

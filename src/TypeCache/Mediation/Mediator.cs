@@ -31,12 +31,12 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 		}
 		catch (AggregateException error)
 		{
-			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.Execute));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", [nameof(Mediator), nameof(Mediator.Execute)]);
 			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
-			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.Execute), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", [nameof(Mediator), nameof(Mediator.Execute), error.Message]);
 			await Task.FromException(error);
 		}
 	}
@@ -63,12 +63,12 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 		}
 		catch (AggregateException error)
 		{
-			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.Map));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", [nameof(Mediator), nameof(Mediator.Map)]);
 			await Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{
-			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.Map), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", [nameof(Mediator), nameof(Mediator.Map), error.Message]);
 			await Task.FromException(error);
 		}
 
@@ -76,7 +76,7 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	}
 
 	public Task<RESPONSE> Map<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default)
-		=> (Task<RESPONSE>)this.GetType().InvokeMethod(nameof(Mediator.Map), [request.GetType(), typeof(RESPONSE)], this, request, token)!;
+		=> (Task<RESPONSE>)this.GetType().InvokeMethod(nameof(Mediator.Map), [request.GetType(), typeof(RESPONSE)], this, [request, token])!;
 
 	public void Validate<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : notnull
@@ -95,7 +95,7 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 		}
 		catch (AggregateException error)
 		{
-			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", nameof(Mediator), nameof(Mediator.Validate));
+			logger?.LogAggregateException(error, "{mediator}.{function} aggregate failure.", [nameof(Mediator), nameof(Mediator.Validate)]);
 			if (error.InnerExceptions.Count == 1)
 				throw error.InnerException!;
 
@@ -103,7 +103,7 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 		}
 		catch (Exception error)
 		{
-			logger?.LogError(error, "{mediator}.{function} failure: {message}", nameof(Mediator), nameof(Mediator.Validate), error.Message);
+			logger?.LogError(error, "{mediator}.{function} failure: {message}", [nameof(Mediator), nameof(Mediator.Validate), error.Message]);
 			throw;
 		}
 	}

@@ -2,14 +2,32 @@
 
 using System.Collections;
 using System.Data;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
+using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data.Extensions;
 
 public static class SqlExtensions
 {
+	public static string EscapeIdentifier([NotNull] this string @this, DataSourceType type)
+		=> type switch
+		{
+			SqlServer => Invariant($"[{@this.Replace("]", "]]")}]"),
+			Oracle or PostgreSql => Invariant($"\"{@this.Replace("\"", "\"\"")}\""),
+			MySql => Invariant($"`{@this.Replace("`", "``")}`"),
+			_ => @this
+		};
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.EscapeValue(@<paramref name="this"/>).Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string EscapeLikeValue([NotNull] this string @this)
+		=> @this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Replace("'", "''");</c>
 	/// </summary>

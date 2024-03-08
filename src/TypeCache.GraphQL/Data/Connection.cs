@@ -20,9 +20,9 @@ public class Connection<T>
 
 	public Connection(uint offset, T[] items)
 	{
-		offset += 1;
+		int o = (int)offset + 1;
 		this.Items = items;
-		this.Edges = items.Select((row, i) => new Edge<T>((int)offset + i, row)).ToArray();
+		this.Edges = items.Select((row, i) => new Edge<T>(o + i, row)).ToArray();
 	}
 
 	[GraphQLDescription("The total number of records available. Returns `null` if the total number is unknown.")]

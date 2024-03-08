@@ -49,14 +49,17 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// Adds a field that is based on the result of the <paramref name="methodInfo"/>.<br/>
 	/// The name of the field is the name or <see cref="GraphQLNameAttribute"/> of the <paramref name="methodInfo"/>.
 	/// </summary>
+	/// <remarks>The <paramref name="methodInfo"/> must be a static method.</remarks>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
 	public FieldType AddField(MethodInfo methodInfo)
 	{
 		var type = methodInfo.ReturnType;
-		if (type.IsGenericType && type.IsAny(typeof(Task<>), typeof(ValueTask<>)))
+		if (type.IsGenericType && type.IsAny([typeof(Task<>), typeof(ValueTask<>)]))
 			type = type.GenericTypeArguments[0];
 
 		var resolverType = typeof(ItemLoaderFieldResolver<>).MakeGenericType(type);
-		var resolver = (IFieldResolver)resolverType.Create(methodInfo)!;
+		var resolver = (IFieldResolver)resolverType.Create([methodInfo])!;
 		return this.AddField(methodInfo, resolver);
 	}
 

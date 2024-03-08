@@ -69,7 +69,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateDeleteSQL(where, output);
+		var sql = objectSchema.CreateDeleteSQL(where, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -129,7 +129,7 @@ internal static class SqlApiHandler
 		, [FromBody] SelectQuery selectQuery)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -160,7 +160,7 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(data, output);
+		var sql = objectSchema.CreateInsertSQL(data, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
@@ -188,7 +188,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateDeleteSQL(where, output), Text.Plain, UTF8);
+		return Results.Text(objectSchema.CreateDeleteSQL(where, [output]), Text.Plain, UTF8);
 	}
 
 	public static IResult GetDeleteBatchSQL(
@@ -253,7 +253,7 @@ internal static class SqlApiHandler
 			Top = top,
 			Where = where
 		};
-		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -267,7 +267,7 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(data, output);
+		var sql = objectSchema.CreateInsertSQL(data, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -339,7 +339,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, output);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -353,7 +353,7 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(data, output);
+		var sql = objectSchema.CreateUpdateSQL(data, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -419,7 +419,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, output);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -450,7 +450,7 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(data, output);
+		var sql = objectSchema.CreateUpdateSQL(data, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();

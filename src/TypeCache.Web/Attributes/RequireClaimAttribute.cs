@@ -18,7 +18,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 {
 	public IDictionary<string, string[]> Claims { get; }
 
-	public RequireClaimAttribute(params string[] claims) : base(nameof(ClaimAuthorizationRequirement))
+	public RequireClaimAttribute(string[] claims) : base(nameof(ClaimAuthorizationRequirement))
 	{
 		const char separator = '=';
 
@@ -35,7 +35,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 				if (key.IsNotBlank())
 				{
 					if (this.Claims.TryGetValue(key, out var values))
-						this.Claims[key] = values.Append(value).ToArray()!;
+						this.Claims[key] = [..values, value!];
 					else
 						this.Claims.Add(key!, [value!]);
 				}

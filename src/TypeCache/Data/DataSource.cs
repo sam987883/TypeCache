@@ -131,38 +131,20 @@ internal sealed class DataSource : IDataSource
 	public DatabaseObject CreateName(string schema, string objectName)
 		=> this.Type switch
 		{
-			MySql => new(Invariant($"{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}")),
-			_ => new(Invariant($"{this.EscapeIdentifier(this.DefaultDatabase)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"))
+			MySql => new(Invariant($"{schema.EscapeIdentifier(this.Type)}.{objectName.EscapeIdentifier(this.Type)}")),
+			_ => new(Invariant($"{this.DefaultDatabase.EscapeIdentifier(this.Type)}.{schema.EscapeIdentifier(this.Type)}.{objectName.EscapeIdentifier(this.Type)}"))
 		};
 
 	public DatabaseObject CreateName(string database, string schema, string objectName)
 	{
 		this.Databases.Contains(database).AssertTrue();
 
-		return new(Invariant($"{this.EscapeIdentifier(database)}.{this.EscapeIdentifier(schema)}.{this.EscapeIdentifier(objectName)}"));
+		return new(Invariant($"{database.EscapeIdentifier(this.Type)}.{schema.EscapeIdentifier(this.Type)}.{objectName.EscapeIdentifier(this.Type)}"));
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public SqlCommand CreateSqlCommand(string sql)
 		=> new(this, sql);
-
-	[DebuggerHidden]
-	public string EscapeIdentifier([NotNull] string identifier)
-		=> this.Type switch
-		{
-			SqlServer => Invariant($"[{identifier.Replace("]", "]]")}]"),
-			Oracle or PostgreSql => Invariant($"\"{identifier.Replace("\"", "\"\"")}\""),
-			MySql => Invariant($"`{identifier.Replace("`", "``")}`"),
-			_ => identifier
-		};
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public string EscapeLikeValue([NotNull] string text)
-		=> text.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public string EscapeValue([NotNull] string text)
-		=> text.Replace("'", "''");
 
 	public async Task<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default)
 	{
@@ -249,7 +231,6 @@ internal sealed class DataSource : IDataSource
 		connection.Open();
 
 		using var command = connection.CreateCommand();
-		command.Connection = connection;
 		command.CommandType = CommandType.Text;
 
 		using var adapter = this.Factory.CreateDataAdapter()!;

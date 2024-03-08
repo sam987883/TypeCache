@@ -26,7 +26,7 @@ public readonly struct ArrayExpressionBuilder
 	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Select(index =&gt; <see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	[DebuggerHidden]
-	public IndexExpression this[params int[] indexes]
+	public IndexExpression this[int[] indexes]
 		=> Expression.ArrayAccess(this._Expression, indexes.Select(index => Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[])"/>
@@ -42,7 +42,7 @@ public readonly struct ArrayExpressionBuilder
 	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>.Select(index =&gt; <see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	[DebuggerHidden]
-	public IndexExpression this[params long[] indexes]
+	public IndexExpression this[long[] indexes]
 		=> Expression.ArrayAccess(this._Expression, indexes.Select(index => Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayAccess(Expression, Expression[])"/>
@@ -66,7 +66,7 @@ public readonly struct ArrayExpressionBuilder
 	/// <c>=&gt; <see cref="Expression"/>.ArrayAccess(<see langword="this"/>._Expression, <paramref name="indexes"/>);</c>
 	/// </remarks>
 	[DebuggerHidden]
-	public IndexExpression this[params Expression[] indexes]
+	public IndexExpression this[Expression[] indexes]
 		=> Expression.ArrayAccess(this._Expression, indexes);
 
 	/// <inheritdoc cref="Expression.ArrayLength(Expression)"/>

@@ -89,7 +89,7 @@ public static class StringExtensions
 	/// <c>=&gt; <paramref name="chars"/>?.Any(@<paramref name="this"/>.Contains) <see langword="is true"/>;</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool ContainsAny(this string @this, params char[] chars)
+	public static bool ContainsAny(this string @this, char[]? chars = null)
 		=> chars?.Any(@this.Contains) is true;
 
 	/// <inheritdoc cref="Convert.FromBase64String(string)"/>
@@ -163,7 +163,7 @@ public static class StringExtensions
 	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Join(this string? @this, params string[] values)
+	public static string Join(this string? @this, string[] values)
 		=> @this.AsSpan().Join(values);
 
 	/// <inheritdoc cref="string.StartsWith(char)"/>
@@ -205,9 +205,9 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] hideTerms)
+	public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, string[]? hideTerms = null)
 	{
-		if (@this.IsBlank() || !hideTerms.Any())
+		if (@this.IsBlank() || hideTerms?.Any() is not true)
 			return @this;
 
 		var count = 0;
@@ -233,7 +233,7 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, params string[] showTerms)
+	public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, string[]? showTerms = null)
 	{
 		if (@this.IsBlank())
 			return @this;

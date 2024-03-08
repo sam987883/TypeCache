@@ -35,10 +35,12 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 	{
 		context.RequestServices.AssertNotNull();
 
-		var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
-		var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
-		var arguments = context.GetArguments<object>(this._MethodInfo).ToArray();
-		var result = this._MethodInfo.InvokeMethod(controller, arguments);
+		var controller = !this._MethodInfo.IsStatic ? context.RequestServices.GetRequiredService(this._MethodInfo.DeclaringType!) : null;
+		var arguments = context.GetArguments(this._MethodInfo).ToArray();
+		if (!this._MethodInfo.IsStatic)
+			arguments = [controller, .. arguments];
+
+		var result = this._MethodInfo.InvokeMethod(arguments);
 
 		return result switch
 		{

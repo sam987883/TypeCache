@@ -10,9 +10,7 @@ using TypeCache.Utilities;
 
 namespace TypeCache.GraphQL.Types;
 
-/// <summary>
 /// <inheritdoc cref="EnumerationGraphType"/>
-/// </summary>
 public sealed class GraphQLEnumType<T> : EnumerationGraphType
 	where T : struct, Enum
 {
@@ -42,12 +40,17 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 	}
 
 	/// <inheritdoc/>
+	public override object? Serialize(object? value)
+		=> value is not null ? (T)value : null;
+
+	/// <inheritdoc/>
 	public override bool CanParseValue(object? value)
 		=> value switch
 		{
 			null => true,
-			T token => Enum.IsDefined(token),
+			T token => Enum<T>.IsValid(token),
 			string text => Enum.TryParse<T>(text, true, out _),
+			_ when value.GetType() == typeof(T).GetEnumUnderlyingType() => true,
 			_ => false
 		};
 
@@ -56,7 +59,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		=> value switch
 		{
 			null => null,
-			T token when Enum.IsDefined(token) => token,
+			T token when Enum<T>.IsValid(token) => token,
 			T token => null,
 			string text => Enum.Parse<T>(text, true),
 			_ => Enum.ToObject(typeof(T), value)

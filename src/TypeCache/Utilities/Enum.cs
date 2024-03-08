@@ -24,4 +24,7 @@ public static class Enum<T>
 
 	[DebuggerHidden]
 	public static Type UnderlyingType => UnderlyingTypeHandle.ToType();
+
+	public static bool IsValid(T value)
+		=> Enum.IsDefined(value) || (Flags && Values.Count(_ => value.HasFlag(_)) > 1);
 }

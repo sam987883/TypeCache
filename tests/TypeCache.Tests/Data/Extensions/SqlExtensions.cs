@@ -53,14 +53,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 
 		var expected = Invariant($@"DELETE {table}
 OUTPUT INSERTED.[First Name] AS [First Name], DELETED.[Last_Name] AS [Last_Name], INSERTED.ID
-FROM {table} AS _
-INNER JOIN
-(
-VALUES (1)
-	, (2)
-	, (3)
-) AS data (EscapeIdentifier)
-ON data.EscapeIdentifier = _.EscapeIdentifier;
+WHERE [ID] IN (1, 2, 3);
 ");
 		Person[] data = [new() { ID = 1 }, new() { ID = 2 }, new() { ID = 3 }];
 		var actual = objectSchema.CreateDeleteSQL<Person>(data, new[] { "INSERTED.[First Name] AS [First Name]", "DELETED.[Last_Name] AS [Last_Name]", "INSERTED.ID" });
@@ -84,7 +77,7 @@ ON data.EscapeIdentifier = _.EscapeIdentifier;
 OUTPUT DELETED.[ID], DELETED.[First Name], DELETED.[Last_Name]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
-		var actual = objectSchema.CreateDeleteSQL("[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'", "DELETED.[ID]", "DELETED.[First Name]", "DELETED.[Last_Name]");
+		var actual = objectSchema.CreateDeleteSQL("[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'", ["DELETED.[ID]", "DELETED.[First Name]", "DELETED.[Last_Name]"]);
 
 		Assert.Equal(expected, actual);
 	}
@@ -108,13 +101,13 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 		];
 
 		var expected = Invariant($@"INSERT INTO {table}
-(EscapeIdentifier, EscapeIdentifier)
+([FirstName], [LastName])
 OUTPUT INSERTED.ID, INSERTED.[LastName]
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
 	, (N'FirstName3', N'LastName3');
 ");
-		var actual = objectSchema.CreateInsertSQL<Person>(["FirstName", "LastName"], data, "INSERTED.ID", "INSERTED.[LastName]");
+		var actual = objectSchema.CreateInsertSQL<Person>(["FirstName", "LastName"], data, ["INSERTED.ID", "INSERTED.[LastName]"]);
 
 		Assert.Equal(expected, actual);
 	}
@@ -136,12 +129,12 @@ VALUES (N'FirstName1', N'LastName1')
 			Having = "MAX([Age]) > 40",
 			OrderBy = ["[First Name] ASC", "Last_Name DESC"],
 			Select = ["ID", "TRIM([First Name]) AS [First Name]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount"],
-			TableHints = "WITH(NOLOCK)",
+			TableHints = "NOLOCK",
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
 		};
 
 		var expected = Invariant($@"INSERT INTO {table}
-(EscapeIdentifier, EscapeIdentifier, EscapeIdentifier, EscapeIdentifier)
+([[First Name]]], [[Last_Name]]], [Age], [Amount])
 OUTPUT INSERTED.[First Name] AS [First Name], INSERTED.[ID] AS [ID]
 SELECT ID, TRIM([First Name]) AS [First Name], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
 FROM [dbo].[NonCustomers] WITH(NOLOCK)
@@ -149,7 +142,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal'
 HAVING MAX([Age]) > 40
 ORDER BY [First Name] ASC, Last_Name DESC;
 ");
-		var actual = objectSchema.CreateInsertSQL(["[First Name]", "[Last_Name]", "Age", "Amount"], selectQuery, "INSERTED.[First Name] AS [First Name]", "INSERTED.[ID] AS [ID]");
+		var actual = objectSchema.CreateInsertSQL(["[First Name]", "[Last_Name]", "Age", "Amount"], selectQuery, ["INSERTED.[First Name] AS [First Name]", "INSERTED.[ID] AS [ID]"]);
 
 		Assert.Equal(expected, actual);
 	}
@@ -173,7 +166,7 @@ ORDER BY [First Name] ASC, Last_Name DESC;
 			OrderBy = ["[FirstName] ASC", "LastName DESC"],
 			Fetch = 100,
 			Offset = 0,
-			TableHints = "WITH(NOLOCK)"
+			TableHints = "NOLOCK"
 		};
 
 		var expected = Invariant($@"SELECT ID, TRIM([FirstName]) AS [FirstName], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
@@ -207,7 +200,7 @@ FETCH NEXT 100 ROWS ONLY;
 		];
 
 		var expected = Invariant($@"UPDATE {table} WITH(UPDLOCK)
-SET EscapeIdentifier = data.EscapeIdentifier, EscapeIdentifier = data.EscapeIdentifier
+SET [FirstName] = data.[FirstName], [LastName] = data.[LastName]
 OUTPUT INSERTED.[FirstName] AS [FirstName], DELETED.LastName AS LastName, INSERTED.[ID] AS [ID]
 FROM {table} AS _
 INNER JOIN
@@ -215,11 +208,11 @@ INNER JOIN
 VALUES (N'FirstName1', N'LastName1')
 	, (N'FirstName2', N'LastName2')
 	, (N'FirstName3', N'LastName3')
-) AS data (EscapeIdentifier, EscapeIdentifier)
-ON data.EscapeIdentifier = _.EscapeIdentifier;
+) AS data ([FirstName], [LastName])
+ON data.[ID] = _.[ID];
 ");
 		var actual = objectSchema.CreateUpdateSQL<Person>(["FirstName", "LastName"], data
-			, "INSERTED.[FirstName] AS [FirstName]", "DELETED.LastName AS LastName", "INSERTED.[ID] AS [ID]");
+			, ["INSERTED.[FirstName] AS [FirstName]", "DELETED.LastName AS LastName", "INSERTED.[ID] AS [ID]"]);
 
 		Assert.Equal(expected, actual);
 	}
@@ -252,9 +245,6 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	{
 		var dataSourceMock = Substitute.For<IDataSource>();
 		dataSourceMock.Type.Returns(dataSourceType);
-		dataSourceMock.EscapeIdentifier(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeIdentifier));
-		dataSourceMock.EscapeLikeValue(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeLikeValue));
-		dataSourceMock.EscapeValue(Arg.Any<string>()).Returns(nameof(dataSourceMock.EscapeValue));
 		return dataSourceMock;
 	}
 }

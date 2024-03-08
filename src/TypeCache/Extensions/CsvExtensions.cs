@@ -66,7 +66,7 @@ public static class CsvExtensions
 			var headerRow = string.Join(',', propertyInfos.Select(propertyInfo => propertyInfo.Name.EscapeCSV()));
 			var dataRows = @this.Select(row => string.Join(',', propertyInfos.Select(propertyInfo => propertyInfo.GetPropertyValue(row).EscapeCSV())));
 
-			return dataRows.Prepend(headerRow).ToArray();
+			return [headerRow, ..dataRows];
 		}
 
 		var fieldInfos = typeof(T).GetPublicFields();
@@ -75,7 +75,7 @@ public static class CsvExtensions
 			var headerRow = string.Join(',', fieldInfos.Select(fieldInfo => fieldInfo.Name.EscapeCSV()));
 			var dataRows = @this.Select(row => string.Join(',', fieldInfos.Select(fieldInfo => fieldInfo.GetFieldValue(row).EscapeCSV())));
 
-			return dataRows.Prepend(headerRow).ToArray();
+			return [headerRow, .. dataRows];
 		}
 
 		return Array<string>.Empty;

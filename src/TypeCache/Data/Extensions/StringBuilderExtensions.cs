@@ -14,8 +14,9 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendOutputSQL(this StringBuilder @this, DataSourceType dataSourceType, StringValues output)
 		=> @this.AppendLine(dataSourceType switch
 		{
-			PostgreSql => Invariant($"RETURNING {output.ToCSV()}"),
-			_ => Invariant($"OUTPUT {output.ToCSV()}")
+			SqlServer or PostgreSql => Invariant($"OUTPUT {output.ToCSV()}"),
+			Oracle => Invariant($"RETURNING {output.ToCSV()}"),
+			_ => string.Empty
 		});
 
 	public static StringBuilder AppendStatementEndSQL(this StringBuilder @this)

@@ -3,16 +3,17 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	/// <exception cref="MissingMethodException"></exception>
-	public static object? Create(this Type @this, params object?[]? parameters)
+	public static object? Create(this Type @this, object?[]? parameters = null)
 		=> @this.FindConstructor(parameters) switch
 		{
 			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorFuncs[@this.TypeHandle].Invoke(),
@@ -21,36 +22,36 @@ partial class ReflectionExtensions
 		};
 
 	[DebuggerHidden]
-	public static ConstructorInfo? FindConstructor(this Type @this, params object?[]? arguments)
+	public static ConstructorInfo? FindConstructor(this Type @this, object?[]? arguments = null)
 		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
 			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodInfo? FindMethod(this Type @this, string name, params Type[] argumentTypes)
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] argumentTypes)
 		=> @this.GetMethod(name, INSTANCE_BINDING_FLAGS, argumentTypes);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
-	public static MethodInfo? FindMethod(this Type @this, string name, params object?[]? arguments)
+	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments = null)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
 			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
-	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, params object?[]? arguments)
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
 			.Where(method => method.Name.Is(name) && method.IsGenericMethod)
 			.FirstOrDefault(method => method.MakeGenericMethod(genericTypes)?.IsCallableWith(arguments) is true);
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodInfo? FindStaticMethod(this Type @this, string name, params Type[] argumentTypes)
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] argumentTypes)
 		=> @this.GetMethod(name, STATIC_BINDING_FLAGS, argumentTypes);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
-	public static MethodInfo? FindStaticMethod(this Type @this, string name, params object?[]? arguments)
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments = null)
 		=> @this.GetMethods(STATIC_BINDING_FLAGS)
 			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
 
@@ -131,7 +132,7 @@ partial class ReflectionExtensions
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
 			.ToArray();
 
-	public static object? GetPropertyValue(this Type @this, string name, object instance, params object?[]? index)
+	public static object? GetPropertyValue(this Type @this, string name, object instance, object?[]? index = null)
 		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
 			.GetPropertyValue(instance, index);
 
@@ -139,7 +140,7 @@ partial class ReflectionExtensions
 		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
 			.GetFieldValue(null);
 
-	public static object? GetStaticPropertyValue(this Type @this, string name, params object?[]? index)
+	public static object? GetStaticPropertyValue(this Type @this, string name, object?[]? index = null)
 		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
 			.GetPropertyValue(null, index);
 
@@ -168,83 +169,83 @@ partial class ReflectionExtensions
 		}
 	}
 
-	public static object? InvokeMethod(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, params object?[]? arguments)
+	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, genericTypes, arguments)?
 			.MakeGenericMethod(genericTypes)
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, params object?[]? arguments)
+	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod(arguments?.Any() is true ? arguments.Prepend(instance).ToArray() : [instance]);
+			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
 
-	public static object? InvokeStaticMethod(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod(this Type @this, string name, Type[] genericTypes, params object?[]? arguments)
+	public static object? InvokeStaticMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
 		=> @this.FindMethod(name, arguments)?
 			.MakeGenericMethod(genericTypes)
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1, T2>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1, T2>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1, T2, T3>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1, T2, T3>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1, T2, T3, T4>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1, T2, T3, T4>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
-	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, params object?[]? arguments)
+	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object?[]? arguments = null)
 		=> @this.FindStaticMethod(name, arguments)?
 			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod(null, arguments);
+			.InvokeMethod(arguments);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
@@ -267,65 +268,65 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <paramref name="types"/>.Any(@<paramref name="this"/>.Is);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool IsAny(this Type @this, params Type[] types)
+	public static bool IsAny(this Type @this, Type[] types)
 		=> types.Any(@this.Is);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Is(<see langword="typeof"/>(<typeparamref name="T1"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Is([<see langword="typeof"/>(<typeparamref name="T1"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1>(this Type @this)
 		=> @this.Is(typeof(T1));
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
-	/// <see langword="typeof"/>(<typeparamref name="T2"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsAny([<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <see langword="typeof"/>(<typeparamref name="T2"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1, T2>(this Type @this)
-		=> @this.IsAny(typeof(T1), typeof(T2));
+		=> @this.IsAny([typeof(T1), typeof(T2)]);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <c>=&gt; @<paramref name="this"/>.IsAny([<see langword="typeof"/>(<typeparamref name="T1"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
-	/// <see langword="typeof"/>(<typeparamref name="T3"/>));</c>
+	/// <see langword="typeof"/>(<typeparamref name="T3"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1, T2, T3>(this Type @this)
-		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3));
+		=> @this.IsAny([typeof(T1), typeof(T2), typeof(T3)]);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <c>=&gt; @<paramref name="this"/>.IsAny([<see langword="typeof"/>(<typeparamref name="T1"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
-	/// <see langword="typeof"/>(<typeparamref name="T4"/>));</c>
+	/// <see langword="typeof"/>(<typeparamref name="T4"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1, T2, T3, T4>(this Type @this)
-		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+		=> @this.IsAny([typeof(T1), typeof(T2), typeof(T3), typeof(T4)]);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <c>=&gt; @<paramref name="this"/>.IsAny([<see langword="typeof"/>(<typeparamref name="T1"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T4"/>),
-	/// <see langword="typeof"/>(<typeparamref name="T5"/>));</c>
+	/// <see langword="typeof"/>(<typeparamref name="T5"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1, T2, T3, T4, T5>(this Type @this)
-		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+		=> @this.IsAny([typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)]);
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsAny(<see langword="typeof"/>(<typeparamref name="T1"/>),
+	/// <c>=&gt; @<paramref name="this"/>.IsAny([<see langword="typeof"/>(<typeparamref name="T1"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T2"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T3"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T4"/>),
 	/// <see langword="typeof"/>(<typeparamref name="T5"/>),
-	/// <see langword="typeof"/>(<typeparamref name="T6"/>));</c>
+	/// <see langword="typeof"/>(<typeparamref name="T6"/>)]);</c>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsAny<T1, T2, T3, T4, T5, T6>(this Type @this)
-		=> @this.IsAny(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
+		=> @this.IsAny([typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6)]);
 
 	/// <inheritdoc cref="Type.IsAssignableFrom(Type?)"/>
 	/// <summary>
@@ -402,7 +403,7 @@ partial class ReflectionExtensions
 			.SetFieldValue(instance, value);
 
 	[DebuggerHidden]
-	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, params object?[]? index)
+	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, object?[]? index = null)
 		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
 			.SetPropertyValue(instance, value, index);
 
@@ -412,7 +413,7 @@ partial class ReflectionExtensions
 			.SetFieldValue(null, value);
 
 	[DebuggerHidden]
-	public static void SetStaticPropertyValue(this Type @this, string name, object? value, params object?[]? index)
+	public static void SetStaticPropertyValue(this Type @this, string name, object? value, object?[]? index = null)
 		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
 			.SetPropertyValue(null, value, index);
 
@@ -442,11 +443,12 @@ partial class ReflectionExtensions
 
 	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[])"/>
 	[DebuggerHidden]
-	public static NewExpression ToNewExpression(this Type @this, params Expression[] parameters) => parameters switch
-	{
-		null or { Length: 0 } => Expression.New(@this),
-		_ => @this.GetConstructor(parameters.Select(parameter => parameter.Type).ToArray())!.ToExpression(parameters)
-	};
+	public static NewExpression ToNewExpression(this Type @this, Expression[]? parameters = null)
+		=> parameters switch
+		{
+			null or { Length: 0 } => Expression.New(@this),
+			_ => @this.GetConstructor(parameters.Select(parameter => parameter.Type).ToArray())!.ToExpression(parameters)
+		};
 
 	/// <inheritdoc cref="Expression.Field(Expression, Type, string)"/>
 	/// <remarks>
@@ -461,7 +463,7 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, params Expression[]? arguments)
+	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
 	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
@@ -469,7 +471,7 @@ partial class ReflectionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, Type[]? genericTypes, params Expression[]? arguments)
+	public static MethodCallExpression ToStaticMethodCallExpression(this Type @this, string method, Type[]? genericTypes, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
 	/// <inheritdoc cref="Expression.Property(Expression, Type, string)"/>

@@ -5,14 +5,14 @@ using System.Reflection;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	/// <remarks>
-	/// <c>@<paramref name="this"/>.ReturnType.IsAny(<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(void));</c>
+	/// <c>@<paramref name="this"/>.ReturnType.IsAny([<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(void)]);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool HasNoReturnValue(this MethodInfo @this)
-		=> @this.ReturnType.IsAny(typeof(Task), typeof(ValueTask), typeof(void));
+		=> @this.ReturnType.IsAny([typeof(Task), typeof(ValueTask), typeof(void)]);
 
 	/// <remarks>
 	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
@@ -92,12 +92,12 @@ partial class ReflectionExtensions
 			? parameterInfos.Select((parameterInfo, i) => arguments.Array()[i].Convert(parameterInfo.ParameterType))
 			: parameterInfos.Select((parameterInfo, i) => arguments.Array()[i + 1].Convert(parameterInfo.ParameterType));
 		var call = @this.IsStatic
-			? @this.ToStaticMethodCallExpression(parameters)
+			? @this.ToExpression(null, parameters)
 			: arguments.Array()[0].Cast(@this.DeclaringType!).Call(@this, parameters);
 
 		return @this.ReturnType != typeof(void)
-			? call.As<object>().Lambda<Func<object?[]?, object?>>(arguments)
-			: call.Block(Expression.Constant(null)).Lambda<Func<object?[]?, object?>>(arguments);
+			? call.As<object>().Lambda<Func<object?[]?, object?>>([arguments])
+			: call.Block(Expression.Constant(null)).Lambda<Func<object?[]?, object?>>([arguments]);
 	}
 
 	public static LambdaExpression ToLambdaExpression(this MethodInfo @this)
@@ -109,31 +109,24 @@ partial class ReflectionExtensions
 			.ToArray();
 
 		return !@this.IsStatic
-			? instance.Call(@this, parameters).Lambda(parameters.Prepend(instance))
-			: @this.ToStaticMethodCallExpression(parameters).Lambda(parameters);
+			? instance.Call(@this, parameters).Lambda([instance, ..parameters])
+			: @this.ToExpression(null, parameters).Lambda(parameters);
 	}
-
-	/// <inheritdoc cref="Expression.Call(Expression, MethodInfo)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression ToStaticMethodCallExpression(this MethodInfo @this)
-		=> Expression.Call(@this);
 
 	/// <inheritdoc cref="Expression.Call(MethodInfo, IEnumerable{Expression}?)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression ToStaticMethodCallExpression(this MethodInfo @this, IEnumerable<Expression> arguments)
-		=> Expression.Call(@this, arguments);
+	public static MethodCallExpression ToExpression(this MethodInfo @this, Expression? instance, IEnumerable<Expression> arguments)
+		=> Expression.Call(instance, @this, arguments);
 
 	/// <inheritdoc cref="Expression.Call(MethodInfo, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="instance"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
+	/// <param name="instance">Pass <c><see langword="null"/></c> for static method call.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression ToStaticMethodCallExpression(this MethodInfo @this, params Expression[]? arguments)
-		=> Expression.Call(@this, arguments);
+	public static MethodCallExpression ToExpression(this MethodInfo @this, Expression? instance, Expression[]? arguments = null)
+		=> Expression.Call(instance, @this, arguments);
 }

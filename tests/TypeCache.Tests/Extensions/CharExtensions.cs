@@ -13,9 +13,9 @@ public class CharExtensions
 	[Fact]
 	public void Join()
 	{
-		Assert.Equal("A,b,C,1,2,3", ','.Join("A", "b", "C", "1", "2", "3"));
+		Assert.Equal("A,b,C,1,2,3", ','.Join(["A", "b", "C", "1", "2", "3"]));
 		Assert.Equal("A.b.C.1.2.3", '.'.Join(new[] { "A", "b", "C", "1", "2", "3" }.AsEnumerable()));
-		Assert.Equal("A;b;C;1;2;3", ';'.Join('A', 'b', 'C', 1, 2, 3));
+		Assert.Equal("A;b;C;1;2;3", ';'.Join(['A', 'b', 'C', 1, 2, 3]));
 		Assert.Equal("A|b|C|1|2|3", '|'.Join(new object[] { 'A', 'b', 'C', 1, 2, 3 }.AsEnumerable()));
 	}
 

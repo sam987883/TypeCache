@@ -30,8 +30,8 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var columns = context.GetArgument<string[]>("columns");
@@ -49,7 +49,7 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
 					.Select(column => column.Name)
 					.ToArray(),
-				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+				TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
 				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);
@@ -87,8 +87,8 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var columns = context.GetArgument<string[]>("columns");
@@ -106,7 +106,7 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
 					.Select(column => column.Name)
 					.ToArray(),
-				TableHints = objectSchema.DataSource.Type is SqlServer ? "WITH(NOLOCK)" : null,
+				TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
 				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);

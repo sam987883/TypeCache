@@ -49,18 +49,6 @@ public interface IDataSource : IEquatable<IDataSource>
 
 	SqlCommand CreateSqlCommand(string sql);
 
-	string EscapeIdentifier([NotNull] string identifier);
-
-	/// <summary>
-	/// <c>=&gt; <see langword="this"/>.EscapeValue(<paramref name="text"/>).Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");</c>
-	/// </summary>
-	string EscapeLikeValue([NotNull] string text);
-
-	/// <summary>
-	/// <c>=&gt; <paramref name="text"/>.Replace("'", "''");</c>
-	/// </summary>
-	string EscapeValue([NotNull] string text);
-
 	Task<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default);
 
 	Task<DataTable> GetDatabaseSchemaAsync(SchemaCollection collection, string? database = null, CancellationToken token = default);

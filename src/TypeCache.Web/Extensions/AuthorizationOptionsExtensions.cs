@@ -12,7 +12,7 @@ namespace TypeCache.Web.Extensions;
 
 public static class AuthorizationOptionsExtensions
 {
-	private static AuthorizationPolicy AddAuthorizationPolicy(this AuthorizationOptions @this, IAuthorizationRequirement requirement, params string[]? authenticationSchemas)
+	private static AuthorizationPolicy AddAuthorizationPolicy(this AuthorizationOptions @this, IAuthorizationRequirement requirement, string[]? authenticationSchemas)
 	{
 		var builder = new AuthorizationPolicyBuilder();
 		if (authenticationSchemas?.Any() is true)
@@ -26,10 +26,10 @@ public static class AuthorizationOptionsExtensions
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static AuthorizationPolicy AddClaimAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
+	public static AuthorizationPolicy AddClaimAuthorizationPolicy(this AuthorizationOptions @this, string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new ClaimAuthorizationRequirement(), authenticationSchemas);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static AuthorizationPolicy AddHeaderAuthorizationPolicy(this AuthorizationOptions @this, params string[]? authenticationSchemas)
+	public static AuthorizationPolicy AddHeaderAuthorizationPolicy(this AuthorizationOptions @this, string[]? authenticationSchemas)
 		=> @this.AddAuthorizationPolicy(new HeaderAuthorizationRequirement(), authenticationSchemas);
 }
