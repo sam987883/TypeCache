@@ -37,7 +37,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+			Top = context.GetArgument<uint>(nameof(SelectQuery.Top)).ToString(),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
 		var sql = objectSchema.CreateSelectSQL(select);
@@ -113,7 +113,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+			Top = context.GetArgument<uint>(nameof(SelectQuery.Top)).ToString(),
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
 		var sql = objectSchema.CreateSelectSQL(select);

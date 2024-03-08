@@ -88,8 +88,7 @@ public static class SchemaExtensions
 		};
 		foreach (var column in table.Columns.OfType<DataColumn>())
 		{
-			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Ascending));
-			graphOrderByEnum.AddOrderBy(new(column.ColumnName, Sort.Descending));
+			graphOrderByEnum.AddOrderBy(column.ColumnName);
 
 			var field = resolvedType.AddField(new()
 			{
@@ -212,8 +211,7 @@ public static class SchemaExtensions
 				field.Metadata.Add(ColumnName, column.Name);
 				field.Metadata.Add(ColumnType, column.DataTypeHandle);
 
-				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Ascending));
-				graphOrderByEnum.AddOrderBy(new(column.Name, Sort.Descending));
+				graphOrderByEnum.AddOrderBy(column.Name);
 			}
 
 			if ((objectSchema.Type is DatabaseObjectType.Table || objectSchema.Type is DatabaseObjectType.View) && actions.HasFlag(SqlApiAction.Select))
@@ -226,7 +224,7 @@ public static class SchemaExtensions
 
 				arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 				arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
 				arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
 				arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
 				arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
@@ -314,7 +312,7 @@ public static class SchemaExtensions
 
 					arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 					arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
 					arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
 					arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
 					arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
@@ -1007,8 +1005,7 @@ public static class SchemaExtensions
 
 			var ascending = Sort.Ascending.ToSQL();
 			graphOrderByEnum.Add(Invariant($"{propertyName}_{ascending}"), Invariant($"{propertyName} {ascending}"), Invariant($"{propertyName} {ascending}"), propertyDeprecationReason);
-			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
-			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
 		}
 
 		var arguments = new QueryArguments();
@@ -1019,7 +1016,7 @@ public static class SchemaExtensions
 		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 		arguments.Add<string>(nameof(SelectQuery.From), description: "The table or view to pull the data from to insert.");
 		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
 		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
 		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
 		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
@@ -1064,18 +1061,17 @@ public static class SchemaExtensions
 			var propertyName = property.GraphQLName();
 			var propertyDeprecationReason = property.GraphQLDeprecationReason();
 
-			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Ascending), propertyDeprecationReason);
-			graphOrderByEnum.AddOrderBy(new(propertyName, Sort.Descending), propertyDeprecationReason);
+			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
 		}
 
 		var arguments = new QueryArguments();
 		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
+			arguments.Add<uint>(nameof(SelectQuery.Top), nullable: true);
 
 		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)), Array<OrderBy>.Empty);
+		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
 		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
 		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
 		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");

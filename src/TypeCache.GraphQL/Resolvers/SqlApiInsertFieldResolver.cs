@@ -44,7 +44,7 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
+				OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 				Select = objectSchema.Columns
 					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
 					.Select(column => column.Name)
@@ -101,7 +101,7 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
-				OrderBy = context.GetArgument<OrderBy[]>(nameof(SelectQuery.OrderBy)).Select(_ => _.ToString()).ToArray(),
+				OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 				Select = objectSchema.Columns
 					.Where(column => select.Any(_ => _.Right(Invariant($"{nameof(SelectQuery.Select)}.{column.Name}"))))
 					.Select(column => column.Name)

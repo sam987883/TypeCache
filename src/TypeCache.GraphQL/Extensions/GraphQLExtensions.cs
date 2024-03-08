@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
@@ -44,8 +46,13 @@ public static class GraphQLExtensions
 		return @this.AddField(fieldType);
 	}
 
-	public static void AddOrderBy(this EnumerationGraphType @this, OrderBy orderBy, string? deprecationReason = null)
-		=> @this.Add(orderBy.Display, orderBy.ToString(), orderBy.ToString(), deprecationReason);
+	public static void AddOrderBy(this EnumerationGraphType @this, string column, string? deprecationReason = null)
+	{
+		var asc = Sort.Ascending.ToSQL();
+		var desc = Sort.Descending.ToSQL();
+		@this.Add(Invariant($"{column}_{asc}"), Invariant($"{column} {asc}"), Invariant($"{column} {asc}"), deprecationReason);
+		@this.Add(Invariant($"{column}_{desc}"), Invariant($"{column} {desc}"), Invariant($"{column} {desc}"), deprecationReason);
+	}
 
 	/// <summary>
 	/// Use this to create a GraphQL Connection object to return in your endpoint to support paging.
