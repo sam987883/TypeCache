@@ -11,7 +11,7 @@
 ### `Microsoft.Extensions.DependencyInjection.IServiceCollection` - Configure SQL API:
 - `ConfigureSqlApi(...)`
 ---
-# `Microsoft.AspNetCore.Routing.IEndpointRouteBuilder` - API Endpoints:
+### `Microsoft.AspNetCore.Routing.IEndpointRouteBuilder` - API Endpoints:
 - `MapSqlApi(...)`
 - `MapSqlApiCallProcedure(...)`
 - `MapSqlApiDelete(...)`
