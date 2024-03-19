@@ -6,57 +6,56 @@
 [Request Features (or report a bug) (if any)](https://github.com/sam987883/TypeCache/issues)
 
 ---
-### Faster Reflection
-- `System.Type.`__`Create(...)`__
-- `System.Type.`__`FindConstructor(...)`__
-- `System.Type.`__`FindMethod(...)`__
-- `System.Type.`__`FindStaticMethod(...)`__
-- `System.Type.`__`GetFieldValue(...)`__
-- `System.Type.`__`GetPropertyValue(...)`__
-- `System.Type.`__`GetStaticFieldValue(...)`__
-- `System.Type.`__`GetStaticPropertyValue(...)`__
-- `System.Type.`__`InvokeMethod(...)`__
-- `System.Type.`__`InvokeStaticMethod(...)`__
-- `System.Type.`__`SetFieldValue(...)`__
-- `System.Type.`__`SetPropertyValue(...)`__
-- `System.Type.`__`SetStaticFieldValue(...)`__
-- `System.Type.`__`SetStaticPropertyValue(...)`__
-- `System.Reflection.FieldInfo.`__`GetFieldValue(...)`__
-- `System.Reflection.PropertyInfo.`__`GetPropertyValue(...)`__
-- `System.Reflection.MethodInfo.`__`InvokeMethod(...)`__
-- `System.Reflection.FieldInfo.`__`SetFieldValue(...)`__
-- `System.Reflection.PropertyInfo.`__`SetPropertyValue(...)`__
+### `TypeCache.Extensions` - Faster Reflection
+- `System.Type.Create(...)`
+- `System.Type.FindConstructor(...)`
+- `System.Type.FindMethod(...)`
+- `System.Type.FindStaticMethod(...)`
+- `System.Type.GetFieldValue(...)`
+- `System.Type.GetPropertyValue(...)`
+- `System.Type.GetStaticFieldValue(...)`
+- `System.Type.GetStaticPropertyValue(...)`
+- `System.Type.InvokeMethod(...)`
+- `System.Type.InvokeStaticMethod(...)`
+- `System.Type.SetFieldValue(...)`
+- `System.Type.SetPropertyValue(...)`
+- `System.Type.SetStaticFieldValue(...)`
+- `System.Type.SetStaticPropertyValue(...)`
+- `System.Reflection.FieldInfo.GetFieldValue(...)`
+- `System.Reflection.PropertyInfo.GetPropertyValue(...)`
+- `System.Reflection.MethodInfo.InvokeMethod(...)`
+- `System.Reflection.FieldInfo.SetFieldValue(...)`
+- `System.Reflection.PropertyInfo.SetPropertyValue(...)`
 ---
-### Better Object Mapping
+### `TypeCache.Extensions` - Better Object Mapping
 
-- `dictionary.`__`Map(...)`__
-- `dictionary.`__`MapToModel(...)`__
-- `model.`__`MapTo(...)`__
-- `model.`__`MapToDictionary(...)`__
+- `dictionary.Map(...)`
+- `dictionary.MapToModel(...)`
+- `model.MapTo(...)`
+- `model.MapToDictionary(...)`
 ---
-### Better Performing Mediator/Mediation
-- `TypeCache.Mediation.`__`IAfterRule`__
-- `TypeCache.Mediation.`__`IMediator`__
-- `TypeCache.Mediation.`__`IRequest`__
-- `TypeCache.Mediation.`__`IRule`__
-- `TypeCache.Mediation.`__`IValidationRule`__
-- `TypeCache.Mediation.`__`RuleFactory`__
-- `TypeCache.Mediation.`__`RulesBuilder`__
+### `TypeCache.Mediation` - Mediator that supports named rules
+- `IMediator`
+- `IRequest`
+- `IValidationRule`
+- `IRule`
+- `IAfterRule`
+- `RuleFactory`
 ---
-### Simple Robust Database CRUD Access
-- `System.Data.Common.DbCommand.`__`ExecuteReaderAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetDataTableAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetJsonArrayAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetJsonAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetModelsAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetStringAsync(...)`__
-- `System.Data.Common.DbCommand.`__`GetValueAsync(...)`__
-- `System.Data.Common.DbDataReader.`__`GetColumns(...)`__
-- `System.Data.Common.DbDataReader.`__`ReadModelsAsync(...)`__
-- `System.Data.Common.DbDataReader.`__`ReadJsonArrayAsync(...)`__
-- `System.Data.Common.DbDataReader.`__`ReadJsonAsync(...)`__
+### `TypeCache.Extensions` - Simple Robust Database CRUD Access
+- `System.Data.Common.DbCommand.ExecuteReaderAsync(...)`
+- `System.Data.Common.DbCommand.GetDataTableAsync(...)`
+- `System.Data.Common.DbCommand.GetJsonArrayAsync(...)`
+- `System.Data.Common.DbCommand.GetJsonAsync(...)`
+- `System.Data.Common.DbCommand.GetModelsAsync(...)`
+- `System.Data.Common.DbCommand.GetStringAsync(...)`
+- `System.Data.Common.DbCommand.GetValueAsync(...)`
+- `System.Data.Common.DbDataReader.GetColumns(...)`__
+- `System.Data.Common.DbDataReader.ReadModelsAsync(...)`__
+- `System.Data.Common.DbDataReader.ReadJsonArrayAsync(...)`__
+- `System.Data.Common.DbDataReader.ReadJsonAsync(...)`__
 ---
-### Helpful Extensions
+### `TypeCache.Extensions` - Helpful Extensions
 - `Array/Linq/Enumerator` extensions
 - Assertion extensions
 - `System.Linq.Expressions` extensions
