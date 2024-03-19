@@ -5,7 +5,7 @@ using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	public static bool IsCallableWith(this MethodBase @this, object?[]? arguments)
 	{

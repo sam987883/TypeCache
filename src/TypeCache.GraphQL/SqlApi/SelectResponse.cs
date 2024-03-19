@@ -4,7 +4,7 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Data;
-using TypeCache.GraphQL.Types;
+using TypeCache.GraphQL.Extensions;
 using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SqlApi;
@@ -43,30 +43,10 @@ public class SelectResponse<T>
 			Description = description
 		};
 
-		graphType.AddField(new()
-		{
-			Name = nameof(SelectResponse<T>.Data),
-			ResolvedType = Connection<T>.CreateGraphType(name, dataGraphType),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, Connection<T>>(context => context.Source.Data)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(SelectResponse<T>.DataSource),
-			Type = typeof(GraphQLScalarType<string>),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(SelectResponse<T>.Sql),
-			Type = typeof(GraphQLScalarType<string>),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(SelectResponse<T>.Table),
-			Type = typeof(GraphQLScalarType<string>),
-			Resolver = new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table)
-		});
+		graphType.AddField(nameof(SelectResponse<T>.Data), Connection<T>.CreateGraphType(name, dataGraphType), new FuncFieldResolver<SelectResponse<T>, Connection<T>>(context => context.Source.Data));
+		graphType.AddField<string>(nameof(SelectResponse<T>.DataSource), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource));
+		graphType.AddField<string>(nameof(SelectResponse<T>.Sql), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql));
+		graphType.AddField<string>(nameof(SelectResponse<T>.Table), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table));
 
 		return graphType;
 	}

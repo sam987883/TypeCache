@@ -80,7 +80,7 @@ public static class ValueConverter
 			(ScalarType.DateOnly, ScalarType.String) => LambdaFactory.CreateFunc((DateOnly _) => _.ToISO8601(null)),
 			(ScalarType.DateTime, ScalarType.String) => LambdaFactory.CreateFunc((DateTime _) => _.ToISO8601(null)),
 			(ScalarType.DateTimeOffset, ScalarType.String) => LambdaFactory.CreateFunc((DateTimeOffset _) => _.ToISO8601(null)),
-			(ScalarType.Enum, ScalarType.String) => LambdaFactory.CreateFunc((Enum _) => _.ToString("F")),
+			(ScalarType.Enum, ScalarType.String) => LambdaFactory.CreateFunc((Enum _) => _.Name()),
 			(ScalarType.TimeOnly, ScalarType.String) => LambdaFactory.CreateFunc((TimeOnly _) => _.ToISO8601(null)),
 			(ScalarType.TimeSpan, ScalarType.String) => LambdaFactory.CreateFunc((TimeSpan _) => _.ToText(null)),
 			(ScalarType.Guid, ScalarType.String) => LambdaFactory.CreateFunc((Guid _) => _.ToString("D")),
@@ -167,200 +167,230 @@ public static class ValueConverter
 		return expression;
 	}
 
-	public static bool? ConvertToBoolean(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => bool.Parse(text),
-		null or string => null,
-		char x when TRUE_CHARS.Contains(x) => true,
-		(sbyte)0 or (short)0 or 0 or 0L or (byte)0 or (ushort)0 or 0U or 0UL or 0F or 0D or 0M => false,
-		sbyte or short or int or long or byte or ushort or uint or ulong or float or double or decimal => true,
-		Int128 x => x != Int128.Zero,
-		BigInteger x => x != BigInteger.Zero,
-		UInt128 x => x != UInt128.Zero,
-		IntPtr x => x != IntPtr.Zero,
-		UIntPtr x => x != UIntPtr.Zero,
-		Half x => x != (Half)0,
-		DateOnly x => x != DateOnly.MinValue,
-		DateTime x => x != DateTime.MinValue,
-		DateTimeOffset x => x != DateTimeOffset.MinValue,
-		TimeOnly x => x != TimeOnly.MinValue,
-		TimeSpan x => x != TimeSpan.MinValue,
-		Guid x => x != Guid.Empty,
-		_ => (bool)value
-	};
+	public static bool? ConvertToBoolean(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => text.Parse<bool>(),
+			null or string => null,
+			char x when TRUE_CHARS.Contains(x) => true,
+			(sbyte)0 or (short)0 or 0 or 0L or (byte)0 or (ushort)0 or 0U or 0UL or 0F or 0D or 0M => false,
+			sbyte or short or int or long or byte or ushort or uint or ulong or float or double or decimal => true,
+			Int128 x => x != Int128.Zero,
+			BigInteger x => x != BigInteger.Zero,
+			UInt128 x => x != UInt128.Zero,
+			IntPtr x => x != IntPtr.Zero,
+			UIntPtr x => x != UIntPtr.Zero,
+			Half x => x != (Half)0,
+			DateOnly x => x != DateOnly.MinValue,
+			DateTime x => x != DateTime.MinValue,
+			DateTimeOffset x => x != DateTimeOffset.MinValue,
+			TimeOnly x => x != TimeOnly.MinValue,
+			TimeSpan x => x != TimeSpan.MinValue,
+			Guid x => x != Guid.Empty,
+			_ => (bool)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static BigInteger? ConvertToBigInteger(object? value) => value.ConvertToPrimitive(BigInteger.Zero, BigInteger.One, BigInteger.Parse, x => (BigInteger)x);
+	public static BigInteger? ConvertToBigInteger(object? value)
+		=> value.ConvertToPrimitive(BigInteger.Zero, BigInteger.One, BigInteger.Parse, x => (BigInteger)x);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static byte? ConvertToByte(object? value) => value.ConvertToPrimitive((byte)0, (byte)1, byte.Parse, Convert.ToByte);
+	public static byte? ConvertToByte(object? value)
+		=> value.ConvertToPrimitive((byte)0, (byte)1, byte.Parse, Convert.ToByte);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static char? ConvertToChar(object? value) => value.ConvertToPrimitive('0', '1', Convert.ToChar, Convert.ToChar);
+	public static char? ConvertToChar(object? value)
+		=> value.ConvertToPrimitive('0', '1', Convert.ToChar, Convert.ToChar);
 
-	public static DateOnly? ConvertToDateOnly(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => DateOnly.Parse(text),
-		null or string => null,
-		int x => DateOnly.FromDayNumber(x),
-		uint x => DateOnly.FromDayNumber(checked((int)x)),
-		DateTime x => x.ToDateOnly(),
-		DateTimeOffset x => x.ToDateOnly(),
-		_ => (DateOnly)value
-	};
+	public static DateOnly? ConvertToDateOnly(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => DateOnly.Parse(text),
+			null or string => null,
+			int x => DateOnly.FromDayNumber(x),
+			uint x => DateOnly.FromDayNumber(checked((int)x)),
+			DateTime x => x.ToDateOnly(),
+			DateTimeOffset x => x.ToDateOnly(),
+			_ => (DateOnly)value
+		};
 
-	public static DateTime? ConvertToDateTime(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => DateTime.Parse(text),
-		null or string => null,
-		long x => new(x),
-		ulong x => new(checked((long)x)),
-		DateOnly x => x.ToDateTime(TimeOnly.MinValue),
-		DateTimeOffset x => x.DateTime,
-		_ => (DateTime)value
-	};
+	public static DateTime? ConvertToDateTime(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => DateTime.Parse(text),
+			null or string => null,
+			long x => new(x),
+			ulong x => new(checked((long)x)),
+			DateOnly x => x.ToDateTime(TimeOnly.MinValue),
+			DateTimeOffset x => x.DateTime,
+			_ => (DateTime)value
+		};
 
-	public static DateTimeOffset? ConvertToDateTimeOffset(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => DateTimeOffset.Parse(text),
-		null or string => null,
-		long x => new DateTime(x).ToDateTimeOffset(),
-		ulong x => new DateTime(checked((long)x)).ToDateTimeOffset(),
-		DateOnly x => x.ToDateTime(TimeOnly.MinValue).ToDateTimeOffset(),
-		DateTime x => x.ToDateTimeOffset(),
-		_ => (DateTimeOffset)value
-	};
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static decimal? ConvertToDecimal(object? value) => value.ConvertToPrimitive(0M, 1M, decimal.Parse, Convert.ToDecimal);
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static double? ConvertToDouble(object? value) => value.ConvertToPrimitive(0D, 1D, double.Parse, Convert.ToDouble);
-
-	public static T? ConvertToEnum<T>(object? value) where T : struct, Enum => value switch
-	{
-		string text when text.IsNotBlank() => Enum.Parse<T>(text, true),
-		null or string => null,
-		sbyte or short or int or long or byte or ushort or uint or ulong => (T)Enum.ToObject(typeof(T), value),
-		_ => (T)value
-	};
-
-	public static Guid? ConvertToGuid(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => Guid.Parse(text),
-		null or string => null,
-		_ => (Guid)value
-	};
+	public static DateTimeOffset? ConvertToDateTimeOffset(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => DateTimeOffset.Parse(text),
+			null or string => null,
+			long x => new DateTime(x).ToDateTimeOffset(),
+			ulong x => new DateTime(checked((long)x)).ToDateTimeOffset(),
+			DateOnly x => x.ToDateTime(TimeOnly.MinValue).ToDateTimeOffset(),
+			DateTime x => x.ToDateTimeOffset(),
+			_ => (DateTimeOffset)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Half? ConvertToHalf(object? value) => value.ConvertToPrimitive((Half)0, (Half)1, Half.Parse, x => (Half)x);
-
-	public static Index? ConvertToIndex(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => new Index(int.Parse(text)),
-		null or string => null,
-		sbyte x => new Index(x),
-		short x => new Index(x),
-		int x => new Index(x),
-		long x => new Index(checked((int)x)),
-		byte x => new Index(x),
-		ushort x => new Index(x),
-		uint x => new Index(checked((int)x)),
-		ulong x => new Index(checked((int)x)),
-		_ => (Index)value
-	};
+	public static decimal? ConvertToDecimal(object? value)
+		=> value.ConvertToPrimitive(0M, 1M, decimal.Parse, Convert.ToDecimal);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static short? ConvertToInt16(object? value) => value.ConvertToPrimitive((short)0, (short)1, short.Parse, Convert.ToInt16);
+	public static double? ConvertToDouble(object? value)
+		=> value.ConvertToPrimitive(0D, 1D, double.Parse, Convert.ToDouble);
+
+	public static T? ConvertToEnum<T>(object? value) where T : struct, Enum
+		=> value switch
+		{
+			string text when text.IsNotBlank() => text.ToEnum<T>(),
+			null or string => null,
+			sbyte or short or int or long or byte or ushort or uint or ulong => (T)Enum.ToObject(typeof(T), value),
+			_ => (T)value
+		};
+
+	public static Guid? ConvertToGuid(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => Guid.Parse(text),
+			null or string => null,
+			_ => (Guid)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static int? ConvertToInt32(object? value) => value.ConvertToPrimitive(0, 1, int.Parse, x => x);
+	public static Half? ConvertToHalf(object? value)
+		=> value.ConvertToPrimitive((Half)0, (Half)1, Half.Parse, x => (Half)x);
+
+	public static Index? ConvertToIndex(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => new Index(text.Parse<int>()),
+			null or string => null,
+			sbyte x => new Index(x),
+			short x => new Index(x),
+			int x => new Index(x),
+			long x => new Index(checked((int)x)),
+			byte x => new Index(x),
+			ushort x => new Index(x),
+			uint x => new Index(checked((int)x)),
+			ulong x => new Index(checked((int)x)),
+			_ => (Index)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static long? ConvertToInt64(object? value) => value.ConvertToPrimitive((long)0, (long)1, long.Parse, Convert.ToInt64);
+	public static short? ConvertToInt16(object? value)
+		=> value.ConvertToPrimitive((short)0, (short)1, short.Parse, Convert.ToInt16);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Int128? ConvertToInt128(object? value) => value.ConvertToPrimitive(Int128.Zero, Int128.One, Int128.Parse, x => (Int128)x);
-
-	public static nint? ConvertToIntPtr(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => IntPtr.Parse(text),
-		null or string => null,
-		_ => (nint)value
-	};
+	public static int? ConvertToInt32(object? value)
+		=> value.ConvertToPrimitive(0, 1, int.Parse, x => x);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static sbyte? ConvertToSByte(object? value) => value.ConvertToPrimitive((sbyte)0, (sbyte)1, sbyte.Parse, Convert.ToSByte);
+	public static long? ConvertToInt64(object? value)
+		=> value.ConvertToPrimitive((long)0, (long)1, long.Parse, Convert.ToInt64);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static float? ConvertToSingle(object? value) => value.ConvertToPrimitive(0F, 1F, float.Parse, Convert.ToSingle);
+	public static Int128? ConvertToInt128(object? value)
+		=> value.ConvertToPrimitive(Int128.Zero, Int128.One, Int128.Parse, x => (Int128)x);
 
-	public static string? ConvertToString(object? value) => value switch
-	{
-		null => null,
-		DateOnly x => x.ToISO8601(),
-		DateTime x => x.ToISO8601(),
-		DateTimeOffset x => x.ToISO8601(),
-		Enum x => x.ToString("F"),
-		TimeOnly x => x.ToISO8601(),
-		TimeSpan x => x.ToText(),
-		_ => value.ToString(),
-	};
-
-	public static TimeOnly? ConvertToTimeOnly(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => TimeOnly.Parse(text),
-		null or string => null,
-		long x => new(x),
-		ulong x => new(checked((long)x)),
-		DateTime x => TimeOnly.FromDateTime(x),
-		DateTimeOffset x => TimeOnly.FromDateTime(x.DateTime),
-		TimeSpan x => TimeOnly.FromTimeSpan(x),
-		_ => (TimeOnly)value
-	};
-
-	public static TimeSpan? ConvertToTimeSpan(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => TimeSpan.Parse(text),
-		null or string => null,
-		long x => new(x),
-		ulong x => new(checked((long)x)),
-		_ => (TimeSpan)value
-	};
+	public static nint? ConvertToIntPtr(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => IntPtr.Parse(text),
+			null or string => null,
+			_ => (nint)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ushort? ConvertToUInt16(object? value) => value.ConvertToPrimitive((ushort)0, (ushort)1, ushort.Parse, Convert.ToUInt16);
+	public static sbyte? ConvertToSByte(object? value)
+		=> value.ConvertToPrimitive((sbyte)0, (sbyte)1, sbyte.Parse, Convert.ToSByte);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static uint? ConvertToUInt32(object? value) => value.ConvertToPrimitive(0U, 1U, uint.Parse, Convert.ToUInt32);
+	public static float? ConvertToSingle(object? value)
+		=> value.ConvertToPrimitive(0F, 1F, float.Parse, Convert.ToSingle);
+
+	public static string? ConvertToString(object? value)
+		=> value switch
+		{
+			null => null,
+			DateOnly x => x.ToISO8601(),
+			DateTime x => x.ToISO8601(),
+			DateTimeOffset x => x.ToISO8601(),
+			Enum x => x.Name(),
+			TimeOnly x => x.ToISO8601(),
+			TimeSpan x => x.ToText(),
+			_ => value.ToString(),
+		};
+
+	public static TimeOnly? ConvertToTimeOnly(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => TimeOnly.Parse(text),
+			null or string => null,
+			long x => new(x),
+			ulong x => new(checked((long)x)),
+			DateTime x => TimeOnly.FromDateTime(x),
+			DateTimeOffset x => TimeOnly.FromDateTime(x.DateTime),
+			TimeSpan x => TimeOnly.FromTimeSpan(x),
+			_ => (TimeOnly)value
+		};
+
+	public static TimeSpan? ConvertToTimeSpan(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => TimeSpan.Parse(text),
+			null or string => null,
+			long x => new(x),
+			ulong x => new(checked((long)x)),
+			_ => (TimeSpan)value
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ulong? ConvertToUInt64(object? value) => value.ConvertToPrimitive((ulong)0, (ulong)1, ulong.Parse, Convert.ToUInt64);
+	public static ushort? ConvertToUInt16(object? value)
+		=> value.ConvertToPrimitive((ushort)0, (ushort)1, ushort.Parse, Convert.ToUInt16);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static UInt128? ConvertToUInt128(object? value) => value.ConvertToPrimitive(UInt128.Zero, UInt128.One, UInt128.Parse, x => (UInt128)x);
+	public static uint? ConvertToUInt32(object? value)
+		=> value.ConvertToPrimitive(0U, 1U, uint.Parse, Convert.ToUInt32);
 
-	public static nuint? ConvertToUIntPtr(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => UIntPtr.Parse(text),
-		null or string => null,
-		_ => (nuint)value
-	};
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ulong? ConvertToUInt64(object? value)
+		=> value.ConvertToPrimitive((ulong)0, (ulong)1, ulong.Parse, Convert.ToUInt64);
 
-	public static Uri? ConvertToUri(object? value) => value switch
-	{
-		string text when text.IsNotBlank() => new Uri(text, text[0] is '/' ? UriKind.Relative : UriKind.Absolute),
-		null or string => null,
-		_ => (Uri)value
-	};
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static UInt128? ConvertToUInt128(object? value)
+		=> value.ConvertToPrimitive(UInt128.Zero, UInt128.One, UInt128.Parse, _ => (UInt128)_);
 
-	private static T? ConvertToPrimitive<T>(this object? @this, T trueValue, T falseValue, Func<string, T> parse, Func<int, T> fromInt) where T : struct => @this switch
-	{
-		string text when text.IsNotBlank() => parse(text),
-		null or string => null,
-		true => trueValue,
-		false => falseValue,
-		Index x => fromInt(x.Value),
-		_ => (T)@this
-	};
+	public static nuint? ConvertToUIntPtr(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => UIntPtr.Parse(text),
+			null or string => null,
+			_ => (nuint)value
+		};
+
+	public static Uri? ConvertToUri(object? value)
+		=> value switch
+		{
+			string text when text.IsNotBlank() => new Uri(text, text[0] is '/' ? UriKind.Relative : UriKind.Absolute),
+			null or string => null,
+			_ => (Uri)value
+		};
+
+	private static T? ConvertToPrimitive<T>(this object? @this, T trueValue, T falseValue, Func<string, T> parse, Func<int, T> fromInt) where T : struct
+		=> @this switch
+		{
+			string text when text.IsNotBlank() => parse(text),
+			null or string => null,
+			true => trueValue,
+			false => falseValue,
+			Index x => fromInt(x.Value),
+			_ => (T)@this
+		};
 }

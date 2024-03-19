@@ -10,7 +10,7 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class QueryArgumentsExtensions
 {
-	public static void Add<T>(this QueryArguments @this, string name, bool nullable = false, object? defaultValue = null, string? description = null)
+	public static void Add<T>(this QueryArguments @this, string name, bool? nullable = null, object? defaultValue = null, string? description = null)
 	{
 		if (typeof(T).Implements(typeof(IGraphType)))
 		{
@@ -31,6 +31,10 @@ public static class QueryArgumentsExtensions
 			_ => typeof(T)
 		};
 
+		var isValueNullable = type.Is(typeof(Nullable<>));
+		if (isValueNullable)
+			type = type.GenericTypeArguments[0];
+
 		var graphType = type switch
 		{
 			{ IsEnum: true } => typeof(GraphQLEnumType<>),
@@ -41,10 +45,22 @@ public static class QueryArgumentsExtensions
 		type = graphType.MakeGenericType(type);
 
 		if (isList)
-			type = type.ToListGraphType();
+		{
+			if (!isValueNullable)
+				type = type.ToNonNullGraphType();
 
-		if (!nullable)
-			type = type.ToNonNullGraphType();
+			type = type.ToListGraphType();
+			nullable ??= defaultValue is not null;
+
+			if (nullable is false)
+				type = type.ToNonNullGraphType();
+		}
+		else
+		{
+			nullable ??= isValueNullable || defaultValue is not null;
+			if (nullable is false)
+				type = type.ToNonNullGraphType();
+		}
 
 		@this.Add(new QueryArgument(type)
 		{

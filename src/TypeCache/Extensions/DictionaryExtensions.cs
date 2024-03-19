@@ -45,9 +45,10 @@ public static class DictionaryExtensions
 		return success;
 	}
 
-	/// <summary>
+	/// <inheritdoc cref="ReadOnlyDictionary{TKey, TValue}.ReadOnlyDictionary(IDictionary{TKey, TValue})"/>
+	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> ReadOnlyDictionary&lt;<typeparamref name="K"/>, <typeparamref name="V"/>&gt;(@<paramref name="this"/>);</c>
-	/// </summary>
+	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IReadOnlyDictionary<K, V> ToReadOnly<K, V>(this IDictionary<K, V> @this)
 		where K : notnull

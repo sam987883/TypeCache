@@ -1,7 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
+using System.Collections.Generic;
 using NSubstitute;
 using NSubstitute.Extensions;
+using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using Xunit;
@@ -27,11 +30,10 @@ public class SqlExtensions
 	public void CreateCountSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test");
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test", null, null);
 
 		var expected = Invariant($@"SELECT COUNT(*)
-FROM {table} WITH(NOLOCK)
+FROM {objectSchema} WITH(NOLOCK)
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
 		var actual = objectSchema.CreateCountSQL(null, "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'");
@@ -43,15 +45,14 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	public void CreateDeleteBatchSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 
-		var expected = Invariant($@"DELETE {table}
+		var expected = Invariant($@"DELETE {objectSchema}
 OUTPUT INSERTED.[First Name] AS [First Name], DELETED.[Last_Name] AS [Last_Name], INSERTED.ID
 WHERE [ID] IN (1, 2, 3);
 ");
@@ -65,15 +66,14 @@ WHERE [ID] IN (1, 2, 3);
 	public void CreateDeleteSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 
-		var expected = Invariant($@"DELETE {table}
+		var expected = Invariant($@"DELETE {objectSchema}
 OUTPUT DELETED.[ID], DELETED.[First Name], DELETED.[Last_Name]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 ");
@@ -86,13 +86,12 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 	public void CreateBatchInsertSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 		Person[] data =
 		[
 			new() { ID = 1, FirstName = "FirstName1", LastName = "LastName1", Age = 30 },
@@ -100,7 +99,7 @@ WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';
 			new() { ID = 3, FirstName = "FirstName3", LastName = "LastName3", Age = 32 }
 		];
 
-		var expected = Invariant($@"INSERT INTO {table}
+		var expected = Invariant($@"INSERT INTO {objectSchema}
 ([FirstName], [LastName])
 OUTPUT INSERTED.ID, INSERTED.[LastName]
 VALUES (N'FirstName1', N'LastName1')
@@ -116,13 +115,12 @@ VALUES (N'FirstName1', N'LastName1')
 	public void CreateInsertSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 		var selectQuery = new SelectQuery
 		{
 			From = new("[dbo].[NonCustomers]"),
@@ -133,7 +131,7 @@ VALUES (N'FirstName1', N'LastName1')
 			Where = "[First Name] = N'Sarah' AND [Last_Name] = N'Marshal'",
 		};
 
-		var expected = Invariant($@"INSERT INTO {table}
+		var expected = Invariant($@"INSERT INTO {objectSchema}
 ([[First Name]]], [[Last_Name]]], [Age], [Amount])
 OUTPUT INSERTED.[First Name] AS [First Name], INSERTED.[ID] AS [ID]
 SELECT ID, TRIM([First Name]) AS [First Name], UPPER([LastName]) AS LastName, 40 Age, Amount AS Amount
@@ -151,12 +149,12 @@ ORDER BY [First Name] ASC, Last_Name DESC;
 	public void CreateSelectSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, new DatabaseObject("db.dbo.Test"), "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 		var selectQuery = new SelectQuery
 		{
 			Select = ["ID", "TRIM([FirstName]) AS [FirstName]", "UPPER([LastName]) AS LastName", "40 Age", "Amount AS Amount"],
@@ -185,13 +183,12 @@ FETCH NEXT 100 ROWS ONLY;
 	public void CreateBatchUpdateSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("FirstName", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("LastName", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 		Person[] data =
 		[
 			new() { ID = 1, FirstName = "FirstName1", LastName = "LastName1", Age = 30 },
@@ -199,10 +196,10 @@ FETCH NEXT 100 ROWS ONLY;
 			new() { ID = 3, FirstName = "FirstName3", LastName = "LastName3", Age = 32 }
 		];
 
-		var expected = Invariant($@"UPDATE {table} WITH(UPDLOCK)
+		var expected = Invariant($@"UPDATE {objectSchema} WITH(UPDLOCK)
 SET [FirstName] = data.[FirstName], [LastName] = data.[LastName]
 OUTPUT INSERTED.[FirstName] AS [FirstName], DELETED.LastName AS LastName, INSERTED.[ID] AS [ID]
-FROM {table} AS _
+FROM {objectSchema} AS _
 INNER JOIN
 (
 VALUES (N'FirstName1', N'LastName1')
@@ -221,15 +218,14 @@ ON data.[ID] = _.[ID];
 	public void CreateUpdateSQL()
 	{
 		var dataSource = CreateDataSourceMock(SqlServer);
-		var table = new DatabaseObject("db.dbo.Test");
-		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, table, "db", "dbo", "Test",
+		var objectSchema = new ObjectSchema(dataSource, DatabaseObjectType.Table, "db", "dbo", "Test",
 		[
 			new ColumnSchema("ID", false, true, true, true, typeof(int).TypeHandle),
 			new ColumnSchema("First Name", false, false, false, false, typeof(string).TypeHandle),
 			new ColumnSchema("Last Name", false, false, false, false, typeof(string).TypeHandle),
-		]);
+		], null);
 
-		var expected = Invariant($@"UPDATE {table} WITH(UPDLOCK)
+		var expected = Invariant($@"UPDATE {objectSchema} WITH(UPDLOCK)
 SET [First Name] = N'Sarah', Last_Name = N'Marshal', Age = @Param1
 OUTPUT INSERTED.[First Name] AS [First Name], DELETED.[Last_Name] AS [Last_Name], INSERTED.ID AS [ID]
 WHERE [First Name] = N'Sarah' AND [Last_Name] = N'Marshal';

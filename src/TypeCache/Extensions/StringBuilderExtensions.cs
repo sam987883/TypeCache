@@ -61,7 +61,7 @@ public static class StringBuilderExtensions
 			float item => @this.Append(item),
 			double item => @this.Append(item),
 			decimal item => @this.Append(item),
-			Enum item => @this.Append(item.ToString("F")),
+			Enum item => @this.Append(item.Name()),
 			char[] item => @this.Append(item),
 			string item => @this.Append(item),
 			StringBuilder item => @this.Append(item),

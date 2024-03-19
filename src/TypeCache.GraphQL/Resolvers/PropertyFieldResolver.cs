@@ -8,21 +8,15 @@ using GraphQL;
 using TypeCache.Extensions;
 using static System.FormattableString;
 using static System.Globalization.CultureInfo;
-using static System.Text.RegularExpressions.RegexOptions;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class PropertyFieldResolver<T> : FieldResolver
+public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldResolver
 {
-	private readonly PropertyInfo _PropertyInfo;
-
-	public PropertyFieldResolver(PropertyInfo propertyInfo)
-	{
-		this._PropertyInfo = propertyInfo;
-	}
-
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
+		propertyInfo.AssertNotNull();
+
 		var source = context.Source switch
 		{
 			null => null,
@@ -31,7 +25,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			_ => context.Source
 		};
 
-		var value = this._PropertyInfo.GetPropertyValue(source!);
+		var value = propertyInfo.GetPropertyValue(source!);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 
@@ -87,7 +81,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = Regex.Match(text, pattern, Compiled | Singleline);
+				var match = text.ToRegex(RegexOptions.Compiled | RegexOptions.Singleline).Match(text);
 				if (match.Success)
 					text = match.Value;
 				else

@@ -24,6 +24,7 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
+		var top = context.GetArgument<string?>(nameof(SelectQuery.Top));
 		var select = new SelectQuery
 		{
 			Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
@@ -37,7 +38,8 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = context.GetArgument<uint>(nameof(SelectQuery.Top)).ToString(),
+			Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
 		var sql = objectSchema.CreateSelectSQL(select);
@@ -100,6 +102,7 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
+		var top = context.GetArgument<string?>(nameof(SelectQuery.Top));
 		var select = new SelectQuery
 		{
 			Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
@@ -113,7 +116,8 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = context.GetArgument<uint>(nameof(SelectQuery.Top)).ToString(),
+			Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
 		var sql = objectSchema.CreateSelectSQL(select);

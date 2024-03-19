@@ -36,12 +36,17 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 			.ToArray();
 		var columns = context.GetArgument<string[]>("columns");
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
-		var sql = data.Rows.Any<DataRow>()
-			? objectSchema.CreateInsertSQL(data, output)
-			: objectSchema.CreateInsertSQL(columns, new SelectQuery
+
+		string sql;
+		if (data.Rows.Any<DataRow>())
+			sql = objectSchema.CreateInsertSQL(data, output);
+		else
+		{
+			var top = context.GetArgument<string?>(nameof(SelectQuery.Top));
+			sql = objectSchema.CreateInsertSQL(columns, new SelectQuery
 			{
 				Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
-				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
+				From = objectSchema.DataSource.Escape(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 				OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
@@ -50,11 +55,13 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 					.Select(column => column.Name)
 					.ToArray(),
 				TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+				Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+				TopPercent = top?.EndsWith('%') is true,
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);
-		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
+		}
 
+		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = Array<DataRow>.Empty;
@@ -93,12 +100,17 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 			.ToArray();
 		var columns = context.GetArgument<string[]>("columns");
 		var data = context.GetArgument<T[]>("data");
-		var sql = data.Any()
-			? objectSchema.CreateInsertSQL(columns, data, output)
-			: objectSchema.CreateInsertSQL(columns, new SelectQuery
+
+		string sql;
+		if (data.Any())
+			sql = objectSchema.CreateInsertSQL(columns, data, output);
+		else
+		{
+			var top = context.GetArgument<string?>(nameof(SelectQuery.Top));
+			sql = objectSchema.CreateInsertSQL(columns, new SelectQuery
 			{
 				Distinct = context.GetArgument<bool>(nameof(SelectQuery.Distinct)),
-				From = objectSchema.DataSource.CreateName(context.GetArgument<string>(nameof(SelectQuery.From))),
+				From = objectSchema.DataSource.Escape(context.GetArgument<string>(nameof(SelectQuery.From))),
 				Fetch = context.GetArgument<uint>(nameof(SelectQuery.Fetch)),
 				Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 				OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
@@ -107,11 +119,13 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 					.Select(column => column.Name)
 					.ToArray(),
 				TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-				Top = context.GetArgument<string>(nameof(SelectQuery.Top)),
+				Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+				TopPercent = top?.EndsWith('%') is true,
 				Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 			}, output);
-		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
+		}
 
+		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = (IList<object>)Array<object>.Empty;

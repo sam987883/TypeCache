@@ -16,9 +16,8 @@ public static class SqlExtensions
 		=> type switch
 		{
 			SqlServer => Invariant($"[{@this.Replace("]", "]]")}]"),
-			Oracle or PostgreSql => Invariant($"\"{@this.Replace("\"", "\"\"")}\""),
 			MySql => Invariant($"`{@this.Replace("`", "``")}`"),
-			_ => @this
+			_ => Invariant($"\"{@this.Replace("\"", "\"\"")}\""),
 		};
 
 	/// <summary>
@@ -53,11 +52,11 @@ public static class SqlExtensions
 		Guid guid => Invariant($"'{guid:D}'"),
 		LogicalOperator.And => "AND",
 		LogicalOperator.Or => "OR",
-		LogicalOperator value => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{value:F} is not implemented for SQL.")),
+		LogicalOperator value => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{value.Name()} is not implemented for SQL.")),
 		Sort.Ascending => "ASC",
 		Sort.Descending => "DESC",
-		Sort value => throw new UnreachableException(Invariant($"{nameof(Sort)}.{value:F} is not implemented for SQL.")),
-		Enum token => token.ToString("D"),
+		Sort value => throw new UnreachableException(Invariant($"{nameof(Sort)}.{value.Name()} is not implemented for SQL.")),
+		Enum token => token.Name(),
 		Range range => Invariant($"'{range}'"),
 		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
 		byte[] binary => Invariant($"0x{binary.ToHexString()}"),
@@ -79,4 +78,12 @@ public static class SqlExtensions
 		IEnumerable enumerable => Invariant($"({enumerable.Cast<object>().Select(_ => _.ToSQL()).ToCSV()})"),
 		_ => @this.ToString() ?? "NULL"
 	};
+
+	public static string UnEscapeIdentifier([NotNull] this string @this, DataSourceType type)
+		=> type switch
+		{
+			SqlServer => @this.TrimStart('[').TrimEnd(']').Replace("]]", "]"),
+			MySql => @this.Trim('`').Replace("``", "`"),
+			_ => @this.Trim('"').Replace("\"\"", "\"")
+		};
 }

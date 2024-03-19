@@ -31,14 +31,12 @@ public class StringExtensions
 	public void Has()
 	{
 		Assert.True(TEST_STRING.Has("BCC 1"));
-		Assert.False(TEST_STRING.Has("BCC 1", StringComparison.Ordinal));
 	}
 
 	[Fact]
 	public void Is()
 	{
 		Assert.True(TEST_STRING.Is("AABBCC 123 `~!#$%^\t\r\n"));
-		Assert.False(TEST_STRING.Is("AABBCC 123 `~!#$%^\t\r\n", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -76,7 +74,6 @@ public class StringExtensions
 		Assert.False(TEST_STRING.Left('a'));
 
 		Assert.True(TEST_STRING.Left("AABBCC 123"));
-		Assert.False(TEST_STRING.Left("AABBCC 123", StringComparison.Ordinal));
 	}
 
 	[Fact]
@@ -112,16 +109,6 @@ public class StringExtensions
 		Assert.False("321 cCbBaA".Right('a'));
 
 		Assert.True("321 cCbBaA".Right("ccbbaa"));
-		Assert.False("321 cCbBaA".Right("ccbbaa", StringComparison.Ordinal));
-	}
-
-	[Fact]
-	public void Segment()
-	{
-		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.Segment());
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.Segment(2, 0));
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.Segment(2, 3));
-		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.Segment(9, 1));
 	}
 
 	[Fact]
@@ -129,6 +116,15 @@ public class StringExtensions
 	{
 		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
 		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().ToEnum<StringComparison>());
+	}
+
+	[Fact]
+	public void ToStringSegment()
+	{
+		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.ToStringSegment());
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.ToStringSegment(2, 0));
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.ToStringSegment(2, 3));
+		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.ToStringSegment(9, 1));
 	}
 
 	[Fact]

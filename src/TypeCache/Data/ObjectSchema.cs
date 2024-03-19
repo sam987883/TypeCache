@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Data;
 using System.Text;
@@ -11,39 +12,35 @@ using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data;
 
-public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Type, DatabaseObject Name, string DatabaseName, string SchemaName, string ObjectName)
+public sealed class ObjectSchema(
+	IDataSource dataSource
+		, DatabaseObjectType type
+		, string databaseName
+		, string schemaName
+		, string objectName
+		, IEnumerable<ColumnSchema>? columns
+		, IEnumerable<ParameterSchema>? parameters
+		) : IEquatable<ObjectSchema>
 {
-	public ObjectSchema(
-		IDataSource dataSource
-		, DatabaseObjectType type
-		, DatabaseObject name
-		, string databaseName
-		, string schemaName
-		, string objectName
-		, IEnumerable<ColumnSchema> columns
-		) : this(dataSource, type, name, databaseName, schemaName, objectName)
+	public IDataSource DataSource { get; } = dataSource;
+
+	public DatabaseObjectType Type { get; } = type;
+
+	public string Name { get; } = dataSource.Type switch
 	{
-		this.Columns = columns.ToImmutableArray();
-	}
+		MySql => Invariant($"{schemaName.EscapeIdentifier(dataSource.Type)}.{objectName.EscapeIdentifier(dataSource.Type)}"),
+		_ => Invariant($"{databaseName.EscapeIdentifier(dataSource.Type)}.{schemaName.EscapeIdentifier(dataSource.Type)}.{objectName.EscapeIdentifier(dataSource.Type)}")
+	};
 
-	public ObjectSchema(
-		IDataSource dataSource
-		, DatabaseObjectType type
-		, DatabaseObject name
-		, string databaseName
-		, string schemaName
-		, string objectName
-		, IEnumerable<ParameterSchema> parameters
-		) : this(dataSource, type, name, databaseName, schemaName, objectName)
-	{
-		this.Parameters = parameters.ToImmutableArray();
-	}
+	public string DatabaseName { get; } = databaseName;
 
-	[DebuggerHidden]
-	public IReadOnlyList<ColumnSchema> Columns { get; } = ImmutableArray<ColumnSchema>.Empty;
+	public string SchemaName { get; } = schemaName;
 
-	[DebuggerHidden]
-	public IReadOnlyList<ParameterSchema> Parameters { get; } = ImmutableArray<ParameterSchema>.Empty;
+	public string ObjectName { get; } = objectName;
+
+	public IReadOnlySet<ColumnSchema> Columns { get; } = columns?.ToFrozenSet() ?? FrozenSet<ColumnSchema>.Empty;
+
+	public IReadOnlySet<ParameterSchema> Parameters { get; } = parameters?.ToFrozenSet() ?? FrozenSet<ParameterSchema>.Empty;
 
 	public DataTable CreateDataTable()
 	{
@@ -196,7 +193,8 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 			case SqlServer:
 				sqlBuilder
 					.AppendIf(select.Distinct, "DISTINCT ")
-					.AppendIf(select.Top.IsNotBlank(), Invariant($"TOP {select.Top} "));
+					.AppendIf(select.Top.HasValue, Invariant($"TOP ({select.Top}) "))
+					.AppendIf(select.Top.HasValue && select.TopPercent, "PERCENT ");
 				break;
 			case Oracle:
 			case MySql:

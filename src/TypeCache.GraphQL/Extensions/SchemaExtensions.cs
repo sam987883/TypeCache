@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
@@ -220,7 +219,7 @@ public static class SchemaExtensions
 				var arguments = new QueryArguments();
 				arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 				if (dataSource.Type is DataSourceType.SqlServer)
-					arguments.Add<string>(nameof(SelectQuery.Top));
+					arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
 
 				arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 				arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
@@ -308,7 +307,7 @@ public static class SchemaExtensions
 					var arguments = new QueryArguments();
 					arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 					if (dataSource.Type is DataSourceType.SqlServer)
-						arguments.Add<GraphQLScalarType<string>>(nameof(SelectQuery.Top));
+						arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
 
 					arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 					arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
@@ -840,7 +839,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		procedure.AssertNotBlank();
 
-		var name = dataSource.CreateName(procedure);
+		var name = dataSource.Escape(procedure);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var parameters = objectSchema.Parameters
 			.Where(_ => _.Direction is ParameterDirection.Input || _.Direction is ParameterDirection.InputOutput)
@@ -885,7 +884,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<T[]>("data", description: "The data to be deleted.");
@@ -920,7 +919,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
@@ -956,7 +955,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<string[]>("columns", description: "The columns to insert data into.");
@@ -992,7 +991,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
@@ -1011,7 +1010,7 @@ public static class SchemaExtensions
 		var arguments = new QueryArguments();
 		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true);
+			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
 
 		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 		arguments.Add<string>(nameof(SelectQuery.From), description: "The table or view to pull the data from to insert.");
@@ -1050,7 +1049,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
@@ -1067,7 +1066,7 @@ public static class SchemaExtensions
 		var arguments = new QueryArguments();
 		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<uint>(nameof(SelectQuery.Top), nullable: true);
+			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
 
 		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
 		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
@@ -1105,7 +1104,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<T[]>("set", description: "The columns to be updated.");
@@ -1140,7 +1139,7 @@ public static class SchemaExtensions
 		dataSource.AssertNotNull();
 		table.AssertNotBlank();
 
-		var name = dataSource.CreateName(table);
+		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var arguments = new QueryArguments();
 		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");

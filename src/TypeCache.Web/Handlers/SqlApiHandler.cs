@@ -11,6 +11,7 @@ using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.Mediation;
 using static System.FormattableString;
+using static System.StringSplitOptions;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Text.Encoding;
 
@@ -129,7 +130,7 @@ internal static class SqlApiHandler
 		, [FromBody] SelectQuery selectQuery)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, [output]);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -213,18 +214,18 @@ internal static class SqlApiHandler
 		, [FromRoute] string table
 		, [FromQuery] string columns
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
+		, [FromQuery] string? orderBy
 		, [FromQuery] string output
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 
@@ -234,7 +235,7 @@ internal static class SqlApiHandler
 		if (select.IsBlank())
 			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
 
-		if (columns.Split(',').Length != select.Split(',').Length)
+		if (columns.Split(',', RemoveEmptyEntries | TrimEntries).Length != select.Split(',', RemoveEmptyEntries | TrimEntries).Length)
 			return Results.BadRequest(Invariant($"[{nameof(columns)}] and [{nameof(select)}] query parameters must have same number of columns/expressions."));
 
 		var selectQuery = new SelectQuery
@@ -243,17 +244,18 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
-		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, [output]);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -292,17 +294,17 @@ internal static class SqlApiHandler
 		, [FromRoute] string schema
 		, [FromRoute] string table
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? orderBy
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select.IsBlank())
@@ -314,14 +316,15 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
 		var sql = objectSchema.CreateSelectSQL(selectQuery);
@@ -339,7 +342,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, [output]);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, [output]);
 		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
@@ -364,17 +367,17 @@ internal static class SqlApiHandler
 		, [FromRoute] string schema
 		, [FromRoute] string table
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? orderBy
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select.IsBlank())
@@ -386,14 +389,15 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
 		var sql = objectSchema.CreateSelectSQL(selectQuery);
@@ -419,7 +423,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, [output]);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))

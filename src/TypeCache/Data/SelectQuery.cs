@@ -19,14 +19,14 @@ public class SelectQuery
 	public string? DistinctOn { get; set; }
 
 	/// <summary>
-	/// <c>FETCH NEXT 100 ROWS ONLY</c>
+	/// <c>FETCH NEXT <i><b>100</b></i> ROWS ONLY</c>
 	/// </summary>
 	public uint Fetch { get; set; }
 
 	/// <summary>
-	/// <c>FROM [Table]</c>
+	/// <c>FROM [Table]{ AS Alias}</c>
 	/// </summary>
-	public DatabaseObject From { get; set; }
+	public string? From { get; set; }
 
 	/// <summary>
 	/// <c>GROUP BY [Column1], TRIM([Column 2]), Column3</c>
@@ -70,10 +70,16 @@ public class SelectQuery
 	public string? TableHints { get; set; }
 
 	/// <summary>
-	/// <c>SELECT TOP (100)</c>
+	/// <c>SELECT TOP <i><b>100</b></i></c><br/>
 	/// </summary>
 	/// <remarks><i><b>* * * SQL Server only * * *</b></i></remarks>
-	public string? Top { get; set; }
+	public uint? Top { get; set; }
+
+	/// <summary>
+	/// <c>SELECT TOP 10 <i><b>PERCENT</b></i></c>
+	/// </summary>
+	/// <remarks><i><b>* * * SQL Server only * * *</b></i></remarks>
+	public bool TopPercent { get; set; }
 
 	/// <summary>
 	/// <code>

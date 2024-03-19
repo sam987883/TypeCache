@@ -25,6 +25,13 @@ public static class EnumExtensions
 	/// <c>=&gt; @<paramref name="this"/>.ToString("X");</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Hex(this Enum @this)
+		=> @this.ToString("X");
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("X");</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Hex<T>(this T @this)
 		where T : struct, Enum
 		=> @this.ToString("X");
@@ -48,10 +55,24 @@ public static class EnumExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>
 	/// </remarks>
-	[DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Name(this Enum @this)
+		=> @this.ToString("F");
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Name<T>(this T @this)
 		where T : struct, Enum
 		=> @this.ToString("F");
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D");</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Number(this Enum @this)
+		=> @this.ToString("D");
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("D");</c>

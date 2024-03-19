@@ -14,7 +14,8 @@ const string DATASOURCE = "Default";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
-	.AddMediation(builder => builder.AddSqlCommandRules())
+	.AddMediation()
+	.AddSqlCommandRules()
 	.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2 * E))
 	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, ["AdventureWorks2019"])
 	.AddGraphQL()

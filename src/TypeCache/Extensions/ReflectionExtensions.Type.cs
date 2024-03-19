@@ -41,7 +41,7 @@ public partial class ReflectionExtensions
 	[DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.Where(method => method.Name.Is(name) && method.IsGenericMethod)
+			.Where(method => method.Name.Is(name) && method.IsGenericMethod && method.GetGenericArguments().Length == genericTypes.Length)
 			.FirstOrDefault(method => method.MakeGenericMethod(genericTypes)?.IsCallableWith(arguments) is true);
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
@@ -77,8 +77,12 @@ public partial class ReflectionExtensions
 		{
 			{ IsGenericTypeDefinition: true } => ScalarType.None,
 			{ IsEnum: true } => ScalarType.Enum,
-			{ IsGenericType: true } when @this.IsNullable() && TypeStore.DataTypes.TryGetValue(@this.GenericTypeArguments[0].TypeHandle, out var scalarType)
-				=> scalarType,
+			{ IsGenericType: true } when @this.IsNullable() => @this.GenericTypeArguments[0] switch
+			{
+				{ IsEnum: true } => ScalarType.Enum,
+				Type type when TypeStore.DataTypes.TryGetValue(type.TypeHandle, out var scalarType) => scalarType,
+				_ => ScalarType.None
+			},
 			_ when TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
 			_ => ScalarType.None
 		};

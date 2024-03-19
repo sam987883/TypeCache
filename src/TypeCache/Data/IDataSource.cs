@@ -19,7 +19,7 @@ public interface IDataSource : IEquatable<IDataSource>
 
 	string Name { get; }
 
-	IReadOnlyDictionary<DatabaseObject, ObjectSchema> ObjectSchemas { get; }
+	IReadOnlyDictionary<string, ObjectSchema> ObjectSchemas { get; }
 
 	public string Server { get; }
 
@@ -34,18 +34,7 @@ public interface IDataSource : IEquatable<IDataSource>
 	DbConnection CreateDbConnection();
 
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	DatabaseObject CreateName(string databaseObject);
-
-	/// <summary>
-	/// <c>=&gt; <see langword="new"/>(<see cref="Invariant"/>($"{<see langword="this"/>.EscapeIdentifier(<see langword="this"/>.DefaultDatabase)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="schema"/>)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="objectName"/>)}"));</c>
-	/// </summary>
-	DatabaseObject CreateName(string schema, string objectName);
-
-	/// <summary>
-	/// <c>=&gt; <see langword="new"/>(<see cref="Invariant"/>($"{<see langword="this"/>.EscapeIdentifier(<paramref name="database"/>)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="schema"/>)}.{<see langword="this"/>.EscapeIdentifier(<paramref name="objectName"/>)}"));</c>
-	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	DatabaseObject CreateName(string database, string schema, string objectName);
+	string Escape(string databaseObject);
 
 	SqlCommand CreateSqlCommand(string sql);
 
