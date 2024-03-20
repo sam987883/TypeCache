@@ -12,7 +12,7 @@ public sealed class ParameterSchema(string name, ParameterDirection direction) :
 	public ParameterDirection Direction { get; } = direction;
 
 	public bool Equals(ParameterSchema? other)
-		=> this.Name.Is(other?.Name);
+		=> this.Name.EqualsIgnoreCase(other?.Name);
 
 	public override bool Equals(object? other)
 		=> this.Equals(other as ParameterSchema);

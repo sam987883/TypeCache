@@ -2,11 +2,9 @@
 
 using TypeCache.Mediation;
 
-namespace TypeCache.Net.Mediation;
+namespace TypeCache.Web.Mediation;
 
 public sealed class HttpClientRequest : IRequest<HttpResponseMessage>
 {
-	public string HttpClientName { get; set; } = string.Empty;
-
 	public required HttpRequestMessage Message { get; set; }
 }

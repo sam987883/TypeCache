@@ -1,14 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
-using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Types;
 

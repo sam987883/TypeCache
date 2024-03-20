@@ -1,8 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
-
 namespace TypeCache.Mediation;
 
 internal sealed class CustomAfterRule<REQUEST>(Func<REQUEST, CancellationToken, Task> execute)

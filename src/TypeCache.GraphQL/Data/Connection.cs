@@ -1,13 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Data;
 

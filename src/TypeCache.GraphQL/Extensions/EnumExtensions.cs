@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Numerics;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;

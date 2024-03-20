@@ -1,15 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Reflection;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
 

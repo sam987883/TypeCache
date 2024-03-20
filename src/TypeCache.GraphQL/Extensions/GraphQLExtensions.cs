@@ -1,13 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
@@ -17,8 +10,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
-using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 

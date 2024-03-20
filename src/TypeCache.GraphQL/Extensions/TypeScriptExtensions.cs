@@ -1,13 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
 

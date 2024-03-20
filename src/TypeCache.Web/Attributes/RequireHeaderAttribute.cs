@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Collections;
 using TypeCache.Extensions;

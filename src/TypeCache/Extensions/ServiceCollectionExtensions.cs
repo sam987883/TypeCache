@@ -10,7 +10,6 @@ using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Data.Mediation;
 using TypeCache.Mediation;
-using TypeCache.Net.Mediation;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -28,14 +27,14 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IAfterRule<REQUEST>>(afterRule);
 
 	/// <summary>
-	/// Registers named singleton: <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, string name, IAfterRule<REQUEST> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, object? key, IAfterRule<REQUEST> afterRule)
 		where REQUEST : IRequest
-		=> @this.AddKeyedSingleton<IAfterRule<REQUEST>>(name, afterRule);
+		=> @this.AddKeyedSingleton<IAfterRule<REQUEST>>(key, afterRule);
 
 	/// <summary>
 	/// Registers singleton: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
@@ -48,22 +47,22 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IAfterRule<REQUEST, RESPONSE>>(afterRule);
 
 	/// <summary>
-	/// Registers named singleton: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, IAfterRule<REQUEST, RESPONSE> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, IAfterRule<REQUEST, RESPONSE> afterRule)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddKeyedSingleton<IAfterRule<REQUEST, RESPONSE>>(name, afterRule);
+		=> @this.AddKeyedSingleton<IAfterRule<REQUEST, RESPONSE>>(key, afterRule);
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
+	/// Registers: <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<IServiceProvider, IAfterRule<REQUEST>> createAfterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, Func<IServiceProvider, IAfterRule<REQUEST>> createAfterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(serviceLifetime, createAfterRule);
 
@@ -73,37 +72,17 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<IServiceProvider, IAfterRule<REQUEST>> createAfterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, object? key, Func<IServiceProvider, IAfterRule<REQUEST>> createAfterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(name, serviceLifetime, (provider, name) => createAfterRule(provider));
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(key, serviceLifetime, (provider, key) => createAfterRule(provider));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
+	/// Registers: <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> afterRule)
-		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateAfterRule(afterRule));
-
-	/// <summary>
-	/// Registers a named implementation of <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
-	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
-	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> afterRule)
-		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateAfterRule(afterRule));
-
-	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
-	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
-	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
-	/// </summary>
-	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Action<REQUEST> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, Func<REQUEST, CancellationToken, Task> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateAfterRule(afterRule));
 
@@ -113,27 +92,57 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Action<REQUEST> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, object? key, Func<REQUEST, CancellationToken, Task> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateAfterRule(afterRule));
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateAfterRule(afterRule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers: <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<IServiceProvider, IAfterRule<REQUEST, RESPONSE>> createAfterRule)
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, Action<REQUEST> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateAfterRule(afterRule));
+
+	/// <summary>
+	/// Registers a named implementation of <c><see cref="IAfterRule{REQUEST}"/></c>.<br/>
+	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddAfterRule<REQUEST>(this IServiceCollection @this, object? key, Action<REQUEST> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateAfterRule(afterRule));
+
+	/// <summary>
+	/// Registers: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, Func<IServiceProvider, IAfterRule<REQUEST, RESPONSE>> createAfterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(serviceLifetime, createAfterRule);
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers keyed: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, RESPONSE, CancellationToken, Task> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Func<IServiceProvider, object?, IAfterRule<REQUEST, RESPONSE>> createAfterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest<RESPONSE>
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(key, serviceLifetime, createAfterRule);
+
+	/// <summary>
+	/// Registers: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, Func<REQUEST, RESPONSE, CancellationToken, Task> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(serviceLifetime, provider => RuleFactory.CreateAfterRule(afterRule));
 
@@ -143,17 +152,17 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, RESPONSE, CancellationToken, Task> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Func<REQUEST, RESPONSE, CancellationToken, Task> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateAfterRule(afterRule));
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateAfterRule(afterRule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers: <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Action<REQUEST, RESPONSE> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, Action<REQUEST, RESPONSE> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(serviceLifetime, provider => RuleFactory.CreateAfterRule(afterRule));
 
@@ -163,12 +172,12 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Action<REQUEST, RESPONSE> afterRule)
+	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Action<REQUEST, RESPONSE> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateAfterRule(afterRule));
+		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateAfterRule(afterRule));
 
 	/// <summary>
-	/// Registers keyed singleton <c><see cref="IDataSource"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IDataSource"/></c>.<br/>
 	/// </summary>
 	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, string[] databases)
 		=> @this.AddKeyedSingleton<IDataSource>(name, new DataSource(name, dbProviderFactory, connectionString, databases));
@@ -207,18 +216,31 @@ public static class ServiceCollectionExtensions
 		=> @this.AddHashMaker(rgbKey.AsBytes().ToArray(), rgbIV.AsBytes().ToArray());
 
 	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="HttpClientRequest"/>, <see cref="HttpResponseMessage"/>&gt;, <see cref="HttpClientRule"/>&gt;()</c>
-	/// </summary>
-	/// <remarks>Requires call to: <c>IServiceCollection.AddHttpClient</c></remarks>
-	public static IServiceCollection AddHttpClientRule(this IServiceCollection @this)
-		=> @this.AddSingleton<IRule<HttpClientRequest, HttpResponseMessage>, HttpClientRule>();
-
-	/// <summary>
 	/// Registers Singleton: <c><see cref="IMediator"/></c><br/>
 	/// <c><paramref name="rulesBuilder"/></c> - manually register Rules, Validation Rules and After Rules.
 	/// </summary>
 	public static IServiceCollection AddMediation(this IServiceCollection @this)
 		=> @this.AddSingleton<IMediator, Mediator>();
+
+	/// <summary>
+	/// Registers: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddRule<REQUEST, RULE>(this IServiceCollection @this, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest
+		where RULE : class, IRule<REQUEST>
+		=> @this.AddServiceDescriptor<IRule<REQUEST>, RULE>(serviceLifetime);
+
+	/// <summary>
+	/// Registers keyed: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddRule<REQUEST, RULE>(this IServiceCollection @this, object? key, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest
+		where RULE : class, IRule<REQUEST>
+		=> @this.AddServiceDescriptor<IRule<REQUEST>, RULE>(key, serviceLifetime);
 
 	/// <summary>
 	/// Registers singleton: <c><see cref="IRule{REQUEST}"/></c>.<br/>
@@ -230,13 +252,33 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IRule<REQUEST>>(rule);
 
 	/// <summary>
-	/// Registers named singleton: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, string name, IRule<REQUEST> rule)
 		where REQUEST : IRequest
 		=> @this.AddKeyedSingleton<IRule<REQUEST>>(name, rule);
+
+	/// <summary>
+	/// Registers: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddRule<REQUEST, RESPONSE, RULE>(this IServiceCollection @this, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest<RESPONSE>
+		where RULE : class, IRule<REQUEST, RESPONSE>
+		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>, RULE>(serviceLifetime);
+
+	/// <summary>
+	/// Registers keyed: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddRule<REQUEST, RESPONSE, RULE>(this IServiceCollection @this, object? key, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest<RESPONSE>
+		where RULE : class, IRule<REQUEST, RESPONSE>
+		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>, RULE>(key, serviceLifetime);
 
 	/// <summary>
 	/// Registers singleton: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
@@ -248,7 +290,7 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IRule<REQUEST, RESPONSE>>(rule);
 
 	/// <summary>
-	/// Registers named singleton: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
@@ -257,20 +299,29 @@ public static class ServiceCollectionExtensions
 		=> @this.AddKeyedSingleton<IRule<REQUEST, RESPONSE>>(name, rule);
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Registers: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<IServiceProvider, IRule<REQUEST>> createRule)
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, Func<IServiceProvider, IRule<REQUEST>> createRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IRule<REQUEST>>(serviceLifetime, createRule);
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> rule)
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, object? key, Func<IServiceProvider, object?, IRule<REQUEST>> createRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+		where REQUEST : IRequest
+		=> @this.AddServiceDescriptor<IRule<REQUEST>>(key, serviceLifetime, createRule);
+
+	/// <summary>
+	/// Registers: <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// </summary>
+	/// <exception cref="ArgumentNullException"/>
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, Func<REQUEST, CancellationToken, Task> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateRule(rule));
 
@@ -279,16 +330,16 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> rule)
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, object? key, Func<REQUEST, CancellationToken, Task> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateRule(rule));
+		=> @this.AddServiceDescriptor<IRule<REQUEST>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateRule(rule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST}"/></c>.<br/>
+	/// Registers: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Action<REQUEST> rule)
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, Action<REQUEST> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateRule(rule));
 
@@ -297,16 +348,16 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Action<REQUEST> rule)
+	public static IServiceCollection AddRule<REQUEST>(this IServiceCollection @this, object? key, Action<REQUEST> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateRule(rule));
+		=> @this.AddServiceDescriptor<IRule<REQUEST>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateRule(rule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<IServiceProvider, IRule<REQUEST, RESPONSE>> createRule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, Func<IServiceProvider, IRule<REQUEST, RESPONSE>> createRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(serviceLifetime, createRule);
 
@@ -315,16 +366,16 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<IServiceProvider, IRule<REQUEST, RESPONSE>> createRule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Func<IServiceProvider, IRule<REQUEST, RESPONSE>> createRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(name, serviceLifetime, (provider, name) => createRule(provider));
+		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => createRule(provider));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task<RESPONSE>> rule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, Func<REQUEST, CancellationToken, Task<RESPONSE>> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(serviceLifetime, provider => RuleFactory.CreateRule(rule));
 
@@ -333,16 +384,16 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task<RESPONSE>> rule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Func<REQUEST, CancellationToken, Task<RESPONSE>> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateRule(rule));
+		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateRule(rule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
+	/// Registers: <c><see cref="IRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, RESPONSE> rule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, Func<REQUEST, RESPONSE> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
 		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(serviceLifetime, provider => RuleFactory.CreateRule(rule));
 
@@ -351,9 +402,9 @@ public static class ServiceCollectionExtensions
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, RESPONSE> rule)
+	public static IServiceCollection AddRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Func<REQUEST, RESPONSE> rule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
 		where REQUEST : IRequest<RESPONSE>
-		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateRule(rule));
+		=> @this.AddServiceDescriptor<IRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateRule(rule));
 
 	public static IServiceCollection AddServiceDescriptor<SERVICE, IMPLEMENTATION>(this IServiceCollection @this, ServiceLifetime serviceLifetime)
 	{
@@ -435,52 +486,52 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IValidationRule<REQUEST>>(validationRule);
 
 	/// <summary>
-	/// Registers named singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, string name, IValidationRule<REQUEST> validationRule)
+	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, object? key, IValidationRule<REQUEST> validationRule)
 		where REQUEST : IRequest
-		=> @this.AddKeyedSingleton<IValidationRule<REQUEST>>(name, validationRule);
+		=> @this.AddKeyedSingleton<IValidationRule<REQUEST>>(key, validationRule);
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
+	/// Registers singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> validationRule)
+	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, Func<REQUEST, CancellationToken, Task> validationRule)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateValidationRule(validationRule));
+		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(ServiceLifetime.Singleton, provider => RuleFactory.CreateValidationRule(validationRule));
 
 	/// <summary>
-	/// Registers a named implementation of <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Func<REQUEST, CancellationToken, Task> validationRule)
+	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, object? key, Func<REQUEST, CancellationToken, Task> validationRule)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateValidationRule(validationRule));
+		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(key, ServiceLifetime.Singleton, (provider, key) => RuleFactory.CreateValidationRule(validationRule));
 
 	/// <summary>
-	/// Registers an implementation of <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
+	/// Registers singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, ServiceLifetime serviceLifetime, Action<REQUEST> validationRule)
+	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, Action<REQUEST> validationRule)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(serviceLifetime, provider => RuleFactory.CreateValidationRule(validationRule));
+		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(ServiceLifetime.Singleton, provider => RuleFactory.CreateValidationRule(validationRule));
 
 	/// <summary>
-	/// Registers a named implementation of <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IValidationRule{REQUEST}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
 	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, string name, ServiceLifetime serviceLifetime, Action<REQUEST> validationRule)
+	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, object? key, Action<REQUEST> validationRule)
 		where REQUEST : IRequest
-		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(name, serviceLifetime, (provider, name) => RuleFactory.CreateValidationRule(validationRule));
+		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(key, ServiceLifetime.Singleton, (provider, key) => RuleFactory.CreateValidationRule(validationRule));
 }

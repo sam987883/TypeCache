@@ -1,9 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -14,10 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Converters;
 using TypeCache.Extensions;
-using TypeCache.Mediation;
 using TypeCache.Web.Filters;
 using TypeCache.Web.Handlers;
-using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.Web.Extensions;
@@ -231,7 +225,7 @@ public static class EndpointRouteBuilderExtensions
 	/// <c>GET|POST /{{dataSource:string}}/procedure/{{database:string}}/{{schema:string}}/{{procedure:string}}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -244,7 +238,7 @@ public static class EndpointRouteBuilderExtensions
 	/// <c>DELETE /{{dataSource:string}}/table/{{database:string}}/{{schema:string}}/{{table:string}}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -258,7 +252,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -272,7 +266,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -287,7 +281,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -301,7 +295,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -316,7 +310,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -330,7 +324,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -344,7 +338,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -358,7 +352,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -373,7 +367,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -386,7 +380,7 @@ public static class EndpointRouteBuilderExtensions
 	/// <c>POST /{{dataSource:string}}/table/{{database:string}}/{{schema:string}}/{{table:string}}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -400,7 +394,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -414,7 +408,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Gets database schema data.
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -428,7 +422,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Selects, filters, sorts and pages data from a table or view.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -442,7 +436,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Selects, filters, sorts and pages data from a view.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -456,7 +450,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Updates table data.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -471,7 +465,7 @@ public static class EndpointRouteBuilderExtensions
 	/// Body is an array of data that contains values to update in the table.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// <see cref="TypeCache.Extensions.RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/><br/>
+	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>

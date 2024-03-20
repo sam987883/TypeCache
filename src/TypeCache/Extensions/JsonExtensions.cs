@@ -2,7 +2,6 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using static System.FormattableString;
 
 namespace TypeCache.Extensions;
 

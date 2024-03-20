@@ -257,7 +257,7 @@ public sealed class ObjectSchema(
 			.Where(column => column.PrimaryKey)
 			.Select(column => column.Name.EscapeIdentifier(this.DataSource.Type));
 		var setColumns = data[0]!.AsObject()
-			.Where(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(pair.Key)))
+			.Where(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.EqualsIgnoreCase(pair.Key)))
 			.Select(pair => pair.Key.EscapeIdentifier(this.DataSource.Type));
 		var columns = data[0]!.AsObject()
 			.Select(pair => pair.Key.EscapeIdentifier(this.DataSource.Type));
@@ -280,7 +280,7 @@ public sealed class ObjectSchema(
 	{
 		var primaryKeys = data.PrimaryKey.Select(column => column.ColumnName.EscapeIdentifier(this.DataSource.Type));
 		var setColumns = data.Columns.OfType<DataColumn>()
-			.Where(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(dataColumn.ColumnName)))
+			.Where(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.EqualsIgnoreCase(dataColumn.ColumnName)))
 			.Select(dataColumn => dataColumn.ColumnName.EscapeIdentifier(this.DataSource.Type));
 		var columns = data.Columns.OfType<DataColumn>()
 			.Select(dataColumn => dataColumn.ColumnName.EscapeIdentifier(this.DataSource.Type));
@@ -322,11 +322,11 @@ public sealed class ObjectSchema(
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasColumn(string column) =>
-		this.Columns.Any(_ => _.Name.Is(column));
+		this.Columns.Any(_ => _.Name.EqualsIgnoreCase(column));
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasParameter(string parameter) =>
-		this.Parameters.Any(_ => _.Name.Is(parameter));
+		this.Parameters.Any(_ => _.Name.EqualsIgnoreCase(parameter));
 
 	[DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] ObjectSchema? other)

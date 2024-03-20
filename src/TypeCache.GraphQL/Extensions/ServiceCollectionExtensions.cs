@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using GraphQL;

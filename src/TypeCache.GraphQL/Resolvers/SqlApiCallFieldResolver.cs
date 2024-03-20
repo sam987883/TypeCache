@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;

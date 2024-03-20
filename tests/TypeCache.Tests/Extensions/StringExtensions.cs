@@ -30,13 +30,13 @@ public class StringExtensions
 	[Fact]
 	public void Has()
 	{
-		Assert.True(TEST_STRING.Has("BCC 1"));
+		Assert.True(TEST_STRING.ContainsIgnoreCase("BCC 1"));
 	}
 
 	[Fact]
 	public void Is()
 	{
-		Assert.True(TEST_STRING.Is("AABBCC 123 `~!#$%^\t\r\n"));
+		Assert.True(TEST_STRING.EqualsIgnoreCase("AABBCC 123 `~!#$%^\t\r\n"));
 	}
 
 	[Fact]
@@ -70,10 +70,7 @@ public class StringExtensions
 		Assert.Equal("AaBbCc 1", TEST_STRING.Left(8));
 		Assert.Equal(string.Empty, TEST_STRING.Left(0));
 
-		Assert.True(TEST_STRING.Left('A'));
-		Assert.False(TEST_STRING.Left('a'));
-
-		Assert.True(TEST_STRING.Left("AABBCC 123"));
+		Assert.True(TEST_STRING.StartsWithIgnoreCase("AABBCC 123"));
 	}
 
 	[Fact]
@@ -105,10 +102,7 @@ public class StringExtensions
 	[Fact]
 	public void Right()
 	{
-		Assert.True("321 cCbBaA".Right('A'));
-		Assert.False("321 cCbBaA".Right('a'));
-
-		Assert.True("321 cCbBaA".Right("ccbbaa"));
+		Assert.True("321 cCbBaA".EndsWithIgnoreCase("ccbbaa"));
 	}
 
 	[Fact]

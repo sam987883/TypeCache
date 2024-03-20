@@ -1,9 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Resolvers;
-using GraphQL.Types;
 using TypeCache.GraphQL.Attributes;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Data;
 

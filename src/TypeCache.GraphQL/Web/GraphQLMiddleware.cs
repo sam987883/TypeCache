@@ -1,9 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DI;
 using GraphQL.Execution;
@@ -11,8 +7,6 @@ using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 using static System.StringSplitOptions;
 

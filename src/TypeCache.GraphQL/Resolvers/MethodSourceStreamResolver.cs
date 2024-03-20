@@ -1,14 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 

@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
-
 namespace TypeCache.GraphQL.Web;
 
 public sealed class GraphQLRequest

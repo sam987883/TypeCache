@@ -1,16 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
-using System.Linq;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TypeCache.Data;
 using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.Mediation;
-using static System.FormattableString;
 using static System.StringSplitOptions;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Text.Encoding;

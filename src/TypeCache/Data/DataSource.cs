@@ -3,7 +3,6 @@
 using System.Collections.Frozen;
 using System.Data;
 using System.Data.Common;
-using System.Security.AccessControl;
 using TypeCache.Collections;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
@@ -30,10 +29,10 @@ internal sealed class DataSource : IDataSource
 		var factoryName = dbProviderFactory.GetType().FullName!;
 		this.Type = factoryName switch
 		{
-			_ when factoryName.Has("Oracle") => Oracle,
-			_ when factoryName.Has("Npgsql") || factoryName.Has("Postgre") => PostgreSql,
-			_ when factoryName.Has("MySql") => MySql,
-			_ when factoryName.Has("SqlClient") => SqlServer,
+			_ when factoryName.ContainsIgnoreCase("Oracle") => Oracle,
+			_ when factoryName.ContainsIgnoreCase("Npgsql") || factoryName.ContainsIgnoreCase("Postgre") => PostgreSql,
+			_ when factoryName.ContainsIgnoreCase("MySql") => MySql,
+			_ when factoryName.ContainsIgnoreCase("SqlClient") => SqlServer,
 			_ => Unknown
 		};
 
@@ -187,7 +186,7 @@ internal sealed class DataSource : IDataSource
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool Equals(IDataSource? other)
-		=> this.Name.Is(other?.Name);
+		=> this.Name.EqualsIgnoreCase(other?.Name);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals([NotNullWhen(true)] object? item)
@@ -297,14 +296,14 @@ internal sealed class DataSource : IDataSource
 						, Invariant($"{SchemaColumn.ordinal_position} ASC"));
 					var parameters = procedureParametersRows?.Select(row => new ParameterSchema(row[SchemaColumn.parameter_name].ToString()!, row[SchemaColumn.parameter_mode].ToString() switch
 					{
-						string value when value.Is("OUT") => ParameterDirection.Output,
-						string value when value.Is("INOUT") => ParameterDirection.InputOutput,
+						string value when value.EqualsIgnoreCase("OUT") => ParameterDirection.Output,
+						string value when value.EqualsIgnoreCase("INOUT") => ParameterDirection.InputOutput,
 						_ => ParameterDirection.Input
 					}));
 
 					var objectType = routineType switch
 					{
-						_ when routineType.Is("FUNCTION") => DatabaseObjectType.Function,
+						_ when routineType.EqualsIgnoreCase("FUNCTION") => DatabaseObjectType.Function,
 						_ => DatabaseObjectType.StoredProcedure
 					};
 					var objectSchema = new ObjectSchema(this, objectType, databaseName, routineSchema, routineName, null, parameters);

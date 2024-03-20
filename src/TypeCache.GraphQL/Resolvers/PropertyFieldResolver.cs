@@ -1,12 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;

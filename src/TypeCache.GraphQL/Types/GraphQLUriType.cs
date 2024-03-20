@@ -1,10 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using TypeCache.Utilities;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Types;
 

@@ -1,15 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.SqlApi;
 

@@ -1,11 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
@@ -20,8 +16,6 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using TypeCache.Mediation;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -147,9 +141,9 @@ public static class SchemaExtensions
 		database ??= dataSource.DefaultDatabase;
 		var objectSchemas = dataSource.ObjectSchemas.Values.ToArray();
 		if (schema.IsNotBlank())
-			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.Is(database) && _.SchemaName.Is(schema)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database) && _.SchemaName.EqualsIgnoreCase(schema)).ToArray();
 		else if (database.IsNotBlank())
-			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.Is(database)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database)).ToArray();
 
 		objectSchemas.ForEach(objectSchema =>
 		{
@@ -577,10 +571,10 @@ public static class SchemaExtensions
 		where T : notnull
 	{
 		var publicMethods = typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().Is(method))
+			.Where(_ => _.Name().EqualsIgnoreCase(method))
 			.Select(@this.AddMutation);
 		var publicStaticMethods = typeof(T).GetPublicStaticMethods()
-			.Where(_ => _.Name().Is(method))
+			.Where(_ => _.Name().EqualsIgnoreCase(method))
 			.Select(@this.AddMutation);
 		return [..publicMethods, ..publicStaticMethods];
 	}
@@ -598,10 +592,10 @@ public static class SchemaExtensions
 	public static FieldType[] AddQueries<T>(this ISchema @this, string method)
 		where T : notnull
 		=> typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().Is(method))
+			.Where(_ => _.Name().EqualsIgnoreCase(method))
 			.Select(@this.AddQuery)
 			.Concat(typeof(T).GetPublicStaticMethods()
-				.Where(_ => _.Name().Is(method))
+				.Where(_ => _.Name().EqualsIgnoreCase(method))
 				.Select(@this.AddQuery))
 			.ToArray();
 
@@ -759,10 +753,10 @@ public static class SchemaExtensions
 	public static FieldType[] AddSubscriptions<T>(this ISchema @this, string method)
 		where T : notnull
 		=> typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().Is(method))
+			.Where(_ => _.Name().EqualsIgnoreCase(method))
 			.Select(@this.AddSubscription)
 			.Concat(typeof(T).GetPublicStaticMethods()
-				.Where(_ => _.Name().Is(method))
+				.Where(_ => _.Name().EqualsIgnoreCase(method))
 				.Select(@this.AddSubscription))
 			.ToArray();
 

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
@@ -14,7 +10,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.Mediation;
-using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.GraphQL.Resolvers;
@@ -28,7 +23,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
@@ -37,7 +32,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
 		var columns = objectSchema.Columns
-			.Where(column => inputs.Any(_ => _.Right(Invariant($"{nameof(data)}.{column.Name}"))))
+			.Where(column => inputs.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(data)}.{column.Name}"))))
 			.Select(column => column.Name);
 		var set = context.GetArgument<string[]>("set");
 		var where = context.GetArgument<string>("where");
@@ -83,7 +78,7 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
 				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
@@ -92,7 +87,7 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");
 		var columns = objectSchema.Columns
-			.Where(column => inputs.Any(_ => _.Right(Invariant($"{nameof(data)}.{column.Name}"))))
+			.Where(column => inputs.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(data)}.{column.Name}"))))
 			.Select(column => column.Name)
 			.ToArray();
 		var set = context.GetArgument<string[]>("set");

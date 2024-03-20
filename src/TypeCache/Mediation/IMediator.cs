@@ -21,7 +21,7 @@ public interface IMediator
 	/// May register named and/or unamed rules of type <c><see cref="IAfterRule{REQUEST}"/></c> that run in parallel after the <c><see cref="IRule{REQUEST}"/></c> rule runs.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	Task Execute<REQUEST>(string name, REQUEST request, CancellationToken token = default)
+	Task Execute<REQUEST>(object? key, REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest;
 
 	/// <summary>
@@ -40,7 +40,7 @@ public interface IMediator
 	/// May register named and/or unamed rules of type <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c> that run in parallel after the <c><see cref="IRule{REQUEST, RESPONSE}"/></c> rule runs.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
-	Task<RESPONSE> Map<RESPONSE>(string name, IRequest<RESPONSE> request, CancellationToken token = default);
+	Task<RESPONSE> Map<RESPONSE>(object? key, IRequest<RESPONSE> request, CancellationToken token = default);
 
 	/// <summary>
 	/// Validates a rule request.  If no exception is thrown, the request is deemed valid.<br/>

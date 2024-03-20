@@ -1,14 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using GraphQL.DataLoader;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using static System.FormattableString;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Resolvers;

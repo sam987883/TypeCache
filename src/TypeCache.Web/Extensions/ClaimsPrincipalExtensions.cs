@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Linq;
 using System.Security.Claims;
 using TypeCache.Extensions;
 
@@ -14,6 +13,6 @@ public static class ClaimsPrincipalExtensions
 
 		return values.Any()
 			? values.Any(value => @this.HasClaim(claimType, value))
-			: @this.Claims.Any(claim => claim.Type.Is(claimType));
+			: @this.Claims.Any(claim => claim.Type.EqualsIgnoreCase(claimType));
 	}
 }

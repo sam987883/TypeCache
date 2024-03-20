@@ -19,7 +19,7 @@ public sealed class ColumnSchema(string name, bool nullable, bool primaryKey, bo
 	public RuntimeTypeHandle DataTypeHandle { get; } = dataTypeHandle;
 
 	public bool Equals(ColumnSchema? other)
-		=> this.Name.Is(other?.Name);
+		=> this.Name.EqualsIgnoreCase(other?.Name);
 
 	public override bool Equals(object? other)
 		=> this.Equals(other as ColumnSchema);

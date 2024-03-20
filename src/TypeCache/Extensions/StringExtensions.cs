@@ -92,6 +92,28 @@ public static class StringExtensions
 	public static bool ContainsAny(this string @this, char[]? chars = null)
 		=> chars?.Any(@this.Contains) is true;
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsIgnoreCase(this string @this, string value)
+		=> @this.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="string.EndsWith(string, StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool EndsWithIgnoreCase(this string @this, string text)
+		=> @this.EndsWith(text, StringComparison.OrdinalIgnoreCase);
+
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool EqualsIgnoreCase([NotNullWhen(true)] this string? @this, [NotNullWhen(true)] string? value)
+		=> string.Equals(@this, value, StringComparison.OrdinalIgnoreCase);
+
 	/// <inheritdoc cref="Convert.FromBase64String(string)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.FromBase64String(@<paramref name="this"/>);</c>
@@ -105,20 +127,6 @@ public static class StringExtensions
 		Span<byte> span = stackalloc byte[@this.Length * sizeof(char)];
 		return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
 	}
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Has(this string @this, string value)
-		=> @this.Contains(value, StringComparison.OrdinalIgnoreCase);
-
-	/// <remarks>
-	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Is([NotNullWhen(true)] this string? @this, [NotNullWhen(true)] string? value)
-		=> string.Equals(@this, value, StringComparison.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
 	/// <remarks>
@@ -166,14 +174,6 @@ public static class StringExtensions
 	public static string Join(this string? @this, string[] values)
 		=> @this.AsSpan().Join(values);
 
-	/// <inheritdoc cref="string.StartsWith(char)"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this string @this, char text)
-		=> @this.StartsWith(text);
-
 	/// <inheritdoc cref="string.Substring(int, int)"/>
 	/// <remarks>
 	/// <c>=&gt; <paramref name="length"/> &gt; -1 ? @<paramref name="this"/>.Substring(0, <paramref name="length"/>) : @<paramref name="this"/>;</c>
@@ -181,14 +181,6 @@ public static class StringExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Left(this string @this, int length)
 		=> length > -1 ? @this.Substring(0, length) : @this;
-
-	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this string @this, string text)
-		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
 
 	public static string Mask(this string @this, char mask = '*')
 	{
@@ -319,21 +311,13 @@ public static class StringExtensions
 		return new string(span);
 	}
 
-	/// <inheritdoc cref="string.EndsWith(char)"/>
+	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Right(this string @this, char text)
-		=> @this.EndsWith(text);
-
-	/// <inheritdoc cref="string.EndsWith(string, StringComparison)"/>
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Right(this string @this, string text)
-		=> @this.EndsWith(text, StringComparison.OrdinalIgnoreCase);
+	public static bool StartsWithIgnoreCase(this string @this, string text)
+		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
 
 	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
 	{

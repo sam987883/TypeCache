@@ -104,7 +104,7 @@ public static partial class MapExtensions
 				var value = propertyInfo.GetPropertyValue(@this);
 				foreach (var attribute in mapAttributes)
 				{
-					var targetPropertyInfo = properties.FirstOrDefault(propertyInfo => propertyInfo.Name.Is(attribute.Property));
+					var targetPropertyInfo = properties.FirstOrDefault(propertyInfo => propertyInfo.Name.EqualsIgnoreCase(attribute.Property));
 					if (targetPropertyInfo?.CanWrite is true)
 						targetPropertyInfo.SetPropertyValue(target, value);
 				}

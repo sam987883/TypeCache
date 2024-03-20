@@ -1,12 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using NSubstitute;
-using NSubstitute.Extensions;
-using TypeCache.Collections;
 using TypeCache.Data;
-using TypeCache.Data.Extensions;
 using Xunit;
 using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;

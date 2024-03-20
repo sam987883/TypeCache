@@ -3,7 +3,7 @@
 using TypeCache.Extensions;
 using TypeCache.Mediation;
 
-namespace TypeCache.Net.Mediation;
+namespace TypeCache.Web.Mediation;
 
 internal sealed class HttpClientValidationRule
 	: IValidationRule<HttpClientRequest>
@@ -13,7 +13,6 @@ internal sealed class HttpClientValidationRule
 		request.AssertNotNull();
 		request.Message.AssertNotNull();
 		request.Message.RequestUri.AssertNotNull();
-
 		request.Message.RequestUri.IsAbsoluteUri.AssertTrue();
 	}, token);
 }

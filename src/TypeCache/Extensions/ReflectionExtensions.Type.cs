@@ -35,13 +35,13 @@ public partial class ReflectionExtensions
 	[DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments = null)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
+			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.Where(method => method.Name.Is(name) && method.IsGenericMethod && method.GetGenericArguments().Length == genericTypes.Length)
+			.Where(method => method.Name.EqualsIgnoreCase(name) && method.IsGenericMethod && method.GetGenericArguments().Length == genericTypes.Length)
 			.FirstOrDefault(method => method.MakeGenericMethod(genericTypes)?.IsCallableWith(arguments) is true);
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
@@ -53,7 +53,7 @@ public partial class ReflectionExtensions
 	[DebuggerHidden]
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments = null)
 		=> @this.GetMethods(STATIC_BINDING_FLAGS)
-			.FirstOrDefault(method => method.Name.Is(name) && method.IsCallableWith(arguments));
+			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
 	[DebuggerHidden]

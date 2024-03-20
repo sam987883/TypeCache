@@ -1,13 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
 using TypeCache.Mediation;
-using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;
 

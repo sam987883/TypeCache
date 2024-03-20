@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Reflection;
-using TypeCache.Attributes;
 
 namespace TypeCache.Extensions;
 
