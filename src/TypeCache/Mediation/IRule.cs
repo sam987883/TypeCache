@@ -5,11 +5,11 @@ namespace TypeCache.Mediation;
 public interface IRule<in REQUEST>
 	where REQUEST : IRequest
 {
-	Task ExecuteAsync(REQUEST request, CancellationToken token = default);
+	Task Execute(REQUEST request, CancellationToken token = default);
 }
 
 public interface IRule<in REQUEST, RESPONSE>
 	where REQUEST : IRequest<RESPONSE>
 {
-	Task<RESPONSE> MapAsync(REQUEST request, CancellationToken token = default);
+	Task<RESPONSE> Map(REQUEST request, CancellationToken token = default);
 }

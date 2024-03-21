@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
@@ -10,9 +8,7 @@ using TypeCache.Utilities;
 
 namespace TypeCache.GraphQL.Types;
 
-/// <summary>
 /// <inheritdoc cref="EnumerationGraphType"/>
-/// </summary>
 public sealed class GraphQLEnumType<T> : EnumerationGraphType
 	where T : struct, Enum
 {
@@ -22,39 +18,48 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		this.Description = typeof(T).GraphQLDescription();
 		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
 
-		var changeEnumCase = Enum<T>.Tokens switch
+		Func<string, string>? changeEnumCase = Enum<T>.Attributes switch
 		{
 			_ when Enum<T>.Attributes.TryFirst<ConstantCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
 			_ when Enum<T>.Attributes.TryFirst<CamelCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
 			_ when Enum<T>.Attributes.TryFirst<PascalCaseAttribute>(out var attribute) => attribute.ChangeEnumCase,
-			_ => new Func<string, string>(_ => _)
+			_ => null
 		};
 
-		Enum<T>.Tokens
-			.Where(_ => !_.Attributes.Any<GraphQLIgnoreAttribute>())
-			.Select(_ => new EnumValueDefinition(_.Attributes.FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase(_.Name), _.Value)
+		Enum<T>.Values
+			.Where(_ => !_.Attributes().Any<GraphQLIgnoreAttribute>())
+			.Select(_ => new EnumValueDefinition(_.Attributes().FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase?.Invoke(_.Name()) ?? _.Name(), _)
 			{
-				Description = _.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
-				DeprecationReason = _.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
+				Description = _.Attributes().FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
+				DeprecationReason = _.Attributes().FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
 			})
 			.ToArray()
 			.ForEach(this.Add);
 	}
 
 	/// <inheritdoc/>
+	public override object? Serialize(object? value)
+		=> value is not null ? (T)value : null;
+
+	/// <inheritdoc/>
 	public override bool CanParseValue(object? value)
 		=> value switch
 		{
-			null or T => true,
-			Enum token => token is T,
+			null => true,
+			T token => Enum<T>.IsValid(token),
+			string text => Enum.TryParse<T>(text, true, out _),
+			_ when value.GetType() == typeof(T).GetEnumUnderlyingType() => true,
 			_ => false
 		};
 
 	/// <inheritdoc/>
 	public override object? ParseValue(object? value)
-		=> value is not null ? Enum.ToObject(typeof(T), value) : null;
-
-	/// <inheritdoc/>
-	public override object? Serialize(object? value)
-		=> this.ParseValue(value);
+		=> value switch
+		{
+			null => null,
+			T token when Enum<T>.IsValid(token) => token,
+			T token => null,
+			string text => Enum.Parse<T>(text, true),
+			_ => Enum.ToObject(typeof(T), value)
+		};
 }

@@ -1,9 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.DI;
 using GraphQL.Execution;
@@ -11,7 +7,6 @@ using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
 using static System.StringSplitOptions;
 
@@ -85,7 +80,7 @@ public sealed class GraphQLMiddleware
 		{
 			logger?.LogError(error, result.Errors?[0].Message);
 
-			var separator = new[] { '\r', '\n' };
+			char[] separator = new[] { '\r', '\n' };
 			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
 			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
 		}

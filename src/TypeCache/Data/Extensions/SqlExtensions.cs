@@ -5,11 +5,27 @@ using System.Data;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
+using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data.Extensions;
 
 public static class SqlExtensions
 {
+	public static string EscapeIdentifier([NotNull] this string @this, DataSourceType type)
+		=> type switch
+		{
+			SqlServer => Invariant($"[{@this.Replace("]", "]]")}]"),
+			MySql => Invariant($"`{@this.Replace("`", "``")}`"),
+			_ => Invariant($"\"{@this.Replace("\"", "\"\"")}\""),
+		};
+
+	/// <summary>
+	/// <c>=&gt; <see langword="this"/>.EscapeValue(@<paramref name="this"/>).Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");</c>
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string EscapeLikeValue([NotNull] this string @this)
+		=> @this.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Replace("'", "''");</c>
 	/// </summary>
@@ -18,7 +34,7 @@ public static class SqlExtensions
 		=> @this.Replace("'", "''");
 
 	/// <exception cref="UnreachableException"></exception>
-	public static string ToSQL(this object? @this) => @this switch
+	public static string ToSQL<T>(this T? @this) => @this switch
 	{
 		null or DBNull => "NULL",
 		true => "1",
@@ -35,17 +51,16 @@ public static class SqlExtensions
 		Guid guid => Invariant($"'{guid:D}'"),
 		LogicalOperator.And => "AND",
 		LogicalOperator.Or => "OR",
-		LogicalOperator value => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{value:F} is not implemented for SQL.")),
+		LogicalOperator value => throw new UnreachableException(Invariant($"{nameof(LogicalOperator)}.{value.Name()} is not implemented for SQL.")),
 		Sort.Ascending => "ASC",
 		Sort.Descending => "DESC",
-		Sort value => throw new UnreachableException(Invariant($"{nameof(Sort)}.{value:F} is not implemented for SQL.")),
-		Enum token => token.ToString("D"),
+		Sort value => throw new UnreachableException(Invariant($"{nameof(Sort)}.{value.Name()} is not implemented for SQL.")),
+		Enum token => token.Name(),
 		Range range => Invariant($"'{range}'"),
 		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
 		byte[] binary => Invariant($"0x{binary.ToHexString()}"),
 		JsonElement json => json.ValueKind switch
 		{
-			JsonValueKind.String => Invariant($"N'{json.GetString()!.EscapeValue()}'"),
 			JsonValueKind.Number => json.ToString()!,
 			JsonValueKind.True => "1",
 			JsonValueKind.False => "0",
@@ -62,4 +77,12 @@ public static class SqlExtensions
 		IEnumerable enumerable => Invariant($"({enumerable.Cast<object>().Select(_ => _.ToSQL()).ToCSV()})"),
 		_ => @this.ToString() ?? "NULL"
 	};
+
+	public static string UnEscapeIdentifier([NotNull] this string @this, DataSourceType type)
+		=> type switch
+		{
+			SqlServer => @this.TrimStart('[').TrimEnd(']').Replace("]]", "]"),
+			MySql => @this.Trim('`').Replace("``", "`"),
+			_ => @this.Trim('"').Replace("\"\"", "\"")
+		};
 }

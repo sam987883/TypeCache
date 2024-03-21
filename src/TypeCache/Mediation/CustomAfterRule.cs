@@ -16,7 +16,7 @@ internal sealed class CustomAfterRule<REQUEST> : IAfterRule<REQUEST>
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task HandleAsync(REQUEST request, CancellationToken token = default)
+	public Task Handle(REQUEST request, CancellationToken token = default)
 		=> this._ExecuteAsync(request, token);
 }
 
@@ -31,6 +31,6 @@ internal sealed class CustomAfterRule<REQUEST, RESPONSE> : IAfterRule<REQUEST, R
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task HandleAsync(REQUEST request, RESPONSE response, CancellationToken token = default)
+	public Task Handle(REQUEST request, RESPONSE response, CancellationToken token = default)
 		=> this._ExecuteAsync(request, response, token);
 }

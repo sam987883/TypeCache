@@ -1,13 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -20,14 +17,14 @@ public static class TypeScriptExtensions
 			ListGraphType graphType => graphType.ResolvedType!.GetTypeScriptType(true),
 			GraphQLBooleanType when list => "boolean[]",
 			GraphQLBooleanType => "boolean",
-			GraphQLNumberType<sbyte> or GraphQLNumberType<short> or GraphQLNumberType<int> or GraphQLNumberType<byte> or GraphQLNumberType<ushort>
-			or GraphQLNumberType<Half> or GraphQLNumberType<float> or GraphQLNumberType<double> or GraphQLNumberType<decimal> when list => "number[]",
-			GraphQLNumberType<sbyte> or GraphQLNumberType<short> or GraphQLNumberType<int> or GraphQLNumberType<byte> or GraphQLNumberType<ushort>
-			or GraphQLNumberType<Half> or GraphQLNumberType<float> or GraphQLNumberType<double> or GraphQLNumberType<decimal> => "number",
-			GraphQLNumberType<int> or GraphQLNumberType<long> or GraphQLNumberType<ulong> or GraphQLNumberType<BigInteger> when list => "bigint[]",
-			GraphQLNumberType<int> or GraphQLNumberType<long> or GraphQLNumberType<ulong> or GraphQLNumberType<BigInteger> => "bigint",
-			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLStringType<DateOnly> or GraphQLStringType<DateTime> or GraphQLStringType<DateTimeOffset> or GraphQLUriType when list => "string[]",
-			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLStringType<DateOnly> or GraphQLStringType<DateTime> or GraphQLStringType<DateTimeOffset> or GraphQLUriType => "string",
+			GraphQLScalarType<sbyte> or GraphQLScalarType<short> or GraphQLScalarType<int> or GraphQLScalarType<byte> or GraphQLScalarType<ushort>
+			or GraphQLScalarType<Half> or GraphQLScalarType<float> or GraphQLScalarType<double> or GraphQLScalarType<decimal> when list => "number[]",
+			GraphQLScalarType<sbyte> or GraphQLScalarType<short> or GraphQLScalarType<int> or GraphQLScalarType<byte> or GraphQLScalarType<ushort>
+			or GraphQLScalarType<Half> or GraphQLScalarType<float> or GraphQLScalarType<double> or GraphQLScalarType<decimal> => "number",
+			GraphQLScalarType<int> or GraphQLScalarType<long> or GraphQLScalarType<ulong> or GraphQLScalarType<BigInteger> when list => "bigint[]",
+			GraphQLScalarType<int> or GraphQLScalarType<long> or GraphQLScalarType<ulong> or GraphQLScalarType<BigInteger> => "bigint",
+			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLScalarType<DateOnly> or GraphQLScalarType<DateTime> or GraphQLScalarType<DateTimeOffset> or GraphQLUriType when list => "string[]",
+			GraphQLStringType or IdGraphType or GuidGraphType or GraphQLScalarType<DateOnly> or GraphQLScalarType<DateTime> or GraphQLScalarType<DateTimeOffset> or GraphQLUriType => "string",
 			_ when list => Invariant($"{@this.Name}[]"),
 			_ => @this.Name
 		};
@@ -52,7 +49,7 @@ public static class TypeScriptExtensions
 		var builder = new StringBuilder();
 		if (@this.Description.IsNotBlank())
 			builder.AppendLine(Invariant($"/* {@this.Description} */"));
-		builder.AppendLine($"export type {@this.Name} = {{");
+		builder.AppendLine(Invariant($"export type {@this.Name} = {{"));
 		@this.Fields.ToArray().ForEach(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
 		return builder.Append('}').AppendLine().ToString();
 	}

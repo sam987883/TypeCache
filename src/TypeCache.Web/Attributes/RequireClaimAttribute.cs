@@ -1,8 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using TypeCache.Collections;
 using TypeCache.Extensions;
@@ -18,7 +15,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 {
 	public IDictionary<string, string[]> Claims { get; }
 
-	public RequireClaimAttribute(params string[] claims) : base(nameof(ClaimAuthorizationRequirement))
+	public RequireClaimAttribute(string[] claims) : base(nameof(ClaimAuthorizationRequirement))
 	{
 		const char separator = '=';
 
@@ -27,7 +24,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 		this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
 		claims?.ForEach(claim =>
 		{
-			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.Count(c => c.Equals(separator)) > 1).AssertEquals(false);
+			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.Count(c => c.Equals(separator)) > 1).AssertFalse();
 
 			if (claim.Contains(separator))
 			{
@@ -35,7 +32,7 @@ public class RequireClaimAttribute : AuthorizeAttribute
 				if (key.IsNotBlank())
 				{
 					if (this.Claims.TryGetValue(key, out var values))
-						this.Claims[key] = values.Append(value).ToArray()!;
+						this.Claims[key] = values.Append(value!).ToArray();
 					else
 						this.Claims.Add(key!, new[] { value! });
 				}

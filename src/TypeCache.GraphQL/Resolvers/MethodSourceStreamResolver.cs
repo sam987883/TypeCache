@@ -1,14 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -35,10 +30,12 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 	{
 		context.RequestServices.AssertNotNull();
 
-		var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
-		var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
-		var arguments = context.GetArguments<object>(this._MethodInfo).ToArray();
-		var result = this._MethodInfo.InvokeMethod(controller, arguments);
+		var controller = !this._MethodInfo.IsStatic ? context.RequestServices.GetRequiredService(this._MethodInfo.DeclaringType!) : null;
+		var arguments = context.GetArguments(this._MethodInfo).ToArray();
+		if (!this._MethodInfo.IsStatic)
+			arguments = arguments.Prepend(controller).ToArray();
+
+		var result = this._MethodInfo.InvokeMethod(arguments);
 
 		return result switch
 		{

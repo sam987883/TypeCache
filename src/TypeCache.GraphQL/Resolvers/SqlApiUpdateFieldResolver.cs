@@ -1,10 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
@@ -14,7 +10,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.Mediation;
-using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.GraphQL.Resolvers;
@@ -28,16 +23,16 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
 		var columns = objectSchema.Columns
-			.Where(column => inputs.Any(_ => _.Right(Invariant($"{nameof(data)}.{column.Name}"))))
+			.Where(column => inputs.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(data)}.{column.Name}"))))
 			.Select(column => column.Name);
 		var set = context.GetArgument<string[]>("set");
 		var where = context.GetArgument<string>("where");
@@ -58,9 +53,9 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
-			result = (await mediator.MapAsync(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
+			result = (await mediator.Map(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -83,16 +78,16 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 		var inputs = context.GetInputs().Keys.ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"INSERTED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"INSERTED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");
 		var columns = objectSchema.Columns
-			.Where(column => inputs.Any(_ => _.Right(Invariant($"{nameof(data)}.{column.Name}"))))
+			.Where(column => inputs.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(data)}.{column.Name}"))))
 			.Select(column => column.Name)
 			.ToArray();
 		var set = context.GetArgument<string[]>("set");
@@ -106,9 +101,9 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
-			result = await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
+			result = await mediator.Map(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<T>()
 		{

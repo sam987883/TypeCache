@@ -1,9 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections;
-using System.Collections.Immutable;
 using TypeCache.Collections;
-using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -24,18 +22,18 @@ public static class EnumerableExtensions
 		=> @this as T[] ?? @this?.ToArray() ?? Array<T>.Empty;
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="HashSet{T}"/> ?? @<paramref name="this"/>?.ToHashSet() ?? <see langword="new"/> <see cref="HashSet{T}"/>(0);</c>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="ISet{T}"/> ?? @<paramref name="this"/>?.ToHashSet(<paramref name="comparer"/>) ?? <see langword="new"/> <see cref="HashSet{T}"/>(0, <paramref name="comparer"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static HashSet<T> AsHashSet<T>(this IEnumerable<T>? @this)
-		=> @this as HashSet<T> ?? @this?.ToHashSet() ?? new HashSet<T>(0);
+	public static ISet<T> AsHashSet<T>(this IEnumerable<T>? @this, IEqualityComparer<T>? comparer = null)
+		=> @this as ISet<T> ?? @this?.ToHashSet(comparer) ?? new HashSet<T>(0, comparer);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="List{T}"/> ?? @<paramref name="this"/>?.ToList() ?? <see langword="new"/> <see cref="List{T}"/>(0);</c>
+	/// <c>=&gt; @<paramref name="this"/> <see langword="as"/> <see cref="IList{T}"/> ?? @<paramref name="this"/>?.ToList() ?? <see langword="new"/> <see cref="List{T}"/>(0);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static List<T> AsList<T>(this IEnumerable<T>? @this)
-		=> @this as List<T> ?? @this?.ToList() ?? new List<T>(0);
+	public static IList<T> AsList<T>(this IEnumerable<T>? @this)
+		=> @this as IList<T> ?? @this?.ToList() ?? new List<T>(0);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see langword="new"/> <see cref="EnumComparer{T}"/>());</c>
@@ -53,7 +51,7 @@ public static class EnumerableExtensions
 	public static string Concat(this IEnumerable<string> @this)
 		=> string.Concat(@this);
 
-	/// <inheritdoc cref="string.Concat(IEnumerable{char})"/>
+	/// <inheritdoc cref="string.Concat{T}(IEnumerable{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Concat(@<paramref name="this"/>);</c>
 	/// </remarks>
@@ -124,7 +122,7 @@ public static class EnumerableExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> @this, IEqualityComparer<TKey>? comparer = null)
 		where TKey : notnull
-		=> new Dictionary<TKey, TValue>(@this, comparer);
+		=> new(@this, comparer);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Select(_ =&gt; _.AsTask());</c>
@@ -141,9 +139,17 @@ public static class EnumerableExtensions
 		=> @this.Select(_ => _.AsTask());
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, [NotNullWhen(true)] out T? value)
+		where T : class
 	{
 		value = @this.OfType<T>().FirstOrDefault();
 		return value is not null;
+	}
+
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, T defaultValue, [NotNullWhen(true)] out T value)
+		where T : struct
+	{
+		value = @this.OfType<T>().FirstOrDefault(defaultValue);
+		return !value.Equals(defaultValue);
 	}
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
@@ -155,18 +161,49 @@ public static class EnumerableExtensions
 	}
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
+		where T : class
 	{
-		var success = false;
-		var filter = new Func<T, bool>(value => success = predicate(value));
-		value = @this.FirstOrDefault(filter);
-		return success;
+		value = @this.FirstOrDefault(predicate);
+		return value is not null;
 	}
 
-	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
+	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
+		where T : struct
 	{
-		using var enumerator = @this.GetEnumerator();
-		value = enumerator.Next();
-		return enumerator.MoveNext();
+		value = @this.FirstOrDefault(predicate, defaultValue);
+		return !value.Equals(defaultValue);
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
+		where T : class
+	{
+		value = @this.SingleOrDefault();
+		return value is not null;
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, [NotNullWhen(true)] out T? value)
+		where T : struct
+	{
+		value = @this.SingleOrDefault(defaultValue);
+		return !value.Equals(defaultValue);
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
+		where T : class
+	{
+		value = @this.SingleOrDefault(predicate);
+		return value is not null;
+	}
+
+	/// <exception cref="InvalidOperationException"/>
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
+		where T : struct
+	{
+		value = @this.SingleOrDefault(predicate, defaultValue);
+		return !value.Equals(defaultValue);
 	}
 
 	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>

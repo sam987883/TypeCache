@@ -1,51 +1,113 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
-using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
-using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 
 public static class GraphQLExtensions
 {
+	public static FieldType AddField<T>(this IComplexGraphType @this, string name, IFieldResolver resolver)
+		=> @this.AddField(new()
+		{
+			Name = name,
+			Type = typeof(T).ToGraphQLType(false),
+			Resolver = resolver
+		});
+
+	public static FieldType AddField(this IComplexGraphType @this, string name, IGraphType resolvedType, IFieldResolver resolver)
+		=> @this.AddField(new()
+		{
+			Name = name,
+			ResolvedType = resolvedType,
+			Resolver = resolver
+		});
+
 	public static FieldType AddField(this IComplexGraphType @this, MethodInfo methodInfo, IFieldResolver resolver)
-	{
-		var fieldType = methodInfo.ToFieldType();
-		fieldType.Resolver = resolver;
-		return @this.AddField(fieldType);
-	}
+		=> @this.AddField(new()
+		{
+			Arguments = new QueryArguments(methodInfo.GetParameters()
+				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
+				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
+				{
+					Name = parameterInfo.GraphQLName(),
+					Description = parameterInfo.GraphQLDescription(),
+				})),
+			Name = methodInfo.GraphQLName(),
+			Description = methodInfo.GraphQLDescription(),
+			DeprecationReason = methodInfo.GraphQLDeprecationReason(),
+			Resolver = resolver,
+			Type = methodInfo.ReturnType.ToGraphQLType(false).ToNonNullGraphType()
+		});
 
 	public static FieldType AddField(this IComplexGraphType @this, MethodInfo methodInfo, ISourceStreamResolver resolver)
-	{
-		var fieldType = methodInfo.ToFieldType();
-		fieldType.StreamResolver = resolver;
-		return @this.AddField(fieldType);
-	}
+		=> @this.AddField(new()
+		{
+			Arguments = new QueryArguments(methodInfo.GetParameters()
+				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
+				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
+				{
+					Name = parameterInfo.GraphQLName(),
+					Description = parameterInfo.GraphQLDescription(),
+				})),
+			Name = methodInfo.GraphQLName(),
+			Description = methodInfo.GraphQLDescription(),
+			DeprecationReason = methodInfo.GraphQLDeprecationReason(),
+			StreamResolver = resolver,
+			Type = methodInfo.ReturnType.ToGraphQLType(false).ToNonNullGraphType()
+		});
 
 	public static FieldType AddField(this IComplexGraphType @this, PropertyInfo propertyInfo, IFieldResolver resolver)
 	{
-		var fieldType = propertyInfo.ToFieldType();
-		fieldType.Resolver = resolver;
-		return @this.AddField(fieldType);
+		var type = propertyInfo.ToGraphQLType(false);
+		var arguments = new QueryArguments();
+
+		if (type.IsAssignableTo<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
+			arguments.Add("null", type, description: "Return this if the value is null.");
+
+		if (propertyInfo.PropertyType.IsAssignableTo<IFormattable>())
+			arguments.Add<string>("format", nullable: true, description: "Use .NET format specifiers to format the data.");
+
+		if (type.Is<GraphQLScalarType<DateTime>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTime>>>())
+			arguments.Add<string>("timeZone", nullable: true, description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
+		else if (type.Is<GraphQLScalarType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLScalarType<DateTimeOffset>>>())
+			arguments.Add<string>("timeZone", nullable: true, description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
+		else if (type.Is<GraphQLStringType>() || type.Is<NonNullGraphType<GraphQLStringType>>())
+		{
+			arguments.Add<StringCase?>("case", description: "value.ToLower(), value.ToLowerInvariant(), value.ToUpper(), value.ToUpperInvariant()");
+			arguments.Add<int?>("length", description: "value.Left(length)");
+			arguments.Add<string>("match", nullable: true, description: "value.ToRegex(RegexOptions.Compiled | RegexOptions.Singleline).Match(match).");
+			arguments.Add<string>("trim", nullable: true, description: "value.Trim()");
+			arguments.Add<string>("trimEnd", nullable: true, description: "value.TrimEnd()");
+			arguments.Add<string>("trimStart", nullable: true, description: "value.TrimStart()");
+		}
+
+		return @this.AddField(new()
+		{
+			Arguments = arguments,
+			Type = type,
+			Name = propertyInfo.GraphQLName(),
+			Description = propertyInfo.GraphQLDescription(),
+			DeprecationReason = propertyInfo.GraphQLDeprecationReason(),
+			Resolver = resolver
+		});
 	}
 
-	public static void AddOrderBy(this EnumerationGraphType @this, OrderBy orderBy, string? deprecationReason = null)
-		=> @this.Add(orderBy.Display, orderBy.ToString(), orderBy.ToString(), deprecationReason);
+	public static void AddOrderBy(this EnumerationGraphType @this, string column, string? deprecationReason = null)
+	{
+		var asc = Sort.Ascending.ToSQL();
+		var desc = Sort.Descending.ToSQL();
+		@this.Add(Invariant($"{column}_{asc}"), Invariant($"{column} {asc}"), Invariant($"{column} {asc}"), deprecationReason);
+		@this.Add(Invariant($"{column}_{desc}"), Invariant($"{column} {desc}"), Invariant($"{column} {desc}"), deprecationReason);
+	}
 
 	/// <summary>
 	/// Use this to create a GraphQL Connection object to return in your endpoint to support paging.
@@ -92,9 +154,7 @@ public static class GraphQLExtensions
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToGraphQLObjectType(this Type @this)
-		=> @this.IsValueType && @this.IsNullable()
-			? typeof(GraphQLObjectType<>).MakeGenericType(@this.GenericTypeArguments[0])
-			: typeof(GraphQLObjectType<>).MakeGenericType(@this);
+		=> typeof(GraphQLObjectType<>).MakeGenericType(@this);
 
 	public static Type ToGraphQLType(this ParameterInfo @this)
 	{
@@ -116,25 +176,28 @@ public static class GraphQLExtensions
 
 	public static Type ToGraphQLType(this Type @this, bool isInputType)
 	{
+		if (@this.Is(typeof(Nullable<>)))
+			return @this.GenericTypeArguments[0].ToGraphQLType(isInputType);
+
+		if (@this.IsEnum)
+			return @this.ToGraphQLEnumType();
+
 		var objectType = @this.GetObjectType();
 		(objectType is ObjectType.Delegate).AssertFalse();
 		(objectType is ObjectType.Object).AssertFalse();
+
+		var scalarGraphType = @this.GetScalarType().ToGraphType();
+		if (scalarGraphType is not null)
+			return scalarGraphType;
 
 		var collectionType = @this.GetCollectionType();
 		if (collectionType.IsDictionary())
 			return typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType();
 
-		if (@this.IsEnum)
-			return @this.ToGraphQLEnumType();
-
 		if (objectType is ObjectType.Task || objectType is ObjectType.ValueTask)
 			return @this.IsGenericType
 				? @this.GenericTypeArguments.First()!.ToGraphQLType(false)
 				: throw new ArgumentOutOfRangeException(nameof(@this), Invariant($"{nameof(Task)} and {nameof(ValueTask)} are not allowed as GraphQL types."));
-
-		var scalarGraphType = @this.GetScalarType().ToGraphType();
-		if (scalarGraphType is not null)
-			return scalarGraphType;
 
 		if (@this.HasElementType)
 		{
@@ -167,64 +230,4 @@ public static class GraphQLExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
-
-	public static FieldType ToFieldType(this MethodInfo @this)
-		=> new()
-		{
-			Arguments = new QueryArguments(@this.GetParameters()
-				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
-				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
-				{
-					Name = parameterInfo.GraphQLName(),
-					Description = parameterInfo.GraphQLDescription(),
-				})),
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Type = @this.ReturnType.ToGraphQLType(false).ToNonNullGraphType()
-		};
-
-	public static FieldType ToFieldType(this PropertyInfo @this)
-	{
-		var type = @this.ToGraphQLType(false);
-		var arguments = new QueryArguments();
-
-		if (type.IsAssignableTo<ScalarGraphType>() && !type.Implements(typeof(NonNullGraphType<>)))
-			arguments.Add("null", type, description: "Return this value instead of null.");
-
-		if (@this.PropertyType.IsAssignableTo<IFormattable>())
-			arguments.Add<GraphQLStringType>("format", description: "Use .NET format specifiers to format the data.");
-
-		if (type.Is<GraphQLStringType<DateTime>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTime>>>())
-			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, [..., ...] | [UTC, ...])"));
-		else if (type.Is<GraphQLStringType<DateTimeOffset>>() || type.Is<NonNullGraphType<GraphQLStringType<DateTimeOffset>>>())
-			arguments.Add<GraphQLStringType>("timeZone", description: Invariant($"{typeof(TimeZoneInfo).Namespace}.{nameof(TimeZoneInfo)}.{nameof(TimeZoneInfo.ConvertTimeBySystemTimeZoneId)}(value, ...)"));
-		else if (type.Is<GraphQLStringType>() || type.Is<NonNullGraphType<GraphQLStringType>>())
-		{
-			arguments.Add<GraphQLEnumType<StringCase>>("case", description: "Convert string value to upper or lower case.");
-			arguments.Add<GraphQLNumberType<int>>("length", description: "Exclude the rest of the string value if it exceeds this length.");
-			arguments.Add<GraphQLStringType>("match", description: "Returns the matching result based on the specified regular expression pattern, null if no match.");
-			arguments.Add<GraphQLStringType>("trim", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.Trim)}(value)"));
-			arguments.Add<GraphQLStringType>("trimEnd", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimEnd)}(value)"));
-			arguments.Add<GraphQLStringType>("trimStart", description: Invariant($"{typeof(string).Namespace}.{nameof(String)}.{nameof(string.TrimStart)}(value)"));
-		}
-
-		return new()
-		{
-			Arguments = arguments,
-			Type = type,
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-		};
-	}
-
-	public static FieldType ToInputFieldType(this PropertyInfo @this)
-		=> new()
-		{
-			Type = @this.ToGraphQLType(true),
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason()
-		};
 }

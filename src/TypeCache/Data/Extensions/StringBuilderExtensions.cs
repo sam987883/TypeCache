@@ -14,8 +14,9 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendOutputSQL(this StringBuilder @this, DataSourceType dataSourceType, StringValues output)
 		=> @this.AppendLine(dataSourceType switch
 		{
-			PostgreSql => Invariant($"RETURNING {output.ToCSV()}"),
-			_ => Invariant($"OUTPUT {output.ToCSV()}")
+			SqlServer or PostgreSql => Invariant($"OUTPUT {output.ToCSV()}"),
+			Oracle => Invariant($"RETURNING {output.ToCSV()}"),
+			_ => string.Empty
 		});
 
 	public static StringBuilder AppendStatementEndSQL(this StringBuilder @this)
@@ -29,7 +30,7 @@ public static class StringBuilderExtensions
 	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, T[] input, StringValues columns)
 	{ 
 		var values = input.Select(row => Invariant($"({columns.Select<string, string>(column =>
-			(typeof(T).GetProperties(Instance | Public).Where(_ => _.Name().Is(column)).First()?.GetPropertyValue(row!)).ToSQL()).ToCSV()})")).ToArray();
+			(typeof(T).GetProperties(Instance | Public).Where(_ => _.Name().EqualsIgnoreCase(column)).First()?.GetPropertyValue(row!)).ToSQL()).ToCSV()})")).ToArray();
 		@this.Append("VALUES ");
 		values.ForEach(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
 		return @this.AppendLine();

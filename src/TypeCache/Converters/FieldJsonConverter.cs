@@ -19,7 +19,7 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 				var name = reader.GetString()!;
 				if (reader.Read())
 				{
-					var fieldInfo = typeof(T).GetPublicFields().FirstOrDefault(_ => _.Name().Is(name));
+					var fieldInfo = typeof(T).GetPublicFields().FirstOrDefault(_ => _.Name().EqualsIgnoreCase(name));
 					if (fieldInfo is not null && !fieldInfo.IsInitOnly)
 						fieldInfo.SetFieldValue(output!, reader.TokenType switch
 						{

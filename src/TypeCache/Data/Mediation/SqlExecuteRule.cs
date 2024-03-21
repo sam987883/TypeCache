@@ -7,7 +7,7 @@ namespace TypeCache.Data.Mediation;
 
 internal sealed class SqlExecuteRule : IRule<SqlExecuteRequest>
 {
-	public async Task ExecuteAsync(SqlExecuteRequest request, CancellationToken token = default)
+	public async Task Execute(SqlExecuteRequest request, CancellationToken token = default)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

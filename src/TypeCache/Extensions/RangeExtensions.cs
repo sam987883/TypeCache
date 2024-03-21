@@ -1,9 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Text;
-using TypeCache.Collections;
-
 namespace TypeCache.Extensions;
 
 public static class RangeExtensions

@@ -1,14 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using GraphQL;
 using TypeCache.Extensions;
-using static System.FormattableString;
 using static System.Globalization.CultureInfo;
-using static System.Text.RegularExpressions.RegexOptions;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -18,6 +14,8 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 
 	public PropertyFieldResolver(PropertyInfo propertyInfo)
 	{
+		propertyInfo.AssertNotNull();
+
 		this._PropertyInfo = propertyInfo;
 	}
 
@@ -87,7 +85,7 @@ public sealed class PropertyFieldResolver<T> : FieldResolver
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = Regex.Match(text, pattern, Compiled | Singleline);
+				var match = text.ToRegex(RegexOptions.Compiled | RegexOptions.Singleline).Match(text);
 				if (match.Success)
 					text = match.Value;
 				else

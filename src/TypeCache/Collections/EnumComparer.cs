@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Linq.Expressions;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 
@@ -22,7 +23,7 @@ public readonly struct EnumComparer<T> : IComparer<T>, IEqualityComparer<T>
 
 	private static Comparison<T> CreateCompare(Type underlyingType)
 		=> LambdaFactory.CreateComparison<T>((value1, value2) =>
-			value1.Cast(underlyingType).Call(nameof(IComparable<T>.CompareTo), value2.Cast(underlyingType))).Compile();
+			value1.Cast(underlyingType).Call(nameof(IComparable<T>.CompareTo), new Expression[] { value2.Cast(underlyingType) })).Compile();
 
 	private static Func<T, T, bool> CreateEquals(Type underlyingType)
 		=> LambdaFactory.CreateFunc<T, T, bool>((value1, value2) =>

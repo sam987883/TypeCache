@@ -39,6 +39,29 @@ public class EnumExtensions
 	}
 
 	[Fact]
+	public void IsPrimitive()
+	{
+		Assert.Equal(typeof(bool).IsPrimitive, ScalarType.Boolean.IsPrimitive());
+		Assert.Equal(typeof(char).IsPrimitive, ScalarType.Char.IsPrimitive());
+		Assert.Equal(typeof(sbyte).IsPrimitive, ScalarType.SByte.IsPrimitive());
+		Assert.Equal(typeof(short).IsPrimitive, ScalarType.Int16.IsPrimitive());
+		Assert.Equal(typeof(int).IsPrimitive, ScalarType.Int32.IsPrimitive());
+		Assert.Equal(typeof(long).IsPrimitive, ScalarType.Int64.IsPrimitive());
+		Assert.Equal(typeof(nint).IsPrimitive, ScalarType.IntPtr.IsPrimitive());
+		Assert.Equal(!typeof(Int128).IsPrimitive, ScalarType.Int128.IsPrimitive());
+		Assert.Equal(typeof(byte).IsPrimitive, ScalarType.Byte.IsPrimitive());
+		Assert.Equal(typeof(ushort).IsPrimitive, ScalarType.UInt16.IsPrimitive());
+		Assert.Equal(typeof(uint).IsPrimitive, ScalarType.UInt32.IsPrimitive());
+		Assert.Equal(typeof(ulong).IsPrimitive, ScalarType.UInt64.IsPrimitive());
+		Assert.Equal(typeof(nuint).IsPrimitive, ScalarType.UIntPtr.IsPrimitive());
+		Assert.Equal(!typeof(UInt128).IsPrimitive, ScalarType.UInt128.IsPrimitive());
+		Assert.Equal(typeof(Half).IsPrimitive, ScalarType.Half.IsPrimitive());
+		Assert.Equal(typeof(float).IsPrimitive, ScalarType.Single.IsPrimitive());
+		Assert.Equal(typeof(double).IsPrimitive, ScalarType.Double.IsPrimitive());
+		Assert.Equal(!typeof(decimal).IsPrimitive, ScalarType.Decimal.IsPrimitive());
+	}
+
+	[Fact]
 	public void Name()
 	{
 		Assert.Equal(TestEnum.TestValue2.ToString("F"), TestEnum.TestValue2.Name());

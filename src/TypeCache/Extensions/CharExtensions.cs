@@ -203,7 +203,7 @@ public static class CharExtensions
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Join(this char @this, params string[] values)
+	public static string Join(this char @this, string[] values)
 		=> string.Join(@this, values);
 
 	/// <inheritdoc cref="string.Join{T}(char, IEnumerable{T})"/>
@@ -219,7 +219,7 @@ public static class CharExtensions
 	/// <c>=&gt; <see cref="string"/>.Join(@<paramref name="this"/>, <paramref name="values"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Join(this char @this, params object[] values)
+	public static string Join(this char @this, object[] values)
 		=> string.Join(@this, values);
 
 	/// <inheritdoc cref="string.Join{T}(char, IEnumerable{T})"/>

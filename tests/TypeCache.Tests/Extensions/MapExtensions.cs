@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using TypeCache.Attributes;
 using TypeCache.Extensions;
 using Xunit;

@@ -5,9 +5,9 @@ using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
-	public static bool IsCallableWith(this MethodBase @this, params object?[]? arguments)
+	public static bool IsCallableWith(this MethodBase @this, object?[]? arguments)
 	{
 		var parameterInfos = @this.GetParameters();
 		if (parameterInfos.Any(_ => _.IsOut))
@@ -28,10 +28,10 @@ partial class ReflectionExtensions
 
 	/// <param name="arguments">The method arguments.</param>
 	/// <exception cref="UnreachableException"></exception>
-	public static object? InvokeMethod(this MethodBase @this, params object?[]? arguments)
+	public static object? InvokeMethod(this MethodBase @this, object?[]? arguments)
 	{
 		@this.DeclaringType.AssertNotNull();
-		var method = TypeStore.MethodInvokes[(@this.DeclaringType.TypeHandle, @this.MethodHandle)];
+		var method = TypeStore.MethodFuncs[(@this.DeclaringType.TypeHandle, @this.MethodHandle)];
 		return method.Invoke(arguments);
 	}
 

@@ -1,10 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
 using TypeCache.Collections;
-using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.Web.Extensions;
 

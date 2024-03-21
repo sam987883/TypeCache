@@ -11,39 +11,47 @@ using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data;
 
-public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Type, DatabaseObject Name, string DatabaseName, string SchemaName, string ObjectName)
+public sealed class ObjectSchema : IEquatable<ObjectSchema>
 {
 	public ObjectSchema(
 		IDataSource dataSource
 		, DatabaseObjectType type
-		, DatabaseObject name
 		, string databaseName
 		, string schemaName
 		, string objectName
-		, IEnumerable<ColumnSchema> columns
-		) : this(dataSource, type, name, databaseName, schemaName, objectName)
+		, IEnumerable<ColumnSchema>? columns
+		, IEnumerable<ParameterSchema>? parameters
+		)
 	{
-		this.Columns = columns.ToImmutableArray();
+		this.DataSource = dataSource;
+		this.Type = type;
+		this.DatabaseName = databaseName;
+		this.SchemaName = schemaName;
+		this.ObjectName = objectName;
+		this.Name = dataSource.Type switch
+		{
+			MySql => Invariant($"{schemaName.EscapeIdentifier(dataSource.Type)}.{objectName.EscapeIdentifier(dataSource.Type)}"),
+			_ => Invariant($"{databaseName.EscapeIdentifier(dataSource.Type)}.{schemaName.EscapeIdentifier(dataSource.Type)}.{objectName.EscapeIdentifier(dataSource.Type)}")
+		};
+		this.Columns = columns?.ToImmutableArray() ?? ImmutableArray<ColumnSchema>.Empty;
+		this.Parameters = parameters?.ToImmutableArray() ?? ImmutableArray<ParameterSchema>.Empty;
 	}
 
-	public ObjectSchema(
-		IDataSource dataSource
-		, DatabaseObjectType type
-		, DatabaseObject name
-		, string databaseName
-		, string schemaName
-		, string objectName
-		, IEnumerable<ParameterSchema> parameters
-		) : this(dataSource, type, name, databaseName, schemaName, objectName)
-	{
-		this.Parameters = parameters.ToImmutableArray();
-	}
+	public IDataSource DataSource { get; }
 
-	[DebuggerHidden]
-	public IReadOnlyList<ColumnSchema> Columns { get; } = ImmutableArray<ColumnSchema>.Empty;
+	public string Name { get; }
 
-	[DebuggerHidden]
-	public IReadOnlyList<ParameterSchema> Parameters { get; } = ImmutableArray<ParameterSchema>.Empty;
+	public DatabaseObjectType Type { get; }
+
+	public string DatabaseName { get; }
+
+	public string SchemaName { get; }
+
+	public string ObjectName { get; }
+
+	public IReadOnlyCollection<ColumnSchema> Columns { get; } = ImmutableArray<ColumnSchema>.Empty;
+
+	public IReadOnlyCollection<ParameterSchema> Parameters { get; }
 
 	public DataTable CreateDataTable()
 	{
@@ -56,106 +64,132 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 	}
 
 	public string CreateCountSQL(string? distinctColumn, string where)
-		=> new StringBuilder()
-			.AppendLineIf(distinctColumn.IsBlank(), "SELECT COUNT(*)", Invariant($"SELECT COUNT(DISTINCT {(distinctColumn.IsNotBlank() ? this.DataSource.EscapeIdentifier(distinctColumn!) : null)})"))
-			.AppendLineIf(this.DataSource.Type is not SqlServer, Invariant($"FROM {this.Name}"), Invariant($"FROM {this.Name} WITH(NOLOCK)"))
+		=> new StringBuilder("SELECT ")
+			.AppendLineIf(distinctColumn.IsBlank(), "COUNT(*)", Invariant($"COUNT(DISTINCT {(distinctColumn.IsNotBlank() ? distinctColumn?.EscapeIdentifier(this.DataSource.Type!) : null)})"))
+			.Append("FROM ").Append(this.Name).AppendIf(this.DataSource.Type is SqlServer, " WITH(NOLOCK)").AppendLine()
 			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 
-	public string CreateDeleteSQL(string where, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(Invariant($"DELETE {this.Name}"))
+	public string CreateDeleteSQL(string where, string[] output)
+		=> new StringBuilder("DELETE ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 
-	public string CreateDeleteSQL(DataTable data, params string[] output)
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public string CreateDeleteSQL(DataTable data, string[] output)
 	{
-		var columns = data.PrimaryKey.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName));
+		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		return new StringBuilder()
-			.AppendLine(Invariant($"DELETE {this.Name}"))
+		(primaryKeys.Length > 0).AssertTrue();
+
+		if (primaryKeys.Length == 1)
+		{
+			var values = data.Rows.Cast<DataRow>().Select(row => row[primaryKeys[0].Name].ToSQL()).ToCSV();
+			var column = primaryKeys[0].Name.EscapeIdentifier(this.DataSource.Type);
+			return new StringBuilder("DELETE FROM ").AppendLine(this.Name)
+				.AppendOutputSQL(this.DataSource.Type, output)
+				.Append("WHERE ").Append(column).Append(" IN (").Append(values).Append(')')
+				.AppendStatementEndSQL()
+				.ToString();
+		}
+
+		var conditions = data.Rows.Cast<DataRow>().Select(row => Invariant($"({string.Join(" AND ", primaryKeys.Select(column =>
+			Invariant($"{column.Name.EscapeIdentifier(this.DataSource.Type)} = {row[column.Name].ToSQL()}")))})"));
+
+		return new StringBuilder("DELETE FROM ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLine(Invariant($"FROM {this.Name} AS _"))
-			.AppendLine("INNER JOIN")
-			.Append('(').AppendLine()
-			.Append(data.ToSQL())
-			.AppendLine(Invariant($") AS data ({data.Columns.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
-			.Append("ON ").AppendJoin(" AND ", columns.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
+			.Append("WHERE ").AppendJoin(" OR ", conditions)
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	public string CreateDeleteSQL(JsonArray data, StringValues output)
 	{
-		var columns = this.Columns.Where(column => column.PrimaryKey).Select(column => this.DataSource.EscapeIdentifier(column.Name));
+		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		return new StringBuilder()
-			.AppendLine(Invariant($"DELETE {this.Name}"))
+		(primaryKeys.Length > 0).AssertTrue();
+
+		if (primaryKeys.Length == 1)
+		{
+			var values = data.Select(row => row![primaryKeys[0].Name].ToSQL()).ToCSV();
+			var column = primaryKeys[0].Name.EscapeIdentifier(this.DataSource.Type);
+			return new StringBuilder("DELETE FROM ").AppendLine(this.Name)
+				.AppendOutputSQL(this.DataSource.Type, output)
+				.Append("WHERE ").Append(column).Append(" IN (").Append(values).Append(')')
+				.AppendStatementEndSQL()
+				.ToString();
+		}
+
+		var conditions = data.Select(row => Invariant($"({string.Join(" AND ", primaryKeys.Select(column =>
+			Invariant($"{column.Name.EscapeIdentifier(this.DataSource.Type)} = {row![column.Name].ToSQL()}")))})"));
+
+		return new StringBuilder("DELETE FROM ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLine(Invariant($"FROM {this.Name} AS _"))
-			.AppendLine("INNER JOIN")
-			.Append('(').AppendLine()
-			.Append(data.ToSQL())
-			.AppendLine(Invariant($") AS data ({data[0]!.AsObject().Select(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()})"))
-			.Append("ON ").AppendJoin(" AND ", columns.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
+			.Append("WHERE ").AppendJoin(" OR ", conditions)
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	public string CreateDeleteSQL<T>(T[] data, StringValues output)
 	{
-		var primaryKeys = this.Columns
-			.Where(column => column.PrimaryKey)
-			.Select(column => column.Name)
-			.ToArray();
-		var escapedPrimaryKeys = primaryKeys.Select(this.DataSource.EscapeIdentifier).ToArray();
+		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		return new StringBuilder()
-			.AppendLine(Invariant($"DELETE {this.Name}"))
+		(primaryKeys.Length > 0).AssertTrue();
+
+		var type = typeof(T);
+
+		if (primaryKeys.Length == 1)
+		{
+			var values = data.Select(row => type.GetPropertyValue(primaryKeys[0].Name, row!).ToSQL()).ToCSV();
+			var column = primaryKeys[0].Name.EscapeIdentifier(this.DataSource.Type);
+			return new StringBuilder("DELETE ").AppendLine(this.Name)
+				.AppendOutputSQL(this.DataSource.Type, output)
+				.Append("WHERE ").Append(column).Append(" IN (").Append(values).Append(')')
+				.AppendStatementEndSQL()
+				.ToString();
+		}
+
+		var conditions = data.Select(row => Invariant($"({string.Join(" AND ", primaryKeys.Select(column =>
+			Invariant($"{column.Name.EscapeIdentifier(this.DataSource.Type)} = {type.GetPropertyValue(column.Name, row!).ToSQL()}")))})"));
+
+		return new StringBuilder("DELETE ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLine(Invariant($"FROM {this.Name} AS _"))
-			.AppendLine("INNER JOIN")
-			.Append('(').AppendLine()
-			.AppendValuesSQL(data, primaryKeys)
-			.AppendLine(Invariant($") AS data ({escapedPrimaryKeys.ToCSV()})"))
-			.Append("ON ").AppendJoin(" AND ", escapedPrimaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
+			.Append("WHERE ").AppendJoin(" OR ", conditions)
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
-	public string CreateInsertSQL(string[] columns, SelectQuery selectQuery, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({columns.Select(this.DataSource.EscapeIdentifier).ToCSV()})"))
+	public string CreateInsertSQL(string[] columns, SelectQuery selectQuery, string[] output)
+		=> new StringBuilder("INSERT INTO ").AppendLine(this.Name)
+			.AppendLine(Invariant($"({columns.Select(column => column.EscapeIdentifier(this.DataSource.Type)).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(this.CreateSelectSQL(selectQuery))
 			.ToString();
 
-	public string CreateInsertSQL(JsonArray data, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({data[0]!.AsObject().Select(pair => this.DataSource.EscapeIdentifier(pair.Key)).ToCSV()}"))
+	public string CreateInsertSQL(JsonArray data, string[] output)
+		=> new StringBuilder("INSERT INTO ").AppendLine(this.Name)
+			.AppendLine(Invariant($"({data[0]!.AsObject().Select(pair => pair.Key.EscapeIdentifier(this.DataSource.Type)).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(data.ToSQL())
 			.AppendStatementEndSQL()
 			.ToString();
 
-	public string CreateInsertSQL(DataTable data, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({data.Columns.OfType<DataColumn>().Select(column => this.DataSource.EscapeIdentifier(column.ColumnName)).ToCSV()})"))
+	public string CreateInsertSQL(DataTable data, string[] output)
+		=> new StringBuilder("INSERT INTO ").AppendLine(this.Name)
+			.AppendLine(Invariant($"({data.Columns.OfType<DataColumn>().Select(column => column.ColumnName.EscapeIdentifier(this.DataSource.Type)).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.Append(data.ToSQL())
 			.AppendStatementEndSQL()
 			.ToString();
 
-	public string CreateInsertSQL<T>(string[] columns, T[] data, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(Invariant($"INSERT INTO {this.Name}"))
-			.AppendLine(Invariant($"({columns.Select(this.DataSource.EscapeIdentifier).ToCSV()})"))
+	public string CreateInsertSQL<T>(string[] columns, T[] data, string[] output)
+		=> new StringBuilder("INSERT INTO ").AppendLine(this.Name)
+			.AppendLine(Invariant($"({columns.Select(column => column.EscapeIdentifier(this.DataSource.Type)).ToCSV()})"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendValuesSQL(data, columns)
 			.AppendStatementEndSQL()
@@ -163,24 +197,43 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 
 	public string CreateSelectSQL(SelectQuery select)
 	{
-		var sqlBuilder = new StringBuilder("SELECT");
+		var sqlBuilder = new StringBuilder("SELECT ");
 
-		if (this.DataSource.Type is PostgreSql && select.DistinctOn.IsNotBlank())
-			sqlBuilder.Append(Invariant($" DISTINCT ON {select.DistinctOn}"));
-		else
-			sqlBuilder.AppendIf(select.Distinct, " DISTINCT");
+		switch (this.DataSource.Type)
+		{
+			case SqlServer:
+				sqlBuilder
+					.AppendIf(select.Distinct, "DISTINCT ")
+					.AppendIf(select.Top.HasValue, Invariant($"TOP ({select.Top}) "))
+					.AppendIf(select.Top.HasValue && select.TopPercent, "PERCENT ");
+				break;
+			case Oracle:
+			case MySql:
+				sqlBuilder
+					.AppendIf(select.TableHints.IsNotBlank(), Invariant($"/*+ {select.TableHints} */ "))
+					.AppendIf(select.Distinct, "DISTINCT ");
+				break;
+			case PostgreSql:
+				if (select.DistinctOn.IsNotBlank())
+					sqlBuilder.Append("DISTINCT ON ").Append(select.DistinctOn);
+				else
+					sqlBuilder.AppendIf(select.Distinct, "DISTINCT ");
 
-		if (this.DataSource.Type is SqlServer && select.Top.IsNotBlank())
-			sqlBuilder.Append(Invariant($" TOP {select.Top}"));
+				break;
+		}
 
 		return sqlBuilder
-			.Append(' ')
-			.AppendLine(select.Select?.Any() is true ? select.Select.ToCSV() : "*")
-			.AppendLine(Invariant($"FROM {select.From} {select.TableHints}"))
+			.AppendLineIf(select.Select?.Any() is true, select.Select.ToCSV(), "*")
+			.Append("FROM ").Append(select.From)
+			.AppendIf(select.TableHints.IsNotBlank(), _ => _
+				.AppendIf(this.DataSource.Type is Oracle, Invariant($" /*+ {select.TableHints} */"))
+				.AppendIf(this.DataSource.Type is SqlServer, Invariant($" WITH({select.TableHints})"))
+				.AppendIf(this.DataSource.Type is PostgreSql, Invariant($" WITH({select.TableHints})")))
+			.AppendLine()
 			.AppendLineIf(select.Where.IsNotBlank(), Invariant($"WHERE {select.Where}"))
 			.AppendLineIf(select.GroupBy?.Any() is true, select.GroupByOption switch
 			{
-				GroupBy.Cube => Invariant($"GROUP BY CUBE({select.GroupBy.ToCSV()})"),
+				GroupBy.Cube when this.DataSource.Type is not MySql => Invariant($"GROUP BY CUBE({select.GroupBy.ToCSV()})"),
 				GroupBy.Rollup => Invariant($"GROUP BY ROLLUP({select.GroupBy.ToCSV()})"),
 				_ => Invariant($"GROUP BY {select.GroupBy.ToCSV()}")
 			})
@@ -200,32 +253,28 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 			_ => Invariant($"TRUNCATE TABLE {this.Name};")
 		};
 
-	public string CreateUpdateSQL(string[] set, string where, params string[] output)
-		=> new StringBuilder()
-			.AppendLine(this.DataSource.Type is SqlServer
-				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
-				: Invariant($"UPDATE {this.Name}"))
+	public string CreateUpdateSQL(string[] set, string where, string[] output)
+		=> new StringBuilder("UPDATE ").Append(this.Name)
+			.AppendIf(this.DataSource.Type is SqlServer, " WITH(UPDLOCK)").AppendLine()
 			.AppendLine(Invariant($"SET {set.ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 
-	public string CreateUpdateSQL(JsonArray data, params string[] output)
+	public string CreateUpdateSQL(JsonArray data, string[] output)
 	{
 		var primaryKeys = this.Columns
 			.Where(column => column.PrimaryKey)
-			.Select(column => this.DataSource.EscapeIdentifier(column.Name));
+			.Select(column => column.Name.EscapeIdentifier(this.DataSource.Type));
 		var setColumns = data[0]!.AsObject()
-			.Where(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(pair.Key)))
-			.Select(pair => this.DataSource.EscapeIdentifier(pair.Key));
+			.Where(pair => this.Columns.Any(column => column.PrimaryKey && column.Name.EqualsIgnoreCase(pair.Key)))
+			.Select(pair => pair.Key.EscapeIdentifier(this.DataSource.Type));
 		var columns = data[0]!.AsObject()
-			.Select(pair => this.DataSource.EscapeIdentifier(pair.Key));
+			.Select(pair => pair.Key.EscapeIdentifier(this.DataSource.Type));
 
-		return new StringBuilder()
-			.AppendLine(this.DataSource.Type is SqlServer
-				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
-				: Invariant($"UPDATE {this.Name}"))
+		return new StringBuilder("UPDATE ").Append(this.Name)
+			.AppendIf(this.DataSource.Type is SqlServer, " WITH(UPDLOCK)").AppendLine()
 			.AppendLine(Invariant($"SET {setColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLine(Invariant($"FROM {this.Name} AS _"))
@@ -238,42 +287,38 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 			.ToString();
 	}
 
-	public string CreateUpdateSQL(DataTable data, params string[] output)
+	public string CreateUpdateSQL(DataTable data, string[] output)
 	{
-		var primaryKeys = data.PrimaryKey.Select(column => this.DataSource.EscapeIdentifier(column.ColumnName));
+		var primaryKeys = data.PrimaryKey.Select(column => column.ColumnName.EscapeIdentifier(this.DataSource.Type));
 		var setColumns = data.Columns.OfType<DataColumn>()
-			.Where(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.Is(dataColumn.ColumnName)))
-			.Select(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
+			.Where(dataColumn => this.Columns.Any(column => column.PrimaryKey && column.Name.EqualsIgnoreCase(dataColumn.ColumnName)))
+			.Select(dataColumn => dataColumn.ColumnName.EscapeIdentifier(this.DataSource.Type));
 		var columns = data.Columns.OfType<DataColumn>()
-			.Select(dataColumn => this.DataSource.EscapeIdentifier(dataColumn.ColumnName));
+			.Select(dataColumn => dataColumn.ColumnName.EscapeIdentifier(this.DataSource.Type));
 
-		return new StringBuilder()
-			.AppendLine(this.DataSource.Type is SqlServer
-				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
-				: Invariant($"UPDATE {this.Name}"))
-			.AppendLine(Invariant($"SET {setColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
+		return new StringBuilder("UPDATE ").Append(this.Name)
+			.AppendIf(this.DataSource.Type is SqlServer, " WITH(UPDLOCK)").AppendLine()
+			.Append("SET ").AppendLine(setColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV())
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLine(Invariant($"FROM {this.Name} AS _"))
+			.Append("FROM ").Append(this.Name).AppendLine(" AS _")
 			.AppendLine("INNER JOIN")
 			.Append('(').AppendLine()
 			.Append(data.ToSQL())
-			.AppendLine(Invariant($") AS data ({columns.ToCSV()})"))
-			.Append("ON ").AppendJoin(" AND ", primaryKeys.Select(column => Invariant($"data.{column} = _.{column}"))).AppendLine()
+			.Append(") AS data (").Append(columns.ToCSV()).Append(')').AppendLine()
+			.Append("ON ").AppendJoin(" AND ", primaryKeys.Select(column => Invariant($"data.{column} = _.{column}")))
 			.AppendStatementEndSQL()
 			.ToString();
 	}
 
-	public string CreateUpdateSQL<T>(string[] columns, T[] data, params string[] output)
+	public string CreateUpdateSQL<T>(string[] columns, T[] data, string[] output)
 	{
 		var primaryKeys = this.Columns
 			.Where(column => column.PrimaryKey)
-			.Select(column => this.DataSource.EscapeIdentifier(column.Name));
-		var escapedColumns = columns.Select(this.DataSource.EscapeIdentifier);
+			.Select(column => column.Name.EscapeIdentifier(this.DataSource.Type));
+		var escapedColumns = columns.Select(column => column.EscapeIdentifier(this.DataSource.Type));
 
-		return new StringBuilder()
-			.AppendLine(this.DataSource.Type is SqlServer
-				? Invariant($"UPDATE {this.Name} WITH(UPDLOCK)")
-				: Invariant($"UPDATE {this.Name}"))
+		return new StringBuilder("UPDATE ").Append(this.Name)
+			.AppendIf(this.DataSource.Type is SqlServer, " WITH(UPDLOCK)").AppendLine()
 			.AppendLine(Invariant($"SET {escapedColumns.Select(column => Invariant($"{column} = data.{column}")).ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
 			.AppendLine(Invariant($"FROM {this.Name} AS _"))
@@ -288,11 +333,11 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasColumn(string column) =>
-		this.Columns.Any(_ => _.Name.Is(column));
+		this.Columns.Any(_ => _.Name.EqualsIgnoreCase(column));
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool HasParameter(string parameter) =>
-		this.Parameters.Any(_ => _.Name.Is(parameter));
+		this.Parameters.Any(_ => _.Name.EqualsIgnoreCase(parameter));
 
 	[DebuggerHidden]
 	public bool Equals([NotNullWhen(true)] ObjectSchema? other)
@@ -301,7 +346,7 @@ public sealed record ObjectSchema(IDataSource DataSource, DatabaseObjectType Typ
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
-		=> HashCode.Combine(this.DataSource, this.Name);
+		=> HashCode.Combine(this.DataSource.Name, this.Name);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override string ToString()

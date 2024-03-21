@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	/// <inheritdoc cref="FieldInfo.GetFieldFromHandle(RuntimeFieldHandle)"/>
 	/// <remarks>
@@ -41,6 +41,7 @@ partial class ReflectionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)
 		=> MethodBase.GetMethodFromHandle(@this, typeHandle) ?? throw new UnreachableException("MethodBase.GetMethodFromHandle(..., ...) returned null.");
+
 	/// <inheritdoc cref="Type.GetTypeFromHandle(RuntimeTypeHandle)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Type"/>.GetTypeFromHandle(@<paramref name="this"/>) ?? throw new UnreachableException("Type.GetTypeFromHandle(...) returned null.");</c>

@@ -6,7 +6,7 @@ using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	/// <inheritdoc cref="FieldInfo.GetValue(object?)"/>
 	/// <remarks>
@@ -18,19 +18,19 @@ partial class ReflectionExtensions
 	public static object? GetFieldValue(this FieldInfo @this, object? instance)
 		=> @this.IsLiteral
 			? @this.GetRawConstantValue()
-			: TypeStore.FieldGetInvokes.GetOrAdd(@this.FieldHandle, handle => @this.GetFieldValueFuncLambdaExpression().Compile())(instance);
+			: TypeStore.FieldGetFuncs.GetOrAdd(@this.FieldHandle, handle => @this.GetFieldValueFuncExpression().Compile())(instance);
 
-	public static Expression<Func<object?, object?>> GetFieldValueFuncLambdaExpression(this FieldInfo @this)
+	public static Expression<Func<object?, object?>> GetFieldValueFuncExpression(this FieldInfo @this)
 	{
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
-		return field.As<object>().Lambda<Func<object?, object?>>(instance);
+		var field = !@this.IsStatic ? instance.Cast(@this.DeclaringType!).Field(@this) : @this.ToExpression(null);
+		return field.As<object>().Lambda<Func<object?, object?>>(new[] { instance });
 	}
 
 	public static LambdaExpression GetFieldValueLambdaExpression(this FieldInfo @this)
 		=> !@this.IsStatic
 			? LambdaFactory.Create(new[] { @this.DeclaringType! }, parameters => parameters[0].Field(@this))
-			: @this.ToStaticFieldExpression().Lambda();
+			: @this.ToExpression(null).Lambda();
 
 	/// <inheritdoc cref="FieldInfo.SetValue(object, object)"/>
 	/// <remarks>
@@ -41,10 +41,10 @@ partial class ReflectionExtensions
 	public static void SetFieldValue(this FieldInfo @this, object? instance, object? value)
 	{
 		if (!@this.IsInitOnly && !@this.IsLiteral)
-			TypeStore.FieldSetInvokes.GetOrAdd(@this.FieldHandle, handle => @this.SetFieldValueActionLambdaExpression().Compile())(instance, value);
+			TypeStore.FieldSetActions.GetOrAdd(@this.FieldHandle, handle => @this.SetFieldValueActionExpression().Compile())(instance, value);
 	}
 
-	public static Expression<Action<object?, object?>> SetFieldValueActionLambdaExpression(this FieldInfo @this)
+	public static Expression<Action<object?, object?>> SetFieldValueActionExpression(this FieldInfo @this)
 	{
 		@this.IsInitOnly.AssertFalse();
 		@this.IsLiteral.AssertFalse();
@@ -52,8 +52,8 @@ partial class ReflectionExtensions
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		ParameterExpression value = nameof(value).ToParameterExpression<object>();
 
-		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.ToStaticFieldExpression();
-		return field.Assign(value.Convert(@this.FieldType)).Lambda<Action<object?, object?>>(instance, value);
+		var field = !@this.IsStatic ? instance.Convert(@this.DeclaringType!).Field(@this) : @this.ToExpression(null);
+		return field.Assign(value.Convert(@this.FieldType)).Lambda<Action<object?, object?>>(new[] { instance, value });
 	}
 
 	public static LambdaExpression SetFieldValueLambdaExpression(this FieldInfo @this)
@@ -63,14 +63,15 @@ partial class ReflectionExtensions
 
 		return !@this.IsStatic
 			? LambdaFactory.CreateAction(new[] { @this.DeclaringType!, @this.FieldType }, parameters => parameters[0].Field(@this).Assign(parameters[1]))
-			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.ToStaticFieldExpression().Assign(parameters[0]));
+			: LambdaFactory.CreateAction(new[] { @this.FieldType }, parameters => @this.ToExpression(null).Assign(parameters[0]));
 	}
 
 	/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Field(<see langword="null"/>, @<paramref name="this"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Field(<paramref name="instance"/>, @<paramref name="this"/>);</c>
 	/// </remarks>
+	/// <param name="instance">Pass <c><see langword="null"/></c> for static field access.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MemberExpression ToStaticFieldExpression(this FieldInfo @this)
-		=> Expression.Field(null, @this);
+	public static MemberExpression ToExpression(this FieldInfo @this, Expression? instance)
+		=> Expression.Field(instance, @this);
 }

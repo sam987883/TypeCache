@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -18,20 +17,23 @@ public sealed class MethodFieldResolver : FieldResolver
 		this._MethodInfo = methodInfo;
 	}
 
-	protected override ValueTask<object?> ResolveAsync(global::GraphQL.IResolveFieldContext context)
+	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.RequestServices.AssertNotNull();
 
-		var sourceType = !this._MethodInfo.IsStatic ? this._MethodInfo.DeclaringType : null;
-		var controller = sourceType is not null ? context.RequestServices.GetRequiredService(sourceType) : null;
-		var arguments = context.GetArguments(sourceType, this._MethodInfo).ToArray();
-		var result = this._MethodInfo.InvokeMethod(controller, arguments);
+		var arguments = context.GetArguments(this._MethodInfo).ToArray();
+		if (!this._MethodInfo.IsStatic)
+		{
+			var controller = context.RequestServices.GetRequiredService(this._MethodInfo.DeclaringType!);
+			arguments = arguments.Prepend(controller).ToArray();
+		}
 
+		var result = this._MethodInfo.InvokeMethod(arguments);
 		return result switch
 		{
-			ValueTask<object?> valueTask => valueTask,
-			Task<object?> task => new ValueTask<object?>(task),
-			_ => ValueTask.FromResult(result)
+			ValueTask<object?> valueTask => await valueTask,
+			Task<object?> task => await task,
+			_ => result
 		};
 	}
 }

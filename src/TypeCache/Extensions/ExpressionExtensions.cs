@@ -36,7 +36,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
-	public static MethodCallExpression Array(this Expression @this, params int[] indexes)
+	public static MethodCallExpression Array(this Expression @this, int[] indexes)
 		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
@@ -51,7 +51,7 @@ public static class ExpressionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
-	public static MethodCallExpression Array(this Expression @this, params long[] indexes)
+	public static MethodCallExpression Array(this Expression @this, long[] indexes)
 		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
@@ -75,7 +75,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Array(this Expression @this, params Expression[] indexes)
+	public static MethodCallExpression Array(this Expression @this, Expression[] indexes)
 		=> Expression.ArrayIndex(@this, indexes);
 
 	/// <inheritdoc cref="Expression.TypeAs(Expression, Type)"/>
@@ -145,7 +145,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression>? arguments)
+	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, IEnumerable<Expression>? arguments = null)
 		=> Expression.Call(@this, methodInfo, arguments);
 
 	/// <inheritdoc cref="Expression.Call(Expression, MethodInfo, Expression[])"/>
@@ -153,7 +153,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, params Expression[]? arguments)
+	public static MethodCallExpression Call(this Expression @this, MethodInfo methodInfo, Expression[]? arguments = null)
 		=> Expression.Call(@this, methodInfo, arguments);
 
 	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
@@ -161,7 +161,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Call(this Expression @this, string method, params Expression[]? arguments)
+	public static MethodCallExpression Call(this Expression @this, string method, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
 
 	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
@@ -169,7 +169,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Call(this Expression @this, string method, Type[]? genericTypes, params Expression[]? arguments)
+	public static MethodCallExpression Call(this Expression @this, string method, Type[]? genericTypes, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
 	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
@@ -226,41 +226,40 @@ public static class ExpressionExtensions
 			return @this.Cast(targetType);
 
 		if (@this.Type != typeof(object))
-			return ValueConverter.CreateConversionExpression(@this, targetType);
+			return @this.CreateConversionExpression(targetType);
 
 		var targetScalarType = targetType.GetScalarType();
 		var expression = targetScalarType switch
 		{
-			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBigInteger), @this),
-			ScalarType.Boolean => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBoolean), @this),
-			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToByte), @this),
-			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToChar), @this),
-			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), @this),
-			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), @this),
-			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), @this),
-			ScalarType.DBNull => DBNull.Value.ToConstantExpression(),
-			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDecimal), @this),
-			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDouble), @this),
-			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), @this),
-			ScalarType.Guid => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToGuid), @this),
-			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToHalf), @this),
-			ScalarType.Index => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIndex), @this),
-			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt16), @this),
-			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt32), @this),
-			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt64), @this),
-			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt128), @this),
-			ScalarType.IntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIntPtr), @this),
-			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSByte), @this),
-			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSingle), @this),
-			ScalarType.String => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToString), @this),
-			ScalarType.TimeOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeOnly), @this),
-			ScalarType.TimeSpan => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeSpan), @this),
-			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt16), @this),
-			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt32), @this),
-			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt64), @this),
-			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt128), @this),
-			ScalarType.UIntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUIntPtr), @this),
-			ScalarType.Uri => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUri), @this),
+			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBigInteger), new[] { @this }),
+			ScalarType.Boolean => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBoolean), new[] { @this }),
+			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToByte), new[] { @this }),
+			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToChar), new[] { @this }),
+			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), new[] { @this }),
+			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), new[] { @this }),
+			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), new[] { @this }),
+			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDecimal), new[] { @this }),
+			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDouble), new[] { @this }),
+			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), new[] { @this }),
+			ScalarType.Guid => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToGuid), new[] { @this }),
+			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToHalf), new[] { @this }),
+			ScalarType.Index => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIndex), new[] { @this }),
+			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt16), new[] { @this }),
+			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt32), new[] { @this }),
+			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt64), new[] { @this }),
+			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt128), new[] { @this }),
+			ScalarType.IntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIntPtr), new[] { @this }),
+			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSByte), new[] { @this }),
+			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSingle), new[] { @this }),
+			ScalarType.String => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToString), new[] { @this }),
+			ScalarType.TimeOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeOnly), new[] { @this }),
+			ScalarType.TimeSpan => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeSpan), new[] { @this }),
+			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt16), new[] { @this }),
+			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt32), new[] { @this }),
+			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt64), new[] { @this }),
+			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt128), new[] { @this }),
+			ScalarType.UIntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUIntPtr), new[] { @this }),
+			ScalarType.Uri => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUri), new[] { @this }),
 			_ => @this.Cast(targetType)
 		};
 
@@ -323,7 +322,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Invoke(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static InvocationExpression Invoke(this LambdaExpression @this, params Expression[]? parameters)
+	public static InvocationExpression Invoke(this LambdaExpression @this, Expression[]? parameters)
 		=> Expression.Invoke(@this, parameters);
 
 	/// <inheritdoc cref="Expression.TypeIs(Expression, Type)"/>
@@ -379,7 +378,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Lambda(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static LambdaExpression Lambda(this Expression @this, params ParameterExpression[]? parameters)
+	public static LambdaExpression Lambda(this Expression @this, ParameterExpression[]? parameters = null)
 		=> Expression.Lambda(@this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda{TDelegate}(Expression, ParameterExpression[])"/>
@@ -387,7 +386,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Lambda&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Expression<T> Lambda<T>(this Expression @this, params ParameterExpression[]? parameters)
+	public static Expression<T> Lambda<T>(this Expression @this, ParameterExpression[]? parameters = null)
 		=> Expression.Lambda<T>(@this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
@@ -403,12 +402,12 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetActionType(<paramref name="parameters"/>.Select(parameter => parameter.Type).ToArray(),
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	public static LambdaExpression LambdaAction(this Expression @this, params ParameterExpression[] parameters)
-		=> Expression.Lambda(Expression.GetActionType(parameters.Select(parameter => parameter.Type).ToArray()), @this, parameters);
+	public static LambdaExpression LambdaAction(this Expression @this, ParameterExpression[]? parameters = null)
+		=> Expression.Lambda(Expression.GetActionType(parameters?.Select(parameter => parameter.Type).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray(),
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType([..<paramref name="parameters"/>.Select(parameter => parameter.Type), <see langword="typeof"/>(<typeparamref name="T"/>)]),
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
@@ -416,15 +415,15 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<see langword="typeof"/>(<typeparamref name="T"/>)).ToArray(),
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType([..<paramref name="parameters"/>.Select(parameter => parameter.Type), <see langword="typeof"/>(<typeparamref name="T"/>)]),
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	public static LambdaExpression LambdaFunc<T>(this Expression @this, params ParameterExpression[]? parameters)
+	public static LambdaExpression LambdaFunc<T>(this Expression @this, ParameterExpression[]? parameters = null)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(typeof(T)).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<paramref name="returnType"/>).ToArray(),
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType([..<paramref name="parameters"/>.Select(parameter => parameter.Type), <paramref name="returnType"/>]),
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
@@ -432,10 +431,10 @@ public static class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType(<paramref name="parameters"/>.Select(parameter => parameter.Type).Append(<paramref name="returnType"/>).ToArray(),
+	/// <c>=&gt; <see cref="Expression"/>.Lambda(<see cref="Expression"/>.GetFuncType([..<paramref name="parameters"/>.Select(parameter => parameter.Type), <paramref name="returnType"/>]),
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
-	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, params ParameterExpression[]? parameters)
+	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, ParameterExpression[]? parameters = null)
 		=> Expression.Lambda(Expression.GetFuncType(parameters?.Select(parameter => parameter.Type).Append(returnType).ToArray()), @this, parameters);
 
 	/// <inheritdoc cref="Expression.PropertyOrField(Expression, string)"/>
@@ -459,7 +458,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.MemberInit(@<paramref name="this"/>, <paramref name="bindings"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MemberInitExpression MemberInit(this NewExpression @this, params MemberBinding[] bindings)
+	public static MemberInitExpression MemberInit(this NewExpression @this, MemberBinding[] bindings)
 		=> Expression.MemberInit(@this, bindings);
 
 	/// <exception cref="UnreachableException" />

@@ -6,7 +6,7 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>7.4.1</Version>
+    <Version>7.5.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
@@ -38,14 +38,7 @@ TypeCache.Reflection - High performance System.Reflection alternative.
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\TypeCash.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,6 +53,22 @@ TypeCache.Reflection - High performance System.Reflection alternative.
     <Using Include="System.Runtime.CompilerServices.MethodImplOptions">
       <Static>True</Static>
     </Using>
+    <Using Include="System.Threading.CancellationToken">
+      <Alias>CancellationToken</Alias>
+    </Using>
+    <Using Include="System.Threading.Tasks.Task">
+      <Alias>Task</Alias>
+    </Using>
+    <Using Include="System.Threading.Tasks.ValueTask">
+      <Alias>ValueTask</Alias>
+    </Using>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\TypeCash.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

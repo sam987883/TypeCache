@@ -10,15 +10,15 @@ public enum ScalarType
 	/// </summary>
 	BigInteger,
 	/// <summary>
-	/// <c><see cref="System.Boolean"/></c>
+	/// <c><see cref="bool"/></c>
 	/// </summary>
 	Boolean,
 	/// <summary>
-	/// <c><see cref="System.Byte"/></c>
+	/// <c><see cref="byte"/></c>
 	/// </summary>
 	Byte,
 	/// <summary>
-	/// <c><see cref="System.Char"/></c>
+	/// <c><see cref="char"/></c>
 	/// </summary>
 	Char,
 	/// <summary>
@@ -34,15 +34,11 @@ public enum ScalarType
 	/// </summary>
 	DateTimeOffset,
 	/// <summary>
-	/// <c><see cref="System.DBNull"/></c>
-	/// </summary>
-	DBNull,
-	/// <summary>
-	/// <c><see cref="System.Decimal"/></c>
+	/// <c><see cref="decimal"/></c>
 	/// </summary>
 	Decimal,
 	/// <summary>
-	/// <c><see cref="System.Double"/></c>
+	/// <c><see cref="double"/></c>
 	/// </summary>
 	Double,
 	/// <summary>
@@ -66,31 +62,31 @@ public enum ScalarType
 	/// </summary>
 	Int128,
 	/// <summary>
-	/// <c><see cref="System.Int16"/></c>
+	/// <c><see cref="short"/></c>
 	/// </summary>
 	Int16,
 	/// <summary>
-	/// <c><see cref="System.Int32"/></c>
+	/// <c><see cref="int"/></c>
 	/// </summary>
 	Int32,
 	/// <summary>
-	/// <c><see cref="System.Int64"/></c>
+	/// <c><see cref="long"/></c>
 	/// </summary>
 	Int64,
 	/// <summary>
-	/// <c><see cref="System.IntPtr"/></c>
+	/// <c><see cref="nint"/></c>
 	/// </summary>
 	IntPtr,
 	/// <summary>
-	/// <c><see cref="System.SByte"/></c>
+	/// <c><see cref="sbyte"/></c>
 	/// </summary>
 	SByte,
 	/// <summary>
-	/// <c><see cref="System.Single"/></c>
+	/// <c><see cref="float"/></c>
 	/// </summary>
 	Single,
 	/// <summary>
-	/// <c><see cref="System.String"/></c>
+	/// <c><see cref="string"/></c>
 	/// </summary>
 	String,
 	/// <summary>
@@ -106,19 +102,19 @@ public enum ScalarType
 	/// </summary>
 	UInt128,
 	/// <summary>
-	/// <c><see cref="System.UInt16"/></c>
+	/// <c><see cref="ushort"/></c>
 	/// </summary>
 	UInt16,
 	/// <summary>
-	/// <c><see cref="System.UInt32"/></c>
+	/// <c><see cref="uint"/></c>
 	/// </summary>
 	UInt32,
 	/// <summary>
-	/// <c><see cref="System.UInt64"/></c>
+	/// <c><see cref="ulong"/></c>
 	/// </summary>
 	UInt64,
 	/// <summary>
-	/// <c><see cref="System.UIntPtr"/></c>
+	/// <c><see cref="nuint"/></c>
 	/// </summary>
 	UIntPtr,
 	/// <summary>

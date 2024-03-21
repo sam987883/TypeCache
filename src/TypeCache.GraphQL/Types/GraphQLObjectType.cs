@@ -1,18 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
-using static System.FormattableString;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Types;
@@ -49,14 +43,17 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 	/// Adds a field that is based on the result of the <paramref name="methodInfo"/>.<br/>
 	/// The name of the field is the name or <see cref="GraphQLNameAttribute"/> of the <paramref name="methodInfo"/>.
 	/// </summary>
+	/// <remarks>The <paramref name="methodInfo"/> must be a static method.</remarks>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
 	public FieldType AddField(MethodInfo methodInfo)
 	{
 		var type = methodInfo.ReturnType;
-		if (type.IsGenericType && type.IsAny(typeof(Task<>), typeof(ValueTask<>)))
+		if (type.IsGenericType && type.IsAny(new[] { typeof(Task<>), typeof(ValueTask<>) }))
 			type = type.GenericTypeArguments[0];
 
 		var resolverType = typeof(ItemLoaderFieldResolver<>).MakeGenericType(type);
-		var resolver = (IFieldResolver)resolverType.Create(methodInfo)!;
+		var resolver = (IFieldResolver)resolverType.Create(new object[] { methodInfo })!;
 		return this.AddField(methodInfo, resolver);
 	}
 

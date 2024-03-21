@@ -140,7 +140,7 @@ public enum ObjectType
 	/// </summary>
 	ValueTuple,
 	/// <summary>
-	/// Is: <c><see cref="System.Void"/></c>
+	/// Is: <c><see cref="void"/></c>
 	/// </summary>
 	Void,
 	/// <summary>

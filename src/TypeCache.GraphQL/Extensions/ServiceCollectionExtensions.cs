@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using GraphQL;
@@ -19,20 +18,19 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// <list type="table">
 	/// <listheader>Registers the following:</listheader>
+	/// <item><term>Singleton</term> <description><c>JsonConverter&lt;<see cref="ExecutionError"/>&gt;</c></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="GraphQLBooleanType"/></c></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="GraphQLScalarType{T}"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDataLoaderContextAccessor"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecuter"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecutionListener"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IGraphQLSerializer"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLBooleanType"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="GraphQLEnumType{T}"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="GraphQLHashIdType"/></c></description></item>
-	/// <item><term>Transient</term> <description><c><see cref="GraphQLInputType{T}"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLNumberType{T}"/></c></description></item>
-	/// <item><term>Transient</term> <description><c><see cref="GraphQLObjectType{T}"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="GraphQLStringType"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLStringType{T}"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="GraphQLUriType"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c>JsonConverter&lt;<see cref="ExecutionError"/>&gt;</c></description></item>
+	/// <item><term>Transient</term> <description><c><see cref="GraphQLInputType{T}"/></c></description></item>
+	/// <item><term>Transient</term> <description><c><see cref="GraphQLObjectType{T}"/></c></description></item>
 	/// </list>
 	/// </summary>
 	/// <remarks>
@@ -52,14 +50,13 @@ public static class ServiceCollectionExtensions
 			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
 			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
 			.AddSingleton<GraphQLBooleanType>()
+			.AddSingleton(typeof(GraphQLScalarType<>))
 			.AddSingleton(typeof(GraphQLEnumType<>))
 			.AddSingleton<GraphQLHashIdType>()
-			.AddTransient(typeof(GraphQLInputType<>))
-			.AddSingleton(typeof(GraphQLNumberType<>))
-			.AddTransient(typeof(GraphQLObjectType<>))
 			.AddSingleton<GraphQLStringType>()
-			.AddSingleton(typeof(GraphQLStringType<>))
-			.AddSingleton<GraphQLUriType>();
+			.AddSingleton<GraphQLUriType>()
+			.AddTransient(typeof(GraphQLInputType<>))
+			.AddTransient(typeof(GraphQLObjectType<>));
 	}
 
 	/// <summary>

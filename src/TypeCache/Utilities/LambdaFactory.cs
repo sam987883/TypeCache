@@ -2,7 +2,6 @@
 
 using System.Linq.Expressions;
 using TypeCache.Extensions;
-using static System.FormattableString;
 
 namespace TypeCache.Utilities;
 

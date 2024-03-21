@@ -3,7 +3,6 @@
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
 using TypeCache.Collections;
 using static System.Globalization.CultureInfo;
 
@@ -123,7 +122,7 @@ public static class ReadOnlySpanExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Join((<see cref="IEnumerable{T}"/>)<paramref name="values"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Join(this scoped ReadOnlySpan<char> @this, params string[] values)
+	public static string Join(this scoped ReadOnlySpan<char> @this, string[] values)
 		=> @this.Join((IEnumerable<string>)values);
 
 	/// <remarks>

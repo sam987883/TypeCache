@@ -1,9 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
@@ -13,7 +10,6 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.Mediation;
-using static System.FormattableString;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.GraphQL.Resolvers;
@@ -26,11 +22,11 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"DELETED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgumentAsDataTable("data", objectSchema);
@@ -42,9 +38,9 @@ public sealed class SqlApiDeleteFieldResolver : FieldResolver
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
-			result = (await mediator.MapAsync(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
+			result = (await mediator.Map(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -66,11 +62,11 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
-			.Where(column => selections.Any(_ => _.Left(Invariant($"output.{column.Name}"))))
+			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
 			.Select(column => objectSchema.DataSource.Type switch
 			{
-				PostgreSql => objectSchema.DataSource.EscapeIdentifier(column.Name),
-				_ or SqlServer => Invariant($"DELETED.{objectSchema.DataSource.EscapeIdentifier(column.Name)}")
+				PostgreSql => column.Name.EscapeIdentifier(objectSchema.DataSource.Type),
+				_ or SqlServer => Invariant($"DELETED.{column.Name.EscapeIdentifier(objectSchema.DataSource.Type)}")
 			})
 			.ToArray();
 		var data = context.GetArgument<T[]>("data");
@@ -82,9 +78,9 @@ public sealed class SqlApiDeleteFieldResolver<T> : FieldResolver
 
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
-			result = await mediator.MapAsync(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
+			result = await mediator.Map(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
 		else
-			await mediator.ExecuteAsync(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
 
 		return new OutputResponse<T>()
 		{

@@ -1,43 +1,44 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Globalization;
+using GraphQL.Types;
 using GraphQLParser.AST;
-using TypeCache.Extensions;
-using TypeCache.Utilities;
 
 namespace TypeCache.GraphQL.Types;
 
-public sealed class GraphQLStringType : GraphQLScalarType<GraphQLStringValue>
+public sealed class GraphQLStringType : ScalarGraphType
 {
-	public GraphQLStringType() : base(
-		nameof(String),
-		value => true,
-		value => value.Value.Span.ToString(),
-		value => value?.ToString())
+	public GraphQLStringType()
 	{
+		this.Name = "System_String";
+		this.Description = "System.String";
 	}
-}
 
-public sealed class GraphQLStringType<T> : GraphQLScalarType<GraphQLStringValue>
-	where T : ISpanParsable<T>
-{
-	public GraphQLStringType() : base(
-		typeof(T).Name,
-		value => T.TryParse(value.Value.Span, CultureInfo.InvariantCulture, out _),
-		value => T.Parse(value.Value.Span, CultureInfo.InvariantCulture),
-		value => typeof(T).GetScalarType() switch
+	public override bool CanParseLiteral(GraphQLValue value)
+		=> value switch
 		{
-			ScalarType.Char => ValueConverter.ConvertToChar(value),
-			ScalarType.DateOnly => ValueConverter.ConvertToDateOnly(value),
-			ScalarType.DateTime => ValueConverter.ConvertToDateTime(value),
-			ScalarType.DateTimeOffset => ValueConverter.ConvertToDateTimeOffset(value),
-			ScalarType.Guid => ValueConverter.ConvertToGuid(value),
-			ScalarType.TimeOnly => ValueConverter.ConvertToTimeOnly(value),
-			ScalarType.TimeSpan => ValueConverter.ConvertToTimeSpan(value),
-			ScalarType.Uri => ValueConverter.ConvertToUri(value),
-			_ => null
-		})
-	{
-	}
+			GraphQLNullValue => true,
+			IHasValueNode node => true,
+			_ => false
+		};
+
+	public override bool CanParseValue(object? value)
+		=> true;
+
+	public override object? ParseLiteral(GraphQLValue value)
+		=> value switch
+		{
+			GraphQLNullValue => null,
+			IHasValueNode node => new string(node.Value.Span),
+			_ => this.ThrowLiteralConversionError(value)
+		};
+
+	public override object? ParseValue(object? value)
+		=> value switch
+		{
+			null or string => value,
+			_ => value.ToString()
+		};
+
+	public override GraphQLValue ToAST(object? value)
+		=> value?.ToString() is not null ? new GraphQLStringValue(value.ToString()!) : new GraphQLNullValue();
 }

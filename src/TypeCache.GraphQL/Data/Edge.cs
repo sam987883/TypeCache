@@ -2,10 +2,9 @@
 
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Data;
 
@@ -26,7 +25,7 @@ public readonly record struct Edge<T>(
 		graphType.AddField(new()
 		{
 			Name = nameof(Edge<T>.Cursor),
-			Type = typeof(GraphQLNumberType<int>),
+			Type = ScalarType.Int32.ToGraphType(),
 			Resolver = new FuncFieldResolver<Edge<T>, int>(context => context.Source.Cursor)
 		});
 		graphType.AddField(new()

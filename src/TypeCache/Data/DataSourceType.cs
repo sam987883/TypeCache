@@ -4,6 +4,9 @@ namespace TypeCache.Data;
 
 public enum DataSourceType
 {
+	Unknown = 0,
 	SqlServer,
-	PostgreSql
+	Oracle,
+	PostgreSql,
+	MySql
 }

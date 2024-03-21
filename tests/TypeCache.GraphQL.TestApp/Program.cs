@@ -8,17 +8,16 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
-using TypeCache.Utilities;
 using static System.Math;
 
 const string DATASOURCE = "Default";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
-	.AddMediation(builder => builder.AddSqlCommandRules())
+	.AddMediation()
+	.AddSqlCommandRules()
 	.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2 * E))
-	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, DataSourceType.SqlServer)
-	.AddDataSourceAccessor()
+	.AddDataSource(DATASOURCE, SqlClientFactory.Instance, builder.Configuration.GetConnectionString(DATASOURCE)!, new[] { "AdventureWorks2019" })
 	.AddGraphQL()
 	.AddGraphQLTypeExtensions<Person>(person =>
 	{
@@ -31,8 +30,8 @@ app
 	.UseRouting()
 	.UseGraphQLSchema("/graphql/custom", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSources = provider.GetRequiredService<IEnumerable<IDataSource>>();
+		var dataSource = dataSources.First(_ => _.Name.EqualsIgnoreCase(DATASOURCE));
 
 		schema.AddVersion("1.0");
 		schema.AddSqlApiEndpoints<Person>(dataSource, "Person.Person");
@@ -41,16 +40,16 @@ app
 	})
 	.UseGraphQLSchema("/graphql/data", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSources = provider.GetRequiredService<IEnumerable<IDataSource>>();
+		var dataSource = dataSources.First(_ => _.Name.EqualsIgnoreCase(DATASOURCE));
 
 		schema.AddVersion("1.0");
 		schema.AddDatabaseEndpoints(dataSource, SqlApiAction.CRUD, "AdventureWorks2019", "Person");
 	})
 	.UseGraphQLSchema("/graphql/schema", (schema, provider) =>
 	{
-		var dataSourceAccessor = provider.GetRequiredService<IAccessor<IDataSource>>();
-		var dataSource = dataSourceAccessor[DATASOURCE]!;
+		var dataSources = provider.GetRequiredService<IEnumerable<IDataSource>>();
+		var dataSource = dataSources.First(_ => _.Name.EqualsIgnoreCase(DATASOURCE));
 
 		schema.AddVersion("1.0");
 		schema.AddDatabaseSchemaQueries(dataSource);

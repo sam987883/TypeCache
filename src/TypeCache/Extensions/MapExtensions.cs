@@ -104,7 +104,7 @@ public static partial class MapExtensions
 				var value = propertyInfo.GetPropertyValue(@this);
 				foreach (var attribute in mapAttributes)
 				{
-					var targetPropertyInfo = properties.FirstOrDefault(propertyInfo => propertyInfo.Name.Is(attribute.Property));
+					var targetPropertyInfo = properties.FirstOrDefault(propertyInfo => propertyInfo.Name.EqualsIgnoreCase(attribute.Property));
 					if (targetPropertyInfo?.CanWrite is true)
 						targetPropertyInfo.SetPropertyValue(target, value);
 				}
@@ -197,8 +197,8 @@ public static partial class MapExtensions
 				if (value is null && !targetPropertyInfo.PropertyType.IsNullable())
 					continue;
 
-				//if (value is not null && !value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
-				//	continue;
+				if (value is not null && !value.GetType().IsAssignableTo(targetPropertyInfo.PropertyType))
+					continue;
 
 				targetPropertyInfo.SetPropertyValue(target, value);
 			}

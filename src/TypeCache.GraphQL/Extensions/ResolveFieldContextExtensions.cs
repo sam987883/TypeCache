@@ -1,18 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
-using static System.FormattableString;
-using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -41,16 +34,12 @@ public static class ResolveFieldContextExtensions
 		return table;
 	}
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetArguments(<see langword="typeof"/>(<typeparamref name="TSource"/>), <paramref name="methodInfo"/>);</c>
-	/// </summary>
-	/// <typeparam name="TSource">Source object type.</typeparam>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IEnumerable<object?> GetArguments<TSource>(this IResolveFieldContext @this, MethodInfo methodInfo)
-		=> @this.GetArguments(typeof(TSource), methodInfo);
-
-	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, Type? sourceType, MethodInfo methodInfo)
+	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, MethodInfo methodInfo)
 	{
+		var sourceType = @this.Source?.GetType();
+		if (sourceType == typeof(object))
+			sourceType = null;
+
 		var parameterInfos = methodInfo.GetParameters()
 			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
 			.OrderBy(parameterInfo => parameterInfo.Position);
@@ -62,7 +51,7 @@ public static class ResolveFieldContextExtensions
 			{
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when parameterInfo.ParameterType.Is(sourceType!) && !parameterInfo.ParameterType.Is<object>() => @this.Source,
+				_ when sourceType is not null && parameterInfo.ParameterType.Is(sourceType) => @this.Source,
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
 					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
 				_ => argument

@@ -1,17 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
 using TypeCache.Mediation;
-using TypeCache.Utilities;
-using static System.FormattableString;
 
 namespace TypeCache.Web.Filters;
 
-public sealed class SqlApiEndpointFilter : IEndpointFilter
+public sealed class SqlApiEndpointFilter
+	: IEndpointFilter
 {
 	private const string DATASOURCE = "dataSource";
 	private const string DATABASE = "database";
@@ -20,12 +17,12 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 	private const string VIEW = "view";
 	private const string PROCEDURE = "procedure";
 
-	private readonly IAccessor<IDataSource> _DataSourceAccessor;
+	private readonly IServiceProvider _ServiceProvider;
 	private readonly IMediator _Mediator;
 
-	public SqlApiEndpointFilter(IAccessor<IDataSource> dataSourceAccessor, IMediator mediator)
+	public SqlApiEndpointFilter(IServiceProvider serviceProvider, IMediator mediator)
 	{
-		this._DataSourceAccessor = dataSourceAccessor;
+		this._ServiceProvider = serviceProvider;
 		this._Mediator = mediator;
 	}
 
@@ -33,14 +30,17 @@ public sealed class SqlApiEndpointFilter : IEndpointFilter
 	{
 		var routeValues = context.HttpContext.Request.RouteValues;
 		var dataSourceName = (string)routeValues[DATASOURCE]!;
-		var dataSource = this._DataSourceAccessor[dataSourceName];
-		if (dataSource is null)
+
+		await using var serviceScope = this._ServiceProvider.CreateAsyncScope();
+		var dataSourceMap = serviceScope.ServiceProvider.GetService<IDictionary<string, IDataSource>>();
+		IDataSource? dataSource = null;
+		if (!dataSourceMap?.TryGetValue(dataSourceName, out dataSource) is not true)
 			return Results.NotFound(Invariant($"{nameof(IDataSource)} [{dataSourceName}] was not found."));
 
 		context.HttpContext.Items.Add(nameof(IDataSource), dataSource);
 
 		var database = (string)routeValues[DATABASE]!;
-		if (!dataSource.Databases.Contains(database, StringComparer.OrdinalIgnoreCase))
+		if (!dataSource!.Databases.Contains(database, StringComparer.OrdinalIgnoreCase))
 			return Results.NotFound(Invariant($"Database {database} was not found in Data Source [{dataSourceName}]."));
 
 		ObjectSchema? objectSchema = null;

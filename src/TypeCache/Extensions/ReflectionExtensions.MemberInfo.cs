@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Reflection;
-using TypeCache.Attributes;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	/// <remarks>
 	/// <c>@<paramref name="this"/>.GetCustomAttribute&lt;<typeparamref name="T"/>&gt;(<paramref name="inherit"/>) <see langword="is not null"/>;</c>
@@ -24,9 +23,5 @@ partial class ReflectionExtensions
 
 	[DebuggerHidden]
 	public static string Name(this MemberInfo @this)
-		=> @this.Name.IndexOf(GENERIC_TICKMARK) switch
-		{
-			var index when index > -1 => @this.Name.Left(index),
-			_ => @this.Name
-		};
+		=> @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
 }

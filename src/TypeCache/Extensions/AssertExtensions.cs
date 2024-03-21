@@ -138,4 +138,12 @@ public static class AssertExtensions
 		if (!@this)
 			throw new ArgumentOutOfRangeException(argument, Invariant($"{caller}: {nameof(AssertTrue)}({argument})."));
 	}
+
+	/// <exception cref="ArgumentNullException"/>
+	[DoesNotReturn]
+	public static T? ThrowArgumentNullException<T>(
+		this T? @this,
+		[CallerArgumentExpression("this")] string? argument = null,
+		[CallerMemberName] string? caller = null)
+		=> throw new ArgumentNullException(Invariant($"{caller}: {argument}.{nameof(AssertNotNull)}<{typeof(T).Name}>()."));
 }

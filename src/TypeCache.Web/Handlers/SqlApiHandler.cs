@@ -1,17 +1,15 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
-using System.Linq;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TypeCache.Data;
 using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.Mediation;
-using static System.FormattableString;
 using static System.Net.Mime.MediaTypeNames;
+using static System.StringSplitOptions;
 using static System.Text.Encoding;
 
 namespace TypeCache.Web.Handlers;
@@ -47,7 +45,7 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlDataSetRequest { Command = sqlCommand };
-		var result = await mediator.MapAsync(request, httpContext.RequestAborted);
+		var response = await mediator.Map(request, httpContext.RequestAborted);
 
 		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
 			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
@@ -56,7 +54,7 @@ internal static class SqlApiHandler
 				httpContext.Items[parameter.Name] = value;
 		}
 
-		return Results.Ok(result);
+		return Results.Ok(response);
 	}
 
 	public static async Task<IResult> DeleteTable(
@@ -69,26 +67,25 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateDeleteSQL(where, output);
+		var sql = objectSchema.CreateDeleteSQL(where, new[] { output });
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> DeleteTableBatch(
@@ -105,19 +102,18 @@ internal static class SqlApiHandler
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static async Task<IResult> InsertTable(
@@ -131,7 +127,7 @@ internal static class SqlApiHandler
 		, [FromBody] SelectQuery selectQuery)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, new[] { output });
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -141,13 +137,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -162,23 +158,22 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(data, output);
+		var sql = objectSchema.CreateInsertSQL(data, new[] { output });
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
-		JsonArray? result = null;
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			result = await mediator.MapAsync(request, httpContext.RequestAborted);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
+			return Results.Ok();
 		}
-
-		return Results.Ok(result);
 	}
 
 	public static IResult GetDeleteSQL(
@@ -191,7 +186,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateDeleteSQL(where, output), Text.Plain, UTF8);
+		return Results.Text(objectSchema.CreateDeleteSQL(where, new[] { output }), Text.Plain, UTF8);
 	}
 
 	public static IResult GetDeleteBatchSQL(
@@ -204,7 +199,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateDeleteSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateDeleteSQL(data, output);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetInsertSQL(
@@ -215,18 +211,18 @@ internal static class SqlApiHandler
 		, [FromRoute] string table
 		, [FromQuery] string columns
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
+		, [FromQuery] string? orderBy
 		, [FromQuery] string output
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 
@@ -236,7 +232,7 @@ internal static class SqlApiHandler
 		if (select.IsBlank())
 			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
 
-		if (columns.Split(',').Length != select.Split(',').Length)
+		if (columns.Split(',', RemoveEmptyEntries | TrimEntries).Length != select.Split(',', RemoveEmptyEntries | TrimEntries).Length)
 			return Results.BadRequest(Invariant($"[{nameof(columns)}] and [{nameof(select)}] query parameters must have same number of columns/expressions."));
 
 		var selectQuery = new SelectQuery
@@ -245,17 +241,19 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
-		return Results.Text(objectSchema.CreateInsertSQL(columns.Split(','), selectQuery, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, new[] { output });
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetInsertBatchSQL(
@@ -268,7 +266,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateInsertSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateInsertSQL(data, new[] { output });
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static async Task<IResult> GetSchema(
@@ -281,7 +280,8 @@ internal static class SqlApiHandler
 	{
 		var dataSource = httpContext.GetDataSource();
 		var table = await dataSource.GetDatabaseSchemaAsync(collection, database, httpContext.RequestAborted);
-		return Results.Ok(table?.Select(where, orderBy));
+		var response = table?.Select(where, orderBy);
+		return Results.Ok(response);
 	}
 
 	public static IResult GetSelectSQL(
@@ -291,17 +291,17 @@ internal static class SqlApiHandler
 		, [FromRoute] string schema
 		, [FromRoute] string table
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? orderBy
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select.IsBlank())
@@ -313,17 +313,19 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
-		return Results.Text(objectSchema.CreateSelectSQL(selectQuery), Text.Plain, UTF8);
+		var sql = objectSchema.CreateSelectSQL(selectQuery);
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetUpdateSQL(
@@ -337,7 +339,8 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateUpdateSQL(set.Split(','), where, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, new[] { output });
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static IResult GetUpdateBatchSQL(
@@ -350,7 +353,8 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateUpdateSQL(data, output), Text.Plain, UTF8);
+		var sql = objectSchema.CreateUpdateSQL(data, new[] { output });
+		return Results.Text(sql, Text.Plain, UTF8);
 	}
 
 	public static async Task<IResult> Select(
@@ -360,17 +364,17 @@ internal static class SqlApiHandler
 		, [FromRoute] string schema
 		, [FromRoute] string table
 		, [FromQuery] bool distinct
-		, [FromQuery] string distinctOn
+		, [FromQuery] string? distinctOn
 		, [FromQuery] uint fetch
-		, [FromQuery] string groupBy
+		, [FromQuery] string? groupBy
 		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string having
+		, [FromQuery] string? having
 		, [FromQuery] uint offset
-		, [FromQuery] string orderBy
-		, [FromQuery] string select
-		, [FromQuery] string tableHints
-		, [FromQuery] string top
-		, [FromQuery] string where)
+		, [FromQuery] string? orderBy
+		, [FromQuery] string? select
+		, [FromQuery] string? tableHints
+		, [FromQuery] string? top
+		, [FromQuery] string? where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select.IsBlank())
@@ -382,14 +386,15 @@ internal static class SqlApiHandler
 			DistinctOn = distinctOn,
 			Fetch = fetch,
 			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(','),
+			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
 			GroupByOption = groupByOption,
 			Having = having,
 			Offset = offset,
-			OrderBy = orderBy?.Split(','),
-			Select = select?.Split(','),
+			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
+			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
 			TableHints = tableHints,
-			Top = top,
+			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
+			TopPercent = top?.EndsWith('%') is true,
 			Where = where
 		};
 		var sql = objectSchema.CreateSelectSQL(selectQuery);
@@ -400,8 +405,8 @@ internal static class SqlApiHandler
 
 		var mediator = httpContext.GetMediator();
 		var request = new SqlJsonArrayRequest { Command = sqlCommand };
-		var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-		return Results.Ok(result);
+		var response = await mediator.Map(request, httpContext.RequestAborted);
+		return Results.Ok(response);
 	}
 
 	public static async Task<IResult> UpdateTable(
@@ -415,7 +420,7 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(','), where, output);
+		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, new[] { output });
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
@@ -425,13 +430,13 @@ internal static class SqlApiHandler
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -446,22 +451,21 @@ internal static class SqlApiHandler
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(data, output);
+		var sql = objectSchema.CreateUpdateSQL(data, new[] { output });
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
-			var result = await mediator.MapAsync(request, httpContext.RequestAborted);
-			return Results.Ok(result);
+			var response = await mediator.Map(request, httpContext.RequestAborted);
+			return Results.Ok(response);
 		}
 		else
 		{
 			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.ExecuteAsync(request, httpContext.RequestAborted);
+			await mediator.Execute(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
-
 	}
 }

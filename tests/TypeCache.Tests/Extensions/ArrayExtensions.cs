@@ -230,7 +230,7 @@ public class ArrayExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 		var intQueue = intArray.ToImmutableQueue();
-		var stringArray = new[] { "123", "abc", "def" };
+		string[] stringArray = new[] { "123", "abc", "def" };
 		var stringQueue = stringArray.ToImmutableQueue();
 
 		Assert.False(intQueue.IsEmpty);
@@ -245,7 +245,7 @@ public class ArrayExtensions
 	{
 		var intArray = new[] { 1, 2, 3, 4, 5, 6 };
 		var intStack = intArray.ToImmutableStack();
-		var stringArray = new[] { "123", "abc", "def" };
+		string[] stringArray = new[] { "123", "abc", "def" };
 		var stringStack = stringArray.ToImmutableStack();
 		intArray.Reverse();
 		stringArray.Reverse();

@@ -13,6 +13,6 @@ internal sealed class CustomValidationRule<REQUEST> : IValidationRule<REQUEST>
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task ValidateAsync(REQUEST request, CancellationToken token = default)
+	public Task Validate(REQUEST request, CancellationToken token = default)
 		=> this._ValidateAsync(request, token);
 }

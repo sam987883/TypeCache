@@ -1,11 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections.Generic;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.Types;
-using static System.FormattableString;
+using TypeCache.GraphQL.Extensions;
 
 namespace TypeCache.GraphQL.SqlApi;
 
@@ -30,36 +28,11 @@ public class OutputResponse<T>
 			Description = description
 		};
 
-		graphType.AddField(new()
-		{
-			Name = nameof(OutputResponse<T>.DataSource),
-			Type = typeof(GraphQLStringType),
-			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.DataSource)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(OutputResponse<T>.Output),
-			ResolvedType = new ListGraphType(new NonNullGraphType(dataGraphType)),
-			Resolver = new FuncFieldResolver<OutputResponse<T>, IList<T>?>(context => context.Source.Output)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(OutputResponse<T>.Sql),
-			Type = typeof(GraphQLStringType),
-			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Sql)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(OutputResponse<T>.Table),
-			Type = typeof(GraphQLStringType),
-			Resolver = new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Table)
-		});
-		graphType.AddField(new()
-		{
-			Name = nameof(OutputResponse<T>.TotalCount),
-			Type = typeof(LongGraphType),
-			Resolver = new FuncFieldResolver<OutputResponse<T>, long?>(context => context.Source.TotalCount)
-		});
+		graphType.AddField<string>(nameof(OutputResponse<T>.DataSource), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.DataSource));
+		graphType.AddField(nameof(OutputResponse<T>.Output), new ListGraphType(new NonNullGraphType(dataGraphType)), new FuncFieldResolver<OutputResponse<T>, IList<T>?>(context => context.Source.Output));
+		graphType.AddField<string>(nameof(OutputResponse<T>.Sql), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Sql));
+		graphType.AddField<string>(nameof(OutputResponse<T>.Table), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Table));
+		graphType.AddField<long>(nameof(OutputResponse<T>.TotalCount), new FuncFieldResolver<OutputResponse<T>, long?>(context => context.Source.TotalCount));
 
 		return graphType;
 	}

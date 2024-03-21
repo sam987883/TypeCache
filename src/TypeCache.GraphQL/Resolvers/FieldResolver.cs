@@ -1,8 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Resolvers;
 
@@ -16,9 +13,15 @@ public abstract class FieldResolver : IFieldResolver
 		{
 			return await this.ResolveAsync(context);
 		}
+		catch (ExecutionError error)
+		{
+			context.Errors.Add(error);
+			return null;
+		}
 		catch (AggregateException error)
 		{
-			var executionErrors = error.InnerExceptions.Select(exception => new ExecutionError(exception.Message, exception));
+			var executionErrors = error.InnerExceptions.Select(exception =>
+				exception as ExecutionError ?? new ExecutionError(exception.Message, exception));
 			context.Errors.AddRange(executionErrors);
 			return null;
 		}

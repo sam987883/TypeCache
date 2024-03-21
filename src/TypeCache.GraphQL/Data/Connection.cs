@@ -1,12 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Linq;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Types;
-using static System.FormattableString;
 
 namespace TypeCache.GraphQL.Data;
 
@@ -19,9 +18,9 @@ public class Connection<T>
 
 	public Connection(uint offset, T[] items)
 	{
-		offset += 1;
+		int o = (int)offset + 1;
 		this.Items = items;
-		this.Edges = items.Select((row, i) => new Edge<T>((int)offset + i, row)).ToArray();
+		this.Edges = items.Select((row, i) => new Edge<T>(o + i, row)).ToArray();
 	}
 
 	[GraphQLDescription("The total number of records available. Returns `null` if the total number is unknown.")]
@@ -67,7 +66,7 @@ public class Connection<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.TotalCount),
-			Type = typeof(GraphQLNumberType<int>),
+			Type = ScalarType.Int32.ToGraphType(),
 			Resolver = new FuncFieldResolver<Connection<T>, int?>(context => context.Source.TotalCount)
 		});
 

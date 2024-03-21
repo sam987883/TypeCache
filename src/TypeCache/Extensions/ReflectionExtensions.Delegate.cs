@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace TypeCache.Extensions;
 
-partial class ReflectionExtensions
+public partial class ReflectionExtensions
 {
 	[DebuggerHidden]
 	public static MethodInfo ToMethodInfo(this Delegate @this)

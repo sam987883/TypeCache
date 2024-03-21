@@ -1,8 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Runtime.CompilerServices;
-using TypeCache.Extensions;
-
 namespace TypeCache.Mediation;
 
 internal sealed class CustomRule<REQUEST> : IRule<REQUEST>
@@ -16,7 +13,7 @@ internal sealed class CustomRule<REQUEST> : IRule<REQUEST>
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task ExecuteAsync(REQUEST request, CancellationToken token = default)
+	public Task Execute(REQUEST request, CancellationToken token = default)
 		=> this._ExecuteAsync(request, token);
 }
 
@@ -31,6 +28,6 @@ internal sealed class CustomRule<REQUEST, RESPONSE> : IRule<REQUEST, RESPONSE>
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task<RESPONSE> MapAsync(REQUEST request, CancellationToken token = default)
+	public Task<RESPONSE> Map(REQUEST request, CancellationToken token = default)
 		=> this._MapAsync(request, token);
 }

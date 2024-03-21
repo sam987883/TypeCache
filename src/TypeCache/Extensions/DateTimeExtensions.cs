@@ -52,7 +52,7 @@ public static class DateTimeExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToDateTimeOffset(this DateTime @this)
-		=> new DateTimeOffset(@this);
+		=> new(@this);
 
 	/// <inheritdoc cref="DateTimeOffset.DateTimeOffset(DateTime, TimeSpan)"/>
 	/// <remarks>
@@ -60,7 +60,7 @@ public static class DateTimeExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToDateTimeOffset(this DateTime @this, TimeSpan offset)
-		=> new DateTimeOffset(@this, offset);
+		=> new(@this, offset);
 
 	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
 	/// <remarks>
@@ -78,8 +78,6 @@ public static class DateTimeExtensions
 	public static TimeOnly ToTimeOnly(this DateTimeOffset @this)
 		=> TimeOnly.FromDateTime(@this.DateTime);
 
-	/// <exception cref="ArgumentException"/>
-	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="UnreachableException"/>
 	public static DateTime ToTimeZone(this DateTime @this, DateTimeKind kind)
 		=> kind switch
@@ -91,7 +89,7 @@ public static class DateTimeExtensions
 			_ => throw new UnreachableException($"{nameof(ToTimeZone)}: {nameof(DateTimeKind)} value of {kind:D} is not supported.")
 		};
 
-	/// <exception cref="TimeZoneNotFoundException">if: <c>@<paramref name="this"/>.Kind = <see cref="DateTimeKind.Unspecified"/></c></exception>
+	/// <exception cref="TimeZoneNotFoundException"/>
 	public static DateTime ToTimeZone(this DateTime @this, TimeZoneInfo targetTimeZone)
 		=> @this.Kind switch
 		{
@@ -114,7 +112,7 @@ public static class DateTimeExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToTimeZone(this DateTimeOffset @this, string targetSystemTimeZoneId)
-		=> TimeZoneInfo.ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
+		=> ConvertTimeBySystemTimeZoneId(@this, targetSystemTimeZoneId);
 
 	/// <inheritdoc cref="TimeZoneInfo.ConvertTimeToUtc(DateTime)"/>
 	/// <remarks>

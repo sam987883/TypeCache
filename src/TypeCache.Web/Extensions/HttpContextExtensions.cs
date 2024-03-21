@@ -1,8 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using static System.Net.Mime.MediaTypeNames;
 
