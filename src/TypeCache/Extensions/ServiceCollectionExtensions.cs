@@ -217,7 +217,6 @@ public static class ServiceCollectionExtensions
 
 	/// <summary>
 	/// Registers Singleton: <c><see cref="IMediator"/></c><br/>
-	/// <c><paramref name="rulesBuilder"/></c> - manually register Rules, Validation Rules and After Rules.
 	/// </summary>
 	public static IServiceCollection AddMediation(this IServiceCollection @this)
 		=> @this.AddSingleton<IMediator, Mediator>();

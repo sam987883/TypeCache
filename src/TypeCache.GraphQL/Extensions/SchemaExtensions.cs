@@ -786,7 +786,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records based on a table's <c>Primary Key</c>.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -823,7 +823,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: call{Procedure}</term> Calls the stored procedure and returns its results.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -868,7 +868,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: delete{Table}Data</term> Deletes records passed in based on primary key value(s).</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -903,7 +903,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: Delete{Table}</term> Deletes records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -939,7 +939,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -975,7 +975,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: insert{Table}Data</term> Inserts a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1033,7 +1033,7 @@ public static class SchemaExtensions
 	/// <item><term>Query: select{Table}</term> Selects records based on a <c>WHERE</c> clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1088,7 +1088,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}Data</term> Updates a batch of records.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
@@ -1123,7 +1123,7 @@ public static class SchemaExtensions
 	/// <item><term>Mutation: update{Table}</term> Updates records based on a WHERE clause.</item>
 	/// </list>
 	/// <i>Requires call to:</i>
-	/// <code><see cref="RulesBuilderExtensions.AddSqlCommandRules(RulesBuilder)"/></code>
+	/// <code><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/></code>
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
