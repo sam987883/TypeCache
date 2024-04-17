@@ -36,7 +36,7 @@ public partial class ReflectionExtensions
 	/// <remarks>
 	/// <c>=&gt; <see cref="MethodBase"/>.GetMethodFromHandle(@<paramref name="this"/>, <paramref name="typeHandle"/>);</c>
 	/// </remarks>
-	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method using a generic parameter of its declared type.</param>
+	/// <param name="typeHandle"><see cref="RuntimeTypeHandle"/> is needed when <see cref="RuntimeMethodHandle"/> is a method or constructor using a generic parameter of its declared type.</param>
 	/// <exception cref="UnreachableException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodBase ToMethodBase(this RuntimeMethodHandle @this, RuntimeTypeHandle typeHandle)

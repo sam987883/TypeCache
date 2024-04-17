@@ -25,7 +25,7 @@ public abstract class CustomEquatable<T>(Func<T?, bool> equals)
 		if (fieldInfos.Length == 0)
 			return base.GetHashCode();
 
-		var values = fieldInfos.Select(fieldInfo => fieldInfo.GetFieldValue(this)).ToArray();
+		var values = fieldInfos.Select(fieldInfo => fieldInfo.GetValueEx(this)).ToArray();
 		var hashCode = new HashCode();
 		values.ForEach(hashCode.Add);
 		return hashCode.ToHashCode();

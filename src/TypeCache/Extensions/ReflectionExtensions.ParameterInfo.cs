@@ -22,12 +22,12 @@ public partial class ReflectionExtensions
 	public static bool HasCustomAttribute(this ParameterInfo @this, Type attributeType, bool inherit = true)
 		=> @this.GetCustomAttribute(attributeType, inherit) is not null;
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.Name.Left(@<paramref name="this"/>.Name.IndexOf('`')) ?? <see cref="string.Empty"/>;</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Name(this ParameterInfo @this)
-		=> @this.Name?.Left(@this.Name.IndexOf(GENERIC_TICKMARK)) ?? string.Empty;
+		=> @this.Name!.IndexOf(GENERIC_TICKMARK) switch
+		{
+			var index when index > 0 => @this.Name.Left(index),
+			_ => @this.Name,
+		};
 
 	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
 	/// <remarks>

@@ -74,7 +74,7 @@ public static class StringExtensions
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsUpper());</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool AnyUppercase(this string @this)
+	public static bool AnyUpper(this string @this)
 		=> @this.Any(c => c.IsUpper());
 
 	/// <inheritdoc cref="char.IsWhiteSpace(char)"/>
@@ -122,8 +122,10 @@ public static class StringExtensions
 	public static byte[] FromBase64(this string @this)
 		=> Convert.FromBase64String(@this);
 
-	public static string FromBase64(this string @this, Encoding encoding)
+	/// <param name="encoding">Defaults to <see cref="Encoding.UTF8"/></param>
+	public static string FromBase64(this string @this, Encoding? encoding = null)
 	{
+		encoding ??= Encoding.UTF8;
 		Span<byte> span = stackalloc byte[@this.Length * sizeof(char)];
 		return Convert.TryFromBase64String(@this, span, out var count) ? encoding.GetString(span.Slice(0, count)) : @this;
 	}
@@ -135,14 +137,6 @@ public static class StringExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsBlank([NotNullWhen(false)] this string? @this)
 		=> string.IsNullOrWhiteSpace(@this);
-
-	/// <inheritdoc cref="string.IsNullOrEmpty(string?)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool IsNullOrEmpty([NotNullWhen(false)] this string? @this)
-		=> string.IsNullOrEmpty(@this);
 
 	/// <inheritdoc cref="string.IsNullOrWhiteSpace(string?)"/>
 	/// <remarks>
@@ -160,6 +154,14 @@ public static class StringExtensions
 	public static bool IsNotNullOrEmpty([NotNullWhen(true)] this string? @this)
 		=> !string.IsNullOrEmpty(@this);
 
+	/// <inheritdoc cref="string.IsNullOrEmpty(string?)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.IsNullOrEmpty(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool IsNullOrEmpty([NotNullWhen(false)] this string? @this)
+		=> string.IsNullOrEmpty(@this);
+
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.AsSpan().Join(<paramref name="values"/>);</c>
 	/// </remarks>
@@ -176,82 +178,25 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="string.Substring(int, int)"/>
 	/// <remarks>
-	/// <c>=&gt; <paramref name="length"/> &gt; -1 ? @<paramref name="this"/>.Substring(0, <paramref name="length"/>) : @<paramref name="this"/>;</c>
+	/// <c>=&gt; @<paramref name="this"/>.Substring(0, <paramref name="length"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Left(this string @this, int length)
-		=> length > -1 ? @this.Substring(0, length) : @this;
+		=> @this.Substring(0, length);
 
-	public static string Mask(this string @this, char mask = '*')
-	{
-		if (@this.IsBlank())
-			return string.Empty;
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Mask(this string @this, char mask = '*', string[]? terms = null)
+		=> @this.AsSpan().Mask(mask, terms);
 
-		Span<char> span = stackalloc char[@this.Length];
-		@this.AsSpan().CopyTo(span);
-		var i = -1;
-		while (++i < span.Length)
-			if (span[i].IsLetterOrDigit())
-				span[i] = mask;
-
-		return new string(span);
-	}
-
-	public static string MaskHide(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, string[]? hideTerms = null)
-	{
-		if (@this.IsBlank() || hideTerms?.Any() is not true)
-			return @this;
-
-		var count = 0;
-		Span<char> span = stackalloc char[@this.Length];
-		@this.AsSpan().CopyTo(span);
-		var i = -1;
-		while (++i < span.Length)
-		{
-			foreach (var term in hideTerms)
-			{
-				if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
-					count = term.Length;
-			}
-
-			if (count > 0)
-			{
-				if (span[i].IsLetterOrDigit())
-					span[i] = mask;
-				--count;
-			}
-		}
-
-		return new string(span);
-	}
-
-	public static string MaskShow(this string @this, char mask = '*', StringComparison comparison = StringComparison.OrdinalIgnoreCase, string[]? showTerms = null)
-	{
-		if (@this.IsBlank())
-			return @this;
-
-		showTerms ??= Array<string>.Empty;
-
-		var count = 0;
-		Span<char> span = stackalloc char[@this.Length];
-		@this.AsSpan().CopyTo(span);
-		var i = -1;
-		while (++i < span.Length)
-		{
-			foreach (var term in showTerms)
-			{
-				if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
-					count = term.Length;
-			}
-
-			if (count > 0)
-				--count;
-			else if (span[i].IsLetterOrDigit())
-				span[i] = mask;
-		}
-
-		return new string(span);
-	}
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string MaskIgnoreCase(this string @this, char mask = '*', string[]? terms = null)
+		=> @this.AsSpan().MaskIgnoreCase(mask, terms);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? @<paramref name="this"/> : <see langword="null"/>;</c>
@@ -273,6 +218,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="formatProvider">Defaults to <see cref="InvariantCulture"/></param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this string @this, IFormatProvider? formatProvider = null)
 		where T : IParsable<T>
@@ -282,6 +228,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.Parse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="formatProvider">Defaults to <see cref="InvariantCulture"/></param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T Parse<T>(this string @this, NumberStyles style, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
@@ -319,8 +266,10 @@ public static class StringExtensions
 	public static bool StartsWithIgnoreCase(this string @this, string text)
 		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
 
-	public static string ToBase64(this string @this, Encoding encoding, bool stripPadding = false)
+	/// <param name="encoding">Defaults to <see cref="Encoding.UTF8"/></param>
+	public static string ToBase64(this string @this, Encoding? encoding = null, bool stripPadding = false)
 	{
+		encoding ??= Encoding.UTF8;
 		var length = encoding.GetMaxByteCount(@this.Length) - 1;
 		Span<byte> bytes = stackalloc byte[length];
 		encoding.GetBytes(@this, bytes);
@@ -391,40 +340,32 @@ public static class StringExtensions
 		=> new(@this, offset, count);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>) : <see langword="null"/>;</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Uri? ToUri(this string? @this)
-		=> @this is not null ? new(@this) : null;
+		=> @this.IsNotBlank() ? new(@this) : null;
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>, <paramref name="kind"/>) : <see langword="null"/>;</c>
+	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>, <paramref name="kind"/>) : <see langword="null"/>;</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Uri? ToUri(this string? @this, UriKind kind)
-		=> @this is not null ? new(@this, kind) : null;
+		=> @this.IsNotBlank() ? new(@this, kind) : null;
 
 	public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> text.IsNotBlank() && @this?.EndsWith(text, comparison) is true ? @this.Substring(0, @this.Length - text.Length) : (@this ?? string.Empty);
+		=> text.IsNotNullOrEmpty() && @this.EndsWith(text, comparison) ? @this.Substring(0, @this.Length - text.Length) : @this;
 
 	public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> text.IsNotBlank() && @this?.StartsWith(text, comparison) is true ? @this.Substring(text.Length) : (@this ?? string.Empty);
-
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider, out TSelf)"/>
-	/// <remarks>
-	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, [MaybeNullWhen(false)] out T value)
-		where T : ISpanParsable<T>
-		=> T.TryParse(@this, InvariantCulture, out value);
+		=> text.IsNotNullOrEmpty() && @this.StartsWith(text, comparison) ? @this.Substring(text.Length) : @this;
 
 	/// <inheritdoc cref="IParsable{TSelf}.TryParse(string, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
+	/// <param name="formatProvider">Defaults to <see cref="InvariantCulture"/></param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
+	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, [MaybeNullWhen(false)] out T value, IFormatProvider? formatProvider = null)
 		where T : IParsable<T>
 		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
 
@@ -432,8 +373,9 @@ public static class StringExtensions
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/> ?? <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
+	/// <param name="formatProvider">Defaults to <see cref="InvariantCulture"/></param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
+	public static bool TryParse<T>([NotNullWhen(true)] this string? @this, NumberStyles style, [MaybeNullWhen(false)] out T value, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
 		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);
 

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using static System.Globalization.CultureInfo;
 using static System.TimeZoneInfo;
 
 namespace TypeCache.Extensions;
@@ -13,6 +14,41 @@ public static class DateTimeExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime As(this DateTime @this, DateTimeKind kind)
 		=> DateTime.SpecifyKind(@this, kind);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this DateOnly @this, DateOnly minimum, DateOnly maximum)
+		=> @this >= minimum && @this <= maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this DateTime @this, DateTime minimum, DateTime maximum)
+		=> @this >= minimum && @this <= maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this DateTimeOffset @this, DateTimeOffset minimum, DateTimeOffset maximum)
+		=> @this >= minimum && @this <= maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this TimeOnly @this, TimeOnly minimum, TimeOnly maximum)
+		=> @this >= minimum && @this <= maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this TimeSpan @this, TimeSpan minimum, TimeSpan maximum)
+		=> @this >= minimum && @this <= maximum;
 
 	/// <inheritdoc cref="TimeZoneInfo.ConvertTime(DateTime, TimeZoneInfo, TimeZoneInfo)"/>
 	/// <remarks>
@@ -29,6 +65,41 @@ public static class DateTimeExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTime ChangeTimeZone(this DateTime @this, string sourceSystemTimeZoneId, string targetSystemTimeZoneId)
 		=> ConvertTimeBySystemTimeZoneId(@this, sourceSystemTimeZoneId, targetSystemTimeZoneId);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this DateOnly @this, DateOnly minimum, DateOnly maximum)
+		=> @this > minimum && @this < maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this DateTime @this, DateTime minimum, DateTime maximum)
+		=> @this > minimum && @this < maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this DateTimeOffset @this, DateTimeOffset minimum, DateTimeOffset maximum)
+		=> @this > minimum && @this < maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this TimeOnly @this, TimeOnly minimum, TimeOnly maximum)
+		=> @this > minimum && @this < maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this TimeSpan @this, TimeSpan minimum, TimeSpan maximum)
+		=> @this > minimum && @this < maximum;
 
 	/// <inheritdoc cref="DateOnly.FromDateTime(DateTime)"/>
 	/// <remarks>
@@ -61,6 +132,41 @@ public static class DateTimeExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static DateTimeOffset ToDateTimeOffset(this DateTime @this, TimeSpan offset)
 		=> new(@this, offset);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("o", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
+		=> @this.ToString("o", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("s", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
+		=> @this.ToString("s", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("yyyy-MM-dd'T'HH:mm:ssK", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
+		=> @this.ToString("yyyy-MM-dd'T'HH:mm:ssK", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("HH:mm:ss", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
+		=> @this.ToString("HH:mm:ss", provider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this Guid @this, IFormatProvider? provider = null)
+		=> @this.ToString("D", provider ?? InvariantCulture);
 
 	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
 	/// <remarks>

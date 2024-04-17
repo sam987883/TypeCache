@@ -11,12 +11,6 @@ namespace TypeCache.Tests.Converters;
 
 public class JsonConverterTests
 {
-	class Test
-	{
-		public DateOnly TestDateOnly { get; set; }
-		public TimeOnly TestTimeOnly { get; set; }
-	}
-
 	[Fact]
 	public void BigIntegerJsonConverter()
 	{
@@ -65,9 +59,6 @@ public class JsonConverterTests
 
 		var jsonOptions = new JsonSerializerOptions();
 		jsonOptions.Converters.Add(new DataRowJsonConverter());
-
-		//var json = JsonSerializer.Serialize(dataTable.Rows);
-		//Assert.NotEqual("[]", json);
 
 		var json = JsonSerializer.Serialize(dataTable.Rows, jsonOptions);
 		Assert.Equal("[{\"Column1\":true,\"Column2\":\"AAAAAA\",\"Column3\":24,\"Column4\":99999.99},{\"Column1\":false,\"Column2\":\"BBBBBB\",\"Column3\":null,\"Column4\":0},{\"Column1\":null,\"Column2\":null,\"Column3\":-24,\"Column4\":-99999.99}]", json);

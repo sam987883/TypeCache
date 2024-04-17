@@ -39,6 +39,18 @@ public class EnumeratorExtensions
 	}
 
 	[Fact]
+	public void IfNext()
+	{
+		var enumerator = this.GetInts().GetEnumerator();
+		Assert.True(enumerator.IfNext(out object item));
+		Assert.True(enumerator.IfNext(out int value));
+
+		while (enumerator.MoveNext()) { }
+		Assert.False(enumerator.IfNext(out _));
+		Assert.False(enumerator.IfNext(out _));
+	}
+
+	[Fact]
 	public void Move()
 	{
 		var enumerator = this.GetInts().GetEnumerator();
@@ -59,18 +71,6 @@ public class EnumeratorExtensions
 			list.Add(enumerator.Current);
 
 		Assert.Equal(2, list.Count);
-	}
-
-	[Fact]
-	public void NextValue()
-	{
-		var enumerator = this.GetInts().GetEnumerator();
-		var list = new List<int>(7);
-
-		while (enumerator.IfNext(out var item))
-			list.Add(item);
-
-		Assert.Equal(7, list.Count);
 	}
 
 	[Fact]

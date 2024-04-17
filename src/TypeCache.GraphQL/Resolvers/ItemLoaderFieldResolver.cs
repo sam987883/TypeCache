@@ -43,8 +43,7 @@ public sealed class ItemLoaderFieldResolver<T> : FieldResolver
 	private Task<T> LoadData(IResolveFieldContext context)
 	{
 		var methodInfo = (MethodInfo)this._MethodHandle.ToMethodBase();
-		var arguments = context.GetArguments(methodInfo).ToArray();
-		var result = methodInfo.InvokeMethod(arguments);
+		var result = methodInfo.InvokeStaticFunc(context.GetArguments(methodInfo).ToArray());
 		return result switch
 		{
 			ValueTask<T> valueTask => valueTask.AsTask(),

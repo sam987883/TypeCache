@@ -62,6 +62,23 @@ public class DateTimeExtensions
 	}
 
 	[Fact]
+	public void ToISO8601()
+	{
+		Assert.Equal(DateOnly.MaxValue.ToString("yyyy-MM-dd"), DateOnly.MaxValue.ToISO8601());
+		Assert.Equal(DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), DateTime.Now.ToISO8601());
+		Assert.Equal(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss"), DateTime.UtcNow.ToISO8601());
+		Assert.Equal(DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ssK"), DateTimeOffset.Now.ToISO8601());
+		Assert.Equal(DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"), DateTimeOffset.UtcNow.ToISO8601());
+		Assert.Equal(TimeOnly.MaxValue.ToString("HH:mm:ss"), TimeOnly.MaxValue.ToISO8601());
+	}
+
+	[Fact]
+	public void ToText()
+	{
+		Assert.Equal(TimeSpan.MaxValue.ToString(), TimeSpan.MaxValue.ToText());
+	}
+
+	[Fact]
 	public void ToTimeOnly()
 	{
 		var now = DateTime.UtcNow;

@@ -31,6 +31,7 @@ public static class JsonExtensions
 		{
 			properties.Add(enumerator.Current.Name, enumerator.Current.Value);
 		}
+
 		return properties;
 	}
 
@@ -44,20 +45,21 @@ public static class JsonExtensions
 		{
 			properties.Add(enumerator.Current.Name, enumerator.Current.Value.GetValue());
 		}
+
 		return properties;
 	}
 
 	public static object? GetValue(this JsonElement @this)
 		=> @this.ValueKind switch
 		{
-			JsonValueKind.Undefined => throw new UnreachableException(Invariant($"{nameof(@this.ValueKind)} == {JsonValueKind.Undefined:F}")),
+			JsonValueKind.Undefined => throw new UnreachableException(Invariant($"{nameof(@this.ValueKind)} is {JsonValueKind.Undefined.Name()}")),
 			JsonValueKind.True => true,
 			JsonValueKind.False => false,
 			JsonValueKind.Number when @this.TryGetInt32(out var value) => value,
 			JsonValueKind.Number when @this.TryGetInt64(out var value) => value,
 			JsonValueKind.Number => @this.GetDecimal(),
-			JsonValueKind.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonValueKind.String when @this.TryGetDateTime(out var value) => value,
+			JsonValueKind.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonValueKind.String when @this.TryGetGuid(out var value) => value,
 			JsonValueKind.String => @this.GetString()!,
 			JsonValueKind.Array => @this.GetArrayValues(),
@@ -73,8 +75,8 @@ public static class JsonExtensions
 			JsonTokenType.Number when @this.TryGetInt32(out var value) => value,
 			JsonTokenType.Number when @this.TryGetInt64(out var value) => value,
 			JsonTokenType.Number => @this.GetDecimal(),
-			JsonTokenType.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonTokenType.String when @this.TryGetDateTime(out var value) => value,
+			JsonTokenType.String when @this.TryGetDateTimeOffset(out var value) => value,
 			JsonTokenType.String when @this.TryGetGuid(out var value) => value,
 			JsonTokenType.String => @this.GetString(),
 			_ => null
@@ -90,6 +92,7 @@ public static class JsonExtensions
 		while (@this.Read())
 			if (@this.TokenType == tokenType)
 				return true;
+
 		return false;
 	}
 

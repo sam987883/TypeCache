@@ -17,13 +17,13 @@ public class EnumExtensions
 	[Flags]
 	private enum TestEnum
 	{
-		TestValue1 = 1,
+		TestValue1 = 4,
 		[TestAttribute]
 		[TestAttribute]
 		[TestAttribute]
-		TestValue2 = 2,
-		TestValue3 = 4,
-		TestValue4 = 8,
+		TestValue2 = 8,
+		TestValue3 = 16,
+		TestValue4 = 32,
 	}
 
 	[Fact]
@@ -36,6 +36,15 @@ public class EnumExtensions
 	public void Hex()
 	{
 		Assert.Equal(TestEnum.TestValue2.ToString("X"), TestEnum.TestValue2.Hex());
+	}
+
+	[Fact]
+	public void IsDefined()
+	{
+		Assert.True(TestEnum.TestValue3.IsDefined());
+		Assert.False(((TestEnum)2).IsDefined());
+		Assert.True((TestEnum.TestValue1 | TestEnum.TestValue2 | TestEnum.TestValue3).IsDefined());
+		Assert.True((TestEnum.TestValue2 | (TestEnum)66).IsDefined());
 	}
 
 	[Fact]

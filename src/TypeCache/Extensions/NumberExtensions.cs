@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Globalization;
 using System.Numerics;
 using TypeCache.Extensions;
-using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
 
@@ -44,6 +44,7 @@ public static class NumberExtensions
 		where T : IFloatingPoint<T>
 		=> T.Ceiling(@this);
 
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static ulong Factorial(this int @this)
 	{
 		(@this >= 0).AssertTrue();
@@ -81,8 +82,8 @@ public static class NumberExtensions
 		(@this.Item1.IsFromEnd == @this.Item2.IsFromEnd).AssertTrue();
 
 		return @this.Item1.IsFromEnd
-			? (@this.Item1.Value, @this.Item2.Value).Min()
-			: (@this.Item1.Value, @this.Item2.Value).Max();
+			? Index.FromEnd((@this.Item1.Value, @this.Item2.Value).Min())
+			: Index.FromStart((@this.Item1.Value, @this.Item2.Value).Max());
 	}
 
 	/// <inheritdoc cref="INumber{TSelf}.Min(TSelf, TSelf)"/>
@@ -100,8 +101,8 @@ public static class NumberExtensions
 		(@this.Item1.IsFromEnd == @this.Item2.IsFromEnd).AssertTrue();
 
 		return @this.Item1.IsFromEnd
-			? (@this.Item1.Value, @this.Item2.Value).Max()
-			: (@this.Item1.Value, @this.Item2.Value).Min();
+			? Index.FromEnd((@this.Item1.Value, @this.Item2.Value).Max())
+			: Index.FromStart((@this.Item1.Value, @this.Item2.Value).Min());
 	}
 
 	public static IEnumerable<T> Repeat<T>(this T @this, int count)
@@ -165,46 +166,11 @@ public static class NumberExtensions
 		=> decimal.GetBits(@this).SelectMany(_ => _.GetBytes()).ToArray();
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
-		=> @this.ToString("O", provider ?? InvariantCulture);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
-		=> @this.ToString("O", provider ?? InvariantCulture);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
-		=> @this.ToString("O", provider ?? InvariantCulture);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("O", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
-		=> @this.ToString("O", provider ?? InvariantCulture);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this Guid @this, IFormatProvider? provider = null)
-		=> @this.ToString("D", provider ?? InvariantCulture);
-
-	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
-		=> @this.ToString("c", provider ?? InvariantCulture);
+		=> @this.ToString("c", provider ?? CultureInfo.InvariantCulture);
 
 	/// <inheritdoc cref="IFloatingPoint{TSelf}.Truncate(TSelf)"/>
 	/// <remarks>

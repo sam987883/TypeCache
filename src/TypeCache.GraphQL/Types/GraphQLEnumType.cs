@@ -46,7 +46,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		=> value switch
 		{
 			null => true,
-			T token => Enum<T>.IsValid(token),
+			T token => Enum<T>.IsDefined(token),
 			string text => Enum.TryParse<T>(text, true, out _),
 			_ when value.GetType() == typeof(T).GetEnumUnderlyingType() => true,
 			_ => false
@@ -57,7 +57,7 @@ public sealed class GraphQLEnumType<T> : EnumerationGraphType
 		=> value switch
 		{
 			null => null,
-			T token when Enum<T>.IsValid(token) => token,
+			T token when Enum<T>.IsDefined(token) => token,
 			T token => null,
 			string text => Enum.Parse<T>(text, true),
 			_ => Enum.ToObject(typeof(T), value)

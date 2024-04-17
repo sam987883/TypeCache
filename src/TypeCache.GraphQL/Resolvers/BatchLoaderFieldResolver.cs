@@ -62,13 +62,16 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, MATCH> : FieldResolv
 
 	private Task<IEnumerable<CHILD>> LoadData(IResolveFieldContext context, IEnumerable<MATCH> keys)
 	{
-		var arguments = context.GetArguments<PARENT, MATCH>(this._MethodInfo, keys);
+		var arguments = context.GetArguments<PARENT, MATCH>(this._MethodInfo, keys).ToArray();
+		object? result;
 		if (!this._MethodInfo.IsStatic)
 		{
 			var controller = context.RequestServices!.GetRequiredService(this._MethodInfo.DeclaringType!);
-			arguments = [controller, ..arguments];
+			result = this._MethodInfo.InvokeFunc(controller, arguments);
 		}
-		var result = this._MethodInfo.InvokeMethod(arguments.ToArray());
+		else
+			result = this._MethodInfo.InvokeStaticFunc(arguments);
+
 		return result switch
 		{
 			ValueTask<IEnumerable<CHILD>> valueTask => valueTask.AsTask(),

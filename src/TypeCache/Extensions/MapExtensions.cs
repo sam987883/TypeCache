@@ -65,7 +65,7 @@ public static partial class MapExtensions
 			if (pair.Value is not null && !pair.Value.GetType().IsConvertibleTo(targetPropertyInfo.PropertyType))
 				continue;
 
-			targetPropertyInfo.SetPropertyValue(target, pair.Value);
+			targetPropertyInfo.SetValueEx(target, pair.Value);
 		}
 
 		return target;
@@ -95,18 +95,18 @@ public static partial class MapExtensions
 				.ToArray();
 			if (!mapAttributes.Any() && !ignoreAttributes.Any())
 			{
-				var value = propertyInfo.GetPropertyValue(@this);
+				var value = propertyInfo.GetValueEx(@this);
 				if (propertyInfo.CanWrite)
-					propertyInfo!.SetPropertyValue(target, value);
+					propertyInfo!.SetValueEx(target, value);
 			}
 			else if (mapAttributes.Any() && !ignoreAttributes.Any(_ => _.Type is not null))
 			{
-				var value = propertyInfo.GetPropertyValue(@this);
+				var value = propertyInfo.GetValueEx(@this);
 				foreach (var attribute in mapAttributes)
 				{
 					var targetPropertyInfo = properties.FirstOrDefault(propertyInfo => propertyInfo.Name.EqualsIgnoreCase(attribute.Property));
 					if (targetPropertyInfo?.CanWrite is true)
-						targetPropertyInfo.SetPropertyValue(target, value);
+						targetPropertyInfo.SetValueEx(target, value);
 				}
 			}
 		}
@@ -155,7 +155,7 @@ public static partial class MapExtensions
 		{
 			var mapAttributes = propertyInfo.GetCustomAttributes<MapAttribute>()
 				.Where(attribute => attribute.Type.IsAssignableTo<IDictionary<string, object?>>());
-			var value = propertyInfo.GetPropertyValue(@this);
+			var value = propertyInfo.GetValueEx(@this);
 
 			if (!mapAttributes.Any())
 			{
@@ -193,23 +193,23 @@ public static partial class MapExtensions
 				if (targetPropertyInfo?.CanWrite is not true)
 					continue;
 
-				var value = sourcePropertyInfo.GetPropertyValue(source);
+				var value = sourcePropertyInfo.GetValueEx(source);
 				if (value is null && !targetPropertyInfo.PropertyType.IsNullable())
 					continue;
 
 				if (value is not null && !value.GetType().IsAssignableTo(targetPropertyInfo.PropertyType))
 					continue;
 
-				targetPropertyInfo.SetPropertyValue(target, value);
+				targetPropertyInfo.SetValueEx(target, value);
 			}
 			else if (mapAttributes.Any() && !ignoreAttributes.Any(_ => _.Type is not null))
 			{
-				var value = sourcePropertyInfo.GetPropertyValue(source);
+				var value = sourcePropertyInfo.GetValueEx(source);
 				foreach (var attribute in mapAttributes)
 				{
 					var targetPropertyInfo = typeof(T).GetProperty(attribute.Property, bindings);
 					if (targetPropertyInfo?.CanWrite is true)
-						targetPropertyInfo.SetPropertyValue(target, value);
+						targetPropertyInfo.SetValueEx(target, value);
 				}
 			}
 		}

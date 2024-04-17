@@ -20,27 +20,14 @@ public static class DictionaryExtensions
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<V> action)
+	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<KeyValuePair<K, V>> action)
 		where K : notnull
 	{
 		@this.AssertNotNull();
 
 		var success = @this.TryGetValue(key, out var value);
 		if (success)
-			action(value!);
-
-		return success;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<K, V> action)
-		where K : notnull
-	{
-		@this.AssertNotNull();
-
-		var success = @this.TryGetValue(key, out var value);
-		if (success)
-			action(key, value!);
+			action(KeyValuePair.Create(key, value!));
 
 		return success;
 	}

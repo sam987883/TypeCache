@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -96,7 +97,7 @@ public static class ReadOnlySpanExtensions
 	public static string Join(this scoped ReadOnlySpan<char> @this, IEnumerable<string> values)
 	{
 		if (!values.Any())
-			return new string(@this);
+			return new(@this);
 
 		var totalLength = (int)values.Select(value => value.Length).Sum() + @this.Length * (values.Count() - 1);
 		Span<char> result = stackalloc char[totalLength];
@@ -115,7 +116,7 @@ public static class ReadOnlySpanExtensions
 			offset += span.Length;
 		}
 
-		return new string(result);
+		return new(result);
 	}
 
 	/// <remarks>
@@ -139,12 +140,59 @@ public static class ReadOnlySpanExtensions
 	public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> @this, int length)
 		=> @this.Slice(0, length);
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <paramref name="comparison"/>);</c>
-	/// </remarks>
+	private static string Mask(this scoped ReadOnlySpan<char> @this, char mask, string[]? terms, StringComparison comparison)
+	{
+		if (@this.IsEmpty)
+			return new(@this);
+
+		terms ??= Array<string>.Empty;
+
+		Span<char> span = stackalloc char[@this.Length];
+		@this.CopyTo(span);
+
+		var i = -1;
+		if (terms.Length > 0)
+		{
+			var count = 0;
+			while (++i < span.Length)
+			{
+				foreach (var term in terms)
+				{
+					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
+						count = term.Length;
+				}
+
+				if (count > 0)
+				{
+					--count;
+					if (span[i].IsLetterOrDigit())
+						span[i] = mask;
+				}
+			}
+		}
+		else
+		{
+			while (++i < span.Length)
+				if (span[i].IsLetterOrDigit())
+					span[i] = mask;
+		}
+
+		return new(span);
+	}
+
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this scoped ReadOnlySpan<char> @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> @this.StartsWith(text, comparison);
+	public static string Mask(this scoped ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null)
+		=> @this.Mask(mask, terms, StringComparison.Ordinal);
+
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string MaskIgnoreCase(this scoped ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null)
+		=> @this.Mask(mask, terms, StringComparison.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="ISpanParsable{TSelf}.Parse(ReadOnlySpan{char}, IFormatProvider?)"/>
 	/// <remarks>
@@ -163,6 +211,13 @@ public static class ReadOnlySpanExtensions
 	public static T Parse<T>(this scoped ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
 		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool StartsWithIgnoreCase(this scoped ReadOnlySpan<char> @this, string text)
+		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="MemoryMarshal.Read{T}(ReadOnlySpan{byte})"/>
 	/// <remarks>

@@ -63,8 +63,9 @@ public static class CsvExtensions
 		var propertyInfos = typeof(T).GetPublicProperties().Where(propertyInfo => propertyInfo.CanRead).ToArray();
 		if (propertyInfos.Length > 0)
 		{
+			var funcs = propertyInfos.Select(_ => _.GetValueFunc()).ToArray();
 			var headerRow = string.Join(',', propertyInfos.Select(propertyInfo => propertyInfo.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', propertyInfos.Select(propertyInfo => propertyInfo.GetPropertyValue(row).EscapeCSV())));
+			var dataRows = @this.Select(row => string.Join(',', funcs.Select(_ => _.Invoke(row, null).EscapeCSV())));
 
 			return [headerRow, ..dataRows];
 		}
@@ -72,8 +73,9 @@ public static class CsvExtensions
 		var fieldInfos = typeof(T).GetPublicFields();
 		if (fieldInfos.Length > 0)
 		{
+			var funcs = fieldInfos.Select(_ => _.GetValueFunc()).ToArray();
 			var headerRow = string.Join(',', fieldInfos.Select(fieldInfo => fieldInfo.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', fieldInfos.Select(fieldInfo => fieldInfo.GetFieldValue(row).EscapeCSV())));
+			var dataRows = @this.Select(row => string.Join(',', funcs.Select(_ => _.Invoke(row).EscapeCSV())));
 
 			return [headerRow, .. dataRows];
 		}

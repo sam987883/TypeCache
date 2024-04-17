@@ -22,7 +22,7 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 			_ => context.Source
 		};
 
-		var value = propertyInfo.GetPropertyValue(source!);
+		var value = propertyInfo.GetValueEx(source!);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 

@@ -23,6 +23,7 @@ public static class Enum<T>
 	[DebuggerHidden]
 	public static Type UnderlyingType => typeof(T).GetEnumUnderlyingType();
 
-	public static bool IsValid(T value)
+	[DebuggerHidden]
+	public static bool IsDefined(T value)
 		=> Enum.IsDefined(value) || (Flags && Values.Any(_ => value.HasFlag(_)));
 }

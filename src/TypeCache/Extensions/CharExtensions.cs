@@ -1,11 +1,26 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Globalization;
+using System.Numerics;
 
 namespace TypeCache.Extensions;
 
 public static class CharExtensions
 {
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt;= <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt;= <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Between(this char @this, char minimum, char maximum)
+		=> @this >= minimum && @this <= maximum;
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool InBetween(this char @this, char minimum, char maximum)
+		=> @this > minimum && @this < maximum;
+
 	/// <inheritdoc cref="char.GetUnicodeCategory(char)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="char"/>.GetUnicodeCategory(@<paramref name="this"/>);</c>

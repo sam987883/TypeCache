@@ -15,13 +15,15 @@ public sealed class MethodFieldResolver(MethodInfo methodInfo) : FieldResolver
 		context.RequestServices.AssertNotNull();
 
 		var arguments = context.GetArguments(methodInfo).ToArray();
+		object? result;
 		if (!methodInfo.IsStatic)
 		{
 			var controller = context.RequestServices.GetRequiredService(methodInfo.DeclaringType!);
-			arguments = [controller, ..arguments];
+			result = methodInfo.InvokeFunc(controller, arguments);
 		}
+		else
+			result = methodInfo.InvokeStaticFunc(arguments);
 
-		var result = methodInfo.InvokeMethod(arguments);
 		return result switch
 		{
 			ValueTask<object?> valueTask => await valueTask,

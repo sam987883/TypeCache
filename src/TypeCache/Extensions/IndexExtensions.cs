@@ -13,7 +13,7 @@ public static class IndexExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Next(this Index @this, int increment = 1)
-		=> new Index(@this.Value + increment);
+		=> new(@this.Value + increment);
 
 	/// <inheritdoc cref="Index.Index(int, bool)"/>
 	/// <remarks>
@@ -21,5 +21,5 @@ public static class IndexExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index Previous(this Index @this, int increment = 1)
-		=> new Index(@this.Value - increment);
+		=> new(@this.Value - increment);
 }

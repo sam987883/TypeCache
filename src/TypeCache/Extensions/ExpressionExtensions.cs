@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using TypeCache.Utilities;
 
@@ -192,7 +193,7 @@ public static class ExpressionExtensions
 	/// </remarks>
 	public static UnaryExpression Cast(this Expression @this, Type type, bool overflowCheck = false) => (@this.Type.IsValueType, type.IsValueType) switch
 	{
-		(true, false) => @this.Unbox(type),
+		(false, true) => @this.Unbox(type),
 		_ when overflowCheck => Expression.ConvertChecked(@this, type),
 		_ => Expression.Convert(@this, type)
 	};
@@ -231,33 +232,33 @@ public static class ExpressionExtensions
 		var targetScalarType = targetType.GetScalarType();
 		var expression = targetScalarType switch
 		{
-			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBigInteger), [@this]),
+			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(BigInteger)], [@this]),
 			ScalarType.Boolean => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBoolean), [@this]),
-			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToByte), [@this]),
-			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToChar), [@this]),
+			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(byte)], [@this]),
+			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(char)], [@this]),
 			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), [@this]),
 			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), [@this]),
 			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), [@this]),
-			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDecimal), [@this]),
-			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDouble), [@this]),
+			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(decimal)], [@this]),
+			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(double)], [@this]),
 			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), [@this]),
 			ScalarType.Guid => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToGuid), [@this]),
-			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToHalf), [@this]),
+			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(Half)], [@this]),
 			ScalarType.Index => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIndex), [@this]),
-			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt16), [@this]),
-			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt32), [@this]),
-			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt64), [@this]),
-			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToInt128), [@this]),
+			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(short)], [@this]),
+			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(int)], [@this]),
+			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(long)], [@this]),
+			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(Int128)], [@this]),
 			ScalarType.IntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIntPtr), [@this]),
-			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSByte), [@this]),
-			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToSingle), [@this]),
+			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(sbyte)], [@this]),
+			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(float)], [@this]),
 			ScalarType.String => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToString), [@this]),
 			ScalarType.TimeOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeOnly), [@this]),
 			ScalarType.TimeSpan => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeSpan), [@this]),
-			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt16), [@this]),
-			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt32), [@this]),
-			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt64), [@this]),
-			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUInt128), [@this]),
+			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(ushort)], [@this]),
+			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(uint)], [@this]),
+			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(ulong)], [@this]),
+			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(UInt128)], [@this]),
 			ScalarType.UIntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUIntPtr), [@this]),
 			ScalarType.Uri => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUri), [@this]),
 			_ => @this.Cast(targetType)
@@ -341,6 +342,14 @@ public static class ExpressionExtensions
 	public static TypeBinaryExpression Is(this Expression @this, Type type)
 		=> Expression.TypeIs(@this, type);
 
+	/// <inheritdoc cref="Expression.IsFalse(Expression)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.IsFalse(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static UnaryExpression IsFalse(this Expression @this)
+		=> Expression.IsFalse(@this);
+
 	/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ReferenceNotEqual(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
@@ -356,6 +365,14 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression IsNull(this Expression @this)
 		=> Expression.ReferenceEqual(@this, Expression.Constant(null));
+
+	/// <inheritdoc cref="Expression.IsTrue(Expression)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.IsTrue(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static UnaryExpression IsTrue(this Expression @this)
+		=> Expression.IsTrue(@this);
 
 	/// <inheritdoc cref="Expression.Lambda(Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
@@ -538,7 +555,7 @@ public static class ExpressionExtensions
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="propertyInfo"/>, <paramref name="index"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IndexExpression Property(this Expression @this, PropertyInfo propertyInfo, ParameterExpression index)
+	public static IndexExpression Property(this Expression @this, PropertyInfo propertyInfo, Expression[] index)
 		=> Expression.Property(@this, propertyInfo, index);
 
 	/// <inheritdoc cref="Expression.Property(Expression, string)"/>
@@ -548,6 +565,14 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MemberExpression Property(this Expression @this, string name)
 		=> Expression.Property(@this, name);
+
+	/// <inheritdoc cref="Expression.Property(Expression, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="name"/>, <paramref name="index"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IndexExpression Property(this Expression @this, string name, Expression[] index)
+		=> Expression.Property(@this, name, index);
 
 	/// <inheritdoc cref="Expression.Property(Expression, Type, string)"/>
 	/// <remarks>

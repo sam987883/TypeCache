@@ -3,7 +3,7 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using TypeCache.Collections;
+using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
@@ -13,16 +13,28 @@ namespace TypeCache.Extensions;
 public partial class ReflectionExtensions
 {
 	/// <exception cref="MissingMethodException"></exception>
-	public static object? Create(this Type @this, object?[]? parameters = null)
-		=> @this.FindConstructor(parameters) switch
+	public static object? Create(this Type @this, object?[]? arguments = null)
+		=> @this.FindConstructor(arguments) switch
 		{
-			null when @this.IsValueType && parameters?.Any() is not true => TypeStore.DefaultValueTypeConstructorFuncs[@this.TypeHandle].Invoke(),
+			null when @this.IsValueType && (arguments is null || arguments.Length is 0) => TypeStore.DefaultValueTypeConstructorFuncs[@this.TypeHandle].Invoke(),
 			null => throw new MissingMethodException(@this.Name, "Constructor"),
-			var constructorInfo => constructorInfo.InvokeMethod(parameters)
+			var constructorInfo => constructorInfo.InvokeFunc(arguments)
 		};
 
-	[DebuggerHidden]
-	public static ConstructorInfo? FindConstructor(this Type @this, object?[]? arguments = null)
+	/// <exception cref="MissingMethodException"></exception>
+	public static object? Create(this Type @this, ITuple? arguments)
+		=> @this.FindConstructor(arguments) switch
+		{
+			null when @this.IsValueType && (arguments is null || arguments.Length is 0) => TypeStore.DefaultValueTypeConstructorFuncs[@this.TypeHandle].Invoke(),
+			null => throw new MissingMethodException(@this.Name, "Constructor"),
+			var constructorInfo => constructorInfo.InvokeFunc(arguments)
+		};
+
+	public static ConstructorInfo? FindConstructor(this Type @this, object?[]? arguments)
+		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
+			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
+
+	public static ConstructorInfo? FindConstructor(this Type @this, ITuple? arguments)
 		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
 			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
 
@@ -33,33 +45,90 @@ public partial class ReflectionExtensions
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	[DebuggerHidden]
-	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments = null)
+	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
+			.FirstOrDefault(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
-	[DebuggerHidden]
-	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
+	public static MethodInfo? FindMethod(this Type @this, string name, ITuple? arguments)
 		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.Where(method => method.Name.EqualsIgnoreCase(name) && method.IsGenericMethod && method.GetGenericArguments().Length == genericTypes.Length)
-			.FirstOrDefault(method => method.MakeGenericMethod(genericTypes)?.IsCallableWith(arguments) is true);
+			.FirstOrDefault(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsCallableWith(arguments));
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
+		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
+			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
+			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
+			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
+		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
+			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
+			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
+			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
 
 	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] argumentTypes)
 		=> @this.GetMethod(name, STATIC_BINDING_FLAGS, argumentTypes);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
-	[DebuggerHidden]
-	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments = null)
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments)
 		=> @this.GetMethods(STATIC_BINDING_FLAGS)
 			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
 
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, ITuple? arguments)
+		=> @this.GetMethods(STATIC_BINDING_FLAGS)
+			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
+		=> @this.GetMethods(STATIC_BINDING_FLAGS)
+			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
+			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
+			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+
+	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
+		=> @this.GetMethods(STATIC_BINDING_FLAGS)
+			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
+			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
+			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+
 	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
-	[DebuggerHidden]
 	public static object? GetFieldValue(this Type @this, string name, object instance)
 		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
-			.GetFieldValue(instance);
+			.GetValueEx(instance);
 
 	/// <summary>
 	/// <c>=&gt; <see cref="TypeStore.CollectionTypes"/>[@<paramref name="this"/>.TypeHandle];</c>
@@ -104,7 +173,6 @@ public partial class ReflectionExtensions
 		=> @this.GetMethods(FlattenHierarchy | Public | Instance);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
-	[DebuggerHidden]
 	public static PropertyInfo[] GetPublicProperties(this Type @this)
 		=> @this.GetProperties(FlattenHierarchy | Public | Instance)
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is not true && propertyInfo.SetMethod?.IsStatic is not true)
@@ -130,23 +198,22 @@ public partial class ReflectionExtensions
 	/// <remarks>
 	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
 	/// </remarks>
-	[DebuggerHidden]
 	public static PropertyInfo[] GetPublicStaticProperties(this Type @this)
 		=> @this.GetProperties(FlattenHierarchy | Public | Static)
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
 			.ToArray();
 
-	public static object? GetPropertyValue(this Type @this, string name, object instance, object?[]? index = null)
+	public static object? GetPropertyValue(this Type @this, string name, object instance, ITuple? index = null)
 		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
-			.GetPropertyValue(instance, index);
+			.GetValueEx(instance, index);
 
 	public static object? GetStaticFieldValue(this Type @this, string name)
 		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
-			.GetFieldValue(null);
+			.GetStaticValue();
 
-	public static object? GetStaticPropertyValue(this Type @this, string name, object?[]? index = null)
+	public static object? GetStaticPropertyValue(this Type @this, string name, ITuple? index = null)
 		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
-			.GetPropertyValue(null, index);
+			.GetStaticValue(index);
 
 	public static bool Implements(this Type @this, Type type)
 	{
@@ -173,83 +240,106 @@ public partial class ReflectionExtensions
 		}
 	}
 
-	public static object? InvokeMethod(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void InvokeMethodAction(this Type @this, string name, object instance, object?[]? arguments)
+	{
+		var methodInfo = @this.FindMethod(name, arguments);
+		methodInfo.AssertNotNull();
+		methodInfo.InvokeAction(instance, arguments);
+	}
 
-	public static object? InvokeMethod(this Type @this, string name, Type[] genericTypes, object instance, object?[]? arguments = null)
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void InvokeMethodAction(this Type @this, string name, object instance, ITuple? arguments)
+	{
+		var methodInfo = @this.FindMethod(name, arguments);
+		methodInfo.AssertNotNull();
+		methodInfo.InvokeAction(instance, arguments);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static object? InvokeMethod(this Type @this, string name, object instance, object?[]? arguments)
+	{
+		var methodInfo = @this.FindMethod(name, arguments);
+		methodInfo.AssertNotNull();
+		methodInfo.DeclaringType.AssertNotNull();
+
+		var func = TypeStore.MethodArrayFuncs[(methodInfo.DeclaringType.TypeHandle, methodInfo.MethodHandle)];
+		if (func is not null)
+			return func(instance, arguments);
+
+		var action = TypeStore.MethodArrayActions[(methodInfo.DeclaringType.TypeHandle, methodInfo.MethodHandle)];
+		action.AssertNotNull();
+		action(instance, arguments);
+
+		return null;
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static void InvokeMethodAction(this Type @this, string name, Type[] genericTypes, object instance, object?[]? arguments)
 		=> @this.FindMethod(name, genericTypes, arguments)?
-			.MakeGenericMethod(genericTypes)
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+			.InvokeAction(instance, arguments);
 
-	public static object? InvokeMethod<T1>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static void InvokeMethodAction(this Type @this, string name, Type[] genericTypes, object instance, ITuple? arguments)
+		=> @this.FindMethod(name, genericTypes, arguments)?
+			.InvokeAction(instance, arguments);
 
-	public static object? InvokeMethod<T1, T2>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static object? InvokeMethodFunc(this Type @this, string name, Type[] genericTypes, object instance, object?[]? arguments)
+		=> @this.FindMethod(name, genericTypes, arguments)?
+			.InvokeFunc(instance, arguments);
 
-	public static object? InvokeMethod<T1, T2, T3>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static object? InvokeMethodFunc(this Type @this, string name, Type[] genericTypes, object instance, ITuple? arguments)
+		=> @this.FindMethod(name, genericTypes, arguments)?
+			.InvokeFunc(instance, arguments);
 
-	public static object? InvokeMethod<T1, T2, T3, T4>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static void InvokeStaticMethodAction(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
+		=> @this.FindStaticMethod(name, genericTypes, arguments)?
+			.InvokeStaticAction(arguments);
 
-	public static object? InvokeMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static void InvokeStaticMethodAction(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
+		=> @this.FindStaticMethod(name, genericTypes, arguments)?
+			.InvokeStaticAction(arguments);
 
-	public static object? InvokeMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object instance, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod([instance, .. arguments ?? Array<object>.Empty]);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static object? InvokeStaticMethodFunc(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
+		=> @this.FindStaticMethod(name, genericTypes, arguments)?
+			.InvokeStaticFunc(arguments);
 
-	public static object? InvokeStaticMethod(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments = null)
-		=> @this.FindMethod(name, arguments)?
-			.MakeGenericMethod(genericTypes)
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1>()
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1, T2>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2>()
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1, T2, T3>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3>()
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1, T2, T3, T4>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4>()
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4, T5>()
-			.InvokeMethod(arguments);
-
-	public static object? InvokeStaticMethod<T1, T2, T3, T4, T5, T6>(this Type @this, string name, object?[]? arguments = null)
-		=> @this.FindStaticMethod(name, arguments)?
-			.MakeGenericMethod<T1, T2, T3, T4, T5, T6>()
-			.InvokeMethod(arguments);
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public static object? InvokeStaticMethodFunc(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
+		=> @this.FindStaticMethod(name, genericTypes, arguments)?
+			.InvokeStaticFunc(arguments);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/> == <see langword="typeof"/>(<typeparamref name="T"/>);</c>
@@ -401,25 +491,29 @@ public partial class ReflectionExtensions
 	public static bool IsNullable(this Type @this)
 		=> @this.IsClass || @this.IsPointer || @this.Is(typeof(Nullable<>));
 
-	[DebuggerHidden]
 	public static void SetFieldValue(this Type @this, string name, object instance, object? value)
 		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
-			.SetFieldValue(instance, value);
+			.SetValueEx(instance, value);
 
-	[DebuggerHidden]
-	public static void SetPropertyValue(this Type @this, string name, object instance, object? value, object?[]? index = null)
+	public static void SetPropertyValue<T>(this Type @this, string name, object instance, T? value)
 		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
-			.SetPropertyValue(instance, value, index);
+			.SetValueEx(instance, value);
 
-	[DebuggerHidden]
+	public static void SetPropertyValue(this Type @this, string name, object instance, ITuple valueAndIndex)
+		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
+			.SetValueEx(instance, valueAndIndex);
+
 	public static void SetStaticFieldValue(this Type @this, string name, object? value)
 		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
-			.SetFieldValue(null, value);
+			.SetStaticValue(value);
 
-	[DebuggerHidden]
-	public static void SetStaticPropertyValue(this Type @this, string name, object? value, object?[]? index = null)
+	public static void SetStaticPropertyValue<T>(this Type @this, string name, T? value)
 		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
-			.SetPropertyValue(null, value, index);
+			.SetStaticValue(value);
+
+	public static void SetStaticPropertyValue(this Type @this, string name, ITuple valueAndIndex)
+		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
+			.SetStaticValue(valueAndIndex);
 
 	/// <inheritdoc cref="Expression.Default(Type)"/>
 	/// <remarks>

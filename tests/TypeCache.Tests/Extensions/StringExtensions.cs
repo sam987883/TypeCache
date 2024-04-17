@@ -78,18 +78,9 @@ public class StringExtensions
 	{
 		Assert.Equal(string.Empty, (null as string).Mask());
 		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.Mask('+'));
-	}
-
-	[Fact]
-	public void MaskHide()
-	{
-		Assert.Equal("--Bb-- 123 `~!#$%^\t\r\n", TEST_STRING.MaskHide('-', StringComparison.OrdinalIgnoreCase, ["A", "C", "\t\r\n"]));
-	}
-
-	[Fact]
-	public void MaskShow()
-	{
-		Assert.Equal("ooBboo 123 `~!#$%^\t\r\n", TEST_STRING.MaskShow('o', StringComparison.Ordinal, ["Bb", " ", "123", "`~!#$%^"]));
+		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+'));
+		Assert.Equal("+aB+++ 123 `~!#$%^\t\r\n", TEST_STRING.Mask('+', ["A", "b", "Cc"]));
+		Assert.Equal("++++++ 123 `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+', ["A", "b", "C"]));
 	}
 
 	[Fact]

@@ -15,15 +15,20 @@
 - `System.Type.GetPropertyValue(...)`
 - `System.Type.GetStaticFieldValue(...)`
 - `System.Type.GetStaticPropertyValue(...)`
-- `System.Type.InvokeMethod(...)`
-- `System.Type.InvokeStaticMethod(...)`
+- `System.Type.InvokeMethodAction(...)`
+- `System.Type.InvokeMethodFunc(...)`
+- `System.Type.InvokeStaticMethodAction(...)`
+- `System.Type.InvokeStaticMethodFunc(...)`
 - `System.Type.SetFieldValue(...)`
 - `System.Type.SetPropertyValue(...)`
 - `System.Type.SetStaticFieldValue(...)`
 - `System.Type.SetStaticPropertyValue(...)`
 - `System.Reflection.FieldInfo.GetFieldValue(...)`
 - `System.Reflection.PropertyInfo.GetPropertyValue(...)`
-- `System.Reflection.MethodInfo.InvokeMethod(...)`
+- `System.Reflection.MethodInfo.InvokeAction(...)`
+- `System.Reflection.MethodInfo.InvokeFunc(...)`
+- `System.Reflection.MethodInfo.InvokeStaticAction(...)`
+- `System.Reflection.MethodInfo.InvokeStaticFunc(...)`
 - `System.Reflection.FieldInfo.SetFieldValue(...)`
 - `System.Reflection.PropertyInfo.SetPropertyValue(...)`
 ---

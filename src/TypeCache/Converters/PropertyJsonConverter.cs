@@ -44,7 +44,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		foreach (var property in typeof(T).GetPublicProperties())
 		{
 			writer.WritePropertyName(property.Name());
-			var value = property.GetPropertyValue(input);
+			var value = property.GetValueEx(input);
 			writer.WriteValue(value, options);
 		}
 		writer.WriteEndObject();

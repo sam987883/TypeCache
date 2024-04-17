@@ -20,6 +20,13 @@ public static class ArrayExtensions
 	public static void Clear<T>(this T[] @this, int start = 0, int length = 0)
 		=> Array.Clear(@this, start, length is 0 ? @this.Length : length);
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsIgnoreCase(this string[] @this, string value)
+		=> @this.Contains(value, StringComparer.OrdinalIgnoreCase);
+
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	public static T[] Copy<T>(this T[] @this)

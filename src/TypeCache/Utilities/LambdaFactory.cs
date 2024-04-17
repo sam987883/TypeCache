@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq.Expressions;
+using System.Numerics;
 using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;
@@ -84,9 +85,9 @@ public static class LambdaFactory
 		return Expression.Lambda<Comparison<T>>(lambda(value1, value2), value1, value2);
 	}
 
-	public static LambdaExpression CreateFunc(Type[] parameterTypes, Type returnType, Func<ParameterExpression[], Expression> lambda)
+	public static LambdaExpression CreateFunc(Type[] parameterTypes, Type returnType, Func<ParameterExpression[]?, Expression> lambda)
 	{
-		var parameters = parameterTypes.Select((type, i) => Invariant($"parameter{i + 1}").ToParameterExpression(type)).ToArray();
+		var parameters = parameterTypes?.Select((type, i) => Invariant($"parameter{i + 1}").ToParameterExpression(type)).ToArray();
 		return lambda(parameters).LambdaFunc(returnType, parameters);
 	}
 

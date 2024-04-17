@@ -21,7 +21,7 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 				{
 					var fieldInfo = typeof(T).GetPublicFields().FirstOrDefault(_ => _.Name().EqualsIgnoreCase(name));
 					if (fieldInfo is not null && !fieldInfo.IsInitOnly)
-						fieldInfo.SetFieldValue(output!, reader.TokenType switch
+						fieldInfo.SetValueEx(output!, reader.TokenType switch
 						{
 							JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, fieldInfo.FieldType, options),
 							_ => reader.GetValue()
@@ -43,7 +43,7 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 			foreach (var field in typeof(T).GetPublicFields())
 			{
 				writer.WritePropertyName(field!.Name());
-				var value = field.GetFieldValue(input);
+				var value = field.GetValueEx(input);
 				writer.WriteValue(value, options);
 			}
 			writer.WriteEndObject();

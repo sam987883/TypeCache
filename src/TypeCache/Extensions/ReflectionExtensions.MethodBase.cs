@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Reflection;
-using TypeCache.Utilities;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions;
 
@@ -13,26 +13,40 @@ public partial class ReflectionExtensions
 		if (parameterInfos.Any(_ => _.IsOut))
 			return false;
 
-		if (arguments?.Any() is not true)
+		if (arguments is null || arguments.Length == 0)
 			return !parameterInfos.Any() || parameterInfos.All(parameterInfo => parameterInfo!.HasDefaultValue || parameterInfo.IsOptional);
 
-		var argumentEnumerator = arguments.GetEnumerator();
+		if (arguments.Length > parameterInfos.Length)
+			return false;
+
 		return parameterInfos
-			.All(parameterInfo => argumentEnumerator.IfNext(out var argument) switch
+			.All(parameterInfo => parameterInfo switch
 			{
-				false => parameterInfo.HasDefaultValue || parameterInfo.IsOptional,
-				true when argument is not null => argument.GetType().IsAssignableTo(parameterInfo.ParameterType),
+				_ when parameterInfo.Position >= arguments.Length => parameterInfo.HasDefaultValue || parameterInfo.IsOptional,
+				_ when arguments[parameterInfo.Position] is not null => arguments[parameterInfo.Position]!.GetType().IsAssignableTo(parameterInfo.ParameterType),
 				_ => parameterInfo.ParameterType.IsNullable()
-			}) && !argumentEnumerator.MoveNext();
+			});
 	}
 
-	/// <param name="arguments">The method arguments.</param>
-	/// <exception cref="UnreachableException"></exception>
-	public static object? InvokeMethod(this MethodBase @this, object?[]? arguments)
+	public static bool IsCallableWith(this MethodBase @this, ITuple? arguments)
 	{
-		@this.DeclaringType.AssertNotNull();
-		var method = TypeStore.MethodFuncs[(@this.DeclaringType.TypeHandle, @this.MethodHandle)];
-		return method.Invoke(arguments);
+		var parameterInfos = @this.GetParameters();
+		if (parameterInfos.Any(_ => _.IsOut))
+			return false;
+
+		if (arguments is null)
+			return !parameterInfos.Any() || parameterInfos.All(parameterInfo => parameterInfo!.HasDefaultValue || parameterInfo.IsOptional);
+
+		if (arguments.Length > parameterInfos.Length)
+			return false;
+
+		return parameterInfos
+			.All(parameterInfo => parameterInfo switch
+			{
+				_ when parameterInfo.Position >= arguments.Length => parameterInfo.HasDefaultValue || parameterInfo.IsOptional,
+				_ when arguments[parameterInfo.Position] is not null => arguments[parameterInfo.Position]!.GetType().IsAssignableTo(parameterInfo.ParameterType),
+				_ => parameterInfo.ParameterType.IsNullable()
+			});
 	}
 
 	[DebuggerHidden]

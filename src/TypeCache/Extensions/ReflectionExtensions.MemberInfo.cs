@@ -23,5 +23,9 @@ public partial class ReflectionExtensions
 
 	[DebuggerHidden]
 	public static string Name(this MemberInfo @this)
-		=> @this.Name.Left(@this.Name.IndexOf(GENERIC_TICKMARK));
+		=> @this.Name.IndexOf(GENERIC_TICKMARK) switch
+		{
+			var index when index >= 0 => @this.Name.Left(index),
+			_ => @this.Name
+		};
 }
