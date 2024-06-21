@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 

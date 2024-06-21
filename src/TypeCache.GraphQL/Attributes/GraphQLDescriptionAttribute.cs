@@ -13,7 +13,7 @@ public sealed class GraphQLDescriptionAttribute : Attribute
 {
 	public GraphQLDescriptionAttribute(string description)
 	{
-		description.AssertNotBlank();
+		description.ThrowIfBlank();
 
 		this.Description = description;
 	}

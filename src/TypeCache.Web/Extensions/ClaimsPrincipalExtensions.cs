@@ -9,7 +9,7 @@ public static class ClaimsPrincipalExtensions
 {
 	public static bool Any(this ClaimsPrincipal @this, string claimType, string[] values)
 	{
-		claimType.AssertNotBlank();
+		claimType.ThrowIfBlank();
 
 		return values.Any()
 			? values.Any(value => @this.HasClaim(claimType, value))

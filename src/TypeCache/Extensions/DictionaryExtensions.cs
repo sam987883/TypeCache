@@ -10,7 +10,7 @@ public static class DictionaryExtensions
 	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action action)
 		where K : notnull
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		var success = @this.ContainsKey(key);
 		if (success)
@@ -23,7 +23,7 @@ public static class DictionaryExtensions
 	public static bool If<K, V>(this IDictionary<K, V> @this, K key, Action<KeyValuePair<K, V>> action)
 		where K : notnull
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		var success = @this.TryGetValue(key, out var value);
 		if (success)

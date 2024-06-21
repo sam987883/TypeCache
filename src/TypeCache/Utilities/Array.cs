@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-namespace TypeCache.Collections;
+namespace TypeCache.Utilities;
 
 public static class Array<T>
 {

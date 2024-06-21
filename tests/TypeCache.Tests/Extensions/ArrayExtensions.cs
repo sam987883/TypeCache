@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using Xunit;
 using static System.FormattableString;
 

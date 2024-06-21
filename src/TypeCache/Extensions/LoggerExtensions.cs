@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.Extensions.Logging;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -12,8 +12,8 @@ public static class LoggerExtensions
 	/// </summary>
 	public static void LogAggregateException<T>(this ILogger<T> @this, EventId eventId, AggregateException error, string message, object?[]? args = null)
 	{
-		@this.AssertNotNull();
-		error.AssertNotNull();
+		@this.ThrowIfNull();
+		error.ThrowIfNull();
 
 		args ??= Array<object?>.Empty;
 
@@ -30,8 +30,8 @@ public static class LoggerExtensions
 	/// </summary>
 	public static void LogAggregateException<T>(this ILogger<T> @this, AggregateException error, string message, object?[]? args = null)
 	{
-		@this.AssertNotNull();
-		error.AssertNotNull();
+		@this.ThrowIfNull();
+		error.ThrowIfNull();
 
 		args ??= Array<object?>.Empty;
 

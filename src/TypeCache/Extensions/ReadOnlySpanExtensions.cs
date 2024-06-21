@@ -4,7 +4,7 @@ using System;
 using System.Globalization;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -33,7 +33,7 @@ public static class ReadOnlySpanExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action)
 	{
-		action.AssertNotNull();
+		action.ThrowIfNull();
 
 		if (@this.IsEmpty)
 			return;
@@ -46,7 +46,7 @@ public static class ReadOnlySpanExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action)
 	{
-		action.AssertNotNull();
+		action.ThrowIfNull();
 
 		if (@this.IsEmpty)
 			return;
@@ -59,8 +59,8 @@ public static class ReadOnlySpanExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action, Action between)
 	{
-		action.AssertNotNull();
-		between.AssertNotNull();
+		action.ThrowIfNull();
+		between.ThrowIfNull();
 
 		if (@this.IsEmpty)
 			return;
@@ -78,8 +78,8 @@ public static class ReadOnlySpanExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T, int> action, Action between)
 	{
-		action.AssertNotNull();
-		between.AssertNotNull();
+		action.ThrowIfNull();
+		between.ThrowIfNull();
 
 		if (@this.IsEmpty)
 			return;

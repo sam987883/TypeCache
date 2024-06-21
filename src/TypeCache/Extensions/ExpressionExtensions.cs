@@ -217,8 +217,8 @@ public static class ExpressionExtensions
 	/// <exception cref="InvalidOperationException"/>
 	public static Expression Convert(this Expression @this, Type targetType)
 	{
-		@this.AssertNotNull();
-		targetType.AssertNotNull();
+		@this.ThrowIfNull();
+		targetType.ThrowIfNull();
 
 		if (@this.Type == targetType)
 			return @this;

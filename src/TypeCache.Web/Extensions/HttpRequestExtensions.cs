@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.AspNetCore.Http;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 
 namespace TypeCache.Web.Extensions;
 

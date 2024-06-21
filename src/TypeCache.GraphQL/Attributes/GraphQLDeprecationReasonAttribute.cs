@@ -13,7 +13,7 @@ public sealed class GraphQLDeprecationReasonAttribute : Attribute
 {
 	public GraphQLDeprecationReasonAttribute(string deprecationReason)
 	{
-		deprecationReason.AssertNotBlank();
+		deprecationReason.ThrowIfBlank();
 
 		this.DeprecationReason = deprecationReason;
 	}

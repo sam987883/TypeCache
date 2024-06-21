@@ -13,7 +13,7 @@ public static class ResolveFieldContextExtensions
 {
 	public static DataTable GetArgumentAsDataTable(this IResolveFieldContext @this, string name, ObjectSchema objectSchema)
 	{
-		name.AssertNotBlank();
+		name.ThrowIfBlank();
 
 		var table = objectSchema.CreateDataTable();
 		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name).ToArray();

@@ -14,7 +14,7 @@ public sealed class GraphQLInputNameAttribute : Attribute
 	/// <exception cref="ArgumentNullException"/>
 	public GraphQLInputNameAttribute(string name)
 	{
-		name.AssertNotBlank();
+		name.ThrowIfBlank();
 
 		this.Name = name;
 	}

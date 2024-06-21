@@ -11,8 +11,8 @@ public sealed class SqlCommand
 {
 	internal SqlCommand(IDataSource dataSource, string sql)
 	{
-		dataSource.AssertNotNull();
-		sql.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		sql.ThrowIfBlank();
 
 		this.DataSource = dataSource;
 		this.SQL = sql;

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Globalization;
 using static System.Globalization.CultureInfo;
 using static System.TimeZoneInfo;
 
@@ -162,11 +163,11 @@ public static class DateTimeExtensions
 		=> @this.ToString("HH:mm:ss", provider ?? InvariantCulture);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToText(this Guid @this, IFormatProvider? provider = null)
-		=> @this.ToString("D", provider ?? InvariantCulture);
+	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
+		=> @this.ToString("c", provider ?? CultureInfo.InvariantCulture);
 
 	/// <inheritdoc cref="TimeOnly.FromDateTime(DateTime)"/>
 	/// <remarks>

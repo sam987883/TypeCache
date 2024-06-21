@@ -10,7 +10,7 @@ public class MapIgnoreAttribute() : Attribute
 	protected MapIgnoreAttribute(Type type)
 		: this()
 	{
-		type.AssertNotNull();
+		type.ThrowIfNull();
 
 		this.Type = type;
 	}

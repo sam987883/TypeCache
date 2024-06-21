@@ -12,14 +12,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using TypeCache.Collections;
 using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;
 
 public static class TypeStore
 {
-	internal static IReadOnlySet<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
+	public static IReadOnlySet<(RuntimeTypeHandle Handle, CollectionType CollectionType)> CollectionTypeMap => new[]
 	{
 		(typeof(Array).TypeHandle, CollectionType.Array),
 		(typeof(ArrayList).TypeHandle, CollectionType.ArrayList),
@@ -73,7 +72,7 @@ public static class TypeStore
 		(typeof(ICollection<>).TypeHandle, CollectionType.Collection)
 	}.ToFrozenSet();
 
-	internal static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
+	public static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
 	{
 		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
 		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
@@ -108,6 +107,7 @@ public static class TypeStore
 		(typeof(Range).TypeHandle, ObjectType.Range),
 		(typeof(Task).TypeHandle, ObjectType.Task),
 		(typeof(Task<>).TypeHandle, ObjectType.Task),
+		(typeof(Tuple).TypeHandle, ObjectType.Tuple),
 		(typeof(Tuple<>).TypeHandle, ObjectType.Tuple),
 		(typeof(Tuple<,>).TypeHandle, ObjectType.Tuple),
 		(typeof(Tuple<,,>).TypeHandle, ObjectType.Tuple),
@@ -173,8 +173,6 @@ public static class TypeStore
 			{ typeof(UIntPtr).TypeHandle, ScalarType.UIntPtr },
 			{ typeof(Uri).TypeHandle, ScalarType.Uri }
 		}.ToFrozenDictionary();
-		DefaultValueFactory = new LazyDictionary<RuntimeTypeHandle, Func<object?>>(handle =>
-			handle.ToType().ToDefaultExpression().As<object>().Lambda<Func<object?>>().Compile());
 		DefaultValueTypeConstructorFuncs = new LazyDictionary<RuntimeTypeHandle, Func<object>>(handle =>
 			handle.ToType().ToNewExpression().As<object>().Lambda<Func<object>>().Compile());
 		Delegates = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Delegate>(_ =>
@@ -205,10 +203,6 @@ public static class TypeStore
 				Type type when type.GetScalarType() is not ScalarType.None => ObjectType.DataType,
 				Type type => ObjectTypeMap.FirstOrDefault(_ => type.Implements(_.Handle.ToType())).ObjectType
 			});
-		PropertyActions = new LazyDictionary<(RuntimeTypeHandle TypeHandle, string Property), Action<object, ITuple?, object?>>(_ =>
-			_.TypeHandle.ToType().GetProperty(_.Property)!.ToPropertyActionExpression().Compile());
-		PropertyFuncs = new LazyDictionary<(RuntimeTypeHandle TypeHandle, string Property), Func<object, ITuple?, object?>>(_ =>
-			_.TypeHandle.ToType().GetProperty(_.Property)!.ToPropertyFuncExpression().Compile());
 		StaticFieldGetFuncs = new LazyDictionary<RuntimeFieldHandle, Func<object?>>(handle =>
 			handle.ToFieldInfo().ToStaticFuncExpression().Compile());
 		StaticFieldSetActions = new LazyDictionary<RuntimeFieldHandle, Action<object?>>(handle =>
@@ -221,10 +215,6 @@ public static class TypeStore
 			((MethodInfo)_.MethodHandle.ToMethodBase(_.TypeHandle)).ToStaticArrayFuncExpression().Compile());
 		StaticMethodTupleFuncs = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Func<ITuple?, object?>>(_ =>
 			((MethodInfo)_.MethodHandle.ToMethodBase(_.TypeHandle)).ToStaticTupleFuncExpression().Compile());
-		StaticPropertyActions = new LazyDictionary<(RuntimeTypeHandle TypeHandle, string Property), Action<ITuple?, object?>>(_ =>
-			_.TypeHandle.ToType().GetProperty(_.Property)!.ToStaticPropertyActionExpression().Compile());
-		StaticPropertyFuncs = new LazyDictionary<(RuntimeTypeHandle TypeHandle, string Property), Func<ITuple?, object?>>(_ =>
-			_.TypeHandle.ToType().GetProperty(_.Property)!.ToStaticPropertyFuncExpression().Compile());
 	}
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, CollectionType> CollectionTypes { get; }
@@ -234,8 +224,6 @@ public static class TypeStore
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<ITuple?, object>> ConstructorTupleFuncs { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> DataTypes { get; }
-
-	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object?>> DefaultValueFactory { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorFuncs { get; }
 
@@ -253,10 +241,6 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object, ITuple?, object?>> MethodTupleFuncs { get; }
 
-	public static IReadOnlyDictionary<(RuntimeTypeHandle, string), Func<object, ITuple?, object?>> PropertyFuncs { get; }
-
-	public static IReadOnlyDictionary<(RuntimeTypeHandle, string), Action<object, ITuple?, object?>> PropertyActions { get; }
-
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
 
 	public static IReadOnlyDictionary<RuntimeFieldHandle, Func<object?>> StaticFieldGetFuncs { get; }
@@ -270,8 +254,4 @@ public static class TypeStore
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object?[]?, object?>> StaticMethodArrayFuncs { get; }
 
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<ITuple?, object?>> StaticMethodTupleFuncs { get; }
-
-	public static IReadOnlyDictionary<(RuntimeTypeHandle, string), Func<ITuple?, object?>> StaticPropertyFuncs { get; }
-
-	public static IReadOnlyDictionary<(RuntimeTypeHandle, string), Action<ITuple?, object?>> StaticPropertyActions { get; }
 }

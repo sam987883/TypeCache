@@ -57,7 +57,7 @@ public class HashMaker : IHashMaker
 	/// <exception cref="ArgumentNullException"/>
 	public byte[] Encrypt(byte[] data, PaddingMode paddingMode = PaddingMode.PKCS7)
 	{
-		data.AssertNotNull();
+		data.ThrowIfNull();
 
 		return this._SymmetricAlgorithm
 			.EncryptCbc(data, this._SymmetricAlgorithm.IV, paddingMode);

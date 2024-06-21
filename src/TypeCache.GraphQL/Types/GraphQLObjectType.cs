@@ -71,7 +71,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		where CHILD : notnull
 		where MATCH : notnull
 	{
-		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
+		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().ThrowIfFalse();
 
 		var fieldType = new FieldType()
 		{
@@ -106,7 +106,7 @@ public sealed class GraphQLObjectType<T> : ObjectGraphType<T>
 		where CHILD : notnull
 		where MATCH : notnull
 	{
-		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
+		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().ThrowIfFalse();
 
 		var fieldType = new FieldType()
 		{

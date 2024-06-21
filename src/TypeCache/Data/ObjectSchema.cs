@@ -72,7 +72,7 @@ public sealed class ObjectSchema(
 	{
 		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		(primaryKeys.Length > 0).AssertTrue();
+		(primaryKeys.Length > 0).ThrowIfFalse();
 
 		if (primaryKeys.Length == 1)
 		{
@@ -100,7 +100,7 @@ public sealed class ObjectSchema(
 	{
 		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		(primaryKeys.Length > 0).AssertTrue();
+		(primaryKeys.Length > 0).ThrowIfFalse();
 
 		if (primaryKeys.Length == 1)
 		{
@@ -128,7 +128,7 @@ public sealed class ObjectSchema(
 	{
 		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
 
-		(primaryKeys.Length > 0).AssertTrue();
+		(primaryKeys.Length > 0).ThrowIfFalse();
 
 		var type = typeof(T);
 

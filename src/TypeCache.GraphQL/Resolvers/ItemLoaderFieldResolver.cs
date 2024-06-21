@@ -17,8 +17,8 @@ public sealed class ItemLoaderFieldResolver<T> : FieldResolver
 	/// <exception cref="ArgumentException"/>
 	public ItemLoaderFieldResolver(MethodInfo methodInfo)
 	{
-		methodInfo.IsStatic.AssertTrue();
-		methodInfo.ReturnType.IsAny<T, Task<T>, ValueTask<T>>().AssertTrue();
+		methodInfo.IsStatic.ThrowIfFalse();
+		methodInfo.ReturnType.IsAny<T, Task<T>, ValueTask<T>>().ThrowIfFalse();
 
 		this._MethodHandle = methodInfo.MethodHandle;
 		this._Name = methodInfo.GraphQLName();
@@ -27,12 +27,12 @@ public sealed class ItemLoaderFieldResolver<T> : FieldResolver
 	/// <exception cref="ArgumentNullException"/>
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		context.RequestServices.AssertNotNull();
-		context.Source.AssertNotNull();
+		context.RequestServices.ThrowIfNull();
+		context.Source.ThrowIfNull();
 
 		var dataLoaderAccessor = context.RequestServices.GetRequiredService<IDataLoaderContextAccessor>();
 		var dataLoaderContext = dataLoaderAccessor.Context;
-		dataLoaderContext.AssertNotNull();
+		dataLoaderContext.ThrowIfNull();
 
 		var loaderKey = Invariant($"{context.Source.GetType().GraphQLName()}.{this._Name}");
 		var dataLoader = dataLoaderContext.GetOrAddLoader<T>(loaderKey, () => this.LoadData(context));

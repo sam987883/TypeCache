@@ -7,7 +7,6 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
-using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
@@ -16,6 +15,7 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
+using TypeCache.Utilities;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -59,7 +59,7 @@ public static class SchemaExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static FieldType AddDatabaseSchemaQuery(this ISchema @this, IDataSource dataSource, SchemaCollection collection)
 	{
-		dataSource.AssertNotNull();
+		dataSource.ThrowIfNull();
 		var table = dataSource.GetDatabaseSchema(collection);
 		var graphDatabasesEnum = new EnumerationGraphType
 		{
@@ -136,7 +136,7 @@ public static class SchemaExtensions
 		const string ColumnName = nameof(ColumnName);
 		const string ColumnType = nameof(ColumnType);
 
-		dataSource.AssertNotNull();
+		dataSource.ThrowIfNull();
 
 		database ??= dataSource.DefaultDatabase;
 		var objectSchemas = dataSource.ObjectSchemas.Values.ToArray();
@@ -830,8 +830,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiCallProcedureEndpoint<T>(this ISchema @this, IDataSource dataSource, string procedure, bool mutation, string? graphQlName = null, IGraphType? graphQlType = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		procedure.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		procedure.ThrowIfBlank();
 
 		var name = dataSource.Escape(procedure);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -875,8 +875,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiDeleteDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -910,8 +910,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiDeleteEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -946,8 +946,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiInsertDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -982,8 +982,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiInsertEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -1040,8 +1040,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiSelectEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -1095,8 +1095,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiUpdateDataEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
@@ -1130,8 +1130,8 @@ public static class SchemaExtensions
 	public static FieldType AddSqlApiUpdateEndpoint<T>(this ISchema @this, IDataSource dataSource, string table, string? graphQlName = null)
 		where T : notnull, new()
 	{
-		dataSource.AssertNotNull();
-		table.AssertNotBlank();
+		dataSource.ThrowIfNull();
+		table.ThrowIfBlank();
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];

@@ -7,7 +7,7 @@ public static class RangeExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static bool Any(this Range @this)
 	{
-		(@this.Start.IsFromEnd == @this.End.IsFromEnd).AssertTrue();
+		(@this.Start.IsFromEnd == @this.End.IsFromEnd).ThrowIfFalse();
 
 		return !@this.Start.Equals(@this.End);
 	}
@@ -36,7 +36,7 @@ public static class RangeExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach(this Range @this, Action<int> action)
 	{
-		action.AssertNotNull();
+		action.ThrowIfNull();
 
 		foreach (var i in @this)
 			action(i);
@@ -60,7 +60,7 @@ public static class RangeExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static bool IsReverse(this Range @this)
 	{
-		(@this.Start.IsFromEnd == @this.End.IsFromEnd).AssertTrue();
+		(@this.Start.IsFromEnd == @this.End.IsFromEnd).ThrowIfFalse();
 
 		return @this.Start.IsFromEnd ? @this.Start.Value <= @this.End.Value : @this.Start.Value > @this.End.Value;
 	}
@@ -68,9 +68,9 @@ public static class RangeExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Index Maximum(this Range @this)
 	{
-		@this.Start.IsFromEnd.AssertFalse();
-		@this.End.IsFromEnd.AssertFalse();
-		@this.Start.AssertNotEquals(@this.End);
+		@this.Start.IsFromEnd.ThrowIfTrue();
+		@this.End.IsFromEnd.ThrowIfTrue();
+		@this.Start.ThrowIfEqual(@this.End);
 
 		return @this.IsReverse() ? @this.Start : @this.End.Previous();
 	}
@@ -78,9 +78,9 @@ public static class RangeExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Index Minimum(this Range @this)
 	{
-		@this.Start.IsFromEnd.AssertFalse();
-		@this.End.IsFromEnd.AssertFalse();
-		@this.Start.AssertNotEquals(@this.End);
+		@this.Start.IsFromEnd.ThrowIfTrue();
+		@this.End.IsFromEnd.ThrowIfTrue();
+		@this.Start.ThrowIfEqual(@this.End);
 
 		return @this.IsReverse() ? @this.End.Next() : @this.Start;
 	}

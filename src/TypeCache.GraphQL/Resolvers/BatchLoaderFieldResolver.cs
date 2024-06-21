@@ -4,9 +4,9 @@ using System.Reflection;
 using GraphQL;
 using GraphQL.DataLoader;
 using Microsoft.Extensions.DependencyInjection;
-using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Utilities;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Resolvers;
@@ -24,10 +24,10 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, MATCH> : FieldResolv
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public BatchLoaderFieldResolver(MethodInfo methodInfo, Func<PARENT, MATCH> getParentKey, Func<CHILD, MATCH> getChildKey, bool returnCollection)
 	{
-		methodInfo.AssertNotNull();
-		getParentKey.AssertNotNull();
-		getChildKey.AssertNotNull();
-		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().AssertTrue();
+		methodInfo.ThrowIfNull();
+		getParentKey.ThrowIfNull();
+		getChildKey.ThrowIfNull();
+		methodInfo.ReturnType.IsAny<CHILD[], IEnumerable<CHILD>, Task<CHILD[]>, Task<IEnumerable<CHILD>>, ValueTask<CHILD[]>, ValueTask<IEnumerable<CHILD>>>().ThrowIfFalse();
 
 		this._DataLoaderKey = Invariant($"{typeof(PARENT).GraphQLName()}.{methodInfo.GraphQLName()}");
 		this._MethodInfo = methodInfo;
@@ -39,11 +39,11 @@ public sealed class BatchLoaderFieldResolver<PARENT, CHILD, MATCH> : FieldResolv
 	/// <exception cref="ArgumentNullException"/>
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		context.RequestServices.AssertNotNull();
-		context.Source.AssertNotNull();
+		context.RequestServices.ThrowIfNull();
+		context.Source.ThrowIfNull();
 
 		var dataLoaderAccessor = context.RequestServices.GetRequiredService<IDataLoaderContextAccessor>();
-		dataLoaderAccessor.Context.AssertNotNull();
+		dataLoaderAccessor.Context.ThrowIfNull();
 
 		var key = this._GetParentKey((PARENT)context.Source);
 		if (this._ReturnCollection)

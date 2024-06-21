@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;

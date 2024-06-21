@@ -245,7 +245,7 @@ public partial class ReflectionExtensions
 	public static void InvokeMethodAction(this Type @this, string name, object instance, object?[]? arguments)
 	{
 		var methodInfo = @this.FindMethod(name, arguments);
-		methodInfo.AssertNotNull();
+		methodInfo.ThrowIfNull();
 		methodInfo.InvokeAction(instance, arguments);
 	}
 
@@ -254,7 +254,7 @@ public partial class ReflectionExtensions
 	public static void InvokeMethodAction(this Type @this, string name, object instance, ITuple? arguments)
 	{
 		var methodInfo = @this.FindMethod(name, arguments);
-		methodInfo.AssertNotNull();
+		methodInfo.ThrowIfNull();
 		methodInfo.InvokeAction(instance, arguments);
 	}
 
@@ -263,15 +263,15 @@ public partial class ReflectionExtensions
 	public static object? InvokeMethod(this Type @this, string name, object instance, object?[]? arguments)
 	{
 		var methodInfo = @this.FindMethod(name, arguments);
-		methodInfo.AssertNotNull();
-		methodInfo.DeclaringType.AssertNotNull();
+		methodInfo.ThrowIfNull();
+		methodInfo.DeclaringType.ThrowIfNull();
 
 		var func = TypeStore.MethodArrayFuncs[(methodInfo.DeclaringType.TypeHandle, methodInfo.MethodHandle)];
 		if (func is not null)
 			return func(instance, arguments);
 
 		var action = TypeStore.MethodArrayActions[(methodInfo.DeclaringType.TypeHandle, methodInfo.MethodHandle)];
-		action.AssertNotNull();
+		action.ThrowIfNull();
 		action(instance, arguments);
 
 		return null;
@@ -450,8 +450,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static bool IsConvertibleTo(this Type @this, Type targetType)
 	{
-		@this.AssertNotNull();
-		targetType.AssertNotNull();
+		@this.ThrowIfNull();
+		targetType.ThrowIfNull();
 
 		return @this.GetScalarType().IsConvertibleTo(targetType.GetScalarType());
 	}

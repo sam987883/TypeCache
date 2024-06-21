@@ -20,13 +20,13 @@ public static class EventHandler<T>
 	/// <exception cref="ArgumentException"/>
 	public static long Add(T instance, string eventMemberName, Delegate handler)
 	{
-		instance.AssertNotNull();
-		eventMemberName.AssertNotBlank();
-		handler.AssertNotNull();
+		instance.ThrowIfNull();
+		eventMemberName.ThrowIfBlank();
+		handler.ThrowIfNull();
 
 		var eventInfo = typeof(T).GetEvent(eventMemberName);
-		eventInfo.AssertNotNull();
-		eventInfo.AddMethod.AssertNotNull();
+		eventInfo.ThrowIfNull();
+		eventInfo.AddMethod.ThrowIfNull();
 
 		var key = DateTime.UtcNow.Ticks;
 		var reference = new EventHandlerReference(instance.ToWeakReference(), eventInfo.AddMethod.MethodHandle, eventInfo.RemoveMethod?.MethodHandle, handler);

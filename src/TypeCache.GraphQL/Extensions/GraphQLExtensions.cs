@@ -183,8 +183,8 @@ public static class GraphQLExtensions
 			return @this.ToGraphQLEnumType();
 
 		var objectType = @this.GetObjectType();
-		(objectType is ObjectType.Delegate).AssertFalse();
-		(objectType is ObjectType.Object).AssertFalse();
+		(objectType is ObjectType.Delegate).ThrowIfTrue();
+		(objectType is ObjectType.Object).ThrowIfTrue();
 
 		var scalarGraphType = @this.GetScalarType().ToGraphType();
 		if (scalarGraphType is not null)

@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Primitives;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -316,7 +316,7 @@ public static class StringExtensions
 	/// <remarks>
 	/// <code>
 	/// =&gt; RegexCache[(@<paramref name="this"/>, <paramref name="options"/>)];
-	/// // _ =&gt; new Regex(@<paramref name="this"/>, <paramref name="options"/>, <see cref="TimeSpan"/>.FromMinutes(1));
+	/// // _ =&gt; <see langword="new"/> Regex(@<paramref name="this"/>, <paramref name="options"/>, <see cref="TimeSpan"/>.FromMinutes(1));
 	/// </code>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]

@@ -52,22 +52,6 @@ public static class GlobalExtensions
 		where T : struct
 		=> new(@this);
 
-	/// <inheritdoc cref="Tuple.Create{T1}(T1)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Tuple"/>.Create(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Tuple<T> ToTuple<T>(this T @this)
-		=> Tuple.Create(@this);
-
-	/// <inheritdoc cref="ValueTuple.Create{T1}(T1)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="ValueTuple"/>.Create(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ValueTuple<T> ToValueTuple<T>(this T @this)
-		=> ValueTuple.Create(@this);
-
 	/// <inheritdoc cref="ToWeakReference{T}(T)"/>
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>

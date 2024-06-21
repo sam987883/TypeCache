@@ -9,21 +9,21 @@ public static class JsonExtensions
 {
 	public static JsonElement[] GetArrayElements(this JsonElement @this)
 	{
-		@this.ValueKind.AssertEquals(JsonValueKind.Array);
+		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Array);
 
 		return @this.EnumerateArrayValues().ToArray();
 	}
 
 	public static object?[] GetArrayValues(this JsonElement @this)
 	{
-		@this.ValueKind.AssertEquals(JsonValueKind.Array);
+		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Array);
 
 		return @this.EnumerateArrayValues().Select(jsonElement => jsonElement.GetValue()).ToArray();
 	}
 
 	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)
 	{
-		@this.ValueKind.AssertEquals(JsonValueKind.Object);
+		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Object);
 
 		var properties = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
 		using var enumerator = @this.EnumerateObject();
@@ -37,7 +37,7 @@ public static class JsonExtensions
 
 	public static IDictionary<string, object?> GetObjectValues(this JsonElement @this)
 	{
-		@this.ValueKind.AssertEquals(JsonValueKind.Object);
+		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Object);
 
 		var properties = new Dictionary<string, object?>(StringComparer.Ordinal);
 		using var enumerator = @this.EnumerateObject();

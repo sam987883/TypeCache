@@ -10,7 +10,7 @@ public static class RuleFactory
 	public static IAfterRule<REQUEST> CreateAfterRule<REQUEST>(Func<REQUEST, CancellationToken, Task> handleAsync)
 		where REQUEST : IRequest
 	{
-		handleAsync.AssertNotNull();
+		handleAsync.ThrowIfNull();
 
 		return new CustomAfterRule<REQUEST>(handleAsync);
 	}
@@ -19,7 +19,7 @@ public static class RuleFactory
 	public static IAfterRule<REQUEST> CreateAfterRule<REQUEST>(Action<REQUEST> handle)
 		where REQUEST : IRequest
 	{
-		handle.AssertNotNull();
+		handle.ThrowIfNull();
 
 		return new CustomAfterRule<REQUEST>((REQUEST request, CancellationToken token) => Task.Run(() => handle(request), token));
 	}
@@ -28,7 +28,7 @@ public static class RuleFactory
 	public static IAfterRule<REQUEST, RESPONSE> CreateAfterRule<REQUEST, RESPONSE>(Func<REQUEST, RESPONSE, CancellationToken, Task> handleAsync)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		handleAsync.AssertNotNull();
+		handleAsync.ThrowIfNull();
 
 		return new CustomAfterRule<REQUEST, RESPONSE>(handleAsync);
 	}
@@ -37,7 +37,7 @@ public static class RuleFactory
 	public static IAfterRule<REQUEST, RESPONSE> CreateAfterRule<REQUEST, RESPONSE>(Action<REQUEST, RESPONSE> handle)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		handle.AssertNotNull();
+		handle.ThrowIfNull();
 
 		return new CustomAfterRule<REQUEST, RESPONSE>((REQUEST request, RESPONSE response, CancellationToken token) => Task.Run(() => handle(request, response), token));
 	}
@@ -46,7 +46,7 @@ public static class RuleFactory
 	public static IRule<REQUEST> CreateRule<REQUEST>(Func<REQUEST, CancellationToken, Task> executeAsync)
 		where REQUEST : IRequest
 	{
-		executeAsync.AssertNotNull();
+		executeAsync.ThrowIfNull();
 
 		return new CustomRule<REQUEST>(executeAsync);
 	}
@@ -55,7 +55,7 @@ public static class RuleFactory
 	public static IRule<REQUEST> CreateRule<REQUEST>(Action<REQUEST> execute)
 		where REQUEST : IRequest
 	{
-		execute.AssertNotNull();
+		execute.ThrowIfNull();
 
 		return new CustomRule<REQUEST>((REQUEST request, CancellationToken token) => Task.Run(() => execute(request), token));
 	}
@@ -64,7 +64,7 @@ public static class RuleFactory
 	public static IRule<REQUEST, RESPONSE> CreateRule<REQUEST, RESPONSE>(Func<REQUEST, CancellationToken, Task<RESPONSE>> mapAsync)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		mapAsync.AssertNotNull();
+		mapAsync.ThrowIfNull();
 
 		return new CustomRule<REQUEST, RESPONSE>(mapAsync);
 	}
@@ -73,7 +73,7 @@ public static class RuleFactory
 	public static IRule<REQUEST, RESPONSE> CreateRule<REQUEST, RESPONSE>(Func<REQUEST, RESPONSE> map)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		map.AssertNotNull();
+		map.ThrowIfNull();
 
 		return new CustomRule<REQUEST, RESPONSE>((REQUEST request, CancellationToken token) => Task.Run(() => map(request), token));
 	}
@@ -82,7 +82,7 @@ public static class RuleFactory
 	public static IValidationRule<REQUEST> CreateValidationRule<REQUEST>(Func<REQUEST, CancellationToken, Task> validateAsync)
 		where REQUEST : IRequest
 	{
-		validateAsync.AssertNotNull();
+		validateAsync.ThrowIfNull();
 
 		return new CustomValidationRule<REQUEST>(validateAsync);
 	}
@@ -91,7 +91,7 @@ public static class RuleFactory
 	public static IValidationRule<REQUEST> CreateValidationRule<REQUEST>(Action<REQUEST> validate)
 		where REQUEST : IRequest
 	{
-		validate.AssertNotNull();
+		validate.ThrowIfNull();
 
 		return new CustomValidationRule<REQUEST>((request, token) => Task.Run(() => validate(request), token));
 	}

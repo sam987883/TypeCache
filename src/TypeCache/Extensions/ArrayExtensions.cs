@@ -3,7 +3,7 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using TypeCache.Collections;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -31,7 +31,7 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentException"/>
 	public static T[] Copy<T>(this T[] @this)
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		if (@this.Length is 0)
 			return Array<T>.Empty;
@@ -52,7 +52,7 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T> action, Action between)
 	{
-		between.AssertNotNull();
+		between.ThrowIfNull();
 
 		var first = true;
 		@this.ForEach(value =>
@@ -69,7 +69,7 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[]? @this, ActionRef<T> action)
 	{
-		action.AssertNotNull();
+		action.ThrowIfNull();
 
 		var count = @this?.Length ?? 0;
 		for (var i = 0; i < count; ++i)
@@ -85,7 +85,7 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[]? @this, ActionIndexRef<T> action)
 	{
-		action.AssertNotNull();
+		action.ThrowIfNull();
 
 		var count = @this?.Length ?? 0;
 		for (var i = 0; i < count; ++i)
@@ -95,7 +95,7 @@ public static class ArrayExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T, int> action, Action between)
 	{
-		between.AssertNotNull();
+		between.ThrowIfNull();
 
 		var i = -1;
 		@this.ForEach(value =>
@@ -202,7 +202,7 @@ public static class ArrayExtensions
 	/// <exception cref="IndexOutOfRangeException"/>
 	public static T[] Subarray<T>(this T[] @this, int sourceIndex, int length = 0)
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		if (sourceIndex + length > @this.Length)
 			throw new IndexOutOfRangeException($"{nameof(Subarray)}: last index {sourceIndex + length} is more than array length {@this.Length}.");

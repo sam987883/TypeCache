@@ -25,7 +25,7 @@ public static partial class MapExtensions
 	public static T? Map<T, K, V>(this IDictionary<K, V> @this, K key, Func<V, T> map, T? keyNotFoundValue = default)
 		where K : notnull
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		return @this.TryGetValue(key, out var value) ? map(value) : keyNotFoundValue;
 	}
@@ -34,7 +34,7 @@ public static partial class MapExtensions
 	public static T? Map<T, K, V>(this IDictionary<K, V> @this, K key, Func<K, V, T> map, T? keyNotFoundValue = default)
 		where K : notnull
 	{
-		@this.AssertNotNull();
+		@this.ThrowIfNull();
 
 		return @this.TryGetValue(key, out var value) ? map(key, value) : keyNotFoundValue;
 	}
@@ -43,8 +43,8 @@ public static partial class MapExtensions
 	public static T MapTo<T>(this IEnumerable<KeyValuePair<string, object?>> @this, T target, bool ignoreCase = true)
 		where T : notnull
 	{
-		@this.AssertNotNull();
-		target.AssertNotNull();
+		@this.ThrowIfNull();
+		target.ThrowIfNull();
 
 		var targetType = target.GetType();
 		var bindings = ignoreCase switch
@@ -77,9 +77,9 @@ public static partial class MapExtensions
 	public static T MapTo<T>(this T @this, T target)
 		where T : notnull
 	{
-		@this.AssertNotNull();
-		target.AssertNotNull();
-		(target, @this).AssertNotSame();
+		@this.ThrowIfNull();
+		target.ThrowIfNull();
+		(target, @this).ThrowIfSame();
 
 		var properties = typeof(T).GetProperties(FlattenHierarchy | Instance | Public);
 		foreach (var propertyInfo in properties)
@@ -133,8 +133,8 @@ public static partial class MapExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static IDictionary<K, V?> MapToDictionary<K, V>(this IEnumerable<KeyValuePair<K, V?>> @this, IDictionary<K, V?> target)
 	{
-		@this.AssertNotNull();
-		target.AssertNotNull();
+		@this.ThrowIfNull();
+		target.ThrowIfNull();
 
 		foreach (var pair in @this)
 			target[pair.Key] = pair.Value;
@@ -145,8 +145,8 @@ public static partial class MapExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static IDictionary<string, object?> MapToDictionary(this object @this, IDictionary<string, object?> target)
 	{
-		@this.AssertNotNull();
-		target.AssertNotNull();
+		@this.ThrowIfNull();
+		target.ThrowIfNull();
 
 		var sourceProperties = @this.GetType().GetProperties(FlattenHierarchy | Instance | Public)
 			.Where(propertyInfo => propertyInfo.CanRead);
@@ -175,8 +175,8 @@ public static partial class MapExtensions
 		where S : notnull
 		where T : notnull
 	{
-		source.AssertNotNull();
-		target.AssertNotNull();
+		source.ThrowIfNull();
+		target.ThrowIfNull();
 
 		foreach (var sourcePropertyInfo in typeof(S).GetProperties(bindings)
 			.Where(propertyInfo => propertyInfo.CanRead))

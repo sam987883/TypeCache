@@ -12,7 +12,7 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		propertyInfo.AssertNotNull();
+		propertyInfo.ThrowIfNull();
 
 		var source = context.Source switch
 		{

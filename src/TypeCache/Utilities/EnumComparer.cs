@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Extensions;
-using TypeCache.Utilities;
 
-namespace TypeCache.Collections;
+namespace TypeCache.Utilities;
 
 public readonly struct EnumComparer<T> : IComparer<T>, IEqualityComparer<T>
 	where T : struct, Enum

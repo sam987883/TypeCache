@@ -83,7 +83,7 @@ public partial class ReflectionExtensions
 	public static void InvokeAction(this MethodInfo @this, object instance, object?[]? arguments)
 	{
 		var action = TypeStore.MethodArrayActions[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		action.AssertNotNull();
+		action.ThrowIfNull();
 		action.Invoke(instance, arguments);
 	}
 
@@ -94,7 +94,7 @@ public partial class ReflectionExtensions
 	public static void InvokeAction(this MethodInfo @this, object instance, ITuple? arguments)
 	{
 		var action = TypeStore.MethodTupleActions[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		action.AssertNotNull();
+		action.ThrowIfNull();
 		action.Invoke(instance, arguments);
 	}
 
@@ -105,7 +105,7 @@ public partial class ReflectionExtensions
 	public static object? InvokeFunc(this MethodInfo @this, object instance, object?[]? arguments)
 	{
 		var func = TypeStore.MethodArrayFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(instance, arguments);
 	}
 
@@ -116,7 +116,7 @@ public partial class ReflectionExtensions
 	public static object? InvokeFunc(this MethodInfo @this, object instance, ITuple? arguments)
 	{
 		var func = TypeStore.MethodTupleFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(instance, arguments);
 	}
 
@@ -127,7 +127,7 @@ public partial class ReflectionExtensions
 	public static void InvokeStaticAction(this MethodInfo @this, object?[]? arguments)
 	{
 		var action = TypeStore.StaticMethodArrayActions[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		action.AssertNotNull();
+		action.ThrowIfNull();
 		action.Invoke(arguments);
 	}
 
@@ -138,7 +138,7 @@ public partial class ReflectionExtensions
 	public static void InvokeStaticAction(this MethodInfo @this, ITuple? arguments)
 	{
 		var action = TypeStore.StaticMethodTupleActions[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		action.AssertNotNull();
+		action.ThrowIfNull();
 		action.Invoke(arguments);
 	}
 
@@ -149,7 +149,7 @@ public partial class ReflectionExtensions
 	public static object? InvokeStaticFunc(this MethodInfo @this, object?[]? arguments)
 	{
 		var func = TypeStore.StaticMethodArrayFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(arguments);
 	}
 
@@ -160,7 +160,7 @@ public partial class ReflectionExtensions
 	public static object? InvokeStaticFunc(this MethodInfo @this, ITuple? arguments)
 	{
 		var func = TypeStore.StaticMethodTupleFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(arguments);
 	}
 
@@ -253,8 +253,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Action<object, object?[]?>> ToArrayActionExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertFalse();
-		@this.ReturnType.AssertEquals(typeof(void));
+		@this.IsStatic.ThrowIfTrue();
+		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
@@ -268,8 +268,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Func<object, object?[]?, object?>> ToArrayFuncExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertFalse();
-		@this.ReturnType.AssertNotEquals(typeof(void));
+		@this.IsStatic.ThrowIfTrue();
+		@this.ReturnType.ThrowIfEqual(typeof(void));
 
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
@@ -283,7 +283,7 @@ public partial class ReflectionExtensions
 	public static LambdaExpression ToDelegateExpression(this MethodInfo @this)
 	{
 		if (!@this.IsStatic)
-			@this.DeclaringType.AssertNotNull();
+			@this.DeclaringType.ThrowIfNull();
 
 		ParameterExpression instance = nameof(instance).ToParameterExpression(@this.DeclaringType!);
 		var parameters = @this.GetParameters()
@@ -318,8 +318,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Action<object?[]?>> ToStaticArrayActionExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertTrue();
-		@this.ReturnType.AssertEquals(typeof(void));
+		@this.IsStatic.ThrowIfFalse();
+		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
 		var call = @this.CreateStaticArrayCall(arguments);
@@ -332,8 +332,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Func<object?[]?, object?>> ToStaticArrayFuncExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertTrue();
-		@this.ReturnType.AssertNotEquals(typeof(void));
+		@this.IsStatic.ThrowIfFalse();
+		@this.ReturnType.ThrowIfEqual(typeof(void));
 
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
 		var call = @this.CreateStaticArrayCall(arguments);
@@ -346,8 +346,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Action<ITuple?>> ToStaticTupleActionExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertTrue();
-		@this.ReturnType.AssertEquals(typeof(void));
+		@this.IsStatic.ThrowIfFalse();
+		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
 		var call = @this.CreateStaticTupleCall(arguments);
@@ -360,8 +360,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Func<ITuple?, object?>> ToStaticTupleFuncExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertTrue();
-		@this.ReturnType.AssertNotEquals(typeof(void));
+		@this.IsStatic.ThrowIfFalse();
+		@this.ReturnType.ThrowIfEqual(typeof(void));
 
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
 		var call = @this.CreateStaticTupleCall(arguments);
@@ -374,8 +374,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Action<object, ITuple?>> ToTupleActionExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertFalse();
-		@this.ReturnType.AssertEquals(typeof(void));
+		@this.IsStatic.ThrowIfTrue();
+		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
@@ -389,8 +389,8 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentOutOfRangeException"/>
 	public static Expression<Func<object, ITuple?, object?>> ToTupleFuncExpression(this MethodInfo @this)
 	{
-		@this.IsStatic.AssertFalse();
-		@this.ReturnType.AssertNotEquals(typeof(void));
+		@this.IsStatic.ThrowIfTrue();
+		@this.ReturnType.ThrowIfEqual(typeof(void));
 
 		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
@@ -411,7 +411,7 @@ public partial class ReflectionExtensions
 
 	private static Expression CreateArrayCall(this MethodInfo @this, ParameterExpression instance, ParameterExpression arguments)
 	{
-		@this.DeclaringType.AssertNotNull();
+		@this.DeclaringType.ThrowIfNull();
 
 		var parameters = @this
 			.GetParameters()
@@ -423,25 +423,33 @@ public partial class ReflectionExtensions
 
 	private static Expression CreateStaticTupleCall(this MethodInfo @this, ParameterExpression arguments)
 	{
-		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position).ToArray();
+		var parameterInfos = @this.GetParameters();
+		if (parameterInfos.Length == 0)
+			return @this.ToExpression(null);
+
+		parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position).ToArray();
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property("Item", [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
+			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(@this.ToExpression(null, valueTupleFields), @this.ToExpression(null, parameters));
 	}
 
 	private static Expression CreateTupleCall(this MethodInfo @this, ParameterExpression instance, ParameterExpression arguments)
 	{
-		@this.DeclaringType.AssertNotNull();
+		@this.DeclaringType.ThrowIfNull();
 
-		var parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position).ToArray();
+		var typedInstance = instance.Cast(@this.DeclaringType);
+		var parameterInfos = @this.GetParameters();
+		if (parameterInfos.Length == 0)
+			return typedInstance.Call(@this);
+
+		parameterInfos = @this.GetParameters().OrderBy(parameterInfo => parameterInfo.Position).ToArray();
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property("Item", [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
-		var typedInstance = instance.Cast(@this.DeclaringType);
+			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(typedInstance.Call(@this, valueTupleFields), typedInstance.Call(@this, parameters));
 	}
@@ -453,11 +461,11 @@ public partial class ReflectionExtensions
 		{
 			if (++i == 8)
 			{
-				tupleExpression = tupleExpression.Field("Rest");
+				tupleExpression = tupleExpression.Field(Rest);
 				i = 1;
 			}
 
-			yield return tupleExpression.Field(Invariant($"Item{i}"));
+			yield return tupleExpression.Field(Item + i);
 		}
 	}
 

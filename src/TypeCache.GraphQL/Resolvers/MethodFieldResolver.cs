@@ -12,7 +12,7 @@ public sealed class MethodFieldResolver(MethodInfo methodInfo) : FieldResolver
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		context.RequestServices.AssertNotNull();
+		context.RequestServices.ThrowIfNull();
 
 		var arguments = context.GetArguments(methodInfo).ToArray();
 		object? result;

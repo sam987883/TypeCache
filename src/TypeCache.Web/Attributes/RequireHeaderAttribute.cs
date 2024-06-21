@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using TypeCache.Web.Requirements;
 
 namespace TypeCache.Web.Attributes;
@@ -16,8 +16,8 @@ public class RequireHeaderAttribute : AuthorizeAttribute
 
 	public RequireHeaderAttribute(string key, string[] allowedValues) : base(nameof(HeaderAuthorizationRequirement))
 	{
-		key.AssertNotBlank();
-		allowedValues?.ForEach(allowedValue => allowedValue.AssertNotBlank());
+		key.ThrowIfBlank();
+		allowedValues?.ForEach(allowedValue => allowedValue.ThrowIfBlank());
 
 		this.Key = key;
 		this.AllowedValues = allowedValues ?? Array<string>.Empty;

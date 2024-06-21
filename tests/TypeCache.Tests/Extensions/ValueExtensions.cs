@@ -2,8 +2,8 @@
 
 using System;
 using System.Linq;
-using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using Xunit;
 
 namespace TypeCache.Tests.Extensions;

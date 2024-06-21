@@ -22,7 +22,7 @@ public sealed class GraphQLHashIdType : ScalarGraphType
 	/// <exception cref="ArgumentNullException"/>
 	public GraphQLHashIdType(IHashMaker hashMaker)
 	{
-		hashMaker.AssertNotNull();
+		hashMaker.ThrowIfNull();
 
 		this._HashMaker = hashMaker;
 		this.Name = "HashID";

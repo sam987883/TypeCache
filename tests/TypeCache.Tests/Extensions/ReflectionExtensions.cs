@@ -39,6 +39,14 @@ public class ReflectionExtensions
 	}
 
 	[Fact]
+	public void Create()
+	{
+		Assert.NotNull(typeof(Contact).Create());
+		Assert.NotNull(typeof(object).Create());
+		Assert.NotNull(typeof(IndexOutOfRangeException).Create());
+	}
+
+	[Fact]
 	public void FieldInfo_GetValueFunc()
 	{
 		var contact = new Contact();
@@ -383,14 +391,14 @@ public class ReflectionExtensions
 		stopwatch.Restart();
 		while (++i < 100000)
 		{
-			setID(null, Guid.NewGuid());
-			setFirstName(contact, null, "FirstName");
-			setMiddleName(contact, null, "MiddleName");
-			setLastName(contact, null, "LastName");
-			setAge(contact, null, 31);
-			setEmail(contact, null, "Email");
-			setPhone(contact, null, "Phone");
-			setDeleted(contact, null, !contact.Deleted);
+			setID(ValueTuple.Create(Guid.NewGuid()));
+			setFirstName(contact, ValueTuple.Create("FirstName"));
+			setMiddleName(contact, ValueTuple.Create("MiddleName"));
+			setLastName(contact, ValueTuple.Create("LastName"));
+			setAge(contact, ValueTuple.Create(31));
+			setEmail(contact, ValueTuple.Create("Email"));
+			setPhone(contact, ValueTuple.Create("Phone"));
+			setDeleted(contact, ValueTuple.Create(!contact.Deleted));
 		}
 		stopwatch.Stop();
 		var elapsedSetPropertyValue = stopwatch.Elapsed;

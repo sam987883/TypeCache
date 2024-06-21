@@ -47,7 +47,7 @@
 - `IAfterRule`
 - `RuleFactory`
 ---
-### `TypeCache.Extensions` - Simple Robust Database CRUD Access
+### `TypeCache.Data` - Simple Robust Database CRUD Access
 - `System.Data.Common.DbCommand.ExecuteReaderAsync(...)`
 - `System.Data.Common.DbCommand.GetDataTableAsync(...)`
 - `System.Data.Common.DbCommand.GetJsonArrayAsync(...)`
@@ -61,17 +61,16 @@
 - `System.Data.Common.DbDataReader.ReadJsonAsync(...)`__
 ---
 ### `TypeCache.Extensions` - Helpful Extensions
-- `Array/Linq/Enumerator` extensions
-- Assertion extensions
+- Array, Linq, Enumerator extensions
+- ThrowIf extensions
 - `System.Linq.Expressions` extensions
 - `System.BitConverter` extensions
 - `System.Char` extensions
 - `System.Enum` extensions
 - `System.ReadOnlySpan<>` extensions
-- `System.Reflection` extensions
 - `System.Span<>` extensions
 - `System.Text.Rune` extensions
 - `System.Text.StringBuilder` extensions
-- `Range/Index` extensions
+- `Range` and `Index` extensions
 - Time Zone extensions
 - And many more!

@@ -42,6 +42,7 @@ public static class EnumeratorExtensions
 	{
 		while (count > 0 && @this.MoveNext())
 			--count;
+
 		return count == 0;
 	}
 

@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using TypeCache.Web.Requirements;
 
 namespace TypeCache.Web.Attributes;
@@ -19,12 +19,12 @@ public class RequireClaimAttribute : AuthorizeAttribute
 	{
 		const char separator = '=';
 
-		claims.AssertNotEmpty();
+		claims.ThrowIfEmpty();
 
 		this.Claims = new Dictionary<string, string[]>(claims.Length, StringComparer.OrdinalIgnoreCase);
 		claims?.ForEach(claim =>
 		{
-			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.Count(c => c.Equals(separator)) > 1).AssertFalse();
+			(claim.StartsWith(separator) || claim.EndsWith(separator) || claim.Count(c => c.Equals(separator)) > 1).ThrowIfTrue();
 
 			if (claim.Contains(separator))
 			{

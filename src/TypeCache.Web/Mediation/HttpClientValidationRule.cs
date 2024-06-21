@@ -10,9 +10,9 @@ internal sealed class HttpClientValidationRule
 {
 	public Task Validate(HttpClientRequest request, CancellationToken token) => Task.Run(() =>
 	{
-		request.AssertNotNull();
-		request.Message.AssertNotNull();
-		request.Message.RequestUri.AssertNotNull();
-		request.Message.RequestUri.IsAbsoluteUri.AssertTrue();
+		request.ThrowIfNull();
+		request.Message.ThrowIfNull();
+		request.Message.RequestUri.ThrowIfNull();
+		request.Message.RequestUri.IsAbsoluteUri.ThrowIfFalse();
 	}, token);
 }

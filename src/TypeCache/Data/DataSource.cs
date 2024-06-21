@@ -3,9 +3,9 @@
 using System.Collections.Frozen;
 using System.Data;
 using System.Data.Common;
-using TypeCache.Collections;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using static System.StringSplitOptions;
 using static TypeCache.Data.DataSourceType;
 
@@ -106,7 +106,7 @@ internal sealed class DataSource : IDataSource
 
 	public string Escape(string databaseObject)
 	{
-		databaseObject.AssertNotBlank();
+		databaseObject.ThrowIfBlank();
 
 		var items = databaseObject.Split('.', RemoveEmptyEntries | TrimEntries);
 		if (items.Length > 3 || (this.Type == MySql && items.Length > 2))

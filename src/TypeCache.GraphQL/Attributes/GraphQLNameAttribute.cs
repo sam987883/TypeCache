@@ -14,7 +14,7 @@ public sealed class GraphQLNameAttribute : Attribute
 	/// <exception cref="ArgumentNullException"/>
 	public GraphQLNameAttribute(string name)
 	{
-		name.AssertNotBlank();
+		name.ThrowIfBlank();
 
 		this.Name = name;
 	}

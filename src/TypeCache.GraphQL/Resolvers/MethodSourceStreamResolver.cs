@@ -20,7 +20,7 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 			if (returnType is ObjectType.Task || returnType is ObjectType.ValueTask)
 				returnsObservable = methodInfo.ReturnType.GenericTypeArguments.Single().GetObjectType() is ObjectType.Observable;
 
-			returnsObservable.AssertTrue();
+			returnsObservable.ThrowIfFalse();
 		}
 
 		this._MethodInfo = methodInfo;
@@ -28,7 +28,7 @@ public sealed class MethodSourceStreamResolver : SourceStreamResolver
 
 	protected override ValueTask<IObservable<object?>> ResolveAsync(global::GraphQL.IResolveFieldContext context)
 	{
-		context.RequestServices.AssertNotNull();
+		context.RequestServices.ThrowIfNull();
 
 		var arguments = context.GetArguments(this._MethodInfo).ToArray();
 		object? result;

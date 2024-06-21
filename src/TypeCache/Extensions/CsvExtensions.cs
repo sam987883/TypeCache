@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Numerics;
-using TypeCache.Collections;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;

@@ -21,7 +21,7 @@ public partial class ReflectionExtensions
 	public static object InvokeFunc(this ConstructorInfo @this, object?[]? arguments)
 	{
 		var func = TypeStore.ConstructorArrayFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(arguments);
 	}
 
@@ -29,7 +29,7 @@ public partial class ReflectionExtensions
 	public static object InvokeFunc(this ConstructorInfo @this, ITuple? arguments)
 	{
 		var func = TypeStore.ConstructorTupleFuncs[(@this.DeclaringType!.TypeHandle, @this.MethodHandle)];
-		func.AssertNotNull();
+		func.ThrowIfNull();
 		return func.Invoke(arguments);
 	}
 
@@ -37,7 +37,7 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static LambdaExpression ToDelegateExpression(this ConstructorInfo @this)
 	{
-		@this.DeclaringType.AssertNotNull();
+		@this.DeclaringType.ThrowIfNull();
 
 		var parameters = @this.GetParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
@@ -101,7 +101,7 @@ public partial class ReflectionExtensions
 
 	private static Expression CreateArrayCall(this ConstructorInfo @this, ParameterExpression arguments)
 	{
-		@this.DeclaringType.AssertNotNull();
+		@this.DeclaringType.ThrowIfNull();
 
 		var parameters = @this
 			.GetParameters()
@@ -117,7 +117,7 @@ public partial class ReflectionExtensions
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property("Item", [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
+			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(@this.ToExpression(valueTupleFields), @this.ToExpression(parameters));
 	}

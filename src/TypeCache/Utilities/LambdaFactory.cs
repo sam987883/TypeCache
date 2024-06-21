@@ -156,4 +156,14 @@ public static class LambdaFactory
 		ParameterExpression value = nameof(value).ToParameterExpression<T>();
 		return Expression.Lambda<Predicate<T>>(lambda(value), value);
 	}
+
+	public static LambdaExpression CreateEnumParseFunc(Type enumType)
+	{
+		ParameterExpression value = nameof(value).ToParameterExpression<string>();
+
+		return typeof(Enum)
+			.GetMethod(nameof(Enum.Parse), 1, [typeof(string), typeof(bool)])!
+			.ToExpression(null, [value, true.ToConstantExpression()])
+			.LambdaFunc(enumType, [value]);
+	}
 }

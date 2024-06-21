@@ -12,7 +12,7 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 {
 	public GraphQLInterfaceType()
 	{
-		typeof(T).IsInterface.AssertTrue();
+		typeof(T).IsInterface.ThrowIfFalse();
 
 		this.Name = typeof(T).GraphQLName();
 
