@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using GraphQL;
-using GraphQL.Resolvers;
 
 namespace TypeCache.GraphQL.Resolvers;
 
@@ -18,19 +17,19 @@ public abstract class FieldResolver : IFieldResolver
 			context.Errors.Add(error);
 			return null;
 		}
-		catch (AggregateException error)
+		catch (AggregateException ex)
 		{
-			var executionErrors = error.InnerExceptions.Select(exception =>
-				exception as ExecutionError ?? new ExecutionError(exception.Message, exception));
-			context.Errors.AddRange(executionErrors);
+			foreach (var error in ex.InnerExceptions)
+				context.Errors.Add(new(error.Message, error));
+
 			return null;
 		}
-		catch (Exception error)
+		catch (Exception ex)
 		{
-			context.Errors.Add(new ExecutionError(error.Message, error));
+			context.Errors.Add(new(ex.Message, ex));
 			return null;
 		}
 	}
 
-	protected abstract ValueTask<object?> ResolveAsync(IResolveFieldContext context);
+	protected abstract Task<object?> ResolveAsync(IResolveFieldContext context);
 }

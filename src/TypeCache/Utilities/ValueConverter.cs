@@ -1,7 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
+using System.Reflection;
 using TypeCache.Extensions;
 using static System.Globalization.CultureInfo;
 
@@ -130,32 +133,32 @@ public static class ValueConverter
 
 			(ScalarType.String, ScalarType.Char) => LambdaFactory.CreateFunc<string, char>(_ => Convert.ToChar(_)),
 			(ScalarType.String, ScalarType.Enum) => LambdaFactory.CreateEnumParseFunc(targetType),
-			(ScalarType.String, ScalarType.Guid) => LambdaFactory.CreateFunc<string, Guid>(_ => Guid.Parse(_)),
-			(ScalarType.String, ScalarType.Index) => LambdaFactory.CreateFunc<string, Index>(_ => Index.FromStart(int.Parse(_))),
-			(ScalarType.String, ScalarType.Uri) => LambdaFactory.CreateFunc<string, Uri>(_ => new Uri(_)),
+			(ScalarType.String, ScalarType.Guid) => LambdaFactory.CreateFunc<string, Guid>(_ => Guid.Parse(_, InvariantCulture)),
+			(ScalarType.String, ScalarType.Index) => LambdaFactory.CreateFunc<string, Index>(_ => Index.FromStart(int.Parse(_, NumberStyles.Integer, InvariantCulture))),
+			(ScalarType.String, ScalarType.Uri) => LambdaFactory.CreateFunc<string, Uri>(_ => new Uri(_, _[0] == '/' ? UriKind.Relative : UriKind.Absolute)),
 			(ScalarType.String, ScalarType.Boolean) => LambdaFactory.CreateFunc<string, bool>(_ => bool.Parse(_)),
-			(ScalarType.String, ScalarType.SByte) => LambdaFactory.CreateFunc<string, sbyte>(_ => sbyte.Parse(_)),
-			(ScalarType.String, ScalarType.Int16) => LambdaFactory.CreateFunc<string, short>(_ => short.Parse(_)),
-			(ScalarType.String, ScalarType.Int32) => LambdaFactory.CreateFunc<string, int>(_ => int.Parse(_)),
-			(ScalarType.String, ScalarType.Int64) => LambdaFactory.CreateFunc<string, long>(_ => long.Parse(_)),
-			(ScalarType.String, ScalarType.Int128) => LambdaFactory.CreateFunc<string, Int128>(_ => Int128.Parse(_)),
-			(ScalarType.String, ScalarType.BigInteger) => LambdaFactory.CreateFunc<string, BigInteger>(_ => BigInteger.Parse(_)),
-			(ScalarType.String, ScalarType.Byte) => LambdaFactory.CreateFunc<string, byte>(_ => byte.Parse(_)),
-			(ScalarType.String, ScalarType.UInt16) => LambdaFactory.CreateFunc<string, ushort>(_ => ushort.Parse(_)),
-			(ScalarType.String, ScalarType.UInt32) => LambdaFactory.CreateFunc<string, uint>(_ => uint.Parse(_)),
-			(ScalarType.String, ScalarType.UInt64) => LambdaFactory.CreateFunc<string, ulong>(_ => ulong.Parse(_)),
-			(ScalarType.String, ScalarType.UInt128) => LambdaFactory.CreateFunc<string, UInt128>(_ => UInt128.Parse(_)),
-			(ScalarType.String, ScalarType.IntPtr) => LambdaFactory.CreateFunc<string, nint>(_ => nint.Parse(_)),
-			(ScalarType.String, ScalarType.UIntPtr) => LambdaFactory.CreateFunc<string, nuint>(_ => nuint.Parse(_)),
-			(ScalarType.String, ScalarType.Half) => LambdaFactory.CreateFunc<string, Half>(_ => Half.Parse(_)),
-			(ScalarType.String, ScalarType.Single) => LambdaFactory.CreateFunc<string, float>(_ => float.Parse(_)),
-			(ScalarType.String, ScalarType.Double) => LambdaFactory.CreateFunc<string, double>(_ => double.Parse(_)),
-			(ScalarType.String, ScalarType.Decimal) => LambdaFactory.CreateFunc<string, decimal>(_ => decimal.Parse(_)),
-			(ScalarType.String, ScalarType.DateOnly) => LambdaFactory.CreateFunc<string, DateOnly>(_ => DateOnly.Parse(_)),
-			(ScalarType.String, ScalarType.DateTime) => LambdaFactory.CreateFunc<string, DateTime>(_ => DateTime.Parse(_)),
-			(ScalarType.String, ScalarType.DateTimeOffset) => LambdaFactory.CreateFunc<string, DateTimeOffset>(_ => DateTimeOffset.Parse(_)),
-			(ScalarType.String, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<string, TimeOnly>(_ => TimeOnly.Parse(_)),
-			(ScalarType.String, ScalarType.TimeSpan) => LambdaFactory.CreateFunc<string, TimeSpan>(_ => TimeSpan.Parse(_)),
+			(ScalarType.String, ScalarType.SByte) => LambdaFactory.CreateFunc<string, sbyte>(_ => sbyte.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.Int16) => LambdaFactory.CreateFunc<string, short>(_ => short.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.Int32) => LambdaFactory.CreateFunc<string, int>(_ => int.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.Int64) => LambdaFactory.CreateFunc<string, long>(_ => long.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.Int128) => LambdaFactory.CreateFunc<string, Int128>(_ => Int128.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.BigInteger) => LambdaFactory.CreateFunc<string, BigInteger>(_ => BigInteger.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.Byte) => LambdaFactory.CreateFunc<string, byte>(_ => byte.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.UInt16) => LambdaFactory.CreateFunc<string, ushort>(_ => ushort.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.UInt32) => LambdaFactory.CreateFunc<string, uint>(_ => uint.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.UInt64) => LambdaFactory.CreateFunc<string, ulong>(_ => ulong.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.UInt128) => LambdaFactory.CreateFunc<string, UInt128>(_ => UInt128.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.IntPtr) => LambdaFactory.CreateFunc<string, nint>(_ => nint.Parse(_, NumberStyles.Integer, InvariantCulture)),
+			(ScalarType.String, ScalarType.UIntPtr) => LambdaFactory.CreateFunc<string, nuint>(_ => nuint.Parse(_, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, InvariantCulture)),
+			(ScalarType.String, ScalarType.Half) => LambdaFactory.CreateFunc<string, Half>(_ => Half.Parse(_, NumberStyles.Float, InvariantCulture)),
+			(ScalarType.String, ScalarType.Single) => LambdaFactory.CreateFunc<string, float>(_ => float.Parse(_, NumberStyles.Float, InvariantCulture)),
+			(ScalarType.String, ScalarType.Double) => LambdaFactory.CreateFunc<string, double>(_ => double.Parse(_, NumberStyles.Float, InvariantCulture)),
+			(ScalarType.String, ScalarType.Decimal) => LambdaFactory.CreateFunc<string, decimal>(_ => decimal.Parse(_, NumberStyles.Float, InvariantCulture)),
+			(ScalarType.String, ScalarType.DateOnly) => LambdaFactory.CreateFunc<string, DateOnly>(_ => DateOnly.Parse(_, InvariantCulture)),
+			(ScalarType.String, ScalarType.DateTime) => LambdaFactory.CreateFunc<string, DateTime>(_ => DateTime.Parse(_, InvariantCulture)),
+			(ScalarType.String, ScalarType.DateTimeOffset) => LambdaFactory.CreateFunc<string, DateTimeOffset>(_ => DateTimeOffset.Parse(_, InvariantCulture)),
+			(ScalarType.String, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<string, TimeOnly>(_ => TimeOnly.Parse(_, InvariantCulture)),
+			(ScalarType.String, ScalarType.TimeSpan) => LambdaFactory.CreateFunc<string, TimeSpan>(_ => TimeSpan.Parse(_, InvariantCulture)),
 
 			_ => null
 		};
@@ -167,6 +170,57 @@ public static class ValueConverter
 			return expression.IsNotNull().IIf(expression, @this);
 
 		return expression;
+	}
+
+	public static object? ConvertChecked<T, OTHER>(this INumberBase<T> @this, INumberBase<OTHER> other)
+		where T : struct, INumberBase<T>
+		where OTHER : struct, INumberBase<OTHER>
+		=> @this.ConvertChecked(other);
+
+	public static object? ConvertTo(this object? @this, Type targetType)
+	{
+		if (@this is null)
+			return null;
+
+		var sourceType = @this.GetType();
+		if (sourceType == targetType)
+			return @this;
+
+		if (sourceType.Implements(typeof(INumberBase<>).MakeGenericType(sourceType)) && targetType.Implements(typeof(INumberBase<>).MakeGenericType(targetType)))
+		{
+			var methodInfo = sourceType.GetMethod(nameof(int.CreateChecked))!.MakeGenericMethod(targetType);
+			return methodInfo.InvokeStaticFunc(ValueTuple.Create(@this));
+		}
+
+		if (@this is string && targetType.Implements(typeof(ISpanParsable<>).MakeGenericType(targetType)))
+		{
+			var methodInfo = targetType.GetMethod(nameof(int.Parse))!.MakeGenericMethod(sourceType);
+			return methodInfo.InvokeStaticFunc((@this, InvariantCulture));
+		}
+
+		if (targetType == typeof(string))
+		{
+			return @this switch
+			{
+				Guid x => x.ToText(),
+				DateOnly x => x.ToISO8601(),
+				DateTime x => x.ToISO8601(),
+				DateTimeOffset x => x.ToISO8601(),
+				Enum x => x.Name(),
+				TimeOnly x => x.ToISO8601(),
+				TimeSpan x => x.ToText(),
+				IFormattable x => x.ToString(null, InvariantCulture),
+				_ => @this.ToString()
+			};
+		}
+
+		if(@this is IDictionary<string, object?> map)
+		{
+			var methodInfo = typeof(MapExtensions).GetMethod(nameof(MapExtensions.MapTo), [typeof(IEnumerable<KeyValuePair<string, object?>>), targetType, typeof(bool)])!.MakeGenericMethod(targetType);
+			return methodInfo.InvokeStaticFunc((@this, InvariantCulture));
+		}
+
+		return null;
 	}
 
 	public static bool? ConvertToBoolean(object? value)
@@ -197,7 +251,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateOnly x => x,
-			string text when text.IsNotBlank() => DateOnly.Parse(text),
+			string text when text.IsNotBlank() => DateOnly.Parse(text, InvariantCulture),
 			null or string => null,
 			int x => DateOnly.FromDayNumber(x),
 			uint x => DateOnly.FromDayNumber(checked((int)x)),
@@ -210,7 +264,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateTime x => x,
-			string text when text.IsNotBlank() => DateTime.Parse(text),
+			string text when text.IsNotBlank() => DateTime.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new(x),
 			ulong x => new(checked((long)x)),
@@ -223,7 +277,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateTimeOffset x => x,
-			string text when text.IsNotBlank() => DateTimeOffset.Parse(text),
+			string text when text.IsNotBlank() => DateTimeOffset.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new DateTime(x).ToDateTimeOffset(),
 			ulong x => new DateTime(checked((long)x)).ToDateTimeOffset(),
@@ -247,7 +301,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			Guid guid => guid,
-			string text when text.IsNotBlank() => Guid.Parse(text),
+			string text when text.IsNotBlank() => Guid.Parse(text, InvariantCulture),
 			null or string => null,
 			_ => (Guid)value
 		};
@@ -256,7 +310,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			Index x => x,
-			string text when text.IsNotBlank() => new Index(text.Parse<int>()),
+			string text when text.IsNotBlank() => new Index(text.Parse<int>(NumberStyles.Integer, InvariantCulture)),
 			null or string => null,
 			int number => new Index(number),
 			sbyte number => new Index(int.CreateChecked(number)),
@@ -277,7 +331,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			nint x => x,
-			string text when text.IsNotBlank() => IntPtr.Parse(text),
+			string text when text.IsNotBlank() => IntPtr.Parse(text, NumberStyles.Integer, InvariantCulture),
 			null or string => null,
 			_ => (nint)value
 		};
@@ -325,7 +379,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			TimeOnly x => x,
-			string text when text.IsNotBlank() => TimeOnly.Parse(text),
+			string text when text.IsNotBlank() => TimeOnly.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new(x),
 			ulong x => new(checked((long)x)),
@@ -339,7 +393,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			TimeSpan x => x,
-			string text when text.IsNotBlank() => TimeSpan.Parse(text),
+			string text when text.IsNotBlank() => TimeSpan.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new(x),
 			ulong x => new(checked((long)x)),
@@ -350,7 +404,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			nuint x => x,
-			string text when text.IsNotBlank() => UIntPtr.Parse(text),
+			string text when text.IsNotBlank() => UIntPtr.Parse(text, NumberStyles.Integer, InvariantCulture),
 			null or string => null,
 			_ => (nuint)value
 		};

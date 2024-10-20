@@ -22,10 +22,10 @@ public class Person
 	public int EmailPromotion { get; set; }
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
-	[GraphQLType<GraphQLScalarType<Guid>>()]
+	[GraphQLType<GraphQLStringType<Guid>>()]
 	[GraphQLName("rowguid")]
 	public Guid Rowguid { get; set; }
-	[GraphQLType<NonNullGraphType<GraphQLScalarType<DateTime>>>()]
+	[GraphQLType<NonNullGraphType<GraphQLStringType<DateTime>>>()]
 	public DateTime ModifiedDate { get; set; }
 
 	public IEnumerable<Person> GetPersons()

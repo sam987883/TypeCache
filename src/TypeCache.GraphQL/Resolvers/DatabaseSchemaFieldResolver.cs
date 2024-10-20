@@ -8,7 +8,7 @@ namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class DatabaseSchemaFieldResolver : FieldResolver
 {
-	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async Task<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var collection = context.FieldDefinition.GetMetadata<SchemaCollection>(nameof(SchemaCollection));
 		var dataSource = context.FieldDefinition.GetMetadata<IDataSource>(nameof(IDataSource));

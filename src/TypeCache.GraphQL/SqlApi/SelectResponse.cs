@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Data;
-using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Resolvers;
+using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.SqlApi;
 
@@ -41,11 +41,33 @@ public class SelectResponse<T>
 			Name = Invariant($"{name}{nameof(SelectResponse<T>)}"),
 			Description = description
 		};
-
-		graphType.AddField(nameof(SelectResponse<T>.Data), Connection<T>.CreateGraphType(name, dataGraphType), new FuncFieldResolver<SelectResponse<T>, Connection<T>>(context => context.Source.Data));
-		graphType.AddField<string>(nameof(SelectResponse<T>.DataSource), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource));
-		graphType.AddField<string>(nameof(SelectResponse<T>.Sql), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql));
-		graphType.AddField<string>(nameof(SelectResponse<T>.Table), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table));
+		graphType.Fields.UnionWith(new FieldType[]
+		{
+			new()
+			{
+				Name = nameof(SelectResponse<T>.Data),
+				ResolvedType = Connection<T>.CreateGraphType(name, dataGraphType),
+				Resolver = new CustomFieldResolver(context => ((SelectResponse<T>)context.Source!).Data)
+			},
+			new()
+			{
+				Name = nameof(SelectResponse<T>.DataSource),
+				Type = typeof(GraphQLStringType),
+				Resolver = new CustomFieldResolver(context => ((SelectResponse<T>)context.Source!).DataSource)
+			},
+			new()
+			{
+				Name = nameof(SelectResponse<T>.Sql),
+				Type = typeof(GraphQLStringType),
+				Resolver = new CustomFieldResolver(context => ((SelectResponse<T>)context.Source!).Sql)
+			},
+			new()
+			{
+				Name = nameof(SelectResponse<T>.Table),
+				Type = typeof(GraphQLStringType),
+				Resolver = new CustomFieldResolver(context => ((SelectResponse<T>)context.Source!).Table)
+			},
+		});
 
 		return graphType;
 	}

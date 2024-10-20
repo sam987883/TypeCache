@@ -8,7 +8,7 @@ public sealed class GraphQLRequest
 
 	public string? Query { get; set; }
 
-	public IDictionary<string, object>? Variables { get; set; }
+	public IDictionary<string, object> Variables { get; } = new Dictionary<string, object>();
 
-	public IDictionary<string, object>? Extensions { get; set; }
+	public IDictionary<string, object> Extensions { get; } = new Dictionary<string, object>();
 }

@@ -1,0 +1,56 @@
+﻿namespace GraphQL.Execution;
+
+/// <inheritdoc cref="ExecuteNodeTreeAsync(ExecutionContext, ExecutionNode)"/>
+public class SerialExecutionStrategy : ExecutionStrategy
+{
+	// frequently reused objects
+	private Stack<ExecutionNode>? _reusableNodes;
+	private Queue<ExecutionNode>? _reusableDataLoaderNodes;
+	private Stack<ExecutionNode>? _reusableAddlNodes;
+
+	/// <summary>
+	/// Executes document nodes serially. Nodes that return a <see cref="IDataLoaderResult"/> will
+	/// execute once all other pending nodes have been completed.
+	/// </summary>
+	public override async Task ExecuteNodeTreeAsync(ExecutionContext context, ExecutionNode rootNode)
+	{
+		// Use a stack to track all nodes in the tree that need to be executed
+		var nodes = Interlocked.Exchange(ref _reusableNodes, null) ?? new Stack<ExecutionNode>();
+		nodes.Push(rootNode);
+		var addlNodes = Interlocked.Exchange(ref _reusableAddlNodes, null) ?? new Stack<ExecutionNode>();
+
+		try
+		{
+			// Process each node on the stack one by one
+			while (nodes.Count > 0)
+			{
+				while (nodes.Count > 0)
+				{
+					var node = nodes.Pop();
+					await ExecuteNodeAsync(context, node);
+
+					// Push any child nodes on top of the stack
+					if (node is IParentExecutionNode parentNode)
+					{
+						// Add in reverse order so fields are executed in the correct order
+						parentNode.ApplyToChildren((node, state) => state.Push(node), nodes, reverse: true);
+					}
+				}
+
+				// Reverse order of queued nodes from data loader nodes so they are executed in the correct order
+				while (addlNodes.Count > 0)
+				{
+					nodes.Push(addlNodes.Pop());
+				}
+			}
+		}
+		finally
+		{
+			nodes.Clear();
+			addlNodes.Clear();
+
+			_ = Interlocked.CompareExchange(ref _reusableNodes, nodes, null);
+			_ = Interlocked.CompareExchange(ref _reusableAddlNodes, addlNodes, null);
+		}
+	}
+}

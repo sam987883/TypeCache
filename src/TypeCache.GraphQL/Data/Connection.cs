@@ -1,10 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Data;
@@ -16,15 +16,15 @@ public class Connection<T>
 	{
 	}
 
-	public Connection(uint offset, T[] items)
+	public Connection(long offset, T[] items)
 	{
-		int o = (int)offset + 1;
+		++offset;
 		this.Items = items;
-		this.Edges = items.Select((row, i) => new Edge<T>(o + i, row)).ToArray();
+		this.Edges = items.Select((row, i) => new Edge<T>(offset + i, row)).ToArray();
 	}
 
 	[GraphQLDescription("The total number of records available. Returns `null` if the total number is unknown.")]
-	public int? TotalCount { get; init; }
+	public long? TotalCount { get; init; }
 
 	[GraphQLDescription("Pagination information for this result data set.")]
 	public PageInfo? PageInfo { get; init; }
@@ -48,26 +48,26 @@ public class Connection<T>
 		{
 			Name = nameof(Connection<T>.Edges),
 			ResolvedType = new ListGraphType(new NonNullGraphType(edgeGraphType)),
-			Resolver = new FuncFieldResolver<Connection<T>, Edge<T>[]?>(context => context.Source.Edges)
+			Resolver = new CustomFieldResolver(context => ((Connection<T>)context.Source!).Edges)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.Items),
 			ResolvedType = new ListGraphType(new NonNullGraphType(dataGraphType)),
-			Resolver = new FuncFieldResolver<Connection<T>, T[]?>(context => context.Source.Items)
+			Resolver = new CustomFieldResolver(context => ((Connection<T>)context.Source!).Items)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.PageInfo),
 			ResolvedType = new GraphQLObjectType<PageInfo>(Invariant($"{name}{nameof(PageInfo)}")),
 			//Type = typeof(GraphQLObjectType<PageInfo>),
-			Resolver = new FuncFieldResolver<Connection<T>, PageInfo?>(context => context.Source.PageInfo)
+			Resolver = new CustomFieldResolver(context => ((Connection<T>)context.Source!).PageInfo)
 		});
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.TotalCount),
-			Type = ScalarType.Int32.ToGraphType(),
-			Resolver = new FuncFieldResolver<Connection<T>, int?>(context => context.Source.TotalCount)
+			Type = typeof(GraphQLNumberType<long>),
+			Resolver = new CustomFieldResolver(context => ((Connection<T>)context.Source!).TotalCount)
 		});
 
 		return graphType;

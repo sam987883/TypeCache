@@ -137,6 +137,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("o", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="provider">Defaults to <see cref="InvariantCulture"/>.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("o", provider ?? InvariantCulture);
@@ -144,6 +145,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("s", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="provider">Defaults to <see cref="InvariantCulture"/>.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTime @this, IFormatProvider? provider = null)
 		=> @this.ToString("s", provider ?? InvariantCulture);
@@ -151,6 +153,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("yyyy-MM-dd'T'HH:mm:ssK", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="provider">Defaults to <see cref="InvariantCulture"/>.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this DateTimeOffset @this, IFormatProvider? provider = null)
 		=> @this.ToString("yyyy-MM-dd'T'HH:mm:ssK", provider ?? InvariantCulture);
@@ -158,6 +161,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("HH:mm:ss", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="provider">Defaults to <see cref="InvariantCulture"/>.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToISO8601(this TimeOnly @this, IFormatProvider? provider = null)
 		=> @this.ToString("HH:mm:ss", provider ?? InvariantCulture);
@@ -165,6 +169,7 @@ public static class DateTimeExtensions
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.ToString("c", <paramref name="provider"/> ?? <see cref="InvariantCulture"/>);</c>
 	/// </remarks>
+	/// <param name="provider">Defaults to <see cref="InvariantCulture"/>.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToText(this TimeSpan @this, IFormatProvider? provider = null)
 		=> @this.ToString("c", provider ?? CultureInfo.InvariantCulture);

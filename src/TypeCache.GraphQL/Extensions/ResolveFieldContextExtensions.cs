@@ -51,6 +51,7 @@ public static class ResolveFieldContextExtensions
 			{
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when parameterInfo.ParameterType.Is<CancellationToken>() => @this.CancellationToken,
 				_ when sourceType is not null && parameterInfo.ParameterType.Is(sourceType) => @this.Source,
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
 					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
@@ -73,6 +74,7 @@ public static class ResolveFieldContextExtensions
 				_ when parameterInfo.GraphQLIgnore() => null,
 				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
 				_ when parameterInfo.ParameterType.Is<TSource>() => @this.Source,
+				_ when parameterInfo.ParameterType.Is<CancellationToken>() => @this.CancellationToken,
 				_ when parameterInfo.ParameterType.Is<IEnumerable<MATCH>>() => keys,
 				_ when parameterInfo.ParameterType.Is<MATCH[]>() => keys.ToArray(),
 				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>

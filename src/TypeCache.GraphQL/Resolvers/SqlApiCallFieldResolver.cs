@@ -12,7 +12,7 @@ namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class SqlApiCallFieldResolver<T> : FieldResolver
 {
-	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async Task<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));

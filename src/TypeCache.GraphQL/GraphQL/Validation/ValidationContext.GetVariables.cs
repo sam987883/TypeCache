@@ -1,0 +1,119 @@
+﻿using System.Collections.Generic;
+using GraphQLParser.AST;
+using GraphQLParser.Visitors;
+
+namespace GraphQL.Validation
+{
+	public partial class ValidationContext
+    {
+        private static readonly GetVariablesVisitor _getVariablesVisitor = new();
+        private readonly Dictionary<GraphQLOperationDefinition, List<VariableUsage>?> _variables = new();
+
+        /// <summary>
+        /// For a node with a selection set, returns a list of variable references along with what input type each were referenced for.
+        /// </summary>
+        public List<VariableUsage>? GetVariables<TNode>(TNode node)
+            where TNode : ASTNode, IHasSelectionSetNode
+        {
+            var context = new GetVariablesVisitorContext(this, new TypeInfo(Schema));
+            _getVariablesVisitor.VisitAsync(node, context).GetAwaiter().GetResult();
+            return context.GetVariableUsages();
+        }
+
+        /// <summary>
+        /// For a specified operation with a document, returns a list of variable references
+        /// along with what input type each was referenced for.
+        /// </summary>
+        public List<VariableUsage>? GetRecursiveVariables(GraphQLOperationDefinition operation)
+        {
+            if (_variables.TryGetValue(operation, out var results))
+            {
+                return results;
+            }
+
+            var usages = GetVariables(operation);
+
+            var frags = GetRecursivelyReferencedFragments(operation);
+
+            if (frags is not null)
+            {
+                foreach (var fragment in frags)
+                {
+                    var usagesFromFragment = GetVariables(fragment);
+                    if (usagesFromFragment is not null)
+                    {
+                        if (usages is null)
+                            usages = usagesFromFragment;
+                        else
+                            usages.AddRange(usagesFromFragment);
+                    }
+                }
+            }
+
+            _variables[operation] = usages;
+
+            return usages;
+        }
+
+        // struct intentionally - works only on stack
+        private readonly struct GetVariablesVisitorContext : IASTVisitorContext
+        {
+            public GetVariablesVisitorContext(ValidationContext validationContext, TypeInfo typeInfo)
+            {
+                ValidationContext = validationContext;
+                Info = typeInfo;
+            }
+
+            public ValidationContext ValidationContext { get; }
+
+            public TypeInfo Info { get; }
+
+            public CancellationToken CancellationToken => default;
+
+            public void AddVariableUsage(VariableUsage usage)
+                => ValidationContext.AddListItem(nameof(GetVariablesVisitorContext), usage);
+
+            public List<VariableUsage>? GetVariableUsages()
+                => ValidationContext.GetList<VariableUsage>(nameof(GetVariablesVisitorContext), reset: true);
+        }
+
+        private sealed class GetVariablesVisitor : ASTVisitor<GetVariablesVisitorContext>
+        {
+            public override async ValueTask VisitAsync(ASTNode? node, GetVariablesVisitorContext context)
+            {
+                if (node is null)
+                    return;
+
+                await context.Info.EnterAsync(node, context.ValidationContext);
+
+                await base.VisitAsync(node, context);
+
+                await context.Info.LeaveAsync(node, context.ValidationContext);
+            }
+
+            protected override ValueTask VisitVariableAsync(GraphQLVariable variable, GetVariablesVisitorContext context)
+            {
+                // GraphQLVariable AST node represents both variable definition and variable usage so check parent node
+                var ancestor = context.Info.GetAncestor(1);
+                if (ancestor is not GraphQLVariableDefinition)
+                {
+                    bool lastHasDefault = false;
+                    if (ancestor is GraphQLArgument)
+                    {
+                        var arg = context.Info.GetArgument();
+                        if (arg is not null && arg.DefaultValue is not null)
+                            lastHasDefault = true;
+                    }
+                    if (ancestor is GraphQLObjectField)
+                    {
+                        var field = context.Info.GetFieldDef();
+                        if (field is not null && field.DefaultValue is not null)
+                            lastHasDefault = true;
+                    }
+                    context.AddVariableUsage(new VariableUsage(variable, context.Info.GetInputType()!, lastHasDefault));
+                }
+                return default;
+            }
+        }
+    }
+}

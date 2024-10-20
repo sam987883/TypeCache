@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -109,11 +110,29 @@ public static class JsonExtensions
 			case bool success:
 				@this.WriteBooleanValue(success);
 				break;
+			case sbyte number:
+				@this.WriteNumberValue((int)number);
+				break;
+			case short number:
+				@this.WriteNumberValue((int)number);
+				break;
 			case int number:
 				@this.WriteNumberValue(number);
 				break;
 			case long number:
 				@this.WriteNumberValue(number);
+				break;
+			case Int128 number:
+				@this.WriteNumberValue((decimal)number);
+				break;
+			case nint number:
+				@this.WriteNumberValue((int)number);
+				break;
+			case byte number:
+				@this.WriteNumberValue((uint)number);
+				break;
+			case ushort number:
+				@this.WriteNumberValue((uint)number);
 				break;
 			case uint number:
 				@this.WriteNumberValue(number);
@@ -121,11 +140,14 @@ public static class JsonExtensions
 			case ulong number:
 				@this.WriteNumberValue(number);
 				break;
-			case sbyte or short or ushort or IntPtr:
-				@this.WriteNumberValue(Convert.ToInt32(value));
+			case UInt128 number:
+				@this.WriteNumberValue((decimal)number);
 				break;
-			case byte or ushort or uint or UIntPtr:
-				@this.WriteNumberValue(Convert.ToUInt32(value));
+			case nuint number:
+				@this.WriteNumberValue((uint)number);
+				break;
+			case Half number:
+				@this.WriteNumberValue((float)number);
 				break;
 			case float number:
 				@this.WriteNumberValue(number);
@@ -135,9 +157,6 @@ public static class JsonExtensions
 				break;
 			case decimal number:
 				@this.WriteNumberValue(number);
-				break;
-			case Half number:
-				@this.WriteNumberValue((float)number);
 				break;
 			case DateOnly date:
 				@this.WriteStringValue(date.ToISO8601());

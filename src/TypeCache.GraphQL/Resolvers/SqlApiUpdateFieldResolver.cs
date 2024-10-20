@@ -16,7 +16,7 @@ namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class SqlApiUpdateFieldResolver : FieldResolver
 {
-	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async Task<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
@@ -71,7 +71,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 	where T : new()
 {
-	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async Task<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));

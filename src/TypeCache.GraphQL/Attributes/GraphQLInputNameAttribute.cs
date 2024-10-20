@@ -8,7 +8,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// <b>GraphQL</b><br/>
 /// Sets the name of the input type.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public sealed class GraphQLInputNameAttribute : Attribute
 {
 	/// <exception cref="ArgumentNullException"/>

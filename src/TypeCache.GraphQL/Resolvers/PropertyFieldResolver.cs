@@ -8,17 +8,20 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldResolver
+public sealed class PropertyFieldResolver(PropertyInfo propertyInfo) : FieldResolver
 {
-	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
+	protected override async Task<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		propertyInfo.ThrowIfNull();
+		context.Source.ThrowIfNull();
 
 		var source = context.Source switch
 		{
-			null => null,
-			Task<T> task => await task,
-			ValueTask<T> task => await task,
+			Task<object> task => await task,
+			ValueTask<object> task => await task,
+			Task task => await task.Cast<object>(),
+			_ when context.Source!.GetType().Is(typeof(ValueTask<>).MakeGenericType(propertyInfo.DeclaringType!))
+				=> await ((Task)typeof(ValueTask<>).MakeGenericType(propertyInfo.DeclaringType!).InvokeMethodFunc(nameof(ValueTask.AsTask), [], context.Source, [])!).Cast<object>(),
 			_ => context.Source
 		};
 
@@ -99,9 +102,10 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 			};
 		}
 
-		if (format.IsNotBlank())
-			return string.Format(InvariantCulture, Invariant($"{{0:{format}}}"), value);
-
-		return value;
+		return value switch
+		{
+			IFormattable formattable when format.IsNotBlank() => formattable.ToString(format, InvariantCulture),
+			_ => value
+		};
 	}
 }

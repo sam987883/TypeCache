@@ -1,12 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
-using GraphQL.Resolvers;
 using GraphQL.Types;
-using GraphQL.Types.Relay.DataObjects;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
-using TypeCache.GraphQL.Extensions;
+using TypeCache.GraphQL.Data;
+using TypeCache.GraphQL.Resolvers;
 
 namespace TypeCache.GraphQL.SqlApi;
 
@@ -17,19 +16,19 @@ public class DataResponse
 	{
 	}
 
-	public DataResponse(DataRow[] items, int totalCount, uint offset)
+	public DataResponse(DataRow[] items, long totalCount, long offset)
 	{
 		var start = offset + 1;
 		var end = start + items.Length;
 		this.Edges = items.Select((item, i) => new Edge<DataRow>
 		{
-			Cursor = (start + i).ToString(),
+			Cursor = start + i,
 			Node = item
 		}).ToArray();
 		this.PageInfo = new()
 		{
-			StartCursor = start.ToString(),
-			EndCursor = end.ToString(),
+			StartCursor = start,
+			EndCursor = end,
 			HasNextPage = end < totalCount,
 			HasPreviousPage = offset > 0
 		};
@@ -59,13 +58,51 @@ public class DataResponse
 		};
 		var edgeType = CreateEdgeGraphType(name, description, dataGraphType);
 
-		graphType.AddField<string>(nameof(DataResponse.DataSource), new FuncFieldResolver<DataResponse, string>(context => context.Source.DataSource));
-		graphType.AddField(nameof(DataResponse.Edges), new ListGraphType(new NonNullGraphType(edgeType)), new FuncFieldResolver<DataResponse, Edge<DataRow>[]?>(context => context.Source.Edges));
-		graphType.AddField(nameof(DataResponse.Items), new ListGraphType(new NonNullGraphType(dataGraphType)), new FuncFieldResolver<DataResponse, IList<DataRow>?>(context => context.Source.Items!));
-		graphType.AddField<PageInfo>(nameof(DataResponse.PageInfo), new FuncFieldResolver<DataResponse, PageInfo>(context => context.Source.PageInfo));
-		graphType.AddField<string>(nameof(DataResponse.Sql), new FuncFieldResolver<DataResponse, string>(context => context.Source.Sql));
-		graphType.AddField<string>(nameof(DataResponse.Table), new FuncFieldResolver<DataResponse, string>(context => context.Source.Table));
-		graphType.AddField<int>(nameof(DataResponse.TotalCount), new FuncFieldResolver<DataResponse, long?>(context => context.Source.TotalCount));
+		graphType.Fields.UnionWith(new FieldType[]
+		{
+			new()
+			{
+				Name = nameof(DataResponse.DataSource),
+				Type = typeof(string),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).DataSource)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.Edges),
+				ResolvedType = new ListGraphType(new NonNullGraphType(edgeType)),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).Edges)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.Items),
+				ResolvedType = new ListGraphType(new NonNullGraphType(dataGraphType)),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).Items)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.PageInfo),
+				Type = typeof(PageInfo),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).PageInfo)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.Sql),
+				Type = typeof(string),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).Sql)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.Table),
+				Type = typeof(string),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).Table)
+			},
+			new()
+			{
+				Name = nameof(DataResponse.TotalCount),
+				Type = typeof(int),
+				Resolver = new CustomFieldResolver(context => ((DataResponse)context.Source!).TotalCount)
+			}
+		});
 
 		return graphType;
 	}
@@ -77,8 +114,22 @@ public class DataResponse
 			Name = Invariant($"{name}Edge"),
 			Description = description
 		};
-		graphType.AddField<string>(nameof(Edge<DataRow>.Cursor), new FuncFieldResolver<Edge<DataRow>, string>(context => context.Source.Cursor));
-		graphType.AddField(nameof(Edge<DataRow>.Node), new NonNullGraphType(dataGraphType), new FuncFieldResolver<Edge<DataRow>, DataRow>(context => context.Source.Node));
+		graphType.Fields.UnionWith(new FieldType[]
+		{
+			new()
+			{
+				Name = nameof(Edge<DataRow>.Cursor),
+				Type = typeof(long),
+				Resolver = new CustomFieldResolver(context => ((Edge<DataRow>)context.Source!).Cursor)
+			},
+			new()
+			{
+				Name = nameof(Edge<DataRow>.Node),
+				ResolvedType = new NonNullGraphType(dataGraphType),
+				Resolver = new CustomFieldResolver(context => ((Edge<DataRow>)context.Source!).Node)
+			},
+		});
+
 		return graphType;
 	}
 }

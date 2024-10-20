@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Frozen;
 using GraphQL;
 using GraphQL.DI;
 using GraphQL.Execution;
@@ -57,7 +58,7 @@ public sealed class GraphQLMiddleware
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
-			Variables = request.Variables is not null ? new Inputs(request.Variables!) : null,
+			Variables = request.Variables,
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
@@ -67,7 +68,7 @@ public sealed class GraphQLMiddleware
 		};
 		options.Listeners.Add(listener);
 		var result = await executer.ExecuteAsync(options);
-		result.Extensions ??= new(2, StringComparer.OrdinalIgnoreCase);
+		result.Extensions ??= new Dictionary<string, object>(2, StringComparer.OrdinalIgnoreCase);
 
 		var error = result.Errors?[0].InnerException;
 		if (result.Extensions is not null)
@@ -82,7 +83,8 @@ public sealed class GraphQLMiddleware
 
 			char[] separator = ['\r', '\n'];
 			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
-			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
+			if (error.StackTrace is not null)
+				result.Extensions["ErrorStackTrace"] = error.StackTrace.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
 		}
 
 		httpContext.Response.ContentType = Application.Json;

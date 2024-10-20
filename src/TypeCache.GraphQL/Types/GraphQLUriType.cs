@@ -50,8 +50,9 @@ public sealed class GraphQLUriType : ScalarGraphType
 		=> this.ParseValue(value) switch
 		{
 			null => Singleton<GraphQLNullValue>.Instance,
-			char x => new GraphQLStringValue(x.ToString()),
-			string x => new GraphQLStringValue(x),
+			char c => new GraphQLStringValue(c.ToString()),
+			string text => new GraphQLStringValue(text),
+			Uri uri => new GraphQLStringValue(uri.ToString()),
 			_ => this.ThrowASTConversionError(value)
 		};
 }

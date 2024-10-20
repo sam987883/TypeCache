@@ -21,8 +21,8 @@ builder.Services
 	.AddGraphQL()
 	.AddGraphQLTypeExtensions<Person>(person =>
 	{
-		person.AddField(typeof(Detail).GetMethod(nameof(Detail.GetDetail))!);
-		person.AddQueryCollection<Detail, string>(typeof(Detail).GetMethod(nameof(Detail.GetDetails))!, person => person.FirstName!, detail => detail.FirstName);
+		person.AddField<Detail>(typeof(Detail).GetMethod(nameof(Detail.GetDetail))!);
+		person.AddField<Detail>(typeof(Detail).GetMethod(nameof(Detail.GetDetails))!, (person, details) => details);
 	});
 
 var app = builder.Build();

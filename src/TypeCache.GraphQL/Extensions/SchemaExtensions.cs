@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Frozen;
 using System.Data;
 using System.Reflection;
 using GraphQL;
-using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
@@ -61,73 +61,72 @@ public static class SchemaExtensions
 	{
 		dataSource.ThrowIfNull();
 		var table = dataSource.GetDatabaseSchema(collection);
-		var graphDatabasesEnum = new EnumerationGraphType
+		var graphDatabasesEnum = new GraphQLEnumType
 		{
 			Name = Invariant($"{dataSource.Name.ToPascalCase()}Database"),
 			Description = Invariant($"`{dataSource}` databases."),
+			Values = dataSource.Databases
+				.Select(database => new GraphQLEnumType.EnumValue(database, Invariant($"Database: {database}"), null, default))
+				.ToDictionary(_ => _.Name, StringComparer.Ordinal)
+				.ToFrozenDictionary()
 		};
-		foreach (var database in dataSource.Databases)
-			graphDatabasesEnum.Add(new(database, database));
-
-		var graphOrderByEnum = new EnumerationGraphType
-		{
-			Name = Invariant($"{table.TableName.ToPascalCase()}Column"),
-			Description = Invariant($"`{table.TableName}` columns.")
-		};
+		var graphOrderByEnum = CreateOrderByGraphQLEnum(table.TableName, table.Columns.OfType<DataColumn>().Select(_ => _.ColumnName));
 		var resolvedType = new ObjectGraphType
 		{
 			Name = table.TableName,
 			Description = Invariant($"Database Schema Collection: `{table.TableName}`")
 		};
+
 		foreach (var column in table.Columns.OfType<DataColumn>())
 		{
-			graphOrderByEnum.AddOrderBy(column.ColumnName);
-
-			var field = resolvedType.AddField(new()
+			var columnField = new FieldType()
 			{
 				Name = FixName(column!.ColumnName),
 				Description = Invariant($"`{column.ColumnName}`"),
-				Resolver = new FuncFieldResolver<DataRow, object?>(static context =>
+				Resolver = new CustomFieldResolver(static context =>
 				{
 					var columnName = context.FieldDefinition.Metadata[nameof(DataColumn.ColumnName)]!.ToString()!;
 					var columnType = ((RuntimeTypeHandle)context.FieldDefinition.Metadata[nameof(DataColumn.DataType)]!).ToType();
 					var fieldType = context.FieldDefinition.Type;
-					var value = context.Source[columnName];
+					var value = ((DataRow)context.Source!)[columnName];
 					return value switch
 					{
 						DBNull or null => null,
-						byte[] bytes when fieldType == typeof(GraphQLScalarType<string>) => bytes.ToBase64(),
-						_ when fieldType == typeof(GraphQLScalarType<string>) => value.ToString(),
+						byte[] bytes when fieldType == typeof(GraphQLStringType) => bytes.ToBase64(),
+						_ when fieldType == typeof(GraphQLStringType) => value.ToString(),
 						_ => value
 					};
 				}),
 				Type = column.DataType switch
 				{
-					_ when column.DataType == typeof(object) => typeof(GraphQLScalarType<string>),
+					_ when column.DataType == typeof(object) => typeof(GraphQLStringType),
 					_ when column.AllowDBNull => column.DataType.ToGraphQLType(false),
 					_ => column.DataType.ToGraphQLType(false).ToNonNullGraphType()
 				}
-			});
-			field.Metadata.Add(nameof(DataColumn.ColumnName), column.ColumnName);
-			field.Metadata.Add(nameof(DataColumn.DataType), column.DataType.TypeHandle);
+			};
+			columnField.Metadata.Add(nameof(DataColumn.ColumnName), column.ColumnName);
+			columnField.Metadata.Add(nameof(DataColumn.DataType), column.DataType.TypeHandle);
+			resolvedType.Fields.Add(columnField);
 		}
 
-		var fieldType = @this.Query().AddField(new()
+		var tableField = new FieldType()
 		{
 			Name = table.TableName,
 			Description = Invariant($"Database Schema: {table.TableName}"),
-			Arguments = new QueryArguments(
-				new QueryArgument(graphDatabasesEnum) { Name = "database" },
-				new QueryArgument<GraphQLScalarType<string>> { Name = "where" },
-				new QueryArgument(new ListGraphType(new NonNullGraphType(graphOrderByEnum))) { Name = "orderBy" }
-			),
+			Arguments =
+			[
+				new QueryArgument("database", graphDatabasesEnum),
+				new QueryArgument("where", typeof(GraphQLStringType)),
+				new QueryArgument("orderBy", new ListGraphType(new NonNullGraphType(graphOrderByEnum)))
+			],
 			ResolvedType = new ListGraphType(resolvedType),
 			Resolver = new DatabaseSchemaFieldResolver()
-		});
-		fieldType.Metadata.Add(nameof(IDataSource), dataSource);
-		fieldType.Metadata.Add(nameof(SchemaCollection), table.TableName.ToEnum<SchemaCollection>());
+		};
+		tableField.Metadata.Add(nameof(IDataSource), dataSource);
+		tableField.Metadata.Add(nameof(SchemaCollection), table.TableName.ToEnum<SchemaCollection>());
+		@this.Query().Fields.Add(tableField);
 
-		return fieldType;
+		return tableField;
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -153,10 +152,7 @@ public static class SchemaExtensions
 				Name = Invariant($"{objectSchema.ObjectName}Input"),
 				Description = Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`")
 			};
-			var graphOrderByEnum = new EnumerationGraphType
-			{
-				Name = Invariant($"{table}OrderBy")
-			};
+			var graphOrderByEnum = CreateOrderByGraphQLEnum(objectSchema.ObjectName, objectSchema.Columns.Select(_ => _.Name));
 			var resolvedType = new ObjectGraphType
 			{
 				Name = objectSchema.ObjectName,
@@ -165,66 +161,65 @@ public static class SchemaExtensions
 			foreach (var column in objectSchema.Columns)
 			{
 				var columnDataType = column.DataTypeHandle.ToType();
-				dataInputType.AddField(new()
+				dataInputType.Fields.Add(new()
 				{
 					Name = column.Name,
 					Description = Invariant($"`{column.Name}`"),
 					Type = columnDataType switch
 					{
-						_ when columnDataType == typeof(object) => typeof(GraphQLScalarType<string>),
+						_ when columnDataType == typeof(object) => typeof(GraphQLStringType),
 						_ => columnDataType.ToGraphQLType(false)
 					}
 				});
 
-				var field = resolvedType.AddField(new()
+				var field = new FieldType()
 				{
 					Name = FixName(column.Name),
 					Description = Invariant($"{(column.PrimaryKey ? "Primary Key: " : string.Empty)}`{column.Name}`"),
-					Resolver = new FuncFieldResolver<DataRow, object?>(static context =>
+					Resolver = new CustomFieldResolver(static context =>
 					{
 						var columnName = context.FieldDefinition.Metadata[ColumnName]!.ToString()!;
 						var columnType = ((RuntimeTypeHandle)context.FieldDefinition.Metadata[ColumnType]!).ToType();
 						var fieldType = context.FieldDefinition.Type;
-						var value = context.Source[columnName];
+						var value = ((DataRow)context.Source!)[columnName];
 						return value switch
 						{
 							DBNull => null,
-							byte[] bytes when fieldType == typeof(GraphQLScalarType<string>) => bytes.ToBase64(),
-							_ when fieldType == typeof(GraphQLScalarType<string>) => value.ToString(),
+							byte[] bytes when fieldType == typeof(GraphQLStringType) => bytes.ToBase64(),
+							_ when fieldType == typeof(GraphQLStringType) => value.ToString(),
 							_ => value
 						};
 					}),
 					Type = column.DataTypeHandle switch
 					{
-						_ when columnDataType == typeof(object) => typeof(GraphQLScalarType<string>),
+						_ when columnDataType == typeof(object) => typeof(GraphQLStringType),
 						_ when column.Nullable => columnDataType.ToGraphQLType(false),
 						_ => columnDataType.ToGraphQLType(false).ToNonNullGraphType()
 					}
-				});
+				};
 				field.Metadata.Add(ColumnName, column.Name);
 				field.Metadata.Add(ColumnType, column.DataTypeHandle);
-
-				graphOrderByEnum.AddOrderBy(column.Name);
+				resolvedType.Fields.Add(field);
 			}
 
 			if ((objectSchema.Type is DatabaseObjectType.Table || objectSchema.Type is DatabaseObjectType.View) && actions.HasFlag(SqlApiAction.Select))
 			{
 				var selectResponseType = SelectResponse<DataRow>.CreateGraphType(table, Invariant($"{objectSchema.Type.Name()}: `{objectSchema.Name}`"), resolvedType);
-				var arguments = new QueryArguments();
-				arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+				var arguments = new List<QueryArgument>(8);
+				arguments.Add(new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." });
 				if (dataSource.Type is DataSourceType.SqlServer)
-					arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
+					arguments.Add(new(nameof(SelectQuery.Top), typeof(string).ToGraphQLType(true)) { Description = "Accepts integer `n` or `n%`." });
 
-				arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
-				arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-				arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
-				arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
-				arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
-				arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
+				arguments.Add(new(nameof(SelectQuery.Distinct), typeof(bool).ToGraphQLType(true), false));
+				arguments.Add(new(nameof(SelectQuery.Where), typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be returned." });
+				arguments.Add(new(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum))));
+				arguments.Add(new(nameof(SelectQuery.Fetch), typeof(uint).ToGraphQLType(true), 0U));
+				arguments.Add(new(nameof(SelectQuery.Offset), typeof(uint).ToGraphQLType(true), 0U));
+				arguments.Add(new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 0U));
 
 				var field = new FieldType
 				{
-					Arguments = arguments,
+					Arguments = arguments.ToArray(),
 					Name = Invariant($"select{table}"),
 					Description = Invariant($"SELECT ... FROM {objectSchema.Name} WHERE ... ORDER BY ..."),
 					Resolver = new SqlApiSelectFieldResolver(),
@@ -232,7 +227,7 @@ public static class SchemaExtensions
 				};
 				field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-				@this.Query().AddField(field);
+				@this.Query().Fields.Add(field);
 			}
 
 			if (objectSchema.Type is DatabaseObjectType.Table)
@@ -241,149 +236,142 @@ public static class SchemaExtensions
 
 				if (actions.HasFlag(SqlApiAction.Delete))
 				{
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = new(new QueryArgument(new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))))
-						{
-							Name = "data",
-							DefaultValue = Array<DataRow>.Empty,
-							Description = "The data to be deleted."
-						},
-						new QueryArgument<TimeSpanSecondsGraphType>
-						{
-							Name = nameof(SqlCommand.Timeout),
-							DefaultValue = 120U,
-							Description = "The SQL command timeout in seconds."
-						}),
+						Arguments =
+						[
+							new("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), Array<DataRow>.Empty)
+							{
+								Description = "The data to be deleted."
+							},
+							new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U)
+							{
+								Description = "The SQL command timeout in seconds."
+							}
+						],
 						Name = Invariant($"delete{table}"),
 						Description = Invariant($"DELETE ... OUTPUT ... FROM {objectSchema.Name} ... VALUES ..."),
 						Resolver = new SqlApiDeleteFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 
 				if (actions.HasFlag(SqlApiAction.DeleteData))
 				{
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = new(
-							new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>>
+						Arguments =
+						[
+							new("parameters", typeof(Parameter[]).ToGraphQLType(true))
 							{
-								Name = "parameters",
 								Description = "Used to reference user input values from the where clause."
 							},
-							new QueryArgument<GraphQLScalarType<string>>
+							new("where", typeof(string).ToGraphQLType(true))
 							{
-								Name = "where",
 								Description = "If `where` is omitted, all records will be deleted!"
 							},
-							new QueryArgument<TimeSpanSecondsGraphType>
+							new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U)
 							{
-								Name = nameof(SqlCommand.Timeout),
-								DefaultValue = 120U,
 								Description = "The SQL command timeout in seconds."
-							}),
+							}
+						],
 						Name = Invariant($"delete{table}Data"),
 						Description = Invariant($"DELETE ... OUTPUT ... FROM {objectSchema.Name} ... VALUES ..."),
 						Resolver = new SqlApiDeleteFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 
 				if (actions.HasFlag(SqlApiAction.Insert))
 				{
-					var arguments = new QueryArguments();
-					arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+					var arguments = new List<QueryArgument>(8);
+					arguments.Add(new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." });
 					if (dataSource.Type is DataSourceType.SqlServer)
-						arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
+						arguments.Add(new(nameof(SelectQuery.Top), typeof(string).ToGraphQLType(true)) { Description = "Accepts integer `n` or `n%`." });
 
-					arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
-					arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-					arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
-					arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
-					arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
-					arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U);
+					arguments.Add(new(nameof(SelectQuery.Distinct), typeof(bool).ToGraphQLType(true), false));
+					arguments.Add(new(nameof(SelectQuery.Where), typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be returned." });
+					arguments.Add(new(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum))));
+					arguments.Add(new(nameof(SelectQuery.Fetch), typeof(uint).ToGraphQLType(true), 0U));
+					arguments.Add(new(nameof(SelectQuery.Offset), typeof(uint).ToGraphQLType(true), 0U));
+					arguments.Add(new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U));
 
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = arguments,
+						Arguments = arguments.ToArray(),
 						Name = Invariant($"insert{table}"),
 						Description = Invariant($"INSERT INTO {objectSchema.Name} SELECT ... FROM ... WHERE ... ORDER BY ..."),
 						Resolver = new SqlApiInsertFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 
 				if (actions.HasFlag(SqlApiAction.InsertData))
 				{
-					var arguments = new QueryArguments();
-					arguments.Add<string[]>("columns", description: "The columns to insert data into.");
-					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), null, "The data to be inserted.");
-
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = arguments,
+						Arguments =
+						[
+							new("columns", typeof(string[]).ToGraphQLType(true)) { Description = "The columns to insert data into." },
+							new("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType)))) { Description = "The data to be inserted." }
+						],
 						Name = Invariant($"insert{table}Data"),
 						Description = Invariant($"INSERT INTO {objectSchema.Name} ... VALUES ..."),
 						Resolver = new SqlApiInsertFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 
 				if (actions.HasFlag(SqlApiAction.Update))
 				{
-					var arguments = new QueryArguments();
-					arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
-					arguments.Add<string[]>("set", description: "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
-					arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be updated.");
-
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = arguments,
+						Arguments =
+						[
+							new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." },
+							new("set", typeof(string[]).ToGraphQLType(true)) { Description ="SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()" },
+							new("where", typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be updated." }
+						],
 						Name = Invariant($"update{table}"),
 						Description = Invariant($"UPDATE {objectSchema.Name} SET ... OUTPUT ... WHERE ..."),
 						Resolver = new SqlApiUpdateFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 
 				if (actions.HasFlag(SqlApiAction.UpdateData))
 				{
-					var arguments = new QueryArguments();
-					arguments.Add<string[]>("columns", description: "The columns to be updated.");
-					arguments.Add("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))), description: "The data to be inserted.");
-
-					var fieldType = new FieldType
+					var field = new FieldType
 					{
-						Arguments = new(
-							new QueryArgument(new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType))))
-							{
-								Name = "set",
-								Description = "The columns and data to be updated."
-							}),
+						Arguments =
+						[
+							new("columns", typeof(string[]).ToGraphQLType(true)) { Description = "The columns to insert data into." },
+							new("set", typeof(string[]).ToGraphQLType(true)) { Description ="SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()" },
+							new("data", new NonNullGraphType(new ListGraphType(new NonNullGraphType(dataInputType)))) { Description = "The data to be inserted." }
+						],
 						Name = Invariant($"update{table}Data"),
 						Description = Invariant($"UPDATE {objectSchema.Name} SET ... OUTPUT ..."),
 						Resolver = new SqlApiUpdateFieldResolver(),
 						ResolvedType = outputResponseType
 					};
-					fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+					field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-					@this.Mutation().AddField(fieldType);
+					@this.Mutation().Fields.Add(field);
 				}
 			}
 		});
@@ -420,116 +408,151 @@ public static class SchemaExtensions
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<R>(this ISchema @this, string name, Func<R> handler)
-		=> @this.Mutation().AddField(new()
+	{ 
+		var field = new FieldType()
 		{
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler()),
+			Resolver = new CustomFieldResolver(context => handler()),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true).ToNonNullGraphType()) { Name = argument }),
+			Arguments = [new(argument, typeof(T).ToGraphQLType(true).ToNonNullGraphType())],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
+			Resolver = new CustomFieldResolver(context => handler(context.GetArgument<T>(argument))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T1, T2, R>(this ISchema @this, string name, (string, string) arguments, Func<T1, T2, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T1, T2, T3, R>(this ISchema @this, string name, (string, string, string) arguments, Func<T1, T2, T3, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T1, T2, T3, T4, R>(this ISchema @this, string name, (string, string, string, string) arguments, Func<T1, T2, T3, T4, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T1, T2, T3, T4, T5, R>(this ISchema @this, string name, (string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item5, typeof(T5).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddMutation<T1, T2, T3, T4, T5, T6, R>(this ISchema @this, string name, (string, string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, T6, R> handler)
-		=> @this.Mutation().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 },
-				new QueryArgument(typeof(T6).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item6 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item5, typeof(T5).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item6, typeof(T6).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
@@ -537,7 +560,10 @@ public static class SchemaExtensions
 				context.GetArgument<T5>(arguments.Item5),
 				context.GetArgument<T6>(arguments.Item6))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Mutation().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -603,116 +629,151 @@ public static class SchemaExtensions
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<R>(this ISchema @this, string name, Func<R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler()),
+			Resolver = new CustomFieldResolver(context => handler()),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T, R>(this ISchema @this, string name, string argument, Func<T, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(new QueryArgument(typeof(T).ToGraphQLType(true).ToNonNullGraphType()) { Name = argument }),
+			Arguments = [new(argument, typeof(T).ToGraphQLType(true).ToNonNullGraphType())],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(context.GetArgument<T>(argument))),
+			Resolver = new CustomFieldResolver(context => handler(context.GetArgument<T>(argument))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T1, T2, R>(this ISchema @this, string name, (string, string) arguments, Func<T1, T2, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T1, T2, T3, R>(this ISchema @this, string name, (string, string, string) arguments, Func<T1, T2, T3, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T1, T2, T3, T4, R>(this ISchema @this, string name, (string, string, string, string) arguments, Func<T1, T2, T3, T4, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T1, T2, T3, T4, T5, R>(this ISchema @this, string name, (string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item5, typeof(T5).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
 				context.GetArgument<T4>(arguments.Item4),
 				context.GetArgument<T5>(arguments.Item5))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
 	/// </summary>
 	public static FieldType AddQuery<T1, T2, T3, T4, T5, T6, R>(this ISchema @this, string name, (string, string, string, string, string, string) arguments, Func<T1, T2, T3, T4, T5, T6, R> handler)
-		=> @this.Query().AddField(new()
+	{
+		var field = new FieldType()
 		{
-			Arguments = new(
-				new QueryArgument(typeof(T1).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item1 },
-				new QueryArgument(typeof(T2).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item2 },
-				new QueryArgument(typeof(T3).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item3 },
-				new QueryArgument(typeof(T4).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item4 },
-				new QueryArgument(typeof(T5).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item5 },
-				new QueryArgument(typeof(T6).ToGraphQLType(true).ToNonNullGraphType()) { Name = arguments.Item6 }),
+			Arguments =
+			[
+				new(arguments.Item1, typeof(T1).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item2, typeof(T2).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item3, typeof(T3).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item4, typeof(T4).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item5, typeof(T5).ToGraphQLType(true).ToNonNullGraphType()),
+				new(arguments.Item6, typeof(T6).ToGraphQLType(true).ToNonNullGraphType())
+			],
 			Name = name,
-			Resolver = new FuncFieldResolver<R>(context => handler(
+			Resolver = new CustomFieldResolver(context => handler(
 				context.GetArgument<T1>(arguments.Item1),
 				context.GetArgument<T2>(arguments.Item2),
 				context.GetArgument<T3>(arguments.Item3),
@@ -720,7 +781,10 @@ public static class SchemaExtensions
 				context.GetArgument<T5>(arguments.Item5),
 				context.GetArgument<T6>(arguments.Item6))),
 			Type = typeof(R).ToGraphQLType(false)
-		});
+		};
+		@this.Query().Fields.Add(field);
+		return field;
+	}
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -839,27 +903,27 @@ public static class SchemaExtensions
 			.Where(_ => _.Direction is ParameterDirection.Input || _.Direction is ParameterDirection.InputOutput)
 			.Select(parameter => parameter.Name)
 			.ToArray();
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = new QueryArguments(parameters.Select(parameter => new QueryArgument(typeof(GraphQLScalarType<string>)) { Name = parameter })),
+			Arguments = parameters.Select(parameter => new QueryArgument(parameter, typeof(GraphQLStringType))).ToArray(),
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"call{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"Calls stored procedure: {name}."),
 			Resolver = new SqlApiCallFieldResolver<T>()
 		};
 
 		if (graphQlType is not null)
-			fieldType.ResolvedType = graphQlType;
+			field.ResolvedType = graphQlType;
 		else
-			fieldType.Type = typeof(T).ToGraphQLType(false).ToNonNullGraphType();
+			field.Type = typeof(T).ToGraphQLType(false).ToNonNullGraphType();
 
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
 		if (mutation)
-			@this.Mutation().AddField(fieldType);
+			@this.Mutation().Fields.Add(field);
 		else
-			@this.Query().AddField(fieldType);
+			@this.Query().Fields.Add(field);
 
-		return fieldType;
+		return field;
 	}
 
 	/// <summary>
@@ -880,21 +944,22 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var arguments = new QueryArguments();
-		arguments.Add<T[]>("data", description: "The data to be deleted.");
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
-
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments =
+			[
+				new("data", typeof(T[]).ToGraphQLType(true)) { Description = "The data to be deleted." },
+				new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." }
+			],
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} ... VALUES ..."),
 			Resolver = new SqlApiDeleteFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -915,22 +980,23 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var arguments = new QueryArguments();
-		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
-		arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be deleted!");
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
-
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments =
+			[
+				new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." },
+				new("where", typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be deleted!" },
+				new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." }
+			],
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} WHERE ..."),
 			Resolver = new SqlApiDeleteFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -951,22 +1017,23 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var arguments = new QueryArguments();
-		arguments.Add<string[]>("columns", description: "The columns to insert data into.");
-		arguments.Add<T[]>("data", description: "The data to be inserted.");
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
-
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments =
+			[
+				new("columns", typeof(string[]).ToGraphQLType(true)) { Description = "The columns to insert data into." },
+				new("data", typeof(T[]).ToGraphQLType(true)) { Description = "The data to be inserted." },
+				new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." }
+			],
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"INSERT INTO {name} ... VALUES ..."),
 			Resolver = new SqlApiInsertFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -987,44 +1054,34 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var graphOrderByEnum = new EnumerationGraphType
-		{
-			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
-		};
-		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
-		{
-			var propertyName = property.GraphQLName();
-			var propertyDeprecationReason = property.GraphQLDeprecationReason();
+		var propertyInfos = typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()).ToArray();
+		var graphOrderByEnum = CreateOrderByGraphQLEnum(typeof(T).GraphQLName(), propertyInfos.Select(_ => _.GraphQLName()));
 
-			var ascending = Sort.Ascending.ToSQL();
-			graphOrderByEnum.Add(Invariant($"{propertyName}_{ascending}"), Invariant($"{propertyName} {ascending}"), Invariant($"{propertyName} {ascending}"), propertyDeprecationReason);
-			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
-		}
-
-		var arguments = new QueryArguments();
-		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+		var arguments = new List<QueryArgument>(9);
+		arguments.Add(new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." });
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
+			arguments.Add(new(nameof(SelectQuery.Top), typeof(string).ToGraphQLType(true)) { Description = "Accepts integer `n` or `n%`." });
 
-		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
-		arguments.Add<string>(nameof(SelectQuery.From), description: "The table or view to pull the data from to insert.");
-		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
-		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
-		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
+		arguments.Add(new(nameof(SelectQuery.Distinct), typeof(bool).ToGraphQLType(true), false));
+		arguments.Add(new(nameof(SelectQuery.From), typeof(string).ToGraphQLType(true)) { Description = "The table or view to pull the data from to insert." });
+		arguments.Add(new(nameof(SelectQuery.Where), typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be returned." });
+		arguments.Add(new(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum))));
+		arguments.Add(new(nameof(SelectQuery.Fetch), typeof(uint).ToGraphQLType(true), 0U));
+		arguments.Add(new(nameof(SelectQuery.Offset), typeof(uint).ToGraphQLType(true), 0U));
+		arguments.Add(new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." });
 
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments = arguments.ToArray(),
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"INSERT INTO {name} SELECT ... FROM ... WHERE ... ORDER BY ..."),
 			Resolver = new SqlApiInsertFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -1045,41 +1102,33 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var graphOrderByEnum = new EnumerationGraphType
-		{
-			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
-		};
-		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
-		{
-			var propertyName = property.GraphQLName();
-			var propertyDeprecationReason = property.GraphQLDeprecationReason();
+		var propertyInfos = typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()).ToArray();
+		var graphOrderByEnum = CreateOrderByGraphQLEnum(typeof(T).GraphQLName(), propertyInfos.Select(_ => _.GraphQLName()));
 
-			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
-		}
-
-		var arguments = new QueryArguments();
-		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
+		var arguments = new List<QueryArgument>(8);
+		arguments.Add(new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." });
 		if (dataSource.Type is DataSourceType.SqlServer)
-			arguments.Add<string>(nameof(SelectQuery.Top), nullable: true, description: "Accepts integer `n` or `n%`.");
+			arguments.Add(new(nameof(SelectQuery.Top), typeof(string).ToGraphQLType(true)) { Description = "Accepts integer `n` or `n%`." });
 
-		arguments.Add<bool>(nameof(SelectQuery.Distinct), defaultValue: false);
-		arguments.Add<string>(nameof(SelectQuery.Where), nullable: true, description: "If `where` is omitted, all records will be returned.");
-		arguments.Add(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum)));
-		arguments.Add<uint>(nameof(SelectQuery.Fetch), defaultValue: 0U);
-		arguments.Add<uint>(nameof(SelectQuery.Offset), defaultValue: 0U);
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
+		arguments.Add(new(nameof(SelectQuery.Distinct), typeof(bool).ToGraphQLType(true), false));
+		arguments.Add(new(nameof(SelectQuery.Where), typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be returned." });
+		arguments.Add(new(nameof(SelectQuery.OrderBy), new ListGraphType(new NonNullGraphType(graphOrderByEnum))));
+		arguments.Add(new(nameof(SelectQuery.Fetch), typeof(uint).ToGraphQLType(true), 0U));
+		arguments.Add(new(nameof(SelectQuery.Offset), typeof(uint).ToGraphQLType(true), 0U));
+		arguments.Add(new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." });
 
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments = arguments.ToArray(),
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"select{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"SELECT ... FROM {name} WHERE ... ORDER BY ..."),
 			Resolver = new SqlApiSelectFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<SelectResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Query().AddField(fieldType);
+		@this.Query().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -1100,21 +1149,22 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var arguments = new QueryArguments();
-		arguments.Add<T[]>("set", description: "The columns to be updated.");
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
-
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments =
+			[
+				new("set", typeof(T[]).ToGraphQLType(true)) { Description = "The columns to be updated." },
+				new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." }
+			],
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"UPDATE {name} SET ... OUTPUT ..."),
 			Resolver = new SqlApiUpdateFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	/// <summary>
@@ -1135,30 +1185,46 @@ public static class SchemaExtensions
 
 		var name = dataSource.Escape(table);
 		var objectSchema = dataSource.ObjectSchemas[name];
-		var arguments = new QueryArguments();
-		arguments.Add<Parameter[]>("parameters", nullable: true, description: "Used to reference user input values from the where clause.");
-		arguments.Add<string[]>("set", description: "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()");
-		arguments.Add<string>("where", nullable: true, description: "If `where` is omitted, all records will be updated.");
-		arguments.Add<uint>(nameof(SqlCommand.Timeout), defaultValue: 120U, description: "SQL Command timeout in seconds.");
-
-		var fieldType = new FieldType
+		var field = new FieldType
 		{
-			Arguments = arguments,
+			Arguments =
+			[
+				new("parameters", typeof(Parameter[]).ToGraphQLType(true)) { Description = "Used to reference user input values from the where clause." },
+				new("set", typeof(string[]).ToGraphQLType(true)) { Description = "SET [Column1] = 111, [Column2] = N'111', [Column3] = GETDATE()" },
+				new("where", typeof(string).ToGraphQLType(true)) { Description = "If `where` is omitted, all records will be updated." },
+				new(nameof(SqlCommand.Timeout), typeof(uint).ToGraphQLType(true), 120U) { Description = "SQL Command timeout in seconds." }
+			],
 			Name = graphQlName ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"UPDATE {name} SET ... OUTPUT ... WHERE ..."),
 			Resolver = new SqlApiUpdateFieldResolver<T>(),
 			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
 		};
-		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
+		field.Metadata[nameof(ObjectSchema)] = objectSchema;
 
-		return @this.Mutation().AddField(fieldType);
+		@this.Mutation().Fields.Add(field);
+		return field;
 	}
 
 	private static string FixName(string name)
-	{
-		if (!name.Contains('_'))
-			return name;
+		=> name.Contains('_') ? name.ToLowerInvariant().Split('_').Select(_ => _.ToPascalCase()).Concat() : name;
 
-		return name.ToLowerInvariant().Split('_').Select(_ => _.ToPascalCase()).Concat();
+	private static GraphQLEnumType CreateOrderByGraphQLEnum(string name, IEnumerable<string> columns)
+	{
+		var asc = Sort.Ascending.ToSQL();
+		var desc = Sort.Descending.ToSQL();
+		var graphQLEnumType = new GraphQLEnumType
+		{
+			Name = Invariant($"{name.ToPascalCase()}OrderBy"),
+			Description = Invariant($"`{name}` column sort options."),
+			Values = columns
+				.SelectMany(column => new[]
+				{
+					new GraphQLEnumType.EnumValue(Invariant($"{column}_{asc}"), Invariant($"ORDER BY {column} {asc}"), null, default),
+					new GraphQLEnumType.EnumValue(Invariant($"{column}_{desc}"), Invariant($"ORDER BY {column} {desc}"), null, default)
+				})
+				.ToDictionary(_ => _.Name, StringComparer.Ordinal)
+				.ToFrozenDictionary()
+		};
+		return graphQLEnumType;
 	}
 }

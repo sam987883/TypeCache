@@ -8,7 +8,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// <b>GraphQL</b><br/>
 /// Sets the name of the object type, object property, enum type, enum field, endpoint or endpoint parameter.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Struct)]
 public sealed class GraphQLNameAttribute : Attribute
 {
 	/// <exception cref="ArgumentNullException"/>
