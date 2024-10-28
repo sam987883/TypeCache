@@ -77,7 +77,7 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 	/// whose result objects are reduced by <paramref name="getResult"/> based on state data from <see cref="IResolveFieldContext"/>.<br/>
 	/// The name of the field is the name or <see cref="GraphQLNameAttribute"/> of the <paramref name="methodInfo"/>.
 	/// </summary>
-	/// <param name="methodInfo">The method that loads data for all result items (<see cref="ITEM[]"/>).  This method can contain user input query parameters.</param>
+	/// <param name="methodInfo">The method that loads data for all result items (<typeparamref name="ITEM"/>[]).  This method can contain user input query parameters.</param>
 	/// <param name="getResult">Reduces the data returned by <paramref name="methodInfo"/>.</param>
 	public FieldType AddField<ITEM>(MethodInfo methodInfo, Func<T, ITEM[], ITEM> getResult)
 		where ITEM : notnull

@@ -9,8 +9,11 @@ public static partial class NumericExtensions
 	{
 		(@this < 0).ThrowIfTrue();
 
-		var result = 1UL;
-		while (@this > 0)
+		if (@this is 0)
+			return 1UL;
+
+		var result = (ulong)@this;
+		while (@this > 1)
 			result *= (ulong)(--@this);
 
 		return result;

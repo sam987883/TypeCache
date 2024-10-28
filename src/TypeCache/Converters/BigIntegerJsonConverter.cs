@@ -5,14 +5,24 @@ using System.Globalization;
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TypeCache.Extensions;
 
 namespace TypeCache.Converters;
 
 public sealed class BigIntegerJsonConverter : JsonConverter<BigInteger>
 {
 	public override BigInteger Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		=> new(reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan);
+	{
+		reader.TokenType.ThrowIfNotEqual(JsonTokenType.Number);
+
+		using var doc = JsonDocument.ParseValue(ref reader);
+		return BigInteger.Parse(doc.RootElement.GetRawText(), NumberFormatInfo.InvariantInfo);
+	}
 
 	public override void Write(Utf8JsonWriter writer, BigInteger value, JsonSerializerOptions options)
-		=> writer.WriteRawValue(value.ToString(NumberFormatInfo.InvariantInfo), false);
+	{
+		var text = value.ToString(NumberFormatInfo.InvariantInfo);
+		using var doc = JsonDocument.Parse(text);
+		doc.WriteTo(writer);
+	}
 }
