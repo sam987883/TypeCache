@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL;
+using global::GraphQL;
 using TypeCache.Data;
 using TypeCache.Extensions;
 

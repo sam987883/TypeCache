@@ -1,5 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Runtime.CompilerServices;
+
 namespace TypeCache.Extensions;
 
 public static class BooleanExtensions

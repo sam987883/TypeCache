@@ -7,10 +7,10 @@ using TypeCache.GraphQL.Resolvers;
 
 namespace TypeCache.GraphQL.Types;
 
-public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
+public sealed class InterfaceGraphType<T> : global::GraphQL.Types.InterfaceGraphType<T>
 	where T : class
 {
-	public GraphQLInterfaceType()
+	public InterfaceGraphType()
 	{
 		typeof(T).IsInterface.ThrowIfFalse();
 
@@ -19,6 +19,6 @@ public sealed class GraphQLInterfaceType<T> : InterfaceGraphType<T>
 		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
 			.ToArray()
-			.ForEach(propertyInfo => this.AddField(propertyInfo, new PropertyFieldResolver<T>(propertyInfo)));
+			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType(new PropertyFieldResolver<T>(propertyInfo))));
 	}
 }

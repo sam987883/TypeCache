@@ -59,7 +59,7 @@ public class Connection<T>
 		graphType.AddField(new()
 		{
 			Name = nameof(Connection<T>.PageInfo),
-			ResolvedType = new GraphQLObjectType<PageInfo>(Invariant($"{name}{nameof(PageInfo)}")),
+			ResolvedType = new OutputGraphType<PageInfo>(Invariant($"{name}{nameof(PageInfo)}")),
 			//Type = typeof(GraphQLObjectType<PageInfo>),
 			Resolver = new FuncFieldResolver<Connection<T>, PageInfo?>(context => context.Source.PageInfo)
 		});

@@ -2,12 +2,12 @@
 
 using System.Reflection;
 using System.Text.Json.Serialization;
-using GraphQL;
-using GraphQL.DataLoader;
-using GraphQL.Execution;
+using global::GraphQL;
+using global::GraphQL.Execution;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using TypeCache.GraphQL.Converters;
+using TypeCache.GraphQL.Listeners;
 using TypeCache.GraphQL.Types;
 using TypeCache.GraphQL.Web;
 
@@ -19,20 +19,18 @@ public static class ServiceCollectionExtensions
 	/// <list type="table">
 	/// <listheader>Registers the following:</listheader>
 	/// <item><term>Singleton</term> <description><c>JsonConverter&lt;<see cref="ExecutionError"/>&gt;</c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLScalarType{T}"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="IDataLoaderContextAccessor"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecuter"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecutionListener"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IGraphQLSerializer"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLEnumType{T}"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLHashIdType"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="GraphQLUriType"/></c></description></item>
-	/// <item><term>Transient</term> <description><c><see cref="GraphQLInputType{T}"/></c></description></item>
-	/// <item><term>Transient</term> <description><c><see cref="GraphQLObjectType{T}"/></c></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="EnumGraphType{T}"/></c></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="HashIdGraphType"/></c></description></item>
+	/// <item><term>Transient</term> <description><c><see cref="InputGraphType{T}"/></c></description></item>
+	/// <item><term>Transient</term> <description><c><see cref="OutputGraphType{T}"/></c></description></item>
 	/// </list>
 	/// </summary>
 	/// <remarks>
 	/// To limit the information exposed in <c><see cref="ExecutionError"/></c>, register a <c>JsonConverter&lt;<see cref="ExecutionError"/>&gt;</c> before this call that writes out only what is desired.<br/><br/>
+	/// You can override <b><see cref="IDocumentExecutionListener"/></b> by registering a different implementation before this call.<br/>
 	/// You can override <b><see cref="IGraphQLSerializer"/></b> by registering a different implementation before this call.<br/>
 	/// Other implementations for <b><see cref="IGraphQLSerializer"/></b> can be found at:
 	/// <list type="bullet">
@@ -44,15 +42,12 @@ public static class ServiceCollectionExtensions
 	{
 		@this.TryAddSingleton<IGraphQLSerializer, GraphQLJsonSerializer>();
 		@this.TryAddSingleton<JsonConverter<ExecutionError>, GraphQLExecutionErrorJsonConverter>();
+		@this.TryAddSingleton<IDocumentExecutionListener, DefaultDocumentExecutionListener>();
 		return @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-			.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>()
-			.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>()
-			.AddSingleton(typeof(GraphQLScalarType<>))
-			.AddSingleton(typeof(GraphQLEnumType<>))
-			.AddSingleton<GraphQLHashIdType>()
-			.AddSingleton<GraphQLUriType>()
-			.AddTransient(typeof(GraphQLInputType<>))
-			.AddTransient(typeof(GraphQLObjectType<>));
+			.AddSingleton(typeof(EnumGraphType<>))
+			.AddSingleton<HashIdGraphType>()
+			.AddTransient(typeof(InputGraphType<>))
+			.AddTransient(typeof(OutputGraphType<>));
 	}
 
 	/// <summary>
@@ -62,16 +57,16 @@ public static class ServiceCollectionExtensions
 	/// <param name="options">
 	/// Place to make calls to:<br/>
 	/// <c>
-	/// <see cref="GraphQLObjectType{T}.AddField(MethodInfo)"/><br/>
-	/// <see cref="GraphQLObjectType{T}.AddQueryItem{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/><br/>
-	/// <see cref="GraphQLObjectType{T}.AddQueryCollection{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/>
+	/// <see cref="OutputGraphType{T}.AddField(MethodInfo)"/><br/>
+	/// <see cref="OutputGraphType{T}.AddQueryItem{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/><br/>
+	/// <see cref="OutputGraphType{T}.AddQueryCollection{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/>
 	/// </c>
 	/// </param>
-	public static IServiceCollection AddGraphQLTypeExtensions<T>(this IServiceCollection @this, Action<GraphQLObjectType<T>> options)
+	public static IServiceCollection AddGraphQLTypeExtensions<T>(this IServiceCollection @this, Action<OutputGraphType<T>> options)
 		where T : notnull
 	{
-		var graphType = new GraphQLObjectType<T>();
+		var graphType = new OutputGraphType<T>();
 		options(graphType);
-		return @this.AddTransient<GraphQLObjectType<T>>(provider => graphType);
+		return @this.AddTransient<OutputGraphType<T>>(provider => graphType);
 	}
 }

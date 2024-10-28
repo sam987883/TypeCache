@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
+using static System.FormattableString;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
@@ -127,8 +128,7 @@ public partial class ReflectionExtensions
 
 	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
 	public static object? GetFieldValue(this Type @this, string name, object instance)
-		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
-			.GetValueEx(instance);
+		=> @this.GetFieldInfo(name)?.GetValueEx(instance);
 
 	/// <summary>
 	/// <c>=&gt; <see cref="TypeStore.CollectionTypes"/>[@<paramref name="this"/>.TypeHandle];</c>
@@ -141,20 +141,27 @@ public partial class ReflectionExtensions
 	public static ObjectType GetObjectType(this Type @this)
 		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
-	public static ScalarType GetScalarType(this Type @this)
-		=> @this switch
-		{
-			{ IsGenericTypeDefinition: true } => ScalarType.None,
-			{ IsEnum: true } => ScalarType.Enum,
-			{ IsGenericType: true } when @this.IsNullable() => @this.GenericTypeArguments[0] switch
-			{
-				{ IsEnum: true } => ScalarType.Enum,
-				Type type when TypeStore.DataTypes.TryGetValue(type.TypeHandle, out var scalarType) => scalarType,
-				_ => ScalarType.None
-			},
-			_ when TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
-			_ => ScalarType.None
-		};
+	public static FieldInfo? GetFieldInfo(this Type @this, string name, bool ignoreCase = true)
+	{
+		name.ThrowIfBlank();
+
+		var binding = INSTANCE_BINDING_FLAGS;
+		if (ignoreCase)
+			binding |= BindingFlags.IgnoreCase;
+
+		return @this.GetField(name, binding | BindingFlags.DeclaredOnly) ?? @this.GetField(name, binding);
+	}
+
+	public static PropertyInfo? GetPropertyInfo(this Type @this, string name, bool ignoreCase = true)
+	{
+		name.ThrowIfBlank();
+
+		var binding = INSTANCE_BINDING_FLAGS;
+		if (ignoreCase)
+			binding |= BindingFlags.IgnoreCase;
+
+		return @this.GetProperty(name, binding | BindingFlags.DeclaredOnly) ?? @this.GetProperty(name, binding);
+	}
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
@@ -204,16 +211,56 @@ public partial class ReflectionExtensions
 			.ToArray();
 
 	public static object? GetPropertyValue(this Type @this, string name, object instance, ITuple? index = null)
-		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
-			.GetValueEx(instance, index);
+		=> @this.GetPropertyInfo(name)?.GetValueEx(instance, index);
+
+	public static ScalarType GetScalarType(this Type @this)
+		=> @this switch
+		{
+			{ IsGenericTypeDefinition: true } => ScalarType.None,
+			{ IsEnum: true } => ScalarType.Enum,
+			{ IsGenericType: true } when @this.IsNullable() => @this.GenericTypeArguments[0] switch
+			{
+				{ IsEnum: true } => ScalarType.Enum,
+				Type type when TypeStore.DataTypes.TryGetValue(type.TypeHandle, out var scalarType) => scalarType,
+				_ => ScalarType.None
+			},
+			_ when TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
+			_ => ScalarType.None
+		};
+
+	public static FieldInfo? GetStaticFieldInfo(this Type @this, string name)
+	{
+		name.ThrowIfBlank();
+
+		return @this.GetField(name, STATIC_BINDING_FLAGS);
+	}
 
 	public static object? GetStaticFieldValue(this Type @this, string name)
-		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
-			.GetStaticValue();
+		=> @this.GetStaticFieldInfo(name)?.GetStaticValue();
+
+	public static PropertyInfo? GetStaticPropertyInfo(this Type @this, string name)
+	{
+		name.ThrowIfBlank();
+
+		return @this.GetProperty(name, STATIC_BINDING_FLAGS);
+	}
 
 	public static object? GetStaticPropertyValue(this Type @this, string name, ITuple? index = null)
-		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
-			.GetStaticValue(index);
+		=> @this.GetStaticPropertyInfo(name)?.GetStaticValue(index);
+
+	/// <summary>
+	/// Gets the C# name of a type.  For example: <c>IDictionary&lt;String, List&lt;Int32&gt;&gt;</c>.
+	/// </summary>
+	public static string GetTypeName(this Type type)
+	{
+		var typeName = type.Name;
+		if (!type.IsGenericType)
+			return typeName;
+
+		typeName = typeName[0..typeName.IndexOf(GENERIC_TICKMARK)];
+		var genericTypeNameCSV = string.Join(", ", type.GetGenericArguments().Select(_ => _.GetTypeName()));
+		return $"{typeName}<{genericTypeNameCSV}>";
+	}
 
 	public static bool Implements(this Type @this, Type type)
 	{
@@ -492,28 +539,22 @@ public partial class ReflectionExtensions
 		=> @this.IsClass || @this.IsPointer || @this.Is(typeof(Nullable<>));
 
 	public static void SetFieldValue(this Type @this, string name, object instance, object? value)
-		=> @this.GetField(name, INSTANCE_BINDING_FLAGS)?
-			.SetValueEx(instance, value);
+		=> @this.GetFieldInfo(name)?.SetValueEx(instance, value);
 
 	public static void SetPropertyValue<T>(this Type @this, string name, object instance, T? value)
-		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
-			.SetValueEx(instance, value);
+		=> @this.GetPropertyInfo(name)?.SetValueEx(instance, value);
 
 	public static void SetPropertyValue(this Type @this, string name, object instance, ITuple valueAndIndex)
-		=> @this.GetProperty(name, INSTANCE_BINDING_FLAGS)?
-			.SetValueEx(instance, valueAndIndex);
+		=> @this.GetPropertyInfo(name)?.SetValueEx(instance, valueAndIndex);
 
 	public static void SetStaticFieldValue(this Type @this, string name, object? value)
-		=> @this.GetField(name, STATIC_BINDING_FLAGS)?
-			.SetStaticValue(value);
+		=> @this.GetStaticFieldInfo(name)?.SetStaticValue(value);
 
 	public static void SetStaticPropertyValue<T>(this Type @this, string name, T? value)
-		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
-			.SetStaticValue(value);
+		=> @this.GetStaticPropertyInfo(name)?.SetStaticValue(value);
 
 	public static void SetStaticPropertyValue(this Type @this, string name, ITuple valueAndIndex)
-		=> @this.GetProperty(name, STATIC_BINDING_FLAGS)?
-			.SetStaticValue(valueAndIndex);
+		=> @this.GetStaticPropertyInfo(name)?.SetStaticValue(valueAndIndex);
 
 	/// <inheritdoc cref="Expression.Default(Type)"/>
 	/// <remarks>

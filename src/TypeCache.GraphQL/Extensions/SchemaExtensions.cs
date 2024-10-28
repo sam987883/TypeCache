@@ -96,14 +96,14 @@ public static class SchemaExtensions
 					return value switch
 					{
 						DBNull or null => null,
-						byte[] bytes when fieldType == typeof(GraphQLScalarType<string>) => bytes.ToBase64(),
-						_ when fieldType == typeof(GraphQLScalarType<string>) => value.ToString(),
+						byte[] bytes when fieldType == typeof(StringGraphType) => bytes.ToBase64(),
+						_ when fieldType == typeof(StringGraphType) => value.ToString(),
 						_ => value
 					};
 				}),
 				Type = column.DataType switch
 				{
-					_ when column.DataType == typeof(object) => typeof(GraphQLScalarType<string>),
+					_ when column.DataType == typeof(object) => typeof(StringGraphType),
 					_ when column.AllowDBNull => column.DataType.ToGraphQLType(false),
 					_ => column.DataType.ToGraphQLType(false).ToNonNullGraphType()
 				}
@@ -118,7 +118,7 @@ public static class SchemaExtensions
 			Description = Invariant($"Database Schema: {table.TableName}"),
 			Arguments = new QueryArguments(
 				new QueryArgument(graphDatabasesEnum) { Name = "database" },
-				new QueryArgument<GraphQLScalarType<string>> { Name = "where" },
+				new QueryArgument<StringGraphType> { Name = "where" },
 				new QueryArgument(new ListGraphType(new NonNullGraphType(graphOrderByEnum))) { Name = "orderBy" }
 			),
 			ResolvedType = new ListGraphType(resolvedType),
@@ -171,7 +171,7 @@ public static class SchemaExtensions
 					Description = Invariant($"`{column.Name}`"),
 					Type = columnDataType switch
 					{
-						_ when columnDataType == typeof(object) => typeof(GraphQLScalarType<string>),
+						_ when columnDataType == typeof(object) => typeof(StringGraphType),
 						_ => columnDataType.ToGraphQLType(false)
 					}
 				});
@@ -189,14 +189,14 @@ public static class SchemaExtensions
 						return value switch
 						{
 							DBNull => null,
-							byte[] bytes when fieldType == typeof(GraphQLScalarType<string>) => bytes.ToBase64(),
-							_ when fieldType == typeof(GraphQLScalarType<string>) => value.ToString(),
+							byte[] bytes when fieldType == typeof(StringGraphType) => bytes.ToBase64(),
+							_ when fieldType == typeof(StringGraphType) => value.ToString(),
 							_ => value
 						};
 					}),
 					Type = column.DataTypeHandle switch
 					{
-						_ when columnDataType == typeof(object) => typeof(GraphQLScalarType<string>),
+						_ when columnDataType == typeof(object) => typeof(StringGraphType),
 						_ when column.Nullable => columnDataType.ToGraphQLType(false),
 						_ => columnDataType.ToGraphQLType(false).ToNonNullGraphType()
 					}
@@ -270,12 +270,12 @@ public static class SchemaExtensions
 					var fieldType = new FieldType
 					{
 						Arguments = new(
-							new QueryArgument<ListGraphType<GraphQLInputType<Parameter>>>
+							new QueryArgument<ListGraphType<InputGraphType<Parameter>>>
 							{
 								Name = "parameters",
 								Description = "Used to reference user input values from the where clause."
 							},
-							new QueryArgument<GraphQLScalarType<string>>
+							new QueryArgument<StringGraphType>
 							{
 								Name = "where",
 								Description = "If `where` is omitted, all records will be deleted!"
@@ -841,7 +841,7 @@ public static class SchemaExtensions
 			.ToArray();
 		var fieldType = new FieldType
 		{
-			Arguments = new QueryArguments(parameters.Select(parameter => new QueryArgument(typeof(GraphQLScalarType<string>)) { Name = parameter })),
+			Arguments = new QueryArguments(parameters.Select(parameter => new QueryArgument(typeof(StringGraphType)) { Name = parameter })),
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"call{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"Calls stored procedure: {name}."),
 			Resolver = new SqlApiCallFieldResolver<T>()
@@ -890,7 +890,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} ... VALUES ..."),
 			Resolver = new SqlApiDeleteFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -926,7 +926,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"delete{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"DELETE ... OUTPUT ... FROM {name} WHERE ..."),
 			Resolver = new SqlApiDeleteFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -962,7 +962,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"INSERT INTO {name} ... VALUES ..."),
 			Resolver = new SqlApiInsertFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -1020,7 +1020,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"insert{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"INSERT INTO {name} SELECT ... FROM ... WHERE ... ORDER BY ..."),
 			Resolver = new SqlApiInsertFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -1075,7 +1075,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"select{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"SELECT ... FROM {name} WHERE ... ORDER BY ..."),
 			Resolver = new SqlApiSelectFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<SelectResponse<T>>)
+			Type = typeof(OutputGraphType<SelectResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -1110,7 +1110,7 @@ public static class SchemaExtensions
 			Name = graphQlName?.ToCamelCase() ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}Data"),
 			Description = Invariant($"UPDATE {name} SET ... OUTPUT ..."),
 			Resolver = new SqlApiUpdateFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 
@@ -1147,7 +1147,7 @@ public static class SchemaExtensions
 			Name = graphQlName ?? Invariant($"update{objectSchema.ObjectName.ToPascalCase()}"),
 			Description = Invariant($"UPDATE {name} SET ... OUTPUT ... WHERE ..."),
 			Resolver = new SqlApiUpdateFieldResolver<T>(),
-			Type = typeof(GraphQLObjectType<OutputResponse<T>>)
+			Type = typeof(OutputGraphType<OutputResponse<T>>)
 		};
 		fieldType.Metadata[nameof(ObjectSchema)] = objectSchema;
 

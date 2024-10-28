@@ -18,7 +18,9 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 		{
 			null => null,
 			Task<T> task => await task,
+			Task<object> task => await task,
 			ValueTask<T> task => await task,
+			ValueTask<object> task => await task,
 			_ => context.Source
 		};
 
@@ -99,8 +101,8 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 			};
 		}
 
-		if (format.IsNotBlank())
-			return string.Format(InvariantCulture, Invariant($"{{0:{format}}}"), value);
+		if (format.IsNotBlank() && value is IFormattable formattable)
+			return formattable.ToString(format, InvariantCulture);
 
 		return value;
 	}

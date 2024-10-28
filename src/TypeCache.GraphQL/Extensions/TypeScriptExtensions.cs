@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Numerics;
 using System.Text;
 using GraphQL.Types;
 using TypeCache.Extensions;
@@ -15,16 +14,14 @@ public static class TypeScriptExtensions
 		{
 			NonNullGraphType graphType => graphType.ResolvedType!.GetTypeScriptType(list),
 			ListGraphType graphType => graphType.ResolvedType!.GetTypeScriptType(true),
-			GraphQLScalarType<bool> when list => "boolean[]",
-			GraphQLScalarType<bool> => "boolean",
-			GraphQLScalarType<sbyte> or GraphQLScalarType<short> or GraphQLScalarType<int> or GraphQLScalarType<byte> or GraphQLScalarType<ushort>
-			or GraphQLScalarType<Half> or GraphQLScalarType<float> or GraphQLScalarType<double> or GraphQLScalarType<decimal> when list => "number[]",
-			GraphQLScalarType<sbyte> or GraphQLScalarType<short> or GraphQLScalarType<int> or GraphQLScalarType<byte> or GraphQLScalarType<ushort>
-			or GraphQLScalarType<Half> or GraphQLScalarType<float> or GraphQLScalarType<double> or GraphQLScalarType<decimal> => "number",
-			GraphQLScalarType<int> or GraphQLScalarType<long> or GraphQLScalarType<ulong> or GraphQLScalarType<BigInteger> when list => "bigint[]",
-			GraphQLScalarType<int> or GraphQLScalarType<long> or GraphQLScalarType<ulong> or GraphQLScalarType<BigInteger> => "bigint",
-			GraphQLScalarType<string> or IdGraphType or GuidGraphType or GraphQLScalarType<DateOnly> or GraphQLScalarType<DateTime> or GraphQLScalarType<DateTimeOffset> or GraphQLUriType when list => "string[]",
-			GraphQLScalarType<string> or IdGraphType or GuidGraphType or GraphQLScalarType<DateOnly> or GraphQLScalarType<DateTime> or GraphQLScalarType<DateTimeOffset> or GraphQLUriType => "string",
+			BooleanGraphType when list => "boolean[]",
+			BooleanGraphType => "boolean",
+			SByteGraphType or ShortGraphType or IntGraphType or ByteGraphType or UShortGraphType or HalfGraphType or FloatGraphType or DecimalGraphType when list => "number[]",
+			SByteGraphType or ShortGraphType or IntGraphType or ByteGraphType or UShortGraphType or HalfGraphType or FloatGraphType or DecimalGraphType => "number",
+			BigIntGraphType when list => "bigint[]",
+			BigIntGraphType => "bigint",
+			StringGraphType or IdGraphType or GuidGraphType or DateOnlyGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType when list => "string[]",
+			StringGraphType or IdGraphType or GuidGraphType or DateOnlyGraphType or DateTimeGraphType or DateTimeOffsetGraphType or UriGraphType => "string",
 			_ when list => Invariant($"{@this.Name}[]"),
 			_ => @this.Name
 		};
@@ -33,7 +30,7 @@ public static class TypeScriptExtensions
 	{
 		var builder = new StringBuilder();
 		if (@this.Description.IsNotBlank())
-			builder.AppendLine(Invariant($"/* {@this.Description} */"));
+			builder.Append("// ").AppendLine(@this.Description);
 		builder.Append("export enum ").AppendLine(@this.Name).Append('{');
 		@this.Values.ToArray().ForEach(value =>
 		{
@@ -48,7 +45,7 @@ public static class TypeScriptExtensions
 	{
 		var builder = new StringBuilder();
 		if (@this.Description.IsNotBlank())
-			builder.AppendLine(Invariant($"/* {@this.Description} */"));
+			builder.Append("// ").AppendLine(@this.Description);
 		builder.AppendLine(Invariant($"export type {@this.Name} = {{"));
 		@this.Fields.ToArray().ForEach(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
 		return builder.Append('}').AppendLine().ToString();

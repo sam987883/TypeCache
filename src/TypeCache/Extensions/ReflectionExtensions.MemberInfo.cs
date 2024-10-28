@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Reflection;
 
 namespace TypeCache.Extensions;
@@ -23,9 +24,9 @@ public partial class ReflectionExtensions
 
 	[DebuggerHidden]
 	public static string Name(this MemberInfo @this)
-		=> @this.Name.IndexOf(GENERIC_TICKMARK) switch
-		{
-			var index when index >= 0 => @this.Name.Left(index),
-			_ => @this.Name
-		};
+	{
+		var name = @this.Name.Replace("@", string.Empty);
+		var index = name.IndexOf(GENERIC_TICKMARK);
+		return index > -1 ? name.Left(index) : name;
+	}
 }

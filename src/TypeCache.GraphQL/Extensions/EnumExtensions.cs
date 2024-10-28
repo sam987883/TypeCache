@@ -1,8 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Numerics;
+using global::GraphQL.Types;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Types;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -11,33 +10,27 @@ public static class EnumExtensions
 	public static Type? ToGraphType(this ScalarType @this)
 		=> @this switch
 		{
-			ScalarType.Boolean => typeof(GraphQLScalarType<bool>),
-			ScalarType.SByte => typeof(GraphQLScalarType<sbyte>),
-			ScalarType.Int16 => typeof(GraphQLScalarType<short>),
-			ScalarType.Int32 or ScalarType.Index => typeof(GraphQLScalarType<int>),
-			ScalarType.Int64 => typeof(GraphQLScalarType<long>),
-			ScalarType.IntPtr => typeof(GraphQLScalarType<nint>),
-			ScalarType.Int128 => typeof(GraphQLScalarType<Int128>),
-			ScalarType.BigInteger => typeof(GraphQLScalarType<BigInteger>),
-			ScalarType.Byte => typeof(GraphQLScalarType<byte>),
-			ScalarType.UInt16 => typeof(GraphQLScalarType<ushort>),
-			ScalarType.UInt32 => typeof(GraphQLScalarType<uint>),
-			ScalarType.UInt64 => typeof(GraphQLScalarType<ulong>),
-			ScalarType.UIntPtr => typeof(GraphQLScalarType<UIntPtr>),
-			ScalarType.UInt128 => typeof(GraphQLScalarType<UInt128>),
-			ScalarType.Half => typeof(GraphQLScalarType<Half>),
-			ScalarType.Single => typeof(GraphQLScalarType<float>),
-			ScalarType.Double => typeof(GraphQLScalarType<char>),
-			ScalarType.Decimal => typeof(GraphQLScalarType<decimal>),
-			ScalarType.DateOnly => typeof(GraphQLScalarType<DateOnly>),
-			ScalarType.DateTime => typeof(GraphQLScalarType<DateTime>),
-			ScalarType.DateTimeOffset => typeof(GraphQLScalarType<DateTimeOffset>),
-			ScalarType.TimeOnly => typeof(GraphQLScalarType<TimeOnly>),
-			ScalarType.TimeSpan => typeof(GraphQLScalarType<TimeSpan>),
-			ScalarType.Guid => typeof(GraphQLScalarType<Guid>),
-			ScalarType.Char => typeof(GraphQLScalarType<char>),
-			ScalarType.String => typeof(GraphQLScalarType<string>),
-			ScalarType.Uri => typeof(GraphQLUriType),
+			ScalarType.Boolean => typeof(BooleanGraphType),
+			ScalarType.SByte => typeof(SByteGraphType),
+			ScalarType.Int16 => typeof(ShortGraphType),
+			ScalarType.Int32 or ScalarType.Index => typeof(IntGraphType),
+			ScalarType.Int64 or ScalarType.IntPtr => typeof(LongGraphType),
+			ScalarType.BigInteger or ScalarType.Int128 or ScalarType.UInt128 => typeof(BigIntGraphType),
+			ScalarType.Byte => typeof(ByteGraphType),
+			ScalarType.UInt16 => typeof(UShortGraphType),
+			ScalarType.UInt32 => typeof(UIntGraphType),
+			ScalarType.UInt64 or ScalarType.UIntPtr => typeof(ULongGraphType),
+			ScalarType.Half => typeof(HalfGraphType),
+			ScalarType.Single or ScalarType.Double => typeof(FloatGraphType),
+			ScalarType.Decimal => typeof(DecimalGraphType),
+			ScalarType.DateOnly => typeof(DateOnlyGraphType),
+			ScalarType.DateTime => typeof(DateTimeGraphType),
+			ScalarType.DateTimeOffset => typeof(DateTimeOffsetGraphType),
+			ScalarType.TimeOnly => typeof(TimeOnlyGraphType),
+			ScalarType.TimeSpan => typeof(TimeSpanSecondsGraphType),
+			ScalarType.Guid => typeof(GuidGraphType),
+			ScalarType.String or ScalarType.Char => typeof(StringGraphType),
+			ScalarType.Uri => typeof(UriGraphType),
 			_ => null
 		};
 }

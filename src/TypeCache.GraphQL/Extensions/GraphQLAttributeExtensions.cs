@@ -36,15 +36,14 @@ public static class GraphQLAttributeExtensions
 		=> @this.HasCustomAttribute<GraphQLIgnoreAttribute>();
 
 	public static string GraphQLInputName(this Type @this)
-		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name ?? (@this.IsGenericType
-			? Invariant($"{@this.Name()}{@this.GenericTypeArguments.Select(_ => _.GraphQLName()).Concat()}")
-			: Invariant($"{@this.GraphQLName()}Input"));
+		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name ?? Invariant($"{@this.GraphQLName()}Input");
 
 	public static string GraphQLName(this MemberInfo @this)
 		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this switch
 		{
 			MethodInfo methodInfo => methodInfo.Name.TrimEnd("Async"),
 			Type type when type.IsGenericType => Invariant($"{type.Name()}{type.GenericTypeArguments.Select(_ => _.GraphQLName()).Concat()}"),
+			Type type => type.Name(),
 			_ => @this.Name
 		};
 

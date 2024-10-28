@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
@@ -17,12 +18,26 @@ public static class GlobalExtensions
 		=> @this >= minimum && @this <= maximum;
 
 	/// <remarks>
+	/// <c>=&gt; <see cref="ValueBox{T}"/>.GetValue(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static object Box<T>(this T @this)
+		where T : struct
+		=> ValueBox<T>.GetValue(@this);
+
+	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/> &gt; <paramref name="minimum"/> &amp;&amp; @<paramref name="this"/> &lt; <paramref name="maximum"/>;</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool InBetween<T>(this T @this, T minimum, T maximum)
 		where T : IComparisonOperators<T, T, bool>
 		=> @this > minimum && @this < maximum;
+
+	public static IEnumerable<T> Repeat<T>(this T @this, int count)
+	{
+		while (--count > -1)
+			yield return @this;
+	}
 
 	/// <remarks>
 	/// <c>=&gt; (@<paramref name="this"/>, <paramref name="value"/>) = (<paramref name="value"/>, @<paramref name="this"/>);</c>

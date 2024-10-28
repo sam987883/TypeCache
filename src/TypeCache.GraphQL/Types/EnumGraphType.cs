@@ -9,10 +9,10 @@ using TypeCache.Utilities;
 namespace TypeCache.GraphQL.Types;
 
 /// <inheritdoc cref="EnumerationGraphType"/>
-public sealed class GraphQLEnumType<T> : EnumerationGraphType
+public sealed class EnumGraphType<T> : EnumerationGraphType
 	where T : struct, Enum
 {
-	public GraphQLEnumType()
+	public EnumGraphType()
 	{
 		this.Name = typeof(T).GraphQLName();
 		this.Description = typeof(T).GraphQLDescription();

@@ -47,11 +47,9 @@ public static partial class MapExtensions
 		target.ThrowIfNull();
 
 		var targetType = target.GetType();
-		var bindings = ignoreCase switch
-		{
-			true => FlattenHierarchy | Instance | Public | IgnoreCase,
-			_ => FlattenHierarchy | Instance | Public
-		};
+		var bindings = FlattenHierarchy | Instance | Public;
+		if (ignoreCase)
+			bindings |= IgnoreCase;
 
 		foreach (var pair in @this)
 		{

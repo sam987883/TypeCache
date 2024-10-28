@@ -1,4 +1,6 @@
-﻿using TypeCache.Extensions;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;
 

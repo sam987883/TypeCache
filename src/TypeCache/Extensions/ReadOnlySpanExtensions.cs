@@ -30,6 +30,13 @@ public static class ReadOnlySpanExtensions
 		where R : struct
 		=> MemoryMarshal.Cast<T, R>(@this);
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Equals(<paramref name="other"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool EqualsIgnoreCase(this ReadOnlySpan<char> @this, ReadOnlySpan<char> other)
+		=> @this.Equals(other, StringComparison.OrdinalIgnoreCase);
+
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this scoped ReadOnlySpan<T> @this, Action<T> action)
 	{

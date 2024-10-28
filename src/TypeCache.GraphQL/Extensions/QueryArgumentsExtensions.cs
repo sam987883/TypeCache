@@ -12,7 +12,7 @@ public static class QueryArgumentsExtensions
 	{
 		if (typeof(T).Implements(typeof(IGraphType)))
 		{
-			@this.Add(new QueryArgument(typeof(T))
+			@this.Add(new(typeof(T))
 			{
 				Name = name,
 				DefaultValue = defaultValue,
@@ -33,14 +33,15 @@ public static class QueryArgumentsExtensions
 		if (isValueNullable)
 			type = type.GenericTypeArguments[0];
 
+		var scalarType = type.GetScalarType();
 		var graphType = type switch
 		{
-			{ IsEnum: true } => typeof(GraphQLEnumType<>),
-			_ when type.Implements(typeof(ISpanParsable<>)) => typeof(GraphQLScalarType<>),
-			_ => typeof(GraphQLInputType<>)
+			{ IsEnum: true } => typeof(EnumGraphType<>),
+			_ when scalarType is not ScalarType.None => scalarType.ToGraphType(),
+			_ => typeof(InputGraphType<>)
 		};
 
-		type = graphType.MakeGenericType(type);
+		type = graphType!.IsGenericType ? graphType.MakeGenericType(type) : graphType;
 
 		if (isList)
 		{
@@ -60,7 +61,7 @@ public static class QueryArgumentsExtensions
 				type = type.ToNonNullGraphType();
 		}
 
-		@this.Add(new QueryArgument(type)
+		@this.Add(new(type)
 		{
 			Name = name,
 			DefaultValue = defaultValue,

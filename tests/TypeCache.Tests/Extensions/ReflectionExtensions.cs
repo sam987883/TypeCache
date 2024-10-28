@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using TypeCache.Extensions;
 using Xunit;
@@ -36,14 +37,6 @@ public class ReflectionExtensions
 				Console.WriteLine($"{i}: {text1}, {text2}, {text3}, {timeOnly}, {dateTime}, {dateTimeOffset}, {guid}, {age}");
 			return i % 10000;
 		}
-	}
-
-	[Fact]
-	public void Create()
-	{
-		Assert.NotNull(typeof(Contact).Create());
-		Assert.NotNull(typeof(object).Create());
-		Assert.NotNull(typeof(IndexOutOfRangeException).Create());
 	}
 
 	[Fact]
@@ -447,5 +440,22 @@ public class ReflectionExtensions
 		var elapsedInvokeEx2 = stopwatch.Elapsed;
 
 		Assert.True(elapsedInvokeEx2 < elapsedInvoke || true);
+	}
+
+	[Fact]
+	public void Type_Create()
+	{
+		Assert.NotNull(typeof(Contact).Create());
+		Assert.NotNull(typeof(object).Create());
+		Assert.NotNull(typeof(IndexOutOfRangeException).Create());
+	}
+
+	[Fact]
+	public void Type_GetTypeName()
+	{
+		const string expected = "IDictionary<String, List<Int32>>";
+		var actual = typeof(IDictionary<string, List<int>>).GetTypeName();
+
+		Assert.Equal(expected, actual);
 	}
 }

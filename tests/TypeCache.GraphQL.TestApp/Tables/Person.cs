@@ -10,7 +10,7 @@ namespace TypeCache.GraphQL.TestApp.Tables;
 [SqlApi]
 public class Person
 {
-	[GraphQLType<GraphQLHashIdType>()]
+	[GraphQLType<HashIdGraphType>()]
 	public int BusinessEntityID { get; set; }
 	public string? PersonType { get; set; }
 	public bool NameStyle { get; set; }
@@ -22,10 +22,10 @@ public class Person
 	public int EmailPromotion { get; set; }
 	public string? AdditionalContactInfo { get; set; }
 	public string? Demographics { get; set; }
-	[GraphQLType<GraphQLScalarType<Guid>>()]
+	[GraphQLType<StringGraphType>()]
 	[GraphQLName("rowguid")]
 	public Guid Rowguid { get; set; }
-	[GraphQLType<NonNullGraphType<GraphQLScalarType<DateTime>>>()]
+	[GraphQLType<NonNullGraphType<StringGraphType>>()]
 	public DateTime ModifiedDate { get; set; }
 
 	public IEnumerable<Person> GetPersons()
