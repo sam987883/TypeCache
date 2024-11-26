@@ -26,7 +26,7 @@ public class ActionExtensions
 
 		var timeProvider = new FakeTimeProvider();
 
-		var task = action.Retry(Sequence.LinearTime(1.0.ToSeconds()).Take(10), timeProvider);
+		var task = action.Retry(Sequence.LinearTime(1.0.ToSeconds(), 10), timeProvider);
 		while (!task.IsCompleted)
 			timeProvider.Advance(1.0.ToSeconds());
 
