@@ -12,12 +12,12 @@ public static class Sequence
 	/// For example: (<c>e^1, e^2, e^3, ...</c>)<br/>
 	/// Use Linq's Skip method to change the start of the sequence.<br/>
 	/// Use Linq's Select method to cap values at a maximum or minimum.
-	/// <param name="count">The power to use in generating the sequence. (<c>i^<paramref name="exponent"/></c>).</param>
 	/// </summary>
-	/// <returns>An <c><see cref="Int32.MaxValue"/></c> sequence of <c><see cref="TimeSpan"/></c> values.</returns>
+	/// <param name="count">The power to use in generating the sequence. (<c>i^<paramref name="exponent"/></c>).</param>
+	/// <returns>A sequence of <c><paramref name="count"/></c> <c><see cref="TimeSpan"/></c> values.</returns>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<TimeSpan> ExponentialSeconds(int count)
-		=> Enumerable.Range(1, count).Select(i => Math.Exp(i).ToSeconds());
+		=> Enumerable.Range(1, count).Select(i => Math.Exp(i).Seconds());
 
 	/// <summary>
 	/// Creates an infinite sequence of exponentially increasing seconds based on powers of <c><paramref name="exponent"/></c>.<br/>
@@ -25,11 +25,12 @@ public static class Sequence
 	/// Use Linq's Skip method to change the start of the sequence.<br/>
 	/// Use Linq's Select method to cap values at a maximum or minimum.
 	/// </summary>
-	/// <param name="exponent">The power to use in generating the sequence. (<c>i^<paramref name="exponent"/></c>).</param>
-	/// <returns>An <c><see cref="Int32.MaxValue"/></c> sequence of <c><see cref="TimeSpan"/></c> values.</returns>
+	/// <param name="exponent">The power to use in generating the sequence (<c>i^<paramref name="exponent"/></c>).</param>
+	/// <param name="count"># of values in the sequence.</param>
+	/// <returns>A sequence of <c><paramref name="count"/></c> <c><see cref="TimeSpan"/></c> values.</returns>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<TimeSpan> ExponentialSeconds(uint exponent, int count)
-		=> Enumerable.Range(1, count).Select(i => Math.Pow(i, exponent).ToSeconds());
+		=> Enumerable.Range(1, count).Select(i => Math.Pow(i, exponent).Seconds());
 
 	/// <summary>
 	/// Creates an infinite sequence of linear increasing times based on a fixed value of <c><paramref name="increase"/></c>.<br/>
@@ -37,8 +38,9 @@ public static class Sequence
 	/// Use Linq's Skip method to change the start of the sequence.<br/>
 	/// Use Linq's Select method to cap values at a maximum or minimum.
 	/// </summary>
-	/// <param name="exponent">The power to use in generating the sequence. (<c>i^<paramref name="exponent"/></c>).</param>
-	/// <returns>An <c><see cref="Int32.MaxValue"/></c> sequence of <c><see cref="TimeSpan"/></c> values.</returns>
+	/// <param name="increase">The fixed amount of time that the sequence increases by.</param>
+	/// <param name="count"># of values in the sequence.</param>
+	/// <returns>A sequence of <c><paramref name="count"/></c> <c><see cref="TimeSpan"/></c> values.</returns>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<TimeSpan> LinearTime(TimeSpan increase, int count)
 		=> Enumerable.Range(1, count).Select(i => i * increase);

@@ -30,9 +30,9 @@ public class FuncExtensions
 
 		var timeProvider = new FakeTimeProvider();
 
-		var task = func.Retry(Sequence.LinearTime(1.0.ToSeconds(), 10), timeProvider);
+		var task = func.Retry(Sequence.LinearTime(1.Seconds(), 10), timeProvider);
 		while (!task.IsCompleted)
-			timeProvider.Advance(1.0.ToSeconds());
+			timeProvider.Advance(1.Seconds());
 
 		var actualValue = await task;
 		Assert.Equal(expectedValue, actualValue);

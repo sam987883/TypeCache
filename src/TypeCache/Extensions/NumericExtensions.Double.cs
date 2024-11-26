@@ -11,7 +11,7 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromDays(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToDays(this double @this)
+	public static TimeSpan Days(this double @this)
 		=> TimeSpan.FromDays(@this);
 
 	/// <inheritdoc cref="TimeSpan.FromHours(double)"/>
@@ -19,7 +19,7 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromHours(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToHours(this double @this)
+	public static TimeSpan Hours(this double @this)
 		=> TimeSpan.FromHours(@this);
 
 	/// <inheritdoc cref="TimeSpan.FromMicroseconds(double)"/>
@@ -27,7 +27,7 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromMicroseconds(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToMicroseconds(this double @this)
+	public static TimeSpan Microseconds(this double @this)
 		=> TimeSpan.FromMicroseconds(@this);
 
 	/// <inheritdoc cref="TimeSpan.FromMilliseconds(double)"/>
@@ -35,7 +35,7 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromMilliseconds(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToMilliseconds(this double @this)
+	public static TimeSpan Milliseconds(this double @this)
 		=> TimeSpan.FromMilliseconds(@this);
 
 	/// <inheritdoc cref="TimeSpan.FromMinutes(double)"/>
@@ -43,7 +43,7 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromMinutes(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToMinutes(this double @this)
+	public static TimeSpan Minutes(this double @this)
 		=> TimeSpan.FromMinutes(@this);
 
 	/// <inheritdoc cref="TimeSpan.FromSeconds(double)"/>
@@ -51,6 +51,6 @@ public static partial class NumericExtensions
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromSeconds(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static TimeSpan ToSeconds(this double @this)
+	public static TimeSpan Seconds(this double @this)
 		=> TimeSpan.FromSeconds(@this);
 }
