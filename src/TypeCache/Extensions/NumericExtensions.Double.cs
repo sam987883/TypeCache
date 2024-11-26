@@ -1,10 +1,11 @@
-﻿using System.Numerics;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System.Numerics;
 
 namespace TypeCache.Extensions;
 
 public static partial class NumericExtensions
 {
-#if NET9_0_OR_GREATER
 	/// <inheritdoc cref="TimeSpan.FromDays(double)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="TimeSpan"/>.FromDays(@<paramref name="this"/>);</c>
@@ -52,5 +53,4 @@ public static partial class NumericExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TimeSpan ToSeconds(this double @this)
 		=> TimeSpan.FromSeconds(@this);
-#endif
 }

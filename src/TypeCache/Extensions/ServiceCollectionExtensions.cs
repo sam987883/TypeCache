@@ -169,7 +169,7 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// Registers a named implementation of <c><see cref="IAfterRule{REQUEST, RESPONSE}"/></c>.<br/>
 	/// Requires registering rule: <c><see cref="IRule{REQUEST}"/></c>.<br/>
-	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>
+	/// Requires call to: <see cref="ServiceCollectionExtensions.AddMediation(IServiceCollection)"/>.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"/>
 	public static IServiceCollection AddAfterRule<REQUEST, RESPONSE>(this IServiceCollection @this, object? key, Action<REQUEST, RESPONSE> afterRule, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
@@ -177,13 +177,13 @@ public static class ServiceCollectionExtensions
 		=> @this.AddServiceDescriptor<IAfterRule<REQUEST, RESPONSE>>(key, serviceLifetime, (provider, key) => RuleFactory.CreateAfterRule(afterRule));
 
 	/// <summary>
-	/// Registers keyed singleton: <c><see cref="IDataSource"/></c>.<br/>
+	/// Registers keyed singleton: <c><see cref="IDataSource"/></c>.
 	/// </summary>
 	public static IServiceCollection AddDataSource(this IServiceCollection @this, string name, DbProviderFactory dbProviderFactory, string connectionString, string[] databases)
 		=> @this.AddKeyedSingleton<IDataSource>(name, new DataSource(name, dbProviderFactory, connectionString, databases));
 
 	/// <summary>
-	/// Registers Singletons:
+	/// Registers singletons:
 	/// <list type="bullet">
 	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
 	/// </list>
@@ -194,7 +194,7 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey, rgbIV));
 
 	/// <summary>
-	/// Registers Singletons:
+	/// Registers singletons:
 	/// <list type="bullet">
 	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
 	/// </list>
@@ -205,7 +205,7 @@ public static class ServiceCollectionExtensions
 		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey.ToBytes(), rgbIV.ToBytes()));
 
 	/// <summary>
-	/// Registers Singletons:
+	/// Registers singletons:
 	/// <list type="bullet">
 	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
 	/// </list>
@@ -216,7 +216,7 @@ public static class ServiceCollectionExtensions
 		=> @this.AddHashMaker(rgbKey.AsBytes().ToArray(), rgbIV.AsBytes().ToArray());
 
 	/// <summary>
-	/// Registers Singleton: <c><see cref="IMediator"/></c><br/>
+	/// Registers singleton: <c><see cref="IMediator"/></c><br/>
 	/// </summary>
 	public static IServiceCollection AddMediation(this IServiceCollection @this)
 		=> @this.AddSingleton<IMediator, Mediator>();

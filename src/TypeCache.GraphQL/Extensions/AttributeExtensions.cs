@@ -8,7 +8,7 @@ using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Extensions;
 
-public static class GraphQLAttributeExtensions
+public static class AttributeExtensions
 {
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string? GraphQLDeprecationReason(this MemberInfo @this)
@@ -25,7 +25,7 @@ public static class GraphQLAttributeExtensions
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string? GraphQLDescription(this ParameterInfo @this)
-		=> @this.GetCustomAttribute<GraphQLDescriptionAttribute>()?.Description;
+		=> @this.GetCustomAttribute<GraphQLDescriptionAttribute>()?.Description?.NullIfBlank();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool GraphQLIgnore(this MemberInfo @this)
@@ -36,10 +36,10 @@ public static class GraphQLAttributeExtensions
 		=> @this.HasCustomAttribute<GraphQLIgnoreAttribute>();
 
 	public static string GraphQLInputName(this Type @this)
-		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name ?? Invariant($"{@this.GraphQLName()}Input");
+		=> @this.GetCustomAttribute<GraphQLInputNameAttribute>()?.Name?.NullIfBlank() ?? Invariant($"{@this.GraphQLName()}Input");
 
 	public static string GraphQLName(this MemberInfo @this)
-		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this switch
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name?.NullIfBlank() ?? @this switch
 		{
 			MethodInfo methodInfo => methodInfo.Name.TrimEnd("Async"),
 			Type type when type.IsGenericType => Invariant($"{type.Name()}{type.GenericTypeArguments.Select(_ => _.GraphQLName()).Concat()}"),
@@ -49,7 +49,7 @@ public static class GraphQLAttributeExtensions
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string GraphQLName(this ParameterInfo @this)
-		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name ?? @this.Name();
+		=> @this.GetCustomAttribute<GraphQLNameAttribute>()?.Name?.NullIfBlank() ?? @this.Name();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Type? GraphQLType(this MemberInfo @this)

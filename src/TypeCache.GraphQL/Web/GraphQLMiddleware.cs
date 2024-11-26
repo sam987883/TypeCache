@@ -7,24 +7,14 @@ using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
 using static System.StringSplitOptions;
 
 namespace TypeCache.GraphQL.Web;
 
-public sealed class GraphQLMiddleware
+public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema)
 {
-	private readonly RequestDelegate _Next;
-	private readonly PathString _Route;
-	private readonly ISchema _Schema;
-
-	public GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema, IServiceProvider provider)
-	{
-		this._Next = next;
-		this._Route = route;
-		this._Schema = new Schema(provider, [configureSchema]);
-	}
-
 	public async Task Invoke(HttpContext httpContext
 		, IServiceProvider provider
 		, IDocumentExecuter executer
@@ -32,28 +22,32 @@ public sealed class GraphQLMiddleware
 		, IGraphQLSerializer graphQLSerializer
 		, ILogger<GraphQLMiddleware> logger)
 	{
-		if (!httpContext.Request.Path.Equals(this._Route))
+		if (!httpContext.Request.Path.Equals(route))
 		{
-			await this._Next.Invoke(httpContext);
+			await next.Invoke(httpContext);
 			return;
 		}
 
 		var request = await graphQLSerializer.ReadAsync<GraphQLRequest>(httpContext.Request.Body, httpContext.RequestAborted);
 		if (request is null)
 		{
-			await this._Next.Invoke(httpContext);
+			await next.Invoke(httpContext);
 			return;
 		}
 
 		var requestId = Guid.NewGuid();
-		var requestTime = DateTime.UtcNow;
+		var timeProvider = provider.GetService(typeof(TimeProvider)) as TimeProvider ?? TimeProvider.System;
+		var requestTime = timeProvider.GetLocalNow().ToISO8601();
 		var userContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
 		{
 			{ "RequestId", requestId },
 			{ "RequestTime", requestTime },
 			{ nameof(httpContext.User), httpContext.User }
 		};
-		this._Schema.Description = Invariant($"GraphQL schema route: {this._Route}");
+		var schema = new Schema(provider, [configureSchema])
+		{
+			Description = "GraphQL schema route: " + route
+		};
 		var options = new ExecutionOptions
 		{
 			CancellationToken = httpContext.RequestAborted,
@@ -61,7 +55,7 @@ public sealed class GraphQLMiddleware
 			OperationName = request.OperationName,
 			Query = request.Query,
 			RequestServices = provider,
-			Schema = this._Schema,
+			Schema = schema,
 			UserContext = userContext,
 			ValidationRules = DocumentValidator.CoreRules
 		};

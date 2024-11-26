@@ -20,14 +20,14 @@ internal sealed class HttpClientRule(HttpClient httpClient, ILogger<IMediator>? 
 
 			var logLevel = httpResponse.IsSuccessStatusCode ? LogLevel.Information : LogLevel.Error;
 			logger?.Log(logLevel, Invariant($"{{{nameof(request.Message.Method)}}} {{{nameof(request.Message.RequestUri)}}} - {{{nameof(httpResponse.StatusCode)}}}"),
-				[request.Message.Method.Method, request.Message.RequestUri, httpResponse.StatusCode]);
+				request.Message.Method.Method, request.Message.RequestUri, httpResponse.StatusCode);
 
 			return httpResponse;
 		}
 		catch (Exception error)
 		{
 			logger?.LogError(error, Invariant($"{{{nameof(request.Message.Method)}}} {{{nameof(request.Message.RequestUri)}}} - {{ErrorMessage}}"),
-				[request.Message.Method.Method, request.Message.RequestUri, error.Message]);
+				request.Message.Method.Method, request.Message.RequestUri, error.Message);
 
 			throw;
 		}

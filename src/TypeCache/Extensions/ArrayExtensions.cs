@@ -78,8 +78,8 @@ public static class ArrayExtensions
 
 	public static void ForEach<T>(this T[] @this, Action<T, int> action)
 	{
-		var i = -1;
-		@this.ForEach(value => action(value, ++i));
+		for (var i = 0; i < @this.Length; ++i)
+			action(@this[i], i);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -105,6 +105,48 @@ public static class ArrayExtensions
 
 			action(value, i);
 		});
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static async Task ForEachAsync<T>(this T[] @this, Action<T> action, CancellationToken token = default)
+	{
+		@this.ThrowIfNull();
+		action.ThrowIfNull();
+
+		for (var i = 0; i < @this.Length; ++i)
+		{
+			if (token.IsCancellationRequested)
+			{
+				await Task.FromCanceled(token);
+				return;
+			}
+
+			action(@this[i]);
+		}
+
+		await Task.CompletedTask;
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static async Task ForEachAsync<T>(this T[] @this, Action<T, int> action, CancellationToken token = default)
+	{
+		@this.ThrowIfNull();
+		action.ThrowIfNull();
+
+		for (var i = 0; i < @this.Length; ++i)
+		{
+			if (token.IsCancellationRequested)
+			{
+				await Task.FromCanceled(token);
+				return;
+			}
+
+			action(@this[i], i);
+		}
+
+		await Task.CompletedTask;
 	}
 
 	/// <inheritdoc cref="Convert.FromBase64CharArray(char[], int, int)"/>

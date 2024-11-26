@@ -9,14 +9,7 @@ namespace TypeCache.GraphQL.Attributes;
 /// Sets the description of the object type, object property, enum type, enum field, endpoint or endpoint parameter.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue | AttributeTargets.Struct)]
-public sealed class GraphQLDescriptionAttribute : Attribute
+public sealed class GraphQLDescriptionAttribute(string description) : Attribute
 {
-	public GraphQLDescriptionAttribute(string description)
-	{
-		description.ThrowIfBlank();
-
-		this.Description = description;
-	}
-
-	public string Description { get; }
+	public string Description { get; } = description;
 }
