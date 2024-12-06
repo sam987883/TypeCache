@@ -450,12 +450,27 @@ public class ReflectionExtensions
 		Assert.NotNull(typeof(IndexOutOfRangeException).Create());
 	}
 
-	[Fact]
-	public void Type_GetTypeName()
+	[Theory]
+	[InlineData("UInt64", typeof(ulong))]
+	[InlineData("String", typeof(string))]
+	[InlineData("Char*", typeof(char*))]
+	[InlineData("Int32[]", typeof(int[]))]
+	[InlineData("Int32[][][]", typeof(int[][][]))]
+	[InlineData("IList<Boolean>", typeof(IList<bool>))]
+	[InlineData("IDictionary<String, List<Int32>>", typeof(IDictionary<string, List<int>>))]
+	public void Type_GetTypeName(string expected, Type type)
 	{
-		const string expected = "IDictionary<String, List<Int32>>";
-		var actual = typeof(IDictionary<string, List<int>>).GetTypeName();
+		var actual = type.GetTypeName();
 
 		Assert.Equal(expected, actual);
+
+		if (type.IsGenericType)
+		{
+			type.GenericTypeArguments.ForEach(_ => expected = expected.Replace(_.GetTypeName(), string.Empty));
+			expected = expected.Replace(" ", string.Empty);
+			actual = type.GetGenericTypeDefinition().GetTypeName();
+
+			Assert.Equal(expected, actual);
+		}
 	}
 }

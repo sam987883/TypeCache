@@ -1,12 +1,25 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Extensions;
+
 namespace TypeCache.Attributes;
 
-public abstract class MapAttribute(Type type, string property) : Attribute
+public abstract class MapAttribute : Attribute
 {
-	public string Property { get; } = property;
+	public MapAttribute(Type type, string property)
+	{
+		var propertyInfo = type.GetPropertyInfo(property, true);
+		propertyInfo.ThrowIfNull();
+		propertyInfo.CanWrite.ThrowIfFalse();
+		propertyInfo.SetMethod?.IsStatic.ThrowIfTrue();
 
-	public Type Type { get; } = type;
+		this.Property = property;
+		this.Type = type;
+	}
+
+	public string Property { get; }
+
+	public Type Type { get; }
 }
 
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
