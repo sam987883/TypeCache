@@ -141,47 +141,43 @@ public partial class ReflectionExtensions
 	public static ObjectType GetObjectType(this Type @this)
 		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
+	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
 	public static FieldInfo? GetFieldInfo(this Type @this, string name, bool ignoreCase = true)
 	{
 		name.ThrowIfBlank();
 
-		var binding = INSTANCE_BINDING_FLAGS;
-		if (ignoreCase)
-			binding |= BindingFlags.IgnoreCase;
-
-		return @this.GetField(name, binding | BindingFlags.DeclaredOnly) ?? @this.GetField(name, binding);
+		var binding = ignoreCase ? INSTANCE_BINDING_FLAGS | BindingFlags.IgnoreCase : INSTANCE_BINDING_FLAGS;
+		return @this.GetField(name, binding);
 	}
 
+	/// <inheritdoc cref="Type.GetProperty(string, BindingFlags)"/>
 	public static PropertyInfo? GetPropertyInfo(this Type @this, string name, bool ignoreCase = true)
 	{
 		name.ThrowIfBlank();
 
-		var binding = INSTANCE_BINDING_FLAGS;
-		if (ignoreCase)
-			binding |= BindingFlags.IgnoreCase;
-
-		return @this.GetProperty(name, binding | BindingFlags.DeclaredOnly) ?? @this.GetProperty(name, binding);
+		var binding = ignoreCase ? INSTANCE_BINDING_FLAGS | BindingFlags.IgnoreCase : INSTANCE_BINDING_FLAGS;
+		return @this.GetProperty(name, binding);
 	}
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldInfo[] GetPublicFields(this Type @this)
-		=> @this.GetFields(FlattenHierarchy | Public | Instance);
+		=> @this.GetFields(Public | Instance);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetMethods(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetMethods(<see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo[] GetPublicMethods(this Type @this)
-		=> @this.GetMethods(FlattenHierarchy | Public | Instance);
+		=> @this.GetMethods(Public | Instance);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
 	public static PropertyInfo[] GetPublicProperties(this Type @this)
-		=> @this.GetProperties(FlattenHierarchy | Public | Instance)
+		=> @this.GetProperties(Public | Instance)
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is not true && propertyInfo.SetMethod?.IsStatic is not true)
 			.ToArray();
 
@@ -249,18 +245,28 @@ public partial class ReflectionExtensions
 		=> @this.GetStaticPropertyInfo(name)?.GetStaticValue(index);
 
 	/// <summary>
-	/// Gets the C# name of a type.  For example: <c>IDictionary&lt;String, List&lt;Int32&gt;&gt;</c>.
+	/// Gets the C# name of a type.  For example:
+	/// <list type="bullet">
+	/// <item><c>UInt64</c></item>
+	/// <item><c>String</c></item>
+	/// <item><c>Char*</c></item>
+	/// <item><c>Int32[]</c></item>
+	/// <item><c>Int32[][][]</c></item>
+	/// <item><c>IList&lt;Boolean&gt;</c></item>
+	/// <item><c>IDictionary&lt;String, List&lt;Int32&gt;&gt;</c></item>
+	/// <item><c>IDictionary&lt;,&gt;</c></item>
+	/// </list>
 	/// </summary>
 	public static string GetTypeName(this Type type)
-	{
-		var typeName = type.Name;
-		if (!type.IsGenericType)
-			return typeName;
-
-		typeName = typeName[0..typeName.IndexOf(GENERIC_TICKMARK)];
-		var genericTypeNameCSV = string.Join(", ", type.GetGenericArguments().Select(_ => _.GetTypeName()));
-		return $"{typeName}<{genericTypeNameCSV}>";
-	}
+		=> type switch
+		{
+			_ when type == typeof(string) => type.Name,
+			{ IsPointer: true } => Invariant($"{type.GetElementType()!.GetTypeName()}*"),
+			{ IsArray: true } => Invariant($"{type.Name}{string.Join(string.Empty, "[]".Repeat(type.GetArrayRank() - 1))}"),
+			{ IsGenericTypeDefinition: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Join(string.Empty, ','.Repeat(type.GetGenericArguments().Length - 1))}>"),
+			{ IsGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Join(", ", type.GetGenericArguments().Select(_ => _.GetTypeName()))}>"),
+			_ => type.Name
+		};
 
 	public static bool Implements(this Type @this, Type type)
 	{
@@ -275,15 +281,15 @@ public partial class ReflectionExtensions
 
 		static bool isDescendantOf(Type? baseType, Type type)
 		{
-			while (baseType is not null)
-			{
-				if (baseType.Is(type))
-					return true;
+		Loop:
+			if (baseType is null)
+				return false;
 
-				baseType = baseType.BaseType;
-			}
+			if (baseType.Is(type))
+				return true;
 
-			return false;
+			baseType = baseType.BaseType;
+			goto Loop;
 		}
 	}
 
