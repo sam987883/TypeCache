@@ -6,7 +6,7 @@ using TypeCache.Extensions;
 namespace TypeCache.Utilities;
 
 /// <summary>
-/// <see cref="IObservable{T}"> adapter for <see cref="IAsyncEnumerable{T}"/>.
+/// <see cref="IObservable{T}"/> adapter for <see cref="IAsyncEnumerable{T}"/>.
 /// </summary>
 public sealed class ObservableAdapter<T>
 	: IObservable<object?>, IDisposable

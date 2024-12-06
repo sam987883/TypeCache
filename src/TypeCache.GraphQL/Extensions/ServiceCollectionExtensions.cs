@@ -58,8 +58,9 @@ public static class ServiceCollectionExtensions
 	/// Place to make calls to:<br/>
 	/// <c>
 	/// <see cref="OutputGraphType{T}.AddField(MethodInfo)"/><br/>
-	/// <see cref="OutputGraphType{T}.AddQueryItem{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/><br/>
-	/// <see cref="OutputGraphType{T}.AddQueryCollection{CHILD, MATCH}(MethodInfo, Func{T, MATCH}, Func{CHILD, MATCH})"/>
+	/// <see cref="OutputGraphType{T}.AddField(PropertyInfo)<br/>
+	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM})"/>
+	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM[]})"/>
 	/// </c>
 	/// </param>
 	public static IServiceCollection AddGraphQLTypeExtensions<T>(this IServiceCollection @this, Action<OutputGraphType<T>> options)

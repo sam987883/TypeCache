@@ -13,7 +13,7 @@ public static class Sequence
 	/// Use Linq's Skip method to change the start of the sequence.<br/>
 	/// Use Linq's Select method to cap values at a maximum or minimum.
 	/// </summary>
-	/// <param name="count">The power to use in generating the sequence. (<c>i^<paramref name="exponent"/></c>).</param>
+	/// <param name="count"># of values in the sequence.</param>
 	/// <returns>A sequence of <c><paramref name="count"/></c> <c><see cref="TimeSpan"/></c> values.</returns>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<TimeSpan> ExponentialSeconds(int count)
