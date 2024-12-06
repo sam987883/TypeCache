@@ -57,8 +57,8 @@ public static class ServiceCollectionExtensions
 	/// <param name="options">
 	/// Place to make calls to:<br/>
 	/// <c>
+	/// <see cref="OutputGraphType{T}.AddField(PropertyInfo)"/><br/>
 	/// <see cref="OutputGraphType{T}.AddField(MethodInfo)"/><br/>
-	/// <see cref="OutputGraphType{T}.AddField(PropertyInfo)<br/>
 	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM})"/>
 	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM[]})"/>
 	/// </c>

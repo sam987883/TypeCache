@@ -42,10 +42,9 @@ public partial class ReflectionExtensions
 	/// The code to set the field is built once and used subsequently.<br/>
 	/// This is much faster than late binding.
 	/// </remarks>
-	/// <param name="instance">Pass <c><see langword="null"/></c> if this is a static field.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static void SetStaticValue(this FieldInfo @this, object? instance)
-		=> TypeStore.StaticFieldSetActions[@this.FieldHandle](instance);
+	public static void SetStaticValue(this FieldInfo @this, object? value)
+		=> TypeStore.StaticFieldSetActions[@this.FieldHandle](value);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Action<object?> SetStaticValueAction(this FieldInfo @this)
