@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Server.Ui.Playground;
+using GraphiQl;
 using Microsoft.Data.SqlClient;
 using TypeCache.Attributes;
 using TypeCache.Data;
@@ -53,19 +53,9 @@ try
 			schema.AddVersion("1.0");
 			schema.AddDatabaseSchemaQueries(dataSource);
 		})
-		.UseGraphQLPlayground("/playground", new()
-		{
-			BetaUpdates = true,
-			EditorCursorShape = EditorCursorShape.Line,
-			EditorFontFamily = "Lucida Console",
-			EditorFontSize = 12,
-			EditorReuseHeaders = true,
-			EditorTheme = EditorTheme.Dark,
-			HideTracingResponse = true,
-			PrettierTabWidth = 2,
-			SchemaPollingEnabled = true,
-			SchemaPollingInterval = 10000
-		});
+		.UseGraphiQl("/playground/custom", "/graphql/custom")
+		.UseGraphiQl("/playground/data", "/graphql/data")
+		.UseGraphiQl("/playground/schema", "/graphql/schema");
 
 	await app.RunAsync();
 }

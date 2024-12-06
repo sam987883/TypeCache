@@ -10,7 +10,7 @@ namespace TypeCache.Extensions;
 public partial class ReflectionExtensions
 {
 	/// <summary>
-	/// Call this instead of <c><see cref="PropertyInfo.GetValue(object?)"/></c> or <c><see cref="PropertyInfo.GetValue(object?, object?[]?)"/></c> for added performance improvement.
+	/// Call this instead of <c><see cref="PropertyInfo.GetValue(object)"/></c> or <c><see cref="PropertyInfo.GetValue(object, object[])"/></c> for added performance improvement.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -39,7 +39,7 @@ public partial class ReflectionExtensions
 	}
 
 	/// <summary>
-	/// Call this instead of <c><see cref="PropertyInfo.GetValue(object?)"/></c> or <c><see cref="PropertyInfo.GetValue(object?, object?[]?)"/></c> for added performance improvement.
+	/// Call this instead of <c><see cref="PropertyInfo.GetValue(object)"/></c> or <c><see cref="PropertyInfo.GetValue(object, object[])"/></c> for added performance improvement.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -59,7 +59,7 @@ public partial class ReflectionExtensions
 
 	/// <summary>
 	/// Call this instead of <c><see cref="PropertyInfo.SetValue(object, object, object[])"/></c> for added performance improvement.<br/>
-	/// Values are automatically converted when possible: ie. "123" ---> 123.
+	/// Values are automatically converted when possible: ie. "123" ---&gt; 123.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -69,11 +69,11 @@ public partial class ReflectionExtensions
 
 	/// <summary>
 	/// Call this instead of <c><see cref="PropertyInfo.SetValue(object, object, object[])"/></c> for added performance improvement.<br/>
-	/// Values are automatically converted when possible: ie. "123" ---> 123.
+	/// Values are automatically converted when possible: ie. "123" ---&gt; 123.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	/// <param name="indexesAndValue">The last field of the tuple should be the value to set the property to./param>
+	/// <param name="indexesAndValue">The last field of the tuple should be the value to set the property to.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void SetStaticValue(this PropertyInfo @this, ITuple indexesAndValue)
 		=> @this.SetStaticValueAction()(indexesAndValue);
@@ -90,7 +90,7 @@ public partial class ReflectionExtensions
 
 	/// <summary>
 	/// Call this instead of <c><see cref="PropertyInfo.SetValue(object, object)"/></c> for added performance improvement.<br/>
-	/// Values are automatically converted when possible: ie. "123" ---> 123.
+	/// Values are automatically converted when possible: ie. "123" ---&gt; 123.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -100,11 +100,11 @@ public partial class ReflectionExtensions
 
 	/// <summary>
 	/// Call this instead of <c><see cref="PropertyInfo.SetValue(object, object, object[])"/></c> for added performance improvement.<br/>
-	/// Values are automatically converted when possible: ie. "123" ---> 123.
+	/// Values are automatically converted when possible: ie. "123" ---&gt; 123.
 	/// </summary>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	/// <param name="indexesAndValue">The last field of the tuple should be the value to set the property to./param>
+	/// <param name="indexesAndValue">The last field of the tuple should be the value to set the property to.</param>
 	public static void SetValueEx(this PropertyInfo @this, object instance, ITuple indexesAndValue)
 	{
 		var indexParameters = @this.GetIndexParameters();

@@ -9,26 +9,26 @@ namespace TypeCache.Extensions;
 public partial class ReflectionExtensions
 {
 	/// <remarks>
-	/// <b>The code to get the field value is built once and used subsequently.<br/>
+	/// The code to get the field value is built once and used subsequently.<br/>
 	/// This is much faster than late binding.<br/>
-	/// In the case of a constant, <c><see cref="FieldInfo.GetRawConstantValue"/></c> is used instead.</b>
+	/// In the case of a constant, <c><see cref="FieldInfo.GetRawConstantValue"/></c> is used instead.
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? GetStaticValue(this FieldInfo @this)
 		=> TypeStore.StaticFieldGetFuncs[@this.FieldHandle]();
 
 	/// <remarks>
-	/// <b>The code to get the static field value is built once and used subsequently.<br/>
-	/// This is much faster than late binding.<br/>
+	/// The code to get the static field value is built once and used subsequently.<br/>
+	/// This is much faster than late binding.
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Func<object?> GetStaticValueFunc(this FieldInfo @this)
 		=> TypeStore.StaticFieldGetFuncs[@this.FieldHandle];
 
 	/// <remarks>
-	/// <b>The code to get the field value is built once and used subsequently.<br/>
+	/// The code to get the field value is built once and used subsequently.<br/>
 	/// This is much faster than late binding.<br/>
-	/// In the case of a constant, <c><see cref="FieldInfo.GetRawConstantValue"/></c> is used instead.</b>
+	/// In the case of a constant, <c><see cref="FieldInfo.GetRawConstantValue"/></c> is used instead.
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? GetValueEx(this FieldInfo @this, object instance)
@@ -39,10 +39,9 @@ public partial class ReflectionExtensions
 		=> TypeStore.FieldGetFuncs[@this.FieldHandle];
 
 	/// <remarks>
-	/// <b>The code to set the field is built once and used subsequently.<br/>
-	/// This is much faster than late binding.</b>
+	/// The code to set the field is built once and used subsequently.<br/>
+	/// This is much faster than late binding.
 	/// </remarks>
-	/// <param name="instance">Pass <c><see langword="null"/></c> if this is a static field.</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static void SetStaticValue(this FieldInfo @this, object? value)
 		=> TypeStore.StaticFieldSetActions[@this.FieldHandle](value);
@@ -56,8 +55,8 @@ public partial class ReflectionExtensions
 		=> TypeStore.FieldSetActions[@this.FieldHandle];
 
 	/// <remarks>
-	/// <b>The code to set the field is built once and used subsequently.<br/>
-	/// This is much faster than late binding.</b>
+	/// The code to set the field is built once and used subsequently.<br/>
+	/// This is much faster than late binding.
 	/// </remarks>
 	/// <param name="instance">Pass <c><see langword="null"/></c> if this is a static field.</param>
 	public static void SetValueEx(this FieldInfo @this, object instance, object? value)

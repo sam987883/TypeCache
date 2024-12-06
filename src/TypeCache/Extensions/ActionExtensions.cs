@@ -10,9 +10,9 @@ public static class ActionExtensions
 	/// Retry a failed <see cref="Action"/>. The # of <c><paramref name="retryDelays"/></c> dictates the # of retry attempts.<br/>
 	/// Some built-in interval sequences to use for retry delays:<br/>
 	/// <list type="table">
-	/// <item><c><see cref="Sequence.ExponentialSeconds()"/></c></item>
-	/// <item><c><see cref="Sequence.ExponentialSeconds(uint)"/></c></item>
-	/// <item><c><see cref="Sequence.LinearTime(TimeSpan)"/></c></item>
+	/// <item><c><see cref="Sequence.ExponentialSeconds(int)"/></c></item>
+	/// <item><c><see cref="Sequence.ExponentialSeconds(uint, int)"/></c></item>
+	/// <item><c><see cref="Sequence.LinearTime(TimeSpan, int)"/></c></item>
 	/// </list>
 	/// These are increasing infinite sequences, hence an infinite # of retries will be attempted.<br/>
 	/// To limit the number of retries, call Linq's Take(...) method on the returned collection.
