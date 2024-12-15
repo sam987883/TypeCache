@@ -77,7 +77,7 @@ public static partial class MapExtensions
 	{
 		@this.ThrowIfNull();
 		target.ThrowIfNull();
-		(target, @this).ThrowIfSame();
+		@this.ThrowIfReferenceEqual(target);
 
 		var properties = typeof(T).GetProperties(FlattenHierarchy | Instance | Public);
 		foreach (var propertyInfo in properties)

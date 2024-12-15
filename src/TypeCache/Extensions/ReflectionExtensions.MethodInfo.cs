@@ -254,10 +254,11 @@ public partial class ReflectionExtensions
 	public static Expression<Action<object, object?[]?>> ToArrayActionExpression(this MethodInfo @this)
 	{
 		@this.IsStatic.ThrowIfTrue();
+		EqualityComparer<Type>.Default.ThrowIfNotEqual(@this.ReturnType, typeof(void));
 		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
 		var call = @this.CreateArrayCall(instance, arguments);
 
 		return call.Lambda<Action<object, object?[]?>>([instance, arguments]);
@@ -271,8 +272,8 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfTrue();
 		@this.ReturnType.ThrowIfEqual(typeof(void));
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
 		var call = @this.CreateArrayCall(instance, arguments);
 
 		return call.Cast<object>().Lambda<Func<object, object?[]?, object?>>([instance, arguments]);
@@ -285,7 +286,7 @@ public partial class ReflectionExtensions
 		if (!@this.IsStatic)
 			@this.DeclaringType.ThrowIfNull();
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression(@this.DeclaringType!);
+		ParameterExpression instance = nameof(instance).ParameterExpression(@this.DeclaringType!);
 		var parameters = @this.GetParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
 			.Select(parameterInfo => parameterInfo!.ToExpression())
@@ -321,7 +322,7 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfFalse();
 		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
 		var call = @this.CreateStaticArrayCall(arguments);
 
 		return call.Lambda<Action<object?[]?>>([arguments]);
@@ -335,7 +336,7 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfFalse();
 		@this.ReturnType.ThrowIfEqual(typeof(void));
 
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
 		var call = @this.CreateStaticArrayCall(arguments);
 
 		return call.Cast<object>().Lambda<Func<object?[]?, object?>>([arguments]);
@@ -349,7 +350,7 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfFalse();
 		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
 		var call = @this.CreateStaticTupleCall(arguments);
 
 		return call.Lambda<Action<ITuple?>>([arguments]);
@@ -363,7 +364,7 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfFalse();
 		@this.ReturnType.ThrowIfEqual(typeof(void));
 
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
 		var call = @this.CreateStaticTupleCall(arguments);
 
 		return call.Cast<object>().Lambda<Func<ITuple?, object?>>([arguments]);
@@ -377,8 +378,8 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfTrue();
 		@this.ReturnType.ThrowIfNotEqual(typeof(void));
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
 		var call = @this.CreateTupleCall(instance, arguments);
 
 		return call.Lambda<Action<object, ITuple?>>([instance, arguments]);
@@ -392,8 +393,8 @@ public partial class ReflectionExtensions
 		@this.IsStatic.ThrowIfTrue();
 		@this.ReturnType.ThrowIfEqual(typeof(void));
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
 		var call = @this.CreateTupleCall(instance, arguments);
 
 		return call.Cast<object>().Lambda<Func<object, ITuple?, object?>>([instance, arguments]);
@@ -431,7 +432,7 @@ public partial class ReflectionExtensions
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
+			arguments.Property(Item, [parameterInfo.Position.ConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(@this.ToExpression(null, valueTupleFields), @this.ToExpression(null, parameters));
 	}
@@ -449,7 +450,7 @@ public partial class ReflectionExtensions
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
+			arguments.Property(Item, [parameterInfo.Position.ConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(typedInstance.Call(@this, valueTupleFields), typedInstance.Call(@this, parameters));
 	}

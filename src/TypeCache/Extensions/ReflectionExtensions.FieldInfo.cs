@@ -77,8 +77,8 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression value = nameof(value).ToParameterExpression<object>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression value = nameof(value).ParameterExpression<object>();
 		return instance
 			.Convert(@this.DeclaringType!)
 			.Field(@this)
@@ -91,7 +91,7 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
 		return instance
 			.Cast(@this.DeclaringType!)
 			.Field(@this)
@@ -105,14 +105,14 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfFalse();
 
-		ParameterExpression value = nameof(value).ToParameterExpression<object>();
+		ParameterExpression value = nameof(value).ParameterExpression<object>();
 		return @this.ToExpression(null).Assign(value.Convert(@this.FieldType)).Lambda<Action<object?>>([value]);
 	}
 
 	public static Expression<Func<object?>> ToStaticFuncExpression(this FieldInfo @this)
 	{
 		if (@this.IsLiteral)
-			return @this.GetRawConstantValue().ToConstantExpression().Cast<object>().Lambda<Func<object?>>();
+			return @this.GetRawConstantValue().ConstantExpression().Cast<object>().Lambda<Func<object?>>();
 
 		@this.IsStatic.ThrowIfFalse();
 

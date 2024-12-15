@@ -46,4 +46,14 @@ public static class ActionExtensions
 			await Task.FromException(lastError);
 		}
 	}
+
+	/// <summary>
+	/// Runs the action and returns how long it took to run.
+	/// </summary>
+	public static TimeSpan Timed(this Action @this)
+	{
+		var ticks = Stopwatch.GetTimestamp();
+		@this();
+		return Stopwatch.GetElapsedTime(ticks);
+	}
 }

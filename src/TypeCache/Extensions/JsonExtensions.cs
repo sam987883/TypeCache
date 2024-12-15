@@ -102,90 +102,38 @@ public static class JsonExtensions
 
 	public static void WriteValue(this Utf8JsonWriter @this, object? value, JsonSerializerOptions options)
 	{
-		switch (value)
+		Action writeValue = value switch
 		{
-			case null or DBNull:
-				@this.WriteNullValue();
-				break;
-			case bool success:
-				@this.WriteBooleanValue(success);
-				break;
-			case sbyte number:
-				@this.WriteNumberValue((int)number);
-				break;
-			case short number:
-				@this.WriteNumberValue((int)number);
-				break;
-			case int number:
-				@this.WriteNumberValue(number);
-				break;
-			case long number:
-				@this.WriteNumberValue(number);
-				break;
-			case Int128 number:
-				@this.WriteNumberValue((decimal)number);
-				break;
-			case nint number:
-				@this.WriteNumberValue((int)number);
-				break;
-			case byte number:
-				@this.WriteNumberValue((uint)number);
-				break;
-			case ushort number:
-				@this.WriteNumberValue((uint)number);
-				break;
-			case uint number:
-				@this.WriteNumberValue(number);
-				break;
-			case ulong number:
-				@this.WriteNumberValue(number);
-				break;
-			case UInt128 number:
-				@this.WriteNumberValue((decimal)number);
-				break;
-			case nuint number:
-				@this.WriteNumberValue((uint)number);
-				break;
-			case Half number:
-				@this.WriteNumberValue((float)number);
-				break;
-			case float number:
-				@this.WriteNumberValue(number);
-				break;
-			case double number:
-				@this.WriteNumberValue(number);
-				break;
-			case decimal number:
-				@this.WriteNumberValue(number);
-				break;
-			case DateOnly date:
-				@this.WriteStringValue(date.ToISO8601());
-				break;
-			case DateTime dateTime:
-				@this.WriteStringValue(dateTime.ToISO8601());
-				break;
-			case DateTimeOffset dateTimeOffset:
-				@this.WriteStringValue(dateTimeOffset.ToISO8601());
-				break;
-			case TimeOnly time:
-				@this.WriteStringValue(time.ToISO8601());
-				break;
-			case TimeSpan timeSpan:
-				@this.WriteStringValue(timeSpan.ToText());
-				break;
-			case Guid id:
-				@this.WriteStringValue(id);
-				break;
-			case char or Index or Range or Uri:
-				@this.WriteStringValue(value.ToString());
-				break;
-			case string text:
-				@this.WriteStringValue(text);
-				break;
-			default:
-				JsonSerializer.Serialize(@this, value, options);
-				break;
-		}
+			null or DBNull => @this.WriteNullValue,
+			bool success => () => @this.WriteBooleanValue(success),
+			sbyte number => () => @this.WriteNumberValue((int)number),
+			short number => () => @this.WriteNumberValue((int)number),
+			int number => () => @this.WriteNumberValue(number),
+			long number => () => @this.WriteNumberValue(number),
+			Int128 number => () => @this.WriteNumberValue((decimal)number),
+			BigInteger number => () => @this.WriteNumberValue((decimal)number),
+			nint number => () => @this.WriteNumberValue((long)number),
+			byte number => () => @this.WriteNumberValue((uint)number),
+			ushort number => () => @this.WriteNumberValue((uint)number),
+			uint number => () => @this.WriteNumberValue(number),
+			ulong number => () => @this.WriteNumberValue(number),
+			UInt128 number => () => @this.WriteNumberValue((decimal)number),
+			nuint number => () => @this.WriteNumberValue((ulong)number),
+			Half number => () => @this.WriteNumberValue((float)number),
+			float number => () => @this.WriteNumberValue(number),
+			double number => () => @this.WriteNumberValue(number),
+			decimal number => () => @this.WriteNumberValue(number),
+			DateOnly dateOnly => () => @this.WriteStringValue(dateOnly.ToISO8601()),
+			DateTime dateTime => () => @this.WriteStringValue(dateTime.ToISO8601()),
+			DateTimeOffset dateTimeOffset => () => @this.WriteStringValue(dateTimeOffset.ToISO8601()),
+			TimeOnly timeOnly => () => @this.WriteStringValue(timeOnly.ToISO8601()),
+			TimeSpan timeSpan => () => @this.WriteStringValue(timeSpan.ToText()),
+			Guid id => () => @this.WriteStringValue(id),
+			char or Index or Range or Uri => () => @this.WriteStringValue(value.ToString()),
+			string text => () => @this.WriteStringValue(text),
+			_ => () => JsonSerializer.Serialize(@this, value, options)
+		};
+		writeValue();
 	}
 
 	private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)

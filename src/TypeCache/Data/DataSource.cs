@@ -62,7 +62,7 @@ internal sealed class DataSource : IDataSource
 		var metadata = connection.GetSchema(SchemaCollection.MetaDataCollections.Name());
 		this.SupportedMetadataCollections = metadata.Rows
 			.Cast<DataRow>()
-			.Select(row => row[SchemaColumn.collectionName]!.ToString()!.ToEnum<SchemaCollection>()!.Value)
+			.Select(row => row[SchemaColumn.collectionName]!.ToString()!.Enum<SchemaCollection>()!.Value)
 			.WhereNotNull()
 			.ToFrozenSet();
 

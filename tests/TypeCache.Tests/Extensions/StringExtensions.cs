@@ -14,6 +14,31 @@ public class StringExtensions
 	private const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
 
 	[Fact]
+	public void ContainsIgnoreCase()
+	{
+		Assert.True(TEST_STRING.ContainsIgnoreCase("BCC 1"));
+	}
+
+	[Fact]
+	public void EndsWithIgnoreCase()
+	{
+		Assert.True("321 cCbBaA".EndsWithIgnoreCase("ccbbaa"));
+	}
+
+	[Fact]
+	public void Enum()
+	{
+		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).Enum<StringComparison>());
+		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().Enum<StringComparison>());
+	}
+
+	[Fact]
+	public void EqualsIgnoreCase()
+	{
+		Assert.True(TEST_STRING.EqualsIgnoreCase("AABBCC 123 `~!#$%^\t\r\n"));
+	}
+
+	[Fact]
 	public void FromBase64()
 	{
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
@@ -25,18 +50,6 @@ public class StringExtensions
 	{
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.UTF8));
-	}
-
-	[Fact]
-	public void Has()
-	{
-		Assert.True(TEST_STRING.ContainsIgnoreCase("BCC 1"));
-	}
-
-	[Fact]
-	public void Is()
-	{
-		Assert.True(TEST_STRING.EqualsIgnoreCase("AABBCC 123 `~!#$%^\t\r\n"));
 	}
 
 	[Fact]
@@ -65,21 +78,17 @@ public class StringExtensions
 	}
 
 	[Fact]
-	public void Left()
-	{
-		Assert.Equal("AaBbCc 1", TEST_STRING.Left(8));
-		Assert.Equal(string.Empty, TEST_STRING.Left(0));
-
-		Assert.True(TEST_STRING.StartsWithIgnoreCase("AABBCC 123"));
-	}
-
-	[Fact]
 	public void Mask()
 	{
 		Assert.Equal(string.Empty, (null as string).Mask());
 		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.Mask('+'));
-		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+'));
 		Assert.Equal("+aB+++ 123 `~!#$%^\t\r\n", TEST_STRING.Mask('+', ["A", "b", "Cc"]));
+	}
+
+	[Fact]
+	public void MaskIgnoreCase()
+	{
+		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+'));
 		Assert.Equal("++++++ 123 `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+', ["A", "b", "C"]));
 	}
 
@@ -91,25 +100,30 @@ public class StringExtensions
 	}
 
 	[Fact]
-	public void Right()
+	public void StringSegment()
 	{
-		Assert.True("321 cCbBaA".EndsWithIgnoreCase("ccbbaa"));
+		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.StringSegment());
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.StringSegment(2, 0));
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.StringSegment(2, 3));
+		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.StringSegment(9, 1));
 	}
 
 	[Fact]
-	public void ToEnum()
+	public void StartsWithIgnoreCase()
 	{
-		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
-		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().ToEnum<StringComparison>());
+		Assert.Equal("AaBbCc 1", TEST_STRING.Left(8));
+		Assert.Equal(string.Empty, TEST_STRING.Left(0));
+
+		Assert.True(TEST_STRING.StartsWithIgnoreCase("AABBCC 123"));
 	}
 
 	[Fact]
-	public void ToStringSegment()
+	public void ThrowIfBlank()
 	{
-		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.ToStringSegment());
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.ToStringSegment(2, 0));
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.ToStringSegment(2, 3));
-		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.ToStringSegment(9, 1));
+		"AAA".ThrowIfBlank();
+		Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).ThrowIfBlank());
+		Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.ThrowIfBlank());
+		Assert.Throws<ArgumentOutOfRangeException>(() => "      ".ThrowIfBlank());
 	}
 
 	[Fact]

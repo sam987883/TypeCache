@@ -291,7 +291,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			T x => x,
-			string text when text.IsNotBlank() => text.ToEnum<T>(),
+			string text when text.IsNotBlank() => text.Enum<T>(),
 			null or string => null,
 			sbyte or short or int or long or byte or ushort or uint or ulong => (T)Enum.ToObject(typeof(T), value),
 			_ => (T)value
