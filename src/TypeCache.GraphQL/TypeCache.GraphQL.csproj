@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.GraphQL</RootNamespace>
     <PackageId>TypeCache.GraphQL</PackageId>
-    <Version>9.0.1</Version>
+    <Version>9.0.2</Version>
 	<Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache GraphQL</Title>

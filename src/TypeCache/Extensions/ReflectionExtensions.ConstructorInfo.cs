@@ -83,7 +83,7 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static Expression<Func<object?[]?, object>> ToArrayFuncExpression(this ConstructorInfo @this)
 	{
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
 		var call = @this.CreateArrayCall(arguments);
 
 		return call.As<object>().Lambda<Func<object?[]?, object>>([arguments]);
@@ -93,7 +93,7 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static Expression<Func<ITuple?, object>> ToTupleFuncExpression(this ConstructorInfo @this)
 	{
-		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
+		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
 		var call = @this.CreateTupleCall(arguments);
 
 		return call.Cast<object>().Lambda<Func<ITuple?, object>>([arguments]);
@@ -117,7 +117,7 @@ public partial class ReflectionExtensions
 		var valueTupleType = GetValueTupleType(parameterInfos);
 		var valueTupleFields = GetValueTupleFields(arguments.Cast(valueTupleType), parameterInfos);
 		var parameters = parameterInfos.Select(parameterInfo =>
-			arguments.Property(Item, [parameterInfo.Position.ToConstantExpression()]).Convert(parameterInfo.ParameterType));
+			arguments.Property(Item, [parameterInfo.Position.ConstantExpression()]).Convert(parameterInfo.ParameterType));
 
 		return arguments.Is(valueTupleType).IIf(@this.ToExpression(valueTupleFields), @this.ToExpression(parameters));
 	}

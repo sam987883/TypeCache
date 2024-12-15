@@ -29,7 +29,7 @@ public static class EventHandler<T>
 		eventInfo.AddMethod.ThrowIfNull();
 
 		var key = DateTime.UtcNow.Ticks;
-		var reference = new EventHandlerReference(instance.ToWeakReference(), eventInfo.AddMethod.MethodHandle, eventInfo.RemoveMethod?.MethodHandle, handler);
+		var reference = new EventHandlerReference(instance.WeakReference(), eventInfo.AddMethod.MethodHandle, eventInfo.RemoveMethod?.MethodHandle, handler);
 		EventHandlers.Add(key, reference);
 		eventInfo.AddMethod.InvokeAction(instance, [handler]);
 		return key;

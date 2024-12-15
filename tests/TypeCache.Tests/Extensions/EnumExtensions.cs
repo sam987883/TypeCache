@@ -15,7 +15,7 @@ public class EnumExtensions
 	}
 
 	[Flags]
-	private enum TestEnum
+	public enum TestEnum
 	{
 		TestValue1 = 4,
 		[TestAttribute]
@@ -30,6 +30,18 @@ public class EnumExtensions
 	public void Attributes()
 	{
 		Assert.Equal(3, TestEnum.TestValue2.Attributes().Count());
+	}
+
+	[Fact]
+	public void Comparer()
+	{
+		Assert.Equal(StringComparer.CurrentCulture, StringComparison.CurrentCulture.Comparer());
+		Assert.Equal(StringComparer.CurrentCultureIgnoreCase, StringComparison.CurrentCultureIgnoreCase.Comparer());
+		Assert.Equal(StringComparer.InvariantCulture, StringComparison.InvariantCulture.Comparer());
+		Assert.Equal(StringComparer.InvariantCultureIgnoreCase, StringComparison.InvariantCultureIgnoreCase.Comparer());
+		Assert.Equal(StringComparer.Ordinal, StringComparison.Ordinal.Comparer());
+		Assert.Equal(StringComparer.OrdinalIgnoreCase, StringComparison.OrdinalIgnoreCase.Comparer());
+		Assert.Throws<ArgumentException>(() => ((StringComparison)666).Comparer());
 	}
 
 	[Fact]
@@ -48,29 +60,6 @@ public class EnumExtensions
 	}
 
 	[Fact]
-	public void IsPrimitive()
-	{
-		Assert.Equal(typeof(bool).IsPrimitive, ScalarType.Boolean.IsPrimitive());
-		Assert.Equal(typeof(char).IsPrimitive, ScalarType.Char.IsPrimitive());
-		Assert.Equal(typeof(sbyte).IsPrimitive, ScalarType.SByte.IsPrimitive());
-		Assert.Equal(typeof(short).IsPrimitive, ScalarType.Int16.IsPrimitive());
-		Assert.Equal(typeof(int).IsPrimitive, ScalarType.Int32.IsPrimitive());
-		Assert.Equal(typeof(long).IsPrimitive, ScalarType.Int64.IsPrimitive());
-		Assert.Equal(typeof(nint).IsPrimitive, ScalarType.IntPtr.IsPrimitive());
-		Assert.Equal(!typeof(Int128).IsPrimitive, ScalarType.Int128.IsPrimitive());
-		Assert.Equal(typeof(byte).IsPrimitive, ScalarType.Byte.IsPrimitive());
-		Assert.Equal(typeof(ushort).IsPrimitive, ScalarType.UInt16.IsPrimitive());
-		Assert.Equal(typeof(uint).IsPrimitive, ScalarType.UInt32.IsPrimitive());
-		Assert.Equal(typeof(ulong).IsPrimitive, ScalarType.UInt64.IsPrimitive());
-		Assert.Equal(typeof(nuint).IsPrimitive, ScalarType.UIntPtr.IsPrimitive());
-		Assert.Equal(!typeof(UInt128).IsPrimitive, ScalarType.UInt128.IsPrimitive());
-		Assert.Equal(typeof(Half).IsPrimitive, ScalarType.Half.IsPrimitive());
-		Assert.Equal(typeof(float).IsPrimitive, ScalarType.Single.IsPrimitive());
-		Assert.Equal(typeof(double).IsPrimitive, ScalarType.Double.IsPrimitive());
-		Assert.Equal(!typeof(decimal).IsPrimitive, ScalarType.Decimal.IsPrimitive());
-	}
-
-	[Fact]
 	public void Name()
 	{
 		Assert.Equal(TestEnum.TestValue2.ToString("F"), TestEnum.TestValue2.Name());
@@ -83,15 +72,173 @@ public class EnumExtensions
 		Assert.Equal(TestEnum.TestValue2.ToString("D"), TestEnum.TestValue2.Number());
 	}
 
-	[Fact]
-	public void ToStringComparer()
+	[Theory]
+	[InlineData(TestEnum.TestValue1, TestEnum.TestValue1)]
+	[InlineData(TestEnum.TestValue2, TestEnum.TestValue2)]
+	[InlineData(TestEnum.TestValue3, TestEnum.TestValue3)]
+	[InlineData(TestEnum.TestValue4, TestEnum.TestValue4)]
+	public void ThrowIfEqual(TestEnum expected, TestEnum actual)
 	{
-		Assert.Equal(StringComparer.CurrentCulture, StringComparison.CurrentCulture.ToStringComparer());
-		Assert.Equal(StringComparer.CurrentCultureIgnoreCase, StringComparison.CurrentCultureIgnoreCase.ToStringComparer());
-		Assert.Equal(StringComparer.InvariantCulture, StringComparison.InvariantCulture.ToStringComparer());
-		Assert.Equal(StringComparer.InvariantCultureIgnoreCase, StringComparison.InvariantCultureIgnoreCase.ToStringComparer());
-		Assert.Equal(StringComparer.Ordinal, StringComparison.Ordinal.ToStringComparer());
-		Assert.Equal(StringComparer.OrdinalIgnoreCase, StringComparison.OrdinalIgnoreCase.ToStringComparer());
-		Assert.Throws<ArgumentException>(() => ((StringComparison)666).ToStringComparer());
+		expected.ThrowIfEqual(default);
+		actual.ThrowIfEqual(default);
+		Assert.Throws<ArgumentOutOfRangeException>(() => expected.ThrowIfEqual(actual));
+	}
+
+	[Theory]
+	[InlineData(TestEnum.TestValue1, TestEnum.TestValue2)]
+	[InlineData(TestEnum.TestValue2, TestEnum.TestValue3)]
+	[InlineData(TestEnum.TestValue3, TestEnum.TestValue4)]
+	[InlineData(TestEnum.TestValue1, default)]
+	public void ThrowIfNotEqual(TestEnum expected, TestEnum actual)
+	{
+		expected.ThrowIfNotEqual(expected);
+		actual.ThrowIfNotEqual(actual);
+		Assert.Throws<ArgumentOutOfRangeException>(() => expected.ThrowIfNotEqual(actual));
+	}
+
+	[Fact]
+	public void IsConcurrent()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().StartsWith("Concurrent"))
+				Assert.True(_.IsConcurrent());
+			else
+				Assert.False(_.IsConcurrent());
+		});
+	}
+
+	[Fact]
+	public void IsDictionary()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_ is CollectionType.Hashtable
+				|| _ is CollectionType.KeyedCollection
+				|| _ is CollectionType.NameObjectCollection
+				|| _ is CollectionType.NameValueCollection
+				|| _ is CollectionType.SortedList
+				|| _.Name().EndsWith("Dictionary"))
+				Assert.True(_.IsDictionary());
+			else
+				Assert.False(_.IsDictionary());
+		});
+	}
+
+	[Fact]
+	public void IsEnumUnderlyingType()
+	{
+		Enum.GetValues<ScalarType>().ForEach(_ =>
+		{
+			if (_ is ScalarType.SByte
+				|| _ is ScalarType.Int16
+				|| _ is ScalarType.Int32
+				|| _ is ScalarType.Int64
+				|| _ is ScalarType.Byte
+				|| _ is ScalarType.UInt16
+				|| _ is ScalarType.UInt32
+				|| _ is ScalarType.UInt64)
+				Assert.True(_.IsEnumUnderlyingType());
+			else
+				Assert.False(_.IsEnumUnderlyingType());
+		});
+	}
+
+	[Fact]
+	public void IsFrozen()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().StartsWith("Frozen"))
+				Assert.True(_.IsFrozen());
+			else
+				Assert.False(_.IsFrozen());
+		});
+	}
+
+	[Fact]
+	public void IsImmutable()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().StartsWith("Immutable"))
+				Assert.True(_.IsImmutable());
+			else
+				Assert.False(_.IsImmutable());
+		});
+	}
+
+	[Fact]
+	public void IsPrimitive()
+	{
+		Enum.GetValues<ScalarType>().ForEach(_ =>
+		{
+			if (_ is ScalarType.Boolean
+				|| _ is ScalarType.Char
+				|| _ is ScalarType.SByte
+				|| _ is ScalarType.Int16
+				|| _ is ScalarType.Int32
+				|| _ is ScalarType.Int64
+				|| _ is ScalarType.IntPtr
+				|| _ is ScalarType.Byte
+				|| _ is ScalarType.UInt16
+				|| _ is ScalarType.UInt32
+				|| _ is ScalarType.UInt64
+				|| _ is ScalarType.UIntPtr
+				|| _ is ScalarType.Half
+				|| _ is ScalarType.Single
+				|| _ is ScalarType.Double)
+				Assert.True(_.IsPrimitive());
+			else
+				Assert.False(_.IsPrimitive());
+		});
+	}
+
+	[Fact]
+	public void IsQueue()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().EndsWith("Queue"))
+				Assert.True(_.IsQueue());
+			else
+				Assert.False(_.IsQueue());
+		});
+	}
+
+	[Fact]
+	public void IsReadOnly()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().StartsWith("ReadOnly"))
+				Assert.True(_.IsReadOnly());
+			else
+				Assert.False(_.IsReadOnly());
+		});
+	}
+
+	[Fact]
+	public void IsSet()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().EndsWith("Set"))
+				Assert.True(_.IsSet());
+			else
+				Assert.False(_.IsSet());
+		});
+	}
+
+	[Fact]
+	public void IsStack()
+	{
+		Enum.GetValues<CollectionType>().ForEach(_ =>
+		{
+			if (_.Name().EndsWith("Stack"))
+				Assert.True(_.IsStack());
+			else
+				Assert.False(_.IsStack());
+		});
 	}
 }

@@ -50,7 +50,7 @@ public static class SchemaExtensions
 		var table = dataSource.GetDatabaseSchema(SchemaCollection.MetaDataCollections);
 		var rows = table.Rows.OfType<DataRow>();
 
-		return rows.Select(row => @this.AddDatabaseSchemaQuery(dataSource, row[SchemaColumn.collectionName].ToString().ToEnum<SchemaCollection>()!.Value)).ToArray();
+		return rows.Select(row => @this.AddDatabaseSchemaQuery(dataSource, row[SchemaColumn.collectionName].ToString().Enum<SchemaCollection>()!.Value)).ToArray();
 	}
 
 	/// <summary>
@@ -125,7 +125,7 @@ public static class SchemaExtensions
 			Resolver = new DatabaseSchemaFieldResolver()
 		});
 		fieldType.Metadata.Add(nameof(IDataSource), dataSource);
-		fieldType.Metadata.Add(nameof(SchemaCollection), table.TableName.ToEnum<SchemaCollection>());
+		fieldType.Metadata.Add(nameof(SchemaCollection), table.TableName.Enum<SchemaCollection>());
 
 		return fieldType;
 	}

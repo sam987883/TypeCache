@@ -161,13 +161,13 @@ public partial class ReflectionExtensions
 		@this.SetMethod.ThrowIfNull();
 		@this.SetMethod.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression value = nameof(instance).ToParameterExpression<object?>();
-		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression value = nameof(instance).ParameterExpression<object?>();
+		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ToConstantExpression()]).Convert(parameterInfo.ParameterType))
+			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ConstantExpression()]).Convert(parameterInfo.ParameterType))
 			.ToArray();
 		var call = instance.Cast(@this.DeclaringType).Property(@this, parameters).Assign(value.Convert(@this.PropertyType));
 
@@ -184,12 +184,12 @@ public partial class ReflectionExtensions
 		@this.GetMethod.ThrowIfNull();
 		@this.GetMethod.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
-		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ToConstantExpression()]).Convert(parameterInfo.ParameterType))
+			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ConstantExpression()]).Convert(parameterInfo.ParameterType))
 			.ToArray();
 
 		return @this
@@ -208,12 +208,12 @@ public partial class ReflectionExtensions
 		@this.SetMethod.ThrowIfNull();
 		@this.SetMethod.IsStatic.ThrowIfFalse();
 
-		ParameterExpression value = nameof(value).ToParameterExpression<object?>();
-		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
+		ParameterExpression value = nameof(value).ParameterExpression<object?>();
+		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ToConstantExpression()]).Convert(parameterInfo.ParameterType))
+			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ConstantExpression()]).Convert(parameterInfo.ParameterType))
 			.ToArray();
 
 		return @this
@@ -231,11 +231,11 @@ public partial class ReflectionExtensions
 		@this.GetMethod.ThrowIfNull();
 		@this.GetMethod.IsStatic.ThrowIfFalse();
 
-		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
+		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
-			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ToConstantExpression()]).Convert(parameterInfo.ParameterType))
+			.Select((parameterInfo, i) => (Expression)index.Property(itemProperty, [i.ConstantExpression()]).Convert(parameterInfo.ParameterType))
 			.ToArray();
 
 		return @this

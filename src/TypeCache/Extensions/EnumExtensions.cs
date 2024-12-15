@@ -1,5 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using static System.Reflection.BindingFlags;
@@ -14,6 +16,14 @@ public static class EnumExtensions
 		=> Enum<T>.IsDefined(@this)
 			? typeof(T).GetField(@this.Name(), Public | Static)!.GetCustomAttributes(false).Cast<Attribute>().ToArray()
 			: Array<Attribute>.Empty;
+
+	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="StringComparer"/>.FromComparison(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static StringComparer Comparer(this StringComparison @this)
+		=> StringComparer.FromComparison(@this);
 
 	[DebuggerHidden]
 	public static bool HasAnyFlag<T>(this T @this, T[] flags)
@@ -73,13 +83,50 @@ public static class EnumExtensions
 		where T : struct, Enum
 		=> @this.ToString("D");
 
-	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="StringComparer"/>.FromComparison(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static StringComparer ToStringComparer(this StringComparison @this)
-		=> StringComparer.FromComparison(@this);
+	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+	/// <param name="logger">Pass a logger to log exception if thrown.</param>
+	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void ThrowIfEqual<T>(this T @this, T value, string? message = null, ILogger? logger = null,
+		[CallerMemberName] string? caller = null,
+		[CallerArgumentExpression("this")] string? argument1 = null,
+		[CallerArgumentExpression("value")] string? argument2 = null)
+		where T : struct, Enum
+	{
+		if (Enum<T>.Equals(@this, value))
+			Throw(caller!, (argument1!, argument2!), (@this, value), message, logger);
+	}
+
+	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+	/// <param name="logger">Pass a logger to log exception if thrown.</param>
+	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
+	/// <exception cref="ArgumentOutOfRangeException"/>
+	public static void ThrowIfNotEqual<T>(this T @this, T value, string? message = null, ILogger? logger = null,
+		[CallerMemberName] string? caller = null,
+		[CallerArgumentExpression("this")] string? argument1 = null,
+		[CallerArgumentExpression("value")] string? argument2 = null)
+		where T : struct, Enum
+	{
+		if (!Enum<T>.Equals(@this, value))
+			Throw(caller!, (argument1!, argument2!), (@this, value), message, logger);
+	}
+
+	private static void Throw(string method, (string, string) arguments, (object?, object?) items, string? message, ILogger? logger,
+		[CallerMemberName] string? caller = null)
+	{
+		var exception = new ArgumentOutOfRangeException(
+			paramName: arguments.ToString(),
+			actualValue: items,
+			message: message ?? Invariant($"{method}: {caller}"));
+
+		logger?.LogError(exception, exception.Message);
+
+		throw exception;
+	}
 
 	public static bool IsConcurrent(this CollectionType @this) => @this switch
 	{
@@ -270,9 +317,8 @@ public static class EnumExtensions
 	public static bool IsEnumUnderlyingType(this ScalarType @this)
 		=> @this switch
 		{
-			ScalarType.SByte or ScalarType.Byte
-			or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
-			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 => true,
+			ScalarType.SByte or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
+			or ScalarType.Byte or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 => true,
 			_ => false
 		};
 
@@ -296,23 +342,17 @@ public static class EnumExtensions
 		};
 
 	/// <summary>
-	/// Returns true for the current .Net primitives.<br/>
-	/// In addition, returns true for the following types:
-	/// <list type="bullet">
-	/// <item><c><see cref="ScalarType.Decimal"/></c></item>
-	/// <item><c><see cref="ScalarType.Int128"/></c></item>
-	/// <item><c><see cref="ScalarType.UInt128"/></c></item>
-	/// </list>
+	/// Returns true for the current .Net primitives.
 	/// </summary>
 	public static bool IsPrimitive(this ScalarType @this)
 		=> @this switch
 		{
 			ScalarType.Boolean
 			or ScalarType.SByte or ScalarType.Byte
-			or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128
+			or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64
 			or ScalarType.IntPtr or ScalarType.UIntPtr
-			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
-			or ScalarType.Single or ScalarType.Double or ScalarType.Decimal
+			or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double
 			or ScalarType.Char => true,
 			_ => false
 		};
@@ -327,7 +367,8 @@ public static class EnumExtensions
 	public static bool IsReadOnly(this CollectionType @this)
 		=> @this switch
 		{
-			CollectionType.ReadOnlyCollection or CollectionType.ReadOnlyDictionary or CollectionType.ReadOnlyObservableCollection => true,
+			CollectionType.ReadOnlyCollection or CollectionType.ReadOnlyDictionary or CollectionType.ReadOnlyObservableCollection
+			or CollectionType.ReadOnlyList or CollectionType.ReadOnlyObservableCollection or CollectionType.ReadOnlySet => true,
 			_ => false
 		};
 
