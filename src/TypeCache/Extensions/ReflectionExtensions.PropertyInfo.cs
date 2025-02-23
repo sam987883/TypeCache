@@ -161,9 +161,9 @@ public partial class ReflectionExtensions
 		@this.SetMethod.ThrowIfNull();
 		@this.SetMethod.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
-		ParameterExpression value = nameof(instance).ParameterExpression<object?>();
-		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		ParameterExpression value = nameof(instance).ToParameterExpression<object?>();
+		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
@@ -184,8 +184,8 @@ public partial class ReflectionExtensions
 		@this.GetMethod.ThrowIfNull();
 		@this.GetMethod.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
-		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
@@ -208,8 +208,8 @@ public partial class ReflectionExtensions
 		@this.SetMethod.ThrowIfNull();
 		@this.SetMethod.IsStatic.ThrowIfFalse();
 
-		ParameterExpression value = nameof(value).ParameterExpression<object?>();
-		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
+		ParameterExpression value = nameof(value).ToParameterExpression<object?>();
+		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)
@@ -231,7 +231,7 @@ public partial class ReflectionExtensions
 		@this.GetMethod.ThrowIfNull();
 		@this.GetMethod.IsStatic.ThrowIfFalse();
 
-		ParameterExpression index = nameof(index).ParameterExpression<ITuple?>();
+		ParameterExpression index = nameof(index).ToParameterExpression<ITuple?>();
 		var itemProperty = typeof(ITuple).GetProperty(Item, INSTANCE_BINDING_FLAGS)!;
 		var parameters = @this.GetIndexParameters()
 			.OrderBy(parameterInfo => parameterInfo.Position)

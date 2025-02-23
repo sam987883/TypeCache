@@ -28,27 +28,11 @@ public class HashMaker : IHashMaker
 
 	/// <inheritdoc cref="SymmetricAlgorithm.DecryptCbc(byte[], byte[], PaddingMode)"/>
 	/// <param name="hashId">A base 64 encoded string.</param>
+	/// <exception cref="FormatException"/>
 	public long Decrypt(ReadOnlySpan<char> hashId, PaddingMode paddingMode = PaddingMode.PKCS7)
-	{
-		var length = (hashId[^2], hashId[^1]) switch
-		{
-			('=', '=') => hashId.Length,
-			_ => hashId.Length + 2
-		};
-		Span<char> span = stackalloc char[length];
-		hashId.CopyTo(span);
-		span[^1] = '=';
-		span[^2] = '=';
-
-		var data = span
-			.Replace('-', '+')
-			.Replace('_', '/')
-			.ToArray()
-			.FromBase64();
-		return this._SymmetricAlgorithm
-			.DecryptCbc(data, this._SymmetricAlgorithm.IV, paddingMode)
+		=> this._SymmetricAlgorithm
+			.DecryptCbc(Base64Url.DecodeFromChars(hashId), this._SymmetricAlgorithm.IV, paddingMode)
 			.ToInt64();
-	}
 
 	public byte[] Encrypt(ReadOnlySpan<byte> data, PaddingMode paddingMode = PaddingMode.PKCS7)
 		=> this._SymmetricAlgorithm
@@ -66,15 +50,10 @@ public class HashMaker : IHashMaker
 	/// <inheritdoc cref="SymmetricAlgorithm.EncryptCbc(byte[], byte[], PaddingMode)"/>
 	/// <remarks>Returns a base 64 encoded string.</remarks>
 	public ReadOnlySpan<char> Encrypt(long id, PaddingMode paddingMode = PaddingMode.PKCS7)
-	{
-		var chars = this._SymmetricAlgorithm
+		=> this._SymmetricAlgorithm
 			.EncryptCbc(id.GetBytes(), this._SymmetricAlgorithm.IV, paddingMode)
-			.ToBase64Chars()
-			.AsSpan()
-			.Replace('+', '-')
-			.Replace('/', '_');
-		return chars.Slice(0, chars.Length - 2);
-	}
+			.ToBase64UrlChars()
+			.AsSpan();
 
 	public void Dispose()
 	{

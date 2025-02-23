@@ -19,6 +19,6 @@ public sealed class InterfaceGraphType<T> : global::GraphQL.Types.InterfaceGraph
 		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
 			.ToArray()
-			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType(new PropertyFieldResolver<T>(propertyInfo))));
+			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType()));
 	}
 }

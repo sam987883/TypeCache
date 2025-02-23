@@ -11,8 +11,9 @@ public static class AuthorizationOptionsExtensions
 	private static AuthorizationPolicy AddAuthorizationPolicy(this AuthorizationOptions @this, IAuthorizationRequirement requirement, string[]? authenticationSchemas)
 	{
 		var builder = new AuthorizationPolicyBuilder();
-		if (authenticationSchemas?.Any() is true)
+		if (authenticationSchemas?.Length > 0)
 			builder.AddAuthenticationSchemes(authenticationSchemas);
+
 		builder.RequireAuthenticatedUser();
 		builder.AddRequirements(requirement);
 

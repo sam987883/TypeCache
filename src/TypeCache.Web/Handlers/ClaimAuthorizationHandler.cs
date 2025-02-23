@@ -12,20 +12,19 @@ namespace TypeCache.Web.Handlers;
 public class ClaimAuthorizationHandler : AuthorizationHandler<ClaimAuthorizationRequirement>
 {
 	protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ClaimAuthorizationRequirement requirement)
-	{
-		var controller = context.GetControllerActionDescriptor();
-		if (controller is not null)
+		=> context.GetControllerActionDescriptor() switch
 		{
-			var success = controller.ControllerTypeInfo
-				.GetCustomAttributes<RequireClaimAttribute>()
-				.Append(controller.MethodInfo.GetCustomAttribute<RequireClaimAttribute>())
-				.All(attribute => attribute!.Claims.Any(pair => context.User.Any(pair.Key, pair.Value)));
+			null => Task.CompletedTask,
+			var controller => Task.Run(() =>
+			{
+				var attributes = controller.ControllerTypeInfo.GetCustomAttributes<RequireClaimAttribute>()
+					.Concat(controller.MethodInfo.GetCustomAttributes<RequireClaimAttribute>());
 
-			if (success)
-				context.Succeed(requirement);
-			else
-				context.Fail();
-		}
-		return Task.CompletedTask;
-	}
+				var success = attributes.All(_ => context.User.Any(_.Claim, _.AllowedValues));
+				if (success)
+					context.Succeed(requirement);
+				else
+					context.Fail();
+			})
+		};
 }

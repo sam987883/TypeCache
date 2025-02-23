@@ -10,33 +10,25 @@ using TypeCache.Web.Requirements;
 
 namespace TypeCache.Web.Handlers;
 
-public class HeaderAuthorizationHandler : AuthorizationHandler<HeaderAuthorizationRequirement>
+public class HeaderAuthorizationHandler(IHttpContextAccessor httpContextAccessor) : AuthorizationHandler<HeaderAuthorizationRequirement>
 {
-	private IHttpContextAccessor _HttpContextAccessor;
-
-	public HeaderAuthorizationHandler(IHttpContextAccessor httpContextAccessor)
-	{
-		this._HttpContextAccessor = httpContextAccessor;
-	}
-
 	protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HeaderAuthorizationRequirement requirement)
-	{
-		var controller = context.GetControllerActionDescriptor();
-		if (controller is not null)
+		=> context.GetControllerActionDescriptor() switch
 		{
-			var type = controller.ControllerTypeInfo.GetType();
-			var headers = this._HttpContextAccessor.HttpContext!.Request.Headers;
-			var success = controller.ControllerTypeInfo
-				.GetCustomAttributes<RequireHeaderAttribute>()
-				.Append(controller.MethodInfo.GetCustomAttribute<RequireHeaderAttribute>())
-				.All(attribute => headers.TryGetValue(attribute!.Key, out var values)
-					&& (!attribute.AllowedValues.Any() || values.Any(value => attribute.AllowedValues.Contains(value, StringComparer.OrdinalIgnoreCase))));
+			null => Task.CompletedTask,
+			var controller => Task.Run(() =>
+			{
+				var headers = httpContextAccessor.HttpContext!.Request.Headers;
+				var attributes = controller.ControllerTypeInfo.GetCustomAttributes<RequireHeaderAttribute>()
+					.Concat(controller.MethodInfo.GetCustomAttributes<RequireHeaderAttribute>());
 
-			if (success)
-				context.Succeed(requirement);
-			else
-				context.Fail();
-		}
-		return Task.CompletedTask;
-	}
+				var success = attributes.All(_ => _.AllowedValues.Length is 0
+					? headers.ContainsKey(_.Header)
+					: headers.TryGetValue(_.Header, out var values) && values.Any(_.AllowedValues.ContainsIgnoreCase!));
+				if (success)
+					context.Succeed(requirement);
+				else
+					context.Fail();
+			}, httpContextAccessor.HttpContext!.RequestAborted)
+		};
 }

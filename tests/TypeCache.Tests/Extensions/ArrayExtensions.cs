@@ -75,32 +75,21 @@ public class ArrayExtensions
 	}
 
 	[Fact]
-	public void ForEach_ActionRefIndex()
-	{
-		var expected = Enumerable.Range(0, 10).ToArray();
-		var actual = Enumerable.Range(1, 10).ToArray();
-
-		actual.ForEach(new ActionIndexRef<int>((ref int value, int i) => value = i));
-
-		Assert.Equal(expected, actual);
-	}
-
-	[Fact]
 	public void ForEach_Index()
 	{
-		var values = Enumerable.Range(0, 10).ToArray();
+		var values = Enumerable.Range(0, 10).Index();
 
-		values.ForEach((expected, actual) => Assert.Equal(expected, actual));
+		values.ForEach(_ => Assert.Equal(_.Index, _.Item));
 	}
 
 	[Fact]
 	public void ForEach_IndexBetween()
 	{
-		var expected = Enumerable.Range(0, 10).ToArray();
-		var expectedCount = expected.Length - 1;
+		var expected = Enumerable.Range(0, 10).Index();
+		var expectedCount = expected.Count() - 1;
 		var actualCount = 0;
 
-		expected.ForEach((expected, actual) => Assert.Equal(expected, actual), () => ++actualCount);
+		expected.ForEach(_ => Assert.Equal(_.Index, _.Item), () => ++actualCount);
 		Assert.Equal(expectedCount, actualCount);
 	}
 
@@ -166,17 +155,6 @@ public class ArrayExtensions
 		Assert.Equal(Array.BinarySearch(array, -3, Comparer<int>.Default), array.Search(-3, Comparer<int>.Default));
 		Assert.Equal(Array.BinarySearch(array, 1, 4, 3), array.Search(3, 1, 4));
 		Assert.Equal(Array.BinarySearch(array, 1, 4, 3, Comparer<int>.Default), array.Search(3, 1, 4, Comparer<int>.Default));
-	}
-
-	[Fact]
-	public void Segment()
-	{
-		var array = Enumerable.Range(0, 10).ToArray();
-
-		Assert.Equal(new ArraySegment<int>(array), array.Segment());
-		Assert.Equal(new ArraySegment<int>(array, 2, 0), array.Segment(2, 0));
-		Assert.Equal(new ArraySegment<int>(array, 2, 3), array.Segment(2, 3));
-		Assert.Equal(new ArraySegment<int>(array, 9, 1), array.Segment(9, 1));
 	}
 
 	[Fact]
@@ -265,6 +243,17 @@ public class ArrayExtensions
 		var actual = array.ToJSON().ToJsonString();
 
 		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void ToSegment()
+	{
+		var array = Enumerable.Range(0, 10).ToArray();
+
+		Assert.Equal(new ArraySegment<int>(array), array.ToSegment());
+		Assert.Equal(new ArraySegment<int>(array, 2, 0), array.ToSegment(2, 0));
+		Assert.Equal(new ArraySegment<int>(array, 2, 3), array.ToSegment(2, 3));
+		Assert.Equal(new ArraySegment<int>(array, 9, 1), array.ToSegment(9, 1));
 	}
 
 	[Fact]

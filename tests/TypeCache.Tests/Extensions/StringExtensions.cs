@@ -28,8 +28,8 @@ public class StringExtensions
 	[Fact]
 	public void Enum()
 	{
-		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).Enum<StringComparison>());
-		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().Enum<StringComparison>());
+		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
+		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().ToEnum<StringComparison>());
 	}
 
 	[Fact]
@@ -102,10 +102,10 @@ public class StringExtensions
 	[Fact]
 	public void StringSegment()
 	{
-		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.StringSegment());
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.StringSegment(2, 0));
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.StringSegment(2, 3));
-		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.StringSegment(9, 1));
+		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.ToStringSegment());
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.ToStringSegment(2, 0));
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.ToStringSegment(2, 3));
+		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.ToStringSegment(9, 1));
 	}
 
 	[Fact]

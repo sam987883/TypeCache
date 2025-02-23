@@ -83,7 +83,7 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static Expression<Func<object?[]?, object>> ToArrayFuncExpression(this ConstructorInfo @this)
 	{
-		ParameterExpression arguments = nameof(arguments).ParameterExpression<object?[]?>();
+		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
 		var call = @this.CreateArrayCall(arguments);
 
 		return call.As<object>().Lambda<Func<object?[]?, object>>([arguments]);
@@ -93,7 +93,7 @@ public partial class ReflectionExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static Expression<Func<ITuple?, object>> ToTupleFuncExpression(this ConstructorInfo @this)
 	{
-		ParameterExpression arguments = nameof(arguments).ParameterExpression<ITuple?>();
+		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple?>();
 		var call = @this.CreateTupleCall(arguments);
 
 		return call.Cast<object>().Lambda<Func<ITuple?, object>>([arguments]);

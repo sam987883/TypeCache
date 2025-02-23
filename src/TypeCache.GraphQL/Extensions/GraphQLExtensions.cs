@@ -69,6 +69,7 @@ public static class GraphQLExtensions
 	{
 		var asc = Sort.Ascending.ToSQL();
 		var desc = Sort.Descending.ToSQL();
+
 		@this.Add(Invariant($"{column}_{asc}"), Invariant($"{column} {asc}"), Invariant($"{column} {asc}"), deprecationReason);
 		@this.Add(Invariant($"{column}_{desc}"), Invariant($"{column} {desc}"), Invariant($"{column} {desc}"), deprecationReason);
 	}
@@ -92,7 +93,7 @@ public static class GraphQLExtensions
 		};
 	}
 
-	public static FieldType ToFieldType(this PropertyInfo @this, IFieldResolver resolver)
+	public static FieldType ToFieldType(this PropertyInfo @this)
 	{
 		var type = @this.ToGraphQLType(false);
 		var arguments = new QueryArguments();
@@ -124,7 +125,7 @@ public static class GraphQLExtensions
 			Name = @this.GraphQLName(),
 			Description = @this.GraphQLDescription(),
 			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = resolver
+			Resolver = (IFieldResolver)typeof(PropertyFieldResolver<>).MakeGenericType(@this.DeclaringType!).Create([@this])!
 		};
 	}
 

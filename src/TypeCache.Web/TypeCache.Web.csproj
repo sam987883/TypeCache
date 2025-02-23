@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.Web</RootNamespace>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>9.0.0</Version>
+    <Version>9.1.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Web Library</Title>
@@ -37,29 +37,6 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="System.Diagnostics" />
-    <Using Include="System.Diagnostics.CodeAnalysis" />
-    <Using Include="System.FormattableString">
-      <Static>True</Static>
-    </Using>
-    <Using Include="System.Runtime.CompilerServices.MethodImplAttribute">
-      <Alias>MethodImplAttribute</Alias>
-    </Using>
-    <Using Include="System.Runtime.CompilerServices.MethodImplOptions">
-      <Static>True</Static>
-    </Using>
-    <Using Include="System.Threading.CancellationToken">
-      <Alias>CancellationToken</Alias>
-    </Using>
-    <Using Include="System.Threading.Tasks.Task">
-      <Alias>Task</Alias>
-    </Using>
-    <Using Include="System.Threading.Tasks.ValueTask">
-      <Alias>ValueTask</Alias>
-    </Using>
   </ItemGroup>
 
   <ItemGroup>

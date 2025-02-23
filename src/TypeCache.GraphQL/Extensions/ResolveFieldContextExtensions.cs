@@ -120,9 +120,10 @@ public static class ResolveFieldContextExtensions
 	{
 		if (value is GraphQLListValue listValue)
 		{
-			if (listValue.Values?.Any<GraphQLObjectValue>() is true)
-				listValue.Values.OfType<GraphQLObjectValue>().ToArray().ForEach((objectValue, i) =>
-					objectValue.Fields?.ForEach(field => @this[Invariant($"{path}.{i}.{field.Name}")] = field.Value.GetScalarValue()));
+			var objectValues = listValue.Values?.OfType<GraphQLObjectValue>();
+			if (objectValues?.Any() is true)
+				objectValues.Index().ForEach(_ =>
+					_.Item.Fields?.ForEach(field => @this[Invariant($"{path}.{_.Index}.{field.Name}")] = field.Value.GetScalarValue()));
 			else if (listValue.Values?.Any() is true)
 				@this[path] = listValue.Values.Select(_ => _.GetScalarValue()).ToArray();
 		}

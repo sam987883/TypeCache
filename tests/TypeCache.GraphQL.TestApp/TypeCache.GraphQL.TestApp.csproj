@@ -8,11 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="graphiql" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TypeCache.GraphQL\TypeCache.GraphQL.csproj" />
+    <ProjectReference Include="..\..\src\TypeCache.Web\TypeCache.Web.csproj" />
     <ProjectReference Include="..\..\src\TypeCache\TypeCache.csproj" />
   </ItemGroup>
 

@@ -38,7 +38,7 @@ public static class DbDataReaderExtensions
 		{
 			var model = (T)typeof(T).Create()!;
 			@this.GetValues(values);
-			properties.ForEach((property, columnIndex) => property.SetValueEx(model, values[columnIndex]));
+			properties.Index().ForEach(_ => _.Item.SetValueEx(model, values[_.Index]));
 			rows.Add((T)model);
 		}
 	}
@@ -53,7 +53,7 @@ public static class DbDataReaderExtensions
 		{
 			var model = modelType.Create()!;
 			@this.GetValues(values);
-			properties.ForEach((property, columnIndex) => property.SetValueEx(model, values[columnIndex]));
+			properties.Index().ForEach(_ => _.Item.SetValueEx(model, values[_.Index]));
 			rows.Add(model);
 		}
 	}
