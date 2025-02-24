@@ -230,38 +230,53 @@ public static class ExpressionExtensions
 			return @this.CreateConversionExpression(targetType);
 
 		var targetScalarType = targetType.GetScalarType();
-		var expression = targetScalarType switch
+		var method = targetScalarType switch
 		{
-			ScalarType.BigInteger => (Expression)typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(BigInteger)], [@this]),
-			ScalarType.Boolean => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToBoolean), [@this]),
-			ScalarType.Byte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(byte)], [@this]),
-			ScalarType.Char => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(char)], [@this]),
-			ScalarType.DateOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateOnly), [@this]),
-			ScalarType.DateTime => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTime), [@this]),
-			ScalarType.DateTimeOffset => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToDateTimeOffset), [@this]),
-			ScalarType.Decimal => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(decimal)], [@this]),
-			ScalarType.Double => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(double)], [@this]),
-			ScalarType.Enum => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToEnum), [@this]),
-			ScalarType.Guid => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToGuid), [@this]),
-			ScalarType.Half => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(Half)], [@this]),
-			ScalarType.Index => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIndex), [@this]),
-			ScalarType.Int16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(short)], [@this]),
-			ScalarType.Int32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(int)], [@this]),
-			ScalarType.Int64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(long)], [@this]),
-			ScalarType.Int128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(Int128)], [@this]),
-			ScalarType.IntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToIntPtr), [@this]),
-			ScalarType.SByte => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(sbyte)], [@this]),
-			ScalarType.Single => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(float)], [@this]),
-			ScalarType.String => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToString), [@this]),
-			ScalarType.TimeOnly => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeOnly), [@this]),
-			ScalarType.TimeSpan => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToTimeSpan), [@this]),
-			ScalarType.UInt16 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(ushort)], [@this]),
-			ScalarType.UInt32 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(uint)], [@this]),
-			ScalarType.UInt64 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(ulong)], [@this]),
-			ScalarType.UInt128 => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToNumber), [typeof(UInt128)], [@this]),
-			ScalarType.UIntPtr => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUIntPtr), [@this]),
-			ScalarType.Uri => typeof(ValueConverter).ToStaticMethodCallExpression(nameof(ValueConverter.ConvertToUri), [@this]),
-			_ => @this.Cast(targetType)
+			ScalarType.BigInteger or ScalarType.Byte or ScalarType.Char
+			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal
+			or ScalarType.SByte or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128
+			or ScalarType.Byte or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
+				=> nameof(ValueConverter.ConvertToNumber),
+			ScalarType.Boolean => nameof(ValueConverter.ConvertToBoolean),
+			ScalarType.DateOnly => nameof(ValueConverter.ConvertToDateOnly),
+			ScalarType.DateTime => nameof(ValueConverter.ConvertToDateTime),
+			ScalarType.DateTimeOffset => nameof(ValueConverter.ConvertToDateTimeOffset),
+			ScalarType.Enum => nameof(ValueConverter.ConvertToEnum),
+			ScalarType.Guid => nameof(ValueConverter.ConvertToGuid),
+			ScalarType.Index => nameof(ValueConverter.ConvertToIndex),
+			ScalarType.IntPtr => nameof(ValueConverter.ConvertToIntPtr),
+			ScalarType.String => nameof(ValueConverter.ConvertToString),
+			ScalarType.TimeOnly => nameof(ValueConverter.ConvertToTimeOnly),
+			ScalarType.TimeSpan => nameof(ValueConverter.ConvertToTimeSpan),
+			ScalarType.UIntPtr => nameof(ValueConverter.ConvertToUIntPtr),
+			ScalarType.Uri => nameof(ValueConverter.ConvertToUri),
+			_ => null
+		};
+		var type = targetScalarType switch
+		{
+			ScalarType.BigInteger => typeof(BigInteger),
+			ScalarType.Byte => typeof(byte),
+			ScalarType.Char => typeof(char),
+			ScalarType.Decimal => typeof(decimal),
+			ScalarType.Double => typeof(double),
+			ScalarType.Half => typeof(Half),
+			ScalarType.Int16 => typeof(short),
+			ScalarType.Int32 => typeof(int),
+			ScalarType.Int64 => typeof(long),
+			ScalarType.Int128 => typeof(Int128),
+			ScalarType.SByte => typeof(sbyte),
+			ScalarType.Single => typeof(float),
+			ScalarType.UInt16 => typeof(ushort),
+			ScalarType.UInt32 => typeof(uint),
+			ScalarType.UInt64 => typeof(ulong),
+			ScalarType.UInt128 => typeof(UInt128),
+			_ => null
+		};
+		var expression = (method, type) switch
+		{
+			(null, null) => (Expression)@this.Cast(targetType),
+			(_, null) => typeof(ValueConverter).ToStaticMethodCallExpression(method, [@this]),
+			_ => typeof(ValueConverter).ToStaticMethodCallExpression(method!, [type], [@this]),
 		};
 
 		if (targetScalarType is not ScalarType.None && targetType.IsValueType && !targetType.IsNullable())
@@ -342,14 +357,6 @@ public static class ExpressionExtensions
 	public static TypeBinaryExpression Is(this Expression @this, Type type)
 		=> Expression.TypeIs(@this, type);
 
-	/// <inheritdoc cref="Expression.IsFalse(Expression)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.IsFalse(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static UnaryExpression IsFalse(this Expression @this)
-		=> Expression.IsFalse(@this);
-
 	/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.ReferenceNotEqual(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
@@ -365,14 +372,6 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static BinaryExpression IsNull(this Expression @this)
 		=> Expression.ReferenceEqual(@this, Expression.Constant(null));
-
-	/// <inheritdoc cref="Expression.IsTrue(Expression)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.IsTrue(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static UnaryExpression IsTrue(this Expression @this)
-		=> Expression.IsTrue(@this);
 
 	/// <inheritdoc cref="Expression.Lambda(Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
@@ -428,7 +427,7 @@ public static class ExpressionExtensions
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, IEnumerable<ParameterExpression> parameters)
-		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type), typeof(T)]), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType([..parameters.Select(parameter => parameter.Type), typeof(T)]), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
@@ -436,7 +435,7 @@ public static class ExpressionExtensions
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc<T>(this Expression @this, ParameterExpression[]? parameters = null)
-		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type), typeof(T)]), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type) ?? [], typeof(T)]), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, IEnumerable{ParameterExpression})"/>
 	/// <remarks>
@@ -444,7 +443,7 @@ public static class ExpressionExtensions
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, IEnumerable<ParameterExpression> parameters)
-		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type), returnType]), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType([..parameters.Select(parameter => parameter.Type), returnType]), @this, parameters);
 
 	/// <inheritdoc cref="Expression.Lambda(Type, Expression, ParameterExpression[])"/>
 	/// <remarks>
@@ -452,7 +451,7 @@ public static class ExpressionExtensions
 	/// @<paramref name="this"/>, <paramref name="parameters"/>);</c>
 	/// </remarks>
 	public static LambdaExpression LambdaFunc(this Expression @this, Type returnType, ParameterExpression[]? parameters = null)
-		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type), returnType]), @this, parameters);
+		=> Expression.Lambda(Expression.GetFuncType([..parameters?.Select(parameter => parameter.Type) ?? [], returnType]), @this, parameters);
 
 	/// <inheritdoc cref="Expression.PropertyOrField(Expression, string)"/>
 	/// <remarks>
@@ -496,15 +495,15 @@ public static class ExpressionExtensions
 			BinaryOperator.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
 			BinaryOperator.LeftShift => Expression.LeftShift(@this, operand),
 			BinaryOperator.RightShift => Expression.RightShift(@this, operand),
-			BinaryOperator.EqualTo => Expression.Equal(@this, operand),
-			BinaryOperator.ReferenceEqualTo => Expression.ReferenceEqual(@this, operand),
-			BinaryOperator.NotEqualTo => Expression.NotEqual(@this, operand),
-			BinaryOperator.ReferenceNotEqualTo => Expression.ReferenceNotEqual(@this, operand),
+			BinaryOperator.Equal => Expression.Equal(@this, operand),
+			BinaryOperator.ReferenceEqual => Expression.ReferenceEqual(@this, operand),
+			BinaryOperator.NotEqual => Expression.NotEqual(@this, operand),
+			BinaryOperator.ReferenceNotEqual => Expression.ReferenceNotEqual(@this, operand),
 			BinaryOperator.GreaterThan => Expression.GreaterThan(@this, operand),
-			BinaryOperator.GreaterThanOrEqualTo => Expression.GreaterThanOrEqual(@this, operand),
+			BinaryOperator.GreaterThanOrEqual => Expression.GreaterThanOrEqual(@this, operand),
 			BinaryOperator.LessThan => Expression.LessThan(@this, operand),
-			BinaryOperator.LessThanOrEqualTo => Expression.LessThanOrEqual(@this, operand),
-			_ => throw new UnreachableException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
+			BinaryOperator.LessThanOrEqual => Expression.LessThanOrEqual(@this, operand),
+			_ => throw new UnreachableException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation.Number()}] is not supported.")
 		};
 
 	/// <exception cref="UnreachableException" />

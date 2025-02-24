@@ -16,7 +16,6 @@ namespace TypeCache.GraphQL.Web;
 public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IConfigureSchema configureSchema)
 {
 	public async Task Invoke(HttpContext httpContext
-		, IServiceProvider provider
 		, IDocumentExecuter executer
 		, IDocumentExecutionListener listener
 		, IGraphQLSerializer graphQLSerializer
@@ -36,7 +35,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 		}
 
 		var requestId = Guid.NewGuid();
-		var timeProvider = provider.GetService(typeof(TimeProvider)) as TimeProvider ?? TimeProvider.System;
+		var timeProvider = httpContext.RequestServices.GetService(typeof(TimeProvider)) as TimeProvider ?? TimeProvider.System;
 		var requestTime = timeProvider.GetLocalNow().ToISO8601();
 		var userContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -44,7 +43,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 			{ "RequestTime", requestTime },
 			{ nameof(httpContext.User), httpContext.User }
 		};
-		var schema = new Schema(provider, [configureSchema])
+		var schema = new Schema(httpContext.RequestServices, [configureSchema])
 		{
 			Description = "GraphQL schema route: " + route
 		};
@@ -54,7 +53,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 			Variables = request.Variables is not null ? new Inputs(request.Variables!) : null,
 			OperationName = request.OperationName,
 			Query = request.Query,
-			RequestServices = provider,
+			RequestServices = httpContext.RequestServices,
 			Schema = schema,
 			UserContext = userContext,
 			ValidationRules = DocumentValidator.CoreRules

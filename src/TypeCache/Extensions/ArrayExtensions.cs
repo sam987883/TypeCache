@@ -2,6 +2,7 @@
 
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,6 @@ using TypeCache.Utilities;
 namespace TypeCache.Extensions;
 
 public delegate void ActionRef<T>(ref T item);
-public delegate void ActionIndexRef<T>(ref T item, int index);
 
 public static class ArrayExtensions
 {
@@ -42,6 +42,14 @@ public static class ArrayExtensions
 		@this.AsSpan().CopyTo(copy);
 		return copy;
 	}
+
+	/// <inheritdoc cref="Array.Exists{T}(T[], Predicate{T})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Array"/>.Exists(@<paramref name="this"/>, <see langword="new"/> <see cref="Predicate{T}"/>(<paramref name="match"/>));</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool Exists<T>(this T[] @this, Func<T, bool> match)
+		=> Array.Exists(@this, new Predicate<T>(match));
 
 	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
 	/// <remarks>
@@ -82,16 +90,6 @@ public static class ArrayExtensions
 	{
 		for (var i = 0; i < @this.Length; ++i)
 			action(@this[i], i);
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this T[]? @this, ActionIndexRef<T> action)
-	{
-		action.ThrowIfNull();
-
-		var count = @this?.Length ?? 0;
-		for (var i = 0; i < count; ++i)
-			action(ref @this![i], i);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -150,6 +148,22 @@ public static class ArrayExtensions
 
 		await Task.CompletedTask;
 	}
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item), <paramref name="token"/>);</c>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Task ForEachAsync<T>(this T[] @this, Func<T, Task> action, CancellationToken token = default)
+		=> @this.ForEachAsync(async item => await action(item), token);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item, <paramref name="token"/>), <paramref name="token"/>);</c>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Task ForEachAsync<T>(this T[] @this, Func<T, CancellationToken, Task> action, CancellationToken token = default)
+		=> @this.ForEachAsync(async item => await action(item, token), token);
 
 	/// <inheritdoc cref="Convert.FromBase64CharArray(char[], int, int)"/>
 	/// <remarks>
@@ -261,7 +275,7 @@ public static class ArrayExtensions
 	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ArraySegment<T> Segment<T>(this T[] @this)
+	public static ArraySegment<T> ToSegment<T>(this T[] @this)
 		=> new(@this);
 
 	/// <inheritdoc cref="ArraySegment{T}.ArraySegment(T[], int, int)"/>
@@ -269,8 +283,24 @@ public static class ArrayExtensions
 	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, <paramref name="offset"/>, <paramref name="count"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ArraySegment<T> Segment<T>(this T[] @this, int offset, int count)
+	public static ArraySegment<T> ToSegment<T>(this T[] @this, int offset, int count)
 		=> new(@this, offset, count);
+
+	/// <inheritdoc cref="Encoding.GetString(byte[])"/>
+	/// <remarks>
+	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToString(this byte[] @this, Encoding encoding)
+		=> encoding.GetString(@this);
+
+	/// <inheritdoc cref="Encoding.GetString(byte[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <paramref name="encoding"/>.GetString(@<paramref name="this"/>, <paramref name="index"/>, <paramref name="count"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToString(this byte[] @this, Encoding encoding, int index, int count)
+		=> encoding.GetString(@this, index, count);
 
 	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
 	/// <param name="logger">Pass a logger to log exception if thrown.</param>
@@ -310,12 +340,21 @@ public static class ArrayExtensions
 	public static char[] ToBase64Chars(this byte[] @this, Base64FormattingOptions options = Base64FormattingOptions.None)
 		=> ((ReadOnlySpan<byte>)@this).ToBase64Chars(options);
 
+	/// <inheritdoc cref="Convert.ToHexString(byte[])"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.AsSpan().AsReadOnly().ToHex();</c>
+	/// <c>=&gt; <see cref="Convert"/>.ToHexString(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToHexString(this byte[] @this)
-		=> @this.AsSpan().AsReadOnly().ToHexString();
+		=> Convert.ToHexString(@this);
+
+	/// <inheritdoc cref="Convert.ToHexString(byte[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Convert"/>.ToHexString(@<paramref name="this"/>, <paramref name="offset"/>, <paramref name="length"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToHexString(this byte[] @this, int offset, int length)
+		=> Convert.ToHexString(@this, offset, length);
 
 	/// <inheritdoc cref="ImmutableQueue.Create{T}(T[])"/>
 	/// <remarks>

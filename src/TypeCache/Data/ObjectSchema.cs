@@ -220,16 +220,11 @@ public sealed class ObjectSchema(
 				.AppendIf(this.DataSource.Type is PostgreSql, Invariant($" WITH({select.TableHints})")))
 			.AppendLine()
 			.AppendLineIf(select.Where.IsNotBlank(), Invariant($"WHERE {select.Where}"))
-			.AppendLineIf(select.GroupBy?.Any() is true, select.GroupByOption switch
-			{
-				GroupBy.Cube when this.DataSource.Type is not MySql => Invariant($"GROUP BY CUBE({select.GroupBy.ToCSV()})"),
-				GroupBy.Rollup => Invariant($"GROUP BY ROLLUP({select.GroupBy.ToCSV()})"),
-				_ => Invariant($"GROUP BY {select.GroupBy.ToCSV()}")
-			})
+			.AppendLineIf(select.GroupBy.IsNotBlank(), Invariant($"GROUP BY {select.GroupBy}"))
 			.AppendLineIf(select.Having.IsNotBlank(), Invariant($"HAVING {select.Having}"))
 			.AppendLineIf(select.OrderBy?.Any() is true, Invariant($"ORDER BY {select.OrderBy.ToCSV()}"))
-			.AppendLineIf(select.Offset > 0, Invariant($"OFFSET {select.Offset} ROWS"))
-			.AppendLineIf(select.Fetch > 0, Invariant($"FETCH NEXT {select.Fetch} ROWS ONLY"))
+			.AppendLineIf(select.Offset > 0U, Invariant($"OFFSET {select.Offset} ROWS"))
+			.AppendLineIf(select.Fetch > 0U, Invariant($"FETCH NEXT {select.Fetch} ROWS ONLY"))
 			.AppendStatementEndSQL()
 			.ToString();
 	}

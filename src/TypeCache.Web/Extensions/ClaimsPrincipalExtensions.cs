@@ -11,8 +11,10 @@ public static class ClaimsPrincipalExtensions
 	{
 		claimType.ThrowIfBlank();
 
-		return values.Any()
-			? values.Any(value => @this.HasClaim(claimType, value))
-			: @this.Claims.Any(claim => claim.Type.EqualsIgnoreCase(claimType));
+		var claim = @this.FindFirst(claimType); // OrdinalIgnoreCase
+		if (claim is null)
+			return false;
+
+		return values.Length is 0 || values.Exists(value => value.EqualsIgnoreCase(claim.Value));
 	}
 }

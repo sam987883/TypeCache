@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.ComponentModel;
 using System.Data;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
@@ -8,8 +9,8 @@ using TypeCache.Data;
 using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.Mediation;
-using static System.StringSplitOptions;
 using static System.Net.Mime.MediaTypeNames;
+using static System.StringSplitOptions;
 using static System.Text.Encoding;
 
 namespace TypeCache.Web.Handlers;
@@ -22,15 +23,13 @@ internal static class SqlApiHandler
 	private static ObjectSchema GetObjectSchema(this HttpContext @this)
 		=> (ObjectSchema)@this.Items[nameof(ObjectSchema)]!;
 
-	private static IMediator GetMediator(this HttpContext @this)
-		=> (IMediator)@this.Items[nameof(IMediator)]!;
-
-	public static async Task<IResult> CallProcedure(
+	public static async Task<IResult> ExecuteProcedure(
 		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string procedure)
+		, IMediator mediator
+		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
+		, [Description("The name of the database.")][FromRoute] string database
+		, [Description("The name of the database object schema.")][FromRoute] string schema
+		, [Description("The name of the stored procedure.")][FromRoute] string procedure)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(procedure);
@@ -43,7 +42,6 @@ internal static class SqlApiHandler
 				sqlCommand.Parameters.Add(parameter.Name, values.First());
 		}
 
-		var mediator = httpContext.GetMediator();
 		var request = new SqlDataSetRequest { Command = sqlCommand };
 		var response = await mediator.Map(request, httpContext.RequestAborted);
 
@@ -59,12 +57,13 @@ internal static class SqlApiHandler
 
 	public static async Task<IResult> DeleteTable(
 		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromQuery] string where)
+		, IMediator mediator
+		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
+		, [Description("The name of the database.")][FromRoute] string database
+		, [Description("The name of the database object schema.")][FromRoute] string schema
+		, [Description("The name of the database table to delete data from.")][FromRoute] string table
+		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
+		, [Description("The DELETE statement WHERE clause (SQL syntax).")][FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		var sql = objectSchema.CreateDeleteSQL(where, [output]);
@@ -73,7 +72,6 @@ internal static class SqlApiHandler
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
@@ -88,20 +86,20 @@ internal static class SqlApiHandler
 		}
 	}
 
-	public static async Task<IResult> DeleteTableBatch(
+	public static async Task<IResult> DeleteTableValues(
 		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
+		, IMediator mediator
+		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
+		, [Description("The name of the database.")][FromRoute] string database
+		, [Description("The name of the database object schema.")][FromRoute] string schema
+		, [Description("The name of the database table to delete data from.")][FromRoute] string table
+		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		var sql = objectSchema.CreateDeleteSQL(data, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
@@ -118,22 +116,33 @@ internal static class SqlApiHandler
 
 	public static async Task<IResult> InsertTable(
 		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string columns
-		, [FromQuery] string output
-		, [FromBody] SelectQuery selectQuery)
+		, IMediator mediator
+		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
+		, [Description("The name of the database.")][FromRoute] string database
+		, [Description("The name of the database object schema.")][FromRoute] string schema
+		, [Description("The name of the database table to insert data into.")][FromRoute] string table
+		, [Description("The INSERT statement COLUMNS clause comma delimited list of columns to insert data into (SQL syntax).")][FromQuery] string columns
+		, [Description("The INSERT statement OUTPUT clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery] string? output
+		, SelectParameter selectParameter
+		, [Description("SELECT [DISTINCT(...)].")][FromQuery] string? distinct
+		, [Description("FETCH NEXT {fetch} ROWS ONLY.")][FromQuery] uint? fetch
+		, [Description("The SELECT statement FROM caluse specifying the table/view/user defined function to pull data to be inserted (SQL syntax).")][FromQuery] string from
+		, [Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery(Name = "group-by")] string? groupBy
+		, [Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")][FromQuery] string? having
+		, [Description("The SELECT statement FROM clause table hints (SQL syntax).")][FromQuery] string? hints
+		, [Description("OFFSET {offset} ROWS.")][FromQuery] uint? offset
+		, [Description("The SELECT statement ORDER BY clause (SQL syntax).")][FromQuery] string? orderBy
+		, [Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")][FromQuery] string select
+		, [Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")][FromQuery] string? top
+		, [Description("The SELECT statement WHERE clause (SQL syntax).")][FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, [output]);
+		var sql = objectSchema.CreateInsertSQL(columns.SplitEx(','), selectParameter, output?.SplitEx(',') ?? []);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
@@ -148,8 +157,9 @@ internal static class SqlApiHandler
 		}
 	}
 
-	public static async Task<IResult> InsertTableBatch(
+	public static async Task<IResult> InsertTableValues(
 		HttpContext httpContext
+		, IMediator mediator
 		, [FromRoute(Name = "dataSource")] string dataSourceName
 		, [FromRoute] string database
 		, [FromRoute] string schema
@@ -161,7 +171,6 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateInsertSQL(data, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
@@ -176,234 +185,35 @@ internal static class SqlApiHandler
 		}
 	}
 
-	public static IResult GetDeleteSQL(
+	public static async Task<IResult> SelectData(
 		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromQuery] string where)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		return Results.Text(objectSchema.CreateDeleteSQL(where, [output]), Text.Plain, UTF8);
-	}
-
-	public static IResult GetDeleteBatchSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromBody] JsonArray data)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateDeleteSQL(data, output);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static IResult GetInsertSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string columns
-		, [FromQuery] bool distinct
-		, [FromQuery] string? distinctOn
-		, [FromQuery] uint fetch
-		, [FromQuery] string? groupBy
-		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string? having
-		, [FromQuery] uint offset
-		, [FromQuery] string? orderBy
-		, [FromQuery] string output
-		, [FromQuery] string? select
-		, [FromQuery] string? tableHints
-		, [FromQuery] string? top
-		, [FromQuery] string? where)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-
-		if (columns.IsBlank())
-			return Results.BadRequest(Invariant($"[{nameof(columns)}] query parameter must be specified."));
-
-		if (select.IsBlank())
-			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
-
-		if (columns.Split(',', RemoveEmptyEntries | TrimEntries).Length != select.Split(',', RemoveEmptyEntries | TrimEntries).Length)
-			return Results.BadRequest(Invariant($"[{nameof(columns)}] and [{nameof(select)}] query parameters must have same number of columns/expressions."));
-
-		var selectQuery = new SelectQuery
-		{
-			Distinct = distinct,
-			DistinctOn = distinctOn,
-			Fetch = fetch,
-			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			GroupByOption = groupByOption,
-			Having = having,
-			Offset = offset,
-			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
-			TableHints = tableHints,
-			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
-			TopPercent = top?.EndsWith('%') is true,
-			Where = where
-		};
-		var sql = objectSchema.CreateInsertSQL(columns.Split(',', RemoveEmptyEntries | TrimEntries), selectQuery, [output]);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static IResult GetInsertBatchSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromBody] JsonArray data)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateInsertSQL(data, [output]);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static async Task<IResult> GetSchema(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] SchemaCollection collection
-		, [FromQuery] string? where
-		, [FromQuery] string? orderBy)
-	{
-		var dataSource = httpContext.GetDataSource();
-		var table = await dataSource.GetDatabaseSchemaAsync(collection, database, httpContext.RequestAborted);
-		var response = table?.Select(where, orderBy);
-		return Results.Ok(response);
-	}
-
-	public static IResult GetSelectSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] bool distinct
-		, [FromQuery] string? distinctOn
-		, [FromQuery] uint fetch
-		, [FromQuery] string? groupBy
-		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string? having
-		, [FromQuery] uint offset
-		, [FromQuery] string? orderBy
-		, [FromQuery] string? select
-		, [FromQuery] string? tableHints
-		, [FromQuery] string? top
-		, [FromQuery] string? where)
+		, IMediator mediator
+		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
+		, [Description("The name of the database.")][FromRoute] string database
+		, [Description("The name of the database object schema.")][FromRoute] string schema
+		, [Description("The name of the database table to retrieve data from.")][FromRoute] string table
+		, SelectParameter selectParameter
+		, [Description("SELECT [DISTINCT(...)].")][FromQuery] string? distinct
+		, [Description("FETCH NEXT {fetch} ROWS ONLY.")][FromQuery] uint? fetch
+		, [Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery] string? groupBy
+		, [Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")][FromQuery] string? having
+		, [Description("The SELECT statement FROM clause table hints (SQL syntax).")][FromQuery] string? hints
+		, [Description("OFFSET {offset} ROWS.")][FromQuery] uint? offset
+		, [Description("The SELECT statement ORDER BY clause (SQL syntax).")][FromQuery] string? orderBy
+		, [Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")][FromQuery] string select
+		, [Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")][FromQuery] string? top
+		, [Description("The SELECT statement WHERE clause (SQL syntax).")][FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select.IsBlank())
 			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
 
-		var selectQuery = new SelectQuery
-		{
-			Distinct = distinct,
-			DistinctOn = distinctOn,
-			Fetch = fetch,
-			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			GroupByOption = groupByOption,
-			Having = having,
-			Offset = offset,
-			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
-			TableHints = tableHints,
-			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
-			TopPercent = top?.EndsWith('%') is true,
-			Where = where
-		};
-		var sql = objectSchema.CreateSelectSQL(selectQuery);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static IResult GetUpdateSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromQuery] string set
-		, [FromQuery] string where)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, [output]);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static IResult GetUpdateBatchSQL(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] string output
-		, [FromBody] JsonArray data)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(data, [output]);
-		return Results.Text(sql, Text.Plain, UTF8);
-	}
-
-	public static async Task<IResult> Select(
-		HttpContext httpContext
-		, [FromRoute(Name = "dataSource")] string dataSourceName
-		, [FromRoute] string database
-		, [FromRoute] string schema
-		, [FromRoute] string table
-		, [FromQuery] bool distinct
-		, [FromQuery] string? distinctOn
-		, [FromQuery] uint fetch
-		, [FromQuery] string? groupBy
-		, [FromQuery] GroupBy groupByOption
-		, [FromQuery] string? having
-		, [FromQuery] uint offset
-		, [FromQuery] string? orderBy
-		, [FromQuery] string? select
-		, [FromQuery] string? tableHints
-		, [FromQuery] string? top
-		, [FromQuery] string? where)
-	{
-		var objectSchema = httpContext.GetObjectSchema();
-		if (select.IsBlank())
-			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
-
-		var selectQuery = new SelectQuery
-		{
-			Distinct = distinct,
-			DistinctOn = distinctOn,
-			Fetch = fetch,
-			From = objectSchema.Name,
-			GroupBy = groupBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			GroupByOption = groupByOption,
-			Having = having,
-			Offset = offset,
-			OrderBy = orderBy?.Split(',', RemoveEmptyEntries | TrimEntries),
-			Select = select?.Split(',', RemoveEmptyEntries | TrimEntries),
-			TableHints = tableHints,
-			Top = top.IsNotBlank() ? uint.Parse(top.TrimEnd('%')) : null,
-			TopPercent = top?.EndsWith('%') is true,
-			Where = where
-		};
-		var sql = objectSchema.CreateSelectSQL(selectQuery);
+		var sql = objectSchema.CreateSelectSQL(selectParameter);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var mediator = httpContext.GetMediator();
 		var request = new SqlJsonArrayRequest { Command = sqlCommand };
 		var response = await mediator.Map(request, httpContext.RequestAborted);
 		return Results.Ok(response);
@@ -411,6 +221,7 @@ internal static class SqlApiHandler
 
 	public static async Task<IResult> UpdateTable(
 		HttpContext httpContext
+		, IMediator mediator
 		, [FromRoute(Name = "dataSource")] string dataSourceName
 		, [FromRoute] string database
 		, [FromRoute] string schema
@@ -420,13 +231,12 @@ internal static class SqlApiHandler
 		, [FromQuery] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
-		var sql = objectSchema.CreateUpdateSQL(set.Split(',', RemoveEmptyEntries | TrimEntries), where, [output]);
+		var sql = objectSchema.CreateUpdateSQL(set.SplitEx(','), where, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };
@@ -441,8 +251,9 @@ internal static class SqlApiHandler
 		}
 	}
 
-	public static async Task<IResult> UpdateTableBatch(
+	public static async Task<IResult> UpdateTableValues(
 		HttpContext httpContext
+		, IMediator mediator
 		, [FromRoute(Name = "dataSource")] string dataSourceName
 		, [FromRoute] string database
 		, [FromRoute] string schema
@@ -454,7 +265,6 @@ internal static class SqlApiHandler
 		var sql = objectSchema.CreateUpdateSQL(data, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		var mediator = httpContext.GetMediator();
 		if (output.IsNotBlank())
 		{
 			var request = new SqlJsonArrayRequest { Command = sqlCommand };

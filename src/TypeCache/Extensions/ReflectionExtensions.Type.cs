@@ -214,13 +214,9 @@ public partial class ReflectionExtensions
 		{
 			{ IsGenericTypeDefinition: true } => ScalarType.None,
 			{ IsEnum: true } => ScalarType.Enum,
-			{ IsGenericType: true } when @this.IsNullable() => @this.GenericTypeArguments[0] switch
-			{
-				{ IsEnum: true } => ScalarType.Enum,
-				Type type when TypeStore.DataTypes.TryGetValue(type.TypeHandle, out var scalarType) => scalarType,
-				_ => ScalarType.None
-			},
-			_ when TypeStore.DataTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
+			{ IsArray: true } or { IsPointer: true } => @this.GetElementType()!.GetScalarType(),
+			{ IsGenericType: true } when @this.Is(typeof(Nullable<>)) => @this.GenericTypeArguments[0].GetScalarType(),
+			_ when TypeStore.ScalarTypes.TryGetValue(@this.TypeHandle, out var scalarType) => scalarType,
 			_ => ScalarType.None
 		};
 

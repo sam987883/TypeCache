@@ -8,6 +8,10 @@ public enum ObjectType
 {
 	Unknown = 0,
 	/// <summary>
+	/// Is any of the <c><see cref="System.Action"/></c> delegate types.
+	/// </summary>
+	Action,
+	/// <summary>
 	/// Implements: <c><see cref="IAsyncEnumerable{T}"/></c>
 	/// </summary>
 	AsyncEnumerable,
@@ -44,10 +48,6 @@ public enum ObjectType
 	/// </summary>
 	DataTable,
 	/// <summary>
-	/// Is any type part of <see cref="DataType"/>.
-	/// </summary>
-	DataType,
-	/// <summary>
 	/// Implements: <c><see cref="System.Data.DataView"/></c>
 	/// </summary>
 	DataView,
@@ -56,11 +56,11 @@ public enum ObjectType
 	/// </summary>
 	Delegate,
 	/// <summary>
-	/// Implements: <c><see cref="IEnumerable{T}"/></c>
+	/// Implements: <c><see cref="IEnumerable{T}"/></c> or <c><see cref="System.Collections.IEnumerable"/></c>
 	/// </summary>
 	Enumerable,
 	/// <summary>
-	/// Implements: <c><see cref="IEnumerator{T}"/></c>
+	/// Implements: <c><see cref="IEnumerator{T}"/></c> or <c><see cref="System.Collections.IEnumerator"/></c>
 	/// </summary>
 	Enumerator,
 	/// <summary>
@@ -68,9 +68,29 @@ public enum ObjectType
 	/// </summary>
 	Exception,
 	/// <summary>
+	/// Is any of the <c><see cref="System.Func{TResult}"/></c> delegate types.
+	/// </summary>
+	Func,
+	/// <summary>
 	/// is: <c><see cref="System.Text.Json.JsonDocument"/></c>
 	/// </summary>
 	JsonDocument,
+	/// <summary>
+	/// is: <c><see cref="System.Text.Json.Nodes.JsonArray"/></c>
+	/// </summary>
+	JsonArray,
+	/// <summary>
+	/// is: <c><see cref="System.Text.Json.JsonElement"/></c>
+	/// </summary>
+	JsonElement,
+	/// <summary>
+	/// is: <c><see cref="System.Text.Json.Nodes.JsonObject"/></c>
+	/// </summary>
+	JsonObject,
+	/// <summary>
+	/// is: <c><see cref="System.Text.Json.Nodes.JsonValue"/></c>
+	/// </summary>
+	JsonValue,
 	/// <summary>
 	/// Implements: <c><see cref="Lazy{T}"/></c> or <c><see cref="Lazy{T, TMetadata}"/></c>
 	/// </summary>
@@ -79,6 +99,10 @@ public enum ObjectType
 	/// Is: <c><see cref="Memory{T}"/></c>
 	/// </summary>
 	Memory,
+	/// <summary>
+	/// Is: <c><see cref="System.Nullable{T}"/></c> or <c><see cref="System.Nullable"/></c>
+	/// </summary>
+	Nullable,
 	/// <summary>
 	/// Implements: <c><see cref="object"/></c>
 	/// </summary>
@@ -107,6 +131,10 @@ public enum ObjectType
 	/// Is: <c><see cref="ReadOnlySpan{T}"/></c>
 	/// </summary>
 	ReadOnlySpan,
+	/// <summary>
+	/// Is any type part of <see cref="Extensions.ScalarType"/>.
+	/// </summary>
+	ScalarType,
 	/// <summary>
 	/// Is: <c><see cref="Span{T}"/></c>
 	/// </summary>

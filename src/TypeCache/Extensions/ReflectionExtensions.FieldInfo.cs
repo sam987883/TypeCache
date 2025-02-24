@@ -77,8 +77,8 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
-		ParameterExpression value = nameof(value).ParameterExpression<object>();
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		ParameterExpression value = nameof(value).ToParameterExpression<object>();
 		return instance
 			.Convert(@this.DeclaringType!)
 			.Field(@this)
@@ -91,7 +91,7 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfTrue();
 
-		ParameterExpression instance = nameof(instance).ParameterExpression<object>();
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
 		return instance
 			.Cast(@this.DeclaringType!)
 			.Field(@this)
@@ -105,7 +105,7 @@ public partial class ReflectionExtensions
 		@this.IsLiteral.ThrowIfTrue();
 		@this.IsStatic.ThrowIfFalse();
 
-		ParameterExpression value = nameof(value).ParameterExpression<object>();
+		ParameterExpression value = nameof(value).ToParameterExpression<object>();
 		return @this.ToExpression(null).Assign(value.Convert(@this.FieldType)).Lambda<Action<object?>>([value]);
 	}
 

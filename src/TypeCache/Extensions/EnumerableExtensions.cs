@@ -37,14 +37,6 @@ public static class EnumerableExtensions
 	public static IList<T> AsList<T>(this IEnumerable<T>? @this)
 		=> @this as IList<T> ?? @this?.ToList() ?? new List<T>(0);
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see langword="new"/> <see cref="EnumComparer{T}"/>());</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool ContainsEnum<T>(this IEnumerable<T> @this, T value)
-		where T : struct, Enum
-		=> @this.Contains(value, new EnumComparer<T>());
-
 	/// <inheritdoc cref="string.Concat(IEnumerable{string})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Concat(@<paramref name="this"/>);</c>
@@ -60,6 +52,21 @@ public static class EnumerableExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Concat(this IEnumerable<char> @this)
 		=> string.Concat(@this);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsIgnoreCase(this IEnumerable<string> @this, string value)
+		=> @this.Contains(value, StringComparer.OrdinalIgnoreCase);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see langword="new"/> <see cref="EnumComparer{T}"/>());</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsEnum<T>(this IEnumerable<T> @this, T value)
+		where T : struct, Enum
+		=> @this.Contains(value, new EnumComparer<T>());
 
 	public static void Deconstruct<T>(this IEnumerable<T> @this, out T? first, out IEnumerable<T> rest)
 	{
@@ -100,6 +107,68 @@ public static class EnumerableExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T? FirstOrDefault<T>(this IEnumerable @this)
 		=> @this.OfType<T>().FirstOrDefault();
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this IEnumerable<T> @this, Action<T> action)
+	{
+		action.ThrowIfNull();
+
+		foreach (var item in @this)
+			action(item);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this IEnumerable<T> @this, Action<T> action, Action between)
+	{
+		between.ThrowIfNull();
+
+		var first = true;
+		foreach (var item in @this)
+		{
+			if (first)
+				first = false;
+			else
+				between();
+
+			action(item);
+		}
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static async Task ForEachAsync<T>(this IEnumerable<T> @this, Action<T> action, CancellationToken token = default)
+	{
+		@this.ThrowIfNull();
+		action.ThrowIfNull();
+
+		foreach (var item in @this)
+		{
+			if (token.IsCancellationRequested)
+			{
+				await Task.FromCanceled(token);
+				return;
+			}
+
+			action(item);
+		}
+
+		await Task.CompletedTask;
+	}
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item), <paramref name="token"/>);</c>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Task ForEachAsync<T>(this IEnumerable<T> @this, Func<T, Task> action, CancellationToken token = default)
+		=> @this.ForEachAsync(async item => await action(item), token);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item, <paramref name="token"/>), <paramref name="token"/>);</c>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Task ForEachAsync<T>(this IEnumerable<T> @this, Func<T, CancellationToken, Task> action, CancellationToken token = default)
+		=> @this.ForEachAsync(async item => await action(item, token), token);
 
 	/// <inheritdoc cref="Enumerable.Single{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>

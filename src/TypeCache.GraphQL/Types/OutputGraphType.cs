@@ -30,7 +30,7 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 		typeof(T).GetPublicProperties()
 			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
 			.ToArray()
-			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType(new PropertyFieldResolver<T>(propertyInfo))));
+			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType()));
 
 		typeof(T).GetInterfaces()
 			.Where(_ => !_.HasElementType && !_.IsGenericType)
@@ -39,10 +39,7 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 	}
 
 	public FieldType AddField(PropertyInfo propertyInfo)
-	{
-		var fieldType = propertyInfo.ToFieldType(new PropertyFieldResolver<T>(propertyInfo));
-		return this.AddField(fieldType);
-	}
+		=> this.AddField(propertyInfo.ToFieldType());
 
 	/// <summary>
 	/// Adds a field that is based on the result of the <paramref name="methodInfo"/>.<br/>

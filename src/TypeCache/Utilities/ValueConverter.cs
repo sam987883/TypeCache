@@ -172,11 +172,6 @@ public static class ValueConverter
 		return expression;
 	}
 
-	public static object? ConvertChecked<T, OTHER>(this INumberBase<T> @this, INumberBase<OTHER> other)
-		where T : struct, INumberBase<T>
-		where OTHER : struct, INumberBase<OTHER>
-		=> @this.ConvertChecked(other);
-
 	public static object? ConvertTo(this object? @this, Type targetType)
 	{
 		if (@this is null)
@@ -186,17 +181,12 @@ public static class ValueConverter
 		if (sourceType == targetType)
 			return @this;
 
-		if (sourceType.Implements(typeof(INumberBase<>).MakeGenericType(sourceType)) && targetType.Implements(typeof(INumberBase<>).MakeGenericType(targetType)))
-		{
-			var methodInfo = sourceType.GetMethod(nameof(int.CreateChecked))!.MakeGenericMethod(targetType);
-			return methodInfo.InvokeStaticFunc(ValueTuple.Create(@this));
-		}
+		if (sourceType.Implements(typeof(INumberBase<>).MakeGenericType(sourceType))
+			&& targetType.Implements(typeof(INumberBase<>).MakeGenericType(targetType)))
+			return sourceType.InvokeStaticMethodFunc(nameof(INumberBase<int>.CreateChecked), [targetType], ValueTuple.Create(@this));
 
 		if (@this is string && targetType.Implements(typeof(ISpanParsable<>).MakeGenericType(targetType)))
-		{
-			var methodInfo = targetType.GetMethod(nameof(int.Parse))!.MakeGenericMethod(sourceType);
-			return methodInfo.InvokeStaticFunc((@this, InvariantCulture));
-		}
+			return targetType.InvokeStaticMethodFunc(nameof(ISpanParsable<int>.Parse), [sourceType], (@this, InvariantCulture));
 
 		if (targetType == typeof(string))
 		{
@@ -214,13 +204,9 @@ public static class ValueConverter
 			};
 		}
 
-		if(@this is IDictionary<string, object?> map)
-		{
-			var methodInfo = typeof(MapExtensions).GetMethod(nameof(MapExtensions.MapTo), [typeof(IEnumerable<KeyValuePair<string, object?>>), targetType, typeof(bool)])!.MakeGenericMethod(targetType);
-			return methodInfo.InvokeStaticFunc((@this, InvariantCulture));
-		}
-
-		return null;
+		return @this is IDictionary<string, object?> map
+			? typeof(MapExtensions).InvokeStaticMethodFunc(nameof(MapExtensions.MapTo), [targetType], (@this, InvariantCulture))
+			: null;
 	}
 
 	public static bool? ConvertToBoolean(object? value)
@@ -229,7 +215,7 @@ public static class ValueConverter
 			bool x => x,
 			(sbyte)0 or (short)0 or 0 or 0L or (byte)0 or (ushort)0 or 0U or 0UL or 0F or 0D or 0M => false,
 			sbyte or short or int or long or byte or ushort or uint or ulong or float or double or decimal => true,
-			char x when TRUE_CHARS.Contains(x) => true,
+			char x when TRUE_CHARS.Contains(x, StringComparison.OrdinalIgnoreCase) => true,
 			string text when text.IsNotBlank() => text.Parse<bool>(),
 			null or string => null,
 			Int128 x => !x.IsZero(),
@@ -291,7 +277,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			T x => x,
-			string text when text.IsNotBlank() => text.Enum<T>(),
+			string text when text.IsNotBlank() => text.ToEnum<T>(),
 			null or string => null,
 			sbyte or short or int or long or byte or ushort or uint or ulong => (T)Enum.ToObject(typeof(T), value),
 			_ => (T)value

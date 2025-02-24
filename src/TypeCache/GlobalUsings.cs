@@ -1,0 +1,10 @@
+﻿global using System;
+global using System.Buffers.Text;
+global using System.Diagnostics;
+global using System.Diagnostics.CodeAnalysis;
+global using static System.FormattableString;
+global using static System.Runtime.CompilerServices.MethodImplOptions;
+global using CancellationToken = System.Threading.CancellationToken;
+global using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+global using Task = System.Threading.Tasks.Task;
+global using ValueTask = System.Threading.Tasks.ValueTask;

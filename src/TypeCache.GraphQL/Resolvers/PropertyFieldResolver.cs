@@ -80,7 +80,7 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 			var pattern = context.GetArgument<string>("match");
 			if (pattern.IsNotBlank())
 			{
-				var match = text.Regex(RegexOptions.Compiled | RegexOptions.Singleline).Match(text);
+				var match = text.ToRegex(RegexOptions.Compiled | RegexOptions.Singleline).Match(text);
 				if (match.Success)
 					text = match.Value;
 				else

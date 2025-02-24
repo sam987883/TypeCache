@@ -50,26 +50,26 @@ public enum BinaryOperator
 	RightShift,
 	/// <inheritdoc cref="Expression.Equal(Expression, Expression)"/>
 	/// <remarks><c>a == b</c></remarks>
-	EqualTo,
+	Equal,
 	/// <inheritdoc cref="Expression.ReferenceEqual(Expression, Expression)"/>
 	/// <remarks><c>a is b</c></remarks>
-	ReferenceEqualTo,
+	ReferenceEqual,
 	/// <inheritdoc cref="Expression.NotEqual(Expression, Expression)"/>
 	/// <remarks><c>a != b</c></remarks>
-	NotEqualTo,
+	NotEqual,
 	/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
 	/// <remarks><c>a is not b</c></remarks>
-	ReferenceNotEqualTo,
+	ReferenceNotEqual,
 	/// <inheritdoc cref="Expression.GreaterThan(Expression, Expression)"/>
 	/// <remarks><c>a &gt; b</c></remarks>
 	GreaterThan,
 	/// <inheritdoc cref="Expression.GreaterThanOrEqual(Expression, Expression)"/>
 	/// <remarks><c>a &gt;= b</c></remarks>
-	GreaterThanOrEqualTo,
+	GreaterThanOrEqual,
 	/// <inheritdoc cref="Expression.LessThan(Expression, Expression)"/>
 	/// <remarks><c>a &lt; b</c></remarks>
 	LessThan,
 	/// <inheritdoc cref="Expression.LessThanOrEqual(Expression, Expression)"/>
 	/// <remarks><c>a &lt;= b</c></remarks>
-	LessThanOrEqualTo,
+	LessThanOrEqual,
 }

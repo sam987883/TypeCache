@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;
@@ -74,6 +75,26 @@ public static class TypeStore
 
 	public static IReadOnlySet<(RuntimeTypeHandle Handle, ObjectType ObjectType)> ObjectTypeMap => new[]
 	{
+		(typeof(Action).TypeHandle, ObjectType.Action),
+		(typeof(Action<>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(Action<,,,,,,,,,,,,,,,>).TypeHandle, ObjectType.Action),
+		(typeof(IAsyncEnumerable<>).TypeHandle, ObjectType.AsyncEnumerable),
+		(typeof(IAsyncEnumerator<>).TypeHandle, ObjectType.AsyncEnumerator),
+		(typeof(IAsyncResult).TypeHandle, ObjectType.AsyncResult),
 		(typeof(Attribute).TypeHandle, ObjectType.Attribute),
 		(typeof(DataColumn).TypeHandle, ObjectType.DataColumn),
 		(typeof(DataRow).TypeHandle, ObjectType.DataRow),
@@ -81,52 +102,53 @@ public static class TypeStore
 		(typeof(DataSet).TypeHandle, ObjectType.DataSet),
 		(typeof(DataTable).TypeHandle, ObjectType.DataTable),
 		(typeof(Delegate).TypeHandle, ObjectType.Delegate),
-		(typeof(Exception).TypeHandle, ObjectType.Exception),
-		(typeof(IAsyncResult).TypeHandle, ObjectType.AsyncResult),
-		(typeof(JsonDocument).TypeHandle, ObjectType.JsonDocument),
-		(typeof(StringBuilder).TypeHandle, ObjectType.StringBuilder),
-		(typeof(Stream).TypeHandle, ObjectType.Stream),
-		(typeof(Task).TypeHandle, ObjectType.Task),
-		(typeof(Type).TypeHandle, ObjectType.Type),
-		(typeof(WeakReference).TypeHandle, ObjectType.WeakReference),
-		(typeof(void).TypeHandle, ObjectType.Void),
-		(typeof(Memory<>).TypeHandle, ObjectType.Memory),
-		(typeof(ReadOnlyMemory<>).TypeHandle, ObjectType.ReadOnlyMemory),
-		(typeof(ReadOnlySpan<>).TypeHandle, ObjectType.ReadOnlySpan),
-		(typeof(Span<>).TypeHandle, ObjectType.Span),
-		(typeof(ValueTask<>).TypeHandle, ObjectType.ValueTask),
-		(typeof(WeakReference<>).TypeHandle, ObjectType.WeakReference),
-		(typeof(IAsyncEnumerable<>).TypeHandle, ObjectType.AsyncEnumerable),
-		(typeof(IAsyncEnumerator<>).TypeHandle, ObjectType.AsyncEnumerator),
+		(typeof(IEnumerable<>).TypeHandle, ObjectType.Enumerable),
 		(typeof(IEnumerable).TypeHandle, ObjectType.Enumerable),
+		(typeof(IEnumerator<>).TypeHandle, ObjectType.Enumerator),
 		(typeof(IEnumerator).TypeHandle, ObjectType.Enumerator),
-		(typeof(IObservable<>).TypeHandle, ObjectType.Observable),
-		(typeof(IObserver<>).TypeHandle, ObjectType.Observer),
+		(typeof(Exception).TypeHandle, ObjectType.Exception),
+		(typeof(Func<>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(Func<,,,,,,,,,,,,,,,,>).TypeHandle, ObjectType.Func),
+		(typeof(JsonArray).TypeHandle, ObjectType.JsonArray),
+		(typeof(JsonDocument).TypeHandle, ObjectType.JsonDocument),
+		(typeof(JsonElement).TypeHandle, ObjectType.JsonElement),
+		(typeof(JsonObject).TypeHandle, ObjectType.JsonObject),
+		(typeof(JsonValue).TypeHandle, ObjectType.JsonValue),
 		(typeof(Lazy<>).TypeHandle, ObjectType.Lazy),
 		(typeof(Lazy<,>).TypeHandle, ObjectType.Lazy),
+		(typeof(Memory<>).TypeHandle, ObjectType.Memory),
+		(typeof(Nullable<>).TypeHandle, ObjectType.Nullable),
+		(typeof(IObservable<>).TypeHandle, ObjectType.Observable),
+		(typeof(IObserver<>).TypeHandle, ObjectType.Observer),
 		(typeof(Range).TypeHandle, ObjectType.Range),
+		(typeof(ReadOnlyMemory<>).TypeHandle, ObjectType.ReadOnlyMemory),
+		(typeof(ReadOnlySpan<>).TypeHandle, ObjectType.ReadOnlySpan),
+		(typeof(Stream).TypeHandle, ObjectType.Stream),
+		(typeof(StringBuilder).TypeHandle, ObjectType.StringBuilder),
+		(typeof(Span<>).TypeHandle, ObjectType.Span),
 		(typeof(Task).TypeHandle, ObjectType.Task),
 		(typeof(Task<>).TypeHandle, ObjectType.Task),
-		(typeof(Tuple).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,,,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,,,,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,,,,,>).TypeHandle, ObjectType.Tuple),
-		(typeof(Tuple<,,,,,,,>).TypeHandle, ObjectType.Tuple),
+		(typeof(Type).TypeHandle, ObjectType.Type),
 		(typeof(ValueTask).TypeHandle, ObjectType.ValueTask),
 		(typeof(ValueTask<>).TypeHandle, ObjectType.ValueTask),
-		(typeof(ValueTuple).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,,,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,,,,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,,,,,>).TypeHandle, ObjectType.ValueTuple),
-		(typeof(ValueTuple<,,,,,,,>).TypeHandle, ObjectType.ValueTuple)
+		(typeof(void).TypeHandle, ObjectType.Void),
+		(typeof(WeakReference<>).TypeHandle, ObjectType.WeakReference),
+		(typeof(WeakReference).TypeHandle, ObjectType.WeakReference)
 	}.ToFrozenSet();
 
 	static TypeStore()
@@ -141,7 +163,7 @@ public static class TypeStore
 			((ConstructorInfo)_.MethodHandle.ToMethodBase(_.TypeHandle)).ToArrayFuncExpression().Compile());
 		ConstructorTupleFuncs = new LazyDictionary<(RuntimeTypeHandle TypeHandle, RuntimeMethodHandle MethodHandle), Func<ITuple?, object>>(_ =>
 			((ConstructorInfo)_.MethodHandle.ToMethodBase(_.TypeHandle)).ToTupleFuncExpression().Compile());
-		DataTypes = new Dictionary<RuntimeTypeHandle, ScalarType>(29)
+		ScalarTypes = new Dictionary<RuntimeTypeHandle, ScalarType>(29)
 		{
 			{ typeof(BigInteger).TypeHandle, ScalarType.BigInteger },
 			{ typeof(bool).TypeHandle, ScalarType.Boolean },
@@ -198,9 +220,11 @@ public static class TypeStore
 			handle.ToType() switch
 			{
 				{ IsPointer: true } => ObjectType.Pointer,
-				{ IsPrimitive: true } => ObjectType.DataType,
+				{ IsPrimitive: true } => ObjectType.ScalarType,
 				Type type when type == typeof(object) => ObjectType.Object,
-				Type type when type.GetScalarType() is not ScalarType.None => ObjectType.DataType,
+				Type type when type.GetScalarType() is not ScalarType.None => ObjectType.ScalarType,
+				{ IsClass: true } type when type.Implements(typeof(ITuple)) => ObjectType.Tuple,
+				{ IsValueType: true } type when type.Implements(typeof(ITuple)) => ObjectType.ValueTuple,
 				Type type => ObjectTypeMap.FirstOrDefault(_ => type.Implements(_.Handle.ToType())).ObjectType
 			});
 		StaticFieldGetFuncs = new LazyDictionary<RuntimeFieldHandle, Func<object?>>(handle =>
@@ -223,8 +247,6 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<ITuple?, object>> ConstructorTupleFuncs { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> DataTypes { get; }
-
 	public static IReadOnlyDictionary<RuntimeTypeHandle, Func<object>> DefaultValueTypeConstructorFuncs { get; }
 
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Delegate> Delegates { get; }
@@ -242,6 +264,8 @@ public static class TypeStore
 	public static IReadOnlyDictionary<(RuntimeTypeHandle, RuntimeMethodHandle), Func<object, ITuple?, object?>> MethodTupleFuncs { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
+
+	public static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> ScalarTypes { get; }
 
 	public static IReadOnlyDictionary<RuntimeFieldHandle, Func<object?>> StaticFieldGetFuncs { get; }
 

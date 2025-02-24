@@ -59,19 +59,24 @@ public static class SqlExtensions
 		Range range => Invariant($"'{range}'"),
 		Uri uri => Invariant($"'{uri.ToString().EscapeValue()}'"),
 		byte[] binary => Invariant($"0x{binary.ToHexString()}"),
-		JsonElement json => json.ValueKind switch
+		JsonArray jsonArray => string.Join(", ", jsonArray.Select(_ => _.ToSQL())),
+		JsonObject jsonObject => jsonObject.ToJsonString().EscapeValue(),
+		JsonValue jsonValue => jsonValue.GetValueKind() switch
 		{
-			JsonValueKind.Number => json.ToString()!,
+			JsonValueKind.Null => "NULL",
+			JsonValueKind.False => "0",
+			JsonValueKind.True => "1",
+			JsonValueKind.Number => jsonValue.ToString(),
+			_ => Invariant($"N'{jsonValue.ToString()!.EscapeValue()}'")
+		},
+		JsonElement jsonElement => jsonElement.ValueKind switch
+		{
+			JsonValueKind.Null => "NULL",
 			JsonValueKind.True => "1",
 			JsonValueKind.False => "0",
-			JsonValueKind.Null => "NULL",
-			_ => Invariant($"N'{json.ToString()!.EscapeValue()}'")
+			JsonValueKind.Number => jsonElement.ToString()!,
+			_ => Invariant($"N'{jsonElement.ToString()!.EscapeValue()}'")
 		},
-		JsonArray jsonArray when jsonArray[0] is JsonObject jsonObject => string.Join("\r\t, ", jsonArray.Select(item => jsonObject.Select(pair => item!.AsObject()[pair.Key]!.AsValue().GetValue<object>()).ToSQL())),
-		JsonArray jsonArray when jsonArray[0] is JsonValue => jsonArray.Select(item => new[] { item!.AsValue().GetValue<object>() }.ToSQL()).ToCSV(),
-		JsonObject jsonObject => jsonObject.ToJsonString().EscapeValue(),
-		JsonValue jsonValue => jsonValue.GetValue<object>().ToSQL(),
-		JsonNode jsonNode => Invariant($"N'{jsonNode.ToString().Replace("\"", string.Empty).EscapeValue()}'"),
 		DataRow row => row.ItemArray.ToSQL(),
 		DataTable table => string.Join("\r\t, ", table.Rows.OfType<DataRow>().Select(row => row.ToSQL())),
 		IEnumerable enumerable => Invariant($"({enumerable.Cast<object>().Select(_ => _.ToSQL()).ToCSV()})"),

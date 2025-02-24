@@ -75,36 +75,6 @@ public class ArrayExtensions
 	}
 
 	[Fact]
-	public void ForEach_ActionRefIndex()
-	{
-		var expected = Enumerable.Range(0, 10).ToArray();
-		var actual = Enumerable.Range(1, 10).ToArray();
-
-		actual.ForEach(new ActionIndexRef<int>((ref int value, int i) => value = i));
-
-		Assert.Equal(expected, actual);
-	}
-
-	[Fact]
-	public void ForEach_Index()
-	{
-		var values = Enumerable.Range(0, 10).ToArray();
-
-		values.ForEach((expected, actual) => Assert.Equal(expected, actual));
-	}
-
-	[Fact]
-	public void ForEach_IndexBetween()
-	{
-		var expected = Enumerable.Range(0, 10).ToArray();
-		var expectedCount = expected.Length - 1;
-		var actualCount = 0;
-
-		expected.ForEach((expected, actual) => Assert.Equal(expected, actual), () => ++actualCount);
-		Assert.Equal(expectedCount, actualCount);
-	}
-
-	[Fact]
 	public void FromBase64()
 	{
 		var values = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4\r\nOTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3Bx\r\ncnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmq\r\nq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj\r\n5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==".ToCharArray();
@@ -166,17 +136,6 @@ public class ArrayExtensions
 		Assert.Equal(Array.BinarySearch(array, -3, Comparer<int>.Default), array.Search(-3, Comparer<int>.Default));
 		Assert.Equal(Array.BinarySearch(array, 1, 4, 3), array.Search(3, 1, 4));
 		Assert.Equal(Array.BinarySearch(array, 1, 4, 3, Comparer<int>.Default), array.Search(3, 1, 4, Comparer<int>.Default));
-	}
-
-	[Fact]
-	public void Segment()
-	{
-		var array = Enumerable.Range(0, 10).ToArray();
-
-		Assert.Equal(new ArraySegment<int>(array), array.Segment());
-		Assert.Equal(new ArraySegment<int>(array, 2, 0), array.Segment(2, 0));
-		Assert.Equal(new ArraySegment<int>(array, 2, 3), array.Segment(2, 3));
-		Assert.Equal(new ArraySegment<int>(array, 9, 1), array.Segment(9, 1));
 	}
 
 	[Fact]
@@ -265,6 +224,17 @@ public class ArrayExtensions
 		var actual = array.ToJSON().ToJsonString();
 
 		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void ToSegment()
+	{
+		var array = Enumerable.Range(0, 10).ToArray();
+
+		Assert.Equal(new ArraySegment<int>(array), array.ToSegment());
+		Assert.Equal(new ArraySegment<int>(array, 2, 0), array.ToSegment(2, 0));
+		Assert.Equal(new ArraySegment<int>(array, 2, 3), array.ToSegment(2, 3));
+		Assert.Equal(new ArraySegment<int>(array, 9, 1), array.ToSegment(9, 1));
 	}
 
 	[Fact]

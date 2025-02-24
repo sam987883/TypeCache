@@ -26,7 +26,7 @@ public static class Enum<T>
 
 	private static Func<T, T, bool> CreateEquals(Type underlyingType)
 		=> LambdaFactory.CreateFunc<T, T, bool>((value1, value2) =>
-			value1.Cast(underlyingType).Operation(BinaryOperator.EqualTo, value2.Cast(underlyingType))).Compile();
+			value1.Cast(underlyingType).Operation(BinaryOperator.Equal, value2.Cast(underlyingType))).Compile();
 
 	private static Func<T, int> CreateGetHashCode(Type underlyingType)
 		=> LambdaFactory.CreateFunc<T, int>(value =>
