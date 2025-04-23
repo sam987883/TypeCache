@@ -18,7 +18,7 @@ public static class LoggerExtensions
 		args ??= Array<object?>.Empty;
 
 		if (error.InnerExceptions.Count > 1)
-			error.InnerExceptions.AsArray().ForEach(exception => @this.LogError(eventId, exception, message, args));
+			error.InnerExceptions.ForEach(exception => @this.LogError(eventId, exception, message, args));
 		else if (error.InnerException is not null)
 			@this.LogError(eventId, error.InnerException, message, args);
 		else
@@ -36,7 +36,7 @@ public static class LoggerExtensions
 		args ??= Array<object?>.Empty;
 
 		if (error.InnerExceptions.Count > 1)
-			error.InnerExceptions.AsArray().ForEach(exception => @this.LogError(exception, message, args));
+			error.InnerExceptions.ForEach(exception => @this.LogError(exception, message, args));
 		else if (error.InnerException is not null)
 			@this.LogError(error.InnerException, message, args);
 		else

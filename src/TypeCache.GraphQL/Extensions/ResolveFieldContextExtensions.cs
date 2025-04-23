@@ -16,7 +16,7 @@ public static class ResolveFieldContextExtensions
 		name.ThrowIfBlank();
 
 		var table = objectSchema.CreateDataTable();
-		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name).ToArray();
+		var arguments = @this.GetArgument<IEnumerable<IDictionary<string, object>>>(name);
 		if (arguments is null)
 			return table;
 

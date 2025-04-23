@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Text;
 using System.Text.Json.Serialization;
 using GraphiQl;
 using Microsoft.Data.SqlClient;
@@ -11,7 +12,6 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
 using TypeCache.Web.Extensions;
-using static System.Math;
 
 const string DATASOURCE = "Default";
 
@@ -24,7 +24,7 @@ try
 		.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(_ => _.JsonSerializerOptions.Converters.Add(stringEnumJsonConverter))
 		.AddMediation()
 		.AddSqlCommandRules()
-		.AddHashMaker((decimal)(Tau - E), (decimal)(Tau + 2 * E))
+		.AddHashMaker(Encoding.UTF8.GetBytes("ABCDEFghijklMNOP"))
 		.AddDataSource(DATASOURCE, SqlClientFactory.Instance, appBuilder.Configuration.GetConnectionString(DATASOURCE)!, ["AdventureWorks2019"])
 		.AddGraphQL()
 		.AddGraphQLTypeExtensions<Person>(person =>

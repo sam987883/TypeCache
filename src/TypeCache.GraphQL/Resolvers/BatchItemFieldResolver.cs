@@ -11,7 +11,7 @@ public sealed class BatchItemFieldResolver<SOURCE, ITEM> : FieldResolver
 	where SOURCE : notnull
 	where ITEM : notnull
 {
-	private readonly object _Lock = new object();
+	private readonly Lock _Lock = new();
 	private readonly RuntimeMethodHandle _MethodHandle;
 	private readonly Func<SOURCE, ITEM[], ITEM> _GetResult;
 	private bool _HasResults = false;
@@ -37,7 +37,7 @@ public sealed class BatchItemFieldResolver<SOURCE, ITEM> : FieldResolver
 
 		if (!this._HasResults)
 		{
-			lock (this._Lock)
+			using (this._Lock.EnterScope())
 			{
 				if (!this._HasResults)
 				{

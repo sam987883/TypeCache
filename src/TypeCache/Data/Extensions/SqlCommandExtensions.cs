@@ -24,7 +24,7 @@ public static class SqlCommandExtensions
 			Command = @this
 		};
 
-	public static SqlJsonArrayRequest ToSqlJsonArrayRequest(this SqlCommand @this)
+	public static SqlResultJsonRequest ToSqlJsonArrayRequest(this SqlCommand @this)
 		=> new()
 		{
 			Command = @this

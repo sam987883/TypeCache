@@ -21,9 +21,8 @@ public sealed class DataRowJsonConverter : JsonConverter<DataRow>
 			return;
 		}
 
-		var columns = row.Table.Columns.OfType<DataColumn>().ToArray();
 		writer.WriteStartObject();
-		columns?.ForEach(column =>
+		row.Table.Columns.OfType<DataColumn>().ForEach(column =>
 		{
 			var value = row[column];
 			if (value is DBNull || value is null)

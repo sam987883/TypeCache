@@ -6,6 +6,11 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
+public sealed class SqlDataSetRequest : IRequest<DataSet>
+{
+	public required SqlCommand Command { get; set; }
+}
+
 internal sealed class SqlDataSetRule : IRule<SqlDataSetRequest, DataSet>
 {
 	public async Task<DataSet> Map(SqlDataSetRequest request, CancellationToken token)

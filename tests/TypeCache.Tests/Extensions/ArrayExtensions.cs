@@ -17,18 +17,11 @@ namespace TypeCache.Tests.Extensions;
 public class ArrayExtensions
 {
 	[Fact]
-	public void Clear()
+	public void ContainsIgnoreCase()
 	{
-		var expected = Enumerable.Range(1, 10).ToArray();
-		var actual = Enumerable.Range(1, 10).ToArray();
-
-		Array.Clear(expected, 4, 3);
-		actual.Clear(4, 3);
-
-		Assert.Equal(expected, actual);
-
-		Array.Clear(expected);
-		actual.Clear();
+		var array = new[] { "AbcDeFgH" };
+		Assert.True(array.ContainsIgnoreCase("abcdefgh"));
+		Assert.True(array.ContainsIgnoreCase("ABCDEFGH"));
 	}
 
 	[Fact]
@@ -38,6 +31,19 @@ public class ArrayExtensions
 		var actual = expected.Copy();
 
 		Assert.Equal(expected, actual);
+
+		expected = [];
+		actual = expected.Copy();
+
+		Assert.Equal(expected, actual);
+	}
+
+	[Fact]
+	public void Exists()
+	{
+		var array = new[] { 1, 2, 3, 4, 5, 6 };
+		Assert.True(array.Exists(_ => _ is 6));
+		Assert.False(array.Exists(_ => _ is 0));
 	}
 
 	[Fact]
@@ -46,7 +52,7 @@ public class ArrayExtensions
 		var expected = Enumerable.Range(0, 10).ToArray();
 		var actual = Enumerable.Range(0, 10).ToArray();
 
-		Array.ForEach(expected, i => expected[i] += 1);
+		expected.ForEach(i => expected[i] += 1);
 		actual.ForEach(i => actual[i] += 1);
 
 		Assert.Equal(expected, actual);
@@ -111,14 +117,19 @@ public class ArrayExtensions
 	[Fact]
 	public void InParallel()
 	{
-		var expected = 0;
-		var actual = 0;
+		var expected1 = 1;
+		var expected2 = 2;
+		var expected3 = 3;
+		var actual1 = 0;
+		var actual2 = 0;
+		var actual3 = 0;
 
-		Parallel.Invoke(() => ++expected, () => expected += 2, () => expected += 3);
-		var actions = new Action[] { () => ++actual, () => actual += 2, () => actual += 3 };
+		var actions = new Action[] { () => ++actual1, () => actual2 += 2, () => actual3 += 3 };
 		actions.InParallel();
 
-		Assert.Equal(expected, actual);
+		Assert.Equal(expected1, actual1);
+		Assert.Equal(expected2, actual2);
+		Assert.Equal(expected3, actual3);
 	}
 
 

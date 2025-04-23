@@ -111,64 +111,64 @@ public static class EnumerableExtensions
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this IEnumerable<T> @this, Action<T> action)
 	{
+		@this.ThrowIfNull();
 		action.ThrowIfNull();
 
 		foreach (var item in @this)
 			action(item);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this IEnumerable<T> @this, Action<T, int> action)
+	{
+		@this.ThrowIfNull();
+		action.ThrowIfNull();
+
+		var i = -1;
+		foreach (var item in @this)
+			action(item, ++i);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this IEnumerable<T> @this, Action<T> action, Action between)
 	{
+		@this.ThrowIfNull();
 		between.ThrowIfNull();
 
-		var first = true;
-		foreach (var item in @this)
-		{
-			if (first)
-				first = false;
-			else
-				between();
+		using var enumerator = @this.GetEnumerator();
 
-			action(item);
+		if (!enumerator.MoveNext())
+			return;
+
+		action(enumerator.Current);
+
+		while (enumerator.MoveNext())
+		{
+			between();
+			action(enumerator.Current);
 		}
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static async Task ForEachAsync<T>(this IEnumerable<T> @this, Action<T> action, CancellationToken token = default)
+	public static void ForEach<T>(this IEnumerable<T> @this, Action<T, int> action, Action between)
 	{
 		@this.ThrowIfNull();
-		action.ThrowIfNull();
+		between.ThrowIfNull();
 
-		foreach (var item in @this)
+		using var enumerator = @this.GetEnumerator();
+
+		if (!enumerator.MoveNext())
+			return;
+
+		action(enumerator.Current, 0);
+
+		var i = 0;
+		while (enumerator.MoveNext())
 		{
-			if (token.IsCancellationRequested)
-			{
-				await Task.FromCanceled(token);
-				return;
-			}
-
-			action(item);
+			between();
+			action(enumerator.Current, ++i);
 		}
-
-		await Task.CompletedTask;
 	}
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item), <paramref name="token"/>);</c>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Task ForEachAsync<T>(this IEnumerable<T> @this, Func<T, Task> action, CancellationToken token = default)
-		=> @this.ForEachAsync(async item => await action(item), token);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item, <paramref name="token"/>), <paramref name="token"/>);</c>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Task ForEachAsync<T>(this IEnumerable<T> @this, Func<T, CancellationToken, Task> action, CancellationToken token = default)
-		=> @this.ForEachAsync(async item => await action(item, token), token);
 
 	/// <inheritdoc cref="Enumerable.Single{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
@@ -209,7 +209,7 @@ public static class EnumerableExtensions
 		}
 	}
 
-	/// <inheritdoc cref="Dictionary{TKey, TValue}.Dictionary(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey}?)"/>
+	/// <inheritdoc cref="Dictionary{TKey, TValue}.Dictionary(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/> <see cref="Dictionary{TKey, TValue}"/>(@<paramref name="this"/>, <paramref name="comparer"/>);</c>
 	/// </remarks>
@@ -217,6 +217,54 @@ public static class EnumerableExtensions
 	public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> @this, IEqualityComparer<TKey>? comparer = null)
 		where TKey : notnull
 		=> new(@this, comparer);
+
+	/// <inheritdoc cref="Dictionary{TKey, TValue}.Dictionary(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, T> ToDictionaryIgnoreCase<T>(this IEnumerable<KeyValuePair<string, T>> @this)
+		=> new(@this, StringComparer.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="Enumerable.ToDictionary{TKey, TValue}(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="keySelector"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, T> ToDictionaryIgnoreCase<T>(this IEnumerable<T> @this, Func<T, string> keySelector)
+		=> @this.ToDictionary(keySelector, StringComparer.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="Enumerable.ToDictionary{TSource, TKey, TElement}(IEnumerable{TSource}, Func{TSource, TKey}, Func{TSource, TElement}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="keySelector"/>, <paramref name="valueSelector"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, V> ToDictionaryIgnoreCase<T, V>(this IEnumerable<T> @this, Func<T, string> keySelector, Func<T, V> valueSelector)
+		=> @this.ToDictionary(keySelector, valueSelector, StringComparer.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="Dictionary{TKey, TValue}.Dictionary(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, <see cref="StringComparer.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, T> ToDictionaryOrdinal<T>(this IEnumerable<KeyValuePair<string, T>> @this)
+		=> new(@this, StringComparer.Ordinal);
+
+	/// <inheritdoc cref="Enumerable.ToDictionary{TKey, TValue}(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="keySelector"/>, <see cref="StringComparer.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, T> ToDictionaryOrdinal<T>(this IEnumerable<T> @this, Func<T, string> keySelector)
+		=> @this.ToDictionary(keySelector, StringComparer.Ordinal);
+
+	/// <inheritdoc cref="Enumerable.ToDictionary{TSource, TKey, TElement}(IEnumerable{TSource}, Func{TSource, TKey}, Func{TSource, TElement}, IEqualityComparer{TKey})"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToDictionary(<paramref name="keySelector"/>, <paramref name="valueSelector"/>, <see cref="StringComparer.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static Dictionary<string, V> ToDictionaryOrdinal<T, V>(this IEnumerable<T> @this, Func<T, string> keySelector, Func<T, V> valueSelector)
+		=> @this.ToDictionary(keySelector, valueSelector, StringComparer.Ordinal);
 
 	/// <summary>
 	/// <c>=&gt; @<paramref name="this"/>.Select(_ =&gt; _.AsTask());</c>
@@ -232,73 +280,33 @@ public static class EnumerableExtensions
 	public static IEnumerable<Task<T>> ToTasks<T>(this IEnumerable<ValueTask<T>> @this)
 		=> @this.Select(_ => _.AsTask());
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, [NotNullWhen(true)] out T? value)
-		where T : class
-	{
-		value = @this.OfType<T>().FirstOrDefault();
-		return value is not null;
-	}
-
-	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable @this, T defaultValue, [NotNullWhen(true)] out T value)
-		where T : struct
-	{
-		value = @this.OfType<T>().FirstOrDefault(defaultValue);
-		return !value.Equals(defaultValue);
-	}
+		=> @this.OfType<T>().TryFirst(out value);
 
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
 	{
 		using var enumerator = @this.GetEnumerator();
-		var success = enumerator.MoveNext();
-		value = success ? enumerator.Current : default;
-		return success;
+		return enumerator.IfNext(out value);
 	}
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
-		where T : class
-	{
-		value = @this.FirstOrDefault(predicate);
-		return value is not null;
-	}
+		=> @this.Where(predicate).TryFirst(out value);
 
-	public static bool TryFirst<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
-		where T : struct
-	{
-		value = @this.FirstOrDefault(predicate, defaultValue);
-		return !value.Equals(defaultValue);
-	}
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable @this, [NotNullWhen(true)] out T? value)
+		=> @this.OfType<T>().TrySingle(out value);
 
-	/// <exception cref="InvalidOperationException"/>
 	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, [NotNullWhen(true)] out T? value)
-		where T : class
 	{
-		value = @this.SingleOrDefault();
-		return value is not null;
+		using var enumerator = @this.GetEnumerator();
+		return enumerator.IfNext(out value) && !enumerator.MoveNext();
 	}
 
-	/// <exception cref="InvalidOperationException"/>
-	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, [NotNullWhen(true)] out T? value)
-		where T : struct
-	{
-		value = @this.SingleOrDefault(defaultValue);
-		return !value.Equals(defaultValue);
-	}
-
-	/// <exception cref="InvalidOperationException"/>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, Func<T, bool> predicate, [NotNullWhen(true)] out T? value)
-		where T : class
-	{
-		value = @this.SingleOrDefault(predicate);
-		return value is not null;
-	}
-
-	/// <exception cref="InvalidOperationException"/>
-	public static bool TrySingle<T>([NotNullWhen(true)] this IEnumerable<T> @this, T defaultValue, Func<T, bool> predicate, [NotNullWhen(true)] out T value)
-		where T : struct
-	{
-		value = @this.SingleOrDefault(predicate, defaultValue);
-		return !value.Equals(defaultValue);
-	}
+		=> @this.Where(predicate).TrySingle(out value);
 
 	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
 	/// <remarks>
@@ -316,11 +324,20 @@ public static class EnumerableExtensions
 	public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> @this, bool condition, Func<T, int, bool> predicate)
 		=> condition ? @this.Where(predicate) : @this;
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Where(_ =&gt; _.HasValue).Select(_ =&gt; _.Value);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IEnumerable<T> WhereHasValue<T>(this IEnumerable<T?> @this)
+		where T : struct
+		=> @this.Where(_ => _.HasValue).Select(_ => _!.Value);
+
 	/// <inheritdoc cref="Enumerable.Where{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Where((_ =&gt; _ <see langword="is not null"/>));</c>
+	/// <c>=&gt; @<paramref name="this"/>.Where(_ =&gt; _ <see langword="is not null"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> @this)
+		where T : class
 		=> @this.Where(_ => _ is not null)!;
 }

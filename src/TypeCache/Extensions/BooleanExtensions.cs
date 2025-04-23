@@ -108,4 +108,11 @@ public static class BooleanExtensions
 			throw exception;
 		}
 	}
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/> ? [(<see cref="byte"/>)1] : [(<see cref="byte"/>)0];</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static byte[] ToBytes(this bool @this)
+		=> @this ? [(byte)1] : [(byte)0];
 }

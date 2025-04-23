@@ -15,19 +15,18 @@ public sealed class SqlApiTableEndpointFilter
 	{
 		var routeValues = context.HttpContext.Request.RouteValues;
 
-		IDataSource? dataSource;
-		var dataSourceName = (string)routeValues[nameof(dataSource)]!;
+		string source = (string)routeValues[nameof(source)]!;
 		string database = (string)routeValues[nameof(database)]!;
 		string schema = (string)routeValues[nameof(schema)]!;
 		string table = (string)routeValues[nameof(table)]!;
 
 		await using var serviceScope = context.HttpContext.RequestServices.CreateAsyncScope();
-		dataSource = serviceScope.ServiceProvider.GetKeyedService<IDataSource>(dataSourceName);
+		var dataSource = serviceScope.ServiceProvider.GetKeyedService<IDataSource>(source);
 		if (dataSource is null)
-			return Results.NotFound(Invariant($"{nameof(IDataSource)} was not found: {dataSourceName}."));
+			return Results.NotFound(Invariant($"{nameof(IDataSource)} was not found: {source}."));
 
-		if (!dataSource.Databases.Contains(database, StringComparer.OrdinalIgnoreCase))
-			return Results.NotFound(Invariant($"Database {database} was not found in Data Source: {dataSourceName}."));
+		if (!dataSource.Databases.ContainsIgnoreCase(database))
+			return Results.NotFound(Invariant($"Database {database} was not found in Data Source: {source}."));
 
 		var objectName = dataSource.Type switch
 		{

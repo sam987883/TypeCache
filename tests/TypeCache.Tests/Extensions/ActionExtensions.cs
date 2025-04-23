@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Time.Testing;
 using TypeCache.Extensions;
@@ -31,5 +31,14 @@ public class ActionExtensions
 			timeProvider.Advance(1.Seconds());
 
 		await task;
+	}
+
+	[Fact]
+	public void Timed()
+	{
+		var expected = TimeSpan.FromMilliseconds(10);
+		var actual = new Action(() => Thread.Sleep(expected)).Timed();
+
+		Assert.True(expected <= actual);
 	}
 }

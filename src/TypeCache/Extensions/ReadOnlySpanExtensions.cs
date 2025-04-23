@@ -1,10 +1,11 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System;
 using System.Globalization;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using TypeCache.Utilities;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -39,15 +40,6 @@ public static class ReadOnlySpanExtensions
 		where R : struct
 		=> MemoryMarshal.Cast<T, R>(@this);
 
-	/// <inheritdoc cref="Enum.TryParse(Type, ReadOnlySpan{char}, bool, out object?)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="System.Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
-	/// </remarks>
-	[DebuggerHidden]
-	public static T? Enum<T>(this ReadOnlySpan<char> @this, bool ignoreCase = true)
-		where T : struct, Enum
-		=> System.Enum.TryParse<T>(@this, ignoreCase, out var result) ? (T?)result : null;
-
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Equals(<paramref name="other"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
 	/// </remarks>
@@ -63,9 +55,21 @@ public static class ReadOnlySpanExtensions
 		if (@this.IsEmpty)
 			return;
 
-		var count = @this.Length;
-		for (var i = 0; i < count; ++i)
-			action(@this[i]);
+		foreach (var item in @this)
+			action(item);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T, int> action)
+	{
+		action.ThrowIfNull();
+
+		if (@this.IsEmpty)
+			return;
+
+		var i = -1;
+		foreach (var item in @this)
+			action(item, ++i);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
@@ -78,12 +82,36 @@ public static class ReadOnlySpanExtensions
 			return;
 
 		action(@this[0]);
+		var slice = @this.Slice(1);
+		if (slice.IsEmpty)
+			return;
 
-		var count = @this.Length;
-		for (var i = 1; i < count; ++i)
+		foreach (var item in slice)
 		{
 			between();
-			action(@this[i]);
+			action(item);
+		}
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this ReadOnlySpan<T> @this, Action<T, int> action, Action between)
+	{
+		action.ThrowIfNull();
+		between.ThrowIfNull();
+
+		if (@this.IsEmpty)
+			return;
+
+		action(@this[0], 0);
+		var slice = @this.Slice(1);
+		if (slice.IsEmpty)
+			return;
+
+		var i = 0;
+		foreach (var item in slice)
+		{
+			between();
+			action(item, ++i);
 		}
 	}
 
@@ -91,9 +119,7 @@ public static class ReadOnlySpanExtensions
 	public static string FromBase64Url(this ReadOnlySpan<char> @this, Encoding? encoding = null)
 	{
 		encoding ??= Encoding.UTF8;
-		Span<byte> span = stackalloc byte[@this.Length * sizeof(char)];
-		Base64Url.DecodeFromChars(@this, span);
-		return encoding.GetString(span);
+		return encoding.GetString(Base64Url.DecodeFromChars(@this));
 	}
 
 	/// <inheritdoc cref="Base64.IsValid(ReadOnlySpan{char})"/>
@@ -106,10 +132,10 @@ public static class ReadOnlySpanExtensions
 
 	public static string Join(this ReadOnlySpan<char> @this, IEnumerable<string> values)
 	{
-		if (!values.Any())
+		if (values?.Any() is not true)
 			return new(@this);
 
-		var totalLength = (int)values.Select(value => value.Length).Sum() + @this.Length * (values.Count() - 1);
+		var totalLength = @this.Length * (values.Count() - 1) + values.Select(value => value.Length).Sum();
 		Span<char> result = stackalloc char[totalLength];
 
 		var offset = 0;
@@ -129,19 +155,31 @@ public static class ReadOnlySpanExtensions
 		return new(result);
 	}
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Join((<see cref="IEnumerable{T}"/>)<paramref name="values"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string Join(this ReadOnlySpan<char> @this, string[] values)
-		=> @this.Join((IEnumerable<string>)values);
+	{
+		if (values?.Any() is not true)
+			return new(@this);
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>[0] == <paramref name="text"/>;</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool Left(this ReadOnlySpan<char> @this, char text)
-		=> @this[0] == text;
+		var totalLength = @this.Length * (values.Length - 1) + values.Select(value => value.Length).Sum();
+		Span<char> result = stackalloc char[totalLength];
+
+		var offset = 0;
+		var count = values.Length;
+		for (var i = 0; i < count; ++i)
+		{
+			if (offset > 0)
+			{
+				@this.CopyTo(result.Slice(offset, @this.Length));
+				offset += @this.Length;
+			}
+
+			var span = values[i].AsSpan();
+			span.CopyTo(result.Slice(offset, span.Length));
+			offset += span.Length;
+		}
+
+		return new(result);
+	}
 
 	/// <inheritdoc cref="ReadOnlySpan{T}.Slice(int, int)"/>
 	/// <remarks>
@@ -151,52 +189,40 @@ public static class ReadOnlySpanExtensions
 	public static ReadOnlySpan<char> Left(this ReadOnlySpan<char> @this, int length)
 		=> @this.Slice(0, length);
 
-	private static string Mask(this ReadOnlySpan<char> @this, char mask, string[]? terms, StringComparison comparison)
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	public static string Mask(this ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null, StringComparison comparison = StringComparison.Ordinal)
 	{
 		if (@this.IsEmpty)
-			return new(@this);
-
-		terms ??= Array<string>.Empty;
+			return string.Empty;
 
 		Span<char> span = stackalloc char[@this.Length];
 		@this.CopyTo(span);
 
-		var i = -1;
-		if (terms.Length > 0)
+		if (terms?.Length > 0)
 		{
-			var count = 0;
-			while (++i < span.Length)
+			foreach (var term in terms)
 			{
-				foreach (var term in terms)
+NextTerm:
+				var index = span.AsReadOnly().IndexOf(term, comparison);
+				if (index > -1)
 				{
-					if (term.Length > count && ((ReadOnlySpan<char>)span[i..]).StartsWith(term.AsSpan(), comparison))
-						count = term.Length;
-				}
-
-				if (count > 0)
-				{
-					--count;
-					if (span[i].IsLetterOrDigit())
-						span[i] = mask;
+					var slice = span.Slice(index, term.Length);
+					slice.Fill(mask);
+					goto NextTerm;
 				}
 			}
 		}
 		else
 		{
-			while (++i < span.Length)
+			for (var i = 0; i < span.Length; ++i)
 				if (span[i].IsLetterOrDigit())
 					span[i] = mask;
 		}
 
 		return new(span);
 	}
-
-	/// <summary>
-	/// Mask letter or numbers in a string.
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Mask(this ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null)
-		=> @this.Mask(mask, terms, StringComparison.Ordinal);
 
 	/// <summary>
 	/// Mask letter or numbers in a string.
@@ -268,6 +294,32 @@ public static class ReadOnlySpanExtensions
 	public static char[] ToBase64UrlChars(this ReadOnlySpan<byte> @this)
 		=> Base64Url.EncodeToChars(@this);
 
+	/// <inheritdoc cref="BitConverter.ToBoolean(ReadOnlySpan{byte})"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToBoolean(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ToBoolean(this ReadOnlySpan<byte> @this)
+		=> BitConverter.ToBoolean(@this);
+
+	/// <inheritdoc cref="Enum.TryParse{TEnum}(ReadOnlySpan{char}, out TEnum)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// </remarks>
+	[DebuggerHidden]
+	public static T? ToEnum<T>(this ReadOnlySpan<char> @this)
+		where T : struct, Enum
+		=> Enum.TryParse<T>(@this, out var result) ? (T?)result : null;
+
+	/// <inheritdoc cref="Enum.TryParse{TEnum}(ReadOnlySpan{char}, bool, out TEnum)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// </remarks>
+	[DebuggerHidden]
+	public static T? ToEnumIgnoreCase<T>(this ReadOnlySpan<char> @this)
+		where T : struct, Enum
+		=> Enum.TryParse<T>(@this, true, out var result) ? (T?)result : null;
+
 	/// <inheritdoc cref="MemoryMarshal.ToEnumerable{T}(ReadOnlyMemory{T})"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.ToEnumerable(@<paramref name="this"/>);</c>
@@ -292,6 +344,55 @@ public static class ReadOnlySpanExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string ToHexStringLower(this ReadOnlySpan<byte> @this)
 		=> Convert.ToHexStringLower(@this);
+
+	public static T ToNumber<T>(this ReadOnlySpan<byte> @this)
+		where T : struct, INumber<T>
+		=> typeof(T).GetScalarType() switch
+		{
+			ScalarType.Char => Unsafe.BitCast<char, T>(BitConverter.ToChar(@this)),
+			ScalarType.SByte => Unsafe.BitCast<sbyte, T>((sbyte)BitConverter.ToInt32(@this)),
+			ScalarType.Int16 => Unsafe.BitCast<short, T>(BitConverter.ToInt16(@this)),
+			ScalarType.Int32 => Unsafe.BitCast<int, T>(BitConverter.ToInt32(@this)),
+			ScalarType.IntPtr => Unsafe.BitCast<nint, T>(BitConverter.ToInt32(@this)),
+			ScalarType.Int64 => Unsafe.BitCast<long, T>(BitConverter.ToInt64(@this)),
+			ScalarType.Int128 => Unsafe.BitCast<Int128, T>(BitConverter.ToInt128(@this)),
+			ScalarType.BigInteger => Unsafe.BitCast<BigInteger, T>(new BigInteger(@this)),
+			ScalarType.Byte => Unsafe.BitCast<byte, T>((byte)BitConverter.ToUInt32(@this)),
+			ScalarType.UInt16 => Unsafe.BitCast<ushort, T>(BitConverter.ToUInt16(@this)),
+			ScalarType.UInt32 => Unsafe.BitCast<uint, T>(BitConverter.ToUInt32(@this)),
+			ScalarType.UIntPtr => Unsafe.BitCast<nuint, T>(BitConverter.ToUInt32(@this)),
+			ScalarType.UInt64 => Unsafe.BitCast<ulong, T>(BitConverter.ToUInt64(@this)),
+			ScalarType.UInt128 => Unsafe.BitCast<UInt128, T>(BitConverter.ToUInt128(@this)),
+			ScalarType.Half => Unsafe.BitCast<Half, T>(BitConverter.ToHalf(@this)),
+			ScalarType.Single => Unsafe.BitCast<float, T>(BitConverter.ToSingle(@this)),
+			ScalarType.Double => Unsafe.BitCast<double, T>(BitConverter.ToDouble(@this)),
+			ScalarType.Decimal => Unsafe.BitCast<decimal, T>(new decimal(@this.Cast<byte, int>())),
+			var scalarType => throw new UnreachableException(Invariant($"Cannot convert bytes to {scalarType.Name()}."))
+		};
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.ToArray());</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this ReadOnlySpan<byte> @this)
+		=> BitConverter.ToString(@this.ToArray());
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[], int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.ToArray(), <paramref name="startIndex"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this ReadOnlySpan<byte> @this, int startIndex)
+		=> BitConverter.ToString(@this.ToArray(), startIndex);
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.Span, <paramref name="length"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this ReadOnlySpan<byte> @this, int startIndex, int length)
+		=> BitConverter.ToString(@this.ToArray(), startIndex, length);
 
 	/// <inheritdoc cref="Convert.TryFromBase64Chars(ReadOnlySpan{char}, Span{byte}, out int)"/>
 	/// <remarks>

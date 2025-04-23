@@ -37,27 +37,6 @@ public class ListExtensions
 	}
 
 	[Fact]
-	public async Task ForEachAsync()
-	{
-		var list = new List<int>(Enumerable.Repeat(Random.Shared.Next(), 3));
-		var cancellationTokenSource = new CancellationTokenSource();
-		var task = list.ForEachAsync(_ => cancellationTokenSource.Cancel(), cancellationTokenSource.Token);
-		await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
-
-		task = list.ForEachAsync(_ => _.ToString(), default);
-		await task;
-		Assert.True(task.IsCompleted);
-
-		cancellationTokenSource = new CancellationTokenSource();
-		task = list.ForEachAsync((_, i) => cancellationTokenSource.Cancel(), cancellationTokenSource.Token);
-		await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
-
-		task = list.ForEachAsync((_, i) => _.ToString(), default);
-		await task;
-		Assert.True(task.IsCompleted);
-	}
-
-	[Fact]
 	public void InsertIfNotBlank()
 	{
 		var list = new List<string> { "1", "2", "4" };

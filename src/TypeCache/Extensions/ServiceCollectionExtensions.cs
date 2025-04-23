@@ -185,7 +185,17 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// Registers singletons:
 	/// <list type="bullet">
-	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
+	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a <see cref="long"/> to a simple string hashed ID and back.</item>
+	/// </list>
+	/// </summary>
+	/// <param name="rgbKey">Any random 16 bytes</param>
+	public static IServiceCollection AddHashMaker(this IServiceCollection @this, byte[] rgbKey)
+		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey));
+
+	/// <summary>
+	/// Registers singletons:
+	/// <list type="bullet">
+	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a <see cref="long"/> to a simple string hashed ID and back.</item>
 	/// </list>
 	/// </summary>
 	/// <param name="rgbKey">Any random 16 bytes</param>
@@ -196,22 +206,21 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// Registers singletons:
 	/// <list type="bullet">
-	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
+	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a <see cref="long"/> to a simple string hashed ID and back.</item>
 	/// </list>
 	/// </summary>
-	/// <param name="rgbKey">Any random decimal value (gets converted to a 16 byte array)</param>
-	/// <param name="rgbIV">Any random decimal value (gets converted to a 16 byte array)</param>
-	public static IServiceCollection AddHashMaker(this IServiceCollection @this, decimal rgbKey, decimal rgbIV)
-		=> @this.AddSingleton<IHashMaker>(provider => new HashMaker(rgbKey.ToBytes(), rgbIV.ToBytes()));
+	/// <param name="rgbKey">Any random 16 UTF-8 characters</param>
+	public static IServiceCollection AddHashMaker(this IServiceCollection @this, ReadOnlySpan<char> rgbKey)
+		=> @this.AddHashMaker(rgbKey.AsBytes().ToArray());
 
 	/// <summary>
 	/// Registers singletons:
 	/// <list type="bullet">
-	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a long to a simple string hashed ID and back.</item>
+	/// <item><term><c><see cref="IHashMaker"/></c></term> Utility class that encrypts a <see cref="long"/> to a simple string hashed ID and back.</item>
 	/// </list>
 	/// </summary>
-	/// <param name="rgbKey">Any random 8 characters</param>
-	/// <param name="rgbIV">Any random 8 characters</param>
+	/// <param name="rgbKey">Any random 16 UTF-8 characters</param>
+	/// <param name="rgbIV">Any random 16 UTF-8 characters</param>
 	public static IServiceCollection AddHashMaker(this IServiceCollection @this, ReadOnlySpan<char> rgbKey, ReadOnlySpan<char> rgbIV)
 		=> @this.AddHashMaker(rgbKey.AsBytes().ToArray(), rgbIV.AsBytes().ToArray());
 
@@ -435,8 +444,8 @@ public static class ServiceCollectionExtensions
 	/// <c>=&gt; @<paramref name="this"/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataSetRequest"/>, <see cref="DataSet"/>&gt;, <see cref="SqlDataSetRule"/>&gt;()<br/>
 	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlDataTableRequest"/>, <see cref="DataTable"/>&gt;, <see cref="SqlDataTableRule"/>&gt;()<br/>
 	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlExecuteRequest"/>, <see cref="SqlExecuteRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlJsonArrayRequest"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlJsonArrayRule"/>&gt;()<br/>
-	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlModelsRequest"/>, IList&lt;<see cref="object"/>&gt;&gt;, <see cref="SqlModelsRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlResultJsonRequest"/>, <see cref="JsonArray"/>&gt;, <see cref="SqlResultJsonRule"/>&gt;()<br/>
+	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlModelsRequest"/>, IList&lt;<see cref="object"/>&gt;&gt;, <see cref="SqlResultsRule"/>&gt;()<br/>
 	/// <see langword="    "/>.AddSingleton&lt;IRule&lt;<see cref="SqlScalarRequest"/>, <see cref="object"/>&gt;, <see cref="SqlScalarRule"/>&gt;()<br/>
 	/// </c>
 	/// <i><b>Requires calls to:</b></i>
@@ -449,8 +458,8 @@ public static class ServiceCollectionExtensions
 			.AddRule<SqlDataSetRequest, DataSet>(new SqlDataSetRule())
 			.AddRule<SqlDataTableRequest, DataTable>(new SqlDataTableRule())
 			.AddRule<SqlExecuteRequest>(new SqlExecuteRule())
-			.AddRule<SqlJsonArrayRequest, JsonArray>(new SqlJsonArrayRule())
-			.AddRule<SqlModelsRequest, IList<object>>(new SqlModelsRule())
+			.AddRule<SqlResultJsonRequest, JsonArray>(new SqlResultJsonRule())
+			.AddRule<SqlModelsRequest, IList<object>>(new SqlResultsRule())
 			.AddRule<SqlScalarRequest, object?>(new SqlScalarRule());
 
 	/// <summary>
@@ -459,18 +468,10 @@ public static class ServiceCollectionExtensions
 	/// <param name="fromAssembly">The assembly to register the types from.</param>
 	public static IServiceCollection AddTypes(this IServiceCollection @this, Assembly fromAssembly)
 	{
-		var serviceDescriptors = fromAssembly.GetTypes()
+		fromAssembly.GetTypes()
 			.Where(type => !type.IsAbstract && !type.IsGenericType && !type.IsInterface && !type.IsPointer && !type.IsPrimitive
-				&& type.HasCustomAttribute<ServiceLifetimeAttribute>())
-			.Select(implementationType =>
-			{
-				var attribute = implementationType.GetCustomAttribute<ServiceLifetimeAttribute>()!;
-				return attribute.Key is not null
-					? ServiceDescriptor.DescribeKeyed(attribute.ServiceType ?? implementationType, attribute.Key, implementationType, attribute.ServiceLifetime)
-					: ServiceDescriptor.Describe(attribute.ServiceType ?? implementationType, implementationType, attribute.ServiceLifetime);
-			})
-			.ToArray();
-		serviceDescriptors.ForEach(@this.Add);
+				&& type.HasCustomAttribute<ServiceLifetimeAttribute>(false))
+			.ForEach(implementationType => @this.Add(implementationType.ToServiceDescriptor()));
 
 		return @this;
 	}
@@ -533,4 +534,12 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddValidationRule<REQUEST>(this IServiceCollection @this, object? key, Action<REQUEST> validationRule)
 		where REQUEST : IRequest
 		=> @this.AddServiceDescriptor<IValidationRule<REQUEST>>(key, ServiceLifetime.Singleton, (provider, key) => RuleFactory.CreateValidationRule(validationRule));
+
+	private static ServiceDescriptor ToServiceDescriptor(this Type @this)
+	{
+		var attribute = @this.GetCustomAttribute<ServiceLifetimeAttribute>()!;
+		return attribute.Key is not null
+			? ServiceDescriptor.DescribeKeyed(attribute.ServiceType ?? @this, attribute.Key, @this, attribute.ServiceLifetime)
+			: ServiceDescriptor.Describe(attribute.ServiceType ?? @this, @this, attribute.ServiceLifetime);
+	}
 }

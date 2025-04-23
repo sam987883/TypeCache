@@ -29,15 +29,14 @@ public static class StringBuilderExtensions
 
 	public static StringBuilder AppendValuesSQL<T>(this StringBuilder @this, T[] input, StringValues columns)
 	{
-		var propertyInfos = typeof(T).GetProperties(Instance | Public);
+		var propertyInfos = typeof(T).GetPublicProperties();
 		var propertyMap = propertyInfos
 			.Where(_ => columns.ContainsIgnoreCase(_.Name))
-			.ToDictionary(_ => _.Name, _ => _.GetValueFunc(), StringComparer.OrdinalIgnoreCase);
-		var values = input.Select(row => Invariant($"({columns.Select(column =>
-			propertyMap[column!].Invoke(row!, null).ToSQL()).ToCSV()})")).ToArray();
+			.ToDictionaryIgnoreCase(_ => _.Name, _ => _.GetValueFunc());
 
 		@this.Append("VALUES ");
-		values.ForEach(row => @this.Append(row), () => @this.AppendLine().Append("\t, "));
+		input.ForEach(row => @this.Append('(').Append(columns.Select(column => propertyMap[column!].Invoke(row!, null).ToSQL()).ToCSV()).Append(')'),
+				() => @this.AppendLine().Append("\t, "));
 
 		return @this.AppendLine();
 	}

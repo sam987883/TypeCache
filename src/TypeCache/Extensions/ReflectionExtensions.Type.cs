@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
-using static System.FormattableString;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
@@ -39,145 +38,170 @@ public partial class ReflectionExtensions
 		=> @this.GetConstructors(INSTANCE_BINDING_FLAGS)
 			.FirstOrDefault(constructor => constructor.IsCallableWith(arguments));
 
-	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] argumentTypes)
-		=> @this.GetMethod(name, INSTANCE_BINDING_FLAGS, argumentTypes);
+		=> @this.GetMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(argumentTypes));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
-	[DebuggerHidden]
 	public static MethodInfo? FindMethod(this Type @this, string name, object?[]? arguments)
-		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.FirstOrDefault(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsCallableWith(arguments));
+		=> @this.GetMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(arguments));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	public static MethodInfo? FindMethod(this Type @this, string name, ITuple? arguments)
-		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.FirstOrDefault(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsCallableWith(arguments));
+		=> @this.GetMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(arguments));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
-		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
-			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
-			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+	{
+		var methodInfos = @this.GetMethodInfos(name)
+			.Where(_ => _.IsGenericMethod && _.GetGenericArguments().Length == genericTypes.Length)
+			.Select(_ => _.MakeGenericMethod(genericTypes))
+			.ToArray();
+		if (methodInfos.Length is 0)
+			return null;
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+		return methodInfos.FirstOrDefault(_ => _.IsCallableWith(arguments));
+	}
+
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindMethod(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
-		=> @this.GetMethods(INSTANCE_BINDING_FLAGS)
-			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
-			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
-			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+	{
+		var methodInfos = @this.GetMethodInfos(name)
+			.Where(_ => _.IsGenericMethod && _.GetGenericArguments().Length == genericTypes.Length)
+			.Select(_ => _.MakeGenericMethod(genericTypes))
+			.ToArray();
+		if (methodInfos.Length is 0)
+			return null;
 
-	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags, Type[])"/>
+		return methodInfos.FirstOrDefault(_ => _.IsCallableWith(arguments));
+	}
+
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] argumentTypes)
-		=> @this.GetMethod(name, STATIC_BINDING_FLAGS, argumentTypes);
+		=> @this.GetStaticMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(argumentTypes));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, object?[]? arguments)
-		=> @this.GetMethods(STATIC_BINDING_FLAGS)
-			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
+		=> @this.GetStaticMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(arguments));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, ITuple? arguments)
-		=> @this.GetMethods(STATIC_BINDING_FLAGS)
-			.FirstOrDefault(method => method.Name.EqualsIgnoreCase(name) && method.IsCallableWith(arguments));
+		=> @this.GetStaticMethodInfos(name).FirstOrDefault(_ => _.IsCallableWith(arguments));
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] genericTypes, object?[]? arguments)
-		=> @this.GetMethods(STATIC_BINDING_FLAGS)
-			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
-			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
-			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+	{
+		var methodInfos = @this.GetStaticMethodInfos(name)
+			.Where(_ => _.IsGenericMethod && _.GetGenericArguments().Length == genericTypes.Length)
+			.Select(_ => _.MakeGenericMethod(genericTypes))
+			.ToArray();
+		if (methodInfos.Length is 0)
+			return null;
 
-	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
+		return methodInfos.FirstOrDefault(_ => _.IsCallableWith(arguments));
+	}
+
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	/// <exception cref="NotSupportedException"/>
 	public static MethodInfo? FindStaticMethod(this Type @this, string name, Type[] genericTypes, ITuple? arguments)
-		=> @this.GetMethods(STATIC_BINDING_FLAGS)
-			.Where(methodInfo => methodInfo.Name.EqualsIgnoreCase(name) && methodInfo.IsGenericMethod && methodInfo.GetGenericArguments().Length == genericTypes.Length)
-			.Select(methodInfo => methodInfo.MakeGenericMethod(genericTypes))
-			.FirstOrDefault(methodInfo => methodInfo.IsCallableWith(arguments));
+	{
+		var methodInfos = @this.GetStaticMethodInfos(name)
+			.Where(_ => _.IsGenericMethod && _.GetGenericArguments().Length == genericTypes.Length)
+			.Select(_ => _.MakeGenericMethod(genericTypes))
+			.ToArray();
+		if (methodInfos.Length is 0)
+			return null;
 
-	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
-	public static object? GetFieldValue(this Type @this, string name, object instance)
-		=> @this.GetFieldInfo(name)?.GetValueEx(instance);
+		return methodInfos.FirstOrDefault(_ => _.IsCallableWith(arguments));
+	}
 
-	/// <summary>
-	/// <c>=&gt; <see cref="TypeStore.CollectionTypes"/>[@<paramref name="this"/>.TypeHandle];</c>
-	/// </summary>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static CollectionType GetCollectionType(this Type @this)
 		=> TypeStore.CollectionTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
+	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static object? GetFieldValue(this Type @this, string name, object instance)
+		=> @this.GetFieldInfo(name)?.GetValueEx(instance);
+
+	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
+	/// <remarks>
+	/// <b>Does a case-insensitive search for the field by <paramref name="name"/>.<br/>
+	/// If multiple fields are found with the same name, then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	public static FieldInfo? GetFieldInfo(this Type @this, string name)
+	{
+		name.ThrowIfBlank();
+
+		return @this.GetFields(INSTANCE_BINDING_FLAGS).GetMemberInfo(name);
+	}
+
+	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags)"/>
+	/// <remarks>
+	/// <b>Does a case-insensitive search for methods by <paramref name="name"/>.<br/>
+	/// If multiple methods are found with the same name but different casings,<br/>
+	/// then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	public static MethodInfo[] GetMethodInfos(this Type @this, string name)
+	{
+		name.ThrowIfBlank();
+
+		return @this.GetMethods(INSTANCE_BINDING_FLAGS).GetMethodInfos(name);
+	}
+
 	public static ObjectType GetObjectType(this Type @this)
 		=> TypeStore.ObjectTypes[@this.IsGenericType ? @this.GetGenericTypeDefinition().TypeHandle : @this.TypeHandle];
 
-	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
-	public static FieldInfo? GetFieldInfo(this Type @this, string name, bool ignoreCase = true)
-	{
-		name.ThrowIfBlank();
-
-		var binding = ignoreCase ? INSTANCE_BINDING_FLAGS | BindingFlags.IgnoreCase : INSTANCE_BINDING_FLAGS;
-		return @this.GetField(name, binding);
-	}
-
 	/// <inheritdoc cref="Type.GetProperty(string, BindingFlags)"/>
-	public static PropertyInfo? GetPropertyInfo(this Type @this, string name, bool ignoreCase = true)
+	/// <remarks>
+	/// <b>Does a case-insensitive search for the property by <paramref name="name"/>.<br/>
+	/// If multiple properties are found with the same name, then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	public static PropertyInfo? GetPropertyInfo(this Type @this, string name)
 	{
 		name.ThrowIfBlank();
 
-		var binding = ignoreCase ? INSTANCE_BINDING_FLAGS | BindingFlags.IgnoreCase : INSTANCE_BINDING_FLAGS;
-		return @this.GetProperty(name, binding);
+		return @this.GetProperties(INSTANCE_BINDING_FLAGS).GetMemberInfo(name);
 	}
 
 	/// <inheritdoc cref="Type.GetFields(BindingFlags)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="Public"/> | <see cref="Instance"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetFields(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldInfo[] GetPublicFields(this Type @this)
-		=> @this.GetFields(Public | Instance);
+		=> @this.GetFields(PUBLIC_INSTANCE_BINDING_FLAGS);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.GetMethods(<see cref="Public"/> | <see cref="Instance"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.GetMethods(<see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Instance"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo[] GetPublicMethods(this Type @this)
-		=> @this.GetMethods(Public | Instance);
+		=> @this.GetMethods(PUBLIC_INSTANCE_BINDING_FLAGS);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
 	public static PropertyInfo[] GetPublicProperties(this Type @this)
-		=> @this.GetProperties(Public | Instance)
+		=> @this.GetProperties(PUBLIC_INSTANCE_BINDING_FLAGS)
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is not true && propertyInfo.SetMethod?.IsStatic is not true)
 			.ToArray();
 
@@ -187,7 +211,7 @@ public partial class ReflectionExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static FieldInfo[] GetPublicStaticFields(this Type @this)
-		=> @this.GetFields(FlattenHierarchy | Public | Static);
+		=> @this.GetFields(PUBLIC_STATIC_BINDING_FLAGS);
 
 	/// <inheritdoc cref="Type.GetMethods(BindingFlags)"/>
 	/// <remarks>
@@ -195,14 +219,14 @@ public partial class ReflectionExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo[] GetPublicStaticMethods(this Type @this)
-		=> @this.GetMethods(FlattenHierarchy | Public | Static);
+		=> @this.GetMethods(PUBLIC_STATIC_BINDING_FLAGS);
 
 	/// <inheritdoc cref="Type.GetProperties(BindingFlags)"/>
 	/// <remarks>
 	/// <c><see cref="FlattenHierarchy"/> | <see cref="Public"/> | <see cref="Static"/></c>
 	/// </remarks>
 	public static PropertyInfo[] GetPublicStaticProperties(this Type @this)
-		=> @this.GetProperties(FlattenHierarchy | Public | Static)
+		=> @this.GetProperties(PUBLIC_STATIC_BINDING_FLAGS)
 			.Where(propertyInfo => propertyInfo.GetMethod?.IsStatic is true || propertyInfo.SetMethod?.IsStatic is true)
 			.ToArray();
 
@@ -220,34 +244,60 @@ public partial class ReflectionExtensions
 			_ => ScalarType.None
 		};
 
+	/// <inheritdoc cref="Type.GetField(string, BindingFlags)"/>
+	/// <remarks>
+	/// <b>Does a case-insensitive search for the static field by <paramref name="name"/>.<br/>
+	/// If multiple static fields are found with the same name, then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
 	public static FieldInfo? GetStaticFieldInfo(this Type @this, string name)
 	{
 		name.ThrowIfBlank();
 
-		return @this.GetField(name, STATIC_BINDING_FLAGS);
+		return @this.GetFields(STATIC_BINDING_FLAGS).GetMemberInfo(name);
 	}
 
 	public static object? GetStaticFieldValue(this Type @this, string name)
 		=> @this.GetStaticFieldInfo(name)?.GetStaticValue();
 
+	/// <inheritdoc cref="Type.GetMethod(string, BindingFlags)"/>
+	/// <remarks>
+	/// <b>Does a case-insensitive search for methods by <paramref name="name"/>.<br/>
+	/// If multiple methods are found with the same name but different casings,<br/>
+	/// then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
+	public static MethodInfo[] GetStaticMethodInfos(this Type @this, string name)
+	{
+		name.ThrowIfBlank();
+
+		return @this.GetMethods(STATIC_BINDING_FLAGS).GetMethodInfos(name);
+	}
+
+	/// <inheritdoc cref="Type.GetProperty(string, BindingFlags)"/>
+	/// <remarks>
+	/// <b>Does a case-insensitive search for the static property by <paramref name="name"/>.<br/>
+	/// If multiple static properties are found with the same name, then a case-sensitive search is performed instead.</b>
+	/// </remarks>
+	/// <exception cref="ArgumentNullException"/>
 	public static PropertyInfo? GetStaticPropertyInfo(this Type @this, string name)
 	{
 		name.ThrowIfBlank();
 
-		return @this.GetProperty(name, STATIC_BINDING_FLAGS);
+		return @this.GetProperties(STATIC_BINDING_FLAGS).GetMemberInfo(name);
 	}
 
 	public static object? GetStaticPropertyValue(this Type @this, string name, ITuple? index = null)
 		=> @this.GetStaticPropertyInfo(name)?.GetStaticValue(index);
 
 	/// <summary>
-	/// Gets the C# name of a type.  For example:
+	/// Gets the C# name of a type, including generic type definitions. For example:
 	/// <list type="bullet">
 	/// <item><c>UInt64</c></item>
 	/// <item><c>String</c></item>
 	/// <item><c>Char*</c></item>
 	/// <item><c>Int32[]</c></item>
-	/// <item><c>Int32[][][]</c></item>
+	/// <item><c>Int32[,,]</c></item>
 	/// <item><c>IList&lt;Boolean&gt;</c></item>
 	/// <item><c>IDictionary&lt;String, List&lt;Int32&gt;&gt;</c></item>
 	/// <item><c>IDictionary&lt;,&gt;</c></item>
@@ -258,34 +308,44 @@ public partial class ReflectionExtensions
 		{
 			_ when type == typeof(string) => type.Name,
 			{ IsPointer: true } => Invariant($"{type.GetElementType()!.GetTypeName()}*"),
-			{ IsArray: true } => Invariant($"{type.Name}{string.Join(string.Empty, "[]".Repeat(type.GetArrayRank() - 1))}"),
-			{ IsGenericTypeDefinition: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Join(string.Empty, ','.Repeat(type.GetGenericArguments().Length - 1))}>"),
+			{ IsArray: true } => Invariant($"{type.GetElementType()!.GetTypeName()}[{string.Concat(','.Repeat(type.GetArrayRank() - 1))}]"),
+			{ IsByRef: true } => Invariant($"{type.GetElementType()!.GetTypeName()}&"),
+			{ IsGenericTypeDefinition: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Concat(','.Repeat(type.GetGenericArguments().Length - 1))}>"),
 			{ IsGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Join(", ", type.GetGenericArguments().Select(_ => _.GetTypeName()))}>"),
 			_ => type.Name
 		};
 
+	/// <inheritdoc cref="Type.IsAssignableTo(Type)"/>
+	/// <remarks>
+	/// Supports generic type definitions as well.  For example:
+	/// <list type="table">
+	/// <item><c>List&lt;Int32&gt; : IList&lt;Int32&gt; // <see langword="true"/></c></item>
+	/// <item><c>List&lt;String&gt; : IList&lt;&gt; // <see langword="true"/></c></item>
+	/// <item><c>List&lt;&gt; : IList&lt;Int32&gt; // <see langword="false"/></c></item>
+	/// </list>
+	/// </remarks>
 	public static bool Implements(this Type @this, Type type)
 	{
 		return type switch
 		{
 			_ when @this.Is(type) => true,
-			{ IsValueType: true } or { IsSealed: true } => false,
+			{ IsArray: true } or { IsPointer: true } or { IsSealed: true } or { IsValueType: true } => false,
 			{ IsGenericTypeDefinition: false } => @this.IsAssignableTo(type),
-			{ IsInterface: true } => type.IsAny(@this.GetInterfaces()),
+			{ IsInterface: true } => type.IsAny(@this.GetInterfaces().Where(_ => _.IsGenericType).ToArray()),
 			_ => isDescendantOf(@this.BaseType, type)
 		};
 
 		static bool isDescendantOf(Type? baseType, Type type)
 		{
-		Loop:
-			if (baseType is null)
-				return false;
+			while (baseType is not null)
+			{
+				if (baseType.Is(type))
+					return true;
 
-			if (baseType.Is(type))
-				return true;
+				baseType = baseType.BaseType;
+			}
 
-			baseType = baseType.BaseType;
-			goto Loop;
+			return false;
 		}
 	}
 
@@ -295,6 +355,7 @@ public partial class ReflectionExtensions
 	{
 		var methodInfo = @this.FindMethod(name, arguments);
 		methodInfo.ThrowIfNull();
+
 		methodInfo.InvokeAction(instance, arguments);
 	}
 
@@ -304,6 +365,7 @@ public partial class ReflectionExtensions
 	{
 		var methodInfo = @this.FindMethod(name, arguments);
 		methodInfo.ThrowIfNull();
+
 		methodInfo.InvokeAction(instance, arguments);
 	}
 
@@ -321,8 +383,8 @@ public partial class ReflectionExtensions
 
 		var action = TypeStore.MethodArrayActions[(methodInfo.DeclaringType.TypeHandle, methodInfo.MethodHandle)];
 		action.ThrowIfNull();
-		action(instance, arguments);
 
+		action(instance, arguments);
 		return null;
 	}
 
@@ -397,13 +459,13 @@ public partial class ReflectionExtensions
 	public static bool Is<T>(this Type @this)
 		=> @this == typeof(T);
 
-	[DebuggerHidden]
 	public static bool Is(this Type @this, Type type)
 		=> (@this, type) switch
 		{
 			({ IsGenericType: true, IsGenericTypeDefinition: false }, { IsGenericTypeDefinition: true })
-				or ({ IsGenericTypeDefinition: true }, { IsGenericType: true, IsGenericTypeDefinition: false })
-				=> @this.GetGenericTypeDefinition() == type.GetGenericTypeDefinition(),
+				=> @this.GetGenericTypeDefinition() == type,
+			({ IsGenericTypeDefinition: true }, { IsGenericType: true, IsGenericTypeDefinition: false })
+				=> @this == type.GetGenericTypeDefinition(),
 			_ => @this == type
 		};
 
@@ -583,7 +645,6 @@ public partial class ReflectionExtensions
 		=> Expression.Label(@this, name);
 
 	/// <inheritdoc cref="Expression.New(ConstructorInfo, Expression[])"/>
-	[DebuggerHidden]
 	public static NewExpression ToNewExpression(this Type @this, Expression[]? parameters = null)
 		=> parameters switch
 		{

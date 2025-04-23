@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions;
 
@@ -68,4 +69,12 @@ public static partial class NumericExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TimeSpan Seconds(this int @this)
 		=> TimeSpan.FromSeconds(@this);
+
+	/// <inheritdoc cref="BitConverter.Int32BitsToSingle(int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Unsafe"/>.BitCast&lt;<see cref="int"/>, <see cref="float"/>&gt;(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static float ToSingle(this int @this)
+		=> Unsafe.BitCast<int, float>(@this);
 }

@@ -79,7 +79,7 @@ public static partial class MapExtensions
 		target.ThrowIfNull();
 		@this.ThrowIfReferenceEqual(target);
 
-		var properties = typeof(T).GetProperties(FlattenHierarchy | Instance | Public);
+		var properties = typeof(T).GetPublicProperties();
 		foreach (var propertyInfo in properties)
 		{
 			if (!propertyInfo.CanRead)

@@ -3,7 +3,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
-using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 
 namespace TypeCache.Web.Filters;
@@ -15,18 +14,17 @@ public sealed class SqlApiSchemaEndpointFilter
 	{
 		var routeValues = context.HttpContext.Request.RouteValues;
 
-		IDataSource? dataSource;
-		var dataSourceName = (string)routeValues[nameof(dataSource)]!;
+		string source = (string)routeValues[nameof(source)]!;
 		string database = (string)routeValues[nameof(database)]!;
 		string collection = (string)routeValues[nameof(collection)]!;
 
 		await using var serviceScope = context.HttpContext.RequestServices.CreateAsyncScope();
-		dataSource = serviceScope.ServiceProvider.GetKeyedService<IDataSource>(dataSourceName);
+		var dataSource = serviceScope.ServiceProvider.GetKeyedService<IDataSource>(source);
 		if (dataSource is null)
-			return Results.NotFound(Invariant($"{nameof(IDataSource)} was not found: {dataSourceName}."));
+			return Results.NotFound(Invariant($"{nameof(IDataSource)} was not found: {source}."));
 
-		if (!dataSource.Databases.Contains(database, StringComparer.OrdinalIgnoreCase))
-			return Results.NotFound(Invariant($"Database {database} was not found in Data Source: {dataSourceName}."));
+		if (!dataSource.Databases.ContainsIgnoreCase(database))
+			return Results.NotFound(Invariant($"Database {database} was not found in Data Source: {source}."));
 
 		if (!Enum.TryParse<SchemaCollection>(collection, out _))
 			return Results.BadRequest(Invariant($"{collection} is not a {nameof(SchemaCollection)} value."));

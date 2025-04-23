@@ -74,16 +74,16 @@ public static class DbCommandExtensions
 		return reader.ReadDataTable();
 	}
 
-	public static async Task<JsonArray> GetJsonArrayAsync(this DbCommand @this, CancellationToken token = default)
+	public static async Task<JsonArray> GetResultsAsJsonAsync(this DbCommand @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
 	{
 		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
-		return await reader.ReadJsonArrayAsync(token);
+		return await reader.ReadResultsAsJsonAsync(jsonOptions, token);
 	}
 
-	public static async Task GetJsonAsync(this DbCommand @this, Utf8JsonWriter writer, CancellationToken token = default)
+	public static async Task<JsonObject> GetResultSetAsJsonAsync(this DbCommand @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
 	{
 		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
-		await reader.ReadJsonAsync(writer, token);
+		return await reader.ReadResultSetAsJsonAsync(jsonOptions, token);
 	}
 
 	public static async Task<IList<T>> GetModelsAsync<T>(this DbCommand @this, int listInitialCapacity, CancellationToken token = default)
@@ -122,4 +122,16 @@ public static class DbCommandExtensions
 			T value => value,
 			_ => null
 		};
+
+	public static async Task WriteResultsAsJsonAsync(this DbCommand @this, Utf8JsonWriter writer, JsonSerializerOptions? jsonOptions = null, CancellationToken token = default)
+	{
+		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
+		await reader.WriteResultsAsJsonAsync(writer, jsonOptions, token);
+	}
+
+	public static async Task WriteResultSetAsJsonAsync(this DbCommand @this, Utf8JsonWriter writer, JsonSerializerOptions? jsonOptions = null, CancellationToken token = default)
+	{
+		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
+		await reader.WriteResultSetAsJsonAsync(writer, jsonOptions, token);
+	}
 }

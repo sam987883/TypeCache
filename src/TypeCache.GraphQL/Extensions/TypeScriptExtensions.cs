@@ -32,7 +32,7 @@ public static class TypeScriptExtensions
 		if (@this.Description.IsNotBlank())
 			builder.Append("// ").AppendLine(@this.Description);
 		builder.Append("export enum ").AppendLine(@this.Name).Append('{');
-		@this.Values.ToArray().ForEach(value =>
+		@this.Values.ForEach(value =>
 		{
 			builder.AppendLine().Append('\t').Append(value.Name);
 			if (value.Value is not null && long.TryParse(value.Value.ToString(), out var id))
@@ -47,7 +47,7 @@ public static class TypeScriptExtensions
 		if (@this.Description.IsNotBlank())
 			builder.Append("// ").AppendLine(@this.Description);
 		builder.AppendLine(Invariant($"export type {@this.Name} = {{"));
-		@this.Fields.ToArray().ForEach(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
+		@this.Fields.ForEach(field => builder.AppendLine(Invariant($"\t{field.Name}: {field.ResolvedType!.GetTypeScriptType()};")));
 		return builder.Append('}').AppendLine().ToString();
 	}
 }

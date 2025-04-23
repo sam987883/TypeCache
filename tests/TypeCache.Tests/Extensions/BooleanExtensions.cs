@@ -56,4 +56,11 @@ public class BooleanExtensions
 		Assert.Throws<ArgumentOutOfRangeException>(() => true.ThrowIfTrue());
 		Assert.Throws<ArgumentOutOfRangeException>(() => ((bool?)true).ThrowIfTrue());
 	}
+
+	[Fact]
+	public void ToBytes()
+	{
+		Assert.Equal(BitConverter.GetBytes(false), false.ToBytes());
+		Assert.Equal(BitConverter.GetBytes(true), true.ToBytes());
+	}
 }

@@ -5,6 +5,11 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
+public sealed class SqlExecuteRequest : IRequest
+{
+	public required SqlCommand Command { get; set; }
+}
+
 internal sealed class SqlExecuteRule : IRule<SqlExecuteRequest>
 {
 	public async Task Execute(SqlExecuteRequest request, CancellationToken token = default)
