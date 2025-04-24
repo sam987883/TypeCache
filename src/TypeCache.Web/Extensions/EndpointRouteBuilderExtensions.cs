@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Converters;
 using TypeCache.Extensions;
+using static Microsoft.AspNetCore.Http.StatusCodes;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TypeCache.Web.Extensions;
@@ -32,10 +33,10 @@ public static partial class EndpointRouteBuilderExtensions
 		internal static class SqlApi
 		{
 			[StringSyntax(nameof(Route))]
-			public const string DATABASE_SCHEMA = "/schema/{dataSource}/{database}/{collection}";
+			public const string DATABASE_SCHEMA = "/schema/{source}/{database}/{collection}";
 
 			[StringSyntax(nameof(Route))]
-			public const string TABLE = "/{dataSource}/{database}/{schema}/{table}";
+			public const string TABLE = "/{source}/{database}/{schema}/{table}";
 
 			[StringSyntax(nameof(Route))]
 			public const string DELETE = "/delete" + TABLE;
@@ -50,7 +51,7 @@ public static partial class EndpointRouteBuilderExtensions
 			public const string INSERT_VALUES = "/insert-values" + TABLE;
 
 			[StringSyntax(nameof(Route))]
-			public const string PROCEDURE = "/execute/{dataSource}/{database}/{schema}/{procedure}";
+			public const string PROCEDURE = "/execute/{source}/{database}/{schema}/{procedure}";
 
 			[StringSyntax(nameof(Route))]
 			public const string SELECT = "/select" + TABLE;
@@ -143,7 +144,7 @@ public static partial class EndpointRouteBuilderExtensions
 
 			var response = string.Empty;
 			var acceptRequestHeader = context.Request.Headers.Accept.ToString().ToLowerInvariant();
-			context.Response.StatusCode = context.Request.Headers.TryGetValue(key, out var value) ? StatusCodes.Status200OK : StatusCodes.Status204NoContent;
+			context.Response.StatusCode = context.Request.Headers.TryGetValue(key, out var value) ? Status200OK : Status204NoContent;
 			context.Response.Headers.ContentType = acceptRequestHeader switch
 			{
 				Text.Plain or Text.Html or Application.Xml or Text.Xml or Application.Json => acceptRequestHeader,
@@ -151,13 +152,13 @@ public static partial class EndpointRouteBuilderExtensions
 			};
 			response = (context.Response.StatusCode, acceptRequestHeader) switch
 			{
-				(StatusCodes.Status200OK, Text.Plain) => Invariant($"{key}: {value}"),
-				(StatusCodes.Status200OK, Text.Html) => Invariant($"<h1>{key}</h1><br><b>{value}<b/>"),
-				(StatusCodes.Status200OK, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'), value.ToString())).ToString(),
-				(StatusCodes.Status200OK, _) => JsonSerializer.Serialize(new Dictionary<string, string?>(1) { { key, value.ToString() } }, CreateJsonSerializerOptions()),
-				(StatusCodes.Status204NoContent, Text.Plain) => Invariant($"{key}: "),
-				(StatusCodes.Status204NoContent, Text.Html) => Invariant($"<h1>{key}</h1><br>"),
-				(StatusCodes.Status204NoContent, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'))).ToString(),
+				(Status200OK, Text.Plain) => Invariant($"{key}: {value}"),
+				(Status200OK, Text.Html) => Invariant($"<h1>{key}</h1><br><b>{value}<b/>"),
+				(Status200OK, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'), value.ToString())).ToString(),
+				(Status200OK, _) => JsonSerializer.Serialize(new Dictionary<string, string?>(1) { { key, value.ToString() } }, CreateJsonSerializerOptions()),
+				(Status204NoContent, Text.Plain) => Invariant($"{key}: "),
+				(Status204NoContent, Text.Html) => Invariant($"<h1>{key}</h1><br>"),
+				(Status204NoContent, Application.Xml or Text.Xml) => new XDocument(new XElement(key.Replace(' ', '_'))).ToString(),
 				_ => JsonSerializer.Serialize(new Dictionary<string, string?>(1) { { key, null } }, CreateJsonSerializerOptions())
 			};
 
@@ -200,7 +201,7 @@ public static partial class EndpointRouteBuilderExtensions
 		var options = new JsonSerializerOptions
 		{
 			PropertyNameCaseInsensitive = true,
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
 			WriteIndented = true
 		};
 		options.Converters.Add(new StringValuesJsonConverter());
