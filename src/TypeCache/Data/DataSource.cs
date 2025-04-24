@@ -13,7 +13,7 @@ namespace TypeCache.Data;
 
 internal sealed class DataSource : IDataSource
 {
-	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString, string[] databases)
+	public DataSource(string name, DbProviderFactory dbProviderFactory, string connectionString, string[]? databases = null)
 	{
 		this.Factory = dbProviderFactory;
 		this.Name = name;
@@ -63,14 +63,10 @@ internal sealed class DataSource : IDataSource
 		this.SupportedMetadataCollections = metadata.Rows
 			.Cast<DataRow>()
 			.Select(row => row[SchemaColumn.collectionName]!.ToString()!.ToEnum<SchemaCollection>()!.Value)
-			.WhereNotNull()
 			.ToFrozenSet();
 
-		if (databases?.Length > 0)
-			this.Databases = new HashSet<string>(databases, StringComparer.OrdinalIgnoreCase)
-				.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
-		else
-			this.Databases = this.GetDatabases().ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+		databases ??= this.GetDatabases();
+		this.Databases = databases.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
 		this.ObjectSchemas = this.GetObjectSchemas();
 	}
@@ -194,7 +190,7 @@ internal sealed class DataSource : IDataSource
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
-		=> this.Name.GetHashCode(StringComparison.OrdinalIgnoreCase);
+		=> this.Name.GetHashCodeIgnoreCase();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override string ToString()
@@ -220,7 +216,7 @@ internal sealed class DataSource : IDataSource
 		adapter.MissingMappingAction = MissingMappingAction.Passthrough;
 		adapter.MissingSchemaAction = MissingSchemaAction.Add;
 
-		this.Databases.ToArray().ForEach(databaseName =>
+		this.Databases.ForEach(databaseName =>
 		{
 			connection.ChangeDatabase(databaseName);
 

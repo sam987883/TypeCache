@@ -32,10 +32,10 @@ public static partial class EndpointRouteBuilderExtensions
 		internal static class SqlApi
 		{
 			[StringSyntax(nameof(Route))]
-			public const string DATABASE_SCHEMA = "/schema/{dataSource}/{database}/{collection}";
+			public const string DATABASE_SCHEMA = "/schema/{source}/{database}/{collection}";
 
 			[StringSyntax(nameof(Route))]
-			public const string TABLE = "/{dataSource}/{database}/{schema}/{table}";
+			public const string TABLE = "/{source}/{database}/{schema}/{table}";
 
 			[StringSyntax(nameof(Route))]
 			public const string DELETE = "/delete" + TABLE;
@@ -50,7 +50,7 @@ public static partial class EndpointRouteBuilderExtensions
 			public const string INSERT_VALUES = "/insert-values" + TABLE;
 
 			[StringSyntax(nameof(Route))]
-			public const string PROCEDURE = "/execute/{dataSource}/{database}/{schema}/{procedure}";
+			public const string PROCEDURE = "/execute/{source}/{database}/{schema}/{procedure}";
 
 			[StringSyntax(nameof(Route))]
 			public const string SELECT = "/select" + TABLE;

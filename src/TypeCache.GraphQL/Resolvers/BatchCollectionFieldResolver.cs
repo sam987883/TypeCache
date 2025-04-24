@@ -11,7 +11,7 @@ public sealed class BatchCollectionFieldResolver<SOURCE, ITEM> : FieldResolver
 	where SOURCE : notnull
 	where ITEM : notnull
 {
-	private readonly object _Lock = new object();
+	private readonly object _Lock = new();
 	private readonly RuntimeMethodHandle _MethodHandle;
 	private readonly Func<SOURCE, ITEM[], ITEM[]> _GetResults;
 	private bool _HasResults = false;

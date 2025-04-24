@@ -10,7 +10,7 @@ namespace TypeCache.GraphQL.Resolvers;
 public sealed class ItemFieldResolver<ITEM> : FieldResolver
 	where ITEM : notnull
 {
-	private readonly object _Lock = new object();
+	private readonly object _Lock = new();
 	private readonly RuntimeMethodHandle _MethodHandle;
 	private bool _HasResult = false;
 	private Task<ITEM> _Result = default!;

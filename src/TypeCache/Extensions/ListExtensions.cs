@@ -4,78 +4,55 @@ namespace TypeCache.Extensions;
 
 public static class ListExtensions
 {
-	public static void AddIfNotBlank(this IList<string> @this, string? value)
+	public static void AddIfNotBlank(this IList<string> @this, string? item)
 	{
 		@this.ThrowIfNull();
 
-		if (value.IsNotBlank())
-			@this.Add(value);
+		if (item.IsNotBlank())
+			@this.Add(item);
 	}
 
-	public static void AddIfNotNull<T>(this IList<T> @this, T? value)
+	public static void AddIfHasValue<T>(this IList<T> @this, T? item)
+		where T : struct
 	{
 		@this.ThrowIfNull();
 
-		if (value is not null)
-			@this.Add(value);
+		if (item.HasValue)
+			@this.Add(item.Value);
 	}
 
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static async Task ForEachAsync<T>(this IList<T> @this, Action<T> action, CancellationToken token = default)
+	public static void AddIfNotNull<T>(this IList<T> @this, T? item)
+		where T : class
 	{
 		@this.ThrowIfNull();
-		action.ThrowIfNull();
 
-		foreach (var item in @this)
-		{
-			if (token.IsCancellationRequested)
-			{
-				await Task.FromCanceled(token);
-				return;
-			}
-
-			action(item);
-		}
-
-		await Task.CompletedTask;
+		if (item is not null)
+			@this.Add(item);
 	}
 
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static async Task ForEachAsync<T>(this IList<T> @this, Action<T, int> action, CancellationToken token = default)
+	public static void InsertIfNotBlank(this IList<string> @this, int index, string? item)
 	{
 		@this.ThrowIfNull();
-		action.ThrowIfNull();
 
-		var i = -1;
-		foreach (var item in @this)
-		{
-			if (token.IsCancellationRequested)
-			{
-				await Task.FromCanceled(token);
-				return;
-			}
-
-			action(item, ++i);
-		}
-
-		await Task.CompletedTask;
+		if (item.IsNotBlank())
+			@this.Insert(index, item);
 	}
 
-	public static void InsertIfNotBlank(this IList<string> @this, int index, string? value)
+	public static void InsertIfHasValue<T>(this IList<T> @this, int index, T? item)
+		where T : struct
 	{
 		@this.ThrowIfNull();
 
-		if (value.IsNotBlank())
-			@this.Insert(index, value);
+		if (item.HasValue)
+			@this.Insert(index, item.Value);
 	}
 
-	public static void InsertIfNotNull<T>(this IList<T> @this, int index, T? value)
+	public static void InsertIfNotNull<T>(this IList<T> @this, int index, T? item)
+		where T : class
 	{
 		@this.ThrowIfNull();
 
-		if (value is not null)
-			@this.Insert(index, value);
+		if (item is not null)
+			@this.Insert(index, item);
 	}
 }

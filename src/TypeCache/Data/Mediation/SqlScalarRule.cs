@@ -5,6 +5,11 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
+public sealed class SqlScalarRequest : IRequest<object?>
+{
+	public required SqlCommand Command { get; set; }
+}
+
 internal sealed class SqlScalarRule : IRule<SqlScalarRequest, object?>
 {
 	public async Task<object?> Map(SqlScalarRequest request, CancellationToken token)

@@ -1,9 +1,26 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Data;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Microsoft.VisualBasic;
 using TypeCache.Extensions;
+using TypeCache.Utilities;
 using Xunit;
 using static System.Reflection.BindingFlags;
 
@@ -454,10 +471,14 @@ public class ReflectionExtensions
 	[InlineData("UInt64", typeof(ulong))]
 	[InlineData("String", typeof(string))]
 	[InlineData("Char*", typeof(char*))]
+	[InlineData("Char***", typeof(char***))]
 	[InlineData("Int32[]", typeof(int[]))]
+	[InlineData("Int32[,,]", typeof(int[,,]))]
 	[InlineData("Int32[][][]", typeof(int[][][]))]
 	[InlineData("IList<Boolean>", typeof(IList<bool>))]
+	[InlineData("IList<>", typeof(IList<>))]
 	[InlineData("IDictionary<String, List<Int32>>", typeof(IDictionary<string, List<int>>))]
+	[InlineData("IDictionary<,>", typeof(IDictionary<,>))]
 	public void Type_GetTypeName(string expected, Type type)
 	{
 		var actual = type.GetTypeName();
@@ -472,5 +493,184 @@ public class ReflectionExtensions
 
 			Assert.Equal(expected, actual);
 		}
+	}
+
+	[Theory]
+	[InlineData(CollectionType.Array, typeof(string[]))]
+	[InlineData(CollectionType.ArrayList, typeof(ArrayList))]
+	[InlineData(CollectionType.BitArray, typeof(BitArray))]
+	[InlineData(CollectionType.BlockingCollection, typeof(BlockingCollection<string>))]
+	[InlineData(CollectionType.ConcurrentBag, typeof(ConcurrentBag<string>))]
+	[InlineData(CollectionType.ConcurrentDictionary, typeof(ConcurrentDictionary<int, string>))]
+	[InlineData(CollectionType.ConcurrentQueue, typeof(ConcurrentQueue<string>))]
+	[InlineData(CollectionType.ConcurrentStack, typeof(ConcurrentStack<string>))]
+	[InlineData(CollectionType.FrozenDictionary, typeof(FrozenDictionary<int, string>))]
+	[InlineData(CollectionType.FrozenSet, typeof(FrozenSet<string>))]
+	[InlineData(CollectionType.Hashtable, typeof(Hashtable))]
+	[InlineData(CollectionType.HybridDictionary, typeof(HybridDictionary))]
+	[InlineData(CollectionType.ImmutableArray, typeof(ImmutableArray<string>))]
+	[InlineData(CollectionType.ImmutableSortedDictionary, typeof(ImmutableSortedDictionary<int, string>))]
+	[InlineData(CollectionType.ImmutableDictionary, typeof(IImmutableDictionary<int, string>))]
+	[InlineData(CollectionType.ImmutableSortedSet, typeof(ImmutableSortedSet<string>))]
+	[InlineData(CollectionType.ImmutableSet, typeof(IImmutableSet<string>))]
+	[InlineData(CollectionType.ImmutableList, typeof(IImmutableList<string>))]
+	[InlineData(CollectionType.ImmutableQueue, typeof(IImmutableQueue<string>))]
+	[InlineData(CollectionType.ImmutableStack, typeof(IImmutableStack<string>))]
+	[InlineData(CollectionType.KeyedCollection, typeof(KeyedCollection<int, string>))]
+	[InlineData(CollectionType.LinkedList, typeof(LinkedList<string>))]
+	[InlineData(CollectionType.ListDictionary, typeof(ListDictionary))]
+	[InlineData(CollectionType.NameObjectCollection, typeof(NameObjectCollectionBase))]
+	[InlineData(CollectionType.ObservableCollection, typeof(ObservableCollection<object>))]
+	[InlineData(CollectionType.OrderedDictionary, typeof(IOrderedDictionary))]
+	[InlineData(CollectionType.PriorityQueue, typeof(PriorityQueue<int, string>))]
+	[InlineData(CollectionType.Queue, typeof(Queue))]
+	[InlineData(CollectionType.Queue, typeof(Queue<string>))]
+	[InlineData(CollectionType.ReadOnlyObservableCollection, typeof(ReadOnlyObservableCollection<object>))]
+	[InlineData(CollectionType.ReadOnlyCollection, typeof(ReadOnlyCollection<object>))]
+	[InlineData(CollectionType.ReadOnlyCollection, typeof(ReadOnlyCollectionBase))]
+	[InlineData(CollectionType.SortedDictionary, typeof(SortedDictionary<int, string>))]
+	[InlineData(CollectionType.SortedList, typeof(SortedList<int, string>))]
+	[InlineData(CollectionType.SortedList, typeof(SortedList))]
+	[InlineData(CollectionType.SortedSet, typeof(SortedSet<string>))]
+	[InlineData(CollectionType.Stack, typeof(Stack<string>))]
+	[InlineData(CollectionType.Stack, typeof(Stack))]
+	[InlineData(CollectionType.StringCollection, typeof(StringCollection))]
+	[InlineData(CollectionType.Collection, typeof(Collection<string>))]
+	[InlineData(CollectionType.Collection, typeof(CollectionBase))]
+	[InlineData(CollectionType.ReadOnlySet, typeof(IReadOnlySet<string>))]
+	[InlineData(CollectionType.Set, typeof(ISet<string>))]
+	[InlineData(CollectionType.Dictionary, typeof(IDictionary<int, string>))]
+	[InlineData(CollectionType.ReadOnlyDictionary, typeof(IReadOnlyDictionary<int, string>))]
+	[InlineData(CollectionType.List, typeof(IList<string>))]
+	[InlineData(CollectionType.ReadOnlyList, typeof(IReadOnlyList<string>))]
+	[InlineData(CollectionType.ReadOnlyCollection, typeof(IReadOnlyCollection<string>))]
+	[InlineData(CollectionType.Collection, typeof(ICollection<string>))]
+	[InlineData(CollectionType.None, typeof(string))]
+	[InlineData(CollectionType.None, typeof(object))]
+	public void Type_GetCollectionType(CollectionType expected, Type type)
+	{
+		Assert.Equal(expected, type.GetCollectionType());
+	}
+
+	[Theory]
+	[InlineData(ObjectType.Action, typeof(Action))]
+	[InlineData(ObjectType.Action, typeof(Action<bool>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string, bool?>))]
+	[InlineData(ObjectType.Action, typeof(Action<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string, bool?, nuint>))]
+	[InlineData(ObjectType.Action, typeof(Action<,,,,,,,,,,,,,,,>))]
+	[InlineData(ObjectType.AsyncEnumerable, typeof(IAsyncEnumerable<string>))]
+	[InlineData(ObjectType.AsyncEnumerator, typeof(IAsyncEnumerator<string>))]
+	[InlineData(ObjectType.AsyncResult, typeof(IAsyncResult))]
+	[InlineData(ObjectType.Attribute, typeof(JsonIgnoreAttribute))]
+	[InlineData(ObjectType.DataColumn, typeof(DataColumn))]
+	[InlineData(ObjectType.DataRow, typeof(DataRow))]
+	[InlineData(ObjectType.DataRowView, typeof(DataRowView))]
+	[InlineData(ObjectType.DataSet, typeof(DataSet))]
+	[InlineData(ObjectType.DataTable, typeof(DataTable))]
+	[InlineData(ObjectType.Enumerable, typeof(List<string>))]
+	[InlineData(ObjectType.Enumerator, typeof(List<string>.Enumerator))]
+	[InlineData(ObjectType.Exception, typeof(ArgumentException))]
+	[InlineData(ObjectType.Func, typeof(Func<bool>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string, bool?>))]
+	[InlineData(ObjectType.Func, typeof(Func<bool, int, object, string, Guid, DataSet, DataTable, DataColumn, DataRow, DataRowView, DBNull, int?, string, bool?, nuint>))]
+	[InlineData(ObjectType.Func, typeof(Func<,,,,,,,,,,,,,,,>))]
+	[InlineData(ObjectType.Func, typeof(Func<,,,,,,,,,,,,,,,,>))]
+	[InlineData(ObjectType.Delegate, typeof(Predicate<object>))]
+	[InlineData(ObjectType.JsonArray, typeof(JsonArray))]
+	[InlineData(ObjectType.JsonDocument, typeof(JsonDocument))]
+	[InlineData(ObjectType.JsonElement, typeof(JsonElement))]
+	[InlineData(ObjectType.JsonObject, typeof(JsonObject))]
+	[InlineData(ObjectType.JsonValue, typeof(JsonValue))]
+	[InlineData(ObjectType.Lazy, typeof(Lazy<object>))]
+	[InlineData(ObjectType.Lazy, typeof(Lazy<object, string>))]
+	[InlineData(ObjectType.Memory, typeof(Memory<object>))]
+	[InlineData(ObjectType.Nullable, typeof(decimal?))]
+	[InlineData(ObjectType.Object, typeof(object))]
+	[InlineData(ObjectType.Observable, typeof(CustomObservable<object>))]
+	[InlineData(ObjectType.Observer, typeof(ObserverAdapter<object>))]
+	[InlineData(ObjectType.Pointer, typeof(char*))]
+	[InlineData(ObjectType.Range, typeof(Range))]
+	[InlineData(ObjectType.ReadOnlyMemory, typeof(ReadOnlyMemory<byte>))]
+	[InlineData(ObjectType.ReadOnlySpan, typeof(ReadOnlySpan<byte>))]
+	[InlineData(ObjectType.ScalarType, typeof(char))]
+	[InlineData(ObjectType.ScalarType, typeof(string))]
+	[InlineData(ObjectType.Span, typeof(Span<byte>))]
+	[InlineData(ObjectType.Stream, typeof(FileStream))]
+	[InlineData(ObjectType.StringBuilder, typeof(StringBuilder))]
+	[InlineData(ObjectType.Task, typeof(Task))]
+	[InlineData(ObjectType.Task, typeof(Task<object>))]
+	[InlineData(ObjectType.Tuple, typeof(Tuple<int, string>))]
+	[InlineData(ObjectType.Type, typeof(Type))]
+	[InlineData(ObjectType.ValueTask, typeof(ValueTask))]
+	[InlineData(ObjectType.ValueTask, typeof(ValueTask<object>))]
+	[InlineData(ObjectType.ValueTuple, typeof((int, string)))]
+	[InlineData(ObjectType.Void, typeof(void))]
+	[InlineData(ObjectType.WeakReference, typeof(WeakReference))]
+	[InlineData(ObjectType.WeakReference, typeof(WeakReference<object>))]
+	[InlineData(ObjectType.Unknown, typeof(HashMaker))]
+	public void Type_GetObjectType(ObjectType expected, Type type)
+	{
+		Assert.Equal(expected, type.GetObjectType());
+	}
+
+	[Theory]
+	[InlineData(ScalarType.BigInteger, typeof(BigInteger))]
+	[InlineData(ScalarType.Boolean, typeof(bool))]
+	[InlineData(ScalarType.Byte, typeof(byte))]
+	[InlineData(ScalarType.Char, typeof(char))]
+	[InlineData(ScalarType.DateOnly, typeof(DateOnly))]
+	[InlineData(ScalarType.DateTime, typeof(DateTime))]
+	[InlineData(ScalarType.DateTimeOffset, typeof(DateTimeOffset))]
+	[InlineData(ScalarType.Decimal, typeof(decimal))]
+	[InlineData(ScalarType.Double, typeof(double))]
+	[InlineData(ScalarType.Enum, typeof(Enum))]
+	[InlineData(ScalarType.Enum, typeof(StringComparison))]
+	[InlineData(ScalarType.Guid, typeof(Guid))]
+	[InlineData(ScalarType.Half, typeof(Half))]
+	[InlineData(ScalarType.Index, typeof(Index))]
+	[InlineData(ScalarType.Int128, typeof(Int128))]
+	[InlineData(ScalarType.Int16, typeof(short))]
+	[InlineData(ScalarType.Int32, typeof(int))]
+	[InlineData(ScalarType.Int64, typeof(long))]
+	[InlineData(ScalarType.IntPtr, typeof(nint))]
+	[InlineData(ScalarType.None, typeof(object))]
+	[InlineData(ScalarType.SByte, typeof(sbyte))]
+	[InlineData(ScalarType.Single, typeof(float))]
+	[InlineData(ScalarType.String, typeof(string))]
+	[InlineData(ScalarType.TimeOnly, typeof(TimeOnly))]
+	[InlineData(ScalarType.TimeSpan, typeof(TimeSpan))]
+	[InlineData(ScalarType.UInt128, typeof(UInt128))]
+	[InlineData(ScalarType.UInt16, typeof(ushort))]
+	[InlineData(ScalarType.UInt32, typeof(uint))]
+	[InlineData(ScalarType.UInt64, typeof(ulong))]
+	[InlineData(ScalarType.UIntPtr, typeof(nuint))]
+	[InlineData(ScalarType.Uri, typeof(Uri))]
+	public void Type_GetScalarType(ScalarType expected, Type type)
+	{
+		Assert.Equal(expected, type.GetScalarType());
 	}
 }

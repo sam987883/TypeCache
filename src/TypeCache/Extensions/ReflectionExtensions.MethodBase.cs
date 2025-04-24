@@ -49,6 +49,17 @@ public partial class ReflectionExtensions
 			});
 	}
 
+	public static bool IsCallableWith(this MethodBase @this, Type[] argumentTypes)
+	{
+		var parameterInfos = @this.GetParameters();
+		if (parameterInfos.Any(_ => _.IsOut))
+			return false;
+
+		return argumentTypes?.Length > 0
+			? parameterInfos.Select(_ => _.ParameterType).SequenceEqual(argumentTypes)
+			: !parameterInfos.Any();
+	}
+
 	[DebuggerHidden]
 	internal static bool IsInvokable(this MethodBase @this)
 		=> @this.GetParameters().All(parameterInfo => !parameterInfo.IsOut && parameterInfo.ParameterType.IsInvokable());

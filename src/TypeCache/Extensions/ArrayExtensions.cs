@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Collections.Immutable;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -23,11 +24,18 @@ public static class ArrayExtensions
 		=> Array.Clear(@this, start, length is 0 ? @this.Length : length);
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparer.OrdinalIgnoreCase"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Exists(item =&gt; <see cref="StringComparer.OrdinalIgnoreCase"/>.Equals(item, <paramref name="value"/>));</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool ContainsIgnoreCase(this string[] @this, string value)
-		=> @this.Contains(value, StringComparer.OrdinalIgnoreCase);
+		=> @this.Exists(item => StringComparer.OrdinalIgnoreCase.Equals(item, value));
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Exists(item =&gt; <see cref="StringComparer.Ordinal"/>.Equals(item, <paramref name="value"/>));</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsOrdinal(this string[] @this, string value)
+		=> @this.Exists(item => StringComparer.Ordinal.Equals(item, value));
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentException"/>
@@ -36,7 +44,7 @@ public static class ArrayExtensions
 		@this.ThrowIfNull();
 
 		if (@this.Length is 0)
-			return Array<T>.Empty;
+			return [];
 
 		var copy = new T[@this.Length];
 		@this.AsSpan().CopyTo(copy);
@@ -51,119 +59,48 @@ public static class ArrayExtensions
 	public static bool Exists<T>(this T[] @this, Func<T, bool> match)
 		=> Array.Exists(@this, new Predicate<T>(match));
 
-	/// <inheritdoc cref="Array.ForEach{T}(T[], Action{T})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Array"/>.ForEach(@<paramref name="this"/>, action);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T> action)
-		=> Array.ForEach(@this, action);
+	{
+		@this.ThrowIfNull();
+
+		@this.AsSpan().AsReadOnly().ForEach(action);
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static void ForEach<T>(this T[] @this, Action<T, int> action)
+	{
+		@this.ThrowIfNull();
+
+		@this.AsSpan().AsReadOnly().ForEach(action);
+	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T> action, Action between)
 	{
-		between.ThrowIfNull();
+		@this.ThrowIfNull();
 
-		var first = true;
-		@this.ForEach(value =>
-		{
-			if (first)
-				first = false;
-			else
-				between();
-
-			action(value);
-		});
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static void ForEach<T>(this T[]? @this, ActionRef<T> action)
-	{
-		action.ThrowIfNull();
-
-		var count = @this?.Length ?? 0;
-		for (var i = 0; i < count; ++i)
-			action(ref @this![i]);
-	}
-
-	public static void ForEach<T>(this T[] @this, Action<T, int> action)
-	{
-		for (var i = 0; i < @this.Length; ++i)
-			action(@this[i], i);
+		@this.AsSpan().AsReadOnly().ForEach(action, between);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static void ForEach<T>(this T[] @this, Action<T, int> action, Action between)
 	{
-		between.ThrowIfNull();
+		@this.ThrowIfNull();
 
-		var i = -1;
-		@this.ForEach(value =>
-		{
-			if (++i > 0)
-				between();
-
-			action(value, i);
-		});
+		@this.AsSpan().AsReadOnly().ForEach(action, between);
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static async Task ForEachAsync<T>(this T[] @this, Action<T> action, CancellationToken token = default)
+	public static void ForEach<T>(this T[] @this, ActionRef<T> action)
 	{
 		@this.ThrowIfNull();
 		action.ThrowIfNull();
 
-		for (var i = 0; i < @this.Length; ++i)
-		{
-			if (token.IsCancellationRequested)
-			{
-				await Task.FromCanceled(token);
-				return;
-			}
-
-			action(@this[i]);
-		}
-
-		await Task.CompletedTask;
+		var count = @this.Length;
+		for (var i = 0; i < count; ++i)
+			action(ref @this![i]);
 	}
-
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static async Task ForEachAsync<T>(this T[] @this, Action<T, int> action, CancellationToken token = default)
-	{
-		@this.ThrowIfNull();
-		action.ThrowIfNull();
-
-		for (var i = 0; i < @this.Length; ++i)
-		{
-			if (token.IsCancellationRequested)
-			{
-				await Task.FromCanceled(token);
-				return;
-			}
-
-			action(@this[i], i);
-		}
-
-		await Task.CompletedTask;
-	}
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item), <paramref name="token"/>);</c>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Task ForEachAsync<T>(this T[] @this, Func<T, Task> action, CancellationToken token = default)
-		=> @this.ForEachAsync(async item => await action(item), token);
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ForEachAsync(<see langword="async"/> item =&gt; <see langword="await"/> <paramref name="action"/>(item, <paramref name="token"/>), <paramref name="token"/>);</c>
-	/// </remarks>
-	/// <exception cref="ArgumentNullException"/>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Task ForEachAsync<T>(this T[] @this, Func<T, CancellationToken, Task> action, CancellationToken token = default)
-		=> @this.ForEachAsync(async item => await action(item, token), token);
 
 	/// <inheritdoc cref="Convert.FromBase64CharArray(char[], int, int)"/>
 	/// <remarks>
@@ -270,6 +207,27 @@ public static class ArrayExtensions
 		return array;
 	}
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Any(_ =&gt; _ &gt; (<see cref="byte"/>)0);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ToBoolean(this byte[] @this)
+		=> @this.Any(_ => _ > (byte)0);
+
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Skip(<paramref name="startIndex"/>).Any(_ =&gt; _ &gt; (<see cref="byte"/>)0);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ToBoolean(this byte[] @this, int startIndex)
+		=> @this.Skip(startIndex).Any(_ => _ > (byte)0);
+
+	/// <remarks>
+	/// <c>=&gt; <see cref="JsonSerializer"/>.SerializeToNode(@<paramref name="this"/>, <paramref name="options"/>) <see langword="as"/> <see cref="JsonArray"/>;</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
+		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
+
 	/// <inheritdoc cref="ArraySegment{T}.ArraySegment(T[])"/>
 	/// <remarks>
 	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
@@ -375,11 +333,59 @@ public static class ArrayExtensions
 		=> ImmutableStack.Create(@this);
 
 	/// <remarks>
-	/// <c>=&gt; <see cref="JsonSerializer"/>.SerializeToNode(@<paramref name="this"/>, <paramref name="options"/>) <see langword="as"/> <see cref="JsonArray"/>;</c>
+	/// <c>=&gt; ((ReadOnlySpan&lt;<see cref="byte"/>&gt;)@<paramref name="this"/>).ToNumber&lt;<typeparamref name="T"/>&gt;();</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static JsonArray? ToJSON<T>(this T[]? @this, JsonSerializerOptions? options = null)
-		=> JsonSerializer.SerializeToNode(@this, options) as JsonArray;
+	public static T ToNumber<T>(this byte[] @this)
+		where T : struct, INumber<T>
+		=> ((ReadOnlySpan<byte>)@this).ToNumber<T>();
+
+	public static T ToNumber<T>(this byte[] @this, int startIndex)
+		where T : struct, INumber<T>
+		=> typeof(T).GetScalarType() switch
+		{
+			ScalarType.Char => Unsafe.BitCast<char, T>(BitConverter.ToChar(@this, startIndex)),
+			ScalarType.SByte => Unsafe.BitCast<sbyte, T>((sbyte)BitConverter.ToInt32(@this, startIndex)),
+			ScalarType.Int16 => Unsafe.BitCast<short, T>(BitConverter.ToInt16(@this, startIndex)),
+			ScalarType.Int32 => Unsafe.BitCast<int, T>(BitConverter.ToInt32(@this, startIndex)),
+			ScalarType.IntPtr => Unsafe.BitCast<nint, T>(BitConverter.ToInt32(@this, startIndex)),
+			ScalarType.Int64 => Unsafe.BitCast<long, T>(BitConverter.ToInt64(@this, startIndex)),
+			ScalarType.BigInteger => Unsafe.BitCast<BigInteger, T>(new BigInteger(@this.AsSpan().Slice(startIndex))),
+			ScalarType.Byte => Unsafe.BitCast<byte, T>((byte)BitConverter.ToUInt32(@this, startIndex)),
+			ScalarType.UInt16 => Unsafe.BitCast<ushort, T>(BitConverter.ToUInt16(@this, startIndex)),
+			ScalarType.UInt32 => Unsafe.BitCast<uint, T>(BitConverter.ToUInt32(@this, startIndex)),
+			ScalarType.UIntPtr => Unsafe.BitCast<nuint, T>(BitConverter.ToUInt32(@this, startIndex)),
+			ScalarType.UInt64 => Unsafe.BitCast<ulong, T>(BitConverter.ToUInt64(@this, startIndex)),
+			ScalarType.Half => Unsafe.BitCast<Half, T>(BitConverter.ToHalf(@this, startIndex)),
+			ScalarType.Single => Unsafe.BitCast<float, T>(BitConverter.ToSingle(@this, startIndex)),
+			ScalarType.Double => Unsafe.BitCast<double, T>(BitConverter.ToDouble(@this, startIndex)),
+			ScalarType.Decimal => Unsafe.BitCast<decimal, T>(new decimal(@this.AsSpan().Slice(startIndex).Cast<byte, int>())),
+			var scalarType => throw new UnreachableException(Invariant($"Cannot convert bytes to {scalarType.Name()}."))
+		};
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this byte[] @this)
+		=> BitConverter.ToString(@this);
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[], int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>, <paramref name="startIndex"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this byte[] @this, int startIndex)
+		=> BitConverter.ToString(@this, startIndex);
+
+	/// <inheritdoc cref="BitConverter.ToString(byte[], int, int)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="BitConverter"/>.ToString(@<paramref name="this"/>.Span, <paramref name="length"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string ToText(this byte[] @this, int startIndex, int length)
+		=> BitConverter.ToString(@this, startIndex, length);
 
 	/// <inheritdoc cref="Task.WaitAll(Task[])"/>
 	/// <remarks>

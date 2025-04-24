@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace TypeCache.Extensions;
 
@@ -30,4 +31,28 @@ public static partial class NumericExtensions
 	public static int Sign<T>(this T @this)
 		where T : INumber<T>
 		=> T.Sign(@this);
+
+	public static byte[] ToBytes<T>(this T @this)
+		where T : struct, INumber<T>
+		=> @this switch
+		{
+			char value => BitConverter.GetBytes(value),
+			sbyte value => [(byte)value],
+			short value => BitConverter.GetBytes(value),
+			int value => BitConverter.GetBytes(value),
+			nint value => BitConverter.GetBytes(value),
+			long value => BitConverter.GetBytes(value),
+			byte value => [value],
+			ushort value => BitConverter.GetBytes(value),
+			uint value => BitConverter.GetBytes(value),
+			nuint value => BitConverter.GetBytes(value),
+			ulong value => BitConverter.GetBytes(value),
+			BigInteger value => value.ToByteArray(),
+			Half value => BitConverter.GetBytes(value),
+			float value => BitConverter.GetBytes(value),
+			double value => BitConverter.GetBytes(value),
+			decimal value => decimal.GetBits(value).SelectMany(BitConverter.GetBytes).ToArray(),
+			NFloat value => BitConverter.GetBytes(value),
+			_ => throw new UnreachableException(Invariant($"Cannot convert [{@this.GetType().FullName}] to bytes."))
+		};
 }

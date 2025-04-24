@@ -139,11 +139,11 @@ public static class SchemaExtensions
 		dataSource.ThrowIfNull();
 
 		database ??= dataSource.DefaultDatabase;
-		var objectSchemas = dataSource.ObjectSchemas.Values.ToArray();
+		var objectSchemas = dataSource.ObjectSchemas.Values;
 		if (schema.IsNotBlank())
-			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database) && _.SchemaName.EqualsIgnoreCase(schema)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database) && _.SchemaName.EqualsIgnoreCase(schema));
 		else if (database.IsNotBlank())
-			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database)).ToArray();
+			objectSchemas = objectSchemas.Where(_ => _.DatabaseName.EqualsIgnoreCase(database));
 
 		objectSchemas.ForEach(objectSchema =>
 		{

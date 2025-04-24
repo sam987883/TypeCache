@@ -10,11 +10,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Utilities;
 using static System.Globalization.CultureInfo;
+using static System.StringSplitOptions;
 
 namespace TypeCache.Extensions;
 
 public static class StringExtensions
 {
+	private const char FROM_END = '^';
+	private const string RANGE_OPERATOR = "..";
+
 	/// <inheritdoc cref="char.IsDigit(char)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Any(c =&gt; c.IsDigit());</c>
@@ -94,12 +98,29 @@ public static class StringExtensions
 	public static bool ContainsAny(this string @this, char[]? chars = null)
 		=> chars?.Any(@this.Contains) is true;
 
+	/// <inheritdoc cref="string.Contains(char, StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsIgnoreCase(this string @this, char value)
+		=> @this.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="string.Contains(string, StringComparison)"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool ContainsIgnoreCase(this string @this, string value)
 		=> @this.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="string.Contains(string, StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Contains(<paramref name="value"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool ContainsOrdinal(this string @this, string value)
+		=> @this.Contains(value, StringComparison.Ordinal);
 
 	/// <inheritdoc cref="string.EndsWith(string, StringComparison)"/>
 	/// <remarks>
@@ -109,6 +130,14 @@ public static class StringExtensions
 	public static bool EndsWithIgnoreCase(this string @this, string text)
 		=> @this.EndsWith(text, StringComparison.OrdinalIgnoreCase);
 
+	/// <inheritdoc cref="string.EndsWith(string, StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.EndsWith(<paramref name="text"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool EndsWithOrdinal(this string @this, string text)
+		=> @this.EndsWith(text, StringComparison.Ordinal);
+
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
 	/// </remarks>
@@ -116,12 +145,35 @@ public static class StringExtensions
 	public static bool EqualsIgnoreCase([NotNullWhen(true)] this string? @this, [NotNullWhen(true)] string? value)
 		=> string.Equals(@this, value, StringComparison.OrdinalIgnoreCase);
 
+	/// <remarks>
+	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool EqualsOrdinal([NotNullWhen(true)] this string? @this, [NotNullWhen(true)] string? value)
+		=> string.Equals(@this, value, StringComparison.Ordinal);
+
 	/// <param name="encoding">Defaults to <see cref="Encoding.UTF8"/></param>
 	public static string FromBase64(this string @this, Encoding? encoding = null)
 	{
 		encoding ??= Encoding.UTF8;
 		return encoding.GetString(Convert.FromBase64String(@this));
 	}
+
+	/// <inheritdoc cref="string.GetHashCode(StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.GetHashCode(<see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int GetHashCodeIgnoreCase(this string @this)
+		=> @this.GetHashCode(StringComparison.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="string.GetHashCode(StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.GetHashCode(<see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static int GetHashCodeOrdinal(this string @this)
+		=> @this.GetHashCode(StringComparison.Ordinal);
 
 	/// <inheritdoc cref="Base64.IsValid(ReadOnlySpan{char})"/>
 	/// <remarks>
@@ -213,7 +265,7 @@ public static class StringExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	[return: NotNullIfNotNull("this")]
 	public static string? NullIfEmpty(this string? @this)
-		=> @this != string.Empty ? @this : null;
+		=> @this is not "" ? @this : null;
 
 	/// <inheritdoc cref="IParsable{TSelf}.Parse(string, IFormatProvider?)"/>
 	/// <remarks>
@@ -261,67 +313,67 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="string.Split(char, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, char separator)
-		=> @this.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separator, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(char, int, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <paramref name="count"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <paramref name="count"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, char separator, int count)
-		=> @this.Split(separator, count, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separator, count, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(char[], StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, char[] separators)
-		=> @this.Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separators, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(char[], int, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <paramref name="count"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <paramref name="count"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, char[] separators, int count)
-		=> @this.Split(separators, count, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separators, count, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(string, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, string separator)
-		=> @this.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separator, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(string, int, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <paramref name="count"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separator"/>, <paramref name="count"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, string separator, int count)
-		=> @this.Split(separator, count, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separator, count, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(string[], StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, string[] separators)
-		=> @this.Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separators, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.Split(string[], int, StringSplitOptions)"/>
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <paramref name="count"/>, <see cref="StringSplitOptions.RemoveEmptyEntries"/> | <see cref="StringSplitOptions.TrimEntries"/>);</c>
+	/// <c>=&gt; @<paramref name="this"/>.Split(<paramref name="separators"/>, <paramref name="count"/>, <see cref="RemoveEmptyEntries"/> | <see cref="TrimEntries"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string[] SplitEx(this string @this, string[] separators, int count)
-		=> @this.Split(separators, count, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		=> @this.Split(separators, count, RemoveEmptyEntries | TrimEntries);
 
 	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
 	/// <remarks>
@@ -330,6 +382,21 @@ public static class StringExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool StartsWithIgnoreCase(this string @this, string text)
 		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
+
+	/// <inheritdoc cref="string.StartsWith(string, StringComparison)"/>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool StartsWithOrdinal(this string @this, string text)
+		=> @this.StartsWith(text, StringComparison.Ordinal);
+
+	/// <remarks>
+	/// <c>=&gt; <see langword="new"/> <see cref="string"/>(@<paramref name="this"/>.Take(<paramref name="range"/>).ToArray());</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Substring(this string @this, Range range)
+		=> new string(@this.Take(range).ToArray());
 
 	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
 	/// <param name="logger">Pass a logger to log exception if thrown.</param>
@@ -359,20 +426,44 @@ public static class StringExtensions
 		encoding ??= Encoding.UTF8;
 		var length = encoding.GetMaxByteCount(@this.Length) - 1;
 		Span<byte> bytes = stackalloc byte[length];
-		encoding.GetBytes(@this, bytes);
 
-		Span<char> chars = stackalloc char[length * sizeof(char)];
-		return Convert.TryToBase64Chars(bytes, chars, out var count) ? new(chars.Slice(0, count)) : string.Empty;
+		return encoding.TryGetBytes(@this, bytes, out length)
+			? bytes.Slice(0, length).AsReadOnly().ToBase64()
+			: string.Empty;
 	}
+
+	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, out TEnum)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// </remarks>
+	[DebuggerHidden]
+	public static T? ToEnum<T>(this string? @this)
+		where T : struct, Enum
+		=> Enum.TryParse<T>(@this, out var result) ? (T?)result : null;
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
-	public static T? ToEnum<T>(this string? @this, bool ignoreCase = true)
+	public static T? ToEnumIgnoreCase<T>(this string? @this)
 		where T : struct, Enum
-		=> Enum.TryParse<T>(@this, ignoreCase, out var result) ? (T?)result : null;
+		=> Enum.TryParse<T>(@this, true, out var result) ? (T?)result : null;
+
+	/// <summary>
+	/// <code>
+	/// "^2" ---&gt; ^2
+	/// "1"  ---&gt; 1
+	/// </code>
+	/// </summary>
+	public static Index? ToIndex(this string @this)
+		=> @this switch
+		{
+			null or "" => null,
+			_ when @this.StartsWith(FROM_END) && int.TryParse(@this.Substring(1), out var index) => Index.FromEnd(index),
+			_ when int.TryParse(@this, out var index) => Index.FromStart(index),
+			_ => null
+		};
 
 	/// <inheritdoc cref="Expression.Label(string)"/>
 	/// <remarks>
@@ -398,14 +489,68 @@ public static class StringExtensions
 	public static ParameterExpression ToParameterExpression(this string @this, Type type)
 		=> Expression.Parameter(type, @this);
 
+	/// <summary>
+	/// <code>
+	/// "1..^2" ---&gt; 1..^2
+	/// "..^1"  ---&gt; 0..^1
+	/// "1.."   ---&gt; 1..^0
+	/// "3"     ---&gt; 3..4
+	/// </code>
+	/// </summary>
+	public static Range? ToRange(this string @this)
+	{
+		if (@this.EqualsIgnoreCase(RANGE_OPERATOR))
+			return Range.All;
+
+		var index = @this.ToIndex();
+		if (index.HasValue)
+			return new(index.Value.Value, index.Value.Value + 1);
+
+		if (!@this.ContainsIgnoreCase(RANGE_OPERATOR))
+			return null;
+
+		if (@this.EndsWithIgnoreCase(RANGE_OPERATOR))
+		{
+			var token = @this.Substring(0..^2);
+			index = token.ToIndex();
+			return index.HasValue ? Range.StartAt(index.Value) : null;
+		}
+
+		if (@this.StartsWithIgnoreCase(RANGE_OPERATOR))
+		{
+			var token = @this.Substring(RANGE_OPERATOR.Length);
+			index = token.ToIndex();
+			return index.HasValue ? Range.EndAt(index.Value) : null;
+		}
+
+		var tokens = @this.SplitEx(RANGE_OPERATOR);
+		if (tokens.Length is 2)
+		{
+			var startIndex = tokens[0].ToIndex();
+			if (!startIndex.HasValue)
+				return null;
+
+			var endIndex = tokens[1].ToIndex();
+			if (!endIndex.HasValue)
+				return null;
+
+			return new(startIndex.Value, endIndex.Value);
+		}
+
+		return null;
+	}
+
 	/// <remarks>
 	/// <code>
-	/// =&gt; RegexCache[(@<paramref name="this"/>, <paramref name="options"/>)];
-	/// // _ =&gt; <see langword="new"/> Regex(@<paramref name="this"/>, <paramref name="options"/>, <see cref="TimeSpan"/>.FromMinutes(1));
+	/// =&gt; RegexCache[(@<paramref name="this"/>, <paramref name="options"/>)]; // <see langword="new"/> Regex(@<paramref name="this"/>, <paramref name="options"/>, <see cref="TimeSpan"/>.FromMinutes(1));
 	/// </code>
 	/// </remarks>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="ArgumentOutOfRangeException"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Regex ToRegex([StringSyntax(StringSyntaxAttribute.Regex)] this string @this, RegexOptions options = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline)
+	public static Regex ToRegex([StringSyntax(StringSyntaxAttribute.Regex)] this string @this,
+		RegexOptions options = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture | RegexOptions.Singleline)
 		=> RegexCache[(@this, options)];
 
 	/// <inheritdoc cref="StringSegment.StringSegment(string?)"/>

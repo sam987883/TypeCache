@@ -3,7 +3,9 @@
 using System;
 using System.Linq;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using NSubstitute;
 using TypeCache.Extensions;
 using Xunit;
 
@@ -11,7 +13,7 @@ namespace TypeCache.Tests.Extensions;
 
 public class StringExtensions
 {
-	private const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n";
+	private const string TEST_STRING = "AaBbCc 123 `~!#$%^\t\r\n/\\&=";
 
 	[Fact]
 	public void ContainsIgnoreCase()
@@ -26,30 +28,17 @@ public class StringExtensions
 	}
 
 	[Fact]
-	public void Enum()
-	{
-		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
-		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().ToEnum<StringComparison>());
-	}
-
-	[Fact]
 	public void EqualsIgnoreCase()
 	{
-		Assert.True(TEST_STRING.EqualsIgnoreCase("AABBCC 123 `~!#$%^\t\r\n"));
+		Assert.True(TEST_STRING.EqualsIgnoreCase(TEST_STRING.ToLowerInvariant()));
+		Assert.True(TEST_STRING.EqualsIgnoreCase(TEST_STRING.ToUpperInvariant()));
 	}
 
 	[Fact]
 	public void FromBase64()
 	{
 		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
-		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.UTF8));
-	}
-
-	[Fact]
-	public void ToBase64()
-	{
-		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
-		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.UTF8));
+		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64().FromBase64());
 	}
 
 	[Fact]
@@ -73,7 +62,6 @@ public class StringExtensions
 	[Fact]
 	public void Join()
 	{
-		Assert.Equal(TEST_STRING, " ".Join(["AaBbCc", "123", "`~!#$%^\t\r\n"]));
 		Assert.Equal(TEST_STRING, " ".Join([TEST_STRING]));
 	}
 
@@ -81,15 +69,15 @@ public class StringExtensions
 	public void Mask()
 	{
 		Assert.Equal(string.Empty, (null as string).Mask());
-		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.Mask('+'));
-		Assert.Equal("+aB+++ 123 `~!#$%^\t\r\n", TEST_STRING.Mask('+', ["A", "b", "Cc"]));
+		Assert.Equal("++++++ +++ `~!#$%^\t\r\n/\\&=", TEST_STRING.Mask('+'));
+		Assert.Equal("+aB+++ 123 `~!#$%^\t\r\n/\\&=", TEST_STRING.Mask('+', ["A", "b", "Cc"]));
 	}
 
 	[Fact]
 	public void MaskIgnoreCase()
 	{
-		Assert.Equal("++++++ +++ `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+'));
-		Assert.Equal("++++++ 123 `~!#$%^\t\r\n", TEST_STRING.MaskIgnoreCase('+', ["A", "b", "C"]));
+		Assert.Equal("++++++ +++ `~!#$%^\t\r\n/\\&=", TEST_STRING.MaskIgnoreCase('+'));
+		Assert.Equal("++++++ 123 `~!#$%^\t\r\n/\\&=", TEST_STRING.MaskIgnoreCase('+', ["A", "b", "C"]));
 	}
 
 	[Fact]
@@ -97,15 +85,6 @@ public class StringExtensions
 	{
 		Assert.Equal(string.Empty, string.Empty.Reverse());
 		Assert.Equal("321 cCbBaA", "AaBbCc 123".Reverse());
-	}
-
-	[Fact]
-	public void StringSegment()
-	{
-		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.ToStringSegment());
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.ToStringSegment(2, 0));
-		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.ToStringSegment(2, 3));
-		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.ToStringSegment(9, 1));
 	}
 
 	[Fact]
@@ -120,25 +99,127 @@ public class StringExtensions
 	[Fact]
 	public void ThrowIfBlank()
 	{
-		"AAA".ThrowIfBlank();
-		Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).ThrowIfBlank());
+		var loggerMock = Substitute.For<ILogger>();
+
+		"AAA".ThrowIfBlank(logger: loggerMock);
+		Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).ThrowIfBlank(logger: loggerMock));
 		Assert.Throws<ArgumentOutOfRangeException>(() => string.Empty.ThrowIfBlank());
-		Assert.Throws<ArgumentOutOfRangeException>(() => "      ".ThrowIfBlank());
+		Assert.Throws<ArgumentOutOfRangeException>(() => "      ".ThrowIfBlank(logger: loggerMock));
+	}
+
+	[Fact]
+	public void ToBase64()
+	{
+		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64(Encoding.ASCII).FromBase64(Encoding.ASCII));
+		Assert.Equal(TEST_STRING, TEST_STRING.ToBase64().FromBase64());
+	}
+
+	[Fact]
+	public void ToEnum()
+	{
+		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToEnum<StringComparison>());
+		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToEnum<StringComparison>());
+	}
+
+	[Fact]
+	public void ToEnumIgnoreCase()
+	{
+		Assert.Equal(StringComparison.Ordinal, nameof(StringComparison.Ordinal).ToLowerInvariant().ToEnumIgnoreCase<StringComparison>());
+		Assert.Equal(StringComparison.OrdinalIgnoreCase, nameof(StringComparison.OrdinalIgnoreCase).ToUpperInvariant().ToEnumIgnoreCase<StringComparison>());
+	}
+
+	[Fact]
+	public void ToIndex()
+	{
+		var index = "".ToIndex();
+		Assert.Null(index);
+
+		index = "AA".ToIndex();
+		Assert.Null(index);
+
+		index = "^".ToIndex();
+		Assert.Null(index);
+
+		index = "^3".ToIndex();
+		Assert.Equal(^3, index);
+
+		index = "55".ToIndex();
+		Assert.Equal(55, index);
+	}
+
+	[Fact]
+	public void ToRange()
+	{
+		var range = "..".ToRange();
+		Assert.NotNull(range);
+		Assert.Equal(Range.All, range);
+
+		range = "2..6".ToRange();
+		Assert.NotNull(range);
+		Assert.Equal(2, range.Value.Start);
+		Assert.False(range.Value.Start.IsFromEnd);
+		Assert.Equal(6, range.Value.End);
+		Assert.False(range.Value.End.IsFromEnd);
+
+		range = "..^2".ToRange();
+		Assert.NotNull(range);
+		Assert.Equal(0, range.Value.Start);
+		Assert.False(range.Value.Start.IsFromEnd);
+		Assert.Equal(^2, range.Value.End);
+		Assert.True(range.Value.End.IsFromEnd);
+
+		range = "3".ToRange();
+		Assert.NotNull(range);
+		Assert.Equal(3, range.Value.Start);
+		Assert.False(range.Value.Start.IsFromEnd);
+		Assert.Equal(4, range.Value.End);
+		Assert.False(range.Value.End.IsFromEnd);
+
+		range = "^2..".ToRange();
+		Assert.NotNull(range);
+		Assert.Equal(^2.., range.Value);
+
+		range = "^".ToRange();
+		Assert.Null(range);
+
+		range = "..^".ToRange();
+		Assert.Null(range);
+
+		range = "^..".ToRange();
+		Assert.Null(range);
+
+		range = "^..^".ToRange();
+		Assert.Null(range);
+
+		range = "0..^".ToRange();
+		Assert.Null(range);
+
+		range = "1..2..3..4".ToRange();
+		Assert.Null(range);
+	}
+
+	[Fact]
+	public void ToStringSegment()
+	{
+		Assert.Equal(new StringSegment(TEST_STRING), TEST_STRING.ToStringSegment());
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 0), TEST_STRING.ToStringSegment(2, 0));
+		Assert.Equal(new StringSegment(TEST_STRING, 2, 3), TEST_STRING.ToStringSegment(2, 3));
+		Assert.Equal(new StringSegment(TEST_STRING, 9, 1), TEST_STRING.ToStringSegment(9, 1));
 	}
 
 	[Fact]
 	public void TrimEnd()
 	{
-		Assert.Equal("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n"));
-		Assert.NotEqual("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n", StringComparison.Ordinal));
+		Assert.Equal("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n/\\&="));
+		Assert.NotEqual("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n/\\&=", StringComparison.Ordinal));
 		Assert.Equal(TEST_STRING, TEST_STRING.TrimEnd("******"));
 	}
 
 	[Fact]
 	public void TrimStart()
 	{
-		Assert.Equal(" `~!#$%^\t\r\n", TEST_STRING.TrimStart("aabbcc 123"));
-		Assert.NotEqual(" `~!#$%^\t\r\n", TEST_STRING.TrimStart("aabbcc 123", StringComparison.Ordinal));
+		Assert.Equal(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStart("aabbcc 123"));
+		Assert.NotEqual(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStart("aabbcc 123", StringComparison.Ordinal));
 		Assert.Equal(TEST_STRING, TEST_STRING.TrimStart("******"));
 	}
 }

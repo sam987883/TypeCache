@@ -5,7 +5,6 @@ using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
-using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Data.Extensions;
 
@@ -16,7 +15,7 @@ public static class DbDataReaderExtensions
 	/// </summary>
 	[DebuggerHidden]
 	public static string[] GetColumns(this DbDataReader @this)
-		=> (0..@this.VisibleFieldCount).ToEnumerable().Select(@this.GetName).ToArray();
+		=> (0..@this.FieldCount).ToEnumerable().Select(@this.GetName).ToArray();
 
 	public static DataTable ReadDataTable(this DbDataReader @this)
 	{
@@ -30,9 +29,9 @@ public static class DbDataReaderExtensions
 	public static async Task ReadModelsAsync<T>(this DbDataReader @this, IList<T> rows, CancellationToken token = default)
 		where T : notnull, new()
 	{
-		var propertyMap = typeof(T).GetPublicProperties().ToDictionary(property => property.Name, property => property, StringComparer.OrdinalIgnoreCase);
+		var propertyMap = typeof(T).GetPublicProperties().ToDictionaryIgnoreCase(_ => _.Name);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
-		var values = new object[@this.VisibleFieldCount];
+		var values = new object[properties.Length];
 
 		while (await @this.ReadAsync(token))
 		{
@@ -45,9 +44,9 @@ public static class DbDataReaderExtensions
 
 	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
 	{
-		var propertyMap = modelType.GetProperties(Instance | Public).ToDictionary(property => property.Name, property => property, StringComparer.OrdinalIgnoreCase);
+		var propertyMap = modelType.GetPublicProperties().ToDictionaryIgnoreCase(_ => _.Name);
 		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
-		var values = new object[@this.VisibleFieldCount];
+		var values = new object[properties.Length];
 
 		while (await @this.ReadAsync(token))
 		{
@@ -58,52 +57,83 @@ public static class DbDataReaderExtensions
 		}
 	}
 
-	public static async ValueTask<JsonArray> ReadJsonArrayAsync(this DbDataReader @this, CancellationToken token = default)
+	public static async ValueTask<JsonArray> ReadResultsAsJsonAsync(this DbDataReader @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
 	{
-		var jsonArray = new JsonArray();
-		var options = new JsonNodeOptions
-		{
-			PropertyNameCaseInsensitive = true
-		};
+		var jsonArray = jsonOptions.HasValue ? new JsonArray(jsonOptions.Value) : new();
 		var columns = @this.GetColumns();
 		var values = new object[columns.Length];
 		var range = 0..columns.Length;
 
 		while (await @this.ReadAsync(token))
 		{
-			var jsonObject = new JsonObject(options);
+			var jsonObject = jsonOptions.HasValue ? new JsonObject(jsonOptions.Value) : new();
 			@this.GetValues(values);
-			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], options)));
+			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], jsonOptions)));
 			jsonArray.Add(jsonObject);
 		}
 
 		return jsonArray;
 	}
 
-	public static async ValueTask ReadJsonAsync(this DbDataReader @this, Utf8JsonWriter writer, CancellationToken token = default)
+	public static async ValueTask<JsonObject> ReadResultSetAsJsonAsync(this DbDataReader @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
+	{
+		var json = jsonOptions.HasValue ? new JsonObject(jsonOptions.Value) : new();
+		var count = 1;
+
+		json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(jsonOptions, token));
+
+		while (await @this.NextResultAsync(token))
+		{
+			++count;
+			json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(jsonOptions, token));
+		}
+
+		return json;
+	}
+
+	public static async ValueTask WriteResultsAsJsonAsync(this DbDataReader @this, Utf8JsonWriter writer, JsonSerializerOptions? jsonOptions = null, CancellationToken token = default)
 	{
 		var columns = @this.GetColumns();
 		var range = 0..columns.Length;
 		var values = new object[columns.Length];
-		var options = new JsonSerializerOptions();
 
 		writer.WriteStartArray();
+
 		while (await @this.ReadAsync(token))
 		{
-			writer.WriteStartObject();
 			@this.GetValues(values);
+
+			writer.WriteStartObject();
+
 			range.ForEach(i =>
 			{
 				writer.WritePropertyName(columns[i]);
-				writer.WriteValue(values[i] switch
-				{
-					DBNull => null,
-					var value => value
-				}, options);
+				var value = values[i];
+				writer.WriteValue(value is not DBNull ? value : null, jsonOptions ?? new());
 			});
+
 			writer.WriteEndObject();
 		}
 
 		writer.WriteEndArray();
+	}
+
+	public static async ValueTask WriteResultSetAsJsonAsync(this DbDataReader @this, Utf8JsonWriter writer, JsonSerializerOptions? jsonOptions = null, CancellationToken token = default)
+	{
+		var count = 1;
+
+		writer.WriteStartObject();
+
+		writer.WritePropertyName(count.ToString());
+		await @this.WriteResultsAsJsonAsync(writer, jsonOptions, token);
+
+		while (await @this.NextResultAsync(token))
+		{
+			++count;
+			writer.WritePropertyName(count.ToString());
+			await @this.WriteResultsAsJsonAsync(writer, jsonOptions, token);
+		}
+
+		writer.WriteEndObject();
 	}
 }

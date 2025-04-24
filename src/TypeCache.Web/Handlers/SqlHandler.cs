@@ -28,11 +28,11 @@ internal static class SqlHandler
 	public static async Task<IResult> GetDatabaseSchema(
 		HttpContext httpContext
 		, [FromHeader(Name = "Content-Type")] string? contentType
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database to pull schema data for.")][FromRoute] string database
-		, [Description("The name of the schema collection data to pull.")][FromRoute] SchemaCollection collection
-		, [Description("example: TABLE_SCHEMA = 'Sales'.")][FromQuery] string? where
-		, [Description("example: TABLE_NAME DESC.")][FromQuery] string? orderBy)
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database to pull schema data for.")] string database
+		, [FromRoute][Description("The name of the schema collection data to pull.")] SchemaCollection collection
+		, [FromQuery][Description("example: TABLE_SCHEMA = 'Sales'.")] string? where
+		, [FromQuery][Description("example: TABLE_NAME DESC.")] string? orderBy)
 	{
 		var dataSource = httpContext.GetDataSource();
 		var table = await dataSource.GetDatabaseSchemaAsync(collection, database, httpContext.RequestAborted);
@@ -49,8 +49,8 @@ internal static class SqlHandler
 			htmlBuilder.AppendLine("<table>");
 
 			htmlBuilder.Append("<tr>");
-			var columns = data.First().Table.Columns.OfType<DataColumn>().ToArray();
-			columns.ForEach(column => htmlBuilder.Append("<th>").Append(column.ColumnName).Append("</th>"));
+			data.First().Table.Columns.OfType<DataColumn>()
+				.ForEach(column => htmlBuilder.Append("<th>").Append(column.ColumnName).Append("</th>"));
 			htmlBuilder.AppendLine("</tr>");
 
 			data.ForEach(row =>
@@ -92,12 +92,12 @@ internal static class SqlHandler
 
 	public static IResult GetDeleteSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table to delete data from.")][FromRoute] string table
-		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
-		, [Description("The DELETE statement WHERE clause (SQL syntax).")][FromQuery] string where)
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table to delete data from.")] string table
+		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
+		, [FromQuery][Description("The DELETE statement WHERE clause (SQL syntax).")] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		return Results.Text(objectSchema.CreateDeleteSQL(where, [output]), Text.Plain, UTF8);
@@ -105,11 +105,11 @@ internal static class SqlHandler
 
 	public static IResult GetDeleteValuesSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table to delete data from.")][FromRoute] string table
-		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table to delete data from.")] string table
+		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
@@ -119,24 +119,24 @@ internal static class SqlHandler
 
 	public static IResult GetInsertSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table to insert data into.")][FromRoute] string table
-		, [Description("The INSERT statement COLUMNS clause comma delimited list of columns to insert data into (SQL syntax).")][FromQuery] string columns
-		, [Description("The INSERT statement OUTPUT clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery] string? output
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table to insert data into.")] string table
+		, [FromQuery][Description("The INSERT statement COLUMNS clause comma delimited list of columns to insert data into (SQL syntax).")] string columns
+		, [FromQuery][Description("The INSERT statement OUTPUT clause comma delimited list of columns/expressions (SQL syntax).")] string? output
 		, SelectParameter selectParameter
-		, [Description("SELECT [DISTINCT(...)].")][FromQuery] string? distinct
-		, [Description("FETCH NEXT {fetch} ROWS ONLY.")][FromQuery] uint? fetch
-		, [Description("The SELECT statement FROM caluse specifying the table/view/user defined function to pull data to be inserted (SQL syntax).")][FromQuery] string from
-		, [Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery] string? groupBy
-		, [Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")][FromQuery] string? having
-		, [Description("The SELECT statement FROM clause table hints (SQL syntax).")][FromQuery] string? hints
-		, [Description("OFFSET {offset} ROWS.")][FromQuery] uint? offset
-		, [Description("The SELECT statement ORDER BY clause (SQL syntax).")][FromQuery] string? orderBy
-		, [Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")][FromQuery] string select
-		, [Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")][FromQuery] string? top
-		, [Description("The SELECT statement WHERE clause (SQL syntax).")][FromQuery] string where)
+		, [FromQuery][Description("SELECT [DISTINCT(...)].")] string? distinct
+		, [FromQuery][Description("FETCH NEXT {fetch} ROWS ONLY.")] uint? fetch
+		, [FromQuery][Description("The SELECT statement FROM caluse specifying the table/view/user defined function to pull data to be inserted (SQL syntax).")] string from
+		, [FromQuery(Name = "group-by")][Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")] string? groupBy
+		, [FromQuery][Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")] string? having
+		, [FromQuery][Description("The SELECT statement FROM clause table hints (SQL syntax).")] string? hints
+		, [FromQuery][Description("OFFSET {offset} ROWS.")] uint? offset
+		, [FromQuery(Name = "order-by")][Description("The SELECT statement ORDER BY clause (SQL syntax).")] string? orderBy
+		, [FromQuery][Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")] string select
+		, [FromQuery][Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")] string? top
+		, [FromQuery][Description("The SELECT statement WHERE clause (SQL syntax).")] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 
@@ -158,11 +158,11 @@ internal static class SqlHandler
 
 	public static IResult GetInsertValuesSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table to insert data into.")][FromRoute] string table
-		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table to insert data into.")] string table
+		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
@@ -172,21 +172,21 @@ internal static class SqlHandler
 
 	public static IResult GetSelectSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table to retrieve data from.")][FromRoute] string table
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table to retrieve data from.")] string table
 		, SelectParameter selectParameter
-		, [Description("SELECT [DISTINCT(...)].")][FromQuery] string? distinct
-		, [Description("FETCH NEXT {fetch} ROWS ONLY.")][FromQuery] uint? fetch
-		, [Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")][FromQuery] string? groupBy
-		, [Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")][FromQuery] string? having
-		, [Description("The SELECT statement FROM clause table hints (SQL syntax).")][FromQuery] string? hints
-		, [Description("OFFSET {offset} ROWS.")][FromQuery] uint? offset
-		, [Description("The SELECT statement ORDER BY clause (SQL syntax).")][FromQuery] string? orderBy
-		, [Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")][FromQuery] string select
-		, [Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")][FromQuery] string? top
-		, [Description("The SELECT statement WHERE clause (SQL syntax).")][FromQuery] string where)
+		, [FromQuery][Description("SELECT [DISTINCT(...)].")] string? distinct
+		, [FromQuery][Description("FETCH NEXT {fetch} ROWS ONLY.")] uint? fetch
+		, [FromQuery(Name = "group-by")][Description("The GROUP BY clause comma delimited list of columns/expressions (SQL syntax).")] string? groupBy
+		, [FromQuery][Description("The SELECT statement's GROUP BY ... HAVING clause (SQL syntax).")] string? having
+		, [FromQuery][Description("The SELECT statement FROM clause table hints (SQL syntax).")] string? hints
+		, [FromQuery][Description("OFFSET {offset} ROWS.")] uint? offset
+		, [FromQuery(Name = "order-by")][Description("The SELECT statement ORDER BY clause (SQL syntax).")] string? orderBy
+		, [FromQuery][Description("The SELECT statement comma delimted list of columns/expressions (SQL syntax).")] string select
+		, [FromQuery][Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")] string? top
+		, [FromQuery][Description("The SELECT statement WHERE clause (SQL syntax).")] string where)
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 		if (select is null)
@@ -215,11 +215,11 @@ internal static class SqlHandler
 
 	public static IResult GetUpdateSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table whose data will be updated.")][FromRoute] string table
-		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table whose data will be updated.")] string table
+		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromQuery] string set
 		, [FromQuery] string where)
 	{
@@ -230,11 +230,11 @@ internal static class SqlHandler
 
 	public static IResult GetUpdateValuesSQL(
 		HttpContext httpContext
-		, [Description("The name of the connection string from appSettings.")][FromRoute(Name = "dataSource")] string dataSourceName
-		, [Description("The name of the database.")][FromRoute] string database
-		, [Description("The name of the database object schema.")][FromRoute] string schema
-		, [Description("The name of the database table whose data will be updated.")][FromRoute] string table
-		, [Description("The comma delimited columns to return (SQL syntax).")][FromQuery] string output
+		, [FromRoute][Description("The name of the connection string from appSettings.")] string source
+		, [FromRoute][Description("The name of the database.")] string database
+		, [FromRoute][Description("The name of the database object schema.")] string schema
+		, [FromRoute][Description("The name of the database table whose data will be updated.")] string table
+		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromBody] JsonArray data)
 	{
 		var objectSchema = httpContext.GetObjectSchema();

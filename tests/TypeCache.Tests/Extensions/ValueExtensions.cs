@@ -22,7 +22,7 @@ public class ValueExtensions
 	{
 		Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
 		Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
-		Assert.Equal(Array<int>.Empty, 123.Repeat(-18).ToArray());
+		Assert.Equal(Enumerable<int>.Empty, 123.Repeat(-18));
 	}
 
 	[Fact]
@@ -31,6 +31,8 @@ public class ValueExtensions
 		var a = 123;
 		var b = -456;
 		b.Swap(ref a);
+
+		Assert.Equal(-456, a);
 		Assert.Equal(123, b);
 	}
 

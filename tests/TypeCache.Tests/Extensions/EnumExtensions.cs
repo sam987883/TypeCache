@@ -33,18 +33,6 @@ public class EnumExtensions
 	}
 
 	[Fact]
-	public void Comparer()
-	{
-		Assert.Equal(StringComparer.CurrentCulture, StringComparison.CurrentCulture.Comparer());
-		Assert.Equal(StringComparer.CurrentCultureIgnoreCase, StringComparison.CurrentCultureIgnoreCase.Comparer());
-		Assert.Equal(StringComparer.InvariantCulture, StringComparison.InvariantCulture.Comparer());
-		Assert.Equal(StringComparer.InvariantCultureIgnoreCase, StringComparison.InvariantCultureIgnoreCase.Comparer());
-		Assert.Equal(StringComparer.Ordinal, StringComparison.Ordinal.Comparer());
-		Assert.Equal(StringComparer.OrdinalIgnoreCase, StringComparison.OrdinalIgnoreCase.Comparer());
-		Assert.Throws<ArgumentException>(() => ((StringComparison)666).Comparer());
-	}
-
-	[Fact]
 	public void Hex()
 	{
 		Assert.Equal(TestEnum.TestValue2.ToString("X"), TestEnum.TestValue2.Hex());
@@ -94,6 +82,18 @@ public class EnumExtensions
 		expected.ThrowIfNotEqual(expected);
 		actual.ThrowIfNotEqual(actual);
 		Assert.Throws<ArgumentOutOfRangeException>(() => expected.ThrowIfNotEqual(actual));
+	}
+
+	[Fact]
+	public void ToComparer()
+	{
+		Assert.Equal(StringComparer.CurrentCulture, StringComparison.CurrentCulture.ToComparer());
+		Assert.Equal(StringComparer.CurrentCultureIgnoreCase, StringComparison.CurrentCultureIgnoreCase.ToComparer());
+		Assert.Equal(StringComparer.InvariantCulture, StringComparison.InvariantCulture.ToComparer());
+		Assert.Equal(StringComparer.InvariantCultureIgnoreCase, StringComparison.InvariantCultureIgnoreCase.ToComparer());
+		Assert.Equal(StringComparer.Ordinal, StringComparison.Ordinal.ToComparer());
+		Assert.Equal(StringComparer.OrdinalIgnoreCase, StringComparison.OrdinalIgnoreCase.ToComparer());
+		Assert.Throws<ArgumentException>(() => ((StringComparison)666).ToComparer());
 	}
 
 	[Fact]
@@ -148,24 +148,14 @@ public class EnumExtensions
 	public void IsFrozen()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().StartsWith("Frozen"))
-				Assert.True(_.IsFrozen());
-			else
-				Assert.False(_.IsFrozen());
-		});
+			Assert.Equal(_.Name().StartsWith("Frozen"), _.IsFrozen()));
 	}
 
 	[Fact]
 	public void IsImmutable()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().StartsWith("Immutable"))
-				Assert.True(_.IsImmutable());
-			else
-				Assert.False(_.IsImmutable());
-		});
+			Assert.Equal(_.Name().StartsWith("Immutable"), _.IsImmutable()));
 	}
 
 	[Fact]
@@ -185,7 +175,6 @@ public class EnumExtensions
 				|| _ is ScalarType.UInt32
 				|| _ is ScalarType.UInt64
 				|| _ is ScalarType.UIntPtr
-				|| _ is ScalarType.Half
 				|| _ is ScalarType.Single
 				|| _ is ScalarType.Double)
 				Assert.True(_.IsPrimitive());
@@ -198,47 +187,27 @@ public class EnumExtensions
 	public void IsQueue()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().EndsWith("Queue"))
-				Assert.True(_.IsQueue());
-			else
-				Assert.False(_.IsQueue());
-		});
+			Assert.Equal(_.Name().EndsWith("Queue"), _.IsQueue()));
 	}
 
 	[Fact]
 	public void IsReadOnly()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().StartsWith("ReadOnly"))
-				Assert.True(_.IsReadOnly());
-			else
-				Assert.False(_.IsReadOnly());
-		});
+			Assert.Equal(_.Name().StartsWith("ReadOnly"), _.IsReadOnly()));
 	}
 
 	[Fact]
 	public void IsSet()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().EndsWith("Set"))
-				Assert.True(_.IsSet());
-			else
-				Assert.False(_.IsSet());
-		});
+			Assert.Equal(_.Name().EndsWith("Set"), _.IsSet()));
 	}
 
 	[Fact]
 	public void IsStack()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-		{
-			if (_.Name().EndsWith("Stack"))
-				Assert.True(_.IsStack());
-			else
-				Assert.False(_.IsStack());
-		});
+			Assert.Equal(_.Name().EndsWith("Stack"), _.IsStack()));
 	}
 }

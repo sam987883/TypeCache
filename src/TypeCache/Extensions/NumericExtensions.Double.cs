@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace TypeCache.Extensions;
 
@@ -53,4 +54,20 @@ public static partial class NumericExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static TimeSpan ToSeconds(this double @this)
 		=> TimeSpan.FromSeconds(@this);
+
+	/// <inheritdoc cref="BitConverter.DoubleToInt64Bits(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Unsafe"/>.BitCast&lt;<see cref="Half"/>, <see cref="long"/>&gt;(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static long ToInt64(this double @this)
+		=> Unsafe.BitCast<double, long>(@this);
+
+	/// <inheritdoc cref="BitConverter.DoubleToUInt64Bits(double)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Unsafe"/>.BitCast&lt;<see cref="Half"/>, <see cref="ulong"/>&gt;(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static ulong ToUInt64(this double @this)
+		=> Unsafe.BitCast<double, ulong>(@this);
 }

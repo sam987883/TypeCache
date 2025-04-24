@@ -24,14 +24,14 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Maps endpoints that execute SQL commands either atomically or in a single local transaction.<br/>
 	/// These calls are all POSTs for webhook compatibility.  Do <b>NOT</b> expose these publicly.
 	/// <code>
-	/// POST /api/execute/{dataSource}/{database}/{schema}/{procedure}<br/>
-	/// POST /api/delete/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/delete-values/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/insert/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/insert-values/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/select/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/update/{dataSource}/{database}/{schema}/{table}<br/>
-	/// POST /api/update-values/{dataSource}/{database}/{schema}/{table}<br/>
+	/// POST /api/execute/{source}/{database}/{schema}/{procedure}<br/>
+	/// POST /api/delete/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/delete-values/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/insert/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/insert-values/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/select/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/update/{source}/{database}/{schema}/{table}<br/>
+	/// POST /api/update-values/{source}/{database}/{schema}/{table}<br/>
 	/// </code>
 	/// </summary>
 	public static RouteGroupBuilder MapSqlApi(this IEndpointRouteBuilder @this, string route = Route.API)
@@ -55,7 +55,7 @@ public static partial class EndpointRouteBuilderExtensions
 	}
 
 	/// <summary>
-	/// <c>POST /api/execute/{dataSource}/{database}/{schema}/{procedure}</c><br/><br/>
+	/// <c>POST /api/execute/{source}/{database}/{schema}/{procedure}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
 	/// MapGroup("/api")<br/>
@@ -75,7 +75,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/delete/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/delete/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
 	/// MapGroup("/api")<br/>
@@ -95,7 +95,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/delete-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/delete-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -116,7 +116,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/insert/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/insert/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
 	/// MapGroup("/api")<br/>
@@ -136,7 +136,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/insert-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/insert-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -157,7 +157,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/select/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/select/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Selects, filters, sorts and pages data from a view.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -178,7 +178,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/update/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/update/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Updates table data.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -199,7 +199,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /api/update-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /api/update-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Updates table data.<br/><br/>
 	/// Body is an array of data that contains values to update in the table.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>

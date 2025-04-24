@@ -3,11 +3,27 @@
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
 
 public static class JsonExtensions
 {
+	private const char ANY_NODE = '*';
+	private const char ROOT_NODE = '$';
+	private const char SEPARATOR = '.';
+	private const string EVERY = "..";
+
+	[StringSyntax(StringSyntaxAttribute.Regex)]
+	private const string ARRAY_REGEX = @"^\[(?'index'(((\^?\d*)?\.{2}(\^?\d*)?)|(\d+))(\,(((\^?\d*)?\.{2}(\^?\d*)?)|(\d+)))*)\]$";
+
+	[StringSyntax(StringSyntaxAttribute.Regex)]
+	private const string BRACKET_PATH = @"^\$((\[\'(?'token'[^']+)\'\])|(?'token'\[[\^\,\.\d]+\]))*$";
+
+	[StringSyntax(StringSyntaxAttribute.Regex)]
+	private const string DOT_PATH = @"^\$(\.(?'token'[^\.\[]+)?(?'token'\[[\^\.\,\d]+\])*)*$";
+
 	public static JsonElement[] GetArrayElements(this JsonElement @this)
 	{
 		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Array);
@@ -48,6 +64,99 @@ public static class JsonExtensions
 		}
 
 		return properties;
+	}
+
+	/// <summary>
+	/// Gets the <c><see cref="JsonNode"/></c>s that match the <paramref name="path"/>.
+	/// <list type="bullet">
+	/// <item>Allowed path separator: <c>.</c></item>
+	/// <item>Use <c>$</c> to reference the root object or array (ie. <c>$.Customer.Addresses.City</c>).<br/>
+	/// Not doing so will return an empty collection.</item>
+	/// <item>Use name syntax (ie. <c>$.Customer.Addresses.City</c>) to select a particular property of a <c><see cref="JsonObject"/></c> by name.</item>
+	/// <item>Use numerical positional syntax (ie. <c>$.Customer.Addresses.2</c>) to select a particular property of a <c><see cref="JsonObject"/></c> by position.</item>
+	/// <item>You can use array syntax (ie. <c>$.Customer.Addresses[2]</c>) to select particular elements from a <c><see cref="JsonArray"/></c>.</item>
+	/// <item>Use <c>*</c> by itself to match any <c><see cref="JsonNode"/></c>.</item>
+	/// </list>
+	/// </summary>
+	/// <param name="this"></param>
+	/// <param name="path">
+	/// A string that represents a path to a value or set of values from within the JSON DOM.<br/>
+	/// Examples:
+	/// <list type="bullet">
+	/// <item><term><c>$.Customers.Addresses[2]</c></term> Get the third Address from each Customer's Addresses array.</item>
+	/// <item><term><c>$.Customers.Advisors.Names.1</c></term> Get the second property of the Names object from each customer's Advisor.</item>
+	/// <item><term><c>$.Customers.Advisors.Names.FirstName</c></term> Get the FirstName property from each customer's Advisor Names object.</item>
+	/// </list>
+	/// </param>
+	/// <exception cref="FormatException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="OverflowException"/>
+	/// <returns>All <c><see cref="JsonNode"/></c>s that match the <paramref name="path"/>.</returns>
+	public static JsonNode[] GetNodes(this JsonNode @this, string path)
+	{
+		if (path.IsBlank())
+			return [];
+
+		var match = BRACKET_PATH.ToRegex().Match(path);
+		if (!match.Success)
+			match = DOT_PATH.ToRegex().Match(path);
+
+		if (!match.Success)
+			return [];
+
+		Group? token;
+		if (!match.Groups.TryGetValue(nameof(token), out token))
+			return [];
+
+		var tokens = token.Captures.Select(_ => _.Value).ToArray();
+
+		return tokens.Length is 0 ? [@this] : getNodes(@this, tokens);
+
+		static JsonNode[] getNodes(JsonNode? jsonNode, IEnumerable<string> tokens)
+		{
+			var token = tokens.First();
+			tokens = tokens.Skip(1);
+
+			if (token.EqualsIgnoreCase(ANY_NODE.ToString()))
+			{
+				var selectedNodes = jsonNode?.GetValueKind() switch
+				{
+					JsonValueKind.Object => jsonNode.AsObject().Select(pair => pair.Value).WhereNotNull().ToArray(),
+					JsonValueKind.Array => jsonNode.AsArray().WhereNotNull().ToArray(),
+					_ => []
+				};
+				return tokens.Any() ? selectedNodes.SelectMany(_ => getNodes(_, tokens)).ToArray() : selectedNodes;
+			}
+
+			if (jsonNode is JsonObject jsonObject)
+			{
+				var selectedNode = int.TryParse(token, InvariantCulture, out var i) ? jsonObject[i] ?? jsonObject[token] : jsonObject[token];
+				if (selectedNode is null)
+					return [];
+
+				return tokens.Any() ? getNodes(selectedNode, tokens) : [selectedNode];
+			}
+
+			if (jsonNode is JsonArray jsonArray)
+			{
+				var match = ARRAY_REGEX.ToRegex().Match(token);
+				if (!match.Success)
+					return [];
+
+				Group? index;
+				if (!match.Groups.TryGetValue(nameof(index), out index) || index.Captures.Count is not 1)
+					return [];
+
+				var ranges = index.Captures[0].Value.SplitEx(',').Select(_ => _.ToRange()).WhereHasValue().ToArray();
+				var jsonArrayNodes = ranges.SelectMany(jsonArray.Take).WhereNotNull().ToArray();
+
+				return tokens.Any()
+					? jsonArrayNodes.SelectMany(_ => getNodes(_, tokens)).ToArray()
+					: jsonArrayNodes;
+			}
+
+			return [];
+		}
 	}
 
 	public static object? GetValue(this JsonElement @this)
@@ -97,6 +206,10 @@ public static class JsonExtensions
 		return false;
 	}
 
+	/// <summary>
+	/// =&gt; <see cref="JsonSerializer"/>.Deserialize&lt;<typeparamref name="T"/>[]?&gt;(@<paramref name="this"/>, <paramref name="options"/>);
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T[]? ToArray<T>(this JsonArray @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.Deserialize<T[]?>(@this, options);
 

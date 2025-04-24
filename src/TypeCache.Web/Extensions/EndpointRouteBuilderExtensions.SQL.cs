@@ -15,14 +15,14 @@ public static partial class EndpointRouteBuilderExtensions
 	/// <summary>
 	/// Maps SQL API endpoints that return composed SQL <b><i>(for testing purposes only).</i></b>
 	/// <code>
-	/// GET /sql/schema/{dataSource}/{database}/{collection}<br/>
-	/// GET /sql/delete/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/delete-values/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/insert/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/insert-values/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/select/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/update/{dataSource}/{database}/{schema}/{table}<br/>
-	/// GET /sql/update-values/{dataSource}/{database}/{schema}/{table}<br/>
+	/// GET /sql/schema/{source}/{database}/{collection}<br/>
+	/// GET /sql/delete/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/delete-values/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/insert/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/insert-values/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/select/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/update/{source}/{database}/{schema}/{table}<br/>
+	/// GET /sql/update-values/{source}/{database}/{schema}/{table}<br/>
 	/// </code>
 	/// </summary>
 	public static RouteGroupBuilder MapSqlGet(this IEndpointRouteBuilder @this, string route = Route.SQL)
@@ -45,7 +45,7 @@ public static partial class EndpointRouteBuilderExtensions
 	}
 
 	/// <summary>
-	/// <c>GET /sql/schema/{dataSource}/{database}/{collection}</c><br/><br/>
+	/// <c>GET /sql/schema/{source}/{database}/{collection}</c><br/><br/>
 	/// Gets database schema data.
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -66,7 +66,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>GET /sql/delete/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>GET /sql/delete/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -88,7 +88,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /sql/delete-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /sql/delete-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
@@ -110,7 +110,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>GET /sql/insert/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>GET /sql/insert/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -131,7 +131,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /sql/insert-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /sql/insert-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Body is an array of data that would be inserted.<br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
@@ -153,7 +153,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>GET /sql/select/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>GET /sql/select/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -173,7 +173,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>GET /sql/update/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>GET /sql/update/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
@@ -193,7 +193,7 @@ public static partial class EndpointRouteBuilderExtensions
 			.Produces(StatusCodes.Status404NotFound, contentType: Text.Plain);
 
 	/// <summary>
-	/// <c>POST /sql/update-values/{dataSource}/{database}/{schema}/{table}</c><br/><br/>
+	/// <c>POST /sql/update-values/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// Body is an array of data with values tp use for update.<br/><br/>
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>

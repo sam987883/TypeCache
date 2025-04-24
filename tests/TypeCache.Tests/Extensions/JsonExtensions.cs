@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TypeCache.Extensions;
 using Xunit;
 
@@ -36,6 +38,113 @@ public class JsonExtensions
 		Assert.Equal(array[0], values[0]);
 		Assert.Equal(array[1], values[1]);
 		Assert.Equal(array[2], values[2]);
+	}
+
+	[Fact]
+	public void GetNodes()
+	{
+		const string json = """
+			{
+				"Aaa": "Bbb",
+				"Bbb":
+				{
+					"Ccc": 111,
+					"Ddd": false,
+					"Eee": [1, 2, 3, 4, 5, 6]
+				},
+				"ObjA":
+				{
+					"Obj1":
+					{
+						"Ccc": 111,
+						"Ddd": true,
+						"Eee": [1, 2, 3, 4, 5, 6]
+					}
+				},
+				"ObjB":
+				{
+					"Obj2":
+					{
+						"Ccc": 111,
+						"Ddd": false,
+						"Eee": [1, 2, 3, 4, 5, 6]
+					}
+				},
+				"Fff":
+				[
+					[
+						99999.66,
+						{
+							"Ggg": 222,
+							"Hhh": true,
+							"Iii":
+							{
+								"Jjj": "Lll"
+							}
+						}
+					]
+				]
+			}
+			""";
+
+		var root = JsonSerializer.Deserialize<JsonNode>(json);
+
+		var nodes = root.GetNodes("$.Fff.*.*.Iii.Jjj");
+		Assert.Equal("Lll", nodes.Single().AsValue().GetValue<string>());
+
+		var range = "4".ToRange();
+		nodes = root.GetNodes("$.Bbb.Eee[4]");
+		Assert.Equal(5, nodes.Single().AsValue().GetValue<int>());
+
+		nodes = root.GetNodes("$.Aaa.Bbb.Ccc");
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes("$['Aaa']['Bbb']['Ccc']");
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes("$.Fff.*.*.Hhh");
+		Assert.True(nodes.Single().AsValue().GetValue<bool>());
+
+		nodes = root.GetNodes("$['Fff']['*']['*']['Hhh']");
+		Assert.True(nodes.Single().AsValue().GetValue<bool>());
+
+		nodes = root.GetNodes("$.Fff[0][1].Hhh");
+		Assert.True(nodes.Single().AsValue().GetValue<bool>());
+
+		nodes = root.GetNodes("$.Fff[0][1].Ggg");
+		Assert.Equal(222, nodes.Single().AsValue().GetValue<int>());
+
+		nodes = root.GetNodes("$.Fff[0][0]");
+		Assert.Equal(99999.66M, nodes.Single().AsValue().GetValue<decimal>());
+
+		nodes = root.GetNodes("$.*.Obj1.Ddd");
+		Assert.True(nodes.Single().AsValue().GetValue<bool>());
+
+		nodes = root.GetNodes("$.*.*.Ddd");
+		Assert.True(nodes.First().AsValue().GetValue<bool>());
+		Assert.False(nodes.Last().AsValue().GetValue<bool>());
+
+		nodes = root.GetNodes("$.Fff[99999999999999]");
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes(null);
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes("   ");
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes("Aaa.Bbb.Ccc");
+		Assert.Empty(nodes);
+
+		nodes = root.GetNodes("['Fff']['Hhh']");
+		Assert.Empty(nodes);
+
+		root = JsonSerializer.Deserialize<JsonNode>("[1, 2, 3, 4, 5, 6, 7, 8]");
+		nodes = root.GetNodes("$[4]");
+		Assert.Equal(5, nodes.Single().AsValue().GetValue<int>());
+
+		nodes = root.GetNodes("$.[7]");
+		Assert.Equal(8, nodes.Single().AsValue().GetValue<int>());
 	}
 
 	[Fact]
@@ -92,13 +201,5 @@ public class JsonExtensions
 		var dictionary = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new { A = 1, B = "2", C = false })).GetValue();
 		Assert.IsType<Dictionary<string, object>>(dictionary);
 		Assert.Equal(3, ((Dictionary<string, object>)dictionary).Count);
-	}
-
-	[Fact]
-	public void ToArray()
-	{
-		Assert.Equal(new[] { 1, 2, 3 }, JsonSerializer.Deserialize<int[]>("[1,2,3]"));
-		Assert.Equal(new[] { "1", "2", "3" }, JsonSerializer.Deserialize<string[]>(@"[""1"",""2"",""3""]"));
-		Assert.Equal(new[] { true, false, true }, JsonSerializer.Deserialize<bool[]>("[true,false,true]"));
 	}
 }
