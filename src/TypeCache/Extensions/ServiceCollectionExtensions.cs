@@ -455,7 +455,6 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	public static IServiceCollection AddSqlCommandRules(this IServiceCollection @this)
 		=> @this.AddRule<SqlDataSetRequest, DataSet>(new SqlDataSetRule())
-			.AddRule<SqlDataSetRequest, DataSet>(new SqlDataSetRule())
 			.AddRule<SqlDataTableRequest, DataTable>(new SqlDataTableRule())
 			.AddRule<SqlExecuteRequest>(new SqlExecuteRule())
 			.AddRule<SqlResultJsonRequest, JsonArray>(new SqlResultJsonRule())
@@ -463,7 +462,12 @@ public static class ServiceCollectionExtensions
 			.AddRule<SqlScalarRequest, object?>(new SqlScalarRule());
 
 	/// <summary>
-	/// Registers all types in the specified assembly that have <see cref="ServiceLifetimeAttribute{T}"/> or <see cref="ServiceLifetimeAttribute"/>.
+	/// Registers all types in the specified assembly that have one of:
+	/// <list type="bullet">
+	/// <item><c><see cref="SingletonAttribute"/></c> or <c><see cref="SingletonAttribute{T}"/></c></item>
+	/// <item><c><see cref="ScopedAttribute"/></c> or <c><see cref="ScopedAttribute{T}"/></c></item>
+	/// <item><c><see cref="TransientAttribute"/></c> or <c><see cref="TransientAttribute{T}"/></c></item>
+	/// </list>
 	/// </summary>
 	/// <param name="fromAssembly">The assembly to register the types from.</param>
 	public static IServiceCollection AddTypes(this IServiceCollection @this, Assembly fromAssembly)
@@ -537,7 +541,10 @@ public static class ServiceCollectionExtensions
 
 	private static ServiceDescriptor ToServiceDescriptor(this Type @this)
 	{
-		var attribute = @this.GetCustomAttribute<ServiceLifetimeAttribute>()!;
+		var attributes = @this.GetCustomAttributes<ServiceLifetimeAttribute>();
+		attributes.Count().ThrowIfNotEqual(1);
+
+		var attribute = attributes.First();
 		return attribute.Key is not null
 			? ServiceDescriptor.DescribeKeyed(attribute.ServiceType ?? @this, attribute.Key, @this, attribute.ServiceLifetime)
 			: ServiceDescriptor.Describe(attribute.ServiceType ?? @this, @this, attribute.ServiceLifetime);

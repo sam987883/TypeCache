@@ -9,10 +9,12 @@ using TypeCache.Utilities;
 namespace TypeCache.GraphQL.Types;
 
 /// <summary>
-/// Requires call to either one of:
+/// Requires call to any one of:
 /// <list type="bullet">
+/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddHashMaker(IServiceCollection, byte[])"/></item>
 /// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddHashMaker(IServiceCollection, byte[], byte[])"/></item>
-/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddHashMaker(IServiceCollection, decimal, decimal)"/></item>
+/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddHashMaker(IServiceCollection, ReadOnlySpan{char})"/></item>
+/// <item><see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddHashMaker(IServiceCollection, ReadOnlySpan{char}, ReadOnlySpan{char})"/></item>
 /// </list>
 /// </summary>
 public sealed class HashIdGraphType : ScalarGraphType

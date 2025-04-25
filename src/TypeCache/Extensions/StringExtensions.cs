@@ -453,7 +453,7 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <see langword="var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnum<T>(this string? @this)
@@ -462,7 +462,7 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out"/> <see langword="var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnumIgnoreCase<T>(this string? @this)
