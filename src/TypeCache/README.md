@@ -27,12 +27,12 @@
 	var comstructorEntity = typeof(Senator).Constructors().Find(("Bob Dole", 98)) // Passing a tuple of values
 
 	// Find a matching MethodInfo object based on argument values
-	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
-	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
-	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find([1996, true]); // Passing an array of values
-	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find([1996, true]); // Passing an array of values
-	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of values
-	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find((1996, true)); // Passing a tuple of values
+	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
+	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
+	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find([1996, true]); // Passing an array of values
+	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find([1996, true]); // Passing an array of values
+	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of values
+	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find((1996, true)); // Passing a tuple of values
 
 	// Get a field value
 	var fieldValue = Type<Senator>.Fields["_Bills"].GetValue(instance);
