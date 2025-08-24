@@ -1,8 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Numerics;
+using TypeCache.Collections;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
+using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -60,22 +61,20 @@ public static class CsvExtensions
 	public static string[] ToCSV<T>(this IEnumerable<T> @this)
 		where T : notnull
 	{
-		var propertyInfos = typeof(T).GetPublicProperties().Where(propertyInfo => propertyInfo.CanRead).ToArray();
-		if (propertyInfos.Length > 0)
+		var properties = Type<T>.Properties.Values.Where(_ => _.CanRead).ToArray();
+		if (properties.Length > 0)
 		{
-			var funcs = propertyInfos.Select(_ => _.GetValueFunc()).ToArray();
-			var headerRow = string.Join(',', propertyInfos.Select(propertyInfo => propertyInfo.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', funcs.Select(_ => _.Invoke(row, null).EscapeCSV())));
+			var headerRow = string.Join(',', properties.Select(_ => _.Name.EscapeCSV()));
+			var dataRows = @this.Select(row => string.Join(',', properties.Select(_ => _.GetValue(row).EscapeCSV())));
 
 			return [headerRow, ..dataRows];
 		}
 
-		var fieldInfos = typeof(T).GetPublicFields();
-		if (fieldInfos.Length > 0)
+		var fields = Type<T>.Fields.Values.Where(_ => _.IsPublic).ToArray();
+		if (fields.Length > 0)
 		{
-			var funcs = fieldInfos.Select(_ => _.GetValueFunc()).ToArray();
-			var headerRow = string.Join(',', fieldInfos.Select(fieldInfo => fieldInfo.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', funcs.Select(_ => _.Invoke(row).EscapeCSV())));
+			var headerRow = string.Join(',', fields.Select(_ => _.Name.EscapeCSV()));
+			var dataRows = @this.Select(row => string.Join(',', fields.Select(_ => _.GetValue(row).EscapeCSV())));
 
 			return [headerRow, .. dataRows];
 		}

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq.Expressions;
-using System.Numerics;
 using TypeCache.Extensions;
 
 namespace TypeCache.Utilities;

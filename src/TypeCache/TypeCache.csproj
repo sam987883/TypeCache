@@ -6,7 +6,7 @@
     <RootNamespace>TypeCache</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>TypeCache</PackageId>
-    <Version>8.5.1</Version>
+    <Version>8.6.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Reflection</Title>
@@ -42,6 +42,10 @@ TypeCache.Reflection - High performance System.Reflection alternative.
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="TypeCache.Tests"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\TypeCash.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -54,5 +58,4 @@ TypeCache.Reflection - High performance System.Reflection alternative.
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
 </Project>

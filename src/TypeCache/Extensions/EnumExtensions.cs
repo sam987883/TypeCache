@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Logging;
+using TypeCache.Collections;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
+using TypeCache.Reflection;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
@@ -74,51 +73,6 @@ public static partial class EnumExtensions
 	public static string Number<T>(this T @this)
 		where T : struct, Enum
 		=> @this.ToString("D");
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEqual<T>(this T @this, T value, string? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression("this")] string? argument1 = null,
-		[CallerArgumentExpression("value")] string? argument2 = null)
-		where T : struct, Enum
-	{
-		if (Enum<T>.Equals(@this, value))
-			Throw(caller!, (argument1!, argument2!), (@this, value), message, logger);
-	}
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotEqual<T>(this T @this, T value, string? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression("this")] string? argument1 = null,
-		[CallerArgumentExpression("value")] string? argument2 = null)
-		where T : struct, Enum
-	{
-		if (!Enum<T>.Equals(@this, value))
-			Throw(caller!, (argument1!, argument2!), (@this, value), message, logger);
-	}
-
-	private static void Throw(string method, (string, string) arguments, (object?, object?) items, string? message, ILogger? logger,
-		[CallerMemberName] string? caller = null)
-	{
-		var exception = new ArgumentOutOfRangeException(
-			paramName: arguments.ToString(),
-			actualValue: items,
-			message: message ?? Invariant($"{method}: {caller}"));
-
-		logger?.LogError(exception, exception.Message);
-
-		throw exception;
-	}
 
 	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
 	/// <remarks>

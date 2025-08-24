@@ -1,4 +1,8 @@
-﻿namespace TypeCache.Utilities;
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using TypeCache.Adapters;
+
+namespace TypeCache.Utilities;
 
 /// <summary>
 /// Converts an <see cref="IObservable{T}"/> for value types into an <see cref="IObservable{T}">IObservable&lt;object?&gt;</see>.

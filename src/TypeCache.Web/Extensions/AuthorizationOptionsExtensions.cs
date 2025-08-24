@@ -18,7 +18,7 @@ public static class AuthorizationOptionsExtensions
 		builder.AddRequirements(requirement);
 
 		var policy = builder.Build();
-		@this.AddPolicy(requirement.GetType().Name(), policy);
+		@this.AddPolicy(requirement.GetType().CodeName(), policy);
 		return policy;
 	}
 

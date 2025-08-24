@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
-using static System.StringSplitOptions;
 
 namespace TypeCache.GraphQL.Web;
 
@@ -18,8 +17,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 	public async Task Invoke(HttpContext httpContext
 		, IDocumentExecuter executer
 		, IDocumentExecutionListener listener
-		, IGraphQLSerializer graphQLSerializer
-		, ILogger<GraphQLMiddleware> logger)
+		, IGraphQLSerializer graphQLSerializer)
 	{
 		if (!httpContext.Request.Path.Equals(route))
 		{
@@ -35,7 +33,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 		}
 
 		var requestId = Guid.NewGuid();
-		var timeProvider = httpContext.RequestServices.GetService(typeof(TimeProvider)) as TimeProvider ?? TimeProvider.System;
+		var timeProvider = httpContext.RequestServices.GetTimeProvider();
 		var requestTime = timeProvider.GetLocalNow().ToISO8601();
 		var userContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -59,23 +57,20 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 			ValidationRules = DocumentValidator.CoreRules
 		};
 		options.Listeners.Add(listener);
+
 		var result = await executer.ExecuteAsync(options);
 		result.Extensions ??= new(2, StringComparer.OrdinalIgnoreCase);
+		result.Extensions["RequestId"] = requestId;
+		result.Extensions["RequestTime"] = requestTime;
 
-		var error = result.Errors?[0].InnerException;
-		if (result.Extensions is not null)
+		if (result.Errors?.Count > 0)
 		{
-			result.Extensions["RequestId"] = requestId;
-			result.Extensions["RequestTime"] = requestTime;
-		}
-
-		if (error is not null)
-		{
-			logger?.LogError(error, result.Errors?[0].Message);
+			var logger = httpContext.RequestServices.GetLogger<GraphQLMiddleware>();
+			logger?.LogError(result.Errors[0], result.Errors[0].Message);
 
 			char[] separator = ['\r', '\n'];
-			result.Extensions!["ErrorMessage"] = error.Message.Split(separator, RemoveEmptyEntries);
-			result.Extensions["ErrorStackTrace"] = error.StackTrace?.Split(separator, RemoveEmptyEntries).Select(_ => _.Trim());
+			result.Extensions!["ErrorMessage"] = result.Errors[0].Message.SplitEx(separator);
+			result.Extensions["ErrorStackTrace"] = result.Errors[0].StackTrace?.SplitEx(separator);
 		}
 
 		httpContext.Response.ContentType = Application.Json;

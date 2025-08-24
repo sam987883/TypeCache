@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.Extensions.Logging;
-using TypeCache.Utilities;
+using TypeCache.Collections;
 
 namespace TypeCache.Extensions;
 

@@ -41,6 +41,62 @@ public static class SpanExtensions
 		where R : struct
 		=> MemoryMarshal.Cast<T, R>(@this);
 
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	public static void Mask(this Span<char> @this, char mask = '*')
+	{
+		if (@this.IsEmpty)
+			return;
+
+		for (var i = 0; i < @this.Length; ++i)
+			if (@this[i].IsLetterOrDigit())
+				@this[i] = mask;
+	}
+
+	/// <summary>
+	/// Mask letter or numbers within a string.
+	/// </summary>
+	public static void Mask(this Span<char> @this, char mask, string[] terms, StringComparison comparison)
+	{
+		if (@this.IsEmpty)
+			return;
+
+		foreach (var term in terms)
+		{
+			var index = @this.AsReadOnly().IndexOf(term, comparison);
+			if (index is -1)
+				continue;
+
+			do
+			{
+				@this.Slice(index, term.Length).Fill(mask);
+				index = @this.AsReadOnly().IndexOf(term, comparison);
+			}
+			while (index > -1);
+		}
+	}
+
+	/// <summary>
+	/// Mask the specified terms within a string.
+	/// </summary>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Mask(<paramref name="mask"/>, <paramref name="terms"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static void MaskIgnoreCase(this Span<char> @this, char mask, string[] terms)
+		=> @this.Mask(mask, terms, StringComparison.OrdinalIgnoreCase);
+
+	/// <summary>
+	/// Mask the specified terms within a string.
+	/// </summary>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.Mask(<paramref name="mask"/>, <paramref name="terms"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static void MaskOrdinal(this Span<char> @this, char mask, string[] terms)
+		=> @this.Mask(mask, terms, StringComparison.Ordinal);
+
 	/// <remarks>
 	/// <c>=&gt; <see cref="MemoryMarshal"/>.Read&lt;<typeparamref name="T"/>&gt;(@<paramref name="this"/>);</c>
 	/// </remarks>

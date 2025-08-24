@@ -1,15 +1,16 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Reflection;
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.Types;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -31,39 +32,45 @@ public static class GraphQLExtensions
 			Resolver = resolver
 		});
 
-	public static FieldType AddField(this IComplexGraphType @this, MethodInfo methodInfo, IFieldResolver resolver)
-		=> @this.AddField(new()
-		{
-			Arguments = new QueryArguments(methodInfo.GetParameters()
-				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
-				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
-				{
-					Name = parameterInfo.GraphQLName(),
-					Description = parameterInfo.GraphQLDescription(),
-				})),
-			Name = methodInfo.GraphQLName(),
-			Description = methodInfo.GraphQLDescription(),
-			DeprecationReason = methodInfo.GraphQLDeprecationReason(),
-			Resolver = resolver,
-			Type = methodInfo.ReturnType.ToGraphQLType(false).ToNonNullGraphType()
-		});
+	public static FieldType AddField(this IComplexGraphType @this, MethodEntity method)
+		=> @this.AddField(method, new MethodFieldResolver(method));
 
-	public static FieldType AddField(this IComplexGraphType @this, MethodInfo methodInfo, ISourceStreamResolver resolver)
-		=> @this.AddField(new()
-		{
-			Arguments = new QueryArguments(methodInfo.GetParameters()
-				.Where(parameterInfo => !parameterInfo.GraphQLIgnore() && !parameterInfo.ParameterType.Is<IResolveFieldContext>())
-				.Select(parameterInfo => new QueryArgument(parameterInfo.ToGraphQLType())
-				{
-					Name = parameterInfo.GraphQLName(),
-					Description = parameterInfo.GraphQLDescription(),
-				})),
-			Name = methodInfo.GraphQLName(),
-			Description = methodInfo.GraphQLDescription(),
-			DeprecationReason = methodInfo.GraphQLDeprecationReason(),
-			StreamResolver = resolver,
-			Type = methodInfo.ReturnType.ToGraphQLType(false).ToNonNullGraphType()
-		});
+	public static FieldType AddField(this IComplexGraphType @this, MethodEntity method, IFieldResolver resolver)
+	{
+		var fieldType = CreateFieldType(method);
+		fieldType.Resolver = resolver;
+		return fieldType;
+	}
+
+	public static FieldType AddField(this IComplexGraphType @this, StaticMethodEntity method)
+		=> @this.AddField(method, new StaticMethodFieldResolver(method));
+
+	public static FieldType AddField(this IComplexGraphType @this, StaticMethodEntity method, IFieldResolver resolver)
+	{
+		var fieldType = CreateFieldType(method);
+		fieldType.Resolver = resolver;
+		return fieldType;
+	}
+
+	public static FieldType AddFieldStream(this IComplexGraphType @this, MethodEntity method)
+		=> @this.AddFieldStream(method, new MethodSourceStreamResolver(method));
+
+	public static FieldType AddFieldStream(this IComplexGraphType @this, MethodEntity method, ISourceStreamResolver resolver)
+	{
+		var fieldType = CreateFieldType(method);
+		fieldType.StreamResolver = resolver;
+		return fieldType;
+	}
+
+	public static FieldType AddFieldStream(this IComplexGraphType @this, StaticMethodEntity method)
+		=> @this.AddFieldStream(method, new StaticMethodSourceStreamResolver(method));
+
+	public static FieldType AddFieldStream(this IComplexGraphType @this, StaticMethodEntity method, ISourceStreamResolver resolver)
+	{
+		var fieldType = CreateFieldType(method);
+		fieldType.StreamResolver = resolver;
+		return fieldType;
+	}
 
 	public static void AddOrderBy(this EnumerationGraphType @this, string column, string? deprecationReason = null)
 	{
@@ -93,7 +100,7 @@ public static class GraphQLExtensions
 		};
 	}
 
-	public static FieldType ToFieldType(this PropertyInfo @this)
+	public static FieldType ToFieldType(this PropertyEntity @this)
 	{
 		var type = @this.ToGraphQLType(false);
 		var arguments = new QueryArguments();
@@ -122,26 +129,26 @@ public static class GraphQLExtensions
 		{
 			Arguments = arguments,
 			Type = type,
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
-			DeprecationReason = @this.GraphQLDeprecationReason(),
-			Resolver = (IFieldResolver)typeof(PropertyFieldResolver<>).MakeGenericType(@this.DeclaringType!).Create([@this])!
+			Name = @this.Attributes.GraphQLName() ?? @this.Name,
+			Description = @this.Attributes.FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
+			DeprecationReason = @this.Attributes.FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason,
+			Resolver = (IFieldResolver)typeof(PropertyFieldResolver<>).MakeGenericType(@this.Type).Create([@this])!
 		};
 	}
 
-	public static Type ToGraphQLType(this ParameterInfo @this)
+	public static Type ToGraphQLType(this ParameterEntity @this)
 	{
-		var type = @this.GraphQLType() ?? @this.ParameterType!.ToGraphQLType(true);
-		if (!type.Is(typeof(NonNullGraphType<>)) && @this.HasCustomAttribute<NotNullAttribute>())
+		var type = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>()?.Type ?? @this.ParameterType.ToGraphQLType(true);
+		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
 			type = type.ToNonNullGraphType();
 
 		return type;
 	}
 
-	public static Type ToGraphQLType(this PropertyInfo @this, bool isInputType)
+	public static Type ToGraphQLType(this PropertyEntity @this, bool isInputType)
 	{
-		var type = @this.GraphQLType() ?? @this.PropertyType.ToGraphQLType(isInputType);
-		if (!type.Is(typeof(NonNullGraphType<>)) && @this.HasCustomAttribute<NotNullAttribute>())
+		var type = @this.Attributes.FirstOrDefault<GraphQLTypeAttribute>()?.Type ?? @this.PropertyType.ToGraphQLType(isInputType);
+		if (!type.Is(typeof(NonNullGraphType<>)) && @this.Attributes.Any<NotNullAttribute>())
 			type = type.ToNonNullGraphType();
 
 		return type;
@@ -155,15 +162,15 @@ public static class GraphQLExtensions
 		if (@this.IsEnum)
 			return typeof(EnumGraphType<>).MakeGenericType(@this);
 
-		var objectType = @this.GetObjectType();
+		var objectType = @this.ObjectType();
 		(objectType is ObjectType.Delegate).ThrowIfTrue();
 		(objectType is ObjectType.Object).ThrowIfTrue();
 
-		var scalarGraphType = @this.GetScalarType().ToGraphType();
+		var scalarGraphType = @this.ScalarType().ToGraphType();
 		if (scalarGraphType is not null)
 			return scalarGraphType;
 
-		var collectionType = @this.GetCollectionType();
+		var collectionType = @this.CollectionType();
 		if (collectionType.IsDictionary())
 			return typeof(KeyValuePair<,>).MakeGenericType(@this.GenericTypeArguments).ToGraphQLType(isInputType).ToNonNullGraphType().ToListGraphType();
 
@@ -206,11 +213,19 @@ public static class GraphQLExtensions
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static QueryArgument ToQueryArgument(this ParameterInfo @this)
-		=> new(@this.ToGraphQLType())
+	private static FieldType CreateFieldType(Method method)
+		=> new()
 		{
-			Name = @this.GraphQLName(),
-			Description = @this.GraphQLDescription(),
+			Arguments = new QueryArguments(method.Parameters
+				.Where(_ => !_.Attributes.GraphQLIgnore() && !_.ParameterType.Is<IResolveFieldContext>())
+				.Select(_ => new QueryArgument(_.Attributes.GraphQLType() ?? _.ParameterType.ToGraphQLType(false))
+				{
+					Name = _.Attributes.GraphQLName() ?? _.Name,
+					Description = _.Attributes.GraphQLDescription(),
+				})),
+			Name = (method.Attributes.GraphQLName() ?? method.Name).TrimEndIgnoreCase("Async"),
+			Description = method.Attributes.GraphQLDescription(),
+			DeprecationReason = method.Attributes.GraphQLDeprecationReason(),
+			Type = method.Return.ParameterType.ToGraphQLType(false).ToNonNullGraphType()
 		};
 }

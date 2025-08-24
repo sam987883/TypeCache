@@ -1,39 +1,29 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Reflection;
+using GraphQL;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Reflection;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class BatchCollectionFieldResolver<SOURCE, ITEM> : FieldResolver
+public sealed class BatchCollectionFieldResolver<SOURCE, ITEM>(StaticMethodEntity method, Func<SOURCE, ITEM[], ITEM[]> getResults) : FieldResolver
 	where SOURCE : notnull
 	where ITEM : notnull
 {
 	private readonly object _Lock = new();
-	private readonly RuntimeMethodHandle _MethodHandle;
-	private readonly Func<SOURCE, ITEM[], ITEM[]> _GetResults;
 	private bool _HasResults = false;
-	private Task<ITEM[]>? _Results = null;
+	private ValueTask<ITEM[]>? _Results = null;
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public BatchCollectionFieldResolver(MethodInfo methodInfo, Func<SOURCE, ITEM[], ITEM[]> getResults)
-	{
-		methodInfo.ThrowIfNull();
-		getResults.ThrowIfNull();
-		methodInfo.IsStatic.ThrowIfFalse();
-		methodInfo.ReturnType.IsAny<IEnumerable<ITEM>, Task<IEnumerable<ITEM>>, ValueTask<IEnumerable<ITEM>>, ITEM[], Task<ITEM[]>, ValueTask<ITEM[]>>().ThrowIfFalse();
-
-		this._MethodHandle = methodInfo.MethodHandle;
-		this._GetResults = getResults;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.Source.ThrowIfNull();
+		getResults.ThrowIfNull();
+		method.ThrowIfNull();
+		method.Return.ParameterType.IsAny<IEnumerable<ITEM>, Task<IEnumerable<ITEM>>, ValueTask<IEnumerable<ITEM>>, ITEM[], Task<ITEM[]>, ValueTask<ITEM[]>>().ThrowIfFalse();
 
 		if (!this._HasResults)
 		{
@@ -47,22 +37,18 @@ public sealed class BatchCollectionFieldResolver<SOURCE, ITEM> : FieldResolver
 			}
 		}
 
-		return this._GetResults((SOURCE)context.Source, await this._Results!);
+		return getResults((SOURCE)context.Source, this._Results.HasValue ? await this._Results.Value : []);
 	}
 
-	private Task<ITEM[]> GetData(IResolveFieldContext context)
-	{
-		var methodInfo = (MethodInfo)this._MethodHandle.ToMethodBase();
-		var result = methodInfo.InvokeStaticFunc(context.GetArguments(methodInfo).ToArray());
-		return result switch
+	private ValueTask<ITEM[]> GetData(IResolveFieldContext context)
+		=> method.Invoke(context.GetArguments(method.Parameters).ToArray()) switch
 		{
-			ITEM[] batch => Task.FromResult(batch),
-			IEnumerable<ITEM> batch => Task.FromResult(batch.AsArray()),
-			Task<ITEM[]> task => task,
-			Task<IEnumerable<ITEM>> task => Task.FromResult(task.Result.AsArray()),
-			ValueTask<ITEM[]> valueTask => valueTask.AsTask(),
-			ValueTask<IEnumerable<ITEM>> valueTask => Task.FromResult(valueTask.Result.AsArray()),
-			_ => Task.FromResult<ITEM[]>([])
+			ITEM[] batch => ValueTask.FromResult(batch),
+			IEnumerable<ITEM> batch => ValueTask.FromResult(batch.AsArray()),
+			Task<ITEM[]> task => new ValueTask<ITEM[]>(task),
+			Task<IEnumerable<ITEM>> task => ValueTask.FromResult(task.Result.AsArray()),
+			ValueTask<ITEM[]> valueTask => valueTask,
+			ValueTask<IEnumerable<ITEM>> valueTask => ValueTask.FromResult(valueTask.Result.AsArray()),
+			_ => ValueTask.FromResult<ITEM[]>([])
 		};
-	}
 }

@@ -1,7 +1,5 @@
 ﻿global using System;
-global using System.Buffers.Text;
 global using System.Diagnostics;
-global using System.Diagnostics.CodeAnalysis;
 global using static System.FormattableString;
 global using static System.Runtime.CompilerServices.MethodImplOptions;
 global using CancellationToken = System.Threading.CancellationToken;

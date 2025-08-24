@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Adapters;
 using TypeCache.Extensions;
 using TypeCache.Utilities;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;

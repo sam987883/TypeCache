@@ -18,11 +18,11 @@ public enum ComparisonOperator
 	/// <summary>
 	/// &gt;
 	/// </summary>
-	MoreThan,
+	GreaterThan,
 	/// <summary>
 	/// &gt;=
 	/// </summary>
-	MoreThanOrEqual,
+	GreaterThanOrEqual,
 	/// <summary>
 	/// &lt;
 	/// </summary>

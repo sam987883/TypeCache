@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.Primitives;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static TypeCache.Data.DataSourceType;
 
 namespace TypeCache.Data;
@@ -127,14 +128,13 @@ public sealed class ObjectSchema(
 	public string CreateDeleteSQL<T>(T[] data, StringValues output)
 	{
 		var primaryKeys = this.Columns.Where(column => column.PrimaryKey).ToArray();
+		primaryKeys.ThrowIfNull();
+		primaryKeys.ThrowIfEmpty();
 
-		(primaryKeys.Length > 0).ThrowIfFalse();
-
-		var type = typeof(T);
-
+		var properties = Type<T>.Properties;
 		if (primaryKeys.Length == 1)
 		{
-			var values = data.Select(row => type.GetPropertyValue(primaryKeys[0].Name, row!).ToSQL()).ToCSV();
+			var values = data.Select(row => properties[primaryKeys[0].Name].GetValue(row!).ToSQL()).ToCSV();
 			var column = primaryKeys[0].Name.EscapeIdentifier(this.DataSource.Type);
 			return new StringBuilder("DELETE ").AppendLine(this.Name)
 				.AppendOutputSQL(this.DataSource.Type, output)
@@ -144,7 +144,7 @@ public sealed class ObjectSchema(
 		}
 
 		var conditions = data.Select(row => Invariant($"({string.Join(" AND ", primaryKeys.Select(column =>
-			Invariant($"{column.Name.EscapeIdentifier(this.DataSource.Type)} = {type.GetPropertyValue(column.Name, row!).ToSQL()}")))})"));
+			Invariant($"{column.Name.EscapeIdentifier(this.DataSource.Type)} = {properties[column.Name].GetValue(row!).ToSQL()}")))})"));
 
 		return new StringBuilder("DELETE ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)

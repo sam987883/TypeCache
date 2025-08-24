@@ -3,9 +3,9 @@
 using System.Collections.Frozen;
 using System.Data;
 using System.Data.Common;
+using TypeCache.Collections;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
-using TypeCache.Utilities;
 using static System.StringSplitOptions;
 using static TypeCache.Data.DataSourceType;
 

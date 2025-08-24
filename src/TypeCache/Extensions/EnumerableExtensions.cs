@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
+using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -170,6 +171,16 @@ public static class EnumerableExtensions
 		}
 	}
 
+	/// <summary>
+	/// Determines if collection contains multiple strings with the same value but different case.<br/>
+	/// For example: <c>FirstName</c> and <c>firstName</c>
+	/// </summary>
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.ToHashSet(<see cref="StringComparer.Ordinal"/>).Count != @<paramref name="this"/>.ToHashSet(<see cref="StringComparer.OrdinalIgnoreCase"/>).Count;</c>
+	/// </remarks>
+	public static bool IsCaseSensitive(this IEnumerable<string> @this)
+		=> @this.ToHashSet(StringComparer.Ordinal).Count != @this.ToHashSet(StringComparer.OrdinalIgnoreCase).Count;
+
 	/// <inheritdoc cref="Enumerable.Single{TSource}(IEnumerable{TSource})"/>
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.OfType&lt;<typeparamref name="T"/>&gt;().Single();</c>
@@ -185,29 +196,6 @@ public static class EnumerableExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static T? SingleOrDefault<T>(this IEnumerable @this)
 		=> @this.OfType<T>().SingleOrDefault();
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEmpty<T>([NotNull] this IEnumerable<T> @this, string? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression("this")] string? argument = null)
-		where T : notnull
-	{
-		if (!@this.Any())
-		{
-			var exception = new ArgumentOutOfRangeException(
-				paramName: argument,
-				actualValue: @this,
-				message: message ?? Invariant($"{caller}: {nameof(ThrowIfEmpty)}"));
-
-			logger?.LogError(exception, exception.Message);
-
-			throw exception;
-		}
-	}
 
 	/// <inheritdoc cref="Dictionary{TKey, TValue}.Dictionary(IEnumerable{KeyValuePair{TKey, TValue}}, IEqualityComparer{TKey})"/>
 	/// <remarks>

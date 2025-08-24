@@ -1,13 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
+using TypeCache.Reflection;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
 
-public static class ExpressionExtensions
+public static partial class ExpressionExtensions
 {
 	/// <inheritdoc cref="Expression.AndAlso(Expression, Expression)"/>
 	/// <remarks>
@@ -19,65 +19,11 @@ public static class ExpressionExtensions
 		=> Expression.AndAlso(@this, operand);
 
 	/// <remarks>
-	/// <c>=&gt; <see langword="new"/> <see cref="ArrayExpressionBuilder"/>(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ArrayExpressionBuilder Array(this Expression @this)
-		=> new ArrayExpressionBuilder(@this);
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static BinaryExpression Array(this Expression @this, int index)
-		=> Expression.ArrayIndex(@this, Expression.Constant(index));
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
-	/// </remarks>
-	public static MethodCallExpression Array(this Expression @this, int[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static BinaryExpression Array(this Expression @this, long index)
-		=> Expression.ArrayIndex(@this, Expression.Constant(index));
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
-	/// </remarks>
-	public static MethodCallExpression Array(this Expression @this, long[] indexes)
-		=> Expression.ArrayIndex(@this, indexes.Select(index => (Expression)Expression.Constant(index)));
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="index"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static BinaryExpression Array(this Expression @this, Expression index)
-		=> Expression.ArrayIndex(@this, index);
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, IEnumerable{Expression})"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Array(this Expression @this, IEnumerable<Expression> indexes)
-		=> Expression.ArrayIndex(@this, indexes);
-
-	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static MethodCallExpression Array(this Expression @this, Expression[] indexes)
-		=> Expression.ArrayIndex(@this, indexes);
+	public static ArrayExpressionFactory Array(this Expression @this)
+		=> new(@this);
 
 	/// <inheritdoc cref="Expression.TypeAs(Expression, Type)"/>
 	/// <remarks>
@@ -95,27 +41,6 @@ public static class ExpressionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Expression As(this Expression @this, Type type)
 		=> Expression.TypeAs(@this, type);
-
-	/// <exception cref="UnreachableException" />
-	public static BinaryExpression Assign(this Expression @this, BinaryOperator operation, Expression operand)
-		=> operation switch
-		{
-			BinaryOperator.Add => Expression.AddAssign(@this, operand),
-			BinaryOperator.AddChecked => Expression.AddAssignChecked(@this, operand),
-			BinaryOperator.Divide => Expression.DivideAssign(@this, operand),
-			BinaryOperator.Modulus => Expression.ModuloAssign(@this, operand),
-			BinaryOperator.Multiply => Expression.MultiplyAssign(@this, operand),
-			BinaryOperator.MultiplyChecked => Expression.MultiplyAssignChecked(@this, operand),
-			BinaryOperator.Power => Expression.PowerAssign(@this, operand),
-			BinaryOperator.Subtract => Expression.SubtractAssign(@this, operand),
-			BinaryOperator.SubtractChecked => Expression.SubtractAssignChecked(@this, operand),
-			BinaryOperator.And => Expression.AndAssign(@this, operand),
-			BinaryOperator.Or => Expression.OrAssign(@this, operand),
-			BinaryOperator.ExclusiveOr => Expression.ExclusiveOrAssign(@this, operand),
-			BinaryOperator.LeftShift => Expression.LeftShiftAssign(@this, operand),
-			BinaryOperator.RightShift => Expression.RightShiftAssign(@this, operand),
-			_ => throw new UnreachableException($"{nameof(Assign)}: {nameof(BinaryOperator)} [{operation:G}] is not supported.")
-		};
 
 	/// <inheritdoc cref="Expression.Assign(Expression, Expression)"/>
 	/// <remarks>
@@ -171,6 +96,38 @@ public static class ExpressionExtensions
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression Call(this Expression @this, string method, Type[]? genericTypes, Expression[]? arguments = null)
+		=> Expression.Call(@this, method, genericTypes, arguments);
+
+	/// <inheritdoc cref="Expression.Call(Expression?, MethodInfo, Expression[]?)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression CallStatic(this MethodInfo @this, Expression[]? arguments = null)
+		=> Expression.Call(@this, arguments);
+
+	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression CallStatic(this MethodInfo @this, IEnumerable<Expression> arguments)
+		=> Expression.Call(@this, arguments);
+
+	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression CallStatic(this Type @this, string method, Expression[]? arguments = null)
+		=> Expression.Call(@this, method, Type.EmptyTypes, arguments);
+
+	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static MethodCallExpression CallStatic(this Type @this, string method, Type[]? genericTypes, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
 	/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
@@ -229,58 +186,32 @@ public static class ExpressionExtensions
 		if (@this.Type != typeof(object))
 			return @this.CreateConversionExpression(targetType);
 
-		var targetScalarType = targetType.GetScalarType();
-		var method = targetScalarType switch
+		var targetScalarType = targetType.ScalarType();
+		if (targetScalarType is ScalarType.None)
+			return @this.Cast(targetType);
+
+		var targetObjectType = targetType.ObjectType();
+		if (targetType.IsValueType && targetObjectType is ObjectType.Nullable)
+			targetType = targetType.GenericTypeArguments[0];
+
+		var expression = targetScalarType switch
 		{
-			ScalarType.BigInteger or ScalarType.Byte or ScalarType.Char
-			or ScalarType.Half or ScalarType.Single or ScalarType.Double or ScalarType.Decimal
-			or ScalarType.SByte or ScalarType.Int16 or ScalarType.Int32 or ScalarType.Int64 or ScalarType.Int128
-			or ScalarType.Byte or ScalarType.UInt16 or ScalarType.UInt32 or ScalarType.UInt64 or ScalarType.UInt128
-				=> nameof(ValueConverter.ConvertToNumber),
-			ScalarType.Boolean => nameof(ValueConverter.ConvertToBoolean),
-			ScalarType.DateOnly => nameof(ValueConverter.ConvertToDateOnly),
-			ScalarType.DateTime => nameof(ValueConverter.ConvertToDateTime),
-			ScalarType.DateTimeOffset => nameof(ValueConverter.ConvertToDateTimeOffset),
-			ScalarType.Enum => nameof(ValueConverter.ConvertToEnum),
-			ScalarType.Guid => nameof(ValueConverter.ConvertToGuid),
-			ScalarType.Index => nameof(ValueConverter.ConvertToIndex),
-			ScalarType.IntPtr => nameof(ValueConverter.ConvertToIntPtr),
-			ScalarType.String => nameof(ValueConverter.ConvertToString),
-			ScalarType.TimeOnly => nameof(ValueConverter.ConvertToTimeOnly),
-			ScalarType.TimeSpan => nameof(ValueConverter.ConvertToTimeSpan),
-			ScalarType.UIntPtr => nameof(ValueConverter.ConvertToUIntPtr),
-			ScalarType.Uri => nameof(ValueConverter.ConvertToUri),
-			_ => null
-		};
-		var type = targetScalarType switch
-		{
-			ScalarType.BigInteger => typeof(BigInteger),
-			ScalarType.Byte => typeof(byte),
-			ScalarType.Char => typeof(char),
-			ScalarType.Decimal => typeof(decimal),
-			ScalarType.Double => typeof(double),
-			ScalarType.Half => typeof(Half),
-			ScalarType.Int16 => typeof(short),
-			ScalarType.Int32 => typeof(int),
-			ScalarType.Int64 => typeof(long),
-			ScalarType.Int128 => typeof(Int128),
-			ScalarType.SByte => typeof(sbyte),
-			ScalarType.Single => typeof(float),
-			ScalarType.UInt16 => typeof(ushort),
-			ScalarType.UInt32 => typeof(uint),
-			ScalarType.UInt64 => typeof(ulong),
-			ScalarType.UInt128 => typeof(UInt128),
-			_ => null
-		};
-		var expression = (method, type) switch
-		{
-			(null, null) => (Expression)@this.Cast(targetType),
-			(_, null) => typeof(ValueConverter).ToStaticMethodCallExpression(method, [@this]),
-			_ => typeof(ValueConverter).ToStaticMethodCallExpression(method!, [type], [@this]),
+			ScalarType.Enum => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToEnum), [@this]),
+			ScalarType.Index => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToIndex), [@this]),
+			ScalarType.Boolean => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToBoolean), [@this]),
+			ScalarType.DateOnly => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToDateOnly), [@this]),
+			ScalarType.DateTime => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToDateTime), [@this]),
+			ScalarType.DateTimeOffset => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToDateTimeOffset), [@this]),
+			ScalarType.Guid => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToGuid), [@this]),
+			ScalarType.String => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToString), [@this]),
+			ScalarType.TimeOnly => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToTimeOnly), [@this]),
+			ScalarType.TimeSpan => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToTimeSpan), [@this]),
+			ScalarType.Uri => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToUri), [@this]),
+			_ => typeof(ValueConverter).CallStatic(nameof(ValueConverter.ConvertToNumber), [targetType], [@this])
 		};
 
-		if (targetScalarType is not ScalarType.None && targetType.IsValueType && !targetType.IsNullable())
-			expression = expression.Property(nameof(Nullable<int>.Value));
+		if (targetType.IsValueType && targetObjectType is not ObjectType.Nullable)
+			return expression.Property(nameof(Nullable<int>.Value));
 
 		return expression;
 	}
@@ -478,37 +409,51 @@ public static class ExpressionExtensions
 		=> Expression.MemberInit(@this, bindings);
 
 	/// <exception cref="UnreachableException" />
-	public static BinaryExpression Operation(this Expression @this, BinaryOperator operation, Expression operand)
-		=> operation switch
+	public static BinaryExpression Operator(this Expression @this, BinaryOperator binaryOperator, Expression operand)
+		=> binaryOperator switch
 		{
 			BinaryOperator.Add => Expression.Add(@this, operand),
+			BinaryOperator.AddAssign => Expression.AddAssign(@this, operand),
 			BinaryOperator.AddChecked => Expression.AddChecked(@this, operand),
+			BinaryOperator.AddAssignChecked => Expression.AddAssignChecked(@this, operand),
 			BinaryOperator.Divide => Expression.Divide(@this, operand),
-			BinaryOperator.Modulus => Expression.Modulo(@this, operand),
+			BinaryOperator.DivideAssign => Expression.DivideAssign(@this, operand),
+			BinaryOperator.Modulo => Expression.Modulo(@this, operand),
+			BinaryOperator.ModuloAssign => Expression.ModuloAssign(@this, operand),
 			BinaryOperator.Multiply => Expression.Multiply(@this, operand),
+			BinaryOperator.MultiplyAssign => Expression.MultiplyAssign(@this, operand),
 			BinaryOperator.MultiplyChecked => Expression.MultiplyChecked(@this, operand),
+			BinaryOperator.MultiplyAssignChecked => Expression.MultiplyAssignChecked(@this, operand),
 			BinaryOperator.Power => Expression.Power(@this, operand),
+			BinaryOperator.PowerAssign => Expression.PowerAssign(@this, operand),
 			BinaryOperator.Subtract => Expression.Subtract(@this, operand),
+			BinaryOperator.SubtractAssign => Expression.SubtractAssign(@this, operand),
 			BinaryOperator.SubtractChecked => Expression.SubtractChecked(@this, operand),
+			BinaryOperator.SubtractAssignChecked => Expression.SubtractAssignChecked(@this, operand),
 			BinaryOperator.And => Expression.And(@this, operand),
+			BinaryOperator.AndAssign => Expression.AndAssign(@this, operand),
 			BinaryOperator.Or => Expression.Or(@this, operand),
+			BinaryOperator.OrAssign => Expression.OrAssign(@this, operand),
 			BinaryOperator.ExclusiveOr => Expression.ExclusiveOr(@this, operand),
+			BinaryOperator.ExclusiveOrAssign => Expression.ExclusiveOrAssign(@this, operand),
 			BinaryOperator.LeftShift => Expression.LeftShift(@this, operand),
+			BinaryOperator.LeftShiftAssign => Expression.LeftShiftAssign(@this, operand),
 			BinaryOperator.RightShift => Expression.RightShift(@this, operand),
+			BinaryOperator.RightShiftAssign => Expression.RightShiftAssign(@this, operand),
 			BinaryOperator.Equal => Expression.Equal(@this, operand),
-			BinaryOperator.ReferenceEqual => Expression.ReferenceEqual(@this, operand),
 			BinaryOperator.NotEqual => Expression.NotEqual(@this, operand),
+			BinaryOperator.ReferenceEqual => Expression.ReferenceEqual(@this, operand),
 			BinaryOperator.ReferenceNotEqual => Expression.ReferenceNotEqual(@this, operand),
 			BinaryOperator.GreaterThan => Expression.GreaterThan(@this, operand),
 			BinaryOperator.GreaterThanOrEqual => Expression.GreaterThanOrEqual(@this, operand),
 			BinaryOperator.LessThan => Expression.LessThan(@this, operand),
 			BinaryOperator.LessThanOrEqual => Expression.LessThanOrEqual(@this, operand),
-			_ => throw new UnreachableException($"{nameof(Operation)}: {nameof(BinaryOperator)} [{operation.Number()}] is not supported.")
+			_ => throw new UnreachableException(Invariant($"{nameof(Operator)}: {nameof(BinaryOperator)} [{binaryOperator.Name()}] is not supported."))
 		};
 
 	/// <exception cref="UnreachableException" />
-	public static UnaryExpression Operation(this Expression @this, UnaryOperator operation)
-		=> operation switch
+	public static UnaryExpression Operator(this Expression @this, UnaryOperator unaryOperator)
+		=> unaryOperator switch
 		{
 			UnaryOperator.IsTrue => Expression.IsTrue(@this),
 			UnaryOperator.IsFalse => Expression.IsFalse(@this),
@@ -521,7 +466,7 @@ public static class ExpressionExtensions
 			UnaryOperator.Negate => Expression.Negate(@this),
 			UnaryOperator.NegateChecked => Expression.NegateChecked(@this),
 			UnaryOperator.Complement => Expression.OnesComplement(@this),
-			_ => throw new UnreachableException($"{nameof(Assign)}: {nameof(UnaryOperator)} [{operation:G}] is not supported.")
+			_ => throw new UnreachableException(Invariant($"{nameof(Operator)}: {nameof(UnaryOperator)} [{unaryOperator.Name()}] is not supported."))
 		};
 
 	/// <inheritdoc cref="Expression.OrElse(Expression, Expression)"/>
@@ -565,7 +510,7 @@ public static class ExpressionExtensions
 	public static MemberExpression Property(this Expression @this, string name)
 		=> Expression.Property(@this, name);
 
-	/// <inheritdoc cref="Expression.Property(Expression, string)"/>
+	/// <inheritdoc cref="Expression.Property(Expression, string, Expression[])"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Expression"/>.Property(@<paramref name="this"/>, <paramref name="name"/>, <paramref name="index"/>);</c>
 	/// </remarks>

@@ -12,18 +12,23 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 	{
 		if (reader.TokenType is JsonTokenType.StartObject)
 		{
-			var output = (T)typeof(T).Create()!;
+			var output = Type<T>.Create()!;
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();
 				if (!reader.Read() || name.IsBlank())
 					continue;
 
-				typeof(T).SetPropertyValue(name, output, reader.TokenType switch
+				var property = Type<T>.Properties[name];
+				if (property is null)
+					continue;
+
+				var value = reader.TokenType switch
 				{
-					JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, typeof(T).GetProperty(name)!.PropertyType, options),
+					JsonTokenType.StartObject or JsonTokenType.StartArray => JsonSerializer.Deserialize(ref reader, property.PropertyType, options),
 					_ => reader.GetValue()
-				});
+				};
+				property.SetValue(output, value);
 			}
 
 			return output;
@@ -41,10 +46,10 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 		}
 
 		writer.WriteStartObject();
-		foreach (var property in typeof(T).GetPublicProperties())
+		foreach (var property in Type<T>.Properties.Values)
 		{
-			writer.WritePropertyName(property.Name());
-			var value = property.GetValueEx(input);
+			writer.WritePropertyName(property.Name);
+			var value = property.GetValue(input);
 			writer.WriteValue(value, options);
 		}
 		writer.WriteEndObject();

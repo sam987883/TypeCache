@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.Extensions;
@@ -185,44 +186,60 @@ public static class ReadOnlySpanExtensions
 	/// <summary>
 	/// Mask letter or numbers in a string.
 	/// </summary>
-	public static string Mask(this ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null, StringComparison comparison = StringComparison.Ordinal)
+	public static string Mask(this ReadOnlySpan<char> @this, char mask = '*')
 	{
 		if (@this.IsEmpty)
 			return string.Empty;
 
 		Span<char> span = stackalloc char[@this.Length];
 		@this.CopyTo(span);
-
-		if (terms?.Length > 0)
-		{
-			foreach (var term in terms)
-			{
-NextTerm:
-				var index = span.AsReadOnly().IndexOf(term, comparison);
-				if (index > -1)
-				{
-					var slice = span.Slice(index, term.Length);
-					slice.Fill(mask);
-					goto NextTerm;
-				}
-			}
-		}
-		else
-		{
-			for (var i = 0; i < span.Length; ++i)
-				if (span[i].IsLetterOrDigit())
-					span[i] = mask;
-		}
-
+		span.Mask(mask);
 		return new(span);
 	}
 
 	/// <summary>
 	/// Mask letter or numbers in a string.
 	/// </summary>
+	public static string Mask(this ReadOnlySpan<char> @this, char mask, string[] terms, StringComparison comparison)
+	{
+		if (@this.IsEmpty)
+			return string.Empty;
+
+		Span<char> span = stackalloc char[@this.Length];
+		@this.CopyTo(span);
+		span.Mask(mask, terms, comparison);
+		return new(span);
+	}
+
+	/// <summary>
+	/// Mask <param name="terms"> in a string.
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string MaskIgnoreCase(this ReadOnlySpan<char> @this, char mask = '*', string[]? terms = null)
-		=> @this.Mask(mask, terms, StringComparison.OrdinalIgnoreCase);
+	public static string MaskIgnoreCase(this ReadOnlySpan<char> @this, char mask, string[] terms)
+	{
+		if (@this.IsEmpty)
+			return string.Empty;
+
+		Span<char> span = stackalloc char[@this.Length];
+		@this.CopyTo(span);
+		span.MaskIgnoreCase(mask, terms);
+		return new(span);
+	}
+
+	/// <summary>
+	/// Mask <param name="terms"> in a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string MaskOrdinal(this ReadOnlySpan<char> @this, char mask, string[] terms)
+	{
+		if (@this.IsEmpty)
+			return string.Empty;
+
+		Span<char> span = stackalloc char[@this.Length];
+		@this.CopyTo(span);
+		span.MaskOrdinal(mask, terms);
+		return new(span);
+	}
 
 	/// <inheritdoc cref="ISpanParsable{TSelf}.Parse(ReadOnlySpan{char}, IFormatProvider?)"/>
 	/// <remarks>
@@ -258,6 +275,13 @@ NextTerm:
 	public static bool StartsWithIgnoreCase(this ReadOnlySpan<char> @this, string text)
 		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase);
 
+	/// <remarks>
+	/// <c>=&gt; @<paramref name="this"/>.StartsWith(<paramref name="text"/>, <see cref="StringComparison.Ordinal"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool StartsWithOrdinal(this ReadOnlySpan<char> @this, string text)
+		=> @this.StartsWith(text, StringComparison.Ordinal);
+
 	/// <inheritdoc cref="Convert.ToBase64String(ReadOnlySpan{byte}, Base64FormattingOptions)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
@@ -282,7 +306,7 @@ NextTerm:
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(ReadOnlySpan{char}, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnum<T>(this ReadOnlySpan<char> @this)
@@ -291,7 +315,7 @@ NextTerm:
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(ReadOnlySpan{char}, bool, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out"/> <typeparamref name="T"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnumIgnoreCase<T>(this ReadOnlySpan<char> @this)
@@ -315,18 +339,33 @@ NextTerm:
 	public static string ToHexString(this ReadOnlySpan<byte> @this)
 		=> Convert.ToHexString(@this);
 
+	/// <summary>
+	/// <code>
+	/// "^2" ---&gt; ^2
+	/// "1"  ---&gt; 1
+	/// </code>
+	/// </summary>
+	public static Index? ToIndex(this ReadOnlySpan<char> @this)
+		=> @this switch
+		{
+			{ IsEmpty: true } => null,
+			_ when @this.StartsWith("^") && int.TryParse(@this.Slice(1), out var index) => Index.FromEnd(index),
+			_ when int.TryParse(@this, out var index) => Index.FromStart(index),
+			_ => null
+		};
+
 	public static T ToNumber<T>(this ReadOnlySpan<byte> @this)
 		where T : struct, INumber<T>
-		=> typeof(T).GetScalarType() switch
+		=> Type<T>.ScalarType switch
 		{
 			ScalarType.Char => Unsafe.BitCast<char, T>(BitConverter.ToChar(@this)),
-			ScalarType.SByte => Unsafe.BitCast<sbyte, T>((sbyte)BitConverter.ToInt32(@this)),
+			ScalarType.SByte => Unsafe.BitCast<sbyte, T>((sbyte)@this[0]),
 			ScalarType.Int16 => Unsafe.BitCast<short, T>(BitConverter.ToInt16(@this)),
 			ScalarType.Int32 => Unsafe.BitCast<int, T>(BitConverter.ToInt32(@this)),
 			ScalarType.IntPtr => Unsafe.BitCast<nint, T>(BitConverter.ToInt32(@this)),
 			ScalarType.Int64 => Unsafe.BitCast<long, T>(BitConverter.ToInt64(@this)),
 			ScalarType.BigInteger => Unsafe.BitCast<BigInteger, T>(new BigInteger(@this)),
-			ScalarType.Byte => Unsafe.BitCast<byte, T>((byte)BitConverter.ToUInt32(@this)),
+			ScalarType.Byte => Unsafe.BitCast<byte, T>(@this[0]),
 			ScalarType.UInt16 => Unsafe.BitCast<ushort, T>(BitConverter.ToUInt16(@this)),
 			ScalarType.UInt32 => Unsafe.BitCast<uint, T>(BitConverter.ToUInt32(@this)),
 			ScalarType.UIntPtr => Unsafe.BitCast<nuint, T>(BitConverter.ToUInt32(@this)),
@@ -335,7 +374,7 @@ NextTerm:
 			ScalarType.Single => Unsafe.BitCast<float, T>(BitConverter.ToSingle(@this)),
 			ScalarType.Double => Unsafe.BitCast<double, T>(BitConverter.ToDouble(@this)),
 			ScalarType.Decimal => Unsafe.BitCast<decimal, T>(new decimal(@this.Cast<byte, int>())),
-			var scalarType => throw new UnreachableException(Invariant($"Cannot convert bytes to {scalarType.Name()}."))
+			var scalarType => throw new UnreachableException(Invariant($"Cannot convert bytes to {Type<T>.CodeName}."))
 		};
 
 	/// <inheritdoc cref="BitConverter.ToString(byte[])"/>
@@ -370,7 +409,7 @@ NextTerm:
 	public static bool TryFromBase64(this ReadOnlySpan<char> @this, Span<byte> bytes, out int bytesWritten)
 		=> Convert.TryFromBase64Chars(@this, bytes, out bytesWritten);
 
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
@@ -379,21 +418,30 @@ NextTerm:
 		where T : ISpanParsable<T>
 		=> T.TryParse(@this, InvariantCulture, out value);
 
-	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="ISpanParsable{TSelf}.TryParse(ReadOnlySpan{char}, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>(this ReadOnlySpan<char> @this, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : ISpanParsable<T>
-		=> T.TryParse(@this, formatProvider ?? InvariantCulture, out value);
+		=> T.TryParse(@this, formatProvider, out value);
 
-	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(ReadOnlySpan{char}, System.Globalization.NumberStyles, IFormatProvider?, out TSelf)"/>
+	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out TSelf)"/>
+	/// <remarks>
+	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <see cref="InvariantCulture"/>, <see langword="out"/> <paramref name="value"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static bool TryParse<T>(this ReadOnlySpan<char> @this, NumberStyles style, [MaybeNullWhen(false)] out T value)
+		where T : INumberBase<T>
+		=> T.TryParse(@this, style, InvariantCulture, out value);
+
+	/// <inheritdoc cref="INumberBase{TSelf}.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out TSelf)"/>
 	/// <remarks>
 	/// <c>=&gt; <typeparamref name="T"/>.TryParse(@<paramref name="this"/>, <paramref name="style"/>, <paramref name="formatProvider"/>, <see langword="out"/> <paramref name="value"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool TryParse<T>(this ReadOnlySpan<char> @this, NumberStyles style, IFormatProvider? formatProvider, [MaybeNullWhen(false)] out T value)
 		where T : INumberBase<T>
-		=> T.TryParse(@this, style, formatProvider ?? InvariantCulture, out value);
+		=> T.TryParse(@this, style, formatProvider, out value);
 }

@@ -150,8 +150,8 @@ public class JsonExtensions
 	[Fact]
 	public void GetObjectElements()
 	{
-		var objectJson = JsonSerializer.Deserialize<JsonElement>(@"{""a"": 1, ""B"": 2, ""c"": 3, ""D"": 4, ""e"": 5, ""F"": 6}");
-		var jsonElements = objectJson.GetObjectElements();
+		var objectJson = JsonSerializer.Deserialize<JsonElement>("""{"a": 1, "B": 2, "c": 3, "D": 4, "e": 5, "F": 6}""");
+		var jsonElements = objectJson.GetObjectElementsOrdinal();
 
 		Assert.Equal(6, jsonElements.Count);
 		Assert.Equal(1, jsonElements["a"].GetInt32());
@@ -165,16 +165,16 @@ public class JsonExtensions
 	[Fact]
 	public void GetObjectValues()
 	{
-		var objectJson = JsonSerializer.Deserialize<JsonElement>(@"{""a"": 1, ""B"": 2, ""c"": 3, ""D"": 4, ""e"": 5, ""F"": 6}");
-		var values = objectJson.GetObjectValues();
+		var objectJson = JsonSerializer.Deserialize<JsonElement>("""{"a": 1, "B": 2, "c": 3, "D": 4, "e": 5, "F": 6}""");
+		var values = objectJson.GetObjectValuesIgnoreCase();
 
 		Assert.Equal(6, values.Count);
-		Assert.Equal(1, (int)values["a"]);
-		Assert.Equal(2, (int)values["B"]);
+		Assert.Equal(1, (int)values["A"]);
+		Assert.Equal(2, (int)values["b"]);
 		Assert.Equal(3, (int)values["c"]);
-		Assert.Equal(4, (int)values["D"]);
+		Assert.Equal(4, (int)values["d"]);
 		Assert.Equal(5, (int)values["e"]);
-		Assert.Equal(6, (int)values["F"]);
+		Assert.Equal(6, (int)values["f"]);
 	}
 
 	[Fact]
@@ -201,5 +201,58 @@ public class JsonExtensions
 		var dictionary = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new { A = 1, B = "2", C = false })).GetValue();
 		Assert.IsType<Dictionary<string, object>>(dictionary);
 		Assert.Equal(3, ((Dictionary<string, object>)dictionary).Count);
+	}
+
+	[Fact]
+	public void ToDictionary()
+	{
+		const string json = """
+			{
+				"Aaa": "Bbb",
+				"Bbb": 1,
+				"Ccc": { "Item1": null, "Item2": true },
+				"Ddd": [ 1, 2, 3 ],
+				"Eee": { "Fff": [ null, "Text", 100, 23.45 ] }
+			}
+			""";
+
+		var dictionary = JsonNode.Parse(json).ToDictionary();
+
+		Assert.NotNull(dictionary);
+		Assert.Equal("Bbb", dictionary["$.Aaa"]);
+		Assert.Equal(1, dictionary["$.Bbb"]);
+		Assert.Equal(null, dictionary["$.Ccc.Item1"]);
+		Assert.Equal(true, dictionary["$.Ccc.Item2"]);
+		Assert.Equal(1, dictionary["$.Ddd[0]"]);
+		Assert.Equal(2, dictionary["$.Ddd[1]"]);
+		Assert.Equal(3, dictionary["$.Ddd[2]"]);
+		Assert.Equal(null, dictionary["$.Eee.Fff[0]"]);
+		Assert.Equal("Text", dictionary["$.Eee.Fff[1]"]);
+		Assert.Equal(100, dictionary["$.Eee.Fff[2]"]);
+		Assert.Equal(23.45M, dictionary["$.Eee.Fff[3]"]);
+
+		const string json2 = """
+			[
+				{ "Aaa": "Bbb" },
+				{ "Bbb": 1 },
+				{ "Ccc": { "Item1": null, "Item2": true } },
+				{ "Ddd": [ 1, 2, 3 ] },
+				{ "Eee": { "Fff": [ null, "Text", 100, 23.45 ] } }
+			]
+			""";
+		dictionary = JsonNode.Parse(json2).ToDictionary();
+
+		Assert.NotNull(dictionary);
+		Assert.Equal("Bbb", dictionary["$[0].Aaa"]);
+		Assert.Equal(1, dictionary["$[1].Bbb"]);
+		Assert.Equal(null, dictionary["$[2].Ccc.Item1"]);
+		Assert.Equal(true, dictionary["$[2].Ccc.Item2"]);
+		Assert.Equal(1, dictionary["$[3].Ddd[0]"]);
+		Assert.Equal(2, dictionary["$[3].Ddd[1]"]);
+		Assert.Equal(3, dictionary["$[3].Ddd[2]"]);
+		Assert.Equal(null, dictionary["$[4].Eee.Fff[0]"]);
+		Assert.Equal("Text", dictionary["$[4].Eee.Fff[1]"]);
+		Assert.Equal(100, dictionary["$[4].Eee.Fff[2]"]);
+		Assert.Equal(23.45M, dictionary["$[4].Eee.Fff[3]"]);
 	}
 }

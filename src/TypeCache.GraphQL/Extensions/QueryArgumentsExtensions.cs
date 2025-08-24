@@ -3,6 +3,7 @@
 using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Types;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -33,7 +34,7 @@ public static class QueryArgumentsExtensions
 		if (isValueNullable)
 			type = type.GenericTypeArguments[0];
 
-		var scalarType = type.GetScalarType();
+		var scalarType = type.ScalarType();
 		var graphType = type switch
 		{
 			{ IsEnum: true } => typeof(EnumGraphType<>),

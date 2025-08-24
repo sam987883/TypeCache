@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using global::GraphQL.Types;
-using TypeCache.Extensions;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 

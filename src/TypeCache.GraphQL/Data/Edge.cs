@@ -2,9 +2,9 @@
 
 using GraphQL.Resolvers;
 using GraphQL.Types;
-using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Data;
 
@@ -19,7 +19,7 @@ public readonly record struct Edge<T>(
 		var graphType = new ObjectGraphType
 		{
 			Name = Invariant($"{name}{nameof(Edge<T>)}"),
-			Description = typeof(Edge<T>).GraphQLDescription()
+			Description = Type<Edge<T>>.Attributes.GraphQLDescription()
 		};
 
 		graphType.AddField(new()

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Primitives;
 using TypeCache.Converters;
 using TypeCache.Extensions;
 using static System.Net.Mime.MediaTypeNames;
+using static Microsoft.AspNetCore.Http.StatusCodes;
 
 namespace TypeCache.Web.Extensions;
 

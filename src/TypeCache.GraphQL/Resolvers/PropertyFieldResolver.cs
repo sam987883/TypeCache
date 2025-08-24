@@ -1,18 +1,18 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Reflection;
 using System.Text.RegularExpressions;
 using GraphQL;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldResolver
+public sealed class PropertyFieldResolver<T>(PropertyEntity property) : FieldResolver
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		propertyInfo.ThrowIfNull();
+		property.ThrowIfNull();
 
 		var source = context.Source switch
 		{
@@ -24,7 +24,7 @@ public sealed class PropertyFieldResolver<T>(PropertyInfo propertyInfo) : FieldR
 			_ => context.Source
 		};
 
-		var value = propertyInfo.GetValueEx(source!);
+		var value = property.GetValue(source!);
 		if (value is null)
 			return value ?? context.GetArgument<object>("null");
 
