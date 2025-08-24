@@ -7,7 +7,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
-using TypeCache.Utilities;
+using TypeCache.Collections;
+using TypeCache.Reflection;
 
 namespace TypeCache.Extensions;
 
@@ -268,29 +269,6 @@ public static class ArrayExtensions
 	public static string ToString(this byte[] @this, Encoding encoding, int index, int count)
 		=> encoding.GetString(@this, index, count);
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEmpty<T>([NotNull] this T[] @this, string? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression("this")] string? argument = null)
-		where T : notnull
-	{
-		if (@this.Length is 0)
-		{
-			var exception = new ArgumentOutOfRangeException(
-				paramName: argument,
-				actualValue: @this,
-				message: message ?? Invariant($"{caller}: {nameof(ThrowIfEmpty)}"));
-
-			logger?.LogError(exception, exception.Message);
-
-			throw exception;
-		}
-	}
-
 	/// <inheritdoc cref="Convert.ToBase64String(ReadOnlySpan{byte}, Base64FormattingOptions)"/>
 	/// <remarks>
 	/// <c>=&gt; <see cref="Convert"/>.ToBase64String(@<paramref name="this"/>, <paramref name="options"/>);</c>
@@ -382,7 +360,7 @@ public static class ArrayExtensions
 
 	public static T ToNumber<T>(this byte[] @this, int startIndex)
 		where T : struct, INumber<T>
-		=> typeof(T).GetScalarType() switch
+		=> typeof(T).ScalarType() switch
 		{
 			ScalarType.Char => Unsafe.BitCast<char, T>(BitConverter.ToChar(@this, startIndex)),
 			ScalarType.SByte => Unsafe.BitCast<sbyte, T>((sbyte)BitConverter.ToInt32(@this, startIndex)),

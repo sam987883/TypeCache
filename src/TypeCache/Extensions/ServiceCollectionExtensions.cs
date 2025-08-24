@@ -474,7 +474,7 @@ public static class ServiceCollectionExtensions
 	{
 		fromAssembly.GetTypes()
 			.Where(type => !type.IsAbstract && !type.IsGenericType && !type.IsInterface && !type.IsPointer && !type.IsPrimitive
-				&& type.HasCustomAttribute<ServiceLifetimeAttribute>(false))
+				&& type.GetCustomAttributes(false).Any<ServiceLifetimeAttribute>())
 			.ForEach(implementationType => @this.Add(implementationType.ToServiceDescriptor()));
 
 		return @this;

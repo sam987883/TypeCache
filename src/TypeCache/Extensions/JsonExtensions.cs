@@ -28,43 +28,79 @@ public static class JsonExtensions
 	{
 		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Array);
 
-		return @this.EnumerateArrayValues().ToArray();
+		var array = new JsonElement[@this.GetArrayLength()];
+		var i = -1;
+		using var enumerator = @this.EnumerateArray();
+		while (enumerator.MoveNext())
+			array[++i] = enumerator.Current;
+
+		return array;
 	}
 
 	public static object?[] GetArrayValues(this JsonElement @this)
 	{
 		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Array);
 
-		return @this.EnumerateArrayValues().Select(jsonElement => jsonElement.GetValue()).ToArray();
+		var array = new object?[@this.GetArrayLength()];
+		var i = -1;
+		using var enumerator = @this.EnumerateArray();
+		while (enumerator.MoveNext())
+			array[++i] = enumerator.Current.GetValue();
+
+		return array;
 	}
 
-	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this)
+	public static IDictionary<string, JsonElement> GetObjectElements(this JsonElement @this, StringComparison comparison)
 	{
 		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Object);
 
-		var properties = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+		var properties = new Dictionary<string, JsonElement>(comparison.ToComparer());
 		using var enumerator = @this.EnumerateObject();
 		while (enumerator.MoveNext())
-		{
 			properties.Add(enumerator.Current.Name, enumerator.Current.Value);
-		}
 
 		return properties;
 	}
 
-	public static IDictionary<string, object?> GetObjectValues(this JsonElement @this)
+	/// <remarks>
+	/// =&gt; @<paramref name="this"/>.GetObjectElements(<see cref="StringComparison.OrdinalIgnoreCase"/>);
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IDictionary<string, JsonElement> GetObjectElementsIgnoreCase(this JsonElement @this)
+		=> @this.GetObjectElements(StringComparison.OrdinalIgnoreCase);
+
+	/// <remarks>
+	/// =&gt; @<paramref name="this"/>.GetObjectElements(<see cref="StringComparison.Ordinal"/>);
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IDictionary<string, JsonElement> GetObjectElementsOrdinal(this JsonElement @this)
+		=> @this.GetObjectElements(StringComparison.Ordinal);
+
+	public static IDictionary<string, object?> GetObjectValues(this JsonElement @this, StringComparison comparison)
 	{
 		@this.ValueKind.ThrowIfNotEqual(JsonValueKind.Object);
 
-		var properties = new Dictionary<string, object?>(StringComparer.Ordinal);
+		var properties = new Dictionary<string, object?>(comparison.ToComparer());
 		using var enumerator = @this.EnumerateObject();
 		while (enumerator.MoveNext())
-		{
 			properties.Add(enumerator.Current.Name, enumerator.Current.Value.GetValue());
-		}
 
 		return properties;
 	}
+
+	/// <remarks>
+	/// =&gt; @<paramref name="this"/>.GetObjectValues(<see cref="StringComparison.OrdinalIgnoreCase"/>);
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IDictionary<string, object?> GetObjectValuesIgnoreCase(this JsonElement @this)
+		=> @this.GetObjectValues(StringComparison.OrdinalIgnoreCase);
+
+	/// <remarks>
+	/// =&gt; @<paramref name="this"/>.GetObjectValues(<see cref="StringComparison.Ordinal"/>);
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IDictionary<string, object?> GetObjectValuesOrdinal(this JsonElement @this)
+		=> @this.GetObjectValues(StringComparison.Ordinal);
 
 	/// <summary>
 	/// Gets the <c><see cref="JsonNode"/></c>s that match the <paramref name="path"/>.
@@ -173,7 +209,7 @@ public static class JsonExtensions
 			JsonValueKind.String when @this.TryGetGuid(out var value) => value,
 			JsonValueKind.String => @this.GetString()!,
 			JsonValueKind.Array => @this.GetArrayValues(),
-			JsonValueKind.Object => @this.GetObjectValues(),
+			JsonValueKind.Object => @this.GetObjectValuesIgnoreCase(),
 			_ => null
 		};
 
@@ -213,6 +249,41 @@ public static class JsonExtensions
 	public static T[]? ToArray<T>(this JsonArray @this, JsonSerializerOptions? options = null)
 		=> JsonSerializer.Deserialize<T[]?>(@this, options);
 
+	public static IDictionary<string, object?> ToDictionary(this JsonNode @this)
+	{
+		var dictionary = new Dictionary<string, object?>();
+		populate(dictionary, @this);
+
+		return dictionary;
+
+		static void populate(Dictionary<string, object?> dictionary, JsonNode jsonNode)
+		{
+			if (jsonNode is JsonObject jsonObject)
+				jsonObject.ForEach(pair =>
+				{
+					if (pair.Value is not null)
+						populate(dictionary, pair.Value);
+					else
+						dictionary.Add(Invariant($"{jsonNode.GetPath()}.{pair.Key}"), null);
+				});
+			else if (jsonNode is JsonArray jsonArray)
+				jsonArray.ForEach((_, i) =>
+				{
+					if (_ is not null)
+						populate(dictionary, _);
+					else
+						dictionary.Add(Invariant($"{jsonArray.GetPath()}[{i}]"), null);
+				});
+			else
+				dictionary.Add(jsonNode.GetPath(), jsonNode.GetValue<object?>() switch
+				{
+					null => null,
+					JsonElement jsonElement => jsonElement.GetValue(),
+					var value => value
+				});
+		}
+	}
+
 	public static void WriteValue(this Utf8JsonWriter @this, object? value, JsonSerializerOptions options)
 	{
 		Action writeValue = value switch
@@ -247,12 +318,5 @@ public static class JsonExtensions
 			_ => () => JsonSerializer.Serialize(@this, value, options)
 		};
 		writeValue();
-	}
-
-	private static IEnumerable<JsonElement> EnumerateArrayValues(this JsonElement @this)
-	{
-		using var enumerator = @this.EnumerateArray();
-		while (enumerator.MoveNext())
-			yield return enumerator.Current;
 	}
 }

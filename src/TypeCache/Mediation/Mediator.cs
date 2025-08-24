@@ -13,14 +13,12 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	public async Task Execute<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest
 	{
-		await using var scope = serviceProvider.CreateAsyncScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>();
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>();
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 
-		var rule = scope.ServiceProvider.GetRequiredService<IRule<REQUEST>>();
-		var afterRules = scope.ServiceProvider.GetServices<IAfterRule<REQUEST>>();
+		var rule = serviceProvider.GetRequiredService<IRule<REQUEST>>();
+		var afterRules = serviceProvider.GetServices<IAfterRule<REQUEST>>();
 
 		await this.ExecuteRules(request, rule, afterRules, token);
 	}
@@ -28,31 +26,27 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	public async Task Execute<REQUEST>(object? key, REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest
 	{
-		await using var scope = serviceProvider.CreateAsyncScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>();
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>();
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 
-		var rule = scope.ServiceProvider.GetRequiredKeyedService<IRule<REQUEST>>(key);
-		var afterRules = scope.ServiceProvider.GetServices<IAfterRule<REQUEST>>()
-			.Concat(scope.ServiceProvider.GetKeyedServices<IAfterRule<REQUEST>>(key));
+		var rule = serviceProvider.GetRequiredKeyedService<IRule<REQUEST>>(key);
+		var afterRules = serviceProvider.GetServices<IAfterRule<REQUEST>>()
+			.Concat(serviceProvider.GetKeyedServices<IAfterRule<REQUEST>>(key));
 
 		await this.ExecuteRules(request, rule, afterRules, token);
 	}
 
 	public Task<RESPONSE> Map<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default)
-		=> (Task<RESPONSE>)this.GetType().InvokeMethodFunc(nameof(Mediator._Map), [request.GetType(), typeof(RESPONSE)], this, [request, token])!;
+		=> (Task<RESPONSE>)this.GetType().GenericMethods()[nameof(Mediator._Map)].Invoke([request.GetType(), typeof(RESPONSE)], this, (request, token))!;
 
 	public Task<RESPONSE> Map<RESPONSE>(object? key, IRequest<RESPONSE> request, CancellationToken token = default)
-		=> (Task<RESPONSE>)this.GetType().InvokeMethodFunc(nameof(Mediator._Map), [request.GetType(), typeof(RESPONSE)], this, [key, request, token])!;
+		=> (Task<RESPONSE>)this.GetType().GenericMethods()[nameof(Mediator._Map)].Invoke([request.GetType(), typeof(RESPONSE)], this, (key, request, token))!;
 
 	public void Validate<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : notnull
 	{
-		using var scope = serviceProvider.CreateScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>();
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>();
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 	}
@@ -60,10 +54,8 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	public void Validate<REQUEST>(object? key, REQUEST request, CancellationToken token = default)
 		where REQUEST : notnull
 	{
-		using var scope = serviceProvider.CreateScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>()
-			.Concat(scope.ServiceProvider.GetKeyedServices<IValidationRule<REQUEST>>(key));
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>()
+			.Concat(serviceProvider.GetKeyedServices<IValidationRule<REQUEST>>(key));
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 	}
@@ -151,14 +143,12 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	private async Task<RESPONSE> _Map<REQUEST, RESPONSE>(REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		await using var scope = serviceProvider.CreateAsyncScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>();
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>();
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 
-		var rule = scope.ServiceProvider.GetRequiredService<IRule<REQUEST, RESPONSE>>();
-		var afterRules = scope.ServiceProvider.GetServices<IAfterRule<REQUEST, RESPONSE>>();
+		var rule = serviceProvider.GetRequiredService<IRule<REQUEST, RESPONSE>>();
+		var afterRules = serviceProvider.GetServices<IAfterRule<REQUEST, RESPONSE>>();
 
 		return await this.ExecuteRules(request, rule, afterRules, token);
 	}
@@ -166,16 +156,14 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	private async Task<RESPONSE> _Map<REQUEST, RESPONSE>(object? key, REQUEST request, CancellationToken token = default)
 		where REQUEST : IRequest<RESPONSE>
 	{
-		await using var scope = serviceProvider.CreateAsyncScope();
-
-		var validationRules = scope.ServiceProvider.GetServices<IValidationRule<REQUEST>>()
-			.Concat(scope.ServiceProvider.GetKeyedServices<IValidationRule<REQUEST>>(key));
+		var validationRules = serviceProvider.GetServices<IValidationRule<REQUEST>>()
+			.Concat(serviceProvider.GetKeyedServices<IValidationRule<REQUEST>>(key));
 		if (validationRules.Any())
 			this.ExecuteRules(request, validationRules, token);
 
-		var rule = scope.ServiceProvider.GetRequiredKeyedService<IRule<REQUEST, RESPONSE>>(key);
-		var afterRules = scope.ServiceProvider.GetServices<IAfterRule<REQUEST, RESPONSE>>()
-			.Concat(scope.ServiceProvider.GetKeyedServices<IAfterRule<REQUEST, RESPONSE>>(key));
+		var rule = serviceProvider.GetRequiredKeyedService<IRule<REQUEST, RESPONSE>>(key);
+		var afterRules = serviceProvider.GetServices<IAfterRule<REQUEST, RESPONSE>>()
+			.Concat(serviceProvider.GetKeyedServices<IAfterRule<REQUEST, RESPONSE>>(key));
 
 		return await this.ExecuteRules(request, rule, afterRules, token);
 	}

@@ -1,11 +1,12 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Reflection;
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using global::GraphQL;
 using global::GraphQL.Execution;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using TypeCache.Converters;
 using TypeCache.GraphQL.Converters;
 using TypeCache.GraphQL.Listeners;
 using TypeCache.GraphQL.Types;
@@ -18,10 +19,9 @@ public static class ServiceCollectionExtensions
 	/// <summary>
 	/// <list type="table">
 	/// <listheader>Registers the following:</listheader>
-	/// <item><term>Singleton</term> <description><c>JsonConverter&lt;<see cref="ExecutionError"/>&gt;</c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecuter"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecutionListener"/></c></description></item>
-	/// <item><term>Singleton</term> <description><c><see cref="IGraphQLSerializer"/></c></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecutionListener"/></c> <b>(if one is not already registered)</b></description></item>
+	/// <item><term>Singleton</term> <description><c><see cref="IGraphQLSerializer"/></c> <b>(if one is not already registered)</b></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="EnumGraphType{T}"/></c></description></item>
 	/// <item><term>Singleton</term> <description><c><see cref="HashIdGraphType"/></c></description></item>
 	/// <item><term>Transient</term> <description><c><see cref="InputGraphType{T}"/></c></description></item>
@@ -40,8 +40,21 @@ public static class ServiceCollectionExtensions
 	/// </remarks>
 	public static IServiceCollection AddGraphQL(this IServiceCollection @this)
 	{
-		@this.TryAddSingleton<IGraphQLSerializer, GraphQLJsonSerializer>();
-		@this.TryAddSingleton<JsonConverter<ExecutionError>, GraphQLExecutionErrorJsonConverter>();
+		@this.TryAddSingleton<IGraphQLSerializer>(provider =>
+		{
+			var jsonOptions = new JsonSerializerOptions()
+			{
+				MaxDepth = 40,
+				PropertyNameCaseInsensitive = true,
+				PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+			};
+			jsonOptions.Converters.Add(new BigIntegerJsonConverter());
+			jsonOptions.Converters.Add(new DictionaryJsonConverter());
+			jsonOptions.Converters.Add(new GraphQLExecutionResultJsonConverter());
+			jsonOptions.Converters.Add(new GraphQLExecutionErrorJsonConverter());
+
+			return new GraphQLJsonSerializer(jsonOptions);
+		});
 		@this.TryAddSingleton<IDocumentExecutionListener, DefaultDocumentExecutionListener>();
 		return @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
 			.AddSingleton(typeof(EnumGraphType<>))
@@ -65,9 +78,10 @@ public static class ServiceCollectionExtensions
 	/// </param>
 	public static IServiceCollection AddGraphQLTypeExtensions<T>(this IServiceCollection @this, Action<OutputGraphType<T>> options)
 		where T : notnull
-	{
-		var graphType = new OutputGraphType<T>();
-		options(graphType);
-		return @this.AddTransient<OutputGraphType<T>>(provider => graphType);
-	}
+		=> @this.AddTransient<OutputGraphType<T>>(provider =>
+		{
+			var graphType = new OutputGraphType<T>();
+			options(graphType);
+			return graphType;
+		});
 }

@@ -1,11 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 using GraphQL;
 using GraphQLParser.AST;
 using TypeCache.Data;
 using TypeCache.Extensions;
+using TypeCache.Mapping;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -34,51 +36,61 @@ public static class ResolveFieldContextExtensions
 		return table;
 	}
 
-	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, MethodInfo methodInfo)
+	public static IEnumerable<object?> GetArguments(this IResolveFieldContext @this, IReadOnlyList<ParameterEntity> parameters)
 	{
 		var sourceType = @this.Source?.GetType();
 		if (sourceType == typeof(object))
 			sourceType = null;
 
-		var parameterInfos = methodInfo.GetParameters()
-			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
-			.OrderBy(parameterInfo => parameterInfo.Position);
-		foreach (var parameterInfo in parameterInfos)
+		foreach (var parameter in parameters)
 		{
-			var name = parameterInfo.GraphQLName();
-			var argument = @this.HasArgument(name) ? @this.GetArgument(parameterInfo.ParameterType, name) : null;
+			var name = parameter.Attributes.GraphQLName() ?? parameter.Name;
+			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.ParameterType, name) : null;
 			yield return argument switch
 			{
-				_ when parameterInfo.GraphQLIgnore() => null,
-				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when sourceType is not null && parameterInfo.ParameterType.Is(sourceType) => @this.Source,
-				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
-					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
+				_ when parameter.Attributes.GraphQLIgnore() => null,
+				_ when parameter.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when sourceType is not null && parameter.ParameterType.Is(sourceType) => @this.Source,
+				IDictionary<string, object?> dictionary when !parameter.ParameterType.Is<IDictionary<string, object?>>() =>
+					map(dictionary, parameter.ParameterType.Create()),
 				_ => argument
 			};
 		}
+
+		static object? map(IDictionary<string, object?> source, object? target)
+		{
+			if (target is not null)
+				source.MapProperties(target);
+
+			return target;
+		}
 	}
 
-	public static IEnumerable<object?> GetArguments<TSource, MATCH>(this IResolveFieldContext @this, MethodInfo methodInfo, IEnumerable<MATCH> keys)
+	public static IEnumerable<object?> GetArguments<TSource, MATCH>(this IResolveFieldContext @this, IReadOnlyList<ParameterEntity> parameters, IEnumerable<MATCH> keys)
 	{
-		var parameterInfos = methodInfo.GetParameters()
-			.Where(parameterInfo => !parameterInfo.IsOut && !parameterInfo.IsRetval)
-			.OrderBy(parameterInfo => parameterInfo.Position);
-		foreach (var parameterInfo in parameterInfos)
+		foreach (var parameter in parameters)
 		{
-			var name = parameterInfo.GraphQLName();
-			var argument = @this.HasArgument(name) ? @this.GetArgument(parameterInfo.ParameterType, name) : null;
+			var name = parameter.Attributes.GraphQLName() ?? parameter.Name;
+			var argument = @this.HasArgument(name) ? @this.GetArgument(parameter.ParameterType, name) : null;
 			yield return argument switch
 			{
-				_ when parameterInfo.GraphQLIgnore() => null,
-				_ when parameterInfo.ParameterType.Is<IResolveFieldContext>() => @this,
-				_ when parameterInfo.ParameterType.Is<TSource>() => @this.Source,
-				_ when parameterInfo.ParameterType.Is<IEnumerable<MATCH>>() => keys,
-				_ when parameterInfo.ParameterType.Is<MATCH[]>() => keys.ToArray(),
-				IDictionary<string, object?> dictionary when !parameterInfo.ParameterType.Is<IDictionary<string, object?>>() =>
-					dictionary.MapTo(parameterInfo.ParameterType.Create()!),
+				_ when parameter.Attributes.GraphQLIgnore() => null,
+				_ when parameter.ParameterType.Is<IResolveFieldContext>() => @this,
+				_ when parameter.ParameterType.Is<TSource>() => @this.Source,
+				_ when parameter.ParameterType.Is<IEnumerable<MATCH>>() => keys,
+				_ when parameter.ParameterType.Is<MATCH[]>() => keys.ToArray(),
+				IDictionary<string, object?> dictionary when !parameter.ParameterType.Is<IDictionary<string, object?>>() =>
+					map(dictionary, parameter.ParameterType.Create()),
 				_ => argument
 			};
+		}
+
+		static object? map(IDictionary<string, object?> source, object? target)
+		{
+			if (target is not null)
+				source.MapProperties(target);
+
+			return target;
 		}
 	}
 

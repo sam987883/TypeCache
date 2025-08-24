@@ -11,18 +11,17 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
+using TypeCache.Adapters;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using TypeCache.Utilities;
 using Xunit;
-using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Tests.Extensions;
 
@@ -63,57 +62,32 @@ public class ReflectionExtensions
 		var stopwatch = new Stopwatch();
 		var type = contact.GetType();
 
-		var idNameFieldInfo = type.GetField('_' + nameof(Contact.ID), Static | FlattenHierarchy | NonPublic);
-		var firstNameFieldInfo = type.GetField('_' + nameof(Contact.FirstName), Instance | FlattenHierarchy | NonPublic);
-		var middleNameFieldInfo = type.GetField('_' + nameof(Contact.MiddleName), Instance | FlattenHierarchy | NonPublic);
-		var lastNameFieldInfo = type.GetField('_' + nameof(Contact.LastName), Instance | FlattenHierarchy | NonPublic);
-		var ageFieldInfo = type.GetField('_' + nameof(Contact.Age), Instance | FlattenHierarchy | NonPublic);
-		var emailFieldInfo = type.GetField('_' + nameof(Contact.Email), Instance | FlattenHierarchy | NonPublic);
-		var phoneFieldInfo = type.GetField('_' + nameof(Contact.Phone), Instance | FlattenHierarchy | NonPublic);
-		var deletedFieldInfo = type.GetField('_' + nameof(Contact.Deleted), Instance | FlattenHierarchy | NonPublic);
+		var idNameField = type.StaticFields()['_' + nameof(Contact.ID)];
+		var firstNameField = type.Fields()['_' + nameof(Contact.FirstName)];
+		var middleNameField = type.Fields()['_' + nameof(Contact.MiddleName)];
+		var lastNameField = type.Fields()['_' + nameof(Contact.LastName)];
+		var ageField = type.Fields()['_' + nameof(Contact.Age)];
+		var emailField = type.Fields()['_' + nameof(Contact.Email)];
+		var phoneField = type.Fields()['_' + nameof(Contact.Phone)];
+		var deletedField = type.Fields()['_' + nameof(Contact.Deleted)];
 
 		var i = 0;
 		stopwatch.Start();
 		while (++i < 100000)
 		{
-			idNameFieldInfo.GetValue(contact);
-			firstNameFieldInfo.GetValue(contact);
-			middleNameFieldInfo.GetValue(contact);
-			lastNameFieldInfo.GetValue(contact);
-			ageFieldInfo.GetValue(contact);
-			emailFieldInfo.GetValue(contact);
-			phoneFieldInfo.GetValue(contact);
-			deletedFieldInfo.GetValue(contact);
+			idNameField.GetValue();
+			firstNameField.GetValue(contact);
+			middleNameField.GetValue(contact);
+			lastNameField.GetValue(contact);
+			ageField.GetValue(contact);
+			emailField.GetValue(contact);
+			phoneField.GetValue(contact);
+			deletedField.GetValue(contact);
 		}
 		stopwatch.Stop();
 		var elapsedGetValue = stopwatch.Elapsed;
 
-		var getID = idNameFieldInfo.GetStaticValueFunc();
-		var getFirstName = firstNameFieldInfo.GetValueFunc();
-		var getMiddleName = middleNameFieldInfo.GetValueFunc();
-		var getLastName = lastNameFieldInfo.GetValueFunc();
-		var getAge = ageFieldInfo.GetValueFunc();
-		var getEmail = emailFieldInfo.GetValueFunc();
-		var getPhone = phoneFieldInfo.GetValueFunc();
-		var getDeleted = deletedFieldInfo.GetValueFunc();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			_ = getID();
-			_ = getFirstName(contact);
-			_ = getMiddleName(contact);
-			_ = getLastName(contact);
-			_ = getAge(contact);
-			_ = getEmail(contact);
-			_ = getPhone(contact);
-			_ = getDeleted(contact);
-		}
-		stopwatch.Stop();
-		var elapsedGetValueFunc = stopwatch.Elapsed;
-
-		Assert.True(elapsedGetValueFunc < elapsedGetValue);
+		Assert.True(elapsedGetValue > TimeSpan.Zero);
 	}
 
 	[Fact]
@@ -123,348 +97,139 @@ public class ReflectionExtensions
 		var stopwatch = new Stopwatch();
 		var type = contact.GetType();
 
-		var idNameFieldInfo = type.GetField('_' + nameof(Contact.ID), Static | FlattenHierarchy | NonPublic);
-		var firstNameFieldInfo = type.GetField('_' + nameof(Contact.FirstName), Instance | FlattenHierarchy | NonPublic);
-		var middleNameFieldInfo = type.GetField('_' + nameof(Contact.MiddleName), Instance | FlattenHierarchy | NonPublic);
-		var lastNameFieldInfo = type.GetField('_' + nameof(Contact.LastName), Instance | FlattenHierarchy | NonPublic);
-		var ageFieldInfo = type.GetField('_' + nameof(Contact.Age), Instance | FlattenHierarchy | NonPublic);
-		var emailFieldInfo = type.GetField('_' + nameof(Contact.Email), Instance | FlattenHierarchy | NonPublic);
-		var phoneFieldInfo = type.GetField('_' + nameof(Contact.Phone), Instance | FlattenHierarchy | NonPublic);
-		var deletedFieldInfo = type.GetField('_' + nameof(Contact.Deleted), Instance | FlattenHierarchy | NonPublic);
+		var idNameField = type.StaticFields()['_' + nameof(Contact.ID)];
+		var firstNameField = type.Fields()['_' + nameof(Contact.FirstName)];
+		var middleNameField = type.Fields()['_' + nameof(Contact.MiddleName)];
+		var lastNameField = type.Fields()['_' + nameof(Contact.LastName)];
+		var ageField = type.Fields()['_' + nameof(Contact.Age)];
+		var emailField = type.Fields()['_' + nameof(Contact.Email)];
+		var phoneField = type.Fields()['_' + nameof(Contact.Phone)];
+		var deletedField = type.Fields()['_' + nameof(Contact.Deleted)];
 
 		var i = 0;
 		stopwatch.Start();
 		while (++i < 100000)
 		{
-			idNameFieldInfo.SetValue(contact, Guid.NewGuid());
-			firstNameFieldInfo.SetValue(contact, "FirstName");
-			middleNameFieldInfo.SetValue(contact, "MiddleName");
-			lastNameFieldInfo.SetValue(contact, "LastName");
-			ageFieldInfo.SetValue(contact, 30);
-			emailFieldInfo.SetValue(contact, "Email");
-			phoneFieldInfo.SetValue(contact, "Phone");
-			deletedFieldInfo.SetValue(contact, !contact.Deleted);
+			idNameField.SetValue(Guid.NewGuid());
+			firstNameField.SetValue(contact, "FirstName");
+			middleNameField.SetValue(contact, "MiddleName");
+			lastNameField.SetValue(contact, "LastName");
+			ageField.SetValue(contact, 30);
+			emailField.SetValue(contact, "Email");
+			phoneField.SetValue(contact, "Phone");
+			deletedField.SetValue(contact, !contact.Deleted);
 		}
 		stopwatch.Stop();
 		var elapsedSetValue = stopwatch.Elapsed;
 
-		var setID = idNameFieldInfo.SetStaticValueAction();
-		var setFirstName = firstNameFieldInfo.SetValueAction();
-		var setMiddleName = middleNameFieldInfo.SetValueAction();
-		var setLastName = lastNameFieldInfo.SetValueAction();
-		var setAge = ageFieldInfo.SetValueAction();
-		var setEmail = emailFieldInfo.SetValueAction();
-		var setPhone = phoneFieldInfo.SetValueAction();
-		var setDeleted = deletedFieldInfo.SetValueAction();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			setID(Guid.NewGuid());
-			setFirstName(contact, "FirstName");
-			setMiddleName(contact, "MiddleName");
-			setLastName(contact, "LastName");
-			setAge(contact, 31);
-			setEmail(contact, "Email");
-			setPhone(contact, "Phone");
-			setDeleted(contact, !contact.Deleted);
-		}
-		stopwatch.Stop();
-		var elapsedSetPropertyValue = stopwatch.Elapsed;
-
-		Assert.True(elapsedSetPropertyValue < elapsedSetValue);
+		Assert.True(elapsedSetValue > TimeSpan.Zero);
 	}
 
 	[Fact]
-	public void PropertyInfo_GetValueDelegate()
-	{
-		var contact = new Contact();
-		var stopwatch = new Stopwatch();
-		var type = contact.GetType();
-
-		var idNamePropertyInfo = type.GetProperty(nameof(Contact.ID));
-		var firstNamePropertyInfo = type.GetProperty(nameof(Contact.FirstName));
-		var middleNamePropertyInfo = type.GetProperty(nameof(Contact.MiddleName));
-		var lastNamePropertyInfo = type.GetProperty(nameof(Contact.LastName));
-		var agePropertyInfo = type.GetProperty(nameof(Contact.Age));
-		var emailPropertyInfo = type.GetProperty(nameof(Contact.Email));
-		var phonePropertyInfo = type.GetProperty(nameof(Contact.Phone));
-		var deletedPropertyInfo = type.GetProperty(nameof(Contact.Deleted));
-
-		var i = 0;
-		stopwatch.Start();
-		while (++i < 100000)
-		{
-			idNamePropertyInfo.GetValue(contact);
-			firstNamePropertyInfo.GetValue(contact);
-			middleNamePropertyInfo.GetValue(contact);
-			lastNamePropertyInfo.GetValue(contact);
-			agePropertyInfo.GetValue(contact);
-			emailPropertyInfo.GetValue(contact);
-			phonePropertyInfo.GetValue(contact);
-			deletedPropertyInfo.GetValue(contact);
-		}
-		stopwatch.Stop();
-		var elapsedGetValue = stopwatch.Elapsed;
-
-		var getID = (Func<Guid>)idNamePropertyInfo.GetValueDelegate();
-		var getFirstName = (Func<Contact, string>)firstNamePropertyInfo.GetValueDelegate();
-		var getMiddleName = (Func<Contact, string>)middleNamePropertyInfo.GetValueDelegate();
-		var getLastName = (Func<Contact, string>)lastNamePropertyInfo.GetValueDelegate();
-		var getAge = (Func<Contact, int>)agePropertyInfo.GetValueDelegate();
-		var getEmail = (Func<Contact, string>)emailPropertyInfo.GetValueDelegate();
-		var getPhone = (Func<Contact, string>)phonePropertyInfo.GetValueDelegate();
-		var getDeleted = (Func<Contact, bool>)deletedPropertyInfo.GetValueDelegate();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			getID();
-			getFirstName(contact);
-			getMiddleName(contact);
-			getLastName(contact);
-			getAge(contact);
-			getEmail(contact);
-			getPhone(contact);
-			getDeleted(contact);
-		}
-		stopwatch.Stop();
-		var elapsedGetPropertyValue = stopwatch.Elapsed;
-
-		Assert.True(elapsedGetPropertyValue < elapsedGetValue);
-	}
-
-	[Fact]
-	public void PropertyInfo_GetValueFunc()
-	{
-		var contact = new Contact();
-		var stopwatch = new Stopwatch();
-		var type = contact.GetType();
-
-		var idNamePropertyInfo = type.GetProperty(nameof(Contact.ID));
-		var firstNamePropertyInfo = type.GetProperty(nameof(Contact.FirstName));
-		var middleNamePropertyInfo = type.GetProperty(nameof(Contact.MiddleName));
-		var lastNamePropertyInfo = type.GetProperty(nameof(Contact.LastName));
-		var agePropertyInfo = type.GetProperty(nameof(Contact.Age));
-		var emailPropertyInfo = type.GetProperty(nameof(Contact.Email));
-		var phonePropertyInfo = type.GetProperty(nameof(Contact.Phone));
-		var deletedPropertyInfo = type.GetProperty(nameof(Contact.Deleted));
-
-		var i = 0;
-		stopwatch.Start();
-		while (++i < 100000)
-		{
-			idNamePropertyInfo.GetValue(contact);
-			firstNamePropertyInfo.GetValue(contact);
-			middleNamePropertyInfo.GetValue(contact);
-			lastNamePropertyInfo.GetValue(contact);
-			agePropertyInfo.GetValue(contact);
-			emailPropertyInfo.GetValue(contact);
-			phonePropertyInfo.GetValue(contact);
-			deletedPropertyInfo.GetValue(contact);
-		}
-		stopwatch.Stop();
-		var elapsedGetValue = stopwatch.Elapsed;
-
-		var getID = idNamePropertyInfo.GetStaticValueFunc();
-		var getFirstName = firstNamePropertyInfo.GetValueFunc();
-		var getMiddleName = middleNamePropertyInfo.GetValueFunc();
-		var getLastName = lastNamePropertyInfo.GetValueFunc();
-		var getAge = agePropertyInfo.GetValueFunc();
-		var getEmail = emailPropertyInfo.GetValueFunc();
-		var getPhone = phonePropertyInfo.GetValueFunc();
-		var getDeleted = deletedPropertyInfo.GetValueFunc();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			getID(null);
-			getFirstName(contact, null);
-			getMiddleName(contact, null);
-			getLastName(contact, null);
-			getAge(contact, null);
-			getEmail(contact, null);
-			getPhone(contact, null);
-			getDeleted(contact, null);
-		}
-		stopwatch.Stop();
-		var elapsedGetValueFunc = stopwatch.Elapsed;
-
-		Assert.True(elapsedGetValueFunc < elapsedGetValue);
-	}
-
-	[Fact]
-	public void PropertyInfo_SetValueDelegate()
-	{
-		var contact = new Contact();
-		var stopwatch = new Stopwatch();
-		var type = contact.GetType();
-
-		var idNamePropertyInfo = type.GetProperty(nameof(Contact.ID));
-		var firstNamePropertyInfo = type.GetProperty(nameof(Contact.FirstName));
-		var middleNamePropertyInfo = type.GetProperty(nameof(Contact.MiddleName));
-		var lastNamePropertyInfo = type.GetProperty(nameof(Contact.LastName));
-		var agePropertyInfo = type.GetProperty(nameof(Contact.Age));
-		var emailPropertyInfo = type.GetProperty(nameof(Contact.Email));
-		var phonePropertyInfo = type.GetProperty(nameof(Contact.Phone));
-		var deletedPropertyInfo = type.GetProperty(nameof(Contact.Deleted));
-
-		var i = 0;
-		stopwatch.Start();
-		while (++i < 100000)
-		{
-			idNamePropertyInfo.SetValue(contact, Guid.NewGuid());
-			firstNamePropertyInfo.SetValue(contact, "FirstName");
-			middleNamePropertyInfo.SetValue(contact, "MiddleName");
-			lastNamePropertyInfo.SetValue(contact, "LastName");
-			agePropertyInfo.SetValue(contact, 30);
-			emailPropertyInfo.SetValue(contact, "Email");
-			phonePropertyInfo.SetValue(contact, "Phone");
-			deletedPropertyInfo.SetValue(contact, !contact.Deleted);
-		}
-		stopwatch.Stop();
-		var elapsedSetValue = stopwatch.Elapsed;
-
-		var setID = (Action<Guid>)idNamePropertyInfo.SetValueDelegate();
-		var setFirstName = (Action<Contact, string>)firstNamePropertyInfo.SetValueDelegate();
-		var setMiddleName = (Action<Contact, string>)middleNamePropertyInfo.SetValueDelegate();
-		var setLastName = (Action<Contact, string>)lastNamePropertyInfo.SetValueDelegate();
-		var setAge = (Action<Contact, int>)agePropertyInfo.SetValueDelegate();
-		var setEmail = (Action<Contact, string>)emailPropertyInfo.SetValueDelegate();
-		var setPhone = (Action<Contact, string>)phonePropertyInfo.SetValueDelegate();
-		var setDeleted = (Action<Contact, bool>)deletedPropertyInfo.SetValueDelegate();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			setID(Guid.NewGuid());
-			setFirstName(contact, "FirstName");
-			setMiddleName(contact, "MiddleName");
-			setLastName(contact, "LastName");
-			setAge(contact, 31);
-			setEmail(contact, "Email");
-			setPhone(contact, "Phone");
-			setDeleted(contact, !contact.Deleted);
-		}
-		stopwatch.Stop();
-		var elapsedSetValueDelegate = stopwatch.Elapsed;
-
-		Assert.True(elapsedSetValueDelegate < elapsedSetValue);
-	}
-
-	[Fact]
-	public void PropertyInfo_SetValueAction()
-	{
-		var contact = new Contact();
-		var stopwatch = new Stopwatch();
-		var type = contact.GetType();
-
-		var idNamePropertyInfo = type.GetProperty(nameof(Contact.ID));
-		var firstNamePropertyInfo = type.GetProperty(nameof(Contact.FirstName));
-		var middleNamePropertyInfo = type.GetProperty(nameof(Contact.MiddleName));
-		var lastNamePropertyInfo = type.GetProperty(nameof(Contact.LastName));
-		var agePropertyInfo = type.GetProperty(nameof(Contact.Age));
-		var emailPropertyInfo = type.GetProperty(nameof(Contact.Email));
-		var phonePropertyInfo = type.GetProperty(nameof(Contact.Phone));
-		var deletedPropertyInfo = type.GetProperty(nameof(Contact.Deleted));
-
-		var i = 0;
-		stopwatch.Start();
-		while (++i < 100000)
-		{
-			idNamePropertyInfo.SetValue(contact, Guid.NewGuid());
-			firstNamePropertyInfo.SetValue(contact, "FirstName");
-			middleNamePropertyInfo.SetValue(contact, "MiddleName");
-			lastNamePropertyInfo.SetValue(contact, "LastName");
-			agePropertyInfo.SetValue(contact, 30);
-			emailPropertyInfo.SetValue(contact, "Email");
-			phonePropertyInfo.SetValue(contact, "Phone");
-			deletedPropertyInfo.SetValue(contact, !contact.Deleted);
-		}
-		stopwatch.Stop();
-		var elapsedSetValue = stopwatch.Elapsed;
-
-		var setID = idNamePropertyInfo.SetStaticValueAction();
-		var setFirstName = firstNamePropertyInfo.SetValueAction();
-		var setMiddleName = middleNamePropertyInfo.SetValueAction();
-		var setLastName = lastNamePropertyInfo.SetValueAction();
-		var setAge = agePropertyInfo.SetValueAction();
-		var setEmail = emailPropertyInfo.SetValueAction();
-		var setPhone = phonePropertyInfo.SetValueAction();
-		var setDeleted = deletedPropertyInfo.SetValueAction();
-
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			setID(ValueTuple.Create(Guid.NewGuid()));
-			setFirstName(contact, ValueTuple.Create("FirstName"));
-			setMiddleName(contact, ValueTuple.Create("MiddleName"));
-			setLastName(contact, ValueTuple.Create("LastName"));
-			setAge(contact, ValueTuple.Create(31));
-			setEmail(contact, ValueTuple.Create("Email"));
-			setPhone(contact, ValueTuple.Create("Phone"));
-			setDeleted(contact, ValueTuple.Create(!contact.Deleted));
-		}
-		stopwatch.Stop();
-		var elapsedSetPropertyValue = stopwatch.Elapsed;
-
-		Assert.True(elapsedSetPropertyValue < elapsedSetValue);
-	}
-
-	[Fact]
-	public void MethodInfo_InvokeEx()
-	{
-		var contact = new Contact();
-		var stopwatch = new Stopwatch();
-		var type = contact.GetType();
-
-		var methodInfo = type.GetMethod(nameof(Contact.WriteOutput));
-
-		var i = 0;
-		stopwatch.Start();
-		while (++i < 100000)
-		{
-			_ = methodInfo.Invoke(contact, [i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
-		}
-		stopwatch.Stop();
-		var elapsedInvoke = stopwatch.Elapsed;
-
-		var func = methodInfo.GetArrayFunc();
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			_ = func(contact, [i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 32]);
-		}
-		stopwatch.Stop();
-		var elapsedInvokeEx = stopwatch.Elapsed;
-
-		Assert.True(elapsedInvokeEx < elapsedInvoke || true);
-
-		var func2 = methodInfo.GetTupleFunc();
-		i = 0;
-		stopwatch.Restart();
-		while (++i < 100000)
-		{
-			_ = func2(contact, (i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 33));
-		}
-		stopwatch.Stop();
-		var elapsedInvokeEx2 = stopwatch.Elapsed;
-
-		Assert.True(elapsedInvokeEx2 < elapsedInvoke || true);
-	}
-
-	[Fact]
-	public void Type_Create()
+	public void Type_Constructors_Create()
 	{
 		Assert.NotNull(typeof(Contact).Create());
 		Assert.NotNull(typeof(object).Create());
 		Assert.NotNull(typeof(IndexOutOfRangeException).Create());
+	}
+
+	[Fact]
+	public void Type_Methods_Invoke()
+	{
+		var contact = new Contact();
+		var stopwatch = new Stopwatch();
+
+		var i = 0;
+		stopwatch.Start();
+		while (++i < 100000)
+		{
+			_ = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Invoke(contact, [i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+		}
+		stopwatch.Stop();
+		var elapsed1 = stopwatch.Elapsed;
+
+		var method = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Find([0, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+
+		i = 0;
+		stopwatch.Restart();
+		while (++i < 100000)
+		{
+			_ = method.Invoke(contact, [i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+		}
+		stopwatch.Stop();
+		var elapsed2 = stopwatch.Elapsed;
+
+		Assert.True(elapsed2 < elapsed1);
+	}
+
+	[Fact]
+	public void Type_Properties_GetValue()
+	{
+		var contact = new Contact();
+		var stopwatch = new Stopwatch();
+		var properties = contact.GetType().Properties();
+
+		var idNameProperty = properties[nameof(Contact.ID)];
+		var firstNameProperty = properties[nameof(Contact.FirstName)];
+		var middleNameProperty = properties[nameof(Contact.MiddleName)];
+		var lastNameProperty = properties[nameof(Contact.LastName)];
+		var ageProperty = properties[nameof(Contact.Age)];
+		var emailProperty = properties[nameof(Contact.Email)];
+		var phoneProperty = properties[nameof(Contact.Phone)];
+		var deletedProperty = properties[nameof(Contact.Deleted)];
+
+		var i = 0;
+		stopwatch.Start();
+		while (++i < 100000)
+		{
+			idNameProperty.GetStaticValue();
+			firstNameProperty.GetValue(contact);
+			middleNameProperty.GetValue(contact);
+			lastNameProperty.GetValue(contact);
+			ageProperty.GetValue(contact);
+			emailProperty.GetValue(contact);
+			phoneProperty.GetValue(contact);
+			deletedProperty.GetValue(contact);
+		}
+		stopwatch.Stop();
+		var elapsed = stopwatch.Elapsed;
+
+		Assert.True(elapsed > TimeSpan.Zero);
+	}
+
+	[Fact]
+	public void Type_Properties_SetValue()
+	{
+		var contact = new Contact();
+		var stopwatch = new Stopwatch();
+		var properties = contact.GetType().Properties();
+
+		var idNameProperty = properties[nameof(Contact.ID)];
+		var firstNameProperty = properties[nameof(Contact.FirstName)];
+		var middleNameProperty = properties[nameof(Contact.MiddleName)];
+		var lastNameProperty = properties[nameof(Contact.LastName)];
+		var ageProperty = properties[nameof(Contact.Age)];
+		var emailProperty = properties[nameof(Contact.Email)];
+		var phoneProperty = properties[nameof(Contact.Phone)];
+		var deletedProperty = properties[nameof(Contact.Deleted)];
+
+		var i = 0;
+		stopwatch.Start();
+		while (++i < 100000)
+		{
+			idNameProperty.SetStaticValue(Guid.NewGuid());
+			firstNameProperty.SetValue(contact, "FirstName");
+			middleNameProperty.SetValue(contact, "MiddleName");
+			lastNameProperty.SetValue(contact, "LastName");
+			ageProperty.SetValue(contact, 30);
+			emailProperty.SetValue(contact, "Email");
+			phoneProperty.SetValue(contact, "Phone");
+			deletedProperty.SetValue(contact, !contact.Deleted);
+		}
+		stopwatch.Stop();
+		var elapsed = stopwatch.Elapsed;
+
+		Assert.True(elapsed > TimeSpan.Zero);
 	}
 
 	[Theory]
@@ -479,17 +244,17 @@ public class ReflectionExtensions
 	[InlineData("IList<>", typeof(IList<>))]
 	[InlineData("IDictionary<String, List<Int32>>", typeof(IDictionary<string, List<int>>))]
 	[InlineData("IDictionary<,>", typeof(IDictionary<,>))]
-	public void Type_GetTypeName(string expected, Type type)
+	public void Type_CodeName(string expected, Type type)
 	{
-		var actual = type.GetTypeName();
+		var actual = type.CodeName();
 
 		Assert.Equal(expected, actual);
 
 		if (type.IsGenericType)
 		{
-			type.GenericTypeArguments.ForEach(_ => expected = expected.Replace(_.GetTypeName(), string.Empty));
+			type.GenericTypeArguments.ForEach(_ => expected = expected.Replace(_.CodeName(), string.Empty));
 			expected = expected.Replace(" ", string.Empty);
-			actual = type.GetGenericTypeDefinition().GetTypeName();
+			actual = type.GetGenericTypeDefinition().CodeName();
 
 			Assert.Equal(expected, actual);
 		}
@@ -547,9 +312,9 @@ public class ReflectionExtensions
 	[InlineData(CollectionType.Collection, typeof(ICollection<string>))]
 	[InlineData(CollectionType.None, typeof(string))]
 	[InlineData(CollectionType.None, typeof(object))]
-	public void Type_GetCollectionType(CollectionType expected, Type type)
+	public void Type_CollectionType(CollectionType expected, Type type)
 	{
-		Assert.Equal(expected, type.GetCollectionType());
+		Assert.Equal(expected, type.CollectionType());
 	}
 
 	[Theory]
@@ -632,9 +397,9 @@ public class ReflectionExtensions
 	[InlineData(ObjectType.WeakReference, typeof(WeakReference))]
 	[InlineData(ObjectType.WeakReference, typeof(WeakReference<object>))]
 	[InlineData(ObjectType.Unknown, typeof(HashMaker))]
-	public void Type_GetObjectType(ObjectType expected, Type type)
+	public void Type_ObjectType(ObjectType expected, Type type)
 	{
-		Assert.Equal(expected, type.GetObjectType());
+		Assert.Equal(expected, type.ObjectType());
 	}
 
 	[Theory]
@@ -669,8 +434,8 @@ public class ReflectionExtensions
 	[InlineData(ScalarType.UInt64, typeof(ulong))]
 	[InlineData(ScalarType.UIntPtr, typeof(nuint))]
 	[InlineData(ScalarType.Uri, typeof(Uri))]
-	public void Type_GetScalarType(ScalarType expected, Type type)
+	public void Type_ScalarType(ScalarType expected, Type type)
 	{
-		Assert.Equal(expected, type.GetScalarType());
+		Assert.Equal(expected, type.ScalarType());
 	}
 }

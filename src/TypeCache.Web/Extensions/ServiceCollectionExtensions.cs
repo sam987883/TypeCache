@@ -12,9 +12,9 @@ public static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddHttpClientRule(this IServiceCollection @this, string name, Action<HttpClient> configure)
 	{
-		@this.AddHttpClient(name, configure);
+		@this.AddHttpClient(name, configure).AddAsKeyed();
 		return @this.AddKeyedScoped<IRule<HttpClientRequest, HttpResponseMessage>>(name,
-			(provider, key) => new HttpClientRule(provider.GetRequiredService<IHttpClientFactory>().CreateClient((string)key!)));
+			(provider, key) => new HttpClientRule(provider.GetRequiredKeyedService<HttpClient>((string)key)));
 	}
 
 	public static IServiceCollection ConfigureSqlApi(this IServiceCollection @this)

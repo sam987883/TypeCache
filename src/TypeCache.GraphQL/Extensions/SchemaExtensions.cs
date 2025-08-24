@@ -7,6 +7,7 @@ using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Attributes;
+using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
@@ -15,7 +16,7 @@ using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.SqlApi;
 using TypeCache.GraphQL.Types;
-using TypeCache.Utilities;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -390,28 +391,28 @@ public static class SchemaExtensions
 	}
 
 	/// <summary>
-	/// Adds GraphQL endpoints based on a <typeparamref name="T"/> controller methodInfos decorated with the following attributes:
+	/// Adds GraphQL endpoints based on <typeparamref name="T"/> controller public methods decorated with the following attributes:
 	/// <list type="bullet">
 	/// <item><see cref="GraphQLQueryAttribute"/></item>
 	/// <item><see cref="GraphQLMutationAttribute"/></item>
 	/// <item><see cref="GraphQLSubscriptionAttribute"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class containing the decorated methodInfos that will be converted into GraphQL endpoints.</typeparam>
+	/// <typeparam name="T">The class containing the decorated public methods that will be converted into GraphQL endpoints.</typeparam>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	public static FieldType[] AddEndpoints<T>(this ISchema @this)
 		where T : notnull
 	{
-		var methodInfos = typeof(T).GetPublicMethods();
+		var methods = Type<T>.Methods.SelectMany(_ => _.Value).Where(_ => _.IsPublic).ToArray();
 		var fieldTypes = new List<FieldType>();
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLQueryAttribute>()).Select(@this.AddQuery));
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLMutationAttribute>()).Select(@this.AddMutation));
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
+		fieldTypes.AddRange(methods.Where(_ => _.Attributes.Any<GraphQLQueryAttribute>()).Select(@this.AddQuery));
+		fieldTypes.AddRange(methods.Where(_ => _.Attributes.Any<GraphQLMutationAttribute>()).Select(@this.AddMutation));
+		fieldTypes.AddRange(methods.Where(_ => _.Attributes.Any<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
 
-		methodInfos = typeof(T).GetPublicStaticMethods();
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLQueryAttribute>()).Select(@this.AddQuery));
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLMutationAttribute>()).Select(@this.AddMutation));
-		fieldTypes.AddRange(methodInfos.Where(methodInfo => methodInfo.HasCustomAttribute<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
+		var staticMethods = Type<T>.StaticMethods.SelectMany(_ => _.Value).Where(_ => _.IsPublic).ToArray();
+		fieldTypes.AddRange(staticMethods.Where(_ => _.Attributes.Any<GraphQLQueryAttribute>()).Select(@this.AddQuery));
+		fieldTypes.AddRange(staticMethods.Where(_ => _.Attributes.Any<GraphQLMutationAttribute>()).Select(@this.AddMutation));
+		fieldTypes.AddRange(staticMethods.Where(_ => _.Attributes.Any<GraphQLSubscriptionAttribute>()).Select(@this.AddSubscription));
 
 		return fieldTypes.ToArray();
 	}
@@ -545,16 +546,16 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <remarks>The methodInfo's type must be registered in the <see cref="IServiceCollection"/>, unless the methodInfo is static.</remarks>
-	/// <param name="methodInfo">Graph endpoint implementation.</param>
+	/// <remarks>The method's declaring type must be registered in the <see cref="IServiceCollection"/>.</remarks>
+	/// <param name="method">Graph endpoint implementation.</param>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddMutation(this ISchema @this, MethodInfo methodInfo)
+	public static FieldType AddMutation(this ISchema @this, MethodEntity method)
 	{
-		if (methodInfo.HasNoReturnValue())
+		if (!method.HasReturnValue)
 			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		return @this.Mutation().AddField(methodInfo, new MethodFieldResolver(methodInfo));
+		return @this.Mutation().AddField(method);
 	}
 
 	/// <summary>
@@ -563,18 +564,35 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a mutation endpoint from.</typeparam>
-	/// <param name="method">The name of the methodInfo or set of methodInfos to use (each methodInfo must have a unique GraphName).</param>
+	/// <param name="method">Graph endpoint implementation.</param>
+	/// <returns>The added <see cref="FieldType"/>.</returns>
+	/// <exception cref="ArgumentException"/>
+	public static FieldType AddMutation(this ISchema @this, StaticMethodEntity method)
+	{
+		if (!method.HasReturnValue)
+			throw new ArgumentException($"{nameof(AddMutation)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
+
+		return @this.Mutation().AddField(method);
+	}
+
+	/// <summary>
+	/// Method parameters with the following type are ignored in the schema and will have their value injected:
+	/// <list type="bullet">
+	/// <item><see cref="IResolveFieldContext"/></item>
+	/// </list>
+	/// </summary>
+	/// <typeparam name="T">The class that holds the instance or static method to create a mutation endpoint from.</typeparam>
+	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddMutations<T>(this ISchema @this, string method)
 		where T : notnull
 	{
-		var publicMethods = typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().EqualsIgnoreCase(method))
+		var publicMethods = Type<T>.Methods[method]
+			.Where(_ => _.IsPublic)
 			.Select(@this.AddMutation);
-		var publicStaticMethods = typeof(T).GetPublicStaticMethods()
-			.Where(_ => _.Name().EqualsIgnoreCase(method))
+		var publicStaticMethods = Type<T>.StaticMethods[method]
+			.Where(_ => _.IsPublic)
 			.Select(@this.AddMutation);
 		return [..publicMethods, ..publicStaticMethods];
 	}
@@ -585,19 +603,21 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a query endpoint from.</typeparam>
-	/// <param name="method">The name of the methodInfo or set of methodInfos to use (each methodInfo must have a unique GraphName).</param>
+	/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
+	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
 	/// <returns>The added <see cref="FieldType"/>(s).</returns>
 	/// <exception cref="ArgumentException"/>
 	public static FieldType[] AddQueries<T>(this ISchema @this, string method)
 		where T : notnull
-		=> typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().EqualsIgnoreCase(method))
-			.Select(@this.AddQuery)
-			.Concat(typeof(T).GetPublicStaticMethods()
-				.Where(_ => _.Name().EqualsIgnoreCase(method))
-				.Select(@this.AddQuery))
-			.ToArray();
+	{
+		var publicMethods = Type<T>.Methods[method]
+			.Where(_ => _.IsPublic)
+			.Select(@this.AddQuery);
+		var publicStaticMethods = Type<T>.StaticMethods[method]
+			.Where(_ => _.IsPublic)
+			.Select(@this.AddQuery);
+		return [.. publicMethods, .. publicStaticMethods];
+	}
 
 	/// <summary>
 	/// <b>GraphQL Minimal API.</b>
@@ -728,16 +748,16 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <param name="methodInfo">Graph endpoint implementation.</param>
-	/// <remarks>Any methodInfo's declaring type instance must be registered in the <see cref="IServiceCollection"/>, unless the methodInfo is <c>static</c>.</remarks>
+	/// <param name="method">Graph endpoint implementation.</param>
+	/// <remarks>Any method's declaring type instance must be registered in the <see cref="IServiceCollection"/>.</remarks>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddQuery(this ISchema @this, MethodInfo methodInfo)
+	public static FieldType AddQuery(this ISchema @this, MethodEntity method)
 	{
-		if (methodInfo.ReturnType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]))
+		if (method.Return.ParameterType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]))
 			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
 
-		return @this.Query().AddField(methodInfo, new MethodFieldResolver(methodInfo));
+		return @this.Query().AddField(method);
 	}
 
 	/// <summary>
@@ -746,19 +766,16 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <typeparam name="T">The class that holds the instance or static methodInfo to create a query endpoint from.</typeparam>
-	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
-	/// <returns>The added <see cref="FieldType"/>(s).</returns>
+	/// <param name="method">Graph endpoint implementation.</param>
+	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType[] AddSubscriptions<T>(this ISchema @this, string method)
-		where T : notnull
-		=> typeof(T).GetPublicMethods()
-			.Where(_ => _.Name().EqualsIgnoreCase(method))
-			.Select(@this.AddSubscription)
-			.Concat(typeof(T).GetPublicStaticMethods()
-				.Where(_ => _.Name().EqualsIgnoreCase(method))
-				.Select(@this.AddSubscription))
-			.ToArray();
+	public static FieldType AddQuery(this ISchema @this, StaticMethodEntity method)
+	{
+		if (method.Return.ParameterType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]))
+			throw new ArgumentException($"{nameof(AddQuery)}: GraphQL endpoints cannot have a return type that is void, {nameof(Task)} or {nameof(ValueTask)}.");
+
+		return @this.Query().AddField(method);
+	}
 
 	/// <summary>
 	/// Method parameters with the following type are ignored in the schema and will have their value injected:
@@ -766,12 +783,46 @@ public static class SchemaExtensions
 	/// <item><see cref="IResolveFieldContext"/></item>
 	/// </list>
 	/// </summary>
-	/// <param name="methodInfo">Graph endpoint implementation that returns <see cref="IObservable{T}"/> or a ValueTask or Task of one.</param>
-	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>, unless the method is static.</remarks>
+	/// <typeparam name="T">The class that holds the instance or static method to create a query endpoint from.</typeparam>
+	/// <param name="method">The name of the method or set of methods to use (each method must have a unique GraphName).</param>
+	/// <returns>The added <see cref="FieldType"/>(s).</returns>
+	/// <exception cref="ArgumentException"/>
+	public static FieldType[] AddSubscriptions<T>(this ISchema @this, string method)
+		where T : notnull
+	{
+		var publicMethods = Type<T>.Methods[method]
+			.Where(_ => _.IsPublic)
+			.Select(@this.AddSubscription);
+		var publicStaticMethods = Type<T>.StaticMethods[method]
+			.Where(_ => _.IsPublic)
+			.Select(@this.AddSubscription);
+		return [.. publicMethods, .. publicStaticMethods];
+	}
+
+	/// <summary>
+	/// Method parameters with the following type are ignored in the schema and will have their value injected:
+	/// <list type="bullet">
+	/// <item><see cref="IResolveFieldContext"/></item>
+	/// </list>
+	/// </summary>
+	/// <param name="method">Graph endpoint implementation that returns <c><see cref="IObservable{T}"/></c>, <c>Task&lt;<see cref="IObservable{T}"/>&gt;</c> or <c>ValueTask&lt;<see cref="IObservable{T}"/>&gt;</c>.</param>
+	/// <remarks>The method's type must be registered in the <see cref="IServiceCollection"/>.</remarks>
 	/// <returns>The added <see cref="FieldType"/>.</returns>
 	/// <exception cref="ArgumentException"/>
-	public static FieldType AddSubscription(this ISchema @this, MethodInfo methodInfo)
-		=> @this.Subscription().AddField(methodInfo, new MethodSourceStreamResolver(methodInfo));
+	public static FieldType AddSubscription(this ISchema @this, MethodEntity method)
+		=> @this.Subscription().AddFieldStream(method);
+
+	/// <summary>
+	/// Method parameters with the following type are ignored in the schema and will have their value injected:
+	/// <list type="bullet">
+	/// <item><see cref="IResolveFieldContext"/></item>
+	/// </list>
+	/// </summary>
+	/// <param name="method">Graph endpoint implementation that returns <c><see cref="IObservable{T}"/></c>, <c>Task&lt;<see cref="IObservable{T}"/>&gt;</c> or <c>ValueTask&lt;<see cref="IObservable{T}"/>&gt;</c>.</param>
+	/// <returns>The added <see cref="FieldType"/>.</returns>
+	/// <exception cref="ArgumentException"/>
+	public static FieldType AddSubscription(this ISchema @this, StaticMethodEntity method)
+		=> @this.Subscription().AddFieldStream(method);
 
 	/// <summary>
 	/// Creates the following GraphQL endpoints:
@@ -989,12 +1040,12 @@ public static class SchemaExtensions
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
-			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
+			Name = Invariant($"{Type<T>.Attributes.GraphQLName() ?? Type<T>.Name}OrderBy"),
 		};
-		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
+		foreach (var property in Type<T>.Properties.Values.Where(_ => !_.IsStaticGet && !_.IsStaticSet && !_.Attributes.GraphQLIgnore()))
 		{
-			var propertyName = property.GraphQLName();
-			var propertyDeprecationReason = property.GraphQLDeprecationReason();
+			var propertyName = property.Attributes.GraphQLName() ?? property.Name;
+			var propertyDeprecationReason = property.Attributes.GraphQLDeprecationReason();
 
 			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
 		}
@@ -1045,12 +1096,12 @@ public static class SchemaExtensions
 		var objectSchema = dataSource.ObjectSchemas[name];
 		var graphOrderByEnum = new EnumerationGraphType
 		{
-			Name = Invariant($"{typeof(T).GraphQLName()}OrderBy"),
+			Name = Invariant($"{Type<T>.Attributes.GraphQLName() ?? Type<T>.Name}OrderBy"),
 		};
-		foreach (var property in typeof(T).GetPublicProperties().Where(property => !property.GraphQLIgnore()))
+		foreach (var property in Type<T>.Properties.Values.Where(_ => !_.Attributes.GraphQLIgnore()))
 		{
-			var propertyName = property.GraphQLName();
-			var propertyDeprecationReason = property.GraphQLDeprecationReason();
+			var propertyName = property.Attributes.GraphQLName() ?? property.Name;
+			var propertyDeprecationReason = property.Attributes.GraphQLDeprecationReason();
 
 			graphOrderByEnum.AddOrderBy(propertyName, propertyDeprecationReason);
 		}

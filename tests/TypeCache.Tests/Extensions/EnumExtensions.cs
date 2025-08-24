@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using Xunit;
 
 namespace TypeCache.Tests.Extensions;

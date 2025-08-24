@@ -77,4 +77,28 @@ public static class LabelTargetExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static LabelExpression Label(this LabelTarget @this, Expression? defaultValue)
 		=> Expression.Label(@this, defaultValue);
+
+	/// <inheritdoc cref="Expression.Label(Type)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this Type @this)
+		=> Expression.Label(@this);
+
+	/// <inheritdoc cref="Expression.Label(Type, string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>, <paramref name="name"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this Type @this, string? name)
+		=> Expression.Label(@this, name);
+
+	/// <inheritdoc cref="Expression.Label(string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static LabelTarget ToLabelTarget(this string? @this)
+		=> Expression.Label(@this);
 }

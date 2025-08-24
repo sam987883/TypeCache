@@ -1,0 +1,115 @@
+﻿// Copyright (c) 2021 Samuel Abraham
+
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using TypeCache.Extensions;
+
+namespace TypeCache.Reflection;
+
+[DebuggerDisplay("Method: {Name}")]
+public sealed class MethodEntity : Method
+{
+	private readonly Lazy<Delegate> _Invoke;
+	private readonly Lazy<Func<object, object?[]?, object?>> _InvokeWithArray;
+	private readonly Lazy<Func<object, ITuple, object?>> _InvokeWithTuple;
+
+	public MethodEntity(MethodInfo methodInfo) : base(methodInfo)
+	{
+		methodInfo.IsStatic.ThrowIfTrue();
+
+		this._Invoke = new(this.CreateCall);
+		this._InvokeWithArray = new(this.CreateArrayCall);
+		this._InvokeWithTuple = new(this.CreateTupleCall);
+	}
+
+	public Delegate Delegate => this._Invoke.Value;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public object? Invoke(object instance)
+		=> this._InvokeWithArray.Value(instance, null);
+
+	public object? Invoke<T>(object instance, T? argument)
+		=> typeof(T) != this.Parameters[0].ParameterType
+			? this._InvokeWithArray.Value(instance, [argument])
+			: this._InvokeWithTuple.Value(instance, ValueTuple.Create(argument));
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public object? Invoke(object instance, object?[] arguments)
+		=> this._InvokeWithArray.Value(instance, arguments);
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public object? Invoke(object instance, ITuple arguments)
+		=> this._InvokeWithTuple.Value(instance, arguments);
+
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
+	private Delegate CreateCall()
+	{
+		ParameterExpression instance = nameof(instance).ToParameterExpression(this.Type);
+		var parameters = this.Parameters.Select(_ => _.ToExpression());
+
+		return instance.Call(this.ToMethodInfo(), parameters).Lambda([instance, .. parameters]).Compile();
+	}
+
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
+	private Func<object, object?[]?, object?> CreateArrayCall()
+	{
+		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
+		Expression[]? parameters = null;
+		if (this.Parameters.Any())
+			parameters = this.Parameters.Index().Select(_ => arguments.Array().Index(_.Index).Convert(_.Item.ParameterType)).ToArray();
+
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		Expression typedInstance = this.Type != typeof(object) ? instance.Cast(this.Type) : instance;
+		Expression methodExpression = this.ToMethodInfo().ToExpression(typedInstance, parameters);
+
+		if (this.HasReturnValue)
+		{
+			if (this.Return.ParameterType != typeof(object))
+				methodExpression = methodExpression.Cast<object>();
+
+			return methodExpression.Lambda<Func<object, object?[]?, object?>>([instance, arguments]).Compile();
+		}
+
+		var action = methodExpression.Lambda<Action<object, object?[]?>>([instance, arguments]).Compile();
+		return (instance, arguments) =>
+		{
+			action(instance, arguments);
+			return null;
+		};
+	}
+
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
+	private Func<object, ITuple, object?> CreateTupleCall()
+	{
+		ParameterExpression arguments = nameof(arguments).ToParameterExpression<ITuple>();
+		Expression[]? parameters = null;
+		if (this.Parameters.Any())
+		{
+			var valueTupleType = GetValueTupleType(this.Parameters);
+			parameters = GetValueTupleFields(arguments.Cast(valueTupleType), this.Parameters.Count).ToArray();
+		}
+
+		ParameterExpression instance = nameof(instance).ToParameterExpression<object>();
+		Expression typedInstance = this.Type != typeof(object) ? instance.Cast(this.Type) : instance;
+		Expression methodExpression = this.ToMethodInfo().ToExpression(typedInstance, parameters);
+
+		if (this.HasReturnValue)
+		{
+			if (this.Return.ParameterType != typeof(object))
+				methodExpression = methodExpression.Cast<object>();
+
+			return methodExpression.Lambda<Func<object, ITuple, object?>>([instance, arguments]).Compile();
+		}
+
+		var action = methodExpression.Lambda<Action<object, ITuple>>([instance, arguments]).Compile();
+		return (instance, arguments) =>
+		{
+			action(instance, arguments);
+			return null;
+		};
+	}
+}

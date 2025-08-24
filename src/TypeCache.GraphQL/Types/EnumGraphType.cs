@@ -4,7 +4,7 @@ using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.Utilities;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -14,9 +14,9 @@ public sealed class EnumGraphType<T> : EnumerationGraphType
 {
 	public EnumGraphType()
 	{
-		this.Name = typeof(T).GraphQLName();
-		this.Description = typeof(T).GraphQLDescription();
-		this.DeprecationReason = typeof(T).GraphQLDeprecationReason();
+		this.Name = Enum<T>.Attributes.GraphQLName() ?? Enum<T>.Name;
+		this.Description = Enum<T>.Attributes.GraphQLDescription();
+		this.DeprecationReason = Enum<T>.Attributes.GraphQLDeprecationReason();
 
 		Func<string, string>? changeEnumCase = Enum<T>.Attributes switch
 		{

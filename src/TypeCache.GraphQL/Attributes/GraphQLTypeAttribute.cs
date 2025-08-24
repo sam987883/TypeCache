@@ -7,6 +7,7 @@ namespace TypeCache.GraphQL.Attributes;
 
 public abstract class GraphQLTypeAttribute : Attribute
 {
+	public abstract Type Type { get; }
 }
 
 /// <summary>
@@ -18,4 +19,5 @@ public abstract class GraphQLTypeAttribute : Attribute
 public sealed class GraphQLTypeAttribute<T> : GraphQLTypeAttribute
 	where T : IGraphType
 {
+	public override Type Type => typeof(T);
 }

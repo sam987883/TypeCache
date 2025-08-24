@@ -1,35 +1,27 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Reflection;
+using GraphQL;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
+using TypeCache.Reflection;
 using IResolveFieldContext = global::GraphQL.IResolveFieldContext;
 
 namespace TypeCache.GraphQL.Resolvers;
 
-public sealed class ItemFieldResolver<ITEM> : FieldResolver
+public sealed class ItemFieldResolver<ITEM>(StaticMethodEntity method) : FieldResolver
 	where ITEM : notnull
 {
 	private readonly Lock _Lock = new();
-	private readonly RuntimeMethodHandle _MethodHandle;
 	private bool _HasResult = false;
-	private Task<ITEM> _Result = default!;
+	private ValueTask<ITEM> _Result = default!;
 
 	/// <exception cref="ArgumentNullException"/>
 	/// <exception cref="ArgumentOutOfRangeException"/>
-	public ItemFieldResolver(MethodInfo methodInfo)
-	{
-		methodInfo.ThrowIfNull();
-		methodInfo.IsStatic.ThrowIfFalse();
-		methodInfo.ReturnType.IsAny<ITEM, Task<ITEM>, ValueTask<ITEM>>().ThrowIfFalse();
-
-		this._MethodHandle = methodInfo.MethodHandle;
-	}
-
-	/// <exception cref="ArgumentNullException"/>
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		context.Source.ThrowIfNull();
+		method.ThrowIfNull();
+		method.Return.ParameterType.IsAny<ITEM, Task<ITEM>, ValueTask<ITEM>>().ThrowIfFalse();
 
 		if (!this._HasResult)
 		{
@@ -46,16 +38,15 @@ public sealed class ItemFieldResolver<ITEM> : FieldResolver
 		return await this._Result;
 	}
 
-	private Task<ITEM> GetData(IResolveFieldContext context)
+	private ValueTask<ITEM> GetData(IResolveFieldContext context)
 	{
-		var methodInfo = (MethodInfo)this._MethodHandle.ToMethodBase();
-		var result = methodInfo.InvokeStaticFunc(context.GetArguments(methodInfo).ToArray());
+		var result = method.Invoke(context.GetArguments(method.Parameters).ToArray());
 		return result switch
 		{
-			ITEM item => Task.FromResult(item),
-			Task<ITEM> task => task,
-			ValueTask<ITEM> valueTask => valueTask.AsTask(),
-			_ => Task.FromResult<ITEM>(default(ITEM)!)
+			ITEM item => ValueTask.FromResult(item),
+			Task<ITEM> task => new ValueTask<ITEM>(task),
+			ValueTask<ITEM> valueTask => valueTask,
+			_ => ValueTask.FromResult<ITEM>(default(ITEM)!)
 		};
 	}
 }

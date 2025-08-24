@@ -6,6 +6,7 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.Types;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Data;
 
@@ -40,7 +41,7 @@ public class Connection<T>
 		var graphType = new ObjectGraphType
 		{
 			Name = Invariant($"{name}{nameof(Connection<T>)}"),
-			Description = typeof(Connection<T>).GraphQLDescription()
+			Description = Type<Connection<T>>.Attributes.GraphQLDescription()
 		};
 		var edgeGraphType = Edge<T>.CreateGraphType(name, dataGraphType);
 

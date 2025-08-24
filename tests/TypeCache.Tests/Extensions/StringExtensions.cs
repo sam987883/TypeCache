@@ -77,14 +77,18 @@ public class StringExtensions
 	{
 		Assert.Equal(string.Empty, (null as string).Mask());
 		Assert.Equal("++++++ +++ `~!#$%^\t\r\n/\\&=", TEST_STRING.Mask('+'));
-		Assert.Equal("+aB+++ 123 `~!#$%^\t\r\n/\\&=", TEST_STRING.Mask('+', ["A", "b", "Cc"]));
 	}
 
 	[Fact]
 	public void MaskIgnoreCase()
 	{
-		Assert.Equal("++++++ +++ `~!#$%^\t\r\n/\\&=", TEST_STRING.MaskIgnoreCase('+'));
 		Assert.Equal("++++++ 123 `~!#$%^\t\r\n/\\&=", TEST_STRING.MaskIgnoreCase('+', ["A", "b", "C"]));
+	}
+
+	[Fact]
+	public void MaskOrdinal()
+	{
+		Assert.Equal("+aB++c 123 `~!#$%^\t\r\n/\\&=", TEST_STRING.MaskOrdinal('+', ["A", "b", "C"]));
 	}
 
 	[Fact]
@@ -222,18 +226,28 @@ public class StringExtensions
 	}
 
 	[Fact]
-	public void TrimEnd()
+	public void TrimEndIgnoreCase()
 	{
-		Assert.Equal("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n/\\&="));
-		Assert.NotEqual("AaB", TEST_STRING.TrimEnd("BCC 123 `~!#$%^\t\r\n/\\&=", StringComparison.Ordinal));
-		Assert.Equal(TEST_STRING, TEST_STRING.TrimEnd("******"));
+		Assert.Equal("AaB", TEST_STRING.TrimEndIgnoreCase("BCC 123 `~!#$%^\t\r\n/\\&="));
+		Assert.Equal(TEST_STRING, TEST_STRING.TrimEndIgnoreCase("******"));
 	}
 
 	[Fact]
-	public void TrimStart()
+	public void TrimEndOrdinal()
 	{
-		Assert.Equal(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStart("aabbcc 123"));
-		Assert.NotEqual(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStart("aabbcc 123", StringComparison.Ordinal));
-		Assert.Equal(TEST_STRING, TEST_STRING.TrimStart("******"));
+		Assert.NotEqual("AaB", TEST_STRING.TrimEndOrdinal("BCC 123 `~!#$%^\t\r\n/\\&="));
+	}
+
+	[Fact]
+	public void TrimStartIgnoreCase()
+	{
+		Assert.Equal(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStartIgnoreCase("aabbcc 123"));
+		Assert.Equal(TEST_STRING, TEST_STRING.TrimStartOrdinal("******"));
+	}
+
+	[Fact]
+	public void TrimStartOrdinal()
+	{
+		Assert.NotEqual(" `~!#$%^\t\r\n/\\&=", TEST_STRING.TrimStartOrdinal("aabbcc 123"));
 	}
 }

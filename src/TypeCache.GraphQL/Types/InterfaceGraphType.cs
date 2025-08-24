@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Types;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
-using TypeCache.GraphQL.Resolvers;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Types;
 
@@ -12,13 +11,12 @@ public sealed class InterfaceGraphType<T> : global::GraphQL.Types.InterfaceGraph
 {
 	public InterfaceGraphType()
 	{
-		typeof(T).IsInterface.ThrowIfFalse();
+		TypeCache.Reflection.Type<T>.ClrType.ThrowIfNotEqual(ClrType.Interface);
 
-		this.Name = typeof(T).GraphQLName();
+		this.Name = TypeCache.Reflection.Type<T>.Attributes.GraphQLName() ?? TypeCache.Reflection.Type<T>.Name;
 
-		typeof(T).GetPublicProperties()
-			.Where(propertyInfo => propertyInfo.CanRead && !propertyInfo.GraphQLIgnore())
-			.ToArray()
-			.ForEach(propertyInfo => this.AddField(propertyInfo.ToFieldType()));
+		TypeCache.Reflection.Type<T>.Properties.Values
+			.Where(_ => _.CanRead && !_.Attributes.GraphQLIgnore())
+			.ForEach(_ => this.AddField(_.ToFieldType()));
 	}
 }

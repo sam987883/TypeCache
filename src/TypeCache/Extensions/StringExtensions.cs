@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using TypeCache.Utilities;
+using TypeCache.Collections;
 using static System.Globalization.CultureInfo;
 using static System.StringSplitOptions;
 
@@ -16,7 +16,6 @@ namespace TypeCache.Extensions;
 
 public static class StringExtensions
 {
-	private const char FROM_END = '^';
 	private const string RANGE_OPERATOR = "..";
 
 	/// <inheritdoc cref="char.IsDigit(char)"/>
@@ -138,6 +137,14 @@ public static class StringExtensions
 	public static bool EndsWithOrdinal(this string @this, string text)
 		=> @this.EndsWith(text, StringComparison.Ordinal);
 
+	/// <inheritdoc cref="Regex.Escape(string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Regex"/>.Escape(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string EscapeRegex(this string @this)
+		=> Regex.Escape(@this);
+
 	/// <remarks>
 	/// <c>=&gt; <see cref="string"/>.Equals(@<paramref name="this"/>, <paramref name="value"/>, <see cref="StringComparison.OrdinalIgnoreCase"/>);</c>
 	/// </remarks>
@@ -245,18 +252,32 @@ public static class StringExtensions
 		=> @this.Substring(0, length);
 
 	/// <summary>
-	/// Mask letter or numbers in a string.
+	/// Mask letter or numbers within a string.
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Mask(this string @this, char mask = '*', string[]? terms = null)
-		=> @this.AsSpan().Mask(mask, terms);
+	public static string Mask(this string @this, char mask = '*')
+		=> @this.AsSpan().Mask(mask);
+
+	/// <summary>
+	/// Mask <paramref name="terms"/> within a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string Mask(this string @this, char mask, string[] terms, StringComparison comparison)
+		=> @this.AsSpan().Mask(mask, terms, comparison);
 
 	/// <summary>
 	/// Mask letter or numbers in a string.
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string MaskIgnoreCase(this string @this, char mask = '*', string[]? terms = null)
+	public static string MaskIgnoreCase(this string @this, char mask, string[] terms)
 		=> @this.AsSpan().MaskIgnoreCase(mask, terms);
+
+	/// <summary>
+	/// Mask letter or numbers in a string.
+	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string MaskOrdinal(this string @this, char mask, string[] terms)
+		=> @this.AsSpan().MaskOrdinal(mask, terms);
 
 	/// <remarks>
 	/// <c>=&gt; @<paramref name="this"/>.IsNotBlank() ? @<paramref name="this"/> : <see langword="null"/>;</c>
@@ -293,22 +314,6 @@ public static class StringExtensions
 	public static T Parse<T>(this string @this, NumberStyles style, IFormatProvider? formatProvider = null)
 		where T : INumberBase<T>
 		=> T.Parse(@this, style, formatProvider ?? InvariantCulture);
-
-	/// <inheritdoc cref="Regex.Escape(string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Regex"/>.Escape(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string RegexEscape(this string @this)
-		=> Regex.Escape(@this);
-
-	/// <inheritdoc cref="Regex.Unescape(string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Regex"/>.Unescape(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string RegexUnescape(this string @this)
-		=> Regex.Unescape(@this);
 
 	public static string Reverse(this string @this)
 	{
@@ -405,28 +410,6 @@ public static class StringExtensions
 	public static string Substring(this string @this, Range range)
 		=> new string(@this.Take(range).ToArray());
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="argument">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfBlank([NotNull] this string? @this, string? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression("this")] string? argument = null)
-	{
-		if (@this.IsBlank())
-		{
-			var exception = new ArgumentOutOfRangeException(
-				paramName: argument,
-				actualValue: @this,
-				message: message ?? Invariant($"{caller}: {nameof(ThrowIfBlank)}"));
-
-			logger?.LogError(exception, exception.Message);
-
-			throw exception;
-		}
-	}
-
 	/// <param name="encoding">Defaults to <see cref="Encoding.UTF8"/></param>
 	public static string ToBase64(this string @this, Encoding? encoding = null)
 	{
@@ -453,7 +436,7 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out"/> <see langword="var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnum<T>(this string? @this)
@@ -462,7 +445,7 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(string?, bool, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out"/> <see langword="var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnumIgnoreCase<T>(this string? @this)
@@ -475,38 +458,9 @@ public static class StringExtensions
 	/// "1"  ---&gt; 1
 	/// </code>
 	/// </summary>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Index? ToIndex(this string @this)
-		=> @this switch
-		{
-			null or "" => null,
-			_ when @this.StartsWith(FROM_END) && int.TryParse(@this.Substring(1), out var index) => Index.FromEnd(index),
-			_ when int.TryParse(@this, out var index) => Index.FromStart(index),
-			_ => null
-		};
-
-	/// <inheritdoc cref="Expression.Label(string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Label(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static LabelTarget ToLabelTarget(this string? @this)
-		=> Expression.Label(@this);
-
-	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Parameter(<see langword="typeof"/>(<typeparamref name="T"/>), @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ParameterExpression ToParameterExpression<T>(this string @this)
-		=> Expression.Parameter(typeof(T), @this);
-
-	/// <inheritdoc cref="Expression.Parameter(Type, string)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Parameter(<paramref name="type"/>, @<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ParameterExpression ToParameterExpression(this string @this, Type type)
-		=> Expression.Parameter(type, @this);
+		=> @this?.AsSpan().ToIndex();
 
 	/// <summary>
 	/// <code>
@@ -530,15 +484,13 @@ public static class StringExtensions
 
 		if (@this.EndsWithIgnoreCase(RANGE_OPERATOR))
 		{
-			var token = @this.Substring(0..^2);
-			index = token.ToIndex();
+			index = @this.AsSpan(0..^2).ToIndex();
 			return index.HasValue ? Range.StartAt(index.Value) : null;
 		}
 
 		if (@this.StartsWithIgnoreCase(RANGE_OPERATOR))
 		{
-			var token = @this.Substring(RANGE_OPERATOR.Length);
-			index = token.ToIndex();
+			index = @this.AsSpan(RANGE_OPERATOR.Length).ToIndex();
 			return index.HasValue ? Range.EndAt(index.Value) : null;
 		}
 
@@ -590,11 +542,12 @@ public static class StringExtensions
 
 	/// <inheritdoc cref="Uri.Uri(string)"/>
 	/// <remarks>
-	/// <c>=&gt; <see langword="new"/> <see cref="Uri"/>(@<paramref name="this"/>);</c>
+	/// <c>=&gt; <see langword="new"/>(@<paramref name="this"/>, @<paramref name="this"/>[0] is '/' ? <see cref="UriKind.Relative"/> : <see cref="UriKind.Absolute"/>);</c>
 	/// </remarks>
+	/// <exception cref="IndexOutOfRangeException"/>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static Uri ToUri(this string @this)
-		=> new(@this);
+		=> new(@this, @this[0] is '/' ? UriKind.Relative : UriKind.Absolute);
 
 	/// <inheritdoc cref="Uri.Uri(string, UriKind)"/>
 	/// <remarks>
@@ -604,11 +557,17 @@ public static class StringExtensions
 	public static Uri ToUri(this string @this, UriKind kind)
 		=> new(@this, kind);
 
-	public static string TrimEnd(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> @this.EndsWith(text, comparison) ? @this.Substring(0, @this.Length - text.Length) : @this;
+	public static string TrimEndOrdinal(this string @this, string text)
+		=> @this.EndsWith(text, StringComparison.Ordinal) ? @this.Substring(0, @this.Length - text.Length) : @this;
 
-	public static string TrimStart(this string @this, string text, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-		=> @this.StartsWith(text, comparison) ? @this.Substring(text.Length) : @this;
+	public static string TrimEndIgnoreCase(this string @this, string text)
+		=> @this.EndsWith(text, StringComparison.OrdinalIgnoreCase) ? @this.Substring(0, @this.Length - text.Length) : @this;
+
+	public static string TrimStartOrdinal(this string @this, string text)
+		=> @this.StartsWith(text, StringComparison.Ordinal) ? @this.Substring(text.Length) : @this;
+
+	public static string TrimStartIgnoreCase(this string @this, string text)
+		=> @this.StartsWith(text, StringComparison.OrdinalIgnoreCase) ? @this.Substring(text.Length) : @this;
 
 	/// <inheritdoc cref="IParsable{TSelf}.TryParse(string, IFormatProvider, out TSelf)"/>
 	/// <remarks>
@@ -638,6 +597,14 @@ public static class StringExtensions
 	public static bool TryFromBase64(this string @this, Span<byte> bytes, out int bytesWritten)
 		=> Convert.TryFromBase64Chars(@this, bytes, out bytesWritten);
 
+	/// <inheritdoc cref="Regex.Unescape(string)"/>
+	/// <remarks>
+	/// <c>=&gt; <see cref="Regex"/>.Unescape(@<paramref name="this"/>);</c>
+	/// </remarks>
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static string UnescapeRegex(this string @this)
+		=> Regex.Unescape(@this);
+
 	private static readonly IReadOnlyDictionary<(string Pattern, RegexOptions Options), Regex> RegexCache =
-		new LazyDictionary<(string Pattern, RegexOptions Options), Regex>(_ => new(_.Pattern, _.Options, TimeSpan.FromMinutes(1)));
+		LazyDictionary.Create<(string Pattern, RegexOptions Options), Regex>(_ => new(_.Pattern, _.Options, TimeSpan.FromMinutes(1)));
 }

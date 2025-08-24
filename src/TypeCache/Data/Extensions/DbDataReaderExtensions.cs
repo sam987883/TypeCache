@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 
 namespace TypeCache.Data.Extensions;
 
@@ -29,30 +30,28 @@ public static class DbDataReaderExtensions
 	public static async Task ReadModelsAsync<T>(this DbDataReader @this, IList<T> rows, CancellationToken token = default)
 		where T : notnull, new()
 	{
-		var propertyMap = typeof(T).GetPublicProperties().ToDictionaryIgnoreCase(_ => _.Name);
-		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
+		var properties = @this.GetColumns().Select(column => Type<T>.Properties[column]).ToArray();
 		var values = new object[properties.Length];
 
 		while (await @this.ReadAsync(token))
 		{
-			var model = (T)typeof(T).Create()!;
+			var model = Type<T>.Create()!;
 			@this.GetValues(values);
-			properties.Index().ForEach(_ => _.Item.SetValueEx(model, values[_.Index]));
+			properties.Index().ForEach(_ => _.Item.SetValue(model, values[_.Index]));
 			rows.Add(model);
 		}
 	}
 
 	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
 	{
-		var propertyMap = modelType.GetPublicProperties().ToDictionaryIgnoreCase(_ => _.Name);
-		var properties = @this.GetColumns().Select(column => propertyMap[column]).ToArray();
+		var properties = @this.GetColumns().Select(column => modelType.Properties()[column]).ToArray();
 		var values = new object[properties.Length];
 
 		while (await @this.ReadAsync(token))
 		{
 			var model = modelType.Create()!;
 			@this.GetValues(values);
-			properties.Index().ForEach(_ => _.Item.SetValueEx(model, values[_.Index]));
+			properties.Index().ForEach(_ => _.Item.SetValue(model, values[_.Index]));
 			rows.Add(model);
 		}
 	}

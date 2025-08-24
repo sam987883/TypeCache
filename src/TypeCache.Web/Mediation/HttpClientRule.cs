@@ -10,8 +10,7 @@ internal sealed class HttpClientRule(HttpClient httpClient, ILogger<IMediator>? 
 {
 	public async Task<HttpResponseMessage> Map(HttpClientRequest request, CancellationToken token = default)
 	{
-		logger?.LogInformation(Invariant($"{{{nameof(request.Message.Method)}}} {{{nameof(request.Message.RequestUri)}}}"),
-			[request.Message.Method.Method, request.Message.RequestUri]);
+		logger?.LogInformation("{Method} {RequestUri}", request.Message.Method.Method, request.Message.RequestUri);
 
 		try
 		{
@@ -19,15 +18,13 @@ internal sealed class HttpClientRule(HttpClient httpClient, ILogger<IMediator>? 
 			await httpResponse.Content.LoadIntoBufferAsync();
 
 			var logLevel = httpResponse.IsSuccessStatusCode ? LogLevel.Information : LogLevel.Error;
-			logger?.Log(logLevel, Invariant($"{{{nameof(request.Message.Method)}}} {{{nameof(request.Message.RequestUri)}}} - {{{nameof(httpResponse.StatusCode)}}}"),
-				request.Message.Method.Method, request.Message.RequestUri, httpResponse.StatusCode);
+			logger?.Log(logLevel, "{Method} {RequestUri} - {StatusCode}", request.Message.Method.Method, request.Message.RequestUri, httpResponse.StatusCode);
 
 			return httpResponse;
 		}
 		catch (Exception error)
 		{
-			logger?.LogError(error, Invariant($"{{{nameof(request.Message.Method)}}} {{{nameof(request.Message.RequestUri)}}} - {{ErrorMessage}}"),
-				request.Message.Method.Method, request.Message.RequestUri, error.Message);
+			logger?.LogError(error, "{Method} {RequestUri} - {ErrorMessage}", request.Message.Method.Method, request.Message.RequestUri, error.Message);
 
 			throw;
 		}

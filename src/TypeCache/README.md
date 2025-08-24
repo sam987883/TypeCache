@@ -15,47 +15,61 @@
 	var intance = typeof(Senator).Create();
 
 	// Create an instance of Customer using a matching constructor
+	var intance = Type<Senator>.Create(["Bob Dole", 98]); // Passing an array of values
 	var intance = typeof(Senator).Create(["Bob Dole", 98]); // Passing an array of values
+	var intance = Type<Senator>.Create(("Bob Dole", 98)); // Passing a tuple of values
 	var intance = typeof(Senator).Create(("Bob Dole", 98)); // Passing a tuple of values
 
 	// Find the matching ConstructorInfo object based on argument values
-	var comstructorInfo = typeof(Senator).FindConstructor(["Bob Dole", 98]) // Passing an array of values
-	var comstructorInfo = typeof(Senator).FindConstructor(("Bob Dole", 98)) // Passing a tuple of values
+	var comstructorEntity = Type<Senator>.Constructors.Find(["Bob Dole", 98]) // Passing an array of values
+	var comstructorEntity = typeof(Senator).Constructors().Find(["Bob Dole", 98]) // Passing an array of values
+	var comstructorEntity = Type<Senator>.Constructors.Find(("Bob Dole", 98)) // Passing a tuple of values
+	var comstructorEntity = typeof(Senator).Constructors().Find(("Bob Dole", 98)) // Passing a tuple of values
 
 	// Find a matching MethodInfo object based on argument values
-	var methodInfo = typeof(Senator).FindMethod("RunForPresident", [typeof(int), typeof(bool)]); // Find method by argument types
-	var methodInfo = typeof(Senator).FindMethod("RunForPresident", [1996, true]); // Passing an array of values
-	var methodInfo = typeof(Senator).FindMethod("RunForPresident", (1996, true)); // Passing a tuple of values
+	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
+	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
+	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find([1996, true]); // Passing an array of values
+	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find([1996, true]); // Passing an array of values
+	var methodInfo = Type<Senator>.Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of values
+	var methodInfo = typeof(Senator).Methods()["RunForPresident"].Find((1996, true)); // Passing a tuple of values
 
 	// Get a field value
-	var fieldValue = typeof(Senator).GetFieldValue(instance, "_Bills");
-
-	var fieldInfo = typeof(Senator).GetFieldInfo(instance, "_Bills");
-	var fieldValue = fieldInfo.GetValueEx("_Bills");
+	var fieldValue = Type<Senator>.Fields["_Bills"].GetValue(instance);
+	var fieldValue = typeof(Senator).Fields()["_Bills"].GetValue(instance);
 
 	// Set a field value
-	var fieldValue = typeof(Senator).SetFieldValue(instance, "_Bills", 47);
+	Type<Senator>.Fields["_Bills"].SetValue(instance, 47);
+	typeof(Senator).Fields()["_Bills"].SetValue(instance, 47);
 
-	var fieldInfo = typeof(Senator).GetFieldInfo(instance, "_Bills");
-	var fieldValue = fieldInfo.SetValueEx("_Bills");
+	var fieldEntity = Type<Senator>.Fields["_Bills"];
+	var fieldEntity = typeof(Senator).Fields()["_Bills"];
+	fieldEntity.SetValue(instance, 47);
 
 	// Get a property value
-	var propertyValue = typeof(Senator).GetPropertyValue(instance, "DoleWhip");
+	var propertyValue = Type<Senator>.Properties["DoleWhip"].GetValue(instance);
+	var propertyValue = typeof(Senator).Properties()["DoleWhip"].GetValue(instance);
 
-	var propertyInfo = typeof(Senator).GetPropertyInfo(instance, "DoleWhip");
-	var propertyValue = propertyInfo.GetValueEx("DoleWhip");
+	var propertyEntity = Type<Senator>.Properties["DoleWhip"];
+	var propertyEntity = typeof(Senator).Properties()["DoleWhip"];
+	var propertyValue = propertyEntity.GetValue(instance);
 
 	// Set a property value
-	var propertyValue = typeof(Senator).SetPropertyValue(instance, "DoleWhip", Fruits.Pineapple);
+	Type<Senator>.Properties["DoleWhip"].SetValue(instance, Fruits.Pineapple);
+	typeof(Senator).Properties()["DoleWhip"].SetValue(instance, Fruits.Pineapple);
 
-	var propertyInfo = typeof(Senator).GetPropertyInfo(instance, "DoleWhip");
-	var propertyValue = propertyInfo.SetValueEx("DoleWhip", Fruits.Pineapple);
+	var propertyEntity = Type<Senator>.Properties["DoleWhip"];
+	var propertyEntity = typeof(Senator).Properties()["DoleWhip"];
+	propertyEntity.SetValueEx("DoleWhip", Fruits.Pineapple);
 
 	// Invoke a method
-	typeof(Senator).InvokeAction("StopHillaryCare", ["Oh noes", Action.Veto, false]); // Passing an array of values
-	typeof(Senator).InvokeAction("StopHillaryCare", ("Oh noes", Action.Veto, false)); // Passing a tuple of values
+	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
+	typeof(Senator).Methods()["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
+	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of values
+	typeof(Senator).Methods()["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of values
 
-	var state = typeof(Senator).InvokeFunc("GetState");
+	var state = Type<Senator>.Methods["GetState].Invoke(instance);
+	var state = typeof(Senator).Methods()["GetState].Invoke(instance);
 
 ---
 ### `TypeCache.Extensions` - Better Object Mapping
@@ -71,8 +85,8 @@
 	var bobDole2 = new Senator();
 	var bobDole3 = null as President;
 
-	dictionary.MapTo(bobDole1); // Automatically maps dictionary entries to properties
-	bobDole1.MapTo(bobDole2); // Automatically maps model properties with same names
+	dictionary.MapProperties(bobDole1); // Automatically maps dictionary entries to properties
+	dictionary.MapFields(bobDole2); // Automatically maps dictionary entries to fields
 
 	// To further customize mappings, use MapAttribute and MapIgnoreAttribute
 

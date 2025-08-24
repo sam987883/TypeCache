@@ -11,6 +11,7 @@ using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
+using TypeCache.Reflection;
 using TypeCache.Web.Extensions;
 
 const string DATASOURCE = "Default";
@@ -19,6 +20,7 @@ try
 {
 	var stringEnumJsonConverter = new JsonStringEnumConverter();
 	var appBuilder = WebApplication.CreateBuilder(args);
+
 	appBuilder.Services
 		.ConfigureHttpJsonOptions(_ => _.SerializerOptions.Converters.Add(stringEnumJsonConverter))
 		.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(_ => _.JsonSerializerOptions.Converters.Add(stringEnumJsonConverter))
@@ -29,8 +31,8 @@ try
 		.AddGraphQL()
 		.AddGraphQLTypeExtensions<Person>(person =>
 		{
-			person.AddField<Detail>(typeof(Detail).GetMethod(nameof(Detail.GetDetail))!);
-			person.AddField<Detail>(typeof(Detail).GetMethod(nameof(Detail.GetDetails))!, (person, details) => details);
+			person.AddField<Detail>(Type<Detail>.StaticMethods[nameof(Detail.GetDetail)].First());
+			person.AddField<Detail>(Type<Detail>.StaticMethods[nameof(Detail.GetDetails)].First(), (person, details) => details);
 		})
 		.AddOpenApi()
 		.AddEndpointsApiExplorer()
