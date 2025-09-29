@@ -212,7 +212,7 @@ public static class ReadOnlySpanExtensions
 	}
 
 	/// <summary>
-	/// Mask <param name="terms"> in a string.
+	/// Mask <param name="terms"/> in a string.
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string MaskIgnoreCase(this ReadOnlySpan<char> @this, char mask, string[] terms)
@@ -227,7 +227,7 @@ public static class ReadOnlySpanExtensions
 	}
 
 	/// <summary>
-	/// Mask <param name="terms"> in a string.
+	/// Mask <param name="terms"/> in a string.
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static string MaskOrdinal(this ReadOnlySpan<char> @this, char mask, string[] terms)
@@ -315,7 +315,7 @@ public static class ReadOnlySpanExtensions
 
 	/// <inheritdoc cref="Enum.TryParse{TEnum}(ReadOnlySpan{char}, bool, out TEnum)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <paramref name="ignoreCase"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
+	/// <c>=&gt; <see cref="Enum"/>.TryParse(@<paramref name="this"/>, <see langword="true"/>, <see langword="out var"/> result) ? (<typeparamref name="T"/>?)result : <see langword="null"/>;</c>
 	/// </remarks>
 	[DebuggerHidden]
 	public static T? ToEnumIgnoreCase<T>(this ReadOnlySpan<char> @this)

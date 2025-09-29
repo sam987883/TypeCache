@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using NSubstitute;
 using TypeCache.Extensions;
+using TypeCache.Testing;
 using Xunit;
 
 namespace TypeCache.Tests.Extensions;
@@ -103,7 +104,10 @@ public class StringExtensions
 	[Fact]
 	public void ThrowIfBlank()
 	{
-		var loggerMock = Substitute.For<ILogger>();
+		//var loggerMock = Substitute.For<ILogger>();
+		//ILogger loggerMock = (ILogger)(dynamic)new DynamicMock<ILogger>();
+		var loggerMock = new Shadow<ILogger>().Instance;
+		loggerMock.LogInformation("TEST");
 
 		"AAA".ThrowIfBlank(logger: loggerMock);
 		Assert.Throws<ArgumentOutOfRangeException>(() => (null as string).ThrowIfBlank(logger: loggerMock));

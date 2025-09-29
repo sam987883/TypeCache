@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
@@ -139,16 +140,17 @@ public class ReflectionExtensions
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
 
+		var method = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Find([0, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+		var call = ((Func<Contact, int, string, string, string, TimeOnly, DateTime, DateTimeOffset, Guid, int, long>)method.Delegate);
+
 		var i = 0;
 		stopwatch.Start();
 		while (++i < 100000)
 		{
-			_ = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Invoke(contact, [i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+			_ = call.Invoke(contact, i, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31);
 		}
 		stopwatch.Stop();
 		var elapsed1 = stopwatch.Elapsed;
-
-		var method = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Find([0, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
 
 		i = 0;
 		stopwatch.Restart();
@@ -159,7 +161,7 @@ public class ReflectionExtensions
 		stopwatch.Stop();
 		var elapsed2 = stopwatch.Elapsed;
 
-		Assert.True(elapsed2 < elapsed1);
+		Assert.True(elapsed1 < elapsed2);
 	}
 
 	[Fact]

@@ -27,12 +27,7 @@ public sealed class StaticMethodEntity : Method
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke()
-		=> this._InvokeWithArray.Value(null);
-
-	public object? Invoke<T>(T? argument)
-		=> typeof(T) != this.Parameters[0].ParameterType
-			? this._InvokeWithArray.Value([argument])
-			: this._InvokeWithTuple.Value(ValueTuple.Create(argument));
+		=> this._InvokeWithArray.Value([]);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object?[] arguments)
@@ -46,9 +41,10 @@ public sealed class StaticMethodEntity : Method
 	/// <exception cref="ArgumentNullException"/>
 	private Delegate CreateCall()
 	{
-		var parameters = this.Parameters.Select(_ => _.ToExpression());
+		var parameters = this.Parameters.Select(_ => _.ToExpression()).ToArray();
+		var lambda = this.ToMethodInfo().ToExpression(null, parameters).Lambda(parameters);
 
-		return this.ToMethodInfo().ToExpression(null, parameters).Lambda(parameters).Compile();
+		return lambda.Compile();
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -65,7 +61,7 @@ public sealed class StaticMethodEntity : Method
 		if (this.HasReturnValue)
 		{
 			if (this.Return.ParameterType != typeof(object))
-				methodExpression = methodExpression.Cast<object>();
+				methodExpression = methodExpression.As<object>();
 
 			return methodExpression.Lambda<Func<object?[]?, object?>>([arguments]).Compile();
 		}
@@ -86,8 +82,8 @@ public sealed class StaticMethodEntity : Method
 		Expression[]? parameters = null;
 		if (this.Parameters.Count > 0)
 		{
-			var valueTupleType = MethodEntity.GetValueTupleType(this.Parameters);
-			parameters = MethodEntity.GetValueTupleFields(arguments.Cast(valueTupleType), this.Parameters.Count).ToArray();
+			var valueTupleType = GetValueTupleType(this.Parameters);
+			parameters = GetValueTupleFields(arguments.Cast(valueTupleType), this.Parameters.Count).ToArray();
 		}
 
 		Expression methodExpression = this.ToMethodInfo().ToExpression(null, parameters);

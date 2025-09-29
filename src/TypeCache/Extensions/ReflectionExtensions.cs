@@ -36,15 +36,11 @@ public static class ReflectionExtensions
 		=> TypeStore.Fields[@this.TypeHandle];
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, GenericMethodSet> GenericMethods(this Type @this)
-		=> TypeStore.GenericMethods[@this.TypeHandle];
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IReadOnlySet<RuntimeTypeHandle> Interfaces(this Type @this)
 		=> TypeStore.Interfaces[@this.TypeHandle];
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, MethodSet> Methods(this Type @this)
+	public static IReadOnlyDictionary<string, MethodSet<MethodEntity>> Methods(this Type @this)
 		=> TypeStore.Methods[@this.TypeHandle];
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -63,29 +59,25 @@ public static class ReflectionExtensions
 		=> TypeStore.StaticFields[@this.TypeHandle];
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, StaticGenericMethodSet> StaticGenericMethods(this Type @this)
-		=> TypeStore.StaticGenericMethods[@this.TypeHandle];
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, StaticMethodSet> StaticMethods(this Type @this)
+	public static IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>> StaticMethods(this Type @this)
 		=> TypeStore.StaticMethods[@this.TypeHandle];
 
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this)
-		=> @this.Constructors().Invoke();
+		=> @this.Constructors().Create();
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, object?[] arguments)
-		=> @this.Constructors().Invoke(arguments);
+		=> @this.Constructors().Create(arguments);
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, ITuple arguments)
-		=> @this.Constructors().Invoke(arguments);
+		=> @this.Constructors().Create(arguments);
 
 	/// <remarks>
 	/// <c>@<paramref name="this"/>.ReturnType.IsAny([<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(void)]);</c>
@@ -94,7 +86,6 @@ public static class ReflectionExtensions
 	public static bool HasReturnValue(this MethodInfo @this)
 		=> !@this.ReturnType.IsAny([typeof(Task), typeof(ValueTask), typeof(void)]);
 
-	/// <inheritdoc cref="Type.IsAssignableTo(Type)"/>
 	/// <remarks>
 	/// Supports generic type definitions as well.  For example:
 	/// <list type="table">

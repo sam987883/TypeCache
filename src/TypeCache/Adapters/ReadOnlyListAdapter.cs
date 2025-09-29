@@ -6,20 +6,32 @@ using TypeCache.Reflection;
 
 namespace TypeCache.Adapters;
 
-internal sealed class ReadOnlyListAdapter(object list) : IReadOnlyList<object>
+internal sealed class ReadOnlyListAdapter : IReadOnlyList<object>
 {
-	private readonly IReadOnlyDictionary<string, MethodSet> _Methods = list.GetType().Methods();
-	private readonly IReadOnlyDictionary<string, PropertyEntity> _Properties = list.GetType().Properties();
+	private readonly object _List;
 
-	public object this[int index]
+	private readonly PropertyEntity _Count;
+	private readonly PropertyEntity _Item;
+	private readonly MethodSet<MethodEntity> _GetEnumerator;
+
+	public ReadOnlyListAdapter(object list)
 	{
-		get => this._Properties["Item"][ValueTuple.Create(index)].GetValue(list)!;
+		this._List = list;
+
+		var methods = list.GetType().Methods();
+		var properties = list.GetType().Properties();
+
+		this._Count = properties[nameof(Count)];
+		this._Item = properties["Item"];
+		this._GetEnumerator = methods[nameof(GetEnumerator)];
 	}
 
-	public int Count => (int)this._Properties[nameof(Count)].GetValue(list)!;
+	public object this[int index] => this._Item[index.ToValueTuple()].GetValue(this._List)!;
+
+	public int Count => (int)this._Count.GetValue(this._List)!;
 
 	public IEnumerator<object> GetEnumerator()
-		=> (IEnumerator<object>)this._Methods[nameof(GetEnumerator)].Invoke(list)!;
+		=> (IEnumerator<object>)this._GetEnumerator.FindWithNoArguments()!.Invoke(this._List)!;
 
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this.GetEnumerator();

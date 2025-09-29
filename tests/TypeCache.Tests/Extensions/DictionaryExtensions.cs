@@ -187,12 +187,12 @@ public class DictionaryExtensions
 
 	private class TestModelFields
 	{
-		public int TestField1;
-		public char TestField2;
-		public string TestField3;
-		public int TestField4;
-		public char TestField5;
-		public string TestField6;
+		public int TestField1 = default;
+		public char TestField2 = default;
+		public string TestField3 = default;
+		public int TestField4 = default;
+		public char TestField5 = default;
+		public string TestField6 = default;
 	}
 
 	private class TestModelProperties

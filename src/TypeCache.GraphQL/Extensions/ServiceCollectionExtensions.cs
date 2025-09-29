@@ -11,6 +11,7 @@ using TypeCache.GraphQL.Converters;
 using TypeCache.GraphQL.Listeners;
 using TypeCache.GraphQL.Types;
 using TypeCache.GraphQL.Web;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Extensions;
 
@@ -70,10 +71,10 @@ public static class ServiceCollectionExtensions
 	/// <param name="options">
 	/// Place to make calls to:<br/>
 	/// <c>
-	/// <see cref="OutputGraphType{T}.AddField(PropertyInfo)"/><br/>
-	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo)"/>
-	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM})"/>
-	/// <see cref="OutputGraphType{T}.AddField{ITEM}(MethodInfo, Func{T, ITEM[], ITEM[]})"/>
+	/// <see cref="OutputGraphType{T}.AddField(PropertyEntity)"/><br/>
+	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity)"/>
+	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity, Func{T, ITEM[], ITEM})"/>
+	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity, Func{T, ITEM[], ITEM[]})"/>
 	/// </c>
 	/// </param>
 	public static IServiceCollection AddGraphQLTypeExtensions<T>(this IServiceCollection @this, Action<OutputGraphType<T>> options)

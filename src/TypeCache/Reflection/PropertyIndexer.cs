@@ -11,7 +11,8 @@ public readonly struct PropertyIndexer(string name, Lazy<Delegate>? getter, Lazy
 	public object? GetStaticValue()
 	{
 		var getValue = getter?.Value as Func<ITuple, object?>;
-		getValue.ThrowIfNull(message: Invariant($"Property [{name}] does not have a static property getter that has arguments."));
+		var propertyName = name;
+		getValue.ThrowIfNull(message: () => Invariant($"Property [{propertyName}] does not have a static property getter that has arguments."));
 
 		return getValue(index);
 	}
@@ -20,7 +21,8 @@ public readonly struct PropertyIndexer(string name, Lazy<Delegate>? getter, Lazy
 	public object? GetValue(object instance)
 	{
 		var getValue = getter?.Value as Func<object, ITuple, object?>;
-		getValue.ThrowIfNull(message: Invariant($"Property [{name}] does not have a property getter that has arguments."));
+		var propertyName = name;
+		getValue.ThrowIfNull(message: () => Invariant($"Property [{propertyName}] does not have a property getter that has arguments."));
 
 		return getValue(instance, index);
 	}
@@ -29,7 +31,8 @@ public readonly struct PropertyIndexer(string name, Lazy<Delegate>? getter, Lazy
 	public void SetStaticValue(object? value)
 	{
 		var setValue = setter?.Value as Action<ITuple, object?>;
-		setValue.ThrowIfNull(message: Invariant($"Property [{name}] does not have a static property setter that has arguments."));
+		var propertyName = name;
+		setValue.ThrowIfNull(message: () => Invariant($"Property [{propertyName}] does not have a static property setter that has arguments."));
 
 		setValue(index, value);
 	}
@@ -39,7 +42,8 @@ public readonly struct PropertyIndexer(string name, Lazy<Delegate>? getter, Lazy
 	public void SetValue(object instance, object? value)
 	{
 		var setValue = setter?.Value as Action<object, ITuple, object?>;
-		setValue.ThrowIfNull(message: Invariant($"Property [{name}] does not have a property setter that has arguments."));
+		var propertyName = name;
+		setValue.ThrowIfNull(message: () => Invariant($"Property [{propertyName}] does not have a property setter that has arguments."));
 
 		setValue(instance, index, value);
 	}

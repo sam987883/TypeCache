@@ -8,7 +8,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection;
 
-public sealed class ConstructorEntity
+public sealed class ConstructorEntity : IEquatable<ConstructorEntity>
 {
 	private readonly Lazy<Delegate> _Create;
 	private readonly Lazy<Func<object?[]?, object>> _CreateWithArray;
@@ -20,7 +20,7 @@ public sealed class ConstructorEntity
 	/// </summary>
 	public ConstructorEntity(Type type)
 	{
-		this.Attributes = new ReadOnlyCollection<Attribute>(Enumerable.Empty<Attribute>());
+		this.Attributes = new ReadOnlyCollection<Attribute>(Enumerable<Attribute>.Empty);
 		this._Create = new(this.CreateCall);
 		this._CreateWithArray = new(this.CreateArrayCall);
 		this._CreateWithTuple = new(this.CreateTupleCall);
@@ -71,8 +71,8 @@ public sealed class ConstructorEntity
 	public object Create(ITuple arguments)
 		=> this._CreateWithTuple.Value(arguments);
 
-	public bool IsCallableWithNoArguments()
-		=> this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
+	public bool Equals(ConstructorEntity? other)
+		=> this.Handle == other?.Handle;
 
 	public bool IsCallableWith(object?[] arguments)
 	{
@@ -98,13 +98,16 @@ public sealed class ConstructorEntity
 	public bool IsCallableWith(ITuple arguments)
 		=> this.IsCallableWith(arguments.ToArray());
 
+	public bool IsCallableWithNoArguments()
+		=> this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
+
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public ConstructorInfo ToConstructorInfo()
 		=> (ConstructorInfo)this.Handle.ToMethodBase(this._TypeHandle);
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	public Delegate CreateCall()
+	private Delegate CreateCall()
 	{
 		var parameters = this.Parameters.Select(_ => _.ToExpression());
 

@@ -463,7 +463,8 @@ public static class ServiceCollectionExtensions
 			.AddRule<SqlScalarRequest, object?>(new SqlScalarRule());
 
 	/// <summary>
-	/// Registers all types in the specified assembly that have <see cref="ServiceLifetimeAttribute{T}"/> or <see cref="ServiceLifetimeAttribute"/>.
+	/// Registers all types in the specified assembly that have <b><c><see cref="SingletonAttribute{T}"/></c></b>,
+	/// <b><c><see cref="ScopedAttribute{T}"/></c></b>, <b><c><see cref="TransientAttribute{T}"/></c></b> or <b><c><see cref="ServiceLifetimeAttribute"/></c></b>.
 	/// </summary>
 	/// <param name="fromAssembly">The assembly to register the types from.</param>
 	public static IServiceCollection AddTypes(this IServiceCollection @this, Assembly fromAssembly)
