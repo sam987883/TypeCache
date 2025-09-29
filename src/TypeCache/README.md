@@ -12,7 +12,7 @@
 	using TypeCache.Extensions;
 
 	// Create an instance of Senator using the default constructor
-	var intance = typeof(Senator).Create();
+	var intance = typeof(Senator).Constructors().Create();
 
 	// Create an instance of Customer using a matching constructor
 	var intance = Type<Senator>.Constructors.Create(["Bob Dole", 98]); // Passing an array of values
