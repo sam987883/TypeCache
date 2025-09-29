@@ -20,7 +20,7 @@ public sealed class ConstructorEntity
 	/// </summary>
 	public ConstructorEntity(Type type)
 	{
-		this.Attributes = new ReadOnlyCollection<Attribute>(Enumerable.Empty<Attribute>());
+		this.Attributes = new ReadOnlyCollection<Attribute>(Enumerable<Attribute>.Empty);
 		this._Create = new(this.CreateCall);
 		this._CreateWithArray = new(this.CreateArrayCall);
 		this._CreateWithTuple = new(this.CreateTupleCall);

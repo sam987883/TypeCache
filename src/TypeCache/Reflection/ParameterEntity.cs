@@ -44,6 +44,13 @@ public sealed class ParameterEntity
 	public Type ParameterType => this._ParameterTypeHandle.ToType();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public bool Supports(Type type)
+		=> this.ParameterType.IsAssignableFrom(type);
+
+	public bool SupportsValue(object? value)
+		=> value is not null ? this.Supports(value.GetType()) : this.IsNullable;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public ParameterExpression ToExpression()
 		=> Expression.Parameter(this.ParameterType, this.Name);
 }

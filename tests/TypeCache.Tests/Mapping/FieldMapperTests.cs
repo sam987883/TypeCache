@@ -63,22 +63,22 @@ public class FieldMapperTests
 	private class TestModel1
 	{
 		[MapAttribute<TestModel2>(nameof(TestModel2.TestField4))]
-		public int TestField1;
-		public char TestField2;
-		public string TestField3;
+		public int TestField1 = default;
+		public char TestField2 = default;
+		public string TestField3 = default;
 		[MapAttribute<TestModel2>(nameof(TestModel2.TestField1))]
-		public int TestField4;
-		public char TestField5;
-		public string TestField6;
+		public int TestField4 = default;
+		public char TestField5 = default;
+		public string TestField6 = default;
 	}
 
 	private class TestModel2
 	{
-		public int TestField1;
-		public char TestField2;
-		public string TestField3;
-		public int TestField4;
-		public char TestField5;
-		public string TestField6;
+		public int TestField1 = default;
+		public char TestField2 = default;
+		public string TestField3 = default;
+		public int TestField4 = default;
+		public char TestField5 = default;
+		public string TestField6 = default;
 	}
 }

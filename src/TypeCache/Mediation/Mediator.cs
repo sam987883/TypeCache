@@ -38,10 +38,14 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	}
 
 	public Task<RESPONSE> Map<RESPONSE>(IRequest<RESPONSE> request, CancellationToken token = default)
-		=> (Task<RESPONSE>)this.GetType().GenericMethods()[nameof(Mediator._Map)].Invoke([request.GetType(), typeof(RESPONSE)], this, (request, token))!;
+		=> (Task<RESPONSE>)this.GetType().Methods()[nameof(Mediator._Map)]
+			.Find([request.GetType(), typeof(RESPONSE)], (request, token))!
+			.Invoke(this, (request, token))!;
 
 	public Task<RESPONSE> Map<RESPONSE>(object? key, IRequest<RESPONSE> request, CancellationToken token = default)
-		=> (Task<RESPONSE>)this.GetType().GenericMethods()[nameof(Mediator._Map)].Invoke([request.GetType(), typeof(RESPONSE)], this, (key, request, token))!;
+		=> (Task<RESPONSE>)this.GetType().Methods()[nameof(Mediator._Map)]
+			.Find([request.GetType(), typeof(RESPONSE)], (key, request, token))!
+			.Invoke(this, (key, request, token))!;
 
 	public void Validate<REQUEST>(REQUEST request, CancellationToken token = default)
 		where REQUEST : notnull

@@ -17,7 +17,7 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
 
 		var targetProperties = Type<T>.Properties;
 		foreach (var pair in source)
@@ -70,8 +70,8 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
 
 		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.CanRead))
 		{
@@ -103,11 +103,11 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
+		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name()}"));
 
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
 
 		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.CanRead && !_.IsStaticGet))
 		{
@@ -173,8 +173,8 @@ internal class PropertyMapper : IMapper
 		var sourceType = source.GetType();
 		var targetType = target.GetType();
 
-		sourceType.ScalarType().ThrowIfNotEqual(ScalarType.None, Invariant($"Cannot map from a scalar: {sourceType.ScalarType().Name()}"));
-		targetType.ScalarType().ThrowIfNotEqual(ScalarType.None, Invariant($"Cannot map to a scalar: {targetType.ScalarType().Name()}"));
+		sourceType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {sourceType.ScalarType().Name()}"));
+		targetType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {targetType.ScalarType().Name()}"));
 
 		var sourceCollectionType = sourceType.CollectionType();
 		var targetCollectionType = targetType.CollectionType();

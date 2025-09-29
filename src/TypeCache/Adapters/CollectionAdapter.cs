@@ -6,32 +6,57 @@ using TypeCache.Reflection;
 
 namespace TypeCache.Adapters;
 
-internal sealed class CollectionAdapter(object collection) : ICollection<object>
+internal sealed class CollectionAdapter : ICollection<object>
 {
-	private readonly IReadOnlyDictionary<string, MethodSet> _Methods = collection.GetType().Methods();
-	private readonly IReadOnlyDictionary<string, PropertyEntity> _Properties = collection.GetType().Properties();
+	private readonly object _Collection;
 
-	public int Count => (int)this._Properties[nameof(Count)].GetValue(collection)!;
+	private readonly PropertyEntity _Count;
+	private readonly PropertyEntity _IsReadOnly;
+	private readonly MethodSet<MethodEntity> _Add;
+	private readonly MethodSet<MethodEntity> _Clear;
+	private readonly MethodSet<MethodEntity> _Contains;
+	private readonly MethodSet<MethodEntity> _CopyTo;
+	private readonly MethodSet<MethodEntity> _GetEnumerator;
+	private readonly MethodSet<MethodEntity> _Remove;
 
-	public bool IsReadOnly => (bool)this._Properties[nameof(IsReadOnly)].GetValue(collection)!;
+	public CollectionAdapter(object collection)
+	{
+		this._Collection = collection;
+
+		var methods = collection.GetType().Methods();
+		var properties = collection.GetType().Properties();
+
+		this._Count = properties[nameof(Count)];
+		this._IsReadOnly = properties[nameof(IsReadOnly)];
+		this._Add = methods[nameof(Add)];
+		this._Clear = methods[nameof(Clear)];
+		this._Contains = methods[nameof(Contains)];
+		this._CopyTo = methods[nameof(CopyTo)];
+		this._GetEnumerator = methods[nameof(GetEnumerator)];
+		this._Remove = methods[nameof(Remove)];
+	}
+
+	public int Count => (int)this._Count.GetValue(this._Collection)!;
+
+	public bool IsReadOnly => (bool)this._IsReadOnly.GetValue(this._Collection)!;
 
 	public void Add(object item)
-		=> this._Methods[nameof(Add)].Invoke(collection, ValueTuple.Create(item));
+		=> this._Add.Find([item])!.Invoke(this._Collection, item.ToValueTuple());
 
 	public void Clear()
-		=> this._Methods[nameof(Clear)].Invoke(collection);
+		=> this._Clear.FindWithNoArguments()!.Invoke(this._Collection);
 
 	public bool Contains(object item)
-		=> (bool)this._Methods[nameof(Contains)].Invoke(collection, ValueTuple.Create(item))!;
+		=> (bool)this._Contains.Find([item])!.Invoke(this._Collection, item.ToValueTuple())!;
 
 	public void CopyTo(object[] array, int arrayIndex)
-		=> this._Methods[nameof(CopyTo)].Invoke(collection, (array, arrayIndex));
+		=> this._CopyTo.Find([array, arrayIndex])!.Invoke(this._Collection, [array, arrayIndex]);
 
 	public IEnumerator<object> GetEnumerator()
-		=> (IEnumerator<object>)this._Methods[nameof(GetEnumerator)].Invoke(collection)!;
+		=> (IEnumerator<object>)this._GetEnumerator.FindWithNoArguments()!.Invoke(this._Collection)!;
 
 	public bool Remove(object item)
-		=> (bool)this._Methods[nameof(Remove)].Invoke(collection, ValueTuple.Create(item))!;
+		=> (bool)this._Remove.Find([item])!.Invoke(this._Collection, item.ToValueTuple())!;
 
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this.GetEnumerator();

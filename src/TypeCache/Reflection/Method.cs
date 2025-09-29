@@ -8,7 +8,7 @@ using TypeCache.Extensions;
 
 namespace TypeCache.Reflection;
 
-public abstract class Method
+public class Method : IEquatable<Method>
 {
 	private readonly IReadOnlyList<RuntimeTypeHandle> _GenericTypeHandles;
 	private readonly RuntimeTypeHandle _TypeHandle;
@@ -25,6 +25,9 @@ public abstract class Method
 		this.CodeName = GetCodeName(methodInfo);
 		this.Handle = methodInfo.MethodHandle;
 		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.IsConstructedGenericMethod = methodInfo.IsConstructedGenericMethod;
+		this.IsGenericMethod = methodInfo.IsGenericMethod;
+		this.IsGenericMethodDefinition = methodInfo.IsGenericMethodDefinition;
 		this.IsPublic = methodInfo.IsPublic;
 		this.Name = methodInfo.Name;
 		this.Parameters = methodInfo.GetParameters()
@@ -45,7 +48,15 @@ public abstract class Method
 
 	public bool HasReturnValue { get; }
 
+	public bool IsConstructedGenericMethod { get; }
+
+	public bool IsGenericMethod { get; }
+
+	public bool IsGenericMethodDefinition { get; }
+
 	public bool IsPublic { get; }
+
+	public bool IsStatic { get; }
 
 	public string Name { get; }
 
@@ -55,60 +66,80 @@ public abstract class Method
 
 	public Type Type => this._TypeHandle.ToType();
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public bool Equals(Method? other)
+		=> this.Handle == other?.Handle;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public override bool Equals(object? obj)
+		=> obj is MethodEntity method && this.Handle == method.Handle;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public override int GetHashCode()
+		=> this.Handle.GetHashCode();
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public override string ToString()
+		=> this.CodeName;
+
+	/// <summary>
+	/// Creates a constructed generic method by providing the type arguments to a generic method definition.<br/>
+	/// <b><c><see langword="null"/></c></b> is returned if this method is not a generic method definition.<br/>
+	/// An exception is thrown if the generic method definition does not support the <b><c><paramref name="genericTypeArguments"/></c></b>.<br/>
+	/// </summary>
+	/// <param name="genericTypeArguments">Method generic type arguments</param>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="ArgumentNullException"/>
+	/// <exception cref="InvalidOperationException"/>
+	/// <exception cref="NotSupportedException"/>
+	public Method? ConstructGenericMethod(Type[] genericTypeArguments)
+		=> (this.IsGenericMethodDefinition, this.IsStatic) switch
+		{
+			(false, _) => null,
+			(true, false) => new MethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments)),
+			_ => new StaticMethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments))
+		};
+
+	public bool HasGenericTypes(Type[] genericTypes)
+		=> this.IsGenericMethod && this._GenericTypeHandles.SequenceEqual(genericTypes.Select(_ => _.TypeHandle));
+
 	public bool IsCallableWith(object?[] arguments)
-	{
-		if (this.Parameters.Any(_ => _.IsOut))
-			return false;
-
-		arguments ??= [];
-		if (arguments.Length is 0)
-			return this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
-
-		if (arguments.Length > this.Parameters.Count)
-			return false;
-
-		return this.Parameters
-			.Index()
-			.All(_ => _ switch
+		=> arguments switch
+		{
+			null or [] => this.IsCallableWithNoArguments(),
+			_ when arguments.Length > this.Parameters.Count => false,
+			_ => this.Parameters.Index().All(_ => _ switch
 			{
+				_ when _.Item.IsOut => false,
 				_ when _.Index >= arguments.Length => _.Item.HasDefaultValue || _.Item.IsOptional,
-				_ when arguments[_.Index] == Type.Missing => _.Item.HasDefaultValue || _.Item.IsOptional,
-				_ when arguments[_.Index] is not null => arguments[_.Index]!.GetType().IsAssignableTo(_.Item.ParameterType),
-				_ => _.Item.IsNullable
-			});
-	}
+				_ => _.Item.SupportsValue(arguments[_.Index])
+			})
+		};
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public bool IsCallableWith(ITuple arguments)
 		=> this.IsCallableWith(arguments.ToArray());
 
 	public bool IsCallableWith(Type[] argumentTypes)
-	{
-		if (this.Parameters.Any(_ => _.IsOut))
-			return false;
-
-		argumentTypes ??= [];
-		if (argumentTypes.Length is 0)
-			return this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
-
-		if (argumentTypes.Length > this.Parameters.Count)
-			return false;
-
-		return this.Parameters
-			.Index()
-			.All(_ => _.Index >= argumentTypes.Length
-				? _.Item.HasDefaultValue || _.Item.IsOptional
-				: argumentTypes[_.Index]!.IsAssignableTo(_.Item.ParameterType));
-	}
+		=> argumentTypes switch
+		{
+			null or [] => this.IsCallableWithNoArguments(),
+			_ when argumentTypes.Length > this.Parameters.Count => false,
+			_ => this.Parameters.Index().All(_ => _ switch
+			{
+				_ when _.Item.IsOut => false,
+				_ when _.Index >= argumentTypes.Length => _.Item.HasDefaultValue || _.Item.IsOptional,
+				_ => _.Item.Supports(argumentTypes[_.Index])
+			})
+		};
 
 	public bool IsCallableWithNoArguments()
 		=> this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
 
-	public bool Match(RuntimeTypeHandle[] genericTypeHandles)
-		=> this.GenericTypes.Zip(genericTypeHandles.Select(_ => _.ToType())).All(_ => _.Second.IsAssignableTo(_.First));
-
-	public bool Match(Type[] genericTypes)
-		=> this.GenericTypes.Zip(genericTypes).All(_ => _.Second.IsAssignableTo(_.First));
+	public bool Supports(Type[] genericTypes)
+		=> this.IsGenericMethodDefinition
+			? this.GenericTypes.Zip(genericTypes).All(_ => _.Second.IsAssignableTo(_.First))
+			: this.HasGenericTypes(genericTypes);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodInfo ToMethodInfo()
@@ -117,12 +148,12 @@ public abstract class Method
 	private static string GetCodeName(MethodInfo methodInfo)
 		=> methodInfo switch
 		{
-			{ IsGenericMethodDefinition: true } => Invariant($"{methodInfo.Name[0..methodInfo.Name.IndexOf(TypeStore.GENERIC_TICKMARK)]}<{','.Repeat(methodInfo.GetGenericArguments().Length - 1)}>"),
-			{ IsGenericMethod: true } => Invariant($"{methodInfo.Name[0..methodInfo.Name.IndexOf(TypeStore.GENERIC_TICKMARK)]}<{string.Join(", ", methodInfo.GetGenericArguments().Select(_ => _.CodeName()))}>"),
+			{ IsGenericMethodDefinition: true } => Invariant($"{methodInfo.Name}<{string.Concat(','.Repeat(methodInfo.GetGenericArguments().Length - 1))}>"),
+			{ IsGenericMethod: true } => Invariant($"{methodInfo.Name}<{methodInfo.GetGenericArguments().Select(_ => _.CodeName()).ToCSV()}>"),
 			_ => methodInfo.Name
 		};
 
-	internal static IEnumerable<Expression> GetValueTupleFields(Expression tupleExpression, int count)
+	protected internal static IEnumerable<Expression> GetValueTupleFields(Expression tupleExpression, int count)
 	{
 		const string Item = nameof(Item);
 		const string Rest = nameof(Rest);
@@ -140,7 +171,7 @@ public abstract class Method
 		}
 	}
 
-	internal static Type GetValueTupleType(IReadOnlyList<ParameterEntity> parameters)
+	protected internal static Type GetValueTupleType(IReadOnlyList<ParameterEntity> parameters)
 	{
 		var parameterTypeChunks = parameters
 			.Select(_ => _.ParameterType)

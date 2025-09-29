@@ -67,7 +67,8 @@ public static class DictionaryExtensions
 		@this.ThrowIfNull();
 		target.ThrowIfNull();
 
-		target.GetType().CollectionType().ThrowIfNotEqual(CollectionType.None, Invariant($"{nameof(MapFields)}: Cannot map to a collection - {target.GetType().CollectionType().Name()}"));
+		target.GetType().CollectionType().ThrowIfNotEqual(CollectionType.None,
+			() => Invariant($"{nameof(MapFields)}: Cannot map to a collection - {target.GetType().CollectionType().Name()}"));
 
 		var targetFields = target.GetType().Fields();
 		foreach (var pair in @this)
@@ -95,7 +96,8 @@ public static class DictionaryExtensions
 		@this.ThrowIfNull();
 		target.ThrowIfNull();
 
-		target.GetType().CollectionType().ThrowIfNotEqual(CollectionType.None, Invariant($"{nameof(MapProperties)}: Cannot map to a collection - {target.GetType().CollectionType().Name()}"));
+		target.GetType().CollectionType().ThrowIfNotEqual(CollectionType.None,
+			() => Invariant($"{nameof(MapProperties)}: Cannot map to a collection - {target.GetType().CollectionType().Name()}"));
 
 		var targetProperties = target.GetType().Properties();
 		foreach (var pair in @this)

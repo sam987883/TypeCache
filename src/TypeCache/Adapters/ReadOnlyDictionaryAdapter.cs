@@ -6,21 +6,42 @@ using TypeCache.Reflection;
 
 namespace TypeCache.Adapters;
 
-internal class ReadOnlyDictionaryAdapter(object dictionary) : IReadOnlyDictionary<object, object>
+internal class ReadOnlyDictionaryAdapter : IReadOnlyDictionary<object, object>
 {
-	protected readonly IReadOnlyDictionary<string, MethodSet> _Methods = dictionary.GetType().Methods();
-	protected readonly IReadOnlyDictionary<string, PropertyEntity> _Properties = dictionary.GetType().Properties();
+	private readonly object _Dictionary;
 
-	public object this[object key] => this._Properties["Item"][ValueTuple.Create(key)].GetValue(dictionary)!;
+	private readonly PropertyEntity _Count;
+	private readonly PropertyEntity _Item;
+	private readonly PropertyEntity _Keys;
+	private readonly PropertyEntity _Values;
+	private readonly MethodSet<MethodEntity> _ContainsKey;
+	private readonly MethodSet<MethodEntity> _GetEnumerator;
 
-	public IEnumerable<object> Keys => ((IEnumerable)this._Properties[nameof(Keys)].GetValue(dictionary)!).Cast<object>();
+	public ReadOnlyDictionaryAdapter(object dictionary)
+	{
+		this._Dictionary = dictionary;
 
-	public IEnumerable<object> Values => ((IEnumerable)this._Properties[nameof(Values)].GetValue(dictionary)!).Cast<object>();
+		var methods = dictionary.GetType().Methods();
+		var properties = dictionary.GetType().Properties();
 
-	public int Count => (int)this._Properties[nameof(Count)].GetValue(dictionary)!;
+		this._Count = properties[nameof(Count)];
+		this._Item = properties["Item"];
+		this._Keys = properties[nameof(Keys)];
+		this._Values = properties[nameof(Values)];
+		this._ContainsKey = methods[nameof(ContainsKey)];
+		this._GetEnumerator = methods[nameof(GetEnumerator)];
+	}
+
+	public object this[object key] => this._Item[ValueTuple.Create(key)].GetValue(this._Dictionary)!;
+
+	public IEnumerable<object> Keys => ((IEnumerable)this._Keys.GetValue(this._Dictionary)!).Cast<object>();
+
+	public IEnumerable<object> Values => ((IEnumerable)this._Values.GetValue(this._Dictionary)!).Cast<object>();
+
+	public int Count => (int)this._Count.GetValue(this._Dictionary)!;
 
 	public bool ContainsKey(object key)
-		=> (bool)this._Methods[nameof(ContainsKey)].Invoke(dictionary, [key])!;
+		=> (bool)this._ContainsKey.Find(key.ToValueTuple())!.Invoke(this._Dictionary, [key])!;
 
 	public IEnumerator<KeyValuePair<object, object>> GetEnumerator()
 		=> throw new NotImplementedException();
@@ -29,5 +50,5 @@ internal class ReadOnlyDictionaryAdapter(object dictionary) : IReadOnlyDictionar
 		=> throw new NotImplementedException();
 
 	IEnumerator IEnumerable.GetEnumerator()
-		=> (IEnumerator)Type<IEnumerable>.Methods[nameof(GetEnumerator)].Invoke(dictionary)!;
+		=> (IEnumerator)this._GetEnumerator.FindWithNoArguments()!.Invoke(this._Dictionary)!;
 }

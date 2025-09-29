@@ -35,11 +35,9 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, FieldEntity>> Fields { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, GenericMethodSet>> GenericMethods { get; }
-
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlySet<RuntimeTypeHandle>> Interfaces { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet>> Methods { get; }
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>> Methods { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
 
@@ -49,9 +47,7 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticFieldEntity>> StaticFields { get; }
 
-	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticGenericMethodSet>> StaticGenericMethods { get; }
-
-	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticMethodSet>> StaticMethods { get; }
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>>> StaticMethods { get; }
 
 	static TypeStore()
 	{
@@ -80,27 +76,16 @@ public static class TypeStore
 				.ToLazyReadOnly();
 		});
 
-		GenericMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, GenericMethodSet>>(handle =>
-		{
-			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Where(_ => _.IsGenericMethodDefinition).Select(_ => _.Name).ToArray();
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<GenericMethodSet>(() => new GenericMethodSet(handle.ToType(), name), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
-		});
-
 		Interfaces = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlySet<RuntimeTypeHandle>>(handle =>
 			handle.ToType().GetInterfaces().Select(_ => _.TypeHandle).ToFrozenSet());
 
-		Methods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet>>(handle =>
+		Methods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Where(_ => !_.IsGenericMethodDefinition).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Select(_ => _.Name).ToArray();
 			return names
 				.ToFrozenDictionary(
 					name => name,
-					name => new Lazy<MethodSet>(() => new MethodSet(handle.ToType(), name), PublicationOnly),
+					name => new Lazy<MethodSet<MethodEntity>>(() => new MethodSet<MethodEntity>(handle.ToType(), name, INSTANCE_BINDING), PublicationOnly),
 					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
 				.ToLazyReadOnly();
 		});
@@ -162,24 +147,13 @@ public static class TypeStore
 				.ToLazyReadOnly();
 		});
 
-		StaticGenericMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticGenericMethodSet>>(handle =>
+		StaticMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(STATIC_BINDING).Where(_ => _.IsGenericMethodDefinition).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetMethods(STATIC_BINDING).Select(_ => _.Name).ToArray();
 			return names
 				.ToFrozenDictionary(
 					name => name,
-					name => new Lazy<StaticGenericMethodSet>(() => new StaticGenericMethodSet(handle.ToType(), name), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
-		});
-
-		StaticMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticMethodSet>>(handle =>
-		{
-			var names = handle.ToType().GetMethods(STATIC_BINDING).Where(_ => !_.IsGenericMethodDefinition).Select(_ => _.Name).ToArray();
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<StaticMethodSet>(() => new StaticMethodSet(handle.ToType(), name), PublicationOnly),
+					name => new Lazy<MethodSet<StaticMethodEntity>>(() => new MethodSet<StaticMethodEntity>(handle.ToType(), name, STATIC_BINDING), PublicationOnly),
 					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
 				.ToLazyReadOnly();
 		});
@@ -206,7 +180,7 @@ public static class TypeStore
 			{ IsArray: true } => Invariant($"{GetCodeName(type.GetElementType()!)}[{string.Concat(','.Repeat(type.GetArrayRank() - 1))}]"),
 			{ IsByRef: true } => Invariant($"{GetCodeName(type.GetElementType()!)}&"),
 			{ IsGenericTypeDefinition: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Concat(','.Repeat(type.GetGenericArguments().Length - 1))}>"),
-			{ IsGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Join(", ", type.GetGenericArguments().Select(GetCodeName))}>"),
+			{ IsGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{type.GetGenericArguments().Select(GetCodeName).ToCSV()}>"),
 			_ => type.Name
 		};
 

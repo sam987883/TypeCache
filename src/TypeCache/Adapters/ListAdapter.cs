@@ -6,47 +6,80 @@ using TypeCache.Reflection;
 
 namespace TypeCache.Adapters;
 
-internal sealed class ListAdapter(object list) : IList<object>
+internal sealed class ListAdapter : IList<object>
 {
-	private readonly IReadOnlyDictionary<string, MethodSet> _Methods = list.GetType().Methods();
-	private readonly IReadOnlyDictionary<string, PropertyEntity> _Properties = list.GetType().Properties();
+	private readonly object _List;
+
+	private readonly PropertyEntity _Count;
+	private readonly PropertyEntity _Item;
+	private readonly PropertyEntity _IsReadOnly;
+	private readonly MethodSet<MethodEntity> _Add;
+	private readonly MethodSet<MethodEntity> _Clear;
+	private readonly MethodSet<MethodEntity> _Contains;
+	private readonly MethodSet<MethodEntity> _CopyTo;
+	private readonly MethodSet<MethodEntity> _GetEnumerator;
+	private readonly MethodSet<MethodEntity> _IndexOf;
+	private readonly MethodSet<MethodEntity> _Insert;
+	private readonly MethodSet<MethodEntity> _Remove;
+	private readonly MethodSet<MethodEntity> _RemoveAt;
+
+	public ListAdapter(object list)
+	{
+		this._List = list;
+
+		var methods = list.GetType().Methods();
+		var properties = list.GetType().Properties();
+
+		this._Count = properties[nameof(Count)];
+		this._Item = properties["Item"];
+		this._IsReadOnly = properties[nameof(IsReadOnly)];
+		this._Add = methods[nameof(Add)];
+		this._Clear = methods[nameof(Clear)];
+		this._Contains = methods[nameof(Contains)];
+		this._CopyTo = methods[nameof(CopyTo)];
+		this._GetEnumerator = methods[nameof(GetEnumerator)];
+		this._IndexOf = methods[nameof(IndexOf)];
+		this._Insert = methods[nameof(Insert)];
+		this._Remove = methods[nameof(Remove)];
+		this._RemoveAt = methods[nameof(RemoveAt)];
+	}
 
 	public object this[int index]
 	{
-		get => this._Properties["Item"][ValueTuple.Create(index)].GetValue(list)!;
-		set => this._Properties["Item"][ValueTuple.Create(index)].SetValue(list, value);
+		get => this._Item[index.ToValueTuple()].GetValue(this._List)!;
+		set => this._Item[index.ToValueTuple()].SetValue(this._List, value);
 	}
 
-	public int Count => (int)this._Properties[nameof(Count)].GetValue(list)!;
+	public int Count => (int)this._Count.GetValue(this._List)!;
 
-	public bool IsReadOnly => (bool)this._Properties[nameof(IsReadOnly)].GetValue(list)!;
+	public bool IsReadOnly => (bool)this._IsReadOnly.GetValue(this._List)!;
 
 	public void Add(object item)
-		=> this._Methods[nameof(Add)].Invoke(list, ValueTuple.Create(item));
+		=> this._Add.Find([item])!.Invoke(this._List, item.ToValueTuple());
 
 	public void Clear()
-		=> this._Methods[nameof(Clear)].Invoke(list);
+		=> this._Clear.FindWithNoArguments()!.Invoke(this._List);
 
 	public bool Contains(object item)
-		=> (bool)this._Methods[nameof(Contains)].Invoke(list, ValueTuple.Create(item))!;
+		=> (bool)this._Contains.Find([item])!.Invoke(this._List, item.ToValueTuple())!;
 
 	public void CopyTo(object[] array, int arrayIndex)
-		=> this._Methods[nameof(CopyTo)].Invoke(list, (array, arrayIndex));
+		=> this._CopyTo.Find([array, arrayIndex])!.Invoke(this._List, (array, arrayIndex));
 
 	public IEnumerator<object> GetEnumerator()
-		=> (IEnumerator<object>)this._Methods[nameof(GetEnumerator)].Invoke(list)!;
+		=> (IEnumerator<object>)this._GetEnumerator.Find([])!.Invoke(this._List)!;
 
 	public int IndexOf(object item)
-		=> (int)this._Methods[nameof(IndexOf)].Invoke(list, ValueTuple.Create(item))!;
+		=> (int)this._IndexOf.Find([item])!.Invoke(this._List, item.ToValueTuple())!;
 
 	public void Insert(int index, object item)
-		=> _ = this._Methods[nameof(Insert)].Invoke(list, (index, item))!;
+		=> _ = this._Insert.Find([index, item])!.Invoke(this._List, (index, item))!;
 
 	public bool Remove(object item)
-		=> (bool)this._Methods[nameof(Remove)].Invoke(list, ValueTuple.Create(item))!;
+		=> (bool)this._Remove.Find([item])!.Invoke(this._List, item.ToValueTuple())!;
 
 	public void RemoveAt(int index)
-		=> _ = this._Methods[nameof(RemoveAt)].Invoke(list, [index])!;
+		=> _ = this._RemoveAt.Find(index.ToValueTuple())!.Invoke(this._List, index.ToValueTuple())!;
 
 	IEnumerator IEnumerable.GetEnumerator()
 		=> this.GetEnumerator();

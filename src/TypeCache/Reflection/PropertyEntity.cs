@@ -76,7 +76,7 @@ public sealed class PropertyEntity
 	public object? GetStaticValue()
 	{
 		var getValue = this._GetValue?.Value as Func<object?>;
-		getValue.ThrowIfNull(message: Invariant($"Property [{this._QualifiedName}] does not have a static property getter."));
+		getValue.ThrowIfNull(message: () => Invariant($"Property [{this._QualifiedName}] does not have a static property getter."));
 
 		return getValue();
 	}
@@ -85,7 +85,7 @@ public sealed class PropertyEntity
 	public object? GetValue(object instance)
 	{
 		var getValue = this._GetValue?.Value as Func<object, object?>;
-		getValue.ThrowIfNull(message: Invariant($"Property [{this._QualifiedName}] does not have a property getter."));
+		getValue.ThrowIfNull(message: () => Invariant($"Property [{this._QualifiedName}] does not have a property getter."));
 
 		return getValue(instance);
 	}
@@ -94,7 +94,7 @@ public sealed class PropertyEntity
 	public void SetStaticValue(object? value)
 	{
 		var setValue = this._SetValue?.Value as Action<object?>;
-		setValue.ThrowIfNull(message: Invariant($"Property [{this._QualifiedName}] does not have a static property setter."));
+		setValue.ThrowIfNull(message: () => Invariant($"Property [{this._QualifiedName}] does not have a static property setter."));
 
 		setValue(value);
 	}
@@ -104,7 +104,7 @@ public sealed class PropertyEntity
 	public void SetValue(object instance, object? value)
 	{
 		var setValue = this._SetValue?.Value as Action<object, object?>;
-		setValue.ThrowIfNull(message: Invariant($"Property [{this._QualifiedName}] does not have a property setter."));
+		setValue.ThrowIfNull(message: () => Invariant($"Property [{this._QualifiedName}] does not have a property setter."));
 
 		setValue(instance, value);
 	}

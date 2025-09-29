@@ -16,6 +16,7 @@ public sealed class MethodEntity : Method
 
 	public MethodEntity(MethodInfo methodInfo) : base(methodInfo)
 	{
+		methodInfo.IsGenericMethodDefinition.ThrowIfTrue();
 		methodInfo.IsStatic.ThrowIfTrue();
 
 		this._Invoke = new(this.CreateCall);
@@ -28,11 +29,6 @@ public sealed class MethodEntity : Method
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance)
 		=> this._InvokeWithArray.Value(instance, null);
-
-	public object? Invoke<T>(object instance, T? argument)
-		=> typeof(T) != this.Parameters[0].ParameterType
-			? this._InvokeWithArray.Value(instance, [argument])
-			: this._InvokeWithTuple.Value(instance, ValueTuple.Create(argument));
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance, object?[] arguments)
@@ -47,9 +43,11 @@ public sealed class MethodEntity : Method
 	private Delegate CreateCall()
 	{
 		ParameterExpression instance = nameof(instance).ToParameterExpression(this.Type);
-		var parameters = this.Parameters.Select(_ => _.ToExpression());
+		var parameters = this.Parameters.Select(_ => _.ToExpression()).ToArray();
+		var call = instance.Call(this.ToMethodInfo(), parameters);
+		var lambda = call.Lambda([instance, .. parameters]);
 
-		return instance.Call(this.ToMethodInfo(), parameters).Lambda([instance, .. parameters]).Compile();
+		return lambda.Compile();
 	}
 
 	/// <exception cref="ArgumentException"/>
@@ -68,7 +66,7 @@ public sealed class MethodEntity : Method
 		if (this.HasReturnValue)
 		{
 			if (this.Return.ParameterType != typeof(object))
-				methodExpression = methodExpression.Cast<object>();
+				methodExpression = methodExpression.As<object>();
 
 			return methodExpression.Lambda<Func<object, object?[]?, object?>>([instance, arguments]).Compile();
 		}
