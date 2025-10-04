@@ -15,10 +15,10 @@
 	var intance = typeof(Senator).Constructors().Create();
 
 	// Create an instance of Customer using a matching constructor
-	var intance = Type<Senator>.Constructors.Create(["Bob Dole", 98]); // Passing an array of values
-	var intance = typeof(Senator).Constructors().Create(["Bob Dole", 98]); // Passing an array of values
-	var intance = Type<Senator>.Constructors.Create(("Bob Dole", 98)); // Passing a tuple of values
-	var intance = typeof(Senator).Constructors().Create(("Bob Dole", 98)); // Passing a tuple of values
+	var intance = Type<Senator>.Create(["Bob Dole", 98]); // Passing an array of values
+	var intance = typeof(Senator).Create(["Bob Dole", 98]); // Passing an array of values
+	var intance = Type<Senator>.Create(("Bob Dole", 98)); // Passing a tuple of values
+	var intance = typeof(Senator).Create(("Bob Dole", 98)); // Passing a tuple of values
 
 	// Find the matching ConstructorInfo object based on argument values
 	var comstructorEntity = Type<Senator>.Constructors.Find(["Bob Dole", 98]) // Passing an array of values
