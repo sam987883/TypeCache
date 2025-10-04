@@ -17,7 +17,7 @@ public sealed class InputGraphType<T> : InputObjectGraphType<T>
 		this.DeprecationReason = Type<T>.Attributes.GraphQLDeprecationReason();
 
 		Type<T>.Properties.Values
-			.Where(_ => !_.IsStaticGet && !_.IsStaticSet && _.CanRead && _.CanWrite && !_.Attributes.GraphQLIgnore())
+			.Where(_ => _.CanRead && _.CanWrite && !_.Attributes.GraphQLIgnore())
 			.ForEach(_ => this.AddField(new()
 			{
 				Type = _.ToGraphQLType(true),

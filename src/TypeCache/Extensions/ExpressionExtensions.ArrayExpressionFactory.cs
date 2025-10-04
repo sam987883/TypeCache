@@ -71,7 +71,7 @@ public readonly struct ArrayExpressionFactory(Expression expression)
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public BinaryExpression Index(int index)
@@ -79,14 +79,14 @@ public readonly struct ArrayExpressionFactory(Expression expression)
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public MethodCallExpression Index(int[] indexes)
 		=> Expression.ArrayIndex(expression, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <see cref="Expression"/>.Constant(<paramref name="index"/>));</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public BinaryExpression Index(long index)
@@ -94,14 +94,14 @@ public readonly struct ArrayExpressionFactory(Expression expression)
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <paramref name="indexes"/>.Select(index =&gt; (<see cref="Expression"/>)<see cref="Expression"/>.Constant(index)));</c>
 	/// </remarks>
 	public MethodCallExpression Index(long[] indexes)
 		=> Expression.ArrayIndex(expression, indexes.Select(index => (Expression)Expression.Constant(index)));
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression)"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="index"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <paramref name="index"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public BinaryExpression Index(Expression index)
@@ -109,7 +109,7 @@ public readonly struct ArrayExpressionFactory(Expression expression)
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, IEnumerable{Expression})"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <paramref name="indexes"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodCallExpression Index(IEnumerable<Expression> indexes)
@@ -117,7 +117,7 @@ public readonly struct ArrayExpressionFactory(Expression expression)
 
 	/// <inheritdoc cref="Expression.ArrayIndex(Expression, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(@<paramref name="this"/>, <paramref name="indexes"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.ArrayIndex(expression, <paramref name="indexes"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodCallExpression Index(Expression[] indexes)

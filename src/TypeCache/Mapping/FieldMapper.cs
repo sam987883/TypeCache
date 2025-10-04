@@ -197,7 +197,7 @@ internal class FieldMapper : IMapper
 			(CollectionType.Collection or CollectionType.Set, CollectionType.Collection or CollectionType.List or CollectionType.Set) =>
 				() => this._Map(new CollectionAdapter(source), new CollectionAdapter(target)),
 			(CollectionType.Dictionary, CollectionType.Dictionary) =>
-				() => this._Map(new DictionaryAdapter(source), new DictionaryAdapter(target)),
+				() => this._Map((IDictionary<object, object>)new DictionaryAdapter(source), (IDictionary<object, object>)new DictionaryAdapter(target)),
 			(CollectionType.ReadOnlyDictionary, CollectionType.Dictionary) =>
 				() => this._Map(new ReadOnlyDictionaryAdapter(source), new DictionaryAdapter(target)),
 			_ => null

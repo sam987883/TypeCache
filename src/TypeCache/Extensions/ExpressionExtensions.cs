@@ -98,9 +98,9 @@ public static partial class ExpressionExtensions
 	public static MethodCallExpression Call(this Expression @this, string method, Type[]? genericTypes, Expression[]? arguments = null)
 		=> Expression.Call(@this, method, genericTypes, arguments);
 
-	/// <inheritdoc cref="Expression.Call(Expression?, MethodInfo, Expression[]?)"/>
+	/// <inheritdoc cref="Expression.Call(Expression?, MethodInfo, Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this MethodInfo @this, Expression[]? arguments = null)
@@ -108,7 +108,7 @@ public static partial class ExpressionExtensions
 
 	/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
 	/// <remarks>
-	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
+	/// <c>=&gt; <see cref="Expression"/>.Call(@<paramref name="this"/>, <paramref name="arguments"/>);</c>
 	/// </remarks>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodCallExpression CallStatic(this MethodInfo @this, IEnumerable<Expression> arguments)

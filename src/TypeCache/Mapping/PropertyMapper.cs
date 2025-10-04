@@ -109,7 +109,7 @@ internal class PropertyMapper : IMapper
 		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
 		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
 
-		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.CanRead && !_.IsStaticGet))
+		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.GetMethod is MethodEntity))
 		{
 			if (sourceProperty.Attributes.OfType<MapIgnoreAttribute>()
 				.Any(_ => _.Type is null || _.Type == target.GetType()))
@@ -200,7 +200,7 @@ internal class PropertyMapper : IMapper
 			(CollectionType.Collection or CollectionType.Set, CollectionType.Collection or CollectionType.List or CollectionType.Set) =>
 				() => this._Map(new CollectionAdapter(source), new CollectionAdapter(target)),
 			(CollectionType.Dictionary, CollectionType.Dictionary) =>
-				() => this._Map(new DictionaryAdapter(source), new DictionaryAdapter(target)),
+				() => this._Map((IDictionary<object, object>)new DictionaryAdapter(source), (IDictionary<object, object>)new DictionaryAdapter(target)),
 			(CollectionType.ReadOnlyDictionary, CollectionType.Dictionary) =>
 				() => this._Map(new ReadOnlyDictionaryAdapter(source), new DictionaryAdapter(target)),
 			_ => null
@@ -212,7 +212,7 @@ internal class PropertyMapper : IMapper
 			return;
 		}
 
-		foreach (var sourceProperty in sourceType.Properties().Values.Where(_ => _.CanRead && !_.IsStaticGet))
+		foreach (var sourceProperty in sourceType.Properties().Values.Where(_ => _.GetMethod is MethodEntity))
 		{
 			if (sourceProperty.Attributes.OfType<MapIgnoreAttribute>()
 				.Any(_ => _.Type is null || _.Type == target.GetType()))

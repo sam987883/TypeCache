@@ -43,11 +43,17 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyEntity>> Properties { get; }
 
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyIndexerEntity>> PropertyIndexers { get; }
+
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ScalarType> ScalarTypes { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticFieldEntity>> StaticFields { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>>> StaticMethods { get; }
+
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyEntity>> StaticProperties { get; }
+
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyIndexerEntity>> StaticPropertyIndexers { get; }
 
 	static TypeStore()
 	{
@@ -67,7 +73,7 @@ public static class TypeStore
 
 		Fields = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, FieldEntity>>(handle =>
 		{
-			var names = handle.ToType().GetFields(INSTANCE_BINDING).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetFields(INSTANCE_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
 			return names
 				.ToFrozenDictionary(
 					name => name,
@@ -81,7 +87,7 @@ public static class TypeStore
 
 		Methods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
 			return names
 				.ToFrozenDictionary(
 					name => name,
@@ -94,13 +100,26 @@ public static class TypeStore
 
 		Properties = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyEntity>>(handle =>
 		{
-			var names = handle.ToType().GetProperties(INSTANCE_BINDING | STATIC_BINDING).Select(_ => _.Name).ToArray();
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<PropertyEntity>(() => new PropertyEntity(handle.ToType().GetProperty(name, INSTANCE_BINDING | STATIC_BINDING)!), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
+			var propetyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
+				.Where(_ => _.GetIndexParameters().Length is 0);
+			return propetyInfos.Any()
+				? propetyInfos.ToFrozenDictionary(
+					propetyInfo => propetyInfo.Name,
+					propetyInfo => new PropertyEntity(propetyInfo),
+					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+				: FrozenDictionary<string, PropertyEntity>.Empty;
+		});
+
+		PropertyIndexers = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyIndexerEntity>>(handle =>
+		{
+			var propetyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
+				.Where(_ => _.GetIndexParameters().Length > 0);
+			return propetyInfos.Any()
+				? propetyInfos.ToFrozenDictionary(
+					propetyInfo => propetyInfo.Name,
+					propetyInfo => new PropertyIndexerEntity(propetyInfo),
+					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+				: FrozenDictionary<string, PropertyIndexerEntity>.Empty;
 		});
 
 		ScalarTypes = new (RuntimeTypeHandle Handle, ScalarType ScalarType)[]
@@ -138,7 +157,7 @@ public static class TypeStore
 
 		StaticFields = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticFieldEntity>>(handle =>
 		{
-			var names = handle.ToType().GetFields(STATIC_BINDING).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetFields(STATIC_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
 			return names
 				.ToFrozenDictionary(
 					name => name,
@@ -149,13 +168,38 @@ public static class TypeStore
 
 		StaticMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(STATIC_BINDING).Select(_ => _.Name).ToArray();
+			var names = handle.ToType().GetMethods(STATIC_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
 			return names
 				.ToFrozenDictionary(
 					name => name,
 					name => new Lazy<MethodSet<StaticMethodEntity>>(() => new MethodSet<StaticMethodEntity>(handle.ToType(), name, STATIC_BINDING), PublicationOnly),
 					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
 				.ToLazyReadOnly();
+		});
+
+
+		StaticProperties = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyEntity>>(handle =>
+		{
+			var propetyInfos = handle.ToType().GetProperties(STATIC_BINDING)
+				.Where(_ => _.GetIndexParameters().Length is 0);
+			return propetyInfos.Any()
+				? propetyInfos.ToFrozenDictionary(
+					propetyInfo => propetyInfo.Name,
+					propetyInfo => new StaticPropertyEntity(propetyInfo),
+					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+				: FrozenDictionary<string, StaticPropertyEntity>.Empty;
+		});
+
+		StaticPropertyIndexers = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyIndexerEntity>>(handle =>
+		{
+			var propetyInfos = handle.ToType().GetProperties(STATIC_BINDING)
+				.Where(_ => _.GetIndexParameters().Length > 0);
+			return propetyInfos.Any()
+				? propetyInfos.ToFrozenDictionary(
+					propetyInfo => propetyInfo.Name,
+					propetyInfo => new StaticPropertyIndexerEntity(propetyInfo),
+					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
+				: FrozenDictionary<string, StaticPropertyIndexerEntity>.Empty;
 		});
 	}
 

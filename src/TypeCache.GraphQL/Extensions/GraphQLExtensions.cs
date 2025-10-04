@@ -37,7 +37,7 @@ public static class GraphQLExtensions
 
 	public static FieldType AddField(this IComplexGraphType @this, MethodEntity method, IFieldResolver resolver)
 	{
-		var fieldType = CreateFieldType(method);
+		var fieldType = CreateFieldType(method, method.Return.ParameterType);
 		fieldType.Resolver = resolver;
 		return fieldType;
 	}
@@ -47,7 +47,7 @@ public static class GraphQLExtensions
 
 	public static FieldType AddField(this IComplexGraphType @this, StaticMethodEntity method, IFieldResolver resolver)
 	{
-		var fieldType = CreateFieldType(method);
+		var fieldType = CreateFieldType(method, method.Return.ParameterType);
 		fieldType.Resolver = resolver;
 		return fieldType;
 	}
@@ -57,7 +57,7 @@ public static class GraphQLExtensions
 
 	public static FieldType AddFieldStream(this IComplexGraphType @this, MethodEntity method, ISourceStreamResolver resolver)
 	{
-		var fieldType = CreateFieldType(method);
+		var fieldType = CreateFieldType(method, method.Return.ParameterType);
 		fieldType.StreamResolver = resolver;
 		return fieldType;
 	}
@@ -67,7 +67,7 @@ public static class GraphQLExtensions
 
 	public static FieldType AddFieldStream(this IComplexGraphType @this, StaticMethodEntity method, ISourceStreamResolver resolver)
 	{
-		var fieldType = CreateFieldType(method);
+		var fieldType = CreateFieldType(method, method.Return.ParameterType);
 		fieldType.StreamResolver = resolver;
 		return fieldType;
 	}
@@ -213,7 +213,7 @@ public static class GraphQLExtensions
 	public static Type ToNonNullGraphType(this Type @this)
 		=> typeof(NonNullGraphType<>).MakeGenericType(@this);
 
-	private static FieldType CreateFieldType(Method method)
+	private static FieldType CreateFieldType(Method method, Type returnType)
 		=> new()
 		{
 			Arguments = new QueryArguments(method.Parameters
@@ -226,6 +226,6 @@ public static class GraphQLExtensions
 			Name = (method.Attributes.GraphQLName() ?? method.Name).TrimEndIgnoreCase("Async"),
 			Description = method.Attributes.GraphQLDescription(),
 			DeprecationReason = method.Attributes.GraphQLDeprecationReason(),
-			Type = method.Return.ParameterType.ToGraphQLType(false).ToNonNullGraphType()
+			Type = returnType.ToGraphQLType(false).ToNonNullGraphType()
 		};
 }

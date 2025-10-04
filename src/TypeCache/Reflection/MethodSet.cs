@@ -33,12 +33,10 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 
 	public string Name { get; }
 
-	/// <param name="arguments">Method parameter arguments</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? Find(MethodInfo methodInfo)
 		=> this.Find(methodInfo.MethodHandle);
 
-	/// <param name="arguments">Method parameter arguments</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? Find(RuntimeMethodHandle handle)
 		=> this._Methods.FirstOrDefault(_ => _.Handle == handle);
@@ -46,17 +44,17 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 	/// <param name="arguments">Method parameter arguments</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? Find(object?[] arguments)
-		=> this._Methods.FirstOrDefault(_ => !_.IsGenericMethod && _.IsCallableWith(arguments));
+		=> this._Methods.FirstOrDefault(_ => !_.IsGeneric && _.IsCallableWith(arguments));
 
 	/// <param name="arguments">Method parameter arguments</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? Find(ITuple arguments)
-		=> this._Methods.FirstOrDefault(_ => !_.IsGenericMethod && _.IsCallableWith(arguments));
+		=> this._Methods.FirstOrDefault(_ => !_.IsGeneric && _.IsCallableWith(arguments));
 
 	/// <param name="argumentTypes">Method parameter argument types</param>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? Find(Type[] argumentTypes)
-		=> this._Methods.FirstOrDefault(_ => !_.IsGenericMethod && _.IsCallableWith(argumentTypes));
+		=> this._Methods.FirstOrDefault(_ => !_.IsGeneric && _.IsCallableWith(argumentTypes));
 
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
@@ -76,7 +74,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 		if (method is not null)
 			return method;
 
-		method = this.Generic.Find(genericTypeArguments, arguments)?.ConstructGenericMethod(genericTypeArguments) as T;
+		method = this.Generic.Find(genericTypeArguments, arguments)?.MakeGenericMethod(genericTypeArguments) as T;
 		if (method is not null)
 			this._Methods.Add(method);
 
@@ -101,7 +99,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 		if (method is not null)
 			return method;
 
-		method = this.Generic.Find(genericTypeArguments, arguments)?.ConstructGenericMethod(genericTypeArguments) as T;
+		method = this.Generic.Find(genericTypeArguments, arguments)?.MakeGenericMethod(genericTypeArguments) as T;
 		if (method is not null)
 			this._Methods.Add(method);
 
@@ -126,7 +124,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 		if (method is not null)
 			return method;
 
-		method = this.Generic.Find(genericTypeArguments, argumentTypes)?.ConstructGenericMethod(genericTypeArguments) as T;
+		method = this.Generic.Find(genericTypeArguments, argumentTypes)?.MakeGenericMethod(genericTypeArguments) as T;
 		if (method is not null)
 			this._Methods.Add(method);
 
@@ -135,7 +133,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public T? FindWithNoArguments()
-		=> this._Methods.FirstOrDefault(_ => !_.IsGenericMethod && _.IsCallableWithNoArguments());
+		=> this._Methods.FirstOrDefault(_ => !_.IsGeneric && _.IsCallableWithNoArguments());
 
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
@@ -154,7 +152,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 		if (method is not null)
 			return method;
 
-		method = this.Generic.FindWithNoArguments(genericTypeArguments)?.ConstructGenericMethod(genericTypeArguments) as T;
+		method = this.Generic.FindWithNoArguments(genericTypeArguments)?.MakeGenericMethod(genericTypeArguments) as T;
 		if (method is not null)
 			this._Methods.Add(method);
 

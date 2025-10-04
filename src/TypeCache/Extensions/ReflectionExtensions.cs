@@ -32,6 +32,10 @@ public static class ReflectionExtensions
 		=> TypeStore.Constructors[@this.TypeHandle];
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static PropertyIndexerEntity? DefaultIndexer(this Type @this)
+		=> TypeStore.PropertyIndexers[@this.TypeHandle].Count is 1 ? TypeStore.PropertyIndexers[@this.TypeHandle].Values.First() : null;
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static IReadOnlyDictionary<string, FieldEntity> Fields(this Type @this)
 		=> TypeStore.Fields[@this.TypeHandle];
 
@@ -51,6 +55,10 @@ public static class ReflectionExtensions
 	public static IReadOnlyDictionary<string, PropertyEntity> Properties(this Type @this)
 		=> TypeStore.Properties[@this.TypeHandle];
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IReadOnlyDictionary<string, PropertyIndexerEntity> PropertyIndexers(this Type @this)
+		=> TypeStore.PropertyIndexers[@this.TypeHandle];
+
 	public static ScalarType ScalarType(this Type @this)
 		=> @this.IsEnum ? Reflection.ScalarType.Enum : TypeStore.ScalarTypes.GetValue(@this.TypeHandle, Reflection.ScalarType.None);
 
@@ -62,22 +70,30 @@ public static class ReflectionExtensions
 	public static IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>> StaticMethods(this Type @this)
 		=> TypeStore.StaticMethods[@this.TypeHandle];
 
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IReadOnlyDictionary<string, StaticPropertyEntity> StaticProperties(this Type @this)
+		=> TypeStore.StaticProperties[@this.TypeHandle];
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public static IReadOnlyDictionary<string, StaticPropertyIndexerEntity> StaticPropertyIndexers(this Type @this)
+		=> TypeStore.StaticPropertyIndexers[@this.TypeHandle];
+
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this)
-		=> @this.Constructors().Invoke();
+		=> @this.Constructors().FindDefault()?.Create();
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, object?[] arguments)
-		=> @this.Constructors().Invoke(arguments);
+		=> @this.Constructors().Find(arguments)?.Create(arguments);
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, ITuple arguments)
-		=> @this.Constructors().Invoke(arguments);
+		=> @this.Constructors().Find(arguments)?.Create(arguments);
 
 	/// <remarks>
 	/// <c>@<paramref name="this"/>.ReturnType.IsAny([<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(void)]);</c>

@@ -72,7 +72,7 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 	/// The name of the field is the name or <see cref="GraphQLNameAttribute"/> of the <paramref name="method"/>.
 	/// </summary>
 	/// <param name="method">The method that loads data for all result items (<typeparamref name="ITEM"/>[]).  This method can contain user input query parameters.</param>
-	/// <param name="getResult">Reduces the data returned by <paramref name="methodInfo"/>.</param>
+	/// <param name="getResult">Reduces the data returned by <paramref name="method"/>.</param>
 	public FieldType AddField<ITEM>(StaticMethodEntity method, Func<T, ITEM[], ITEM> getResult)
 		where ITEM : notnull
 	{
@@ -103,7 +103,7 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 	/// The name of the field is the name or <see cref="GraphQLNameAttribute"/> of the <paramref name="method"/>.
 	/// </summary>
 	/// <param name="method">The method that loads data for all result items.  This method can contain user input query parameters.</param>
-	/// <param name="getResult">Reduces the data returned by <paramref name="methodInfo"/>.</param>
+	/// <param name="getResult">Reduces the data returned by <paramref name="method"/>.</param>
 	public FieldType AddField<ITEM>(StaticMethodEntity method, Func<T, ITEM[], ITEM[]> getResult)
 		where ITEM : notnull
 	{

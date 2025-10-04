@@ -1,38 +1,25 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using System.Collections;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 
 namespace TypeCache.Adapters;
 
-internal sealed class ReadOnlyListAdapter : IReadOnlyList<object>
+public class ReadOnlyListAdapter : ReadOnlyCollectionAdapter, IReadOnlyList<object>
 {
 	private readonly object _List;
-
-	private readonly PropertyEntity _Count;
-	private readonly PropertyEntity _Item;
-	private readonly MethodSet<MethodEntity> _GetEnumerator;
+	private readonly PropertyIndexerEntity _Item;
 
 	public ReadOnlyListAdapter(object list)
+		: base(list)
 	{
 		this._List = list;
+		(list.GetType().Implements(typeof(IReadOnlyList<>))).ThrowIfFalse();
 
-		var methods = list.GetType().Methods();
-		var properties = list.GetType().Properties();
+		var listType = list.GetType().GetInterfaces().First(_ => _.Is(typeof(IReadOnlyList<>)));
 
-		this._Count = properties[nameof(Count)];
-		this._Item = properties["Item"];
-		this._GetEnumerator = methods[nameof(GetEnumerator)];
+		this._Item = listType.DefaultIndexer()!;
 	}
 
-	public object this[int index] => this._Item[index.ToValueTuple()].GetValue(this._List)!;
-
-	public int Count => (int)this._Count.GetValue(this._List)!;
-
-	public IEnumerator<object> GetEnumerator()
-		=> (IEnumerator<object>)this._GetEnumerator.FindWithNoArguments()!.Invoke(this._List)!;
-
-	IEnumerator IEnumerable.GetEnumerator()
-		=> this.GetEnumerator();
+	public object this[int index] => this._Item.GetValue(this._List, index.ToValueTuple())!;
 }

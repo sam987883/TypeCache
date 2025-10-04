@@ -170,8 +170,9 @@ public class ReflectionExtensions
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
 		var properties = contact.GetType().Properties();
+		var staticProperties = contact.GetType().StaticProperties();
 
-		var idNameProperty = properties[nameof(Contact.ID)];
+		var idNameProperty = staticProperties[nameof(Contact.ID)];
 		var firstNameProperty = properties[nameof(Contact.FirstName)];
 		var middleNameProperty = properties[nameof(Contact.MiddleName)];
 		var lastNameProperty = properties[nameof(Contact.LastName)];
@@ -184,7 +185,7 @@ public class ReflectionExtensions
 		stopwatch.Start();
 		while (++i < 100000)
 		{
-			idNameProperty.GetStaticValue();
+			_ = idNameProperty.Value;
 			firstNameProperty.GetValue(contact);
 			middleNameProperty.GetValue(contact);
 			lastNameProperty.GetValue(contact);
@@ -205,8 +206,9 @@ public class ReflectionExtensions
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
 		var properties = contact.GetType().Properties();
+		var staticProperties = contact.GetType().StaticProperties();
 
-		var idNameProperty = properties[nameof(Contact.ID)];
+		var idNameProperty = staticProperties[nameof(Contact.ID)];
 		var firstNameProperty = properties[nameof(Contact.FirstName)];
 		var middleNameProperty = properties[nameof(Contact.MiddleName)];
 		var lastNameProperty = properties[nameof(Contact.LastName)];
@@ -219,7 +221,7 @@ public class ReflectionExtensions
 		stopwatch.Start();
 		while (++i < 100000)
 		{
-			idNameProperty.SetStaticValue(Guid.NewGuid());
+			idNameProperty.Value = Guid.NewGuid();
 			firstNameProperty.SetValue(contact, "FirstName");
 			middleNameProperty.SetValue(contact, "MiddleName");
 			lastNameProperty.SetValue(contact, "LastName");
