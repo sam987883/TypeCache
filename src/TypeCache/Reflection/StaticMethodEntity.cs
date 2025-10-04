@@ -21,9 +21,16 @@ public sealed class StaticMethodEntity : Method
 		this._Invoke = new(this.CreateCall);
 		this._InvokeWithArray = new(this.CreateArrayCall);
 		this._InvokeWithTuple = new(this.CreateTupleCall);
+
+		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.Return = new(methodInfo.ReturnParameter);
 	}
 
 	public Delegate Delegate => this._Invoke.Value;
+
+	public bool HasReturnValue { get; }
+
+	public ParameterEntity Return { get; }
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke()
@@ -35,7 +42,13 @@ public sealed class StaticMethodEntity : Method
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(ITuple arguments)
-		=> this._InvokeWithTuple.Value(arguments);
+		=> this.Parameters.Zip(arguments.GetType().GetGenericArguments()).All(_ => _.First.ParameterType == _.Second)
+			? this._InvokeWithTuple.Value(arguments)
+			: this._InvokeWithArray.Value(arguments.ToArray());
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public MethodInfo ToMethodInfo()
+		=> (MethodInfo)this.Handle.ToMethodBase(this._TypeHandle);
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>

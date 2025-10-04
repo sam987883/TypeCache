@@ -22,9 +22,16 @@ public sealed class MethodEntity : Method
 		this._Invoke = new(this.CreateCall);
 		this._InvokeWithArray = new(this.CreateArrayCall);
 		this._InvokeWithTuple = new(this.CreateTupleCall);
+
+		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.Return = new(methodInfo.ReturnParameter);
 	}
 
 	public Delegate Delegate => this._Invoke.Value;
+
+	public bool HasReturnValue { get; }
+
+	public ParameterEntity Return { get; }
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance)
@@ -34,9 +41,14 @@ public sealed class MethodEntity : Method
 	public object? Invoke(object instance, object?[] arguments)
 		=> this._InvokeWithArray.Value(instance, arguments);
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance, ITuple arguments)
-		=> this._InvokeWithTuple.Value(instance, arguments);
+		=> this.Parameters.Zip(arguments.GetType().GetGenericArguments()).All(_ => _.First.ParameterType == _.Second)
+			? this._InvokeWithTuple.Value(instance, arguments)
+			: this._InvokeWithArray.Value(instance, arguments.ToArray());
+
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
+	public MethodInfo ToMethodInfo()
+		=> (MethodInfo)this.Handle.ToMethodBase(this._TypeHandle);
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>

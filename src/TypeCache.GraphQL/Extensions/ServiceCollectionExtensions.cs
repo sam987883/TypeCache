@@ -72,7 +72,7 @@ public static class ServiceCollectionExtensions
 	/// Place to make calls to:<br/>
 	/// <c>
 	/// <see cref="OutputGraphType{T}.AddField(PropertyEntity)"/><br/>
-	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity)"/>
+	/// <see cref="OutputGraphType{T}.AddField(StaticMethodEntity)"/><br/>
 	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity, Func{T, ITEM[], ITEM})"/>
 	/// <see cref="OutputGraphType{T}.AddField{ITEM}(StaticMethodEntity, Func{T, ITEM[], ITEM[]})"/>
 	/// </c>

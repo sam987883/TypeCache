@@ -3,61 +3,25 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
 using TypeCache.Extensions;
 
 namespace TypeCache.Reflection;
 
-public sealed class ConstructorEntity : IEquatable<ConstructorEntity>
+public sealed class ConstructorEntity : Method
 {
 	private readonly Lazy<Delegate> _Create;
 	private readonly Lazy<Func<object?[]?, object>> _CreateWithArray;
 	private readonly Lazy<Func<ITuple, object>> _CreateWithTuple;
-	private readonly RuntimeTypeHandle _TypeHandle;
-
-	/// <summary>
-	/// Intended for struct types only as they always have a default constructor that does not show up in Reflection.
-	/// </summary>
-	public ConstructorEntity(Type type)
-	{
-		this.Attributes = new ReadOnlyCollection<Attribute>(Enumerable<Attribute>.Empty);
-		this._Create = new(this.CreateCall);
-		this._CreateWithArray = new(this.CreateArrayCall);
-		this._CreateWithTuple = new(this.CreateTupleCall);
-
-		this.Parameters = [];
-	}
 
 	public ConstructorEntity(ConstructorInfo constructorInfo)
+		: base(constructorInfo)
 	{
-		constructorInfo.DeclaringType.ThrowIfNull();
-
-		this._TypeHandle = constructorInfo.DeclaringType.TypeHandle;
 		this._Create = new(() => this.ToConstructorInfo().ToExpression().Lambda().Compile());
 		this._CreateWithArray = new(this.CreateArrayCall);
 		this._CreateWithTuple = new(this.CreateTupleCall);
-
-		this.Attributes = new ReadOnlyCollection<Attribute>(constructorInfo.GetCustomAttributes());
-		this.Handle = constructorInfo.MethodHandle;
-		this.IsPublic = constructorInfo.IsPublic;
-		this.Parameters = constructorInfo.GetParameters()
-			.Where(_ => !_.IsRetval)
-			.OrderBy(_ => _.Position)
-			.Select(_ => new ParameterEntity(_))
-			.ToArray();
 	}
 
-	public IReadOnlyCollection<Attribute> Attributes { get; }
-
 	public Delegate Delegate => this._Create.Value;
-
-	public RuntimeMethodHandle Handle { get; }
-
-	public bool IsPublic { get; }
-
-	public IReadOnlyList<ParameterEntity> Parameters { get; }
-
-	public Type Type => this._TypeHandle.ToType();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object Create()
@@ -73,33 +37,6 @@ public sealed class ConstructorEntity : IEquatable<ConstructorEntity>
 
 	public bool Equals(ConstructorEntity? other)
 		=> this.Handle == other?.Handle;
-
-	public bool IsCallableWith(object?[] arguments)
-	{
-		arguments ??= [];
-		if (arguments.Length is 0)
-			return this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
-
-		if (arguments.Length > this.Parameters.Count)
-			return false;
-
-		return this.Parameters
-			.Select((parameter, index) => (Item: parameter, Index: index))
-			.All(_ => _ switch
-			{
-				_ when _.Index >= arguments.Length => _.Item.HasDefaultValue || _.Item.IsOptional,
-				_ when arguments[_.Index] == Type.Missing => _.Item.HasDefaultValue || _.Item.IsOptional,
-				_ when arguments[_.Index] is not null => arguments[_.Index]!.GetType().IsAssignableTo(_.Item.ParameterType),
-				_ => _.Item.IsNullable
-			});
-	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public bool IsCallableWith(ITuple arguments)
-		=> this.IsCallableWith(arguments.ToArray());
-
-	public bool IsCallableWithNoArguments()
-		=> this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public ConstructorInfo ToConstructorInfo()

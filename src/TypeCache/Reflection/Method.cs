@@ -11,59 +11,78 @@ namespace TypeCache.Reflection;
 public class Method : IEquatable<Method>
 {
 	private readonly IReadOnlyList<RuntimeTypeHandle> _GenericTypeHandles;
-	private readonly RuntimeTypeHandle _TypeHandle;
+	protected readonly RuntimeTypeHandle _TypeHandle;
 
-	public Method(MethodInfo methodInfo)
+	public Method(MethodBase methodBase)
 	{
-		methodInfo.ThrowIfNull();
-		methodInfo.DeclaringType.ThrowIfNull();
+		methodBase.ThrowIfNull();
+		methodBase.DeclaringType.ThrowIfNull();
 
-		this._GenericTypeHandles = methodInfo.GetGenericArguments().Select(_ => _.TypeHandle).ToArray();
-		this._TypeHandle = methodInfo.DeclaringType.TypeHandle;
+		this._GenericTypeHandles = methodBase.IsGenericMethod ? methodBase.GetGenericArguments().Select(_ => _.TypeHandle).ToArray() : [];
+		this._TypeHandle = methodBase.DeclaringType.TypeHandle;
 
-		this.Attributes = new ReadOnlyCollection<Attribute>(methodInfo.GetCustomAttributes());
-		this.CodeName = GetCodeName(methodInfo);
-		this.Handle = methodInfo.MethodHandle;
-		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
-		this.IsConstructedGenericMethod = methodInfo.IsConstructedGenericMethod;
-		this.IsGenericMethod = methodInfo.IsGenericMethod;
-		this.IsGenericMethodDefinition = methodInfo.IsGenericMethodDefinition;
-		this.IsPublic = methodInfo.IsPublic;
-		this.Name = methodInfo.Name;
-		this.Parameters = methodInfo.GetParameters()
+		this.Attributes = new ReadOnlyCollection<Attribute>(methodBase.GetCustomAttributes());
+		this.CodeName = GetCodeName(methodBase);
+		this.Handle = methodBase.MethodHandle;
+		this.IsGeneric = methodBase.IsGenericMethod;
+		this.IsPublic = methodBase.IsPublic;
+		this.IsStatic = methodBase.IsStatic;
+		this.Name = methodBase.Name;
+		this.Parameters = methodBase.GetParameters()
 			.Where(_ => !_.IsRetval)
 			.OrderBy(_ => _.Position)
 			.Select(_ => new ParameterEntity(_))
 			.ToArray();
-		this.Return = new(methodInfo.ReturnParameter);
 	}
 
+	/// <summary>
+	/// Method attributes.
+	/// </summary>
 	public IReadOnlyCollection<Attribute> Attributes { get; }
 
+	/// <summary>
+	/// The C# name of the method.  For example:
+	/// <list type="bullet">
+	/// <item><c>GetItems</c></item>
+	/// <item><c>GetItems&lt;&gt;</c></item>
+	/// <item><c>GetItems&lt;String&gt;</c></item>
+	/// </list>
+	/// </summary>
 	public string CodeName { get; }
 
+	/// <summary>
+	/// Method generic parameter types.
+	/// </summary>
 	public Type[] GenericTypes => this._GenericTypeHandles.Select(_ => _.ToType()).ToArray();
 
+	/// <summary>
+	/// Method handle.
+	/// </summary>
 	public RuntimeMethodHandle Handle { get; }
 
-	public bool HasReturnValue { get; }
+	/// <inheritdoc cref="MethodBase.IsGenericMethod"/>
+	/// <remarks>
+	/// Returns <b><c><see langword="true"/></c></b> if a method is either a <b><i>generic method definition</i></b> or a <b><i>constructed generic method</i></b>.
+	/// </remarks>
+	public bool IsGeneric { get; }
 
-	public bool IsConstructedGenericMethod { get; }
-
-	public bool IsGenericMethod { get; }
-
-	public bool IsGenericMethodDefinition { get; }
-
+	/// <inheritdoc cref="MethodBase.IsPublic"/>
 	public bool IsPublic { get; }
 
+	/// <inheritdoc cref="MethodBase.IsStatic"/>
 	public bool IsStatic { get; }
 
+	/// <summary>
+	/// The method name.
+	/// </summary>
 	public string Name { get; }
 
+	/// <summary>
+	/// The ordered list of method parameters.
+	/// </summary>
 	public IReadOnlyList<ParameterEntity> Parameters { get; }
 
-	public ParameterEntity Return { get; }
-
+	/// <inheritdoc cref="MemberInfo.DeclaringType"/>
 	public Type Type => this._TypeHandle.ToType();
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -72,36 +91,26 @@ public class Method : IEquatable<Method>
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override bool Equals(object? obj)
-		=> obj is MethodEntity method && this.Handle == method.Handle;
+		=> obj is Method method && this.Handle == method.Handle;
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override int GetHashCode()
 		=> this.Handle.GetHashCode();
 
+	/// <summary>
+	/// The C# name of the method.  For example:
+	/// <list type="bullet">
+	/// <item><c>GetItems</c></item>
+	/// <item><c>GetItems&lt;&gt;</c></item>
+	/// <item><c>GetItems&lt;String&gt;</c></item>
+	/// </list>
+	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public override string ToString()
 		=> this.CodeName;
 
-	/// <summary>
-	/// Creates a constructed generic method by providing the type arguments to a generic method definition.<br/>
-	/// <b><c><see langword="null"/></c></b> is returned if this method is not a generic method definition.<br/>
-	/// An exception is thrown if the generic method definition does not support the <b><c><paramref name="genericTypeArguments"/></c></b>.<br/>
-	/// </summary>
-	/// <param name="genericTypeArguments">Method generic type arguments</param>
-	/// <exception cref="ArgumentException"/>
-	/// <exception cref="ArgumentNullException"/>
-	/// <exception cref="InvalidOperationException"/>
-	/// <exception cref="NotSupportedException"/>
-	public Method? ConstructGenericMethod(Type[] genericTypeArguments)
-		=> (this.IsGenericMethodDefinition, this.IsStatic) switch
-		{
-			(false, _) => null,
-			(true, false) => new MethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments)),
-			_ => new StaticMethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments))
-		};
-
 	public bool HasGenericTypes(Type[] genericTypes)
-		=> this.IsGenericMethod && this._GenericTypeHandles.SequenceEqual(genericTypes.Select(_ => _.TypeHandle));
+		=> this.IsGeneric && this._GenericTypeHandles.SequenceEqual(genericTypes.Select(_ => _.TypeHandle));
 
 	public bool IsCallableWith(object?[] arguments)
 		=> arguments switch
@@ -140,24 +149,16 @@ public class Method : IEquatable<Method>
 	public bool IsCallableWithNoArguments()
 		=> this.Parameters.Count is 0 || this.Parameters.All(_ => _.HasDefaultValue || _.IsOptional);
 
-	public bool Supports(Type[] genericTypes)
-		=> this.IsGenericMethodDefinition
-			? this.GenericTypes.Zip(genericTypes).All(_ => _.Second.IsAssignableTo(_.First))
-			: this.HasGenericTypes(genericTypes);
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public MethodInfo ToMethodInfo()
-		=> (MethodInfo)this.Handle.ToMethodBase(this._TypeHandle);
-
-	private static string GetCodeName(MethodInfo methodInfo)
-		=> methodInfo switch
+	protected static string GetCodeName(MethodBase methodBase)
+		=> methodBase switch
 		{
-			{ IsGenericMethodDefinition: true } => Invariant($"{methodInfo.Name}<{string.Concat(','.Repeat(methodInfo.GetGenericArguments().Length - 1))}>"),
-			{ IsGenericMethod: true } => Invariant($"{methodInfo.Name}<{methodInfo.GetGenericArguments().Select(_ => _.CodeName()).ToCSV()}>"),
-			_ => methodInfo.Name
+			ConstructorInfo => methodBase.DeclaringType?.Name ?? methodBase.Name,
+			{ IsGenericMethodDefinition: true } => Invariant($"{methodBase.Name}<{string.Concat(','.Repeat(methodBase.GetGenericArguments().Length - 1))}>"),
+			{ IsGenericMethod: true } => Invariant($"{methodBase.Name}<{methodBase.GetGenericArguments().Select(_ => _.CodeName()).ToCSV()}>"),
+			_ => methodBase.Name
 		};
 
-	protected internal static IEnumerable<Expression> GetValueTupleFields(Expression tupleExpression, int count)
+	protected static IEnumerable<Expression> GetValueTupleFields(Expression tupleExpression, int count)
 	{
 		const string Item = nameof(Item);
 		const string Rest = nameof(Rest);
@@ -175,7 +176,7 @@ public class Method : IEquatable<Method>
 		}
 	}
 
-	protected internal static Type GetValueTupleType(IReadOnlyList<ParameterEntity> parameters)
+	protected static Type GetValueTupleType(IReadOnlyList<ParameterEntity> parameters)
 	{
 		var parameterTypeChunks = parameters
 			.Select(_ => _.ParameterType)

@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using TypeCache.Reflection;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -36,7 +37,7 @@ public static class GlobalExtensions
 
 	public static IDictionary<string, object?> Properties<T>(this T @this)
 		=> @this!.GetType().Properties()
-			.Where(_ => _.Value.CanRead && !_.Value.IsStaticGet)
+			.Where(_ => _.Value.GetMethod is MethodEntity)
 			.Select(_ => (_.Key, _.Value.GetValue(@this)))
 			.ToDictionary(@this.GetType().Properties().Keys.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
 

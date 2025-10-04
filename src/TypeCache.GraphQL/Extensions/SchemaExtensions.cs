@@ -1042,7 +1042,7 @@ public static class SchemaExtensions
 		{
 			Name = Invariant($"{Type<T>.Attributes.GraphQLName() ?? Type<T>.Name}OrderBy"),
 		};
-		foreach (var property in Type<T>.Properties.Values.Where(_ => !_.IsStaticGet && !_.IsStaticSet && !_.Attributes.GraphQLIgnore()))
+		foreach (var property in Type<T>.Properties.Values.Where(_ => !_.Attributes.GraphQLIgnore()))
 		{
 			var propertyName = property.Attributes.GraphQLName() ?? property.Name;
 			var propertyDeprecationReason = property.Attributes.GraphQLDeprecationReason();
