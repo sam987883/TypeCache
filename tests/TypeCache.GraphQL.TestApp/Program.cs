@@ -62,8 +62,8 @@ try
 	var app = appBuilder.Build();
 	app
 		.UseRouting()
-		.UseEndpoints(_ => _.MapSqlApi().WithOpenApi())
-		.UseEndpoints(_ => _.MapSqlGet().WithOpenApi())
+		.UseEndpoints(_ => _.MapSqlApi())
+		.UseEndpoints(_ => _.MapSqlGet())
 		.UseSwagger()
 		.UseSwaggerUI(_ =>
 		{
