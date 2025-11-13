@@ -199,8 +199,8 @@ public class ArrayExtensions
 		var intStack = intArray.ToImmutableStack();
 		string[] stringArray = ["123", "abc", "def"];
 		var stringStack = stringArray.ToImmutableStack();
-		intArray.Reverse();
-		stringArray.Reverse();
+		intArray = intArray.Reverse().ToArray();
+		stringArray = stringArray.Reverse().ToArray();
 
 		Assert.False(intStack.IsEmpty);
 		Assert.False(stringStack.IsEmpty);
