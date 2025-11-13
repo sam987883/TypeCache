@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using GraphiQl;
 using Microsoft.Data.SqlClient;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using TypeCache.Attributes;
 using TypeCache.Data;
 using TypeCache.Extensions;

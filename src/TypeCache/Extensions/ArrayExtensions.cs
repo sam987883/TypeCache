@@ -100,14 +100,6 @@ public static class ArrayExtensions
 				action(ref @this![i]);
 		}
 
-		/// <inheritdoc cref="Array.Reverse{T}(T[])"/>
-		/// <remarks>
-		/// <c>=&gt; <see cref="Array"/>.Reverse(@this);</c>
-		/// </remarks>
-		[MethodImpl(AggressiveInlining), DebuggerHidden]
-		public void Reverse()
-			=> Array.Reverse(@this);
-
 		/// <exception cref="ArgumentNullException"/>
 		/// <exception cref="IndexOutOfRangeException"/>
 		public T[] Subarray(int sourceIndex, int length = 0)
