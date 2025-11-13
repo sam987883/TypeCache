@@ -40,33 +40,33 @@ public class Connection<T>
 	{
 		var graphType = new ObjectGraphType
 		{
-			Name = Invariant($"{name}{nameof(Connection<T>)}"),
-			Description = Type<Connection<T>>.Attributes.GraphQLDescription()
+			Name = Invariant($"{name}{nameof(Connection<>)}"),
+			Description = Type<Connection<T>>.Attributes.GraphQLDescription
 		};
 		var edgeGraphType = Edge<T>.CreateGraphType(name, dataGraphType);
 
 		graphType.AddField(new()
 		{
-			Name = nameof(Connection<T>.Edges),
+			Name = nameof(Connection<>.Edges),
 			ResolvedType = new ListGraphType(new NonNullGraphType(edgeGraphType)),
 			Resolver = new FuncFieldResolver<Connection<T>, Edge<T>[]?>(context => context.Source.Edges)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(Connection<T>.Items),
+			Name = nameof(Connection<>.Items),
 			ResolvedType = new ListGraphType(new NonNullGraphType(dataGraphType)),
 			Resolver = new FuncFieldResolver<Connection<T>, T[]?>(context => context.Source.Items)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(Connection<T>.PageInfo),
+			Name = nameof(Connection<>.PageInfo),
 			ResolvedType = new OutputGraphType<PageInfo>(Invariant($"{name}{nameof(PageInfo)}")),
 			//Type = typeof(GraphQLObjectType<PageInfo>),
 			Resolver = new FuncFieldResolver<Connection<T>, PageInfo?>(context => context.Source.PageInfo)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(Connection<T>.TotalCount),
+			Name = nameof(Connection<>.TotalCount),
 			Type = ScalarType.Int32.ToGraphType(),
 			Resolver = new FuncFieldResolver<Connection<T>, int?>(context => context.Source.TotalCount)
 		});

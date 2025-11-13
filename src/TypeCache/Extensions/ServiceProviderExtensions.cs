@@ -7,21 +7,24 @@ namespace TypeCache.Extensions;
 
 public static class ServiceProviderExtensions
 {
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetService&lt;<see cref="ILogger"/>&gt;();</c>
-	/// </summary>
-	public static ILogger? GetLogger(this IServiceProvider @this)
-		=> @this.GetService<ILogger>();
+	extension(IServiceProvider @this)
+	{
+		/// <summary>
+		/// <c>=&gt; @this.GetService&lt;<see cref="ILogger"/>&gt;();</c>
+		/// </summary>
+		public ILogger? GetLogger()
+			=> @this.GetService<ILogger>();
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetService&lt;<see cref="ILogger{TCategoryName}"/>&gt;();</c>
-	/// </summary>
-	public static ILogger<T>? GetLogger<T>(this IServiceProvider @this)
-		=> @this.GetService<ILogger<T>>();
+		/// <summary>
+		/// <c>=&gt; @this.GetService&lt;<see cref="ILogger{TCategoryName}"/>&gt;();</c>
+		/// </summary>
+		public ILogger<T>? GetLogger<T>()
+			=> @this.GetService<ILogger<T>>();
 
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.GetService&lt;<see cref="TimeProvider"/>&gt;() ?? <see cref="TimeProvider.System"/>;</c>
-	/// </summary>
-	public static TimeProvider GetTimeProvider(this IServiceProvider @this)
-		=> @this.GetService<TimeProvider>() ?? TimeProvider.System;
+		/// <summary>
+		/// <c>=&gt; @this.GetService&lt;<see cref="TimeProvider"/>&gt;() ?? <see cref="TimeProvider.System"/>;</c>
+		/// </summary>
+		public TimeProvider GetTimeProvider()
+			=> @this.GetService<TimeProvider>() ?? TimeProvider.System;
+	}
 }

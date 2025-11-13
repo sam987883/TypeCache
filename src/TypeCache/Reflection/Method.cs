@@ -150,7 +150,7 @@ public class Method : IEquatable<Method>
 		{
 			ConstructorInfo => methodBase.DeclaringType?.Name ?? methodBase.Name,
 			{ IsGenericMethodDefinition: true } => Invariant($"{methodBase.Name}<{string.Concat(','.Repeat(methodBase.GetGenericArguments().Length - 1))}>"),
-			{ IsGenericMethod: true } => Invariant($"{methodBase.Name}<{methodBase.GetGenericArguments().Select(_ => _.CodeName()).ToCSV()}>"),
+			{ IsGenericMethod: true } => Invariant($"{methodBase.Name}<{methodBase.GetGenericArguments().Select(_ => _.CodeName).ToCSV()}>"),
 			_ => methodBase.Name
 		};
 

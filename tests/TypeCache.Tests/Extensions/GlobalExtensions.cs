@@ -49,23 +49,6 @@ public class GlobalExtensions
 	}
 
 	[Fact]
-	public void Swap()
-	{
-		decimal a = 1M;
-		decimal b = 2M;
-
-		a.Swap(ref b);
-
-		Assert.Equal(1M, b);
-		Assert.Equal(2M, a);
-
-		var swap = (a, b).Swap();
-
-		Assert.Equal(1M, swap.Item1);
-		Assert.Equal(2M, swap.Item2);
-	}
-
-	[Fact]
 	public void ThrowIfEqual()
 	{
 		123456.ThrowIfEqual(12345);

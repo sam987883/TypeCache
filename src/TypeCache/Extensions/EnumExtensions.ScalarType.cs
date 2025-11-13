@@ -87,8 +87,9 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsEnumUnderlyingType(this ScalarType @this)
-		=> @this switch
+	extension(ScalarType @this)
+	{
+		public bool IsEnumUnderlyingType => @this switch
 		{
 			ScalarType.SByte
 			or ScalarType.Int16
@@ -101,19 +102,17 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsPointer(this ScalarType @this)
-		=> @this switch
+		public bool IsPointer => @this switch
 		{
 			ScalarType.IntPtr
 			or ScalarType.UIntPtr => true,
 			_ => false
 		};
 
-	/// <summary>
-	/// Returns true for the current .Net primitives.
-	/// </summary>
-	public static bool IsPrimitive(this ScalarType @this)
-		=> @this switch
+		/// <summary>
+		/// Returns true for the current .Net primitives.
+		/// </summary>
+		public bool IsPrimitive => @this switch
 		{
 			ScalarType.Boolean
 			or ScalarType.SByte
@@ -132,8 +131,7 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static Type GetScalarType(this ScalarType @this)
-		=> @this switch
+		public Type Type => @this switch
 		{
 			ScalarType.None => typeof(void),
 			ScalarType.Boolean => typeof(bool),
@@ -167,4 +165,5 @@ public static partial class EnumExtensions
 			ScalarType.TimeSpan => typeof(TimeSpan),
 			_ => throw new UnreachableException()
 		};
+	}
 }

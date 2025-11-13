@@ -38,7 +38,7 @@ public sealed class SqlApiProcedureEndpointFilter
 			return Results.NotFound(Invariant($"{nameof(ObjectSchema)} for {objectName} was not found."));
 
 		if (objectSchema.Type is not DatabaseObjectType.StoredProcedure)
-			return Results.BadRequest(Invariant($"{objectName} is not a {DatabaseObjectType.StoredProcedure.Name()}."));
+			return Results.BadRequest(Invariant($"{objectName} is not a {DatabaseObjectType.StoredProcedure.Name}."));
 
 		context.HttpContext.Items.Add(nameof(IDataSource), dataSource);
 		context.HttpContext.Items.Add(nameof(ObjectSchema), objectSchema);

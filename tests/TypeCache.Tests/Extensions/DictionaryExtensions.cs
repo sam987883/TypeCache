@@ -1,11 +1,8 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using TypeCache.Collections;
 using TypeCache.Extensions;
 using Xunit;
@@ -24,7 +21,7 @@ public class DictionaryExtensions
 			{ 3, "333" },
 		};
 		Action action = () => 0.ToString();
-		Action<KeyValuePair<int, string>> actionPair = pair => pair.ToString();
+		Action<int, string> actionPair = (a, b) => (a, b).ToString();
 
 		Assert.True(dictionary.If(1, action));
 		Assert.False(dictionary.If(0, action));

@@ -15,13 +15,16 @@ public abstract class Field
 	public Field(FieldInfo fieldInfo)
 	{
 		fieldInfo.ThrowIfNull();
+		fieldInfo.IsLiteral.ThrowIfTrue();
 		fieldInfo.DeclaringType.ThrowIfNull();
 
 		this._FieldTypeHandle = fieldInfo.FieldType.TypeHandle;
 		this._TypeHandle = fieldInfo.DeclaringType.TypeHandle;
 
 		this.Attributes = fieldInfo.GetCustomAttributes().ToFrozenSet();
-		this.Handle = fieldInfo.FieldHandle;
+		if (!fieldInfo.IsLiteral)
+			this.Handle = fieldInfo.FieldHandle;
+
 		this.IsPublic = fieldInfo.IsPublic;
 		this.Name = fieldInfo.Name;
 	}

@@ -23,7 +23,7 @@ public static class Enum<T>
 	[DebuggerHidden]
 	public static ScalarType UnderlyingType { get; } = TypeStore.ScalarTypes[typeof(T).GetEnumUnderlyingType().TypeHandle];
 
-	[DebuggerHidden]
+	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static bool IsDefined(T value)
-		=> Enum.IsDefined(value) || Flags && Values.Any(_ => value.HasFlag(_));
+		=> Enum.IsDefined(value);
 }

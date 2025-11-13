@@ -4,55 +4,60 @@ namespace TypeCache.Extensions;
 
 public static class ListExtensions
 {
-	public static void AddIfNotBlank(this IList<string> @this, string? item)
+	extension<T>(IList<T> @this) where T : class
 	{
-		@this.ThrowIfNull();
+		public void AddIfNotNull(T? item)
+		{
+			@this.ThrowIfNull();
 
-		if (item.IsNotBlank())
-			@this.Add(item);
+			if (item is not null)
+				@this.Add(item);
+		}
+
+		public void InsertIfNotNull(int index, T? item)
+		{
+			@this.ThrowIfNull();
+
+			if (item is not null)
+				@this.Insert(index, item);
+		}
 	}
 
-	public static void AddIfHasValue<T>(this IList<T> @this, T? item)
-		where T : struct
+	extension<T>(IList<T> @this) where T : struct
 	{
-		@this.ThrowIfNull();
+		public void AddIfHasValue(T? item)
+		{
+			@this.ThrowIfNull();
 
-		if (item.HasValue)
-			@this.Add(item.Value);
+			if (item.HasValue)
+				@this.Add(item.Value);
+		}
+
+		public void InsertIfHasValue(int index, T? item)
+		{
+			@this.ThrowIfNull();
+
+			if (item.HasValue)
+				@this.Insert(index, item.Value);
+		}
 	}
 
-	public static void AddIfNotNull<T>(this IList<T> @this, T? item)
-		where T : class
+	extension(IList<string> @this)
 	{
-		@this.ThrowIfNull();
+		public void AddIfNotBlank(string? item)
+		{
+			@this.ThrowIfNull();
 
-		if (item is not null)
-			@this.Add(item);
-	}
+			if (item.IsNotBlank)
+				@this.Add(item);
+		}
 
-	public static void InsertIfNotBlank(this IList<string> @this, int index, string? item)
-	{
-		@this.ThrowIfNull();
+		public void InsertIfNotBlank(int index, string? item)
+		{
+			@this.ThrowIfNull();
 
-		if (item.IsNotBlank())
-			@this.Insert(index, item);
-	}
-
-	public static void InsertIfHasValue<T>(this IList<T> @this, int index, T? item)
-		where T : struct
-	{
-		@this.ThrowIfNull();
-
-		if (item.HasValue)
-			@this.Insert(index, item.Value);
-	}
-
-	public static void InsertIfNotNull<T>(this IList<T> @this, int index, T? item)
-		where T : class
-	{
-		@this.ThrowIfNull();
-
-		if (item is not null)
-			@this.Insert(index, item);
+			if (item.IsNotBlank)
+				@this.Insert(index, item);
+		}
 	}
 }

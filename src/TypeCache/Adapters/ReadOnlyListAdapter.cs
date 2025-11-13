@@ -18,8 +18,8 @@ public class ReadOnlyListAdapter : ReadOnlyCollectionAdapter, IReadOnlyList<obje
 
 		var listType = list.GetType().GetInterfaces().First(_ => _.Is(typeof(IReadOnlyList<>)));
 
-		this._Item = listType.DefaultIndexer()!;
+		this._Item = listType.DefaultIndexer!;
 	}
 
-	public object this[int index] => this._Item.GetValue(this._List, index.ToValueTuple())!;
+	public object this[int index] => this._Item.GetValue(this._List, [index])!;
 }

@@ -6,11 +6,14 @@ namespace TypeCache.Web.Extensions;
 
 public static class HttpRequestExtensions
 {
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GetQueryString(this HttpRequest @this, string key)
-		=> @this.Query[key];
+	extension(HttpRequest @this)
+	{
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public string? GetQueryString(string key)
+			=> @this.Query[key];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string[] GetQueryValues(this HttpRequest @this, string key)
-		=> @this.GetQueryString(key)?.Split(',') ?? [];
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public string[] GetQueryValues(string key)
+			=> @this.GetQueryString(key)?.Split(',') ?? [];
+	}
 }

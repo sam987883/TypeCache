@@ -8,25 +8,28 @@ namespace TypeCache.Web.Extensions;
 
 public static class AuthorizationOptionsExtensions
 {
-	private static AuthorizationPolicy AddAuthorizationPolicy(this AuthorizationOptions @this, IAuthorizationRequirement requirement, string[]? authenticationSchemas)
+	extension(AuthorizationOptions @this)
 	{
-		var builder = new AuthorizationPolicyBuilder();
-		if (authenticationSchemas?.Length > 0)
-			builder.AddAuthenticationSchemes(authenticationSchemas);
+		private AuthorizationPolicy AddAuthorizationPolicy(IAuthorizationRequirement requirement, string[]? authenticationSchemas)
+		{
+			var builder = new AuthorizationPolicyBuilder();
+			if (authenticationSchemas?.Length > 0)
+				builder.AddAuthenticationSchemes(authenticationSchemas);
 
-		builder.RequireAuthenticatedUser();
-		builder.AddRequirements(requirement);
+			builder.RequireAuthenticatedUser();
+			builder.AddRequirements(requirement);
 
-		var policy = builder.Build();
-		@this.AddPolicy(requirement.GetType().CodeName(), policy);
-		return policy;
+			var policy = builder.Build();
+			@this.AddPolicy(requirement.GetType().CodeName, policy);
+			return policy;
+		}
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public AuthorizationPolicy AddClaimAuthorizationPolicy(string[]? authenticationSchemas)
+			=> @this.AddAuthorizationPolicy(new ClaimAuthorizationRequirement(), authenticationSchemas);
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public AuthorizationPolicy AddHeaderAuthorizationPolicy(string[]? authenticationSchemas)
+			=> @this.AddAuthorizationPolicy(new HeaderAuthorizationRequirement(), authenticationSchemas);
 	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static AuthorizationPolicy AddClaimAuthorizationPolicy(this AuthorizationOptions @this, string[]? authenticationSchemas)
-		=> @this.AddAuthorizationPolicy(new ClaimAuthorizationRequirement(), authenticationSchemas);
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static AuthorizationPolicy AddHeaderAuthorizationPolicy(this AuthorizationOptions @this, string[]? authenticationSchemas)
-		=> @this.AddAuthorizationPolicy(new HeaderAuthorizationRequirement(), authenticationSchemas);
 }

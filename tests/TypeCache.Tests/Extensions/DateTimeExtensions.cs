@@ -38,13 +38,23 @@ public class DateTimeExtensions
 	}
 
 	[Fact]
-	public void ToDateOnly()
+	public void DateOnly()
 	{
 		var now = DateTime.UtcNow;
 		var nowOffset = DateTimeOffset.Now;
 
-		Assert.Equal(DateOnly.FromDateTime(now), now.ToDateOnly());
-		Assert.Equal(DateOnly.FromDateTime(nowOffset.DateTime), nowOffset.ToDateOnly());
+		Assert.Equal(System.DateOnly.FromDateTime(now), now.DateOnly);
+		Assert.Equal(System.DateOnly.FromDateTime(nowOffset.DateTime), nowOffset.DateOnly);
+	}
+
+	[Fact]
+	public void TimeOnly()
+	{
+		var now = DateTime.UtcNow;
+		var nowOffset = DateTimeOffset.Now;
+
+		Assert.Equal(System.TimeOnly.FromDateTime(now), now.TimeOnly);
+		Assert.Equal(System.TimeOnly.FromDateTime(nowOffset.DateTime), nowOffset.TimeOnly);
 	}
 
 	[Fact]
@@ -64,28 +74,18 @@ public class DateTimeExtensions
 	[Fact]
 	public void ToISO8601()
 	{
-		Assert.Equal(DateOnly.MaxValue.ToString("yyyy-MM-dd"), DateOnly.MaxValue.ToISO8601());
+		Assert.Equal(System.DateOnly.MaxValue.ToString("yyyy-MM-dd"), System.DateOnly.MaxValue.ToISO8601());
 		Assert.Equal(DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"), DateTime.Now.ToISO8601());
 		Assert.Equal(DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss"), DateTime.UtcNow.ToISO8601());
 		Assert.Equal(DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ssK"), DateTimeOffset.Now.ToISO8601());
 		Assert.Equal(DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssK"), DateTimeOffset.UtcNow.ToISO8601());
-		Assert.Equal(TimeOnly.MaxValue.ToString("HH:mm:ss"), TimeOnly.MaxValue.ToISO8601());
+		Assert.Equal(System.TimeOnly.MaxValue.ToString("HH:mm:ss"), System.TimeOnly.MaxValue.ToISO8601());
 	}
 
 	[Fact]
 	public void ToText()
 	{
 		Assert.Equal(TimeSpan.MaxValue.ToString(), TimeSpan.MaxValue.ToText());
-	}
-
-	[Fact]
-	public void ToTimeOnly()
-	{
-		var now = DateTime.UtcNow;
-		var nowOffset = DateTimeOffset.Now;
-
-		Assert.Equal(TimeOnly.FromDateTime(now), now.ToTimeOnly());
-		Assert.Equal(TimeOnly.FromDateTime(nowOffset.DateTime), nowOffset.ToTimeOnly());
 	}
 
 	[Fact]

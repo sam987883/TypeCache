@@ -17,7 +17,7 @@ internal class FieldMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name}"));
 
 		var targetFields = Type<T>.Fields;
 		foreach (var pair in source)
@@ -27,14 +27,14 @@ internal class FieldMapper : IMapper
 
 			if (pair.Value is null)
 			{
-				if (!field.FieldType.IsNullable())
+				if (!field.FieldType.IsNullable)
 					continue;
 
 				field.SetValue(target, null);
 				continue;
 			}
 
-			if (field.FieldType.ScalarType() is not ScalarType.None || field.FieldType.IsValueType)
+			if (field.FieldType.ScalarType is not ScalarType.None || field.FieldType.IsValueType)
 			{
 				field.SetValue(target, pair.Value);
 				continue;
@@ -69,8 +69,8 @@ internal class FieldMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name}"));
 
 		foreach (var sourceField in Type<S>.Fields.Values)
 		{
@@ -102,11 +102,11 @@ internal class FieldMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name}"));
+		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name}"));
 
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name}"));
 
 		foreach (var sourceField in Type<S>.Fields.Values)
 		{
@@ -122,7 +122,7 @@ internal class FieldMapper : IMapper
 				foreach (var attribute in mapAttributes)
 					setFieldValue(attribute.Member, sourceValue);
 			}
-			else if (sourceField.FieldType.ScalarType() is not ScalarType.None
+			else if (sourceField.FieldType.ScalarType is not ScalarType.None
 				|| sourceField.FieldType.IsValueType)
 				setFieldValue(sourceField.Name, sourceValue);
 		}
@@ -133,14 +133,14 @@ internal class FieldMapper : IMapper
 
 			if (value is null)
 			{
-				if (!field.FieldType.IsNullable())
+				if (!field.FieldType.IsNullable)
 					return;
 
 				field.SetValue(target, null);
 				return;
 			}
 
-			if (field.FieldType.IsValueType || field.FieldType.ScalarType() is not ScalarType.None)
+			if (field.FieldType.IsValueType || field.FieldType.ScalarType is not ScalarType.None)
 			{
 				field.SetValue(target, value);
 				return;
@@ -170,11 +170,11 @@ internal class FieldMapper : IMapper
 		var sourceType = source.GetType();
 		var targetType = target.GetType();
 
-		sourceType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {sourceType.ScalarType().Name()}"));
-		targetType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {targetType.ScalarType().Name()}"));
+		sourceType.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {sourceType.ScalarType.Name}"));
+		targetType.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {targetType.ScalarType.Name}"));
 
-		var sourceCollectionType = sourceType.CollectionType();
-		var targetCollectionType = targetType.CollectionType();
+		var sourceCollectionType = sourceType.CollectionType;
+		var targetCollectionType = targetType.CollectionType;
 
 		Action? executeMap = (sourceCollectionType, targetCollectionType) switch
 		{
@@ -209,7 +209,7 @@ internal class FieldMapper : IMapper
 			return;
 		}
 
-		foreach (var sourceField in sourceType.Fields().Values)
+		foreach (var sourceField in sourceType.Fields.Values)
 		{
 			if (sourceField.Attributes.OfType<MapIgnoreAttribute>()
 				.Any(_ => _.Type is null || _.Type == target.GetType()))
@@ -223,25 +223,25 @@ internal class FieldMapper : IMapper
 				foreach (var attribute in mapAttributes)
 					setFieldValue(attribute.Member, sourceValue);
 			}
-			else if (sourceField.FieldType.ScalarType() is not ScalarType.None
+			else if (sourceField.FieldType.ScalarType is not ScalarType.None
 				|| sourceField.FieldType.IsValueType)
 				setFieldValue(sourceField.Name, sourceValue);
 		}
 
 		void setFieldValue(string fieldName, object? value)
 		{
-			var field = target.GetType().Fields()[fieldName];
+			var field = target.GetType().Fields[fieldName];
 
 			if (value is null)
 			{
-				if (!field.FieldType.IsNullable())
+				if (!field.FieldType.IsNullable)
 					return;
 
 				field.SetValue(target, null);
 				return;
 			}
 
-			if (field.FieldType.IsValueType || field.FieldType.ScalarType() is not ScalarType.None)
+			if (field.FieldType.IsValueType || field.FieldType.ScalarType is not ScalarType.None)
 			{
 				field.SetValue(target, value);
 				return;
@@ -268,7 +268,7 @@ internal class FieldMapper : IMapper
 
 		var sourceElementType = source.GetType().GetElementType()!;
 		var targetElementType = target.GetType().GetElementType()!;
-		if (targetElementType.ScalarType() is not ScalarType.None
+		if (targetElementType.ScalarType is not ScalarType.None
 			|| sourceElementType.IsValueType)
 			Array.Copy(source, 0, target, 0, target.Length);
 		else if (!targetElementType.IsValueType)
@@ -291,7 +291,7 @@ internal class FieldMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -324,7 +324,7 @@ internal class FieldMapper : IMapper
 		if (source.Length > 0
 			&& !sourceItemType.IsValueType
 			&& !targetItemType.IsValueType
-			&& targetItemType.ScalarType() is ScalarType.None)
+			&& targetItemType.ScalarType is ScalarType.None)
 		{
 			for (var i = 0; i < length; ++i)
 			{
@@ -342,7 +342,7 @@ internal class FieldMapper : IMapper
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
 		var length = source.Length < target.Count ? source.Length : target.Count;
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -362,7 +362,7 @@ internal class FieldMapper : IMapper
 
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetElementType = target.GetType().GetElementType()!;
-		if (targetElementType.ScalarType() is not ScalarType.None
+		if (targetElementType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 			source.Index().ForEach(_ => target.SetValue(_.Item, _.Index));
 		else if (!targetElementType.IsValueType)
@@ -384,7 +384,7 @@ internal class FieldMapper : IMapper
 	{
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -411,7 +411,7 @@ internal class FieldMapper : IMapper
 		if (source.Count > 0
 			&& !sourceItemType.IsValueType
 			&& !targetItemType.IsValueType
-			&& targetItemType.ScalarType() is ScalarType.None)
+			&& targetItemType.ScalarType is ScalarType.None)
 		{
 			var length = source.Count < target.Count ? source.Count : target.Count;
 			for (var i = 0; i < length; ++i)
@@ -429,7 +429,7 @@ internal class FieldMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -442,7 +442,7 @@ internal class FieldMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -459,12 +459,12 @@ internal class FieldMapper : IMapper
 		var targetKeyType = targetGenericTypeArguments[0];
 		var targetValueType = targetGenericTypeArguments[1];
 
-		if (sourceKeyType.ScalarType() is not ScalarType.None
-				&& targetKeyType.ScalarType() is not ScalarType.None
+		if (sourceKeyType.ScalarType is not ScalarType.None
+				&& targetKeyType.ScalarType is not ScalarType.None
 			|| sourceKeyType.IsValueType && targetKeyType.IsValueType)
 		{
-			if (sourceValueType.ScalarType() is not ScalarType.None
-					&& targetValueType.ScalarType() is not ScalarType.None
+			if (sourceValueType.ScalarType is not ScalarType.None
+					&& targetValueType.ScalarType is not ScalarType.None
 				|| sourceValueType.IsValueType && targetValueType.IsValueType)
 			{
 				source.Keys.ForEach(key => target[key] = source[key]);
@@ -485,12 +485,12 @@ internal class FieldMapper : IMapper
 		var targetKeyType = targetGenericTypeArguments[0];
 		var targetValueType = targetGenericTypeArguments[1];
 
-		if (sourceKeyType.ScalarType() is not ScalarType.None
-				&& targetKeyType.ScalarType() is not ScalarType.None
+		if (sourceKeyType.ScalarType is not ScalarType.None
+				&& targetKeyType.ScalarType is not ScalarType.None
 			|| sourceKeyType.IsValueType && targetKeyType.IsValueType)
 		{
-			if (sourceValueType.ScalarType() is not ScalarType.None
-					&& targetValueType.ScalarType() is not ScalarType.None
+			if (sourceValueType.ScalarType is not ScalarType.None
+					&& targetValueType.ScalarType is not ScalarType.None
 				|| sourceValueType.IsValueType && targetValueType.IsValueType)
 			{
 				source.Keys.ForEach(key => target[key] = source[key]);

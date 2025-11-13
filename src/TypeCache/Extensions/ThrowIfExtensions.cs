@@ -10,277 +10,336 @@ namespace TypeCache.Extensions;
 
 public static class ThrowIfExtensions
 {
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfBlank([NotNull] this string? @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
+	extension(object? @this)
 	{
-		if (@this.IsBlank())
-			Throw(caller!, expression, @this, message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEqual(object? value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (@this?.Equals(value) is true)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNot<T>(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this is not T)
+				Throw(caller!, expression, (@this, Invariant($"typeof({Type<T>.CodeName})")), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotEqual(object? value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (@this?.Equals(value) is not true)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfReferenceEqual(object? value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (object.ReferenceEquals(@this, value))
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotReferenceEqual(object? value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (!object.ReferenceEquals(@this, value))
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEmpty<T>([NotNull] this IEnumerable<T> @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-		where T : notnull
+	extension([NotNull] object? @this)
 	{
-		if (!@this.Any())
-			Throw(caller!, expression, @this, message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNull(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this is null)
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEmpty<T>([NotNull] this T[] @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-		where T : notnull
+	extension([NotNull] string? @this)
 	{
-		if (@this.Length is 0)
-			Throw(caller!, expression, @this, message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfBlank(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this.IsBlank)
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEnumIs<T>(this T @this, T value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : struct, Enum
+	extension(bool @this)
 	{
-		var comparer = new EnumComparer<T>();
-		if (comparer.Equals(@this, value))
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		/// <param name="message">Pass in a custom message or omit to use a default message.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfFalse(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (!@this)
+				Throw(caller!, expression, @this, message, logger);
+		}
+
+		/// <param name="message">Pass in a custom message or omit to use a default message.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfTrue(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this)
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEnumIsNot<T>(this T @this, T value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : struct, Enum
+	extension(bool? @this)
 	{
-		var comparer = new EnumComparer<T>();
-		if (!comparer.Equals(@this, value))
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		/// <param name="message">Pass in a custom message or omit to use a default message.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotTrue(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this is not true)
+				Throw(caller!, expression, @this, message, logger);
+		}
+
+		/// <param name="message">Pass in a custom message or omit to use a default message.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfTrue(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this is true)
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEqual(this object? @this, object? value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+	extension<T>(T? @this) where T : unmanaged, IEqualityOperators<T, T, bool>
 	{
-		if (@this?.Equals(value) is true)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEqual(T value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (@this == value)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotEqual(T value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if (@this != value)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEqual<T>(this IEquatable<T> @this, IEquatable<T> value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : notnull
+	extension<T>([NotNull] IEnumerable<T> @this) where T : notnull
 	{
-		if ((@this?.Equals(value) ?? (value is null)) is true)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEmpty(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (!@this.Any())
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfEqual<T>(this T @this, T value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : unmanaged, IEqualityOperators<T, T, bool>
+	extension<T>([NotNull] T[] @this) where T : notnull
 	{
-		if (@this == value)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEmpty(Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression = null)
+		{
+			if (@this.Length is 0)
+				Throw(caller!, expression, @this, message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom message or omit to use a default message.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfFalse(this bool @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
+	extension<T>([NotNull] T @this) where T : struct, Enum
 	{
-		if (!@this)
-			Throw(caller!, expression, @this, message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEnumIs(T value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			var comparer = new EnumComparer<T>();
+			if (comparer.Equals(@this, value))
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEnumIsNot(T value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			var comparer = new EnumComparer<T>();
+			if (!comparer.Equals(@this, value))
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNot<T>(this object @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
+	extension<T>(IEquatable<T> @this) where T : notnull
 	{
-		if (@this is not T)
-			Throw(caller!, expression, (@this, Invariant($"typeof({Type<T>.CodeName})")), message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEqual(IEquatable<T> value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if ((@this?.Equals(value) ?? (value is null)) is true)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
+
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotEqual(IEquatable<T> value, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+		{
+			if ((@this?.Equals(value) ?? (value is null)) is not true)
+				Throw(caller!, (expression1, expression2), (@this, value), message, logger);
+		}
 	}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotEqual(this object? @this, object? value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
+	extension<T>(IEqualityComparer<T> @this) where T : notnull
 	{
-		if (@this?.Equals(value) is not true)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
-	}
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfEqual(T? x, T? y, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression("x")] string? argument1 = null,
+			[CallerArgumentExpression("y")] string? argument2 = null)
+		{
+			@this.ThrowIfNull();
+			if (@this.Equals(x, y))
+				Throw(caller!, (expression1!, Invariant($"{argument1 ?? "null"}, {argument2 ?? "null"}")), (x, y), message, logger);
+		}
 
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotEqual<T>(this IEquatable<T> @this, IEquatable<T> value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : notnull
-	{
-		if ((@this?.Equals(value) ?? (value is null)) is not true)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
-	}
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotEqual<T>(this T @this, T value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-		where T : unmanaged, IEqualityOperators<T, T, bool>
-	{
-		if (@this != value)
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
-	}
-
-	/// <param name="message">Pass in a custom message or omit to use a default message.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotTrue(this bool? @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-	{
-		if (@this is not true)
-			Throw(caller!, expression, @this, message, logger);
-	}
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNull([NotNull] this object? @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-	{
-		if (@this is null)
-			Throw(caller!, expression, @this, message, logger);
-	}
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfReferenceEqual(this object? @this, object? value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-	{
-		if (object.ReferenceEquals(@this, value))
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
-	}
-
-	/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
-	/// <param name="logger">Pass a logger to log exception if thrown.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression1">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression2">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfNotReferenceEqual(this object? @this, object? value, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
-		[CallerArgumentExpression(nameof(value))] string? expression2 = null)
-	{
-		if (!object.ReferenceEquals(@this, value))
-			Throw(caller!, (expression1, expression2), (@this, value), message, logger);
-	}
-
-	/// <param name="message">Pass in a custom message or omit to use a default message.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfTrue(this bool @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-	{
-		if (@this)
-			Throw(caller!, expression, @this, message, logger);
-	}
-
-	/// <param name="message">Pass in a custom message or omit to use a default message.</param>
-	/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <param name="expression">Do not pass any value to this parameter as it will be injected automatically</param>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static void ThrowIfTrue(this bool? @this, Func<string>? message = null, ILogger? logger = null,
-		[CallerMemberName] string? caller = null,
-		[CallerArgumentExpression(nameof(@this))] string? expression = null)
-	{
-		if (@this is true)
-			Throw(caller!, expression, @this, message, logger);
+		/// <param name="message">Pass in a custom error message or omit to use a default message.</param>
+		/// <param name="logger">Pass a logger to log exception if thrown.</param>
+		/// <param name="caller">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="argument1">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <param name="argument2">Do not pass any value to this parameter as it will be injected automatically</param>
+		/// <exception cref="ArgumentOutOfRangeException"/>
+		public void ThrowIfNotEqual(T? x, T? y, Func<string>? message = null, ILogger? logger = null,
+			[CallerMemberName] string? caller = null,
+			[CallerArgumentExpression(nameof(@this))] string? expression1 = null,
+			[CallerArgumentExpression("x")] string? argument1 = null,
+			[CallerArgumentExpression("y")] string? argument2 = null)
+		{
+			@this.ThrowIfNull();
+			if (!@this.Equals(x, y))
+				Throw(caller!, (expression1!, Invariant($"{argument1 ?? "null"}, {argument2 ?? "null"}")), (x, y), message, logger);
+		}
 	}
 
 	[DoesNotReturn]

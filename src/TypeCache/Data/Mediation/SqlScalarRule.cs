@@ -5,22 +5,17 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlScalarRequest : IRequest<object?>
+internal sealed class SqlScalarRule : IRule<SqlCommand, object?>
 {
-	public required SqlCommand Command { get; set; }
-}
-
-internal sealed class SqlScalarRule : IRule<SqlScalarRequest, object?>
-{
-	public async Task<object?> Map(SqlScalarRequest request, CancellationToken token)
+	public async ValueTask<object?> Send(SqlCommand request, CancellationToken token)
 	{
-		await using var connection = request.Command.DataSource.CreateDbConnection();
+		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
-		await using var dbCommand = connection.CreateCommand(request.Command);
+		await using var dbCommand = connection.CreateCommand(request);
 
 		var result = await dbCommand.ExecuteScalarAsync(token);
 
-		dbCommand.CopyOutputParameters(request.Command);
+		dbCommand.CopyOutputParameters(request);
 
 		return result is not DBNull ? result : null;
 	}

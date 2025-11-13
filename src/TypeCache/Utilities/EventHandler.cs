@@ -31,7 +31,7 @@ public static class EventHandler<T>
 		var key = DateTime.UtcNow.Ticks;
 		var reference = new EventHandlerReference(instance.ToWeakReference(), eventInfo.AddMethod.MethodHandle, eventInfo.RemoveMethod?.MethodHandle, handler);
 		EventHandlers.Add(key, reference);
-		eventInfo.AddMethod.ToMethodEntity()!.Invoke(instance, [handler]);
+		eventInfo.AddMethod.MethodEntity!.Invoke(instance, [handler]);
 		return key;
 	}
 
@@ -47,7 +47,7 @@ public static class EventHandler<T>
 			return false;
 
 		if (handler.Instance.TryGetTarget(out var target))
-			((MethodInfo)handler.RemoveMethodHandle?.ToMethodBase()!).ToMethodEntity()!.Invoke(target, [handler.EventHandler]);
+			((MethodInfo)handler.RemoveMethodHandle?.ToMethodBase()!).MethodEntity!.Invoke(target, [handler.EventHandler]);
 
 		return EventHandlers.Remove(key);
 	}

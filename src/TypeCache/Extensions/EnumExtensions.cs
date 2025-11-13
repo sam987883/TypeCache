@@ -1,84 +1,77 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using TypeCache.Collections;
+using System.Collections.Frozen;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
-using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Extensions;
 
 public static partial class EnumExtensions
 {
-	[DebuggerHidden]
-	public static Attribute[] Attributes<T>(this T @this)
-		where T : struct, Enum
-		=> Enum<T>.IsDefined(@this)
-			? typeof(T).GetField(@this.Name(), Public | Static)!.GetCustomAttributes(false).Cast<Attribute>().ToArray()
-			: Array<Attribute>.Empty;
+	extension<T>(T @this) where T : struct, Enum
+	{
+		[DebuggerHidden]
+		public IReadOnlySet<Attribute> Attributes => typeof(T).Literals.TryGetValue(@this.Name, out var literal) ? literal.Attributes : FrozenSet<Attribute>.Empty;
 
-	[DebuggerHidden]
-	public static bool HasAnyFlag<T>(this T @this, T[] flags)
-		where T : struct, Enum
-		=> flags?.Any(flag => @this.HasFlag(flag)) is true;
+		[DebuggerHidden]
+		public bool HasAnyFlag(T[] flags)
+			=> flags.Any(flag => @this.HasFlag(flag));
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("X");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Hex(this Enum @this)
-		=> @this.ToString("X");
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("X");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Hex => @this.ToString("X");
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("X");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Hex<T>(this T @this)
-		where T : struct, Enum
-		=> @this.ToString("X");
+		/// <remarks>
+		/// <c>=&gt; <see cref="Enum{T}"/>.IsDefined(@this);</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public bool IsDefined()
+			=> Enum<T>.IsDefined(@this);
 
-	/// <remarks>
-	/// <c>=&gt; <see cref="Enum{T}"/>.IsDefined(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool IsDefined<T>(this T @this)
-		where T : struct, Enum
-		=> Enum<T>.IsDefined(@this);
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("F");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Name => @this.ToString("F");
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Name(this Enum @this)
-		=> @this.ToString("F");
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("D");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Number => @this.ToString("D");
+	}
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("F");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Name<T>(this T @this)
-		where T : struct, Enum
-		=> @this.ToString("F");
+	extension(Enum @this)
+	{
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("X");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Hex => @this.ToString("X");
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Number(this Enum @this)
-		=> @this.ToString("D");
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("F");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Name => @this.ToString("F");
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ToString("D");</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string Number<T>(this T @this)
-		where T : struct, Enum
-		=> @this.ToString("D");
+		/// <remarks>
+		/// <c>=&gt; @this.ToString("D");</c>
+		/// </remarks>
+		[DebuggerHidden]
+		public string Number => @this.ToString("D");
+	}
 
-	/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
-	/// <remarks>
-	/// <c>=&gt; <see cref="StringComparer"/>.FromComparison(@<paramref name="this"/>);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static StringComparer ToComparer(this StringComparison @this)
-		=> StringComparer.FromComparison(@this);
+	extension(StringComparison @this)
+	{
+		/// <inheritdoc cref="StringComparer.FromComparison(StringComparison)"/>
+		/// <remarks>
+		/// <c>=&gt; <see cref="StringComparer"/>.FromComparison(@this);</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public StringComparer ToComparer()
+			=> StringComparer.FromComparison(@this);
+	}
 }

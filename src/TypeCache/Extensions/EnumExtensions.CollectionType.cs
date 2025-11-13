@@ -6,8 +6,9 @@ namespace TypeCache.Extensions;
 
 public static partial class EnumExtensions
 {
-	public static bool IsConcurrent(this CollectionType @this)
-		=> @this switch
+	extension(CollectionType @this)
+	{
+		public bool IsConcurrent => @this switch
 		{
 			CollectionType.ConcurrentBag
 			or CollectionType.ConcurrentDictionary
@@ -16,8 +17,7 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsDictionary(this CollectionType @this)
-		=> @this switch
+		public bool IsDictionary => @this switch
 		{
 			CollectionType.Dictionary
 			or CollectionType.ConcurrentDictionary
@@ -38,15 +38,13 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsFrozen(this CollectionType @this)
-		=> @this switch
+		public bool IsFrozen => @this switch
 		{
 			CollectionType.FrozenDictionary or CollectionType.FrozenSet => true,
 			_ => false
 		};
 
-	public static bool IsImmutable(this CollectionType @this)
-		=> @this switch
+		public bool IsImmutable => @this switch
 		{
 			CollectionType.ImmutableArray
 			or CollectionType.ImmutableDictionary or CollectionType.ImmutableSortedDictionary
@@ -57,8 +55,7 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsQueue(this CollectionType @this)
-		=> @this switch
+		public bool IsQueue => @this switch
 		{
 			CollectionType.ConcurrentQueue
 			or CollectionType.ImmutableQueue
@@ -67,8 +64,7 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsReadOnly(this CollectionType @this)
-		=> @this switch
+		public bool IsReadOnly => @this switch
 		{
 			CollectionType.ReadOnlyCollection
 			or CollectionType.ReadOnlyDictionary
@@ -79,8 +75,7 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsSet(this CollectionType @this)
-		=> @this switch
+		public bool IsSet => @this switch
 		{
 			CollectionType.Set
 			or CollectionType.ReadOnlySet
@@ -91,12 +86,12 @@ public static partial class EnumExtensions
 			_ => false
 		};
 
-	public static bool IsStack(this CollectionType @this)
-		=> @this switch
+		public bool IsStack => @this switch
 		{
 			CollectionType.ConcurrentStack
 			or CollectionType.ImmutableStack
 			or CollectionType.Stack => true,
 			_ => false
 		};
+	}
 }

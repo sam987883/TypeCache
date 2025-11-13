@@ -5,21 +5,16 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlExecuteRequest : IRequest
+internal sealed class SqlExecuteRule : IRule<SqlCommand>
 {
-	public required SqlCommand Command { get; set; }
-}
-
-internal sealed class SqlExecuteRule : IRule<SqlExecuteRequest>
-{
-	public async Task Execute(SqlExecuteRequest request, CancellationToken token = default)
+	public async Task Execute(SqlCommand request, CancellationToken token = default)
 	{
-		await using var connection = request.Command.DataSource.CreateDbConnection();
+		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
-		await using var command = connection.CreateCommand(request.Command);
+		await using var command = connection.CreateCommand(request);
 
 		await command.ExecuteNonQueryAsync(token);
 
-		command.CopyOutputParameters(request.Command);
+		command.CopyOutputParameters(request);
 	}
 }

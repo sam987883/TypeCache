@@ -1,8 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
-using GraphQL.Types;
+using global::GraphQL.Types;
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 
@@ -12,11 +11,11 @@ namespace TypeCache.GraphQL.Types;
 public sealed class EnumGraphType<T> : EnumerationGraphType
 	where T : struct, Enum
 {
-	public EnumGraphType()
+	public EnumGraphType() : base()
 	{
-		this.Name = Enum<T>.Attributes.GraphQLName() ?? Enum<T>.Name;
-		this.Description = Enum<T>.Attributes.GraphQLDescription();
-		this.DeprecationReason = Enum<T>.Attributes.GraphQLDeprecationReason();
+		this.Name = Enum<T>.Attributes.GraphQLName ?? Enum<T>.Name;
+		this.Description = Enum<T>.Attributes.GraphQLDescription;
+		this.DeprecationReason = Enum<T>.Attributes.GraphQLDeprecationReason;
 
 		Func<string, string>? changeEnumCase = Enum<T>.Attributes switch
 		{
@@ -27,13 +26,12 @@ public sealed class EnumGraphType<T> : EnumerationGraphType
 		};
 
 		Enum<T>.Values
-			.Where(_ => !_.Attributes().Any<GraphQLIgnoreAttribute>())
-			.Select(_ => new EnumValueDefinition(_.Attributes().FirstOrDefault<GraphQLNameAttribute>()?.Name ?? changeEnumCase?.Invoke(_.Name()) ?? _.Name(), _)
+			.Where(_ => !_.Attributes.GraphQLIgnore)
+			.Select(_ => new EnumValueDefinition(_.Attributes.GraphQLName ?? changeEnumCase?.Invoke(_.Name) ?? _.Name, _)
 			{
-				Description = _.Attributes().FirstOrDefault<GraphQLDescriptionAttribute>()?.Description,
-				DeprecationReason = _.Attributes().FirstOrDefault<GraphQLDeprecationReasonAttribute>()?.DeprecationReason
+				Description = _.Attributes.GraphQLDescription,
+				DeprecationReason = _.Attributes.GraphQLDeprecationReason
 			})
-			.ToArray()
 			.ForEach(this.Add);
 	}
 

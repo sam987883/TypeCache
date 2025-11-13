@@ -67,11 +67,11 @@ internal static class SqlHandler
 		if (contentType?.EqualsIgnoreCase(Application.Xml) is true
 			|| contentType?.EqualsIgnoreCase(Text.Xml) is true)
 		{
-			var collectionElement = new XElement(collection.Name());
-			if (!where.IsBlank())
+			var collectionElement = new XElement(collection.Name);
+			if (!where.IsBlank)
 				collectionElement.Add(new XAttribute(nameof(where), where));
 
-			if (!orderBy.IsBlank())
+			if (!orderBy.IsBlank)
 				collectionElement.Add(new XAttribute(nameof(orderBy), orderBy));
 
 			var columns = data.First().Table.Columns.OfType<DataColumn>().ToArray();
@@ -140,13 +140,13 @@ internal static class SqlHandler
 	{
 		var objectSchema = httpContext.GetObjectSchema();
 
-		if (columns.IsBlank())
+		if (columns.IsBlank)
 			return Results.BadRequest(Invariant($"[{nameof(columns)}] query parameter must be specified."));
 
-		if (select.IsBlank())
+		if (select.IsBlank)
 			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
 
-		if (from.IsBlank())
+		if (from.IsBlank)
 			return Results.BadRequest(Invariant($"[{nameof(from)}] query parameter must be specified."));
 
 		if (columns.SplitEx(',').Length != select.SplitEx(',').Length)

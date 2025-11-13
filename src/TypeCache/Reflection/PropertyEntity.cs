@@ -42,6 +42,6 @@ public sealed class PropertyEntity : Property
 	{
 		this.SetMethod.ThrowIfNull();
 
-		this.SetMethod.Invoke(instance, value.ToValueTuple());
+		this.SetMethod.Invoke(instance, [value]);
 	}
 }

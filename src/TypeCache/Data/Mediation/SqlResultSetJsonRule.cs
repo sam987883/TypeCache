@@ -6,24 +6,17 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlResultSetJsonRequest : IRequest<JsonObject>
+internal sealed class SqlResultSetJsonRule : IRule<SqlCommand, JsonObject>
 {
-	public required SqlCommand Command { get; set; }
-
-	public JsonNodeOptions JsonOptions { get; set; }
-}
-
-internal sealed class SqlResultSetJsonRule : IRule<SqlResultSetJsonRequest, JsonObject>
-{
-	public async Task<JsonObject> Map(SqlResultSetJsonRequest request, CancellationToken token)
+	public async ValueTask<JsonObject> Send(SqlCommand request, CancellationToken token)
 	{
-		await using var connection = request.Command.DataSource.CreateDbConnection();
+		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
-		await using var command = connection.CreateCommand(request.Command);
+		await using var command = connection.CreateCommand(request);
 
-		var result = await command.GetResultSetAsJsonAsync(request.JsonOptions, token);
+		var result = await command.GetResultSetAsJsonAsync(token);
 
-		command.CopyOutputParameters(request.Command);
+		command.CopyOutputParameters(request);
 
 		return result;
 	}

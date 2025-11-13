@@ -4,7 +4,7 @@ using System.Data;
 using GraphQL;
 using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
-using TypeCache.Data.Extensions;
+using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Extensions;
@@ -30,12 +30,12 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
-				.Where(column => selections.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<DataRow>.Items)}.{column.Name}"))
-					|| _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}.{column.Name}"))))
+				.Where(column => selections.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<>.Items)}.{column.Name}"))
+					|| _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<>.Edges)}.{nameof(Edge<>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+			Top = top.IsNotBlank ? top.TrimEnd('%').Parse<uint>() : null,
 			TopPercent = top?.EndsWith('%') is true,
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
@@ -44,16 +44,16 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.Items)}."))
-			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.Edges)}.{nameof(Edge<DataRow>.Node)}."))))
+		if (selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.Items)}."))
+			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.Edges)}.{nameof(Edge<>.Node)}."))))
 		{
-			var result = await mediator.Map(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken);
+			var result = await mediator.Request<DataTable>().Send(sqlCommand, context.CancellationToken);
 			var totalCount = result.Rows.Count;
 			if (select.Fetch == totalCount)
 			{
 				var countSql = objectSchema.CreateCountSQL(null, select.Where);
 				var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
-				totalCount = (int?)await mediator.Map(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
+				totalCount = (int?)await mediator.Request<object?>().Send(countCommand, context.CancellationToken) ?? 0;
 			}
 
 			var rows = result.Select();
@@ -64,12 +64,12 @@ public sealed class SqlApiSelectFieldResolver : FieldResolver
 				Table = objectSchema.Name,
 			};
 		}
-		else if (selections.Any(_ => _.EqualsIgnoreCase(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.TotalCount)}"))
-			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<DataRow>.Data)}.{nameof(Connection<DataRow>.PageInfo)}."))))
+		else if (selections.Any(_ => _.EqualsIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.TotalCount)}"))
+			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
-			var totalCount = (int?)await mediator.Map(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
+			var totalCount = (int?)await mediator.Request<object?>().Send(countCommand, context.CancellationToken) ?? 0;
 			return new SelectResponse<DataRow>()
 			{
 				Data = new()
@@ -108,12 +108,12 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 			Offset = context.GetArgument<uint>(nameof(SelectQuery.Offset)),
 			OrderBy = context.GetArgument<string[]>(nameof(SelectQuery.OrderBy)),
 			Select = objectSchema.Columns
-				.Where(column => selections.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<T>.Items)}.{column.Name}"))
-					|| _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<T>.Edges)}.{nameof(Edge<T>.Node)}.{column.Name}"))))
+				.Where(column => selections.Any(_ => _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<>.Items)}.{column.Name}"))
+					|| _.EndsWithIgnoreCase(Invariant($"{nameof(Connection<>.Edges)}.{nameof(Edge<>.Node)}.{column.Name}"))))
 				.Select(column => column.Name)
 				.ToArray(),
 			TableHints = objectSchema.DataSource.Type is SqlServer ? "NOLOCK" : null,
-			Top = top.IsNotBlank() ? top.TrimEnd('%').Parse<uint>() : null,
+			Top = top.IsNotBlank ? top.TrimEnd('%').Parse<uint>() : null,
 			TopPercent = top?.EndsWith('%') is true,
 			Where = context.GetArgument<string>(nameof(SelectQuery.Where))
 		};
@@ -122,16 +122,16 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		if (selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.Items)}."))
-			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.Edges)}.{nameof(Edge<T>.Node)}."))))
+		if (selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.Items)}."))
+			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.Edges)}.{nameof(Edge<>.Node)}."))))
 		{
-			var result = await mediator.Map(sqlCommand.ToSqlModelsRequest<T>((int)select.Fetch), context.CancellationToken);
+			var result = await mediator.Request<IList<T>>().Send(new SqlResultsRequest<T>(sqlCommand, (int)select.Fetch), context.CancellationToken);
 			var totalCount = result.Count;
 			if (select.Fetch == totalCount)
 			{
 				var countSql = objectSchema.CreateCountSQL(null, select.Where);
 				var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
-				totalCount = (int?)await mediator.Map(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
+				totalCount = (int?)await mediator.Request<object?>().Send(countCommand, context.CancellationToken) ?? 0;
 			}
 
 			var items = result.OfType<T>().ToArray();
@@ -142,12 +142,12 @@ public sealed class SqlApiSelectFieldResolver<T> : FieldResolver
 				Table = objectSchema.Name
 			};
 		}
-		else if (selections.Any(_ => _.EqualsIgnoreCase(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.TotalCount)}"))
-			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<T>.Data)}.{nameof(Connection<T>.PageInfo)}."))))
+		else if (selections.Any(_ => _.EqualsIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.TotalCount)}"))
+			|| _.StartsWithIgnoreCase(Invariant($"{nameof(SelectResponse<>.Data)}.{nameof(Connection<>.PageInfo)}."))))
 		{
 			var countSql = objectSchema.CreateCountSQL(null, select.Where);
 			var countCommand = objectSchema.DataSource.CreateSqlCommand(countSql);
-			var totalCount = (int?)await mediator.Map(countCommand.ToSqlScalarRequest(), context.CancellationToken) ?? 0;
+			var totalCount = (int?)await mediator.Request<object?>().Send(countCommand, context.CancellationToken) ?? 0;
 			return new SelectResponse<T>()
 			{
 				Data = new()

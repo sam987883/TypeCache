@@ -18,7 +18,7 @@ public sealed class FieldJsonConverter<T> : JsonConverter<T?>
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString()!;
-				if (!reader.Read() || name.IsBlank())
+				if (!reader.Read() || name.IsBlank)
 					continue;
 
 				var field = Type<T>.Fields[name];

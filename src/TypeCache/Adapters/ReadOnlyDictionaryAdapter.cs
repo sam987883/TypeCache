@@ -23,13 +23,13 @@ public class ReadOnlyDictionaryAdapter : ReadOnlyCollectionAdapter, IReadOnlyDic
 
 		var dictionaryType = dictionary.GetType().GetInterfaces().First(_ => _.Is(typeof(IReadOnlyDictionary<,>)));
 
-		this._Item = dictionaryType.DefaultIndexer()!;
-		this._Keys = dictionaryType.Properties()[nameof(Keys)];
-		this._Values = dictionaryType.Properties()[nameof(Values)];
-		this._ContainsKey = dictionaryType.Methods()[nameof(ContainsKey)];
+		this._Item = dictionaryType.DefaultIndexer!;
+		this._Keys = dictionaryType.Properties[nameof(Keys)];
+		this._Values = dictionaryType.Properties[nameof(Values)];
+		this._ContainsKey = dictionaryType.Methods[nameof(ContainsKey)];
 	}
 
-	public object this[object key] => this._Item.GetValue(this._Dictionary, ValueTuple.Create(key))!;
+	public object this[object key] => this._Item.GetValue(this._Dictionary, [key])!;
 
 	public IEnumerable<object> Keys => ((IEnumerable)this._Keys.GetValue(this._Dictionary)!).Cast<object>();
 
@@ -37,9 +37,6 @@ public class ReadOnlyDictionaryAdapter : ReadOnlyCollectionAdapter, IReadOnlyDic
 
 	public bool ContainsKey(object key)
 		=> (bool)this._ContainsKey.Find(key.ToValueTuple())!.Invoke(this._Dictionary, [key])!;
-
-	public IEnumerator GetEnumerator()
-		=> ((IEnumerable)this._Dictionary).GetEnumerator();
 
 	IEnumerator<KeyValuePair<object, object>> IEnumerable<KeyValuePair<object, object>>.GetEnumerator()
 		=> throw new NotImplementedException();

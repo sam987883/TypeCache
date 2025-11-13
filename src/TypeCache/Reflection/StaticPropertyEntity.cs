@@ -40,7 +40,7 @@ public sealed class StaticPropertyEntity : Property
 		{
 			this.SetMethod.ThrowIfNull();
 
-			this.SetMethod.Invoke(value.ToValueTuple());
+			this.SetMethod.Invoke([value]);
 		}
 	}
 }

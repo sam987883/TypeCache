@@ -8,11 +8,11 @@ namespace TypeCache.Web.Mediation;
 internal sealed class HttpClientValidationRule
 	: IValidationRule<HttpClientRequest>
 {
-	public Task Validate(HttpClientRequest request, CancellationToken token) => Task.Run(() =>
+	public void Validate(HttpClientRequest request)
 	{
 		request.ThrowIfNull();
 		request.Message.ThrowIfNull();
 		request.Message.RequestUri.ThrowIfNull();
 		request.Message.RequestUri.IsAbsoluteUri.ThrowIfFalse();
-	}, token);
+	}
 }

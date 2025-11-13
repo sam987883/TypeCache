@@ -3,6 +3,7 @@
 namespace TypeCache.Mediation;
 
 public interface IValidationRule<in REQUEST>
+	where REQUEST : notnull
 {
-	Task Validate(REQUEST request, CancellationToken token = default);
+	void Validate(REQUEST request);
 }

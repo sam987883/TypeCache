@@ -8,99 +8,114 @@ namespace TypeCache.Extensions;
 
 public static class ReflectionExtensions
 {
-	public static string AssemblyName(this Type @this)
-		=> @this.Assembly.GetName().Name ?? string.Empty;
+	extension(Type @this)
+	{
+		public string AssemblyName => @this.Assembly.GetName().Name ?? string.Empty;
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlySet<Attribute> Attributes(this Type @this)
-		=> TypeStore.Attributes[@this.TypeHandle];
+		public IReadOnlySet<Attribute> DeclaredAttributes => TypeStore.Attributes[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ClrType ClrType(this Type @this)
-		=> TypeStore.ClrTypes[@this.TypeHandle];
+		public ClrType ClrType => @this switch
+		{
+			{ IsEnum: true } => Reflection.ClrType.Enum,
+			{ IsValueType: true } => Reflection.ClrType.Struct,
+			{ IsInterface: true } => Reflection.ClrType.Interface,
+			_ when @this.IsAssignableTo<Delegate>() => Reflection.ClrType.Delegate,
+			_ => Reflection.ClrType.Class,
+		};
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string CodeName(this Type @this)
-		=> TypeStore.CodeNames[@this.TypeHandle];
+		public string BaseName => @this.IsGenericType ? @this.Name.Substring(0, @this.Name.IndexOf(TypeStore.GENERIC_TICKMARK)) : @this.Name;
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static CollectionType CollectionType(this Type @this)
-		=> TypeStore.CollectionTypes[@this.TypeHandle];
+		public string CodeName => TypeStore.CodeNames[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ConstructorSet Constructors(this Type @this)
-		=> TypeStore.Constructors[@this.TypeHandle];
+		public CollectionType CollectionType => TypeStore.CollectionTypes[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static PropertyIndexerEntity? DefaultIndexer(this Type @this)
-		=> TypeStore.PropertyIndexers[@this.TypeHandle].Count is 1 ? TypeStore.PropertyIndexers[@this.TypeHandle].Values.First() : null;
+		public ConstructorSet Constructors => TypeStore.Constructors[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, FieldEntity> Fields(this Type @this)
-		=> TypeStore.Fields[@this.TypeHandle];
+		public PropertyIndexerEntity? DefaultIndexer => TypeStore.PropertyIndexers[@this.TypeHandle] switch
+		{
+			{ Count: 1 } propertyIndexers => propertyIndexers.First().Value,
+			_ => null
+		};
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlySet<RuntimeTypeHandle> Interfaces(this Type @this)
-		=> TypeStore.Interfaces[@this.TypeHandle];
+		public IReadOnlyDictionary<string, FieldEntity> Fields => TypeStore.Fields[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, MethodSet<MethodEntity>> Methods(this Type @this)
-		=> TypeStore.Methods[@this.TypeHandle];
+		public IReadOnlySet<RuntimeTypeHandle> Interfaces => TypeStore.Interfaces[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static ObjectType ObjectType(this Type @this)
-		=> TypeStore.ObjectTypes[@this.TypeHandle];
+		/// <remarks>
+		/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
+		/// </remarks>
+		internal bool IsInvokable => !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, PropertyEntity> Properties(this Type @this)
-		=> TypeStore.Properties[@this.TypeHandle];
+		/// <remarks>
+		/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || @<paramref name="this"/>.Is(<see langword="typeof"/>(Nullable&lt;&gt;));</c>
+		/// </remarks>
+		public bool IsNullable => @this.IsClass || @this.IsPointer || @this.Is(typeof(Nullable<>));
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, PropertyIndexerEntity> PropertyIndexers(this Type @this)
-		=> TypeStore.PropertyIndexers[@this.TypeHandle];
+		public IReadOnlyDictionary<string, Literal> Literals => TypeStore.Literals[@this.TypeHandle];
 
-	public static ScalarType ScalarType(this Type @this)
-		=> @this.IsEnum ? Reflection.ScalarType.Enum : TypeStore.ScalarTypes.GetValue(@this.TypeHandle, Reflection.ScalarType.None);
+		public IReadOnlyDictionary<string, MethodSet<MethodEntity>> Methods => TypeStore.Methods[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, StaticFieldEntity> StaticFields(this Type @this)
-		=> TypeStore.StaticFields[@this.TypeHandle];
+		public ObjectType ObjectType => TypeStore.ObjectTypes[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>> StaticMethods(this Type @this)
-		=> TypeStore.StaticMethods[@this.TypeHandle];
+		public IReadOnlyDictionary<string, PropertyEntity> Properties => TypeStore.Properties[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, StaticPropertyEntity> StaticProperties(this Type @this)
-		=> TypeStore.StaticProperties[@this.TypeHandle];
+		public IReadOnlyDictionary<string, PropertyIndexerEntity> PropertyIndexers => TypeStore.PropertyIndexers[@this.TypeHandle];
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static IReadOnlyDictionary<string, StaticPropertyIndexerEntity> StaticPropertyIndexers(this Type @this)
-		=> TypeStore.StaticPropertyIndexers[@this.TypeHandle];
+		public ScalarType ScalarType => @this.IsEnum ? Reflection.ScalarType.Enum : TypeStore.ScalarTypes.GetValue(@this.TypeHandle, Reflection.ScalarType.None);
+
+		public IReadOnlyDictionary<string, StaticFieldEntity> StaticFields => TypeStore.StaticFields[@this.TypeHandle];
+
+		public IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>> StaticMethods => TypeStore.StaticMethods[@this.TypeHandle];
+
+		public IReadOnlyDictionary<string, StaticPropertyEntity> StaticProperties => TypeStore.StaticProperties[@this.TypeHandle];
+
+		public IReadOnlyDictionary<string, StaticPropertyIndexerEntity> StaticPropertyIndexers => TypeStore.StaticPropertyIndexers[@this.TypeHandle];
+	}
+
+	extension(ConstructorInfo @this)
+	{
+		public ConstructorEntity? ConstructorEntity => @this.DeclaringType?.Constructors.FirstOrDefault(_ => _.Handle == @this.MethodHandle);
+	}
+
+	extension(MethodInfo @this)
+	{
+		/// <remarks>
+		/// <c>!@<paramref name="this"/>.ReturnType.IsAny([<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(<see langword="void"/>)]);</c>
+		/// </remarks>
+		public bool HasReturnValue => !@this.ReturnType.IsAny([typeof(Task), typeof(ValueTask), typeof(void)]);
+
+		public MethodEntity? MethodEntity => !@this.IsGenericMethodDefinition && !@this.IsStatic
+			? @this.DeclaringType?.Methods[@this.Name].FirstOrDefault(_ => _.Handle == @this.MethodHandle)
+			: null;
+
+		public StaticMethodEntity? StaticMethodEntity => !@this.IsGenericMethodDefinition && @this.IsStatic
+			? @this.DeclaringType?.StaticMethods[@this.Name].FirstOrDefault(_ => _.Handle == @this.MethodHandle)
+			: null;
+	}
+
+	extension(FieldInfo @this)
+	{
+		public FieldEntity? FieldEntity => @this.DeclaringType?.Fields.Values.FirstOrDefault(_ => _.Handle == @this.FieldHandle);
+
+		public StaticFieldEntity? StaticFieldEntity => @this.DeclaringType?.StaticFields.Values.FirstOrDefault(_ => _.Handle == @this.FieldHandle);
+	}
 
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this)
-		=> @this.Constructors().FindDefault()?.Create();
+		=> @this.Constructors.FindDefault()?.Create();
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, object?[] arguments)
-		=> @this.Constructors().Find(arguments)?.Create(arguments);
+		=> @this.Constructors.Find(arguments)?.Create(arguments);
 
 	/// <param name="arguments">Constructor parameter arguments</param>
 	/// <exception cref="MissingMethodException"></exception>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static object? Create(this Type @this, ITuple arguments)
-		=> @this.Constructors().Find(arguments)?.Create(arguments);
-
-	/// <remarks>
-	/// <c>@<paramref name="this"/>.ReturnType.IsAny([<see langword="typeof"/>(Task), <see langword="typeof"/>(ValueTask), <see langword="typeof"/>(void)]);</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool HasReturnValue(this MethodInfo @this)
-		=> !@this.ReturnType.IsAny([typeof(Task), typeof(ValueTask), typeof(void)]);
+		=> @this.Constructors.Find(arguments)?.Create(arguments);
 
 	/// <remarks>
 	/// Supports generic type definitions as well.  For example:
@@ -249,7 +264,7 @@ public static class ReflectionExtensions
 		@this.ThrowIfNull();
 		targetType.ThrowIfNull();
 
-		return @this.ScalarType().IsConvertibleTo(targetType.ScalarType());
+		return @this.ScalarType.IsConvertibleTo(targetType.ScalarType);
 	}
 
 	/// <summary>
@@ -267,26 +282,12 @@ public static class ReflectionExtensions
 		=> @this.IsAssignableTo<IEnumerable<T>>();
 
 	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.IsPointer &amp;&amp; !@<paramref name="this"/>.IsByRef &amp;&amp; !@<paramref name="this"/>.IsByRefLike;</c>
-	/// </remarks>
-	[DebuggerHidden]
-	internal static bool IsInvokable(this Type @this)
-		=> !@this.IsPointer && !@this.IsByRef && !@this.IsByRefLike;
-
-	/// <remarks>
 	/// <c>=&gt; ((<see cref="MethodBase"/>)@<paramref name="this"/>).IsInvokable() &amp;&amp; @<paramref name="this"/>.ReturnType.IsInvokable();</c>
 	/// </remarks>
 	[DebuggerHidden]
 	internal static bool IsInvokable(this MethodInfo @this)
-		=> @this.GetParameters().All(parameterInfo => !parameterInfo.IsOut && parameterInfo.ParameterType.IsInvokable())
-			&& @this.ReturnType.IsInvokable();
-
-	/// <summary>
-	/// <c>=&gt; @<paramref name="this"/>.IsClass || @<paramref name="this"/>.IsPointer || @<paramref name="this"/>.Is(<see langword="typeof"/>(Nullable&lt;&gt;));</c>
-	/// </summary>
-	[DebuggerHidden]
-	public static bool IsNullable(this Type @this)
-		=> @this.IsClass || @this.IsPointer || @this.Is(typeof(Nullable<>));
+		=> @this.GetParameters().All(parameterInfo => !parameterInfo.IsOut && parameterInfo.ParameterType.IsInvokable)
+			&& @this.ReturnType.IsInvokable;
 
 	/// <inheritdoc cref="MethodInfo.MakeGenericMethod(Type[])"/>
 	/// <remarks>
@@ -364,21 +365,6 @@ public static class ReflectionExtensions
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public static MethodInfo MakeGenericMethod<T1, T2, T3, T4, T5, T6, T7>(this MethodInfo @this)
 		=> @this.MakeGenericMethod(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6), typeof(T7));
-
-	public static ConstructorEntity? ToConstructorEntity(this ConstructorInfo @this)
-		=> @this.DeclaringType?.Constructors().FirstOrDefault(_ => _.Handle == @this.MethodHandle);
-
-	public static FieldEntity? ToFieldEntity(this FieldInfo @this)
-		=> @this.DeclaringType?.Fields().Values.FirstOrDefault(_ => _.Handle == @this.FieldHandle);
-
-	public static MethodEntity? ToMethodEntity(this MethodInfo @this)
-		=> !@this.IsGenericMethod && !@this.IsStatic ? @this.DeclaringType?.Methods()[@this.Name].FirstOrDefault(_ => _.Handle == @this.MethodHandle) : null;
-
-	public static StaticFieldEntity? ToStaticFieldEntity(this FieldInfo @this)
-		=> @this.DeclaringType?.StaticFields().Values.FirstOrDefault(_ => _.Handle == @this.FieldHandle);
-
-	public static StaticMethodEntity? ToStaticMethodEntity(this MethodInfo @this)
-		=> !@this.IsGenericMethod && @this.IsStatic ? @this.DeclaringType?.StaticMethods()[@this.Name].FirstOrDefault(_ => _.Handle == @this.MethodHandle) : null;
 
 	/// <inheritdoc cref="FieldInfo.GetFieldFromHandle(RuntimeFieldHandle)"/>
 	/// <remarks>

@@ -6,7 +6,6 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TypeCache.Data;
-using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.Mediation;
 
@@ -14,11 +13,11 @@ namespace TypeCache.Web.Handlers;
 
 internal static class SqlApiHandler
 {
-	private static IDataSource GetDataSource(this HttpContext @this)
-		=> (IDataSource)@this.Items[nameof(IDataSource)]!;
-
-	private static ObjectSchema GetObjectSchema(this HttpContext @this)
-		=> (ObjectSchema)@this.Items[nameof(ObjectSchema)]!;
+	extension(HttpContext @this)
+	{
+		private ObjectSchema ObjectSchema
+			=> (ObjectSchema)@this.Items[nameof(ObjectSchema)]!;
+	}
 
 	public static async Task<IResult> ExecuteProcedure(
 		HttpContext httpContext
@@ -28,7 +27,7 @@ internal static class SqlApiHandler
 		, [FromRoute][Description("The name of the database object schema.")] string schema
 		, [FromRoute][Description("The name of the stored procedure.")] string procedure)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(procedure);
 		sqlCommand.Type = CommandType.StoredProcedure;
 
@@ -39,8 +38,7 @@ internal static class SqlApiHandler
 				sqlCommand.Parameters.Add(parameter.Name, values.First());
 		}
 
-		var request = new SqlDataSetRequest { Command = sqlCommand };
-		var response = await mediator.Map(request, httpContext.RequestAborted);
+		var response = await mediator.Request<ValueTask<DataSet>>().Send(sqlCommand, httpContext.RequestAborted);
 
 		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
 			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
@@ -62,23 +60,21 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromQuery][Description("The DELETE statement WHERE clause (SQL syntax).")] string where)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateDeleteSQL(where, [output]);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -93,20 +89,18 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The comma delimited columns to return (SQL syntax).")] string output
 		, [FromBody] JsonArray data)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateDeleteSQL(data, output);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -133,23 +127,21 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")] string? top
 		, [FromQuery][Description("The SELECT statement WHERE clause (SQL syntax).")] string where)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateInsertSQL(columns.SplitEx(','), selectParameter, output?.SplitEx(',') ?? []);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -164,20 +156,18 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The INSERT statement OUTPUT clause comma delimited list of columns/expressions (SQL syntax).")] string? output
 		, [FromBody][Description("The data to insert.")] JsonArray data)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateInsertSQL(data, output is not null ? [output] : []);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -201,8 +191,8 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The SELECT statement TOP clause value, either a number (ie. 10000) or a percentage (ie. 50%) (SQL syntax).")] string? top
 		, [FromQuery][Description("The SELECT statement WHERE clause (SQL syntax).")] string where)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
-		if (select.IsBlank())
+		var objectSchema = httpContext.ObjectSchema;
+		if (select.IsBlank)
 			return Results.BadRequest(Invariant($"[{nameof(select)}] query parameter must be specified."));
 
 		var sql = objectSchema.CreateSelectSQL(selectParameter);
@@ -211,8 +201,7 @@ internal static class SqlApiHandler
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var request = new SqlResultJsonRequest { Command = sqlCommand };
-		var response = await mediator.Map(request, httpContext.RequestAborted);
+		var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 		return Results.Ok(response);
 	}
 
@@ -227,23 +216,21 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The UPDATE statement SET clause comma delimited list of columns=expressions (SQL syntax).")] string set
 		, [FromQuery][Description("The UPDATE statement WHERE clause (SQL syntax).")] string where)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateUpdateSQL(set.SplitEx(','), where, output is not null ? [output] : []);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -258,20 +245,18 @@ internal static class SqlApiHandler
 		, [FromQuery][Description("The UPDATE statement OUTPUT clause comma delimited list of columns/expressions (SQL syntax).")] string? output
 		, [FromBody][Description("The data used for updating the table.")] JsonArray data)
 	{
-		var objectSchema = httpContext.GetObjectSchema();
+		var objectSchema = httpContext.ObjectSchema;
 		var sql = objectSchema.CreateUpdateSQL(data, output is not null ? [output] : []);
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 
-		if (output.IsNotBlank())
+		if (output.IsNotBlank)
 		{
-			var request = new SqlResultJsonRequest { Command = sqlCommand };
-			var response = await mediator.Map(request, httpContext.RequestAborted);
+			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok(response);
 		}
 		else
 		{
-			var request = new SqlExecuteRequest { Command = sqlCommand };
-			await mediator.Execute(request, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}

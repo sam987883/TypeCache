@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Numerics;
-using TypeCache.Collections;
 using TypeCache.Extensions;
 using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
@@ -12,73 +11,87 @@ public static class CsvExtensions
 {
 	private static readonly char[] ESCAPE_CHARS = ['"', ',', '\r', '\n'];
 
-	/// <remarks>
-	/// <c>=&gt; <see cref="ESCAPE_CHARS"/>.Contains(@<paramref name="this"/>) ? Invariant($"\"{@<paramref name="this"/>}\"") : @<paramref name="this"/>.ToString();</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string EscapeCSV(this char @this)
-		=> ESCAPE_CHARS.Contains(@this) ? Invariant($"\"{@this}\"") : @this.ToString();
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/>.ContainsAny(<see cref="ESCAPE_CHARS"/>) ? Invariant($"\"{@<paramref name="this"/>.Replace("\"", "\"\"")}\"") : @<paramref name="this"/>;</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string EscapeCSV(this string @this)
-		=> @this.ContainsAny(ESCAPE_CHARS) ? Invariant($"\"{@this.Replace("\"", "\"\"")}\"") : @this;
-
-	public static string EscapeCSV(this object? @this) => @this switch
+	extension(object? @this)
 	{
-		null => string.Empty,
-		bool => @this.ToString(),
-		char character => character.EscapeCSV(),
-		IFormattable formattable => @this switch
-		{
-			sbyte or byte => formattable.ToString("X", InvariantCulture),
-			DateOnly or DateTime or DateTimeOffset or TimeOnly => formattable.ToString("O", InvariantCulture),
-			TimeSpan => formattable.ToString("c", InvariantCulture),
-			Guid => formattable.ToString("D", InvariantCulture),
-			Enum => formattable.ToString("F", InvariantCulture),
-			_ when @this.GetType().Implements(typeof(IBinaryInteger<>)) => formattable.ToString("D", InvariantCulture),
-			_ when @this.GetType().Implements(typeof(IFloatingPoint<>)) => formattable.ToString("D", InvariantCulture),
-			_ => @this.ToString()?.EscapeCSV()
-		},
-		string text => text.EscapeCSV(),
-		_ => @this.ToString()?.EscapeCSV()
-	} ?? string.Empty;
+		public string EscapeCSV()
+			=> @this switch
+			{
+				null => string.Empty,
+				bool => @this.ToString(),
+				char character => character.EscapeCSV(),
+				IFormattable formattable => @this switch
+				{
+					sbyte or byte => formattable.ToString("X", InvariantCulture),
+					DateOnly or DateTime or DateTimeOffset or TimeOnly => formattable.ToString("O", InvariantCulture),
+					TimeSpan => formattable.ToString("c", InvariantCulture),
+					Guid => formattable.ToString("D", InvariantCulture),
+					Enum => formattable.ToString("F", InvariantCulture),
+					_ when @this.GetType().Implements(typeof(IBinaryInteger<>)) => formattable.ToString("D", InvariantCulture),
+					_ when @this.GetType().Implements(typeof(IFloatingPoint<>)) => formattable.ToString("D", InvariantCulture),
+					_ => @this.ToString()?.EscapeCSV()
+				},
+				string text => text.EscapeCSV(),
+				_ => @this.ToString()?.EscapeCSV()
+			} ?? string.Empty;
+	}
 
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> <see langword="is not null"/> ? <see cref="string"/>.Join(", ", @<paramref name="this"/>) : <see cref="string.Empty"/>;</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string ToCSV(this IEnumerable<string>? @this)
-		=> @this is not null ? string.Join(", ", @this) : string.Empty;
-
-	/// <summary>
-	/// Creates a <c><see langword="string[]"/></c> result of formal (escaped) CSV data.
-	/// </summary>
-	/// <typeparam name="T">The model to convert to CSV.</typeparam>
-	/// <returns>Formal (escaped) CSV data</returns>
-	public static string[] ToCSV<T>(this IEnumerable<T> @this)
-		where T : notnull
+	extension(char @this)
 	{
-		var properties = Type<T>.Properties.Values.Where(_ => _.CanRead).ToArray();
-		if (properties.Length > 0)
+		/// <remarks>
+		/// <c>=&gt; <see cref="ESCAPE_CHARS"/>.Contains(@this) ? Invariant($"\"{@this}\"") : @this.ToString();</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public string EscapeCSV()
+			=> ESCAPE_CHARS.Contains(@this) ? Invariant($"\"{@this}\"") : @this.ToString();
+	}
+
+	extension(string @this)
+	{
+		/// <remarks>
+		/// <c>=&gt; @this.ContainsAny(<see cref="ESCAPE_CHARS"/>) ? Invariant($"\"{@this.Replace("\"", "\"\"")}\"") : @this;</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public string EscapeCSV()
+			=> @this.ContainsAny(ESCAPE_CHARS) ? Invariant($"\"{@this.Replace("\"", "\"\"")}\"") : @this;
+	}
+
+	extension(IEnumerable<string>? @this)
+	{
+		/// <remarks>
+		/// <c>=&gt; @this <see langword="is not null"/> ? <see cref="string"/>.Join(", ", @this) : <see cref="string.Empty"/>;</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public string ToCSV()
+			=> @this is not null ? string.Join(", ", @this) : string.Empty;
+	}
+
+	extension<T>(IEnumerable<T> @this) where T : notnull
+	{
+		/// <summary>
+		/// Creates a <c><see langword="string[]"/></c> result of formal (escaped) CSV data.
+		/// </summary>
+		/// <returns>Formal (escaped) CSV data</returns>
+		public string[] ToCSV()
 		{
-			var headerRow = string.Join(',', properties.Select(_ => _.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', properties.Select(_ => _.GetValue(row).EscapeCSV())));
+			var properties = Type<T>.Properties.Values.Where(_ => _.CanRead).ToArray();
+			if (properties.Length > 0)
+			{
+				var headerRow = string.Join(',', properties.Select(_ => _.Name.EscapeCSV()));
+				var dataRows = @this.Select(row => string.Join(',', properties.Select(_ => _.GetValue(row).EscapeCSV())));
 
-			return [headerRow, ..dataRows];
+				return [headerRow, .. dataRows];
+			}
+
+			var fields = Type<T>.Fields.Values.Where(_ => _.IsPublic).ToArray();
+			if (fields.Length > 0)
+			{
+				var headerRow = string.Join(',', fields.Select(_ => _.Name.EscapeCSV()));
+				var dataRows = @this.Select(row => string.Join(',', fields.Select(_ => _.GetValue(row).EscapeCSV())));
+
+				return [headerRow, .. dataRows];
+			}
+
+			return [];
 		}
-
-		var fields = Type<T>.Fields.Values.Where(_ => _.IsPublic).ToArray();
-		if (fields.Length > 0)
-		{
-			var headerRow = string.Join(',', fields.Select(_ => _.Name.EscapeCSV()));
-			var dataRows = @this.Select(row => string.Join(',', fields.Select(_ => _.GetValue(row).EscapeCSV())));
-
-			return [headerRow, .. dataRows];
-		}
-
-		return Array<string>.Empty;
 	}
 }

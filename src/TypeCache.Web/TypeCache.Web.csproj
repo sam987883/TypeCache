@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+	<LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>TypeCache.Web</RootNamespace>
     <PackageId>TypeCache.Web</PackageId>
-    <Version>9.2.0</Version>
+    <Version>9.3.0</Version>
     <Authors>Samuel Abraham &lt;sam987883@gmail.com&gt;</Authors>
     <Company>Samuel Abraham &lt;sam987883@gmail.com&gt;</Company>
     <Title>TypeCache Web Library</Title>

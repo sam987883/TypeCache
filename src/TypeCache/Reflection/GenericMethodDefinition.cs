@@ -13,7 +13,7 @@ public class GenericMethodDefinition : Method
 	{
 		methodInfo.IsGenericMethodDefinition.ThrowIfFalse();
 
-		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.HasReturnValue = !methodInfo.ReturnType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]);
 		this.Return = new(methodInfo.ReturnParameter);
 	}
 

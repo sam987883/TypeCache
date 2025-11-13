@@ -6,22 +6,17 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlDataTableRequest : IRequest<DataTable>
+internal sealed class SqlDataTableRule : IRule<SqlCommand, DataTable>
 {
-	public required SqlCommand Command { get; set; }
-}
-
-internal sealed class SqlDataTableRule : IRule<SqlDataTableRequest, DataTable>
-{
-	public async Task<DataTable> Map(SqlDataTableRequest request, CancellationToken token)
+	public async ValueTask<DataTable> Send(SqlCommand request, CancellationToken token)
 	{
-		await using var connection = request.Command.DataSource.CreateDbConnection();
+		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
-		await using var command = connection.CreateCommand(request.Command);
+		await using var command = connection.CreateCommand(request);
 
 		var result = await command.GetDataTableAsync(token);
 
-		command.CopyOutputParameters(request.Command);
+		command.CopyOutputParameters(request);
 
 		return result;
 	}

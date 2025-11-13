@@ -9,11 +9,14 @@ namespace TypeCache.Web.Extensions;
 
 public static class AuthorizationHandlerContextExtensions
 {
-	public static ControllerActionDescriptor? GetControllerActionDescriptor(this AuthorizationHandlerContext @this)
-		=> @this.Resource switch
-		{
-			Endpoint endpoint => endpoint.Metadata.OfType<ControllerActionDescriptor>().First(), // Web API
-			AuthorizationFilterContext authorizationFilterContext => authorizationFilterContext.ActionDescriptor as ControllerActionDescriptor, // MVC
-			_ => null
-		};
+	extension(AuthorizationHandlerContext @this)
+	{
+		public ControllerActionDescriptor? GetControllerActionDescriptor()
+			=> @this.Resource switch
+			{
+				Endpoint endpoint => endpoint.Metadata.OfType<ControllerActionDescriptor>().First(), // Web API
+				AuthorizationFilterContext authorizationFilterContext => authorizationFilterContext.ActionDescriptor as ControllerActionDescriptor, // MVC
+				_ => null
+			};
+	}
 }

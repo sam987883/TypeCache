@@ -21,24 +21,24 @@ public class ListAdapter : CollectionAdapter, IList<object>
 
 		var listType = list.GetType().GetInterfaces().First(_ => _.Is(typeof(IList<>)));
 
-		this._DefaultIndexer = listType.DefaultIndexer()!;
-		this._IndexOf = listType.Methods()[nameof(IndexOf)].First();
-		this._Insert = listType.Methods()[nameof(Insert)].First();
-		this._RemoveAt = listType.Methods()[nameof(RemoveAt)].First();
+		this._DefaultIndexer = listType.DefaultIndexer!;
+		this._IndexOf = listType.Methods[nameof(IndexOf)].First();
+		this._Insert = listType.Methods[nameof(Insert)].First();
+		this._RemoveAt = listType.Methods[nameof(RemoveAt)].First();
 	}
 
 	public object this[int index]
 	{
-		get => this._DefaultIndexer.GetValue(this._Collection, index.ToValueTuple())!;
-		set => this._DefaultIndexer.SetValue(this._Collection, index.ToValueTuple(), value);
+		get => this._DefaultIndexer.GetValue(this._Collection, [index])!;
+		set => this._DefaultIndexer.SetValue(this._Collection, [index], value);
 	}
 
 	public int IndexOf(object item)
-		=> (int)this._IndexOf.Invoke(this._Collection, item.ToValueTuple())!;
+		=> (int)this._IndexOf.Invoke(this._Collection, [item])!;
 
 	public void Insert(int index, object item)
-		=> _ = this._Insert.Invoke(this._Collection, (index, item))!;
+		=> _ = this._Insert.Invoke(this._Collection, [index, item])!;
 
 	public void RemoveAt(int index)
-		=> _ = this._RemoveAt.Invoke(this._Collection, index.ToValueTuple())!;
+		=> _ = this._RemoveAt.Invoke(this._Collection, [index])!;
 }

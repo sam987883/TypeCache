@@ -7,9 +7,10 @@
 [Request Features (or report a bug) (if any)](https://github.com/sam987883/TypeCache/issues)
 
 ---
-### `TypeCache.Extensions` - Faster Reflection
+### `TypeCache.Reflection` - Faster Reflection
 
 	using TypeCache.Extensions;
+	using TypeCache.Reflection;
 
 	// Create an instance of Senator using the default constructor
 	var intance = typeof(Senator).Create();
@@ -17,56 +18,56 @@
 	// Create an instance of Customer using a matching constructor
 	var intance = Type<Senator>.Create(["Bob Dole", 98]); // Passing an array of values
 	var intance = typeof(Senator).Create(["Bob Dole", 98]); // Passing an array of values
-	var intance = Type<Senator>.Create(("Bob Dole", 98)); // Passing a tuple of values
-	var intance = typeof(Senator).Create(("Bob Dole", 98)); // Passing a tuple of values
+	var intance = Type<Senator>.Create(("Bob Dole", 98)); // Passing a tuple of strongly-typed values
+	var intance = typeof(Senator).Create(("Bob Dole", 98)); // Passing a tuple of strongly-typed values
 
 	// Find the matching ConstructorInfo object based on argument values
 	var comstructorEntity = Type<Senator>.Constructors.Find(["Bob Dole", 98]) // Passing an array of values
-	var comstructorEntity = typeof(Senator).Constructors().Find(["Bob Dole", 98]) // Passing an array of values
-	var comstructorEntity = Type<Senator>.Constructors.Find(("Bob Dole", 98)) // Passing a tuple of values
-	var comstructorEntity = typeof(Senator).Constructors().Find(("Bob Dole", 98)) // Passing a tuple of values
+	var comstructorEntity = typeof(Senator).Constructors.Find(["Bob Dole", 98]) // Passing an array of values
+	var comstructorEntity = Type<Senator>.Constructors.Find(("Bob Dole", 98)) // Passing a tuple of strongly-typed values
+	var comstructorEntity = typeof(Senator).Constructors.Find(("Bob Dole", 98)) // Passing a tuple of strongly-typed values
 
 	// Find a matching MethodInfo object based on argument values
 	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
-	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
+	var methodEntity = typeof(Senator).Methods["RunForPresident"].Find([typeof(int), typeof(bool)]); // Find method by argument types
 	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find([1996, true]); // Passing an array of values
-	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find([1996, true]); // Passing an array of values
-	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of values
-	var methodEntity = typeof(Senator).Methods()["RunForPresident"].Find((1996, true)); // Passing a tuple of values
+	var methodEntity = typeof(Senator).Methods["RunForPresident"].Find([1996, true]); // Passing an array of values
+	var methodEntity = Type<Senator>.Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of strongly-typed values
+	var methodEntity = typeof(Senator).Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of strongly-typed values
 
 	// Get a field value
 	var fieldValue = Type<Senator>.Fields["_Bills"].GetValue(instance);
-	var fieldValue = typeof(Senator).Fields()["_Bills"].GetValue(instance);
+	var fieldValue = typeof(Senator).Fields["_Bills"].GetValue(instance);
 
 	// Set a field value
 	Type<Senator>.Fields["_Bills"].SetValue(instance, 47);
-	typeof(Senator).Fields()["_Bills"].SetValue(instance, 47);
+	typeof(Senator).Fields["_Bills"].SetValue(instance, 47);
 
 	var fieldEntity = Type<Senator>.Fields["_Bills"];
-	var fieldEntity = typeof(Senator).Fields()["_Bills"];
+	var fieldEntity = typeof(Senator).Fields["_Bills"];
 	fieldEntity.SetValue(instance, 47);
 
 	// Get a property value
 	var propertyValue = Type<Senator>.Properties["DoleWhip"].GetValue(instance);
-	var propertyValue = typeof(Senator).Properties()["DoleWhip"].GetValue(instance);
+	var propertyValue = typeof(Senator).Properties["DoleWhip"].GetValue(instance);
 
 	var propertyEntity = Type<Senator>.Properties["DoleWhip"];
-	var propertyEntity = typeof(Senator).Properties()["DoleWhip"];
+	var propertyEntity = typeof(Senator).Properties["DoleWhip"];
 	var propertyValue = propertyEntity.GetValue(instance);
 
 	// Set a property value
 	Type<Senator>.Properties["DoleWhip"].SetValue(instance, Fruits.Pineapple);
-	typeof(Senator).Properties()["DoleWhip"].SetValue(instance, Fruits.Pineapple);
+	typeof(Senator).Properties["DoleWhip"].SetValue(instance, Fruits.Pineapple);
 
 	var propertyEntity = Type<Senator>.Properties["DoleWhip"];
-	var propertyEntity = typeof(Senator).Properties()["DoleWhip"];
+	var propertyEntity = typeof(Senator).Properties["DoleWhip"];
 	propertyEntity.SetValueEx("DoleWhip", Fruits.Pineapple);
 
 	// Invoke a method
 	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
-	typeof(Senator).Methods()["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
-	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of values
-	typeof(Senator).Methods()["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of values
+	typeof(Senator).Methods["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
+	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of strongly-typed values
+	typeof(Senator).Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of strongly-typed values
 
 	var state = Type<Senator>.Methods["GetState].Invoke(instance);
 	var state = typeof(Senator).Methods()["GetState].Invoke(instance);
@@ -97,14 +98,21 @@
 
 	IMediator mediator; // Injected
 
-	var bobDole1 = new Representative(); // Implements IRequest<Senator>
-	Senator bobDole2 = mediator.Map(bobDole1); // Implements IRequest<President>
+	var bobDoleRep = new Representative(); // Implements IRequest<Senator>
+	Senator bobDoleSen = mediator.Send(bobDoleRep); // Where bobDoleRep implements IRequest<Senator>
 
-	mediator.Execute("Presidential Campaign", bobDole2);
+	// Similar code with needing to implement IRequest<>
+	bobDoleSen = mediator.Request<Senator>().Send(bobDoleRep); // Where bobDoleRep does NOT need to implement IRequest<Senator>
 
-	President? bobDole3 = mediator.Map(nameof(President), bobDole2); // Map using named Rule
+	mediator.Dispatch("Presidential Campaign", bobDole2);
 
-	bobDole3.AssertNotNull(); // Unhandled exception
+	President? bobDolePres = mediator.Send(nameof(President), bobDole2); // Send using named Rule
+
+	bobDolePres = mediator.Request<Senator>(nameof(President)).Send(bobDole2); // Send using named Rule without implementing IRequest<>
+
+	bobDolePres.AssertNotNull(); // Unhandled exception
+
+
 
 ---
 ### `TypeCache.Data` - Simple Robust Database CRUD Access

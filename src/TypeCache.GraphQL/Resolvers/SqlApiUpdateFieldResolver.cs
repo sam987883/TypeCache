@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
+using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
@@ -20,7 +21,7 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
-		var inputs = context.GetInputs().Keys.ToArray();
+		var inputs = context.GetInputs().ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
 			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
@@ -53,9 +54,9 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 
 		var result = Array<DataRow>.Empty;
 		if (output.Any())
-			result = (await mediator.Map(sqlCommand.ToSqlDataTableRequest(), context.CancellationToken)).Select();
+			result = (await mediator.Request<DataTable>().Send(sqlCommand, context.CancellationToken)).Select();
 		else
-			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Dispatch(sqlCommand, context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -69,13 +70,13 @@ public sealed class SqlApiUpdateFieldResolver : FieldResolver
 }
 
 public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
-	where T : new()
+	where T : notnull, new()
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
 		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
-		var inputs = context.GetInputs().Keys.ToArray();
+		var inputs = context.GetInputs().ToArray();
 		var selections = context.GetSelections().ToArray();
 		var output = objectSchema.Columns
 			.Where(column => selections.Any(_ => _.StartsWithIgnoreCase(Invariant($"output.{column.Name}"))))
@@ -101,9 +102,9 @@ public sealed class SqlApiUpdateFieldResolver<T> : FieldResolver
 
 		var result = (IList<object>)Array<object>.Empty;
 		if (output.Any())
-			result = await mediator.Map(sqlCommand.ToSqlModelsRequest<T>(data.Length), context.CancellationToken);
+			result = await mediator.Request<IList<object>>().Send(new SqlResultsRequest<T>(sqlCommand, data.Length), context.CancellationToken);
 		else
-			await mediator.Execute(sqlCommand.ToSqlExecuteRequest(), context.CancellationToken);
+			await mediator.Dispatch(sqlCommand, context.CancellationToken);
 
 		return new OutputResponse<T>()
 		{

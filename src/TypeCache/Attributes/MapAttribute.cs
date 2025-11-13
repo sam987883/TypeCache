@@ -14,10 +14,10 @@ public abstract class MapAttribute : Attribute
 		type.ThrowIfNull();
 		member.ThrowIfBlank();
 
-		if (type.Properties().TryGetValue(member, out var property))
+		if (type.Properties.TryGetValue(member, out var property))
 			property.CanRead.ThrowIfFalse();
 		else
-			type.Fields().TryGetValue(member, out var field).ThrowIfFalse();
+			type.Fields.TryGetValue(member, out var field).ThrowIfFalse();
 
 		this.Member = member;
 		this.Type = type;

@@ -60,17 +60,14 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 
 		var result = await executer.ExecuteAsync(options);
 		result.Extensions ??= new(2, StringComparer.OrdinalIgnoreCase);
-		result.Extensions["RequestId"] = requestId;
-		result.Extensions["RequestTime"] = requestTime;
+		result.Extensions["request-id"] = requestId;
+		result.Extensions["request-time"] = requestTime;
 
 		if (result.Errors?.Count > 0)
 		{
 			var logger = httpContext.RequestServices.GetLogger<GraphQLMiddleware>();
-			logger?.LogError(result.Errors[0], result.Errors[0].Message);
-
-			char[] separator = ['\r', '\n'];
-			result.Extensions!["ErrorMessage"] = result.Errors[0].Message.SplitEx(separator);
-			result.Extensions["ErrorStackTrace"] = result.Errors[0].StackTrace?.SplitEx(separator);
+			Exception error = result.Errors.First();
+			logger?.LogError(error.InnerMostException, error.InnerMostException.Message);
 		}
 
 		httpContext.Response.ContentType = Application.Json;

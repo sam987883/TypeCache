@@ -13,6 +13,9 @@
 			"dotnetRunMessages": true,
 			"launchBrowser": true,
 			"launchUrl": "swagger",
+			//"launchUrl": "playground/custom",
+			//"launchUrl": "playground/data",
+			//"launchUrl": "playground/schema",
 			"applicationUrl": "http://localhost:5198",
 			"environmentVariables": {
 				"ASPNETCORE_ENVIRONMENT": "Development"

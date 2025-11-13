@@ -18,19 +18,19 @@ public readonly record struct Edge<T>(
 	{
 		var graphType = new ObjectGraphType
 		{
-			Name = Invariant($"{name}{nameof(Edge<T>)}"),
-			Description = Type<Edge<T>>.Attributes.GraphQLDescription()
+			Name = Invariant($"{name}{nameof(Edge<>)}"),
+			Description = Type<Edge<T>>.Attributes.GraphQLDescription
 		};
 
 		graphType.AddField(new()
 		{
-			Name = nameof(Edge<T>.Cursor),
+			Name = nameof(Edge<>.Cursor),
 			Type = ScalarType.Int32.ToGraphType(),
 			Resolver = new FuncFieldResolver<Edge<T>, int>(context => context.Source.Cursor)
 		});
 		graphType.AddField(new()
 		{
-			Name = nameof(Edge<T>.Node),
+			Name = nameof(Edge<>.Node),
 			ResolvedType = new NonNullGraphType(dataGraphType),
 			Resolver = new FuncFieldResolver<Edge<T>, T>(context => context.Source.Node)
 		});

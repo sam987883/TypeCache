@@ -37,6 +37,8 @@ public static class TypeStore
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlySet<RuntimeTypeHandle>> Interfaces { get; }
 
+	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, Literal>> Literals { get; }
+
 	public static IReadOnlyDictionary<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>> Methods { get; }
 
 	public static IReadOnlyDictionary<RuntimeTypeHandle, ObjectType> ObjectTypes { get; }
@@ -63,150 +65,182 @@ public static class TypeStore
 		Attributes = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlySet<Attribute>>(handle =>
 			handle.ToType().GetCustomAttributes().ToFrozenSet());
 
-		ClrTypes = LazyDictionary.Create<RuntimeTypeHandle, ClrType>(GetClrType);
+		ClrTypes = LazyDictionary.Create<RuntimeTypeHandle, ClrType>(handle => GetClrType(handle.ToType()));
 
 		CodeNames = LazyDictionary.Create<RuntimeTypeHandle, string>(handle => GetCodeName(handle.ToType()));
 
-		CollectionTypes = LazyDictionary.Create<RuntimeTypeHandle, CollectionType>(GetCollectionType);
+		CollectionTypes = LazyDictionary.Create<RuntimeTypeHandle, CollectionType>(handle => GetCollectionType(handle.ToType()));
 
 		Constructors = LazyDictionary.Create<RuntimeTypeHandle, ConstructorSet>(handle => new(handle.ToType()));
 
 		Fields = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, FieldEntity>>(handle =>
 		{
-			var names = handle.ToType().GetFields(INSTANCE_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<FieldEntity>(() => new FieldEntity(handle.ToType().GetField(name, INSTANCE_BINDING)!), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
+			var fieldInfos = handle.ToType().GetFields(INSTANCE_BINDING).Where(_ => !_.IsLiteral);
+			if (!fieldInfos.Any())
+				return FrozenDictionary<string, FieldEntity>.Empty;
+
+			var names = fieldInfos.Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
+			var nameComparer = names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return fieldInfos.ToFrozenDictionary(fieldInfo => fieldInfo.Name, fieldInfo => new FieldEntity(fieldInfo), nameComparer);
 		});
 
 		Interfaces = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlySet<RuntimeTypeHandle>>(handle =>
 			handle.ToType().GetInterfaces().Select(_ => _.TypeHandle).ToFrozenSet());
 
-		Methods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>>(handle =>
+		Literals = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, Literal>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(INSTANCE_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<MethodSet<MethodEntity>>(() => new MethodSet<MethodEntity>(handle.ToType(), name, INSTANCE_BINDING), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
+			var fieldInfos = handle.ToType().GetFields(STATIC_BINDING).Where(_ => _.IsLiteral);
+			if (!fieldInfos.Any())
+				return FrozenDictionary<string, Literal>.Empty;
+
+			var names = fieldInfos.Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
+			var nameComparer = names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return fieldInfos.ToFrozenDictionary(fieldInfo => fieldInfo.Name, fieldInfo => new Literal(fieldInfo), nameComparer);
 		});
 
-		ObjectTypes = LazyDictionary.Create<RuntimeTypeHandle, ObjectType>(GetObjectType);
+		Methods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<MethodEntity>>>(handle =>
+		{
+			var methodInfos = handle.ToType().GetMethods(INSTANCE_BINDING);
+			if (methodInfos.Length is 0)
+				return FrozenDictionary<string, MethodSet<MethodEntity>>.Empty;
+
+			var names = methodInfos.Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
+			var comparer = names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return methodInfos
+				.GroupBy(_ => _.Name, comparer)
+				.ToFrozenDictionary(_ => _.Key, createMethodSet, comparer);
+		});
+
+		ObjectTypes = LazyDictionary.Create<RuntimeTypeHandle, ObjectType>(handle => GetObjectType(handle.ToType()));
 
 		Properties = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyEntity>>(handle =>
 		{
-			var propetyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
+			var propertyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
 				.Where(_ => _.GetIndexParameters().Length is 0);
-			return propetyInfos.Any()
-				? propetyInfos.ToFrozenDictionary(
-					propetyInfo => propetyInfo.Name,
-					propetyInfo => new PropertyEntity(propetyInfo),
-					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				: FrozenDictionary<string, PropertyEntity>.Empty;
+			if (!propertyInfos.Any())
+				return FrozenDictionary<string, PropertyEntity>.Empty;
+
+			var nameComparer = propertyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return propertyInfos.ToFrozenDictionary(propertyInfo => propertyInfo.Name, propertyInfo => new PropertyEntity(propertyInfo), nameComparer);
 		});
 
 		PropertyIndexers = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, PropertyIndexerEntity>>(handle =>
 		{
-			var propetyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
+			var propertyInfos = handle.ToType().GetProperties(INSTANCE_BINDING)
 				.Where(_ => _.GetIndexParameters().Length > 0);
-			return propetyInfos.Any()
-				? propetyInfos.ToFrozenDictionary(
-					propetyInfo => propetyInfo.Name,
-					propetyInfo => new PropertyIndexerEntity(propetyInfo),
-					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				: FrozenDictionary<string, PropertyIndexerEntity>.Empty;
+			if (!propertyInfos.Any())
+				return FrozenDictionary<string, PropertyIndexerEntity>.Empty;
+
+			var nameComparer = propertyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return propertyInfos.ToFrozenDictionary(propertyInfo => propertyInfo.Name, propertyInfo => new PropertyIndexerEntity(propertyInfo), nameComparer);
 		});
 
-		ScalarTypes = new (RuntimeTypeHandle Handle, ScalarType ScalarType)[]
+		ScalarTypes = new (Type Type, ScalarType ScalarType)[]
 		{
-			(typeof(BigInteger).TypeHandle, ScalarType.BigInteger),
-			(typeof(bool).TypeHandle, ScalarType.Boolean),
-			(typeof(byte).TypeHandle, ScalarType.Byte),
-			(typeof(char).TypeHandle, ScalarType.Char),
-			(typeof(DateOnly).TypeHandle, ScalarType.DateOnly),
-			(typeof(DateTime).TypeHandle, ScalarType.DateTime),
-			(typeof(DateTimeOffset).TypeHandle, ScalarType.DateTimeOffset),
-			(typeof(decimal).TypeHandle, ScalarType.Decimal),
-			(typeof(double).TypeHandle, ScalarType.Double),
-			(typeof(Enum).TypeHandle, ScalarType.Enum),
-			(typeof(Guid).TypeHandle, ScalarType.Guid),
-			(typeof(Half).TypeHandle, ScalarType.Half),
-			(typeof(Index).TypeHandle, ScalarType.Index),
-			(typeof(Int128).TypeHandle, ScalarType.Int128),
-			(typeof(short).TypeHandle, ScalarType.Int16),
-			(typeof(int).TypeHandle, ScalarType.Int32),
-			(typeof(long).TypeHandle, ScalarType.Int64),
-			(typeof(IntPtr).TypeHandle, ScalarType.IntPtr),
-			(typeof(sbyte).TypeHandle, ScalarType.SByte),
-			(typeof(float).TypeHandle, ScalarType.Single),
-			(typeof(string).TypeHandle, ScalarType.String),
-			(typeof(TimeOnly).TypeHandle, ScalarType.TimeOnly),
-			(typeof(TimeSpan).TypeHandle, ScalarType.TimeSpan),
-			(typeof(UInt128).TypeHandle, ScalarType.UInt128),
-			(typeof(ushort).TypeHandle, ScalarType.UInt16),
-			(typeof(uint).TypeHandle, ScalarType.UInt32),
-			(typeof(ulong).TypeHandle, ScalarType.UInt64),
-			(typeof(UIntPtr).TypeHandle, ScalarType.UIntPtr),
-			(typeof(Uri).TypeHandle, ScalarType.Uri)
-		}.ToFrozenDictionary(_ => _.Handle, _ => _.ScalarType);
+			(typeof(BigInteger), ScalarType.BigInteger),
+			(typeof(bool), ScalarType.Boolean),
+			(typeof(byte), ScalarType.Byte),
+			(typeof(char), ScalarType.Char),
+			(typeof(DateOnly), ScalarType.DateOnly),
+			(typeof(DateTime), ScalarType.DateTime),
+			(typeof(DateTimeOffset), ScalarType.DateTimeOffset),
+			(typeof(decimal), ScalarType.Decimal),
+			(typeof(double), ScalarType.Double),
+			(typeof(Enum), ScalarType.Enum),
+			(typeof(Guid), ScalarType.Guid),
+			(typeof(Half), ScalarType.Half),
+			(typeof(Index), ScalarType.Index),
+			(typeof(Int128), ScalarType.Int128),
+			(typeof(short), ScalarType.Int16),
+			(typeof(int), ScalarType.Int32),
+			(typeof(long), ScalarType.Int64),
+			(typeof(IntPtr), ScalarType.IntPtr),
+			(typeof(sbyte), ScalarType.SByte),
+			(typeof(float), ScalarType.Single),
+			(typeof(string), ScalarType.String),
+			(typeof(TimeOnly), ScalarType.TimeOnly),
+			(typeof(TimeSpan), ScalarType.TimeSpan),
+			(typeof(UInt128), ScalarType.UInt128),
+			(typeof(ushort), ScalarType.UInt16),
+			(typeof(uint), ScalarType.UInt32),
+			(typeof(ulong), ScalarType.UInt64),
+			(typeof(UIntPtr), ScalarType.UIntPtr),
+			(typeof(Uri), ScalarType.Uri)
+		}.ToFrozenDictionary(_ => _.Type.TypeHandle, _ => _.ScalarType);
 
 		StaticFields = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticFieldEntity>>(handle =>
 		{
-			var names = handle.ToType().GetFields(STATIC_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<StaticFieldEntity>(() => new StaticFieldEntity(handle.ToType().GetField(name, STATIC_BINDING)!), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
+			var fieldInfos = handle.ToType().GetFields(STATIC_BINDING).Where(_ => !_.IsLiteral);
+			if (!fieldInfos.Any())
+				return FrozenDictionary<string, StaticFieldEntity>.Empty;
+
+			var names = fieldInfos.Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
+			var nameComparer = names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return fieldInfos.ToFrozenDictionary(fieldInfo => fieldInfo.Name, fieldInfo => new StaticFieldEntity(fieldInfo), nameComparer);
 		});
 
 		StaticMethods = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, MethodSet<StaticMethodEntity>>>(handle =>
 		{
-			var names = handle.ToType().GetMethods(STATIC_BINDING).Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
-			return names
-				.ToFrozenDictionary(
-					name => name,
-					name => new Lazy<MethodSet<StaticMethodEntity>>(() => new MethodSet<StaticMethodEntity>(handle.ToType(), name, STATIC_BINDING), PublicationOnly),
-					names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				.ToLazyReadOnly();
-		});
+			var methodInfos = handle.ToType().GetMethods(STATIC_BINDING);
+			if (methodInfos.Length is 0)
+				return FrozenDictionary<string, MethodSet<StaticMethodEntity>>.Empty;
 
+			var names = methodInfos.Select(_ => _.Name).ToHashSet(StringComparer.Ordinal);
+			var nameComparer = names.IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return methodInfos
+				.GroupBy(_ => _.Name, nameComparer)
+				.ToFrozenDictionary(_ => _.Key, createStaticMethodSet, nameComparer);
+		});
 
 		StaticProperties = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyEntity>>(handle =>
 		{
-			var propetyInfos = handle.ToType().GetProperties(STATIC_BINDING)
+			var propertyInfos = handle.ToType().GetProperties(STATIC_BINDING)
 				.Where(_ => _.GetIndexParameters().Length is 0);
-			return propetyInfos.Any()
-				? propetyInfos.ToFrozenDictionary(
-					propetyInfo => propetyInfo.Name,
-					propetyInfo => new StaticPropertyEntity(propetyInfo),
-					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				: FrozenDictionary<string, StaticPropertyEntity>.Empty;
+			if (!propertyInfos.Any())
+				return FrozenDictionary<string, StaticPropertyEntity>.Empty;
+
+			var nameComparer = propertyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return propertyInfos.ToFrozenDictionary(propetyInfo => propetyInfo.Name, propetyInfo => new StaticPropertyEntity(propetyInfo), nameComparer);
 		});
 
 		StaticPropertyIndexers = LazyDictionary.Create<RuntimeTypeHandle, IReadOnlyDictionary<string, StaticPropertyIndexerEntity>>(handle =>
 		{
-			var propetyInfos = handle.ToType().GetProperties(STATIC_BINDING)
+			var propertyInfos = handle.ToType().GetProperties(STATIC_BINDING)
 				.Where(_ => _.GetIndexParameters().Length > 0);
-			return propetyInfos.Any()
-				? propetyInfos.ToFrozenDictionary(
-					propetyInfo => propetyInfo.Name,
-					propetyInfo => new StaticPropertyIndexerEntity(propetyInfo),
-					propetyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
-				: FrozenDictionary<string, StaticPropertyIndexerEntity>.Empty;
+			if (!propertyInfos.Any())
+				return FrozenDictionary<string, StaticPropertyIndexerEntity>.Empty;
+
+			var nameComparer = propertyInfos.Select(_ => _.Name).IsCaseSensitive() ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+			return propertyInfos.ToFrozenDictionary(propetyInfo => propetyInfo.Name, propetyInfo => new StaticPropertyIndexerEntity(propetyInfo), nameComparer);
 		});
+
+		static MethodSet<MethodEntity> createMethodSet(IGrouping<string, MethodInfo> methodInfos)
+		{
+			var methods = methodInfos
+				.Where(methodInfo => !methodInfo.IsGenericMethodDefinition)
+				.Select(methodInfo => new MethodEntity(methodInfo));
+			var genericMethods = methodInfos
+				.Where(methodInfo => methodInfo.IsGenericMethodDefinition)
+				.Select(methodInfo => new GenericMethodDefinition(methodInfo));
+
+			return new(methodInfos.Key, methods, genericMethods);
+		}
+
+		static MethodSet<StaticMethodEntity> createStaticMethodSet(IGrouping<string, MethodInfo> methodInfos)
+		{
+			var methods = methodInfos
+				.Where(methodInfo => !methodInfo.IsGenericMethodDefinition)
+				.Select(methodInfo => new StaticMethodEntity(methodInfo));
+			var genericMethods = methodInfos
+				.Where(methodInfo => methodInfo.IsGenericMethodDefinition)
+				.Select(methodInfo => new GenericMethodDefinition(methodInfo));
+
+			return new(methodInfos.Key, methods, genericMethods);
+		}
 	}
 
-	private static ClrType GetClrType(RuntimeTypeHandle handle)
-	{
-		var type = handle.ToType();
-		return type switch
+	private static ClrType GetClrType(Type type)
+		=> type switch
 		{
 			{ IsEnum: true } => ClrType.Enum,
 			{ IsValueType: true } => ClrType.Struct,
@@ -214,7 +248,6 @@ public static class TypeStore
 			_ when type.IsAssignableTo<Delegate>() => ClrType.Delegate,
 			_ => ClrType.Class,
 		};
-	}
 
 	private static string GetCodeName(Type type)
 		=> type switch
@@ -224,14 +257,12 @@ public static class TypeStore
 			{ IsArray: true } => Invariant($"{GetCodeName(type.GetElementType()!)}[{string.Concat(','.Repeat(type.GetArrayRank() - 1))}]"),
 			{ IsByRef: true } => Invariant($"{GetCodeName(type.GetElementType()!)}&"),
 			{ IsGenericTypeDefinition: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{string.Concat(','.Repeat(type.GetGenericArguments().Length - 1))}>"),
-			{ IsGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{type.GetGenericArguments().Select(GetCodeName).ToCSV()}>"),
+			{ IsConstructedGenericType: true } => Invariant($"{type.Name[0..type.Name.IndexOf(GENERIC_TICKMARK)]}<{type.GetGenericArguments().Select(GetCodeName).ToCSV()}>"),
 			_ => type.Name
 		};
 
-	private static CollectionType GetCollectionType(RuntimeTypeHandle handle)
-	{
-		var type = handle.ToType();
-		return type switch
+	private static CollectionType GetCollectionType(Type type)
+		=> type switch
 		{
 			{ IsArray: true } => CollectionType.Array,
 			_ when type.Implements(typeof(ArrayList)) => CollectionType.ArrayList,
@@ -263,8 +294,6 @@ public static class TypeStore
 			_ when type.Implements(typeof(Queue<>)) => CollectionType.Queue,
 			_ when type.Implements(typeof(Queue)) => CollectionType.Queue,
 			_ when type.Implements(typeof(ReadOnlyObservableCollection<>)) => CollectionType.ReadOnlyObservableCollection,
-			_ when type.Implements(typeof(System.Collections.ObjectModel.ReadOnlyCollection<>)) => CollectionType.ReadOnlyCollection,
-			_ when type.Implements(typeof(ReadOnlyCollectionBase)) => CollectionType.ReadOnlyCollection,
 			_ when type.Implements(typeof(SortedDictionary<,>)) => CollectionType.SortedDictionary,
 			_ when type.Implements(typeof(SortedList<,>)) => CollectionType.SortedList,
 			_ when type.Implements(typeof(SortedList)) => CollectionType.SortedList,
@@ -272,48 +301,66 @@ public static class TypeStore
 			_ when type.Implements(typeof(Stack<>)) => CollectionType.Stack,
 			_ when type.Implements(typeof(Stack)) => CollectionType.Stack,
 			_ when type.Implements(typeof(StringCollection)) => CollectionType.StringCollection,
-			_ when type.Implements(typeof(Collection<>)) => CollectionType.Collection,
-			_ when type.Implements(typeof(CollectionBase)) => CollectionType.Collection,
+			_ when type.Implements(typeof(CollectionBase)) => CollectionType.List,
+			_ when type.Implements(typeof(System.Collections.ObjectModel.ReadOnlyCollection<>)) => CollectionType.ReadOnlyList,
 			_ when type.Implements(typeof(IReadOnlySet<>)) => CollectionType.ReadOnlySet,
 			_ when type.Implements(typeof(ISet<>)) => CollectionType.Set,
 			_ when type.Implements(typeof(IDictionary<,>)) => CollectionType.Dictionary,
 			_ when type.Implements(typeof(IReadOnlyDictionary<,>)) => CollectionType.ReadOnlyDictionary,
+			_ when type.Implements(typeof(IList)) => CollectionType.List,
 			_ when type.Implements(typeof(IList<>)) => CollectionType.List,
 			_ when type.Implements(typeof(IReadOnlyList<>)) => CollectionType.ReadOnlyList,
 			_ when type.Implements(typeof(IReadOnlyCollection<>)) => CollectionType.ReadOnlyCollection,
+			_ when type.Implements(typeof(ICollection)) => CollectionType.ReadOnlyCollection,
 			_ when type.Implements(typeof(ICollection<>)) => CollectionType.Collection,
 			_ => CollectionType.None
 		};
-	}
 
-	private static ObjectType GetObjectType(RuntimeTypeHandle handle)
-	{
-		var type = handle.ToType();
-		if (type.IsGenericType && !type.IsGenericTypeDefinition)
-			type = type.GetGenericTypeDefinition();
-
-		return type switch
+	private static ObjectType GetObjectType(Type type)
+		=> type switch
 		{
+			{ IsConstructedGenericType: true } => GetObjectType(type.GetGenericTypeDefinition()),
 			{ IsPointer: true } => ObjectType.Pointer,
 			{ IsPrimitive: true } => ObjectType.ScalarType,
-			_ when type.ScalarType() is not ScalarType.None => ObjectType.ScalarType,
-			_ when type == typeof(Action) => ObjectType.Action,
-			_ when type == typeof(Action<>) => ObjectType.Action,
-			_ when type == typeof(Action<,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,,,,,>) => ObjectType.Action,
-			_ when type == typeof(Action<,,,,,,,,,,,,,,,>) => ObjectType.Action,
+			_ when type.ScalarType is not ScalarType.None => ObjectType.ScalarType,
+			_ when type.IsAssignableTo<Delegate>() => type switch
+			{
+				_ when type == typeof(Action) => ObjectType.Action,
+				_ when type == typeof(Action<>) => ObjectType.Action,
+				_ when type == typeof(Action<,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Action<,,,,,,,,,,,,,,,>) => ObjectType.Action,
+				_ when type == typeof(Func<>) => ObjectType.Func,
+				_ when type == typeof(Func<,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,,,,,>) => ObjectType.Func,
+				_ when type == typeof(Func<,,,,,,,,,,,,,,,,>) => ObjectType.Func,
+				_ => ObjectType.Delegate
+			},
 			_ when type.Implements(typeof(IAsyncEnumerable<>)) => ObjectType.AsyncEnumerable,
 			_ when type.Implements(typeof(IAsyncEnumerator<>)) => ObjectType.AsyncEnumerator,
 			_ when type.Implements(typeof(Attribute)) => ObjectType.Attribute,
@@ -324,30 +371,13 @@ public static class TypeStore
 			_ when type.Implements(typeof(DataTable)) => ObjectType.DataTable,
 			_ when type.Implements(typeof(IEnumerator)) => ObjectType.Enumerator,
 			_ when type.Implements(typeof(Exception)) => ObjectType.Exception,
-			_ when type == typeof(Func<>) => ObjectType.Func,
-			_ when type == typeof(Func<,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type == typeof(Func<,,,,,,,,,,,,,,,,>) => ObjectType.Func,
-			_ when type.IsAssignableTo<Delegate>() => ObjectType.Delegate,
 			_ when type == typeof(JsonArray) => ObjectType.JsonArray,
 			_ when type == typeof(JsonDocument) => ObjectType.JsonDocument,
 			_ when type == typeof(JsonElement) => ObjectType.JsonElement,
 			_ when type == typeof(JsonObject) => ObjectType.JsonObject,
 			_ when type.Implements(typeof(JsonValue)) => ObjectType.JsonValue,
 			_ when type.Implements(typeof(Lazy<>)) => ObjectType.Lazy,
+			_ when type.Implements(typeof(Lazy<,>)) => ObjectType.Lazy,
 			_ when type == typeof(Memory<>) => ObjectType.Memory,
 			_ when type == typeof(Nullable<>) => ObjectType.Nullable,
 			_ when type == typeof(object) => ObjectType.Object,
@@ -361,16 +391,14 @@ public static class TypeStore
 			_ when type.Implements(typeof(StringBuilder)) => ObjectType.StringBuilder,
 			_ when type.Implements(typeof(Task)) => ObjectType.Task,
 			_ when type.Implements(typeof(IAsyncResult)) => ObjectType.AsyncResult,
-			{ IsClass: true } when type.Implements(typeof(ITuple)) => ObjectType.Tuple,
+			_ when type.Implements(typeof(ITuple)) => type.IsValueType ? ObjectType.ValueTuple : ObjectType.Tuple,
 			_ when type.Implements(typeof(Type)) => ObjectType.Type,
 			_ when type == typeof(ValueTask) => ObjectType.ValueTask,
 			_ when type == typeof(ValueTask<>) => ObjectType.ValueTask,
-			{ IsValueType: true } when type.Implements(typeof(ITuple)) => ObjectType.ValueTuple,
 			_ when type == typeof(void) => ObjectType.Void,
 			_ when type.Implements(typeof(WeakReference)) => ObjectType.WeakReference,
 			_ when type.Implements(typeof(WeakReference<>)) => ObjectType.WeakReference,
 			_ when type.Implements(typeof(IEnumerable)) => ObjectType.Enumerable,
 			_ => ObjectType.Unknown
 		};
-	}
 }

@@ -44,7 +44,7 @@ public static class DbDataReaderExtensions
 
 	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
 	{
-		var properties = @this.GetColumns().Select(column => modelType.Properties()[column]).ToArray();
+		var properties = @this.GetColumns().Select(column => modelType.Properties[column]).ToArray();
 		var values = new object[properties.Length];
 
 		while (await @this.ReadAsync(token))
@@ -56,35 +56,36 @@ public static class DbDataReaderExtensions
 		}
 	}
 
-	public static async ValueTask<JsonArray> ReadResultsAsJsonAsync(this DbDataReader @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
+	public static async ValueTask<JsonArray> ReadResultsAsJsonAsync(this DbDataReader @this, CancellationToken token = default)
 	{
-		var jsonArray = jsonOptions.HasValue ? new JsonArray(jsonOptions.Value) : new();
+		var jsonNodeOptions = new JsonNodeOptions() { PropertyNameCaseInsensitive = true };
+		var jsonArray = new JsonArray(jsonNodeOptions);
 		var columns = @this.GetColumns();
 		var values = new object[columns.Length];
 		var range = 0..columns.Length;
 
 		while (await @this.ReadAsync(token))
 		{
-			var jsonObject = jsonOptions.HasValue ? new JsonObject(jsonOptions.Value) : new();
+			var jsonObject = new JsonObject(jsonNodeOptions);
 			@this.GetValues(values);
-			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], jsonOptions)));
+			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], jsonNodeOptions)));
 			jsonArray.Add(jsonObject);
 		}
 
 		return jsonArray;
 	}
 
-	public static async ValueTask<JsonObject> ReadResultSetAsJsonAsync(this DbDataReader @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
+	public static async ValueTask<JsonObject> ReadResultSetAsJsonAsync(this DbDataReader @this, CancellationToken token = default)
 	{
-		var json = jsonOptions.HasValue ? new JsonObject(jsonOptions.Value) : new();
+		var json = new JsonObject(new JsonNodeOptions() { PropertyNameCaseInsensitive = true });
 		var count = 1;
 
-		json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(jsonOptions, token));
+		json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(token));
 
 		while (await @this.NextResultAsync(token))
 		{
 			++count;
-			json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(jsonOptions, token));
+			json.Add(count.ToString(), await @this.ReadResultsAsJsonAsync(token));
 		}
 
 		return json;

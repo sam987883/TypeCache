@@ -3,13 +3,13 @@
 namespace TypeCache.Mediation;
 
 public interface IRule<in REQUEST>
-	where REQUEST : IRequest
+	where REQUEST : notnull
 {
 	Task Execute(REQUEST request, CancellationToken token = default);
 }
 
 public interface IRule<in REQUEST, RESPONSE>
-	where REQUEST : IRequest<RESPONSE>
+	where REQUEST : notnull
 {
-	Task<RESPONSE> Map(REQUEST request, CancellationToken token = default);
+	ValueTask<RESPONSE> Send(REQUEST request, CancellationToken token = default);
 }

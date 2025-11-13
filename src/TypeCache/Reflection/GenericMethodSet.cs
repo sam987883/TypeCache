@@ -10,16 +10,10 @@ namespace TypeCache.Reflection;
 
 public sealed class GenericMethodSet : ReadOnlySet<GenericMethodDefinition>
 {
-	internal GenericMethodSet(Type type, BindingFlags binding, string name)
-		: base(type.GetMethods(binding)
-			.Where(methodInfo => methodInfo.IsGenericMethodDefinition && methodInfo.Name.EqualsOrdinal(name))
-			.Select(methodInfo => new GenericMethodDefinition(methodInfo))
-			.ToFrozenSet())
+	internal GenericMethodSet(IEnumerable<GenericMethodDefinition> methods)
+		: base(methods.ToFrozenSet())
 	{
-		this.Name = name;
 	}
-
-	public string Name { get; }
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public GenericMethodDefinition? Find(MethodInfo methodInfo)

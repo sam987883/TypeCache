@@ -5,18 +5,9 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlModelsRequest : IRequest<IList<object>>
+internal sealed class SqlResultsRule : IRule<SqlResultsRequest, IList<object>>
 {
-	public required SqlCommand Command { get; set; }
-
-	public int ListInitialCapacity { get; set; }
-
-	public required Type ModelType { get; set; }
-}
-
-internal sealed class SqlResultsRule : IRule<SqlModelsRequest, IList<object>>
-{
-	public async Task<IList<object>> Map(SqlModelsRequest request, CancellationToken token)
+	public async ValueTask<IList<object>> Send(SqlResultsRequest request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
@@ -31,18 +22,10 @@ internal sealed class SqlResultsRule : IRule<SqlModelsRequest, IList<object>>
 	}
 }
 
-public sealed class SqlResultsRequest<T> : IRequest<IList<T>>
-	where T : notnull, new()
-{
-	public required SqlCommand Command { get; set; }
-
-	public int ListInitialCapacity { get; set; }
-}
-
 internal sealed class SqlResultsRule<T> : IRule<SqlResultsRequest<T>, IList<T>>
 	where T : notnull, new()
 {
-	public async Task<IList<T>> Map(SqlResultsRequest<T> request, CancellationToken token)
+	public async ValueTask<IList<T>> Send(SqlResultsRequest<T> request, CancellationToken token)
 	{
 		await using var connection = request.Command.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

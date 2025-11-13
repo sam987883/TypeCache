@@ -15,10 +15,10 @@ public sealed class StaticMethodSourceStreamResolver(StaticMethodEntity method) 
 	{
 		method.ThrowIfNull();
 
-		var returnType = method.Return.ParameterType.ObjectType();
+		var returnType = method.Return.ParameterType.ObjectType;
 		var returnsObservable = returnType is ObjectType.Observable;
 		if (!returnsObservable && (returnType is ObjectType.Task || returnType is ObjectType.ValueTask))
-			returnsObservable = method.Return.ParameterType.GenericTypeArguments.Single().ObjectType() is ObjectType.Observable;
+			returnsObservable = method.Return.ParameterType.GenericTypeArguments.Single().ObjectType is ObjectType.Observable;
 
 		returnsObservable.ThrowIfFalse();
 

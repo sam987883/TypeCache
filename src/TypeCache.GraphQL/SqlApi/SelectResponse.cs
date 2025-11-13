@@ -38,14 +38,14 @@ public class SelectResponse<T>
 	{
 		var graphType = new ObjectGraphType
 		{
-			Name = Invariant($"{name}{nameof(SelectResponse<T>)}"),
+			Name = Invariant($"{name}{nameof(SelectResponse<>)}"),
 			Description = description
 		};
 
-		graphType.AddField(nameof(SelectResponse<T>.Data), Connection<T>.CreateGraphType(name, dataGraphType), new FuncFieldResolver<SelectResponse<T>, Connection<T>>(context => context.Source.Data));
-		graphType.AddField<string>(nameof(SelectResponse<T>.DataSource), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource));
-		graphType.AddField<string>(nameof(SelectResponse<T>.Sql), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql));
-		graphType.AddField<string>(nameof(SelectResponse<T>.Table), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table));
+		graphType.AddField(nameof(SelectResponse<>.Data), Connection<T>.CreateGraphType(name, dataGraphType), new FuncFieldResolver<SelectResponse<T>, Connection<T>>(context => context.Source.Data));
+		graphType.AddField<string>(nameof(SelectResponse<>.DataSource), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.DataSource));
+		graphType.AddField<string>(nameof(SelectResponse<>.Sql), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Sql));
+		graphType.AddField<string>(nameof(SelectResponse<>.Table), new FuncFieldResolver<SelectResponse<T>, string>(context => context.Source.Table));
 
 		return graphType;
 	}

@@ -74,16 +74,16 @@ public static class DbCommandExtensions
 		return reader.ReadDataTable();
 	}
 
-	public static async Task<JsonArray> GetResultsAsJsonAsync(this DbCommand @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
+	public static async Task<JsonArray> GetResultsAsJsonAsync(this DbCommand @this, CancellationToken token = default)
 	{
 		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
-		return await reader.ReadResultsAsJsonAsync(jsonOptions, token);
+		return await reader.ReadResultsAsJsonAsync(token);
 	}
 
-	public static async Task<JsonObject> GetResultSetAsJsonAsync(this DbCommand @this, JsonNodeOptions? jsonOptions = null, CancellationToken token = default)
+	public static async Task<JsonObject> GetResultSetAsJsonAsync(this DbCommand @this, CancellationToken token = default)
 	{
 		await using var reader = await @this.ExecuteReaderAsync(CommandBehavior.SingleResult, token);
-		return await reader.ReadResultSetAsJsonAsync(jsonOptions, token);
+		return await reader.ReadResultSetAsJsonAsync(token);
 	}
 
 	public static async Task<IList<T>> GetModelsAsync<T>(this DbCommand @this, int listInitialCapacity, CancellationToken token = default)

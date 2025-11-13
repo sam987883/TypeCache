@@ -42,7 +42,7 @@ public sealed class PropertyFieldResolver<T>(PropertyEntity property) : FieldRes
 		if (value is DateTime dateTime)
 		{
 			var timeZone = context.GetArgument<string>("timeZone");
-			if (timeZone.IsNotBlank())
+			if (timeZone.IsNotBlank)
 			{
 				var currentTimeZone = TimeZoneInfo.Utc.Id;
 				if (timeZone.Contains(','))
@@ -51,16 +51,16 @@ public sealed class PropertyFieldResolver<T>(PropertyEntity property) : FieldRes
 				dateTime = dateTime.ChangeTimeZone(currentTimeZone, timeZone!);
 			}
 
-			return format.IsNotBlank() ? dateTime.ToString(format, InvariantCulture) : dateTime;
+			return format.IsNotBlank ? dateTime.ToString(format, InvariantCulture) : dateTime;
 		}
 
 		if (value is DateTimeOffset dateTimeOffset)
 		{
 			var timeZone = context.GetArgument<string>("timeZone");
-			if (timeZone.IsNotBlank())
+			if (timeZone.IsNotBlank)
 				dateTimeOffset = dateTimeOffset.ToTimeZone(timeZone);
 
-			return format.IsNotBlank() ? dateTimeOffset.ToString(format, InvariantCulture) : dateTimeOffset;
+			return format.IsNotBlank ? dateTimeOffset.ToString(format, InvariantCulture) : dateTimeOffset;
 		}
 
 		if (value is string text)
@@ -78,7 +78,7 @@ public sealed class PropertyFieldResolver<T>(PropertyEntity property) : FieldRes
 				text = text.TrimEnd(trimEnd.ToCharArray());
 
 			var pattern = context.GetArgument<string>("match");
-			if (pattern.IsNotBlank())
+			if (pattern.IsNotBlank)
 			{
 				var match = text.ToRegex(RegexOptions.Compiled | RegexOptions.Singleline).Match(text);
 				if (match.Success)
@@ -101,7 +101,7 @@ public sealed class PropertyFieldResolver<T>(PropertyEntity property) : FieldRes
 			};
 		}
 
-		if (format.IsNotBlank() && value is IFormattable formattable)
+		if (format.IsNotBlank && value is IFormattable formattable)
 			return formattable.ToString(format, InvariantCulture);
 
 		return value;

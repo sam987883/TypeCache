@@ -1,13 +1,9 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
-using System.Reflection;
 using TypeCache.Extensions;
-using TypeCache.Mapping;
 using TypeCache.Reflection;
 using static System.Globalization.CultureInfo;
 
@@ -27,8 +23,8 @@ public static class ValueConverter
 		targetType.ThrowIfNull();
 
 		ParameterExpression value = nameof(value).ToParameterExpression(@this.Type);
-		var sourceScalarType = @this.Type.ScalarType();
-		var targetScalarType = targetType.ScalarType();
+		var sourceScalarType = @this.Type.ScalarType;
+		var targetScalarType = targetType.ScalarType;
 		var expression = (sourceScalarType, targetScalarType) switch
 		{
 			(ScalarType.Boolean, ScalarType.Char) => LambdaFactory.CreateFunc<bool, char>(_ => _ ? '1' : '0'),
@@ -54,7 +50,7 @@ public static class ValueConverter
 			(ScalarType.DateOnly, ScalarType.String) => LambdaFactory.CreateFunc<DateOnly, string>(_ => _.ToISO8601(null)),
 			(ScalarType.DateTime, ScalarType.String) => LambdaFactory.CreateFunc<DateTime, string>(_ => _.ToISO8601(null)),
 			(ScalarType.DateTimeOffset, ScalarType.String) => LambdaFactory.CreateFunc<DateTimeOffset, string>(_ => _.ToISO8601(null)),
-			(ScalarType.Enum, ScalarType.String) => LambdaFactory.CreateFunc<Enum, string>(_ => _.Name()),
+			(ScalarType.Enum, ScalarType.String) => LambdaFactory.CreateFunc<Enum, string>(_ => _.ToString("F")),
 			(ScalarType.TimeOnly, ScalarType.String) => LambdaFactory.CreateFunc<TimeOnly, string>(_ => _.ToISO8601(null)),
 			(ScalarType.TimeSpan, ScalarType.String) => LambdaFactory.CreateFunc<TimeSpan, string>(_ => _.ToText(null)),
 			(ScalarType.Guid, ScalarType.String) => LambdaFactory.CreateFunc<Guid, string>(_ => _.ToString("D")),
@@ -83,15 +79,15 @@ public static class ValueConverter
 			(ScalarType.DateOnly, ScalarType.Int64) => LambdaFactory.CreateFunc<DateOnly, long>(_ => (long)_.DayNumber),
 			(ScalarType.DateOnly, ScalarType.UInt64) => LambdaFactory.CreateFunc<DateOnly, ulong>(_ => (ulong)_.DayNumber),
 
-			(ScalarType.DateTime, ScalarType.DateOnly) => LambdaFactory.CreateFunc<DateTime, DateOnly>(_ => _.ToDateOnly()),
+			(ScalarType.DateTime, ScalarType.DateOnly) => LambdaFactory.CreateFunc<DateTime, DateOnly>(_ => DateOnly.FromDateTime(_)),
 			(ScalarType.DateTime, ScalarType.DateTimeOffset) => LambdaFactory.CreateFunc<DateTime, DateTimeOffset>(_ => _.ToDateTimeOffset()),
-			(ScalarType.DateTime, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<DateTime, TimeOnly>(_ => _.ToTimeOnly()),
+			(ScalarType.DateTime, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<DateTime, TimeOnly>(_ => TimeOnly.FromDateTime(_)),
 			(ScalarType.DateTime, ScalarType.Int64) => LambdaFactory.CreateFunc<DateTime, long>(_ => _.Ticks),
 			(ScalarType.DateTime, ScalarType.UInt64) => LambdaFactory.CreateFunc<DateTime, ulong>(_ => (ulong)_.Ticks),
 
-			(ScalarType.DateTimeOffset, ScalarType.DateOnly) => LambdaFactory.CreateFunc<DateTimeOffset, DateOnly>(_ => _.ToDateOnly()),
+			(ScalarType.DateTimeOffset, ScalarType.DateOnly) => LambdaFactory.CreateFunc<DateTimeOffset, DateOnly>(_ => DateOnly.FromDateTime(_.DateTime)),
 			(ScalarType.DateTimeOffset, ScalarType.DateTime) => LambdaFactory.CreateFunc<DateTimeOffset, DateTime>(_ => _.LocalDateTime),
-			(ScalarType.DateTimeOffset, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<DateTimeOffset, TimeOnly>(_ => _.ToTimeOnly()),
+			(ScalarType.DateTimeOffset, ScalarType.TimeOnly) => LambdaFactory.CreateFunc<DateTimeOffset, TimeOnly>(_ => TimeOnly.FromDateTime(_.DateTime)),
 			(ScalarType.DateTimeOffset, ScalarType.Int64) => LambdaFactory.CreateFunc<DateTimeOffset, long>(_ => _.Ticks),
 			(ScalarType.DateTimeOffset, ScalarType.UInt64) => LambdaFactory.CreateFunc<DateTimeOffset, ulong>(_ => (ulong)_.Ticks),
 
@@ -109,34 +105,31 @@ public static class ValueConverter
 			(ScalarType.String, ScalarType.Uri) => LambdaFactory.CreateFunc<string, Uri>(_ => new Uri(_, _.StartsWith('/') ? UriKind.Relative : UriKind.Absolute)),
 			(ScalarType.String, ScalarType.Boolean) => LambdaFactory.CreateFunc<string, bool>(_ => bool.Parse(_)),
 			(ScalarType.String, _) when targetType.Implements(typeof(IParsable<>)) =>
-				targetType.GetMethod(nameof(IParsable<int>.Parse), [targetType, typeof(IFormatProvider)])!
+				targetType.GetMethod(nameof(IParsable<>.Parse), [targetType, typeof(IFormatProvider)])!
 					.ToExpression(null, [value, Expression.Constant(InvariantCulture, typeof(IFormatProvider))])
 					.LambdaFunc(targetType, [value]),
 
 			_ => null
 		};
 
-		const string HasValue = nameof(HasValue);
-		const string Value = nameof(Value);
-
 		if (expression is not null)
 		{
 			if (@this.Type.Is(typeof(Nullable<>)))
 			{
 				ParameterExpression source = nameof(source).ToParameterExpression(@this.Type);
-				return @this.Property(HasValue).IIf(expression.Invoke([source.Property(Value)]).Lambda([source]), @this);
+				return @this.Property(nameof(Nullable<>.HasValue)).IIf(expression.Invoke([source.Property(nameof(Nullable<>.Value))]).Lambda([source]), @this);
 			}
 
-			if (@this.Type.IsNullable())
+			if (@this.Type.IsNullable)
 				return @this.IsNotNull().IIf(expression, @this);
 
 			return expression;
 		}
 
 		if (@this.Type.Is(typeof(Nullable<>)))
-			return @this.Property(HasValue).IIf(@this.Property(Value).Cast(targetType), @this);
+			return @this.Property(nameof(Nullable<>.HasValue)).IIf(@this.Property(nameof(Nullable<>.Value)).Cast(targetType), @this);
 
-		if (@this.Type.IsNullable())
+		if (@this.Type.IsNullable)
 			return @this.IsNotNull().IIf(@this.Cast(targetType), @this);
 
 		return @this.Cast(targetType);
@@ -151,7 +144,7 @@ public static class ValueConverter
 		if (sourceType == targetType || sourceType.IsAssignableTo(targetType))
 			return @this;
 
-		var targetScalarType = targetType.ScalarType();
+		var targetScalarType = targetType.ScalarType;
 		var value = targetScalarType switch
 		{
 			ScalarType.Boolean => ConvertToBoolean(@this),
@@ -160,7 +153,7 @@ public static class ValueConverter
 			ScalarType.DateTimeOffset => ConvertToDateTimeOffset(@this),
 			ScalarType.Enum => @this switch
 			{
-				string text when text.IsNotBlank() => Enum.Parse(targetType, text, true),
+				string text when text.IsNotBlank => Enum.Parse(targetType, text, true),
 				_ when @this.GetType() == targetType => @this,
 				_ => Enum.ToObject(targetType, @this)
 			},
@@ -222,7 +215,7 @@ public static class ValueConverter
 			float x => !x.IsZero(),
 			double x => !x.IsZero(),
 			decimal x => !x.IsZero(),
-			string text when text.IsNotBlank() => text.Parse<bool>(),
+			string text when text.IsNotBlank => text.Parse<bool>(),
 			null or string => null,
 			_ => throw new NotSupportedException(Invariant($"Cannot convert value of type [{value.GetType().Name}] to [{nameof(Boolean)}]."))
 		};
@@ -231,12 +224,12 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateOnly x => x,
-			string text when text.IsNotBlank() => DateOnly.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => DateOnly.Parse(text, InvariantCulture),
 			null or string => null,
 			int x => DateOnly.FromDayNumber(x),
 			uint x => DateOnly.FromDayNumber(checked((int)x)),
-			DateTime x => x.ToDateOnly(),
-			DateTimeOffset x => x.ToDateOnly(),
+			DateTime x => x.DateOnly,
+			DateTimeOffset x => x.DateOnly,
 			_ => throw new NotSupportedException(Invariant($"Cannot convert value of type [{value.GetType().Name}] to [{nameof(DateOnly)}]."))
 		};
 
@@ -244,7 +237,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateTime x => x,
-			string text when text.IsNotBlank() => DateTime.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => DateTime.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new(x),
 			ulong x => new(checked((long)x)),
@@ -257,7 +250,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			DateTimeOffset x => x,
-			string text when text.IsNotBlank() => DateTimeOffset.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => DateTimeOffset.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new DateTime(x).ToDateTimeOffset(),
 			ulong x => new DateTime(checked((long)x)).ToDateTimeOffset(),
@@ -271,10 +264,10 @@ public static class ValueConverter
 		=> value switch
 		{
 			T x => x,
-			Enum x => throw new NotSupportedException(Invariant($"Cannot convert value [{x.Name()}] of type [{value.GetType().Name}] to [{typeof(T).Name}].")),
-			string text when text.IsNotBlank() => text.ToEnum<T>(),
+			Enum x => throw new NotSupportedException(Invariant($"Cannot convert value [{x.Name}] of type [{value.GetType().Name}] to [{typeof(T).Name}].")),
+			string text when text.IsNotBlank => text.ToEnum<T>(),
 			null or string => null,
-			_ when value.GetType().ScalarType().IsEnumUnderlyingType() => (T)Enum.ToObject(typeof(T), value),
+			_ when value.GetType().ScalarType.IsEnumUnderlyingType => (T)Enum.ToObject(typeof(T), value),
 			_ => throw new NotSupportedException(Invariant($"Cannot convert value of type [{value.GetType().Name}] to [{typeof(T).Name}]."))
 		};
 
@@ -282,7 +275,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			Guid guid => guid,
-			string text when text.IsNotBlank() => Guid.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => Guid.Parse(text, InvariantCulture),
 			null or string => null,
 			_ => throw new NotSupportedException(Invariant($"Cannot convert value of type [{value.GetType().Name}] to [{nameof(Guid)}]."))
 		};
@@ -291,7 +284,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			Index x => x,
-			string text when text.IsNotBlank() => new Index(text.Parse<int>(InvariantCulture)),
+			string text when text.IsNotBlank => new Index(text.Parse<int>(InvariantCulture)),
 			null or string => null,
 			int x => new Index(x),
 			sbyte x => new Index(int.CreateChecked(x)),
@@ -330,7 +323,7 @@ public static class ValueConverter
 			float x => T.CreateChecked(x),
 			double x => T.CreateChecked(x),
 			decimal x => T.CreateChecked(x),
-			string text when text.IsNotBlank() => T.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => T.Parse(text, InvariantCulture),
 			null or string => null,
 			true => T.One,
 			false => T.Zero,
@@ -346,7 +339,7 @@ public static class ValueConverter
 			DateOnly x => x.ToISO8601(),
 			DateTime x => x.ToISO8601(),
 			DateTimeOffset x => x.ToISO8601(),
-			Enum x => x.Name(),
+			Enum x => x.Name,
 			Guid x => x.ToText(),
 			TimeOnly x => x.ToISO8601(),
 			TimeSpan x => x.ToText(),
@@ -358,12 +351,12 @@ public static class ValueConverter
 		=> value switch
 		{
 			TimeOnly x => x,
-			string text when text.IsNotBlank() => TimeOnly.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => TimeOnly.Parse(text, InvariantCulture),
 			null or string => null,
 			long x => new(x),
 			ulong x => new(checked((long)x)),
-			DateTime x => TimeOnly.FromDateTime(x),
-			DateTimeOffset x => TimeOnly.FromDateTime(x.DateTime),
+			DateTime x => x.TimeOnly,
+			DateTimeOffset x => x.TimeOnly,
 			TimeSpan x => TimeOnly.FromTimeSpan(x),
 			_ => throw new NotSupportedException(Invariant($"Cannot convert value of type [{value.GetType().Name}] to [{nameof(TimeOnly)}]."))
 		};
@@ -372,7 +365,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			TimeSpan x => x,
-			string text when text.IsNotBlank() => TimeSpan.Parse(text, InvariantCulture),
+			string text when text.IsNotBlank => TimeSpan.Parse(text, InvariantCulture),
 			null or string => null,
 			TimeOnly x => TimeSpan.FromTicks(x.Ticks),
 			long x => TimeSpan.FromTicks(x),
@@ -384,7 +377,7 @@ public static class ValueConverter
 		=> value switch
 		{
 			Uri x => x,
-			string text when text.IsNotBlank() => text.ToUri(),
+			string text when text.IsNotBlank => text.ToUri(),
 			null or string => null,
 			_ => value.ToString()?.ToUri()
 		};

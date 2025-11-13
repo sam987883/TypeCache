@@ -6,12 +6,15 @@ namespace TypeCache.Extensions;
 
 public static class TupleExtensions
 {
-	public static object?[] ToArray(this ITuple @this)
+	extension(ITuple @this)
 	{
-		var array = new object?[@this.Length];
-		for (var i = 0; i < @this.Length; ++i)
-			array[i] = @this[i];
+		public object?[] ToArray()
+		{
+			var array = new object?[@this.Length];
+			for (var i = 0; i < @this.Length; ++i)
+				array[i] = @this[i];
 
-		return array;
+			return array;
+		}
 	}
 }

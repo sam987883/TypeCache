@@ -18,7 +18,7 @@ public sealed class ParameterEntity
 		this.Attributes = new ReadOnlyCollection<Attribute>(parameterInfo.GetCustomAttributes());
 		this.DefaultValue = parameterInfo.DefaultValue;
 		this.HasDefaultValue = parameterInfo.HasDefaultValue;
-		this.IsNullable = parameterInfo.ParameterType.IsNullable();
+		this.IsNullable = parameterInfo.ParameterType.IsNullable;
 		this.IsOptional = parameterInfo.IsOptional;
 		this.IsOut = parameterInfo.IsOut;
 		this.IsRetval = parameterInfo.IsRetval;

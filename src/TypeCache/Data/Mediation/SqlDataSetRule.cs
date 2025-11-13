@@ -6,25 +6,20 @@ using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-public sealed class SqlDataSetRequest : IRequest<DataSet>
+internal sealed class SqlDataSetRule : IRule<SqlCommand, DataSet>
 {
-	public required SqlCommand Command { get; set; }
-}
-
-internal sealed class SqlDataSetRule : IRule<SqlDataSetRequest, DataSet>
-{
-	public async Task<DataSet> Map(SqlDataSetRequest request, CancellationToken token)
+	public async ValueTask<DataSet> Send(SqlCommand request, CancellationToken token)
 	{
-		await using var connection = request.Command.DataSource.CreateDbConnection();
+		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);
-		await using var command = connection.CreateCommand(request.Command);
-		using var adapter = request.Command.DataSource.Factory.CreateDataAdapter()!;
-		adapter.SelectCommand = command;
+		await using var dbCommand = connection.CreateCommand(request);
+		using var adapter = request.DataSource.Factory.CreateDataAdapter()!;
+		adapter.SelectCommand = dbCommand;
 
 		var result = new DataSet();
 		adapter.Fill(result);
 
-		command.CopyOutputParameters(request.Command);
+		dbCommand.CopyOutputParameters(request);
 
 		return result;
 	}

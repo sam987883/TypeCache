@@ -11,7 +11,6 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
@@ -63,14 +62,14 @@ public class ReflectionExtensions
 		var stopwatch = new Stopwatch();
 		var type = contact.GetType();
 
-		var idNameField = type.StaticFields()['_' + nameof(Contact.ID)];
-		var firstNameField = type.Fields()['_' + nameof(Contact.FirstName)];
-		var middleNameField = type.Fields()['_' + nameof(Contact.MiddleName)];
-		var lastNameField = type.Fields()['_' + nameof(Contact.LastName)];
-		var ageField = type.Fields()['_' + nameof(Contact.Age)];
-		var emailField = type.Fields()['_' + nameof(Contact.Email)];
-		var phoneField = type.Fields()['_' + nameof(Contact.Phone)];
-		var deletedField = type.Fields()['_' + nameof(Contact.Deleted)];
+		var idNameField = type.StaticFields['_' + nameof(Contact.ID)];
+		var firstNameField = type.Fields['_' + nameof(Contact.FirstName)];
+		var middleNameField = type.Fields['_' + nameof(Contact.MiddleName)];
+		var lastNameField = type.Fields['_' + nameof(Contact.LastName)];
+		var ageField = type.Fields['_' + nameof(Contact.Age)];
+		var emailField = type.Fields['_' + nameof(Contact.Email)];
+		var phoneField = type.Fields['_' + nameof(Contact.Phone)];
+		var deletedField = type.Fields['_' + nameof(Contact.Deleted)];
 
 		var i = 0;
 		stopwatch.Start();
@@ -98,14 +97,14 @@ public class ReflectionExtensions
 		var stopwatch = new Stopwatch();
 		var type = contact.GetType();
 
-		var idNameField = type.StaticFields()['_' + nameof(Contact.ID)];
-		var firstNameField = type.Fields()['_' + nameof(Contact.FirstName)];
-		var middleNameField = type.Fields()['_' + nameof(Contact.MiddleName)];
-		var lastNameField = type.Fields()['_' + nameof(Contact.LastName)];
-		var ageField = type.Fields()['_' + nameof(Contact.Age)];
-		var emailField = type.Fields()['_' + nameof(Contact.Email)];
-		var phoneField = type.Fields()['_' + nameof(Contact.Phone)];
-		var deletedField = type.Fields()['_' + nameof(Contact.Deleted)];
+		var idNameField = type.StaticFields['_' + nameof(Contact.ID)];
+		var firstNameField = type.Fields['_' + nameof(Contact.FirstName)];
+		var middleNameField = type.Fields['_' + nameof(Contact.MiddleName)];
+		var lastNameField = type.Fields['_' + nameof(Contact.LastName)];
+		var ageField = type.Fields['_' + nameof(Contact.Age)];
+		var emailField = type.Fields['_' + nameof(Contact.Email)];
+		var phoneField = type.Fields['_' + nameof(Contact.Phone)];
+		var deletedField = type.Fields['_' + nameof(Contact.Deleted)];
 
 		var i = 0;
 		stopwatch.Start();
@@ -140,7 +139,7 @@ public class ReflectionExtensions
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
 
-		var method = contact.GetType().Methods()[nameof(Contact.WriteOutput)].Find([0, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
+		var method = contact.GetType().Methods[nameof(Contact.WriteOutput)].Find([0, "FirstName", "MiddleName", "LastName", TimeOnly.FromDateTime(new DateTime(999999999L)), new DateTime(999999999L), new DateTimeOffset(new DateTime(999999999L)), Guid.NewGuid(), 31]);
 		var call = ((Func<Contact, int, string, string, string, TimeOnly, DateTime, DateTimeOffset, Guid, int, long>)method.Delegate);
 
 		var i = 0;
@@ -169,8 +168,8 @@ public class ReflectionExtensions
 	{
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
-		var properties = contact.GetType().Properties();
-		var staticProperties = contact.GetType().StaticProperties();
+		var properties = contact.GetType().Properties;
+		var staticProperties = contact.GetType().StaticProperties;
 
 		var idNameProperty = staticProperties[nameof(Contact.ID)];
 		var firstNameProperty = properties[nameof(Contact.FirstName)];
@@ -205,8 +204,8 @@ public class ReflectionExtensions
 	{
 		var contact = new Contact();
 		var stopwatch = new Stopwatch();
-		var properties = contact.GetType().Properties();
-		var staticProperties = contact.GetType().StaticProperties();
+		var properties = contact.GetType().Properties;
+		var staticProperties = contact.GetType().StaticProperties;
 
 		var idNameProperty = staticProperties[nameof(Contact.ID)];
 		var firstNameProperty = properties[nameof(Contact.FirstName)];
@@ -250,15 +249,15 @@ public class ReflectionExtensions
 	[InlineData("IDictionary<,>", typeof(IDictionary<,>))]
 	public void Type_CodeName(string expected, Type type)
 	{
-		var actual = type.CodeName();
+		var actual = type.CodeName;
 
 		Assert.Equal(expected, actual);
 
 		if (type.IsGenericType)
 		{
-			type.GenericTypeArguments.ForEach(_ => expected = expected.Replace(_.CodeName(), string.Empty));
+			type.GenericTypeArguments.ForEach(_ => expected = expected.Replace(_.CodeName, string.Empty));
 			expected = expected.Replace(" ", string.Empty);
-			actual = type.GetGenericTypeDefinition().CodeName();
+			actual = type.GetGenericTypeDefinition().CodeName;
 
 			Assert.Equal(expected, actual);
 		}
@@ -295,7 +294,7 @@ public class ReflectionExtensions
 	[InlineData(CollectionType.Queue, typeof(Queue))]
 	[InlineData(CollectionType.Queue, typeof(Queue<string>))]
 	[InlineData(CollectionType.ReadOnlyObservableCollection, typeof(ReadOnlyObservableCollection<object>))]
-	[InlineData(CollectionType.ReadOnlyCollection, typeof(ReadOnlyCollection<object>))]
+	[InlineData(CollectionType.ReadOnlyList, typeof(ReadOnlyCollection<object>))]
 	[InlineData(CollectionType.ReadOnlyCollection, typeof(ReadOnlyCollectionBase))]
 	[InlineData(CollectionType.SortedDictionary, typeof(SortedDictionary<int, string>))]
 	[InlineData(CollectionType.SortedList, typeof(SortedList<int, string>))]
@@ -304,8 +303,8 @@ public class ReflectionExtensions
 	[InlineData(CollectionType.Stack, typeof(Stack<string>))]
 	[InlineData(CollectionType.Stack, typeof(Stack))]
 	[InlineData(CollectionType.StringCollection, typeof(StringCollection))]
-	[InlineData(CollectionType.Collection, typeof(Collection<string>))]
-	[InlineData(CollectionType.Collection, typeof(CollectionBase))]
+	[InlineData(CollectionType.List, typeof(Collection<string>))]
+	[InlineData(CollectionType.List, typeof(CollectionBase))]
 	[InlineData(CollectionType.ReadOnlySet, typeof(IReadOnlySet<string>))]
 	[InlineData(CollectionType.Set, typeof(ISet<string>))]
 	[InlineData(CollectionType.Dictionary, typeof(IDictionary<int, string>))]
@@ -318,7 +317,7 @@ public class ReflectionExtensions
 	[InlineData(CollectionType.None, typeof(object))]
 	public void Type_CollectionType(CollectionType expected, Type type)
 	{
-		Assert.Equal(expected, type.CollectionType());
+		Assert.Equal(expected, type.CollectionType);
 	}
 
 	[Theory]
@@ -403,7 +402,7 @@ public class ReflectionExtensions
 	[InlineData(ObjectType.Unknown, typeof(HashMaker))]
 	public void Type_ObjectType(ObjectType expected, Type type)
 	{
-		Assert.Equal(expected, type.ObjectType());
+		Assert.Equal(expected, type.ObjectType);
 	}
 
 	[Theory]
@@ -440,6 +439,6 @@ public class ReflectionExtensions
 	[InlineData(ScalarType.Uri, typeof(Uri))]
 	public void Type_ScalarType(ScalarType expected, Type type)
 	{
-		Assert.Equal(expected, type.ScalarType());
+		Assert.Equal(expected, type.ScalarType);
 	}
 }

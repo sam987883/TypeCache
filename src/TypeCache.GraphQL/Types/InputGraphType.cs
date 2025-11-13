@@ -12,18 +12,18 @@ public sealed class InputGraphType<T> : InputObjectGraphType<T>
 {
 	public InputGraphType()
 	{
-		this.Name = Type<T>.Attributes.GraphQLInputName() ?? Invariant($"{Type<T>.Name}Input");
-		this.Description = Type<T>.Attributes.GraphQLDescription();
-		this.DeprecationReason = Type<T>.Attributes.GraphQLDeprecationReason();
+		this.Name = Type<T>.Attributes.GraphQLInputName ?? Invariant($"{typeof(T).GraphQLName}Input");
+		this.Description = Type<T>.Attributes.GraphQLDescription;
+		this.DeprecationReason = Type<T>.Attributes.GraphQLDeprecationReason;
 
 		Type<T>.Properties.Values
-			.Where(_ => _.CanRead && _.CanWrite && !_.Attributes.GraphQLIgnore())
+			.Where(_ => _.CanRead && _.CanWrite && !_.Attributes.GraphQLIgnore)
 			.ForEach(_ => this.AddField(new()
 			{
 				Type = _.ToGraphQLType(true),
-				Name = _.Attributes.GraphQLName() ?? _.Name,
-				Description = _.Attributes.GraphQLDescription(),
-				DeprecationReason = _.Attributes.GraphQLDeprecationReason()
+				Name = _.Attributes.GraphQLName ?? _.Name,
+				Description = _.Attributes.GraphQLDescription,
+				DeprecationReason = _.Attributes.GraphQLDeprecationReason
 			}));
 	}
 }

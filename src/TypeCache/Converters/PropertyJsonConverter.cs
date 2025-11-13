@@ -16,7 +16,7 @@ public sealed class PropertyJsonConverter<T> : JsonConverter<T> where T : class,
 			while (reader.Read() && reader.TokenType is JsonTokenType.PropertyName)
 			{
 				var name = reader.GetString();
-				if (!reader.Read() || name.IsBlank())
+				if (!reader.Read() || name.IsBlank)
 					continue;
 
 				var property = Type<T>.Properties[name];

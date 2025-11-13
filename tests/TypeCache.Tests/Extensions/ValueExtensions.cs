@@ -26,17 +26,6 @@ public class ValueExtensions
 	}
 
 	[Fact]
-	public void Swap()
-	{
-		var a = 123;
-		var b = -456;
-		b.Swap(ref a);
-
-		Assert.Equal(-456, a);
-		Assert.Equal(123, b);
-	}
-
-	[Fact]
 	public void ToBytes()
 	{
 		Assert.Equal(16, (-999999.9999M).ToBytes().Length);

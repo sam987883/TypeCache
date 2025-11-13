@@ -17,7 +17,7 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name}"));
 
 		var targetProperties = Type<T>.Properties;
 		foreach (var pair in source)
@@ -28,14 +28,14 @@ internal class PropertyMapper : IMapper
 
 			if (pair.Value is null)
 			{
-				if (!property.PropertyType.IsNullable())
+				if (!property.PropertyType.IsNullable)
 					continue;
 
 				property.SetValue(target, null);
 				continue;
 			}
 
-			if (property.PropertyType.ScalarType() is not ScalarType.None || property.PropertyType.IsValueType)
+			if (property.PropertyType.ScalarType is not ScalarType.None || property.PropertyType.IsValueType)
 			{
 				property.SetValue(target, pair.Value);
 				continue;
@@ -70,8 +70,8 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name}"));
 
 		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.CanRead))
 		{
@@ -103,11 +103,11 @@ internal class PropertyMapper : IMapper
 		source.ThrowIfNull();
 		target.ThrowIfNull();
 
-		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name()}"));
-		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name()}"));
+		Type<S>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {Type<S>.ScalarType.Name}"));
+		Type<T>.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {Type<T>.ScalarType.Name}"));
 
-		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name()}"));
-		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name()}"));
+		Type<S>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map from a collection: {Type<S>.CollectionType.Name}"));
+		Type<T>.CollectionType.ThrowIfNotEqual(CollectionType.None, () => Invariant($"Cannot map to a collection: {Type<T>.CollectionType.Name}"));
 
 		foreach (var sourceProperty in Type<S>.Properties.Values.Where(_ => _.GetMethod is MethodEntity))
 		{
@@ -123,7 +123,7 @@ internal class PropertyMapper : IMapper
 				foreach (var attribute in mapAttributes)
 					setPropertyValue(attribute.Member, sourceValue);
 			}
-			else if (sourceProperty.PropertyType.ScalarType() is not ScalarType.None
+			else if (sourceProperty.PropertyType.ScalarType is not ScalarType.None
 				|| sourceProperty.PropertyType.IsValueType)
 				setPropertyValue(sourceProperty.Name, sourceValue);
 		}
@@ -136,14 +136,14 @@ internal class PropertyMapper : IMapper
 
 			if (value is null)
 			{
-				if (!property.PropertyType.IsNullable())
+				if (!property.PropertyType.IsNullable)
 					return;
 
 				property.SetValue(target, null);
 				return;
 			}
 
-			if (property.PropertyType.ScalarType() is not ScalarType.None || property.PropertyType.IsValueType)
+			if (property.PropertyType.ScalarType is not ScalarType.None || property.PropertyType.IsValueType)
 			{
 				property.SetValue(target, value);
 				return;
@@ -173,11 +173,11 @@ internal class PropertyMapper : IMapper
 		var sourceType = source.GetType();
 		var targetType = target.GetType();
 
-		sourceType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {sourceType.ScalarType().Name()}"));
-		targetType.ScalarType().ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {targetType.ScalarType().Name()}"));
+		sourceType.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map from a scalar: {sourceType.ScalarType.Name}"));
+		targetType.ScalarType.ThrowIfNotEqual(ScalarType.None, () => Invariant($"Cannot map to a scalar: {targetType.ScalarType.Name}"));
 
-		var sourceCollectionType = sourceType.CollectionType();
-		var targetCollectionType = targetType.CollectionType();
+		var sourceCollectionType = sourceType.CollectionType;
+		var targetCollectionType = targetType.CollectionType;
 
 		Action? executeMap = (sourceCollectionType, targetCollectionType) switch
 		{
@@ -212,7 +212,7 @@ internal class PropertyMapper : IMapper
 			return;
 		}
 
-		foreach (var sourceProperty in sourceType.Properties().Values.Where(_ => _.GetMethod is MethodEntity))
+		foreach (var sourceProperty in sourceType.Properties.Values.Where(_ => _.GetMethod is MethodEntity))
 		{
 			if (sourceProperty.Attributes.OfType<MapIgnoreAttribute>()
 				.Any(_ => _.Type is null || _.Type == target.GetType()))
@@ -226,23 +226,23 @@ internal class PropertyMapper : IMapper
 				foreach (var attribute in mapAttributes)
 					setPropertyValue(attribute.Member, sourceValue);
 			}
-			else if (sourceProperty.PropertyType.ScalarType() is not ScalarType.None
+			else if (sourceProperty.PropertyType.ScalarType is not ScalarType.None
 				|| sourceProperty.PropertyType.IsValueType)
 				setPropertyValue(sourceProperty.Name, sourceValue);
 		}
 
 		void setPropertyValue(string propertyName, object? value)
 		{
-			var property = target.GetType().Properties()[propertyName];
+			var property = target.GetType().Properties[propertyName];
 			if (property?.CanWrite is not true)
 				return;
 
 			if (value is null)
 			{
-				if (property.PropertyType.IsNullable())
+				if (property.PropertyType.IsNullable)
 					property.SetValue(target, null);
 			}
-			else if (property.PropertyType.ScalarType() is not ScalarType.None
+			else if (property.PropertyType.ScalarType is not ScalarType.None
 				|| property.PropertyType.IsValueType)
 				property.SetValue(target, value);
 			else
@@ -261,7 +261,7 @@ internal class PropertyMapper : IMapper
 
 		var sourceElementType = source.GetType().GetElementType()!;
 		var targetElementType = target.GetType().GetElementType()!;
-		if (targetElementType.ScalarType() is not ScalarType.None
+		if (targetElementType.ScalarType is not ScalarType.None
 			|| sourceElementType.IsValueType)
 			Array.Copy(source, 0, target, 0, target.Length);
 		else if (!targetElementType.IsValueType)
@@ -284,7 +284,7 @@ internal class PropertyMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -317,7 +317,7 @@ internal class PropertyMapper : IMapper
 		if (source.Length > 0
 			&& !sourceItemType.IsValueType
 			&& !targetItemType.IsValueType
-			&& targetItemType.ScalarType() is ScalarType.None)
+			&& targetItemType.ScalarType is ScalarType.None)
 		{
 			for (var i = 0; i < length; ++i)
 			{
@@ -335,7 +335,7 @@ internal class PropertyMapper : IMapper
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
 		var length = source.Length < target.Count ? source.Length : target.Count;
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -355,7 +355,7 @@ internal class PropertyMapper : IMapper
 
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetElementType = target.GetType().GetElementType()!;
-		if (targetElementType.ScalarType() is not ScalarType.None
+		if (targetElementType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 			source.Index().ForEach(_ => target.SetValue(_.Item, _.Index));
 		else if (!targetElementType.IsValueType)
@@ -377,7 +377,7 @@ internal class PropertyMapper : IMapper
 	{
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -404,7 +404,7 @@ internal class PropertyMapper : IMapper
 		if (source.Count > 0
 			&& !sourceItemType.IsValueType
 			&& !targetItemType.IsValueType
-			&& targetItemType.ScalarType() is ScalarType.None)
+			&& targetItemType.ScalarType is ScalarType.None)
 		{
 			var length = source.Count < target.Count ? source.Count : target.Count;
 			for (var i = 0; i < length; ++i)
@@ -422,7 +422,7 @@ internal class PropertyMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -435,7 +435,7 @@ internal class PropertyMapper : IMapper
 		var sourceItemType = source.GetType().GenericTypeArguments[0];
 		var targetItemType = target.GetType().GenericTypeArguments[0];
 
-		if (targetItemType.ScalarType() is not ScalarType.None
+		if (targetItemType.ScalarType is not ScalarType.None
 			|| sourceItemType.IsValueType)
 		{
 			target.Clear();
@@ -452,12 +452,12 @@ internal class PropertyMapper : IMapper
 		var targetKeyType = targetGenericTypeArguments[0];
 		var targetValueType = targetGenericTypeArguments[1];
 
-		if (sourceKeyType.ScalarType() is not ScalarType.None
-				&& targetKeyType.ScalarType() is not ScalarType.None
+		if (sourceKeyType.ScalarType is not ScalarType.None
+				&& targetKeyType.ScalarType is not ScalarType.None
 			|| sourceKeyType.IsValueType && targetKeyType.IsValueType)
 		{
-			if (sourceValueType.ScalarType() is not ScalarType.None
-					&& targetValueType.ScalarType() is not ScalarType.None
+			if (sourceValueType.ScalarType is not ScalarType.None
+					&& targetValueType.ScalarType is not ScalarType.None
 				|| sourceValueType.IsValueType && targetValueType.IsValueType)
 			{
 				source.Keys.ForEach(key => target[key] = source[key]);
@@ -478,12 +478,12 @@ internal class PropertyMapper : IMapper
 		var targetKeyType = targetGenericTypeArguments[0];
 		var targetValueType = targetGenericTypeArguments[1];
 
-		if (sourceKeyType.ScalarType() is not ScalarType.None
-				&& targetKeyType.ScalarType() is not ScalarType.None
+		if (sourceKeyType.ScalarType is not ScalarType.None
+				&& targetKeyType.ScalarType is not ScalarType.None
 			|| sourceKeyType.IsValueType && targetKeyType.IsValueType)
 		{
-			if (sourceValueType.ScalarType() is not ScalarType.None
-					&& targetValueType.ScalarType() is not ScalarType.None
+			if (sourceValueType.ScalarType is not ScalarType.None
+					&& targetValueType.ScalarType is not ScalarType.None
 				|| sourceValueType.IsValueType && targetValueType.IsValueType)
 			{
 				source.Keys.ForEach(key => target[key] = source[key]);

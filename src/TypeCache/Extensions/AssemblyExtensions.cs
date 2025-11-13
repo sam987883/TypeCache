@@ -4,14 +4,17 @@ namespace TypeCache.Extensions;
 
 public static class AssemblyExtensions
 {
-	public static string GetNuGetVersion(this Assembly assembly)
+	extension(Assembly @this)
 	{
-		var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-		return version?.LastIndexOf('+') switch
+		public string GetNuGetVersion()
 		{
-			null => string.Empty,
-			-1 => version,
-			int i => version[0..i]
-		};
+			var version = @this.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+			return version?.LastIndexOf('+') switch
+			{
+				null => string.Empty,
+				-1 => version,
+				int i => version[0..i]
+			};
+		}
 	}
 }

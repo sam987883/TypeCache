@@ -13,15 +13,21 @@ public class EnumExtensions
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
 	private class TestAttribute : Attribute
 	{
+		public TestAttribute(string Value)
+		{
+			this.Value = Value;
+		}
+
+		public string Value { get; }
 	}
 
 	[Flags]
 	public enum TestEnum
 	{
 		TestValue1 = 4,
-		[TestAttribute]
-		[TestAttribute]
-		[TestAttribute]
+		[TestAttribute("AbC")]
+		[TestAttribute("Def")]
+		[TestAttribute("xyz")]
 		TestValue2 = 8,
 		TestValue3 = 16,
 		TestValue4 = 32,
@@ -30,13 +36,13 @@ public class EnumExtensions
 	[Fact]
 	public void Attributes()
 	{
-		Assert.Equal(3, TestEnum.TestValue2.Attributes().Count());
+		Assert.Equal(3, TestEnum.TestValue2.Attributes.Count());
 	}
 
 	[Fact]
 	public void Hex()
 	{
-		Assert.Equal(TestEnum.TestValue2.ToString("X"), TestEnum.TestValue2.Hex());
+		Assert.Equal(TestEnum.TestValue2.ToString("X"), TestEnum.TestValue2.Hex);
 	}
 
 	[Fact]
@@ -44,21 +50,21 @@ public class EnumExtensions
 	{
 		Assert.True(TestEnum.TestValue3.IsDefined());
 		Assert.False(((TestEnum)2).IsDefined());
-		Assert.True((TestEnum.TestValue1 | TestEnum.TestValue2 | TestEnum.TestValue3).IsDefined());
-		Assert.True((TestEnum.TestValue2 | (TestEnum)66).IsDefined());
+		Assert.False((TestEnum.TestValue1 | TestEnum.TestValue2 | TestEnum.TestValue3).IsDefined());
+		Assert.False((TestEnum.TestValue2 | (TestEnum)66).IsDefined());
 	}
 
 	[Fact]
 	public void Name()
 	{
-		Assert.Equal(TestEnum.TestValue2.ToString("F"), TestEnum.TestValue2.Name());
-		Assert.Equal((TestEnum.TestValue2 | TestEnum.TestValue3).ToString("F"), (TestEnum.TestValue2 | TestEnum.TestValue3).Name());
+		Assert.Equal(TestEnum.TestValue2.ToString("F"), TestEnum.TestValue2.Name);
+		Assert.Equal((TestEnum.TestValue2 | TestEnum.TestValue3).ToString("F"), (TestEnum.TestValue2 | TestEnum.TestValue3).Name);
 	}
 
 	[Fact]
 	public void Number()
 	{
-		Assert.Equal(TestEnum.TestValue2.ToString("D"), TestEnum.TestValue2.Number());
+		Assert.Equal(TestEnum.TestValue2.ToString("D"), TestEnum.TestValue2.Number);
 	}
 
 	[Theory]
@@ -102,10 +108,10 @@ public class EnumExtensions
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
 		{
-			if (_.Name().StartsWith("Concurrent"))
-				Assert.True(_.IsConcurrent());
+			if (_.Name.StartsWith("Concurrent"))
+				Assert.True(_.IsConcurrent);
 			else
-				Assert.False(_.IsConcurrent());
+				Assert.False(_.IsConcurrent);
 		});
 	}
 
@@ -119,10 +125,10 @@ public class EnumExtensions
 				|| _ is CollectionType.NameObjectCollection
 				|| _ is CollectionType.NameValueCollection
 				|| _ is CollectionType.SortedList
-				|| _.Name().EndsWith("Dictionary"))
-				Assert.True(_.IsDictionary());
+				|| _.Name.EndsWith("Dictionary"))
+				Assert.True(_.IsDictionary);
 			else
-				Assert.False(_.IsDictionary());
+				Assert.False(_.IsDictionary);
 		});
 	}
 
@@ -139,9 +145,9 @@ public class EnumExtensions
 				|| _ is ScalarType.UInt16
 				|| _ is ScalarType.UInt32
 				|| _ is ScalarType.UInt64)
-				Assert.True(_.IsEnumUnderlyingType());
+				Assert.True(_.IsEnumUnderlyingType);
 			else
-				Assert.False(_.IsEnumUnderlyingType());
+				Assert.False(_.IsEnumUnderlyingType);
 		});
 	}
 
@@ -149,14 +155,14 @@ public class EnumExtensions
 	public void IsFrozen()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().StartsWith("Frozen"), _.IsFrozen()));
+			Assert.Equal(_.Name.StartsWith("Frozen"), _.IsFrozen));
 	}
 
 	[Fact]
 	public void IsImmutable()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().StartsWith("Immutable"), _.IsImmutable()));
+			Assert.Equal(_.Name.StartsWith("Immutable"), _.IsImmutable));
 	}
 
 	[Fact]
@@ -178,9 +184,9 @@ public class EnumExtensions
 				|| _ is ScalarType.UIntPtr
 				|| _ is ScalarType.Single
 				|| _ is ScalarType.Double)
-				Assert.True(_.IsPrimitive());
+				Assert.True(_.IsPrimitive);
 			else
-				Assert.False(_.IsPrimitive());
+				Assert.False(_.IsPrimitive);
 		});
 	}
 
@@ -188,27 +194,27 @@ public class EnumExtensions
 	public void IsQueue()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().EndsWith("Queue"), _.IsQueue()));
+			Assert.Equal(_.Name.EndsWith("Queue"), _.IsQueue));
 	}
 
 	[Fact]
 	public void IsReadOnly()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().StartsWith("ReadOnly"), _.IsReadOnly()));
+			Assert.Equal(_.Name.StartsWith("ReadOnly"), _.IsReadOnly));
 	}
 
 	[Fact]
 	public void IsSet()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().EndsWith("Set"), _.IsSet()));
+			Assert.Equal(_.Name.EndsWith("Set"), _.IsSet));
 	}
 
 	[Fact]
 	public void IsStack()
 	{
 		Enum.GetValues<CollectionType>().ForEach(_ =>
-			Assert.Equal(_.Name().EndsWith("Stack"), _.IsStack()));
+			Assert.Equal(_.Name.EndsWith("Stack"), _.IsStack));
 	}
 }

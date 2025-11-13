@@ -59,7 +59,7 @@ internal sealed class DataSource : IDataSource
 			this.DefaultSchema = command.ExecuteScalar()?.ToString() ?? string.Empty;
 		}
 
-		var metadata = connection.GetSchema(SchemaCollection.MetaDataCollections.Name());
+		var metadata = connection.GetSchema(SchemaCollection.MetaDataCollections.Name);
 		this.SupportedMetadataCollections = metadata.Rows
 			.Cast<DataRow>()
 			.Select(row => row[SchemaColumn.collectionName]!.ToString()!.ToEnum<SchemaCollection>()!.Value)
@@ -105,7 +105,7 @@ internal sealed class DataSource : IDataSource
 		databaseObject.ThrowIfBlank();
 
 		var items = databaseObject.Split('.', RemoveEmptyEntries | TrimEntries);
-		if (items.Length > 3 || (this.Type == MySql && items.Length > 2))
+		if (items.Length > 3 || (this.Type is MySql && items.Length > 2))
 			throw new ArgumentOutOfRangeException(Invariant($"{nameof(DataSource)}.{nameof(Escape)}: Invalid name: {databaseObject}"), nameof(databaseObject));
 
 		items = (items.Length, this.Type) switch
@@ -126,7 +126,7 @@ internal sealed class DataSource : IDataSource
 
 	public async Task<DataSet> GetDatabaseSchemaAsync(string? database = null, CancellationToken token = default)
 	{
-		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name());
+		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name);
 
 		await using var connection = this.CreateDbConnection();
 		await connection.OpenAsync(token);
@@ -149,12 +149,12 @@ internal sealed class DataSource : IDataSource
 		if (database is not null)
 			await connection.ChangeDatabaseAsync(database, token);
 
-		return await connection.GetSchemaAsync(collection.Name(), token);
+		return await connection.GetSchemaAsync(collection.Name, token);
 	}
 
 	public DataSet GetDatabaseSchema(string? database = null)
 	{
-		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name());
+		var schemaSet = new DataSet(SchemaCollection.MetaDataCollections.Name);
 
 		using var connection = this.CreateDbConnection();
 		connection.Open();
@@ -177,7 +177,7 @@ internal sealed class DataSource : IDataSource
 		if (database is not null)
 			connection.ChangeDatabaseAsync(database);
 
-		return connection.GetSchema(collection.Name());
+		return connection.GetSchema(collection.Name);
 	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -222,7 +222,7 @@ internal sealed class DataSource : IDataSource
 
 			if (this.SupportedMetadataCollections.Contains(SchemaCollection.Tables))
 			{
-				var tables = connection.GetSchema(SchemaCollection.Tables.Name());
+				var tables = connection.GetSchema(SchemaCollection.Tables.Name);
 				var tablesRows = tables.Select(Invariant($"{SchemaColumn.table_type} = 'BASE TABLE'"), Invariant($"{SchemaColumn.table_name} ASC"));
 				tablesRows.ForEach(tablesRow =>
 				{
@@ -250,7 +250,7 @@ internal sealed class DataSource : IDataSource
 
 			if (this.SupportedMetadataCollections.Contains(SchemaCollection.Views))
 			{
-				var views = connection.GetSchema(SchemaCollection.Views.Name());
+				var views = connection.GetSchema(SchemaCollection.Views.Name);
 				var viewsRows = views?.Select(null, Invariant($"{SchemaColumn.table_name} ASC"));
 				viewsRows?.ForEach(viewsRow =>
 				{
@@ -278,8 +278,8 @@ internal sealed class DataSource : IDataSource
 
 			if (this.SupportedMetadataCollections.Contains(SchemaCollection.Procedures))
 			{
-				var procedures = connection.GetSchema(SchemaCollection.Procedures.Name());
-				var procedureParameters = connection.GetSchema(SchemaCollection.ProcedureParameters.Name());
+				var procedures = connection.GetSchema(SchemaCollection.Procedures.Name);
+				var procedureParameters = connection.GetSchema(SchemaCollection.ProcedureParameters.Name);
 				var proceduresRows = procedures?.Select(null, Invariant($"{SchemaColumn.routine_name} ASC"));
 				proceduresRows?.ForEach(proceduresRow =>
 				{

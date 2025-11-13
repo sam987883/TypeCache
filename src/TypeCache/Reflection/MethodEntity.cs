@@ -11,7 +11,7 @@ namespace TypeCache.Reflection;
 public sealed class MethodEntity : Method
 {
 	private readonly Lazy<Delegate> _Invoke;
-	private readonly Lazy<Func<object, object?[]?, object?>> _InvokeWithArray;
+	private readonly Lazy<Func<object, object?[], object?>> _InvokeWithArray;
 	private readonly Lazy<Func<object, ITuple, object?>> _InvokeWithTuple;
 
 	public MethodEntity(MethodInfo methodInfo) : base(methodInfo)
@@ -23,7 +23,7 @@ public sealed class MethodEntity : Method
 		this._InvokeWithArray = new(this.CreateArrayCall);
 		this._InvokeWithTuple = new(this.CreateTupleCall);
 
-		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.HasReturnValue = !methodInfo.ReturnType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]);
 		this.Return = new(methodInfo.ReturnParameter);
 	}
 
@@ -35,16 +35,14 @@ public sealed class MethodEntity : Method
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance)
-		=> this._InvokeWithArray.Value(instance, null);
+		=> this._InvokeWithArray.Value(instance, []);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(object instance, object?[] arguments)
 		=> this._InvokeWithArray.Value(instance, arguments);
 
 	public object? Invoke(object instance, ITuple arguments)
-		=> this.Parameters.Zip(arguments.GetType().GetGenericArguments()).All(_ => _.First.ParameterType == _.Second)
-			? this._InvokeWithTuple.Value(instance, arguments)
-			: this._InvokeWithArray.Value(instance, arguments.ToArray());
+		=> this._InvokeWithTuple.Value(instance, arguments);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodInfo ToMethodInfo()
@@ -64,7 +62,7 @@ public sealed class MethodEntity : Method
 
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="ArgumentNullException"/>
-	private Func<object, object?[]?, object?> CreateArrayCall()
+	private Func<object, object?[], object?> CreateArrayCall()
 	{
 		ParameterExpression arguments = nameof(arguments).ToParameterExpression<object?[]?>();
 		Expression[]? parameters = null;
@@ -80,10 +78,10 @@ public sealed class MethodEntity : Method
 			if (this.Return.ParameterType != typeof(object))
 				methodExpression = methodExpression.As<object>();
 
-			return methodExpression.Lambda<Func<object, object?[]?, object?>>([instance, arguments]).Compile();
+			return methodExpression.Lambda<Func<object, object?[], object?>>([instance, arguments]).Compile();
 		}
 
-		var action = methodExpression.Lambda<Action<object, object?[]?>>([instance, arguments]).Compile();
+		var action = methodExpression.Lambda<Action<object, object?[]>>([instance, arguments]).Compile();
 		return (instance, arguments) =>
 		{
 			action(instance, arguments);

@@ -39,7 +39,7 @@ public class Shadow<T> : DispatchProxy
 		var parameterTypes = call.Method.GetParameters().Where(_ => !_.IsRetval).OrderBy(_ => _.Position).Select(_ => _.ParameterType).ToArray();
 		var methodEntity = methods?.Find(parameterTypes);
 		methodEntity.ThrowIfNull(
-			() => Invariant($"Method overload was not found: {Type<T>.CodeName}.{method}({parameterTypes.Select(_ => _.CodeName()).ToCSV()})"), this._Logger);
+			() => Invariant($"Method overload was not found: {Type<T>.CodeName}.{method}({parameterTypes.Select(_ => _.CodeName).ToCSV()})"), this._Logger);
 
 		this._Methods[methodEntity] = call;
 	}
@@ -63,7 +63,7 @@ public class Shadow<T> : DispatchProxy
 		// If method is not found, could be an extension method
 		if (targetMethod.GetParameters().FirstOrDefault(_ => _.Position is 0)?.ParameterType == typeof(T))
 		{
-			var targetMethodEntity = targetMethod.DeclaringType!.Methods()[targetMethod.Name].Find(args)!;
+			var targetMethodEntity = targetMethod.DeclaringType!.Methods[targetMethod.Name].Find(args)!;
 			// Invoke override if found
 			if (this._Methods.TryGetValue(targetMethodEntity, out var extensionOverride))
 				return extensionOverride.DynamicInvoke([this.Instance, .. args]);

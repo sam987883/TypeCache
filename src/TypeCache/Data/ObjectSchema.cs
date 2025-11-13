@@ -55,16 +55,16 @@ public sealed class ObjectSchema(
 
 	public string CreateCountSQL(string? distinctColumn, string where)
 		=> new StringBuilder("SELECT ")
-			.AppendLineIf(distinctColumn.IsBlank(), "COUNT(*)", Invariant($"COUNT(DISTINCT {(distinctColumn.IsNotBlank() ? distinctColumn?.EscapeIdentifier(this.DataSource.Type!) : null)})"))
+			.AppendLineIf(distinctColumn.IsBlank, "COUNT(*)", Invariant($"COUNT(DISTINCT {(distinctColumn.IsNotBlank ? distinctColumn?.EscapeIdentifier(this.DataSource.Type!) : null)})"))
 			.Append("FROM ").Append(this.Name).AppendIf(this.DataSource.Type is SqlServer, " WITH(NOLOCK)").AppendLine()
-			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
+			.AppendLineIf(where.IsNotBlank, Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 
 	public string CreateDeleteSQL(string where, string[] output)
 		=> new StringBuilder("DELETE ").AppendLine(this.Name)
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
+			.AppendLineIf(where.IsNotBlank, Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 
@@ -199,11 +199,11 @@ public sealed class ObjectSchema(
 			case Oracle:
 			case MySql:
 				sqlBuilder
-					.AppendIf(select.TableHints.IsNotBlank(), Invariant($"/*+ {select.TableHints} */ "))
+					.AppendIf(select.TableHints.IsNotBlank, Invariant($"/*+ {select.TableHints} */ "))
 					.AppendIf(select.Distinct, "DISTINCT ");
 				break;
 			case PostgreSql:
-				if (select.DistinctOn.IsNotBlank())
+				if (select.DistinctOn.IsNotBlank)
 					sqlBuilder.Append("DISTINCT ON ").Append(select.DistinctOn);
 				else
 					sqlBuilder.AppendIf(select.Distinct, "DISTINCT ");
@@ -214,14 +214,14 @@ public sealed class ObjectSchema(
 		return sqlBuilder
 			.AppendLineIf(select.Select?.Any() is true, select.Select.ToCSV(), "*")
 			.Append("FROM ").Append(select.From)
-			.AppendIf(select.TableHints.IsNotBlank(), _ => _
+			.AppendIf(select.TableHints.IsNotBlank, _ => _
 				.AppendIf(this.DataSource.Type is Oracle, Invariant($" /*+ {select.TableHints} */"))
 				.AppendIf(this.DataSource.Type is SqlServer, Invariant($" WITH({select.TableHints})"))
 				.AppendIf(this.DataSource.Type is PostgreSql, Invariant($" WITH({select.TableHints})")))
 			.AppendLine()
-			.AppendLineIf(select.Where.IsNotBlank(), Invariant($"WHERE {select.Where}"))
-			.AppendLineIf(select.GroupBy.IsNotBlank(), Invariant($"GROUP BY {select.GroupBy}"))
-			.AppendLineIf(select.Having.IsNotBlank(), Invariant($"HAVING {select.Having}"))
+			.AppendLineIf(select.Where.IsNotBlank, Invariant($"WHERE {select.Where}"))
+			.AppendLineIf(select.GroupBy.IsNotBlank, Invariant($"GROUP BY {select.GroupBy}"))
+			.AppendLineIf(select.Having.IsNotBlank, Invariant($"HAVING {select.Having}"))
 			.AppendLineIf(select.OrderBy?.Any() is true, Invariant($"ORDER BY {select.OrderBy.ToCSV()}"))
 			.AppendLineIf(select.Offset > 0U, Invariant($"OFFSET {select.Offset} ROWS"))
 			.AppendLineIf(select.Fetch > 0U, Invariant($"FETCH NEXT {select.Fetch} ROWS ONLY"))
@@ -233,7 +233,7 @@ public sealed class ObjectSchema(
 		=> this.DataSource.Type switch
 		{
 			PostgreSql => Invariant($"TRUNCATE {this.Name};"),
-			_ when partitions.IsNotBlank() => Invariant($"TRUNCATE TABLE {this.Name} WITH (PARTITIONS ({partitions}));"),
+			_ when partitions.IsNotBlank => Invariant($"TRUNCATE TABLE {this.Name} WITH (PARTITIONS ({partitions}));"),
 			_ => Invariant($"TRUNCATE TABLE {this.Name};")
 		};
 
@@ -242,7 +242,7 @@ public sealed class ObjectSchema(
 			.AppendIf(this.DataSource.Type is SqlServer, " WITH(UPDLOCK)").AppendLine()
 			.AppendLine(Invariant($"SET {set.ToCSV()}"))
 			.AppendOutputSQL(this.DataSource.Type, output)
-			.AppendLineIf(where.IsNotBlank(), Invariant($"WHERE {where}"))
+			.AppendLineIf(where.IsNotBlank, Invariant($"WHERE {where}"))
 			.AppendStatementEndSQL()
 			.ToString();
 

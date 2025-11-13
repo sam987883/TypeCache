@@ -2,11 +2,11 @@
 
 namespace TypeCache.Mediation;
 
-internal sealed class CustomValidationRule<REQUEST>(Func<REQUEST, CancellationToken, Task> validate)
+internal sealed class CustomValidationRule<REQUEST>(Action<REQUEST> validate)
 	: IValidationRule<REQUEST>
-	where REQUEST : IRequest
+	where REQUEST : notnull
 {
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task Validate(REQUEST request, CancellationToken token = default)
-		=> validate(request, token);
+	public void Validate(REQUEST request)
+		=> validate(request);
 }

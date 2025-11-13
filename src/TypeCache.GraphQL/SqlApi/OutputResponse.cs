@@ -24,15 +24,15 @@ public class OutputResponse<T>
 	{
 		var graphType = new ObjectGraphType
 		{
-			Name = Invariant($"{name}{nameof(OutputResponse<T>)}"),
+			Name = Invariant($"{name}{nameof(OutputResponse<>)}"),
 			Description = description
 		};
 
-		graphType.AddField<string>(nameof(OutputResponse<T>.DataSource), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.DataSource));
-		graphType.AddField(nameof(OutputResponse<T>.Output), new ListGraphType(new NonNullGraphType(dataGraphType)), new FuncFieldResolver<OutputResponse<T>, IList<T>?>(context => context.Source.Output));
-		graphType.AddField<string>(nameof(OutputResponse<T>.Sql), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Sql));
-		graphType.AddField<string>(nameof(OutputResponse<T>.Table), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Table));
-		graphType.AddField<long>(nameof(OutputResponse<T>.TotalCount), new FuncFieldResolver<OutputResponse<T>, long?>(context => context.Source.TotalCount));
+		graphType.AddField<string>(nameof(OutputResponse<>.DataSource), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.DataSource));
+		graphType.AddField(nameof(OutputResponse<>.Output), new ListGraphType(new NonNullGraphType(dataGraphType)), new FuncFieldResolver<OutputResponse<T>, IList<T>?>(context => context.Source.Output));
+		graphType.AddField<string>(nameof(OutputResponse<>.Sql), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Sql));
+		graphType.AddField<string>(nameof(OutputResponse<>.Table), new FuncFieldResolver<OutputResponse<T>, string?>(context => context.Source.Table));
+		graphType.AddField<long>(nameof(OutputResponse<>.TotalCount), new FuncFieldResolver<OutputResponse<T>, long?>(context => context.Source.TotalCount));
 
 		return graphType;
 	}

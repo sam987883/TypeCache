@@ -38,7 +38,7 @@ public sealed class SqlApiTableEndpointFilter
 			return Results.NotFound(Invariant($"{nameof(ObjectSchema)} for {objectName} was not found."));
 
 		if (objectSchema.Type is not DatabaseObjectType.Table && objectSchema.Type is not DatabaseObjectType.View)
-			return Results.BadRequest(Invariant($"{objectName} is not a {DatabaseObjectType.Table.Name()} or {DatabaseObjectType.View.Name()}."));
+			return Results.BadRequest(Invariant($"{objectName} is not a {DatabaseObjectType.Table.Name} or {DatabaseObjectType.View.Name}."));
 
 		context.HttpContext.Items.Add(nameof(IDataSource), dataSource);
 		context.HttpContext.Items.Add(nameof(ObjectSchema), objectSchema);

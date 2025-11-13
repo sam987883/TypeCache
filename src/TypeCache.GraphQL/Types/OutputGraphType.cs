@@ -17,18 +17,18 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 	where T : notnull
 {
 	public OutputGraphType()
-		: this(Type<T>.Attributes.GraphQLName() ?? Type<T>.CodeName)
+		: this(Type<T>.Attributes.GraphQLName ?? typeof(T).GraphQLName)
 	{
 	}
 
 	public OutputGraphType(string name)
 	{
 		this.Name = name;
-		this.Description = Type<T>.Attributes.GraphQLDescription()
+		this.Description = Type<T>.Attributes.GraphQLDescription
 			?? Invariant($"{Type<T>.AssemblyName}: {Type<T>.Namespace}.{Type<T>.CodeName}");
-		this.DeprecationReason = Type<T>.Attributes.GraphQLDeprecationReason();
+		this.DeprecationReason = Type<T>.Attributes.GraphQLDeprecationReason;
 
-		Type<T>.Properties.Values.Where(_ => _.CanRead && !_.Attributes.GraphQLIgnore()).ForEach(_ => this.AddField(_.ToFieldType()));
+		Type<T>.Properties.Values.Where(_ => _.CanRead && !_.Attributes.GraphQLIgnore).ForEach(_ => this.AddField(_.ToFieldType()));
 		Type<T>.Interfaces.Select(_ => _.ToType()).Where(_ => !_.IsGenericType).ForEach(this.Interfaces.Add);
 	}
 
@@ -46,20 +46,20 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 		where ITEM : notnull
 	{
 		var arguments = method.Parameters
-			.Where(_ => !_.Attributes.GraphQLIgnore()
+			.Where(_ => !_.Attributes.GraphQLIgnore
 				&& !_.ParameterType.IsAssignableTo<IResolveFieldContext>()
 				&& !_.ParameterType.IsAssignableTo<CancellationToken>())
 			.Select(_ => new QueryArgument(_.ToGraphQLType())
 			{
-				Name = _.Attributes.GraphQLName() ?? _.Name,
-				Description = _.Attributes.GraphQLDescription(),
+				Name = _.Attributes.GraphQLName ?? _.Name,
+				Description = _.Attributes.GraphQLDescription,
 			});
 		var fieldType = new FieldType()
 		{
 			Arguments = new(arguments),
-			Name = method.Attributes.GraphQLName() ?? method.Name,
-			Description = method.Attributes.GraphQLDescription(),
-			DeprecationReason = method.Attributes.GraphQLDeprecationReason(),
+			Name = method.Attributes.GraphQLName ?? method.Name,
+			Description = method.Attributes.GraphQLDescription,
+			DeprecationReason = method.Attributes.GraphQLDeprecationReason,
 			Resolver = new ItemFieldResolver<ITEM>(method),
 			Type = typeof(OutputGraphType<ITEM>)
 		};
@@ -77,20 +77,20 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 		where ITEM : notnull
 	{
 		var arguments = method.Parameters
-			.Where(_ => !_.Attributes.GraphQLIgnore()
+			.Where(_ => !_.Attributes.GraphQLIgnore
 				&& !_.ParameterType.IsAssignableTo<IResolveFieldContext>()
 				&& !_.ParameterType.IsAssignableTo<CancellationToken>())
 			.Select(_ => new QueryArgument(_.ToGraphQLType())
 			{
-				Name = _.Attributes.GraphQLName() ?? _.Name,
-				Description = _.Attributes.GraphQLDescription(),
+				Name = _.Attributes.GraphQLName ?? _.Name,
+				Description = _.Attributes.GraphQLDescription,
 			});
 		var fieldType = new FieldType()
 		{
 			Arguments = new(arguments),
-			Name = method.Attributes.GraphQLName() ?? method.Name,
-			Description = method.Attributes.GraphQLDescription(),
-			DeprecationReason = method.Attributes.GraphQLDeprecationReason(),
+			Name = method.Attributes.GraphQLName ?? method.Name,
+			Description = method.Attributes.GraphQLDescription,
+			DeprecationReason = method.Attributes.GraphQLDeprecationReason,
 			Resolver = new BatchItemFieldResolver<T, ITEM>(method, getResult),
 			Type = typeof(OutputGraphType<ITEM>)
 		};
@@ -108,20 +108,20 @@ public sealed class OutputGraphType<T> : ObjectGraphType<T>
 		where ITEM : notnull
 	{
 		var arguments = method.Parameters
-			.Where(_ => !_.Attributes.GraphQLIgnore()
+			.Where(_ => !_.Attributes.GraphQLIgnore
 				&& !_.ParameterType.IsAssignableTo<IResolveFieldContext>()
 				&& !_.ParameterType.IsAssignableTo<CancellationToken>())
 			.Select(_ => new QueryArgument(_.ToGraphQLType())
 			{
-				Name = _.Attributes.GraphQLName() ?? _.Name,
-				Description = _.Attributes.GraphQLDescription(),
+				Name = _.Attributes.GraphQLName ?? _.Name,
+				Description = _.Attributes.GraphQLDescription,
 			});
 		var fieldType = new FieldType()
 		{
 			Arguments = new(arguments),
-			Name = method.Attributes.GraphQLName() ?? method.Name,
-			Description = method.Attributes.GraphQLDescription(),
-			DeprecationReason = method.Attributes.GraphQLDeprecationReason(),
+			Name = method.Attributes.GraphQLName ?? method.Name,
+			Description = method.Attributes.GraphQLDescription,
+			DeprecationReason = method.Attributes.GraphQLDeprecationReason,
 			Resolver = new BatchCollectionFieldResolver<T, ITEM>(method, getResult),
 			Type = typeof(OutputGraphType<ITEM>)
 		};

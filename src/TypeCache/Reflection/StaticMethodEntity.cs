@@ -22,7 +22,7 @@ public sealed class StaticMethodEntity : Method
 		this._InvokeWithArray = new(this.CreateArrayCall);
 		this._InvokeWithTuple = new(this.CreateTupleCall);
 
-		this.HasReturnValue = methodInfo.ReturnType != typeof(void);
+		this.HasReturnValue = !methodInfo.ReturnType.IsAny([typeof(void), typeof(Task), typeof(ValueTask)]);
 		this.Return = new(methodInfo.ReturnParameter);
 	}
 
@@ -40,11 +40,8 @@ public sealed class StaticMethodEntity : Method
 	public object? Invoke(object?[] arguments)
 		=> this._InvokeWithArray.Value(arguments);
 
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public object? Invoke(ITuple arguments)
-		=> this.Parameters.Zip(arguments.GetType().GetGenericArguments()).All(_ => _.First.ParameterType == _.Second)
-			? this._InvokeWithTuple.Value(arguments)
-			: this._InvokeWithArray.Value(arguments.ToArray());
+		=> this._InvokeWithTuple.Value(arguments);
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodInfo ToMethodInfo()

@@ -18,7 +18,7 @@ public class ReadOnlyCollectionAdapter : IReadOnlyCollection<object>
 
 		var collectionType = collection.GetType().GetInterfaces().First(_ => _.Is(typeof(IReadOnlyCollection<>)));
 
-		this._Count = collectionType.Properties()[nameof(Count)];
+		this._Count = collectionType.Properties[nameof(Count)];
 	}
 
 	public int Count => (int)this._Count.GetValue(this._Collection)!;

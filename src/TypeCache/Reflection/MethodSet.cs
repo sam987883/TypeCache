@@ -11,21 +11,18 @@ namespace TypeCache.Reflection;
 public sealed class MethodSet<T> : ReadOnlySet<T>
 	where T : Method
 {
-	private readonly HashSet<T> _Methods;
+	private readonly HashSet<T> _Methods = new();
 
-	private MethodSet(Type type, string name, BindingFlags binding, HashSet<T> methods) : base(methods)
+	private MethodSet(string name, HashSet<T> methods, GenericMethodSet genericMethods)
+		: base(methods)
 	{
 		this._Methods = methods;
-		this.Generic = new GenericMethodSet(type, binding, name);
+		this.Generic = genericMethods;
 		this.Name = name;
 	}
 
-	public MethodSet(Type type, string name, BindingFlags binding)
-		: this(type, name, binding,
-			type.GetMethods(binding)
-				.Where(methodInfo => (!methodInfo.IsGenericMethod || methodInfo.IsConstructedGenericMethod) && methodInfo.Name.EqualsOrdinal(name))
-				.Select(methodInfo => (!methodInfo.IsStatic ? new MethodEntity(methodInfo) as T : new StaticMethodEntity(methodInfo) as T)!)
-				.ToHashSet())
+	public MethodSet(string name, IEnumerable<T> methods, IEnumerable<GenericMethodDefinition> genericMethods)
+		: this(name, methods.ToHashSet(), new GenericMethodSet(genericMethods))
 	{
 	}
 

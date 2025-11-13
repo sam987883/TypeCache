@@ -7,36 +7,33 @@ namespace TypeCache.GraphQL.Extensions;
 
 public static class AttributeExtensions
 {
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLDeprecationReason(this IEnumerable<Attribute> @this)
-		=> @this.OfType<GraphQLDeprecationReasonAttribute>().FirstOrDefault()?.DeprecationReason?.NullIfBlank();
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLDescription(this IEnumerable<Attribute> @this)
-		=> @this.OfType<GraphQLDescriptionAttribute>().FirstOrDefault()?.Description?.NullIfBlank();
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static bool GraphQLIgnore(this IEnumerable<Attribute> @this)
-		=> @this.Any<GraphQLIgnoreAttribute>();
-
-	public static string? GraphQLInputName(this IEnumerable<Attribute> @this)
+	extension(IEnumerable<Attribute> @this)
 	{
-		var name = @this.OfType<GraphQLInputNameAttribute>().FirstOrDefault()?.Name?.NullIfBlank();
-		if (name.IsNotBlank())
-			return name;
+		[DebuggerHidden]
+		public string? GraphQLDeprecationReason => @this.OfType<GraphQLDeprecationReasonAttribute>().FirstOrDefault()?.DeprecationReason?.IfBlank(null);
 
-		name = @this.GraphQLName();
-		if (name.IsNotBlank())
-			return Invariant($"{@this.GraphQLName()}Input");
+		[DebuggerHidden]
+		public string? GraphQLDescription => @this.OfType<GraphQLDescriptionAttribute>().FirstOrDefault()?.Description?.IfBlank(null);
 
-		return null;
+		[DebuggerHidden]
+		public bool GraphQLIgnore => @this.Any<GraphQLIgnoreAttribute>();
+
+		[DebuggerHidden]
+		public string? GraphQLInputName => @this.OfType<GraphQLInputNameAttribute>().FirstOrDefault()?.Name?.IfBlank(null);
+
+		[DebuggerHidden]
+		public bool GraphQLMutation => @this.Any<GraphQLMutationAttribute>();
+
+		[DebuggerHidden]
+		public string? GraphQLName => @this.OfType<GraphQLNameAttribute>().FirstOrDefault()?.Name?.IfBlank(null);
+
+		[DebuggerHidden]
+		public bool GraphQLQuery => @this.Any<GraphQLQueryAttribute>();
+
+		[DebuggerHidden]
+		public bool GraphQLSubscription => @this.Any<GraphQLSubscriptionAttribute>();
+
+		[DebuggerHidden]
+		public Type? GraphQLType => @this.OfType<GraphQLTypeAttribute>().FirstOrDefault()?.Type;
 	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static string? GraphQLName(this IEnumerable<Attribute> @this)
-		=> @this.OfType<GraphQLNameAttribute>().FirstOrDefault()?.Name?.NullIfBlank();
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static Type? GraphQLType(this IEnumerable<Attribute> @this)
-		=> @this.OfType<GraphQLTypeAttribute>().FirstOrDefault()?.Type;
 }

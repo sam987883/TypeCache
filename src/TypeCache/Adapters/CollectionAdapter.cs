@@ -27,13 +27,13 @@ public class CollectionAdapter : ICollection<object>
 
 		var collectionType = collection.GetType().GetInterfaces().First(_ => _.Is(typeof(ICollection<>)));
 
-		this._Count = collectionType.Properties()[nameof(Count)];
-		this._IsReadOnly = collectionType.Properties()[nameof(IsReadOnly)];
-		this._Add = collectionType.Methods()[nameof(Add)].First();
-		this._Clear = collectionType.Methods()[nameof(Clear)].First()!;
-		this._Contains = collectionType.Methods()[nameof(Contains)].First();
-		this._CopyTo = collectionType.Methods()[nameof(CopyTo)].First();
-		this._Remove = collectionType.Methods()[nameof(Remove)].First();
+		this._Count = collectionType.Properties[nameof(Count)];
+		this._IsReadOnly = collectionType.Properties[nameof(IsReadOnly)];
+		this._Add = collectionType.Methods[nameof(Add)].First();
+		this._Clear = collectionType.Methods[nameof(Clear)].First()!;
+		this._Contains = collectionType.Methods[nameof(Contains)].First();
+		this._CopyTo = collectionType.Methods[nameof(CopyTo)].First();
+		this._Remove = collectionType.Methods[nameof(Remove)].First();
 	}
 
 	public int Count => (int)this._Count.GetValue(this._Collection)!;
@@ -41,13 +41,13 @@ public class CollectionAdapter : ICollection<object>
 	public bool IsReadOnly => (bool)this._IsReadOnly.GetValue(this._Collection)!;
 
 	public void Add(object item)
-		=> this._Add.Invoke(this._Collection, item.ToValueTuple());
+		=> this._Add.Invoke(this._Collection, [item]);
 
 	public void Clear()
 		=> this._Clear.Invoke(this._Collection);
 
 	public bool Contains(object item)
-		=> (bool)this._Contains.Invoke(this._Collection, item.ToValueTuple())!;
+		=> (bool)this._Contains.Invoke(this._Collection, [item])!;
 
 	public void CopyTo(object[] array, int arrayIndex)
 		=> this.ForEach(item => array[arrayIndex++] = item);
@@ -58,6 +58,6 @@ public class CollectionAdapter : ICollection<object>
 	IEnumerator<object> IEnumerable<object>.GetEnumerator()
 		=> ((IEnumerable)this._Collection).OfType<object>().GetEnumerator();
 
-	public bool Remove(object item)
-		=> (bool)this._Remove.Invoke(this._Collection, item.ToValueTuple())!;
+	public virtual bool Remove(object item)
+		=> (bool)this._Remove.Invoke(this._Collection, [item])!;
 }

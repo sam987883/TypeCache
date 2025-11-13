@@ -8,7 +8,7 @@ public static class RuleFactory
 {
 	/// <exception cref="ArgumentNullException"/>
 	public static IAfterRule<REQUEST> CreateAfterRule<REQUEST>(Func<REQUEST, CancellationToken, Task> handleAsync)
-		where REQUEST : IRequest
+		where REQUEST : notnull
 	{
 		handleAsync.ThrowIfNull();
 
@@ -17,7 +17,7 @@ public static class RuleFactory
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IAfterRule<REQUEST> CreateAfterRule<REQUEST>(Action<REQUEST> handle)
-		where REQUEST : IRequest
+		where REQUEST : notnull
 	{
 		handle.ThrowIfNull();
 
@@ -25,26 +25,8 @@ public static class RuleFactory
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IAfterRule<REQUEST, RESPONSE> CreateAfterRule<REQUEST, RESPONSE>(Func<REQUEST, RESPONSE, CancellationToken, Task> handleAsync)
-		where REQUEST : IRequest<RESPONSE>
-	{
-		handleAsync.ThrowIfNull();
-
-		return new CustomAfterRule<REQUEST, RESPONSE>(handleAsync);
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static IAfterRule<REQUEST, RESPONSE> CreateAfterRule<REQUEST, RESPONSE>(Action<REQUEST, RESPONSE> handle)
-		where REQUEST : IRequest<RESPONSE>
-	{
-		handle.ThrowIfNull();
-
-		return new CustomAfterRule<REQUEST, RESPONSE>((REQUEST request, RESPONSE response, CancellationToken token) => Task.Run(() => handle(request, response), token));
-	}
-
-	/// <exception cref="ArgumentNullException"/>
 	public static IRule<REQUEST> CreateRule<REQUEST>(Func<REQUEST, CancellationToken, Task> executeAsync)
-		where REQUEST : IRequest
+		where REQUEST : notnull
 	{
 		executeAsync.ThrowIfNull();
 
@@ -53,46 +35,50 @@ public static class RuleFactory
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IRule<REQUEST> CreateRule<REQUEST>(Action<REQUEST> execute)
-		where REQUEST : IRequest
+		where REQUEST : notnull
 	{
 		execute.ThrowIfNull();
 
-		return new CustomRule<REQUEST>((REQUEST request, CancellationToken token) => Task.Run(() => execute(request), token));
+		return new CustomRule<REQUEST>((REQUEST request, CancellationToken token)
+			=> Task.Run(() => execute(request), token));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
-	public static IRule<REQUEST, RESPONSE> CreateRule<REQUEST, RESPONSE>(Func<REQUEST, CancellationToken, Task<RESPONSE>> mapAsync)
-		where REQUEST : IRequest<RESPONSE>
+	public static IRule<REQUEST> CreateRule<REQUEST>(Action<REQUEST, CancellationToken> execute)
+		where REQUEST : notnull
+	{
+		execute.ThrowIfNull();
+
+		return new CustomRule<REQUEST>((REQUEST request, CancellationToken token)
+			=> Task.Run(() => execute(request, token), token));
+	}
+
+	/// <exception cref="ArgumentNullException"/>
+	public static IRule<REQUEST, RESPONSE> CreateRule<REQUEST, RESPONSE>(Func<REQUEST, CancellationToken, RESPONSE> mapAsync)
+		where REQUEST : notnull
 	{
 		mapAsync.ThrowIfNull();
 
-		return new CustomRule<REQUEST, RESPONSE>(mapAsync);
+		return new CustomRule<REQUEST, RESPONSE>((REQUEST request, CancellationToken token)
+			=> new ValueTask<RESPONSE>(Task.Run(() => mapAsync(request, token), token)));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IRule<REQUEST, RESPONSE> CreateRule<REQUEST, RESPONSE>(Func<REQUEST, RESPONSE> map)
-		where REQUEST : IRequest<RESPONSE>
+		where REQUEST : notnull
 	{
 		map.ThrowIfNull();
 
-		return new CustomRule<REQUEST, RESPONSE>((REQUEST request, CancellationToken token) => Task.Run(() => map(request), token));
-	}
-
-	/// <exception cref="ArgumentNullException"/>
-	public static IValidationRule<REQUEST> CreateValidationRule<REQUEST>(Func<REQUEST, CancellationToken, Task> validateAsync)
-		where REQUEST : IRequest
-	{
-		validateAsync.ThrowIfNull();
-
-		return new CustomValidationRule<REQUEST>(validateAsync);
+		return new CustomRule<REQUEST, RESPONSE>((REQUEST request, CancellationToken token)
+			=> new ValueTask<RESPONSE>(Task.Run(() => map(request))));
 	}
 
 	/// <exception cref="ArgumentNullException"/>
 	public static IValidationRule<REQUEST> CreateValidationRule<REQUEST>(Action<REQUEST> validate)
-		where REQUEST : IRequest
+		where REQUEST : notnull
 	{
 		validate.ThrowIfNull();
 
-		return new CustomValidationRule<REQUEST>((request, token) => Task.Run(() => validate(request), token));
+		return new CustomValidationRule<REQUEST>(validate);
 	}
 }

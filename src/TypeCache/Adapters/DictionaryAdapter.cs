@@ -26,18 +26,18 @@ public class DictionaryAdapter : CollectionAdapter, IDictionary<object, object>
 
 		var dictionaryType = dictionary.GetType().GetInterfaces().First(_ => _.Is(typeof(IDictionary<,>)));
 
-		this._Item = dictionaryType.DefaultIndexer()!;
-		this._Keys = dictionaryType.Properties()[nameof(Keys)];
-		this._Values = dictionaryType.Properties()[nameof(Values)];
-		this._Add = dictionaryType.Methods()[nameof(Add)].First(_ => _.Parameters.Count is 2);
-		this._ContainsKey = dictionaryType.Methods()[nameof(ContainsKey)].First();
-		this._Remove = dictionaryType.Methods()[nameof(Remove)].First(_ => _.Parameters[0].ParameterType == dictionaryType.GetGenericArguments()[0]);
+		this._Item = dictionaryType.DefaultIndexer!;
+		this._Keys = dictionaryType.Properties[nameof(Keys)];
+		this._Values = dictionaryType.Properties[nameof(Values)];
+		this._Add = dictionaryType.Methods[nameof(Add)].First(_ => _.Parameters.Count is 2);
+		this._ContainsKey = dictionaryType.Methods[nameof(ContainsKey)].First();
+		this._Remove = dictionaryType.Methods[nameof(Remove)].First(_ => _.Parameters[0].ParameterType == dictionaryType.GetGenericArguments()[0]);
 	}
 
 	public object this[object key]
 	{
-		get => this._Item.GetValue(this._Dictionary, ValueTuple.Create(key))!;
-		set => this._Item.SetValue(this._Dictionary, ValueTuple.Create(key), value);
+		get => this._Item.GetValue(this._Dictionary, [key])!;
+		set => this._Item.SetValue(this._Dictionary, [key], value);
 	}
 
 	public ICollection<object> Keys => new CollectionAdapter(this._Keys.GetValue(this._Dictionary)!);
@@ -62,7 +62,7 @@ public class DictionaryAdapter : CollectionAdapter, IDictionary<object, object>
 	IEnumerator<KeyValuePair<object, object>> IEnumerable<KeyValuePair<object, object>>.GetEnumerator()
 		=> throw new NotImplementedException();
 
-	public bool Remove(object key)
+	public override bool Remove(object key)
 		=> (bool)this._Remove.Invoke(this._Dictionary, [key])!;
 
 	public bool Remove(KeyValuePair<object, object> item)

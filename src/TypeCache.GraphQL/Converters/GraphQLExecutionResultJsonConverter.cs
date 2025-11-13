@@ -10,6 +10,8 @@ namespace TypeCache.GraphQL.Converters;
 
 public sealed class GraphQLExecutionResultJsonConverter : JsonConverter<ExecutionResult>
 {
+	public override bool CanConvert(Type typeToConvert) => typeof(ExecutionResult).IsAssignableFrom(typeToConvert);
+
 	/// <exception cref="NotImplementedException"></exception>
 	public override ExecutionResult Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		=> throw new NotImplementedException();
@@ -27,14 +29,18 @@ public sealed class GraphQLExecutionResultJsonConverter : JsonConverter<Executio
 		if (value.Errors?.Any() is true)
 		{
 			writer.WritePropertyName("errors");
-			JsonSerializer.Serialize(writer, value.Errors, options);
+
+			writer.WriteStartArray();
+			value.Errors.ForEach(error => JsonSerializer.Serialize(writer, error, options));
+			writer.WriteEndArray();
 		}
 
 		if (value.Executed)
 		{
 			writer.WritePropertyName("data");
+
 			if (value.Data is ExecutionNode executionNode)
-				WriteExecutionNode(writer, executionNode, options);
+				Write(writer, executionNode, options);
 			else
 				JsonSerializer.Serialize(writer, value.Data, options);
 		}
@@ -42,13 +48,14 @@ public sealed class GraphQLExecutionResultJsonConverter : JsonConverter<Executio
 		if (value.Extensions?.Any() is true)
 		{
 			writer.WritePropertyName("extensions");
+
 			JsonSerializer.Serialize(writer, value.Extensions, options);
 		}
 
 		writer.WriteEndObject();
 	}
 
-	private static void WriteExecutionNode(Utf8JsonWriter writer, ExecutionNode executionNode, JsonSerializerOptions options)
+	private static void Write(Utf8JsonWriter writer, ExecutionNode executionNode, JsonSerializerOptions options)
 	{
 		switch (executionNode)
 		{
@@ -61,17 +68,20 @@ public sealed class GraphQLExecutionResultJsonConverter : JsonConverter<Executio
 				{
 					var propertyName = options.PropertyNamingPolicy?.ConvertName(childNode.Name!) ?? childNode.Name!;
 					writer.WritePropertyName(propertyName);
-					WriteExecutionNode(writer, childNode, options);
+					Write(writer, childNode, options);
 				});
 				writer.WriteEndObject();
 				break;
 			case ArrayExecutionNode arrayExecutionNode when arrayExecutionNode.Items is not null:
 				writer.WriteStartArray();
-				arrayExecutionNode.Items.ForEach(childNode => WriteExecutionNode(writer, childNode, options));
+				arrayExecutionNode.Items.ForEach(childNode => Write(writer, childNode, options));
 				writer.WriteEndArray();
 				break;
+			case ArrayExecutionNode arrayExecutionNode when arrayExecutionNode.SerializedResult is not null:
+				JsonSerializer.Serialize(writer, arrayExecutionNode.SerializedResult, options);
+				break;
+			case ArrayExecutionNode arrayExecutionNode:
 			case ObjectExecutionNode:
-			case ArrayExecutionNode:
 			case NullExecutionNode:
 			case null:
 				writer.WriteNullValue();

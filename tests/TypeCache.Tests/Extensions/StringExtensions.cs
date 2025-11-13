@@ -52,19 +52,19 @@ public class StringExtensions
 	[Fact]
 	public void IsBlank()
 	{
-		Assert.True(string.Empty.IsBlank());
-		Assert.True(" \t \r \n ".IsBlank());
-		Assert.True((null as string).IsBlank());
-		Assert.False(TEST_STRING.IsBlank());
+		Assert.True(string.Empty.IsBlank);
+		Assert.True(" \t \r \n ".IsBlank);
+		Assert.True((null as string).IsBlank);
+		Assert.False(TEST_STRING.IsBlank);
 	}
 
 	[Fact]
 	public void IsNotBlank()
 	{
-		Assert.False(string.Empty.IsNotBlank());
-		Assert.False(" \t \r \n ".IsNotBlank());
-		Assert.False((null as string).IsNotBlank());
-		Assert.True(TEST_STRING.IsNotBlank());
+		Assert.False(string.Empty.IsNotBlank);
+		Assert.False(" \t \r \n ".IsNotBlank);
+		Assert.False((null as string).IsNotBlank);
+		Assert.True(TEST_STRING.IsNotBlank);
 	}
 
 	[Fact]

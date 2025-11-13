@@ -4,40 +4,43 @@ namespace TypeCache.Extensions;
 
 public static class BooleanExtensions
 {
-	[DebuggerHidden]
-	public static bool Else(this bool @this, Action doIfFalse)
+	extension(bool @this)
 	{
-		if (!@this)
-			doIfFalse();
+		[DebuggerHidden]
+		public bool Else(Action doIfFalse)
+		{
+			if (!@this)
+				doIfFalse();
 
-		return @this;
+			return @this;
+		}
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public T If<T>(T trueValue, T falseValue)
+			=> @this ? trueValue : falseValue;
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public T If<T>(Func<T> trueValue, T falseValue)
+			=> @this ? trueValue() : falseValue;
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public T If<T>(Func<T> trueValue, Func<T> falseValue)
+			=> @this ? trueValue() : falseValue();
+
+		[DebuggerHidden]
+		public bool Then(Action doIfTrue)
+		{
+			if (@this)
+				doIfTrue();
+
+			return @this;
+		}
+
+		/// <remarks>
+		/// <c>=&gt; @this ? [(<see cref="byte"/>)1] : [(<see cref="byte"/>)0];</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public byte[] ToBytes()
+			=> @this ? [(byte)1] : [(byte)0];
 	}
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T If<T>(this bool @this, T trueValue, T falseValue)
-		=> @this ? trueValue : falseValue;
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T If<T>(this bool @this, Func<T> trueValue, T falseValue)
-		=> @this ? trueValue() : falseValue;
-
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static T If<T>(this bool @this, Func<T> trueValue, Func<T> falseValue)
-		=> @this ? trueValue() : falseValue();
-
-	[DebuggerHidden]
-	public static bool Then(this bool @this, Action doIfTrue)
-	{
-		if (@this)
-			doIfTrue();
-
-		return @this;
-	}
-
-	/// <remarks>
-	/// <c>=&gt; @<paramref name="this"/> ? [(<see cref="byte"/>)1] : [(<see cref="byte"/>)0];</c>
-	/// </remarks>
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public static byte[] ToBytes(this bool @this)
-		=> @this ? [(byte)1] : [(byte)0];
 }
