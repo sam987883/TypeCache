@@ -12,6 +12,11 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	internal readonly struct Sender<RESPONSE>(Mediator mediator, ILogger<IMediator>? logger, object? key)
 		: ISend<RESPONSE>
 	{
+		internal ValueTask<RESPONSE> InvokeSend(IRequest<RESPONSE> request, CancellationToken token)
+			=> (ValueTask<RESPONSE>)this.GetType().Methods[nameof(Send)]
+				.Find([request.GetType(), typeof(RESPONSE)], (request, token))!
+				.Invoke(this, (request, token))!;
+
 		public async ValueTask<RESPONSE> Send<REQUEST>(REQUEST request, CancellationToken token = default)
 			where REQUEST : notnull
 		{
@@ -74,22 +79,16 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 	{
 		this.Validate(request);
 
-		var requestType = request.GetType();
-		var sender = this.Request<RESPONSE>();
-		return (ValueTask<RESPONSE>)sender.GetType().Methods[nameof(sender.Send)]
-			.Find([requestType, typeof(ValueTask<RESPONSE>)], (null as object, request, token))!
-			.Invoke(sender, (request, token))!;
+		var sender = new Sender<RESPONSE>(this, logger, null);
+		return sender.InvokeSend(request, token);
 	}
 
 	public ValueTask<RESPONSE> Send<RESPONSE>(object key, IRequest<RESPONSE> request, CancellationToken token = default)
 	{
 		this.Validate(key, request);
 
-		var requestType = request.GetType();
-		var sender = this.Request<RESPONSE>(key);
-		return (ValueTask<RESPONSE>)sender.GetType().Methods[nameof(sender.Send)]
-			.Find([requestType, typeof(ValueTask<RESPONSE>)], (null as object, request, token))!
-			.Invoke(sender, (request, token))!;
+		var sender = new Sender<RESPONSE>(this, logger, key);
+		return sender.InvokeSend(request, token);
 	}
 
 	public void Validate<REQUEST>(REQUEST request)
@@ -127,7 +126,7 @@ internal sealed class Mediator(IServiceProvider serviceProvider, ILogger<IMediat
 		catch (AggregateException error)
 		{
 			logger?.LogAggregateException(error, "ERROR: {Mediator} rule {Rule}", [nameof(Mediator), ruleName]);
-			return Task.FromException(error.InnerExceptions.Count == 1 ? error.InnerException! : error);
+			return Task.FromException(error.InnerExceptions.Count is 1 ? error.InnerException! : error);
 		}
 		catch (Exception error)
 		{

@@ -140,7 +140,6 @@ public static class JsonExtensions
 		/// <item>Use <c>*</c> by itself to match any <c><see cref="JsonNode"/></c>.</item>
 		/// </list>
 		/// </summary>
-		/// <param name="this"></param>
 		/// <param name="path">
 		/// A string that represents a path to a value or set of values from within the JSON DOM.<br/>
 		/// Examples:
