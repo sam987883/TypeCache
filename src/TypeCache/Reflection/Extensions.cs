@@ -567,7 +567,7 @@ public static class Extensions
 		where T : notnull
 	{
 		/// <summary>
-		/// Finds matching method with <paramref name="arguments"/>.
+		/// Prepare instance method for being invoked.
 		/// </summary>
 		public static (MethodSet<MethodEntity>, T) operator |(MethodSet<MethodEntity> methods, T instance)
 			=> (methods, instance);
@@ -596,7 +596,7 @@ public static class Extensions
 		where T : notnull
 	{
 		/// <summary>
-		/// Finds matching generic method overload with <paramref name="arguments"/>.
+		/// Prepare generic instance method for being invoked.
 		/// </summary>
 		public static (MethodSet<MethodEntity>, Type[], T) operator |((MethodSet<MethodEntity> Methods, Type[] GenericTypeArguments) _, T instance)
 			=> (_.Methods, _.GenericTypeArguments, instance);
