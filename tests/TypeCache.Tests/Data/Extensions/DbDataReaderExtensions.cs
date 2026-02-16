@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using NSubstitute;
 using NSubstitute.ClearExtensions;
@@ -32,19 +33,23 @@ public class DbDataReaderExtensions
 	public DbDataReaderExtensions()
 	{
 		this._DataReader = Substitute.For<DbDataReader>();
-		this._DataReader.FieldCount.Returns(3);
+		this._DataReader.VisibleFieldCount.Returns(3);
 		this._DataReader.GetName(0).Returns("ID");
 		this._DataReader.GetName(1).Returns("Name");
 		this._DataReader.GetName(2).Returns("Date");
 
 		// Used by DataTable.Load(IDataReader)
+		this._DataReader.FieldCount.Returns(3);
 		this._DataReader.GetFieldType(0).Returns(typeof(long));
 		this._DataReader.GetFieldType(1).Returns(typeof(string));
 		this._DataReader.GetFieldType(2).Returns(typeof(DateTime));
 	}
 
-	private void SetupReader()
+	private void SetupDataReader()
 	{
+		this._DataReader.GetValue(0).Returns(callInfo => 1L, callInfo => 2L, callInfo => 3L);
+		this._DataReader.GetValue(1).Returns(callInfo => "Bob Dole", callInfo => "Bob Dole Robot", callInfo => "Bob Dole Clone");
+		this._DataReader.GetValue(2).Returns(callInfo => _Now, callInfo => _UtcNow, callInfo => null);
 		this._DataReader.GetValues(Arg.Any<object[]>()).Returns(callInfo =>
 		{
 			var values = (object[])callInfo.Args()[0];
@@ -67,6 +72,7 @@ public class DbDataReaderExtensions
 			values[2] = null;
 			return 3;
 		});
+		this._DataReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(true, true, true, false);
 		this._DataReader.ReadAsync().Returns(true, true, true, false);
 		this._DataReader.Read().Returns(true, true, true, false);
 	}
@@ -83,7 +89,7 @@ public class DbDataReaderExtensions
 	[Fact]
 	public void ReadDataTable()
 	{
-		this.SetupReader();
+		this.SetupDataReader();
 		var table = this._DataReader.ReadDataTable();
 
 		Assert.NotNull(table);
@@ -102,14 +108,14 @@ public class DbDataReaderExtensions
 	[Fact]
 	public async Task ReadModelsAsync()
 	{
-		this.SetupReader();
+		this.SetupDataReader();
 		var rows = new List<Tester>(3);
 		await this._DataReader.ReadModelsAsync<Tester>(rows, default);
 
 		Assert.NotNull(rows);
 		Assert.Equal(3, rows.Count);
 
-		this.SetupReader();
+		this.SetupDataReader();
 		var rows2 = new List<object>(3);
 		await this._DataReader.ReadModelsAsync(typeof(Tester), rows2, default);
 
@@ -120,7 +126,7 @@ public class DbDataReaderExtensions
 	[Fact]
 	public async Task ReadResultsAsJsonAsync()
 	{
-		this.SetupReader();
+		this.SetupDataReader();
 		var expected = JsonSerializer.Serialize(new[]
 		{
 			new Tester() { Id = 1, Name = "Bob Dole", Date = this._Now },

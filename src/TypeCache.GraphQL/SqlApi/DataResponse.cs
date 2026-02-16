@@ -44,6 +44,8 @@ public class DataResponse
 
 	public PageInfo? PageInfo { get; set; }
 
+	public Parameter[]? Parameters { get; set; }
+
 	public string? Sql { get; set; }
 
 	public string? Table { get; set; }

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using GraphQL;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 
 namespace TypeCache.GraphQL.Converters;
 

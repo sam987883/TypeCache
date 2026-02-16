@@ -1,12 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Text.Json.Nodes;
+using TypeCache.Attributes;
 using TypeCache.Data.Extensions;
 using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-internal sealed class SqlResultSetJsonRule : IRule<SqlCommand, JsonObject>
+[Singleton]
+internal sealed class SqlResultSetJsonRule : IRule<SqlCommand, ValueTask<JsonObject>>
 {
 	public async ValueTask<JsonObject> Send(SqlCommand request, CancellationToken token)
 	{

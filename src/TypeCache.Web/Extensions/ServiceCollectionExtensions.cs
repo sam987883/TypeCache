@@ -15,8 +15,7 @@ public static class ServiceCollectionExtensions
 		public IServiceCollection AddHttpClientRule(string name, Action<HttpClient> configure)
 		{
 			@this.AddHttpClient(name, configure).AddAsKeyed();
-			return @this.AddKeyedScoped<IRule<HttpClientRequest, HttpResponseMessage>>(name,
-				(provider, key) => new HttpClientRule(provider.GetRequiredKeyedService<HttpClient>((string)key)));
+			return @this.AddRule<HttpClientRule>(name);
 		}
 
 		public IServiceCollection ConfigureSqlApi()

@@ -49,8 +49,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Gets database schema data.
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -70,8 +69,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -93,8 +91,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -114,8 +111,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -136,8 +132,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -157,8 +152,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -177,8 +171,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -198,8 +191,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Returns generated SQL statement.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/sql")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>

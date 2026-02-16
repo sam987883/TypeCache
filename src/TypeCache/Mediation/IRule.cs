@@ -2,14 +2,8 @@
 
 namespace TypeCache.Mediation;
 
-public interface IRule<in REQUEST>
+public interface IRule<in REQUEST, out RESPONSE>
 	where REQUEST : notnull
 {
-	Task Execute(REQUEST request, CancellationToken token = default);
-}
-
-public interface IRule<in REQUEST, RESPONSE>
-	where REQUEST : notnull
-{
-	ValueTask<RESPONSE> Send(REQUEST request, CancellationToken token = default);
+	RESPONSE Send(REQUEST request, CancellationToken token);
 }

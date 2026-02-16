@@ -59,8 +59,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// <c>POST /api/execute/{source}/{database}/{schema}/{procedure}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -80,8 +79,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// <c>POST /api/delete/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -102,8 +100,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -123,8 +120,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// <c>POST /api/insert/{source}/{database}/{schema}/{table}</c><br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -145,8 +141,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Body is an array of data whose property names match the primary keys of the table to delete from.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -167,8 +162,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Selects, filters, sorts and pages data from a view.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -189,8 +183,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Updates table data.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>
@@ -212,8 +205,7 @@ public static partial class EndpointRouteBuilderExtensions
 	/// Body is an array of data that contains values to update in the table.<br/><br/>
 	/// <i><b>Requires calls to:</b></i>
 	/// <code>
-	/// MapGroup("/api")<br/>
-	/// <see cref="TypeCache.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
+	/// <see cref="TypeCache.Data.Extensions.ServiceCollectionExtensions.AddSqlCommandRules(IServiceCollection)"/><br/>
 	/// <see cref="ServiceCollectionExtensions.ConfigureSqlApi(IServiceCollection)"/><br/>
 	/// </code>
 	/// </summary>

@@ -4,11 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace TypeCache.Attributes;
 
-public abstract class ServiceLifetimeAttribute(ServiceLifetime serviceLifetime, Type? serviceType = null, object? key = null) : Attribute
+public abstract class ServiceLifetimeAttribute(ServiceLifetime serviceLifetime) : Attribute
 {
-	public object? Key { get; } = key;
-
 	public ServiceLifetime ServiceLifetime { get; } = serviceLifetime;
-
-	public Type? ServiceType { get; } = serviceType;
 }

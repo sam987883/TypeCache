@@ -1,11 +1,13 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Attributes;
 using TypeCache.Data.Extensions;
 using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-internal sealed class SqlScalarRule : IRule<SqlCommand, object?>
+[Singleton]
+internal sealed class SqlScalarRule : IRule<SqlCommand, ValueTask<object?>>
 {
 	public async ValueTask<object?> Send(SqlCommand request, CancellationToken token)
 	{

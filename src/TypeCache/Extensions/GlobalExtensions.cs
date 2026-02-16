@@ -3,7 +3,7 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using TypeCache.Reflection;
+using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
@@ -12,12 +12,6 @@ public static class GlobalExtensions
 {
 	extension<T>(T @this)
 	{
-		public IEnumerable<T> Repeat(int count)
-		{
-			while (--count > -1)
-				yield return @this;
-		}
-
 		/// <inheritdoc cref="Tuple{T1}"/>
 		/// <remarks>
 		/// <c>=&gt; <see cref="Tuple"/>.Create(@this);</c>
@@ -80,6 +74,21 @@ public static class GlobalExtensions
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public StrongBox<T> ToStrongBox()
 			=> new(@this);
+	}
+
+	extension<T>(T @this) where T : unmanaged
+	{
+		public T[] Repeat(int count)
+		{
+			(count < 0).ThrowIfTrue();
+
+			if (count is 0)
+				return [];
+
+			Span<T> span = stackalloc T[count];
+			span.Fill(@this);
+			return span.ToArray();
+		}
 	}
 
 	extension<T>(T @this) where T : IComparisonOperators<T, T, bool>

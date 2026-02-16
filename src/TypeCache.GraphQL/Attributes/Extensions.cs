@@ -1,11 +1,10 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Extensions;
-using TypeCache.GraphQL.Attributes;
 
-namespace TypeCache.GraphQL.Extensions;
+namespace TypeCache.GraphQL.Attributes;
 
-public static class AttributeExtensions
+public static class Extensions
 {
 	extension(IEnumerable<Attribute> @this)
 	{

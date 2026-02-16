@@ -6,13 +6,12 @@ using TypeCache.Mediation;
 namespace TypeCache.Web.Mediation;
 
 internal sealed class HttpClientValidationRule
-	: IValidationRule<HttpClientRequest>
+	: IValidation<HttpRequestMessage>
 {
-	public void Validate(HttpClientRequest request)
+	public void Validate(HttpRequestMessage request)
 	{
 		request.ThrowIfNull();
-		request.Message.ThrowIfNull();
-		request.Message.RequestUri.ThrowIfNull();
-		request.Message.RequestUri.IsAbsoluteUri.ThrowIfFalse();
+		request.RequestUri.ThrowIfNull();
+		request.RequestUri.IsAbsoluteUri.ThrowIfFalse();
 	}
 }

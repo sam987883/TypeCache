@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".filenesting.json" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE.txt" />
+    <File Path="README.md" />
+    <File Path="TypeCash.png" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/FUNDING.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/dotnet-core.yml" />
+  </Folder>
+  <Project Path="src/TypeCache.GraphQL/TypeCache.GraphQL.csproj" />
+  <Project Path="src/TypeCache.Web/TypeCache.Web.csproj" />
+  <Project Path="src/TypeCache/TypeCache.csproj" />
+  <Project Path="tests/TypeCache.GraphQL.TestApp/TypeCache.GraphQL.TestApp.csproj" />
+  <Project Path="tests/TypeCache.Tests/TypeCache.Tests.csproj" />
+</Solution>

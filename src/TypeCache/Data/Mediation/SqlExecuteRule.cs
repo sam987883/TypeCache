@@ -1,13 +1,15 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
+using TypeCache.Attributes;
 using TypeCache.Data.Extensions;
 using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-internal sealed class SqlExecuteRule : IRule<SqlCommand>
+[Singleton]
+internal sealed class SqlExecuteRule : IRule<SqlCommand, Task>
 {
-	public async Task Execute(SqlCommand request, CancellationToken token = default)
+	public async Task Send(SqlCommand request, CancellationToken token)
 	{
 		await using var connection = request.DataSource.CreateDbConnection();
 		await connection.OpenAsync(token);

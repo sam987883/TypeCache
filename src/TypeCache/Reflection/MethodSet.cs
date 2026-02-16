@@ -56,7 +56,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
 	/// If no matching constructed generic method is found then a generic method definition is found that supports the <b><c><paramref name="genericTypeArguments"/></c></b> and <b><c><paramref name="arguments"/></c></b>.<br/>
-	/// If a generic method definition is found then a constructed generic method is created from it, stored in <b><c>ConstructedGeneric</c></b> and returned.<br/>
+	/// If a generic method definition is found then a constructed generic method is created from it, stored and returned.<br/>
 	/// Otherwise <b><c><see langword="null"/></c></b> is returned.
 	/// </summary>
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
@@ -81,7 +81,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
 	/// If no matching constructed generic method is found then a generic method definition is found that supports the <b><c><paramref name="genericTypeArguments"/></c></b> and <b><c><paramref name="arguments"/></c></b>.<br/>
-	/// If a generic method definition is found then a constructed generic method is created from it, stored in <b><c>ConstructedGeneric</c></b> and returned.<br/>
+	/// If a generic method definition is found then a constructed generic method is created from it, stored and returned.<br/>
 	/// Otherwise <b><c><see langword="null"/></c></b> is returned.
 	/// </summary>
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
@@ -106,7 +106,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
 	/// If no matching constructed generic method is found then a generic method definition is found that supports the <b><c><paramref name="genericTypeArguments"/></c></b> and <b><c><paramref name="argumentTypes"/></c></b>.<br/>
-	/// If a generic method definition is found then a constructed generic method is created from it, stored in <b><c>ConstructedGeneric</c></b> and returned.<br/>
+	/// If a generic method definition is found then a constructed generic method is created from it, stored and returned.<br/>
 	/// Otherwise <b><c><see langword="null"/></c></b> is returned.
 	/// </summary>
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
@@ -135,7 +135,7 @@ public sealed class MethodSet<T> : ReadOnlySet<T>
 	/// <summary>
 	/// Finds a constructed generic method by the generic type arguments.<br/>
 	/// If no matching constructed generic method is found then a generic method definition is found that supports the <b><c><paramref name="genericTypeArguments"/></c></b>.<br/>
-	/// If a generic method definition is found then a constructed generic method is created from it, stored in <b><c>ConstructedGeneric</c></b> and returned.<br/>
+	/// If a generic method definition is found then a constructed generic method is created from it, stored and returned.<br/>
 	/// Otherwise <b><c><see langword="null"/></c></b> is returned.
 	/// </summary>
 	/// <param name="genericTypeArguments">Method generic type arguments</param>

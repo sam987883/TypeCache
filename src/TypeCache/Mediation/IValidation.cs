@@ -2,7 +2,7 @@
 
 namespace TypeCache.Mediation;
 
-public interface IValidationRule<in REQUEST>
+public interface IValidation<in REQUEST>
 	where REQUEST : notnull
 {
 	void Validate(REQUEST request);

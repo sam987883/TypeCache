@@ -36,8 +36,26 @@ public class GenericMethodDefinition : Method
 			? new MethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments))
 			: new StaticMethodEntity(this.ToMethodInfo().MakeGenericMethod(genericTypeArguments));
 
-	public bool Supports(Type[] genericTypes)
-		=> this.GenericTypes.Zip(genericTypes).All(_ => _.Second.IsAssignableTo(_.First));
+	/// <summary>
+	/// Returns <c><see langword="true"/></c> if the generic method definition supports the given generic type arguments.
+	/// </summary>
+	/// <param name="constructedMethodInfo">The constructed generic method based on the generic type arguments passed in.</param>
+	public bool Supports(Type[] genericTypes, [NotNullWhen(true)] out MethodInfo? constructedMethodInfo)
+	{
+		constructedMethodInfo = null;
+		if (this.GenericTypes.Length != genericTypes.Length)
+			return false;
+
+		try
+		{
+			constructedMethodInfo = this.ToMethodInfo().MakeGenericMethod(genericTypes);
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
 
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
 	public MethodInfo ToMethodInfo()

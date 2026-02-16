@@ -33,7 +33,7 @@ public sealed class GraphQLMiddleware(RequestDelegate next, PathString route, IC
 		}
 
 		var requestId = Guid.CreateVersion7();
-		var timeProvider = httpContext.RequestServices.GetTimeProvider();
+		var timeProvider = httpContext.RequestServices.TimeProvider;
 		var requestTime = timeProvider.GetLocalNow().ToISO8601();
 		var userContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
 		{

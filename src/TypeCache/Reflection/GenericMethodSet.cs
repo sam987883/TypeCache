@@ -25,25 +25,32 @@ public sealed class GenericMethodSet : ReadOnlySet<GenericMethodDefinition>
 
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
 	public GenericMethodDefinition[] Find(Type[] genericTypeArguments)
-		=> this.Where(_ => _.Supports(genericTypeArguments)).ToArray();
+		=> this.Where(method => method.Supports(genericTypeArguments, out _)).ToArray();
+
+	/// <param name="genericTypeArguments">Method generic type arguments</param>
+	/// <param name="argumentTypes">Method parameter argument types</param>
+	/// <exception cref="ArgumentException"/>
+	/// <exception cref="InvalidOperationException"/>
+	public GenericMethodDefinition? Find(Type[] genericTypeArguments, Type[] argumentTypes)
+		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments, out var methodInfo) && methodInfo.IsCallableWith(argumentTypes));
 
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
 	/// <param name="arguments">Method parameter arguments</param>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	public GenericMethodDefinition? Find(Type[] genericTypeArguments, object?[] arguments)
-		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments) && _.IsCallableWith(arguments));
+		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments, out var methodInfo) && methodInfo.IsCallableWith(arguments));
 
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
 	/// <param name="arguments">Method parameter arguments</param>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	public GenericMethodDefinition? Find(Type[] genericTypeArguments, ITuple arguments)
-		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments) && _.IsCallableWith(arguments));
+		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments, out var methodInfo) && methodInfo.IsCallableWith(arguments));
 
 	/// <param name="genericTypeArguments">Method generic type arguments</param>
 	/// <exception cref="ArgumentException"/>
 	/// <exception cref="InvalidOperationException"/>
 	public GenericMethodDefinition? FindWithNoArguments(Type[] genericTypeArguments)
-		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments) && _.IsCallableWithNoArguments());
+		=> this.SingleOrDefault(_ => _.Supports(genericTypeArguments, out var methodInfo) && methodInfo.IsCallableWithNoArguments());
 }

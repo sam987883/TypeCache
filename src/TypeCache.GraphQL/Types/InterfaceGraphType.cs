@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.Reflection;
 

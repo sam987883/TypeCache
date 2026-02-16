@@ -1,26 +1,33 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using GraphQL;
-using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Data;
-using TypeCache.Data.Mediation;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.SqlApi;
-using TypeCache.Mediation;
 
 namespace TypeCache.GraphQL.Resolvers;
 
 public sealed class SqlApiCallFieldResolver<T> : FieldResolver
+	where T : notnull, new()
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(objectSchema.Name);
 
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var result = (IList<T>)await mediator.Request<IList<T>>().Send(new SqlResultsRequest(typeof(T), sqlCommand, 0), context.CancellationToken);
+		await using var connection = sqlCommand.DataSource.CreateDbConnection();
+		await connection.OpenAsync(context.CancellationToken);
+		await using var dbCommand = connection.CreateCommand(sqlCommand);
+
+		var result = await dbCommand.GetModelsAsync<T>(100, context.CancellationToken);
+		sqlCommand.RecordsAffected = (int?)dbCommand.Parameters[nameof(sqlCommand.RecordsAffected)]?.Value ?? 0;
+
+		if (sqlCommand.Parameters.Any())
+			dbCommand.CopyOutputParameters(sqlCommand);
+
 		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected > 0 ? sqlCommand.RecordsAffected : result.Count,

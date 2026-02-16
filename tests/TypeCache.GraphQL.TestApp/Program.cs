@@ -7,10 +7,12 @@ using Microsoft.Data.SqlClient;
 using Microsoft.OpenApi;
 using TypeCache.Attributes;
 using TypeCache.Data;
+using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.TestApp.Models;
 using TypeCache.GraphQL.TestApp.Tables;
+using TypeCache.Mediation;
 using TypeCache.Reflection;
 using TypeCache.Web.Extensions;
 
@@ -24,10 +26,10 @@ try
 	appBuilder.Services
 		.ConfigureHttpJsonOptions(_ => _.SerializerOptions.Converters.Add(stringEnumJsonConverter))
 		.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(_ => _.JsonSerializerOptions.Converters.Add(stringEnumJsonConverter))
-		.AddMediation()
-		.AddSqlCommandRules()
+		.AddMediator()
 		.AddHashMaker(Encoding.UTF8.GetBytes("ABCDEFghijklMNOP"))
 		.AddDataSource(DATASOURCE, SqlClientFactory.Instance, appBuilder.Configuration.GetConnectionString(DATASOURCE)!, ["AdventureWorks2019"])
+		.AddSqlCommandRules()
 		.AddGraphQL()
 		.AddGraphQLTypeExtensions<Person>(person =>
 		{

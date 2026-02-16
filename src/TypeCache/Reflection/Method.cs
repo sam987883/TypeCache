@@ -100,9 +100,9 @@ public class Method : IEquatable<Method>
 	/// <summary>
 	/// The C# name of the method.  For example:
 	/// <list type="bullet">
-	/// <item><c>GetItems</c></item>
-	/// <item><c>GetItems&lt;&gt;</c></item>
-	/// <item><c>GetItems&lt;String&gt;</c></item>
+	/// <item>Non-generic method example: <c>GetItems</c></item>
+	/// <item>Generic method definition example: <c>GetItems&lt;&gt;</c></item>
+	/// <item>Coinstructed generic method example: <c>GetItems&lt;String&gt;</c></item>
 	/// </list>
 	/// </summary>
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
@@ -174,22 +174,24 @@ public class Method : IEquatable<Method>
 
 	protected static Type GetValueTupleType(IReadOnlyList<ParameterEntity> parameters)
 	{
-		var parameterTypeChunks = parameters
+		var typeChunks = parameters
 			.Select(_ => _.ParameterType)
 			.Chunk(7)
-			.ToArray();
-		var valueTupleTypeStack = new Stack<Type>(parameterTypeChunks.Select((types, i) => getValueTupleGenericType(i < types.Length - 1 ? 8 : types.Length)));
-		var parameterTypeStack = new Stack<Type[]>(parameterTypeChunks);
-		var valueTupleType = valueTupleTypeStack.Pop().MakeGenericType(parameterTypeStack.Pop());
-		while (valueTupleTypeStack.Count > 0)
+			.Reverse();
+		var enumerator = typeChunks.GetEnumerator();
+
+		enumerator.MoveNext();
+		var valueTupleType = getValueTupleType(enumerator.Current);
+		while (enumerator.MoveNext())
 		{
-			valueTupleType = valueTupleTypeStack.Pop().MakeGenericType([.. parameterTypeStack.Pop(), valueTupleType]);
+			valueTupleType = getValueTupleType([.. enumerator.Current, valueTupleType]);
 		}
 
 		return valueTupleType;
 
-		static Type getValueTupleGenericType(int arity)
-			=> arity switch
+		static Type getValueTupleType(Type[] types)
+		{
+			var genericType = types.Length switch
 			{
 				1 => typeof(ValueTuple<>),
 				2 => typeof(ValueTuple<,>),
@@ -200,5 +202,7 @@ public class Method : IEquatable<Method>
 				7 => typeof(ValueTuple<,,,,,,>),
 				_ => typeof(ValueTuple<,,,,,,,>),
 			};
+			return genericType.MakeGenericType(types);
+		}
 	}
 }

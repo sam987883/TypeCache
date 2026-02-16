@@ -1,12 +1,14 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
+using TypeCache.Attributes;
 using TypeCache.Data.Extensions;
 using TypeCache.Mediation;
 
 namespace TypeCache.Data.Mediation;
 
-internal sealed class SqlDataSetRule : IRule<SqlCommand, DataSet>
+[Singleton]
+internal sealed class SqlDataSetRule : IRule<SqlCommand, ValueTask<DataSet>>
 {
 	public async ValueTask<DataSet> Send(SqlCommand request, CancellationToken token)
 	{

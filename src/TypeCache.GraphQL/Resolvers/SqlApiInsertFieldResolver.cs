@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TypeCache.Collections;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
-using TypeCache.Data.Mediation;
 using TypeCache.Extensions;
 using TypeCache.GraphQL.Extensions;
 using TypeCache.GraphQL.SqlApi;
@@ -62,10 +61,11 @@ public sealed class SqlApiInsertFieldResolver : FieldResolver
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
 		var result = Array<DataRow>.Empty;
+		var request = sqlCommand.Request;
 		if (output.Any())
-			result = (await mediator.Request<DataTable>().Send(sqlCommand, context.CancellationToken)).Select();
+			result = (await mediator.Send(request.For<ValueTask<DataTable>>(), context.CancellationToken)).Select();
 		else
-			await mediator.Dispatch(sqlCommand, context.CancellationToken);
+			await mediator.Dispatch(request, context.CancellationToken);
 
 		return new OutputResponse<DataRow>()
 		{
@@ -83,7 +83,6 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 {
 	protected override async ValueTask<object?> ResolveAsync(IResolveFieldContext context)
 	{
-		var mediator = context.RequestServices!.GetRequiredService<IMediator>();
 		var objectSchema = context.FieldDefinition.GetMetadata<ObjectSchema>(nameof(ObjectSchema));
 		var selections = context.GetSelections().ToArray();
 		var select = context.GetArgument<string[]>(nameof(SelectQuery.Select));
@@ -125,17 +124,27 @@ public sealed class SqlApiInsertFieldResolver<T> : FieldResolver
 		var sqlCommand = objectSchema.DataSource.CreateSqlCommand(sql);
 		context.GetArgument<Parameter[]>("parameters")?.ForEach(parameter => sqlCommand.Parameters[parameter.Name] = parameter.Value);
 
-		var result = (IList<T>)Array<T>.Empty;
+		await using var connection = sqlCommand.DataSource.CreateDbConnection();
+		await connection.OpenAsync(context.CancellationToken);
+		await using var dbCommand = connection.CreateCommand(sqlCommand);
+
+		IList<T> result = [];
 		if (output.Any())
-			result = await mediator.Request<IList<T>>().Send(new SqlResultsRequest<T>(sqlCommand, data.Length), context.CancellationToken);
+		{
+			result = await dbCommand.GetModelsAsync<T>(data.Length, context.CancellationToken);
+			sqlCommand.RecordsAffected = (int?)dbCommand.Parameters[nameof(sqlCommand.RecordsAffected)]?.Value ?? 0;
+		}
 		else
-			await mediator.Dispatch(sqlCommand, context.CancellationToken);
+			await dbCommand.ExecuteNonQueryAsync(context.CancellationToken);
+
+		if (sqlCommand.Parameters.Any())
+			dbCommand.CopyOutputParameters(sqlCommand);
 
 		return new OutputResponse<T>()
 		{
 			TotalCount = sqlCommand.RecordsAffected,
 			DataSource = objectSchema.DataSource.Name,
-			Output = result.OfType<T>().ToArray(),
+			Output = result,
 			Sql = sql,
 			Table = objectSchema.Name
 		};

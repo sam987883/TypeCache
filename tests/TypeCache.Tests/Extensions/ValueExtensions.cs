@@ -22,7 +22,7 @@ public class ValueExtensions
 	{
 		Assert.Equal(new[] { 'f', 'f', 'f', 'f', 'f', 'f' }, 'f'.Repeat(6).ToArray());
 		Assert.Equal(Array<int>.Empty, 123.Repeat(0).ToArray());
-		Assert.Equal(Enumerable<int>.Empty, 123.Repeat(-18));
+		Assert.Throws<ArgumentOutOfRangeException>(() => 123.Repeat(-18));
 	}
 
 	[Fact]

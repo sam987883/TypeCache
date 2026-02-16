@@ -9,7 +9,6 @@
 ---
 ### `TypeCache.Reflection` - Faster Reflection
 
-	using TypeCache.Extensions;
 	using TypeCache.Reflection;
 
 	// Create an instance of Senator using the default constructor
@@ -36,10 +35,12 @@
 	var methodEntity = typeof(Senator).Methods["RunForPresident"].Find((1996, true)); // Passing a tuple of strongly-typed values
 
 	// Get a field value
+	var fieldValue = instance & "_Bills";
 	var fieldValue = Type<Senator>.Fields["_Bills"].GetValue(instance);
 	var fieldValue = typeof(Senator).Fields["_Bills"].GetValue(instance);
 
 	// Set a field value
+	var success = instance & ("_Bills", 47);
 	Type<Senator>.Fields["_Bills"].SetValue(instance, 47);
 	typeof(Senator).Fields["_Bills"].SetValue(instance, 47);
 
@@ -48,6 +49,7 @@
 	fieldEntity.SetValue(instance, 47);
 
 	// Get a property value
+	var propertyValue = instance & "DoleWhip";
 	var propertyValue = Type<Senator>.Properties["DoleWhip"].GetValue(instance);
 	var propertyValue = typeof(Senator).Properties["DoleWhip"].GetValue(instance);
 
@@ -56,6 +58,7 @@
 	var propertyValue = propertyEntity.GetValue(instance);
 
 	// Set a property value
+	var success = instance & ("DoleWhip", Fruits.Pineapple);
 	Type<Senator>.Properties["DoleWhip"].SetValue(instance, Fruits.Pineapple);
 	typeof(Senator).Properties["DoleWhip"].SetValue(instance, Fruits.Pineapple);
 
@@ -63,14 +66,23 @@
 	var propertyEntity = typeof(Senator).Properties["DoleWhip"];
 	propertyEntity.SetValueEx("DoleWhip", Fruits.Pineapple);
 
-	// Invoke a method
+	// Invoke a method passing a tuple of strongly-typed values
+	intance | "StopHillaryCare" & ("Oh noes", Action.Veto, false);
+	intance | "GenericMethod1" | typeof(string) & ("Oh noes", false);
+	intance | "GenericMethod2" | [typeof(string), typeof(int)] & ("Oh noes", 999, true, false);
+	var result = typeof(Senator) | "StaticMethod1" & ("Agr1", Action.Veto, false);
+
+	// Equivalent traditional calls
+	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false));
+	typeof(Senator).Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false));
+
+	// Invoke a method passing an array of object typed values
 	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
 	typeof(Senator).Methods["StopHillaryCare"].Invoke(instance, ["Oh noes", Action.Veto, false]); // Passing an array of values
-	Type<Senator>.Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of strongly-typed values
-	typeof(Senator).Methods["StopHillaryCare"].Invoke(instance, ("Oh noes", Action.Veto, false)); // Passing a tuple of strongly-typed values
 
-	var state = Type<Senator>.Methods["GetState].Invoke(instance);
-	var state = typeof(Senator).Methods()["GetState].Invoke(instance);
+	var state = instance | "GetState" & ValueTuple.Create(); // Use for no arguments
+	var state = Type<Senator>.Methods["GetState"].Invoke(instance);
+	var state = typeof(Senator).Methods()["GetState"].Invoke(instance);
 
 ---
 ### `TypeCache.Extensions` - Better Object Mapping
@@ -99,17 +111,14 @@
 	IMediator mediator; // Injected
 
 	var bobDoleRep = new Representative(); // Implements IRequest<Senator>
-	Senator bobDoleSen = mediator.Send(bobDoleRep); // Where bobDoleRep implements IRequest<Senator>
+	bobDoleSen = mediator.Send(bobDoleRep.Request.For<Senator>()); // Where bobDoleRep does NOT need to implement IRequest<Senator>
 
-	// Similar code with needing to implement IRequest<>
-	bobDoleSen = mediator.Request<Senator>().Send(bobDoleRep); // Where bobDoleRep does NOT need to implement IRequest<Senator>
-
-	mediator.Dispatch("Presidential Campaign", bobDole2);
+	var campaign = mediator.Dispatch("Presidential Campaign", bobDole2);
+	...
+	await campaign;
 
 	President? bobDolePres = mediator.Send(nameof(President), bobDole2); // Send using named Rule
-
-	bobDolePres = mediator.Request<Senator>(nameof(President)).Send(bobDole2); // Send using named Rule without implementing IRequest<>
-
+	bobDolePres = mediator.Send(bobDole2.Request(nameof(President)).For<Senator>()); // Send using named Rule without implementing IRequest<>
 	bobDolePres.AssertNotNull(); // Unhandled exception
 
 
@@ -133,7 +142,6 @@
 
 	// Action/Func Retry on fail
 	Action runForPresident;
-
 	runForPresident.Retry([TimeSpan.FromYears(4)]);
 
 	var timeSpan = runForPresident.Timed(); // Involes the Action and returns how long it took to run

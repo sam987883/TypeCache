@@ -2,20 +2,11 @@
 
 namespace TypeCache.Mediation;
 
-internal sealed class CustomRule<REQUEST>(Func<REQUEST, CancellationToken, Task> execute)
-	: IRule<REQUEST>
+public sealed class CustomRule<REQUEST, RESPONSE>(Func<REQUEST, CancellationToken, RESPONSE> send) : IRule<REQUEST, RESPONSE>
 	where REQUEST : notnull
 {
-	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public Task Execute(REQUEST request, CancellationToken token = default)
-		=> execute(request, token);
-}
 
-internal sealed class CustomRule<REQUEST, RESPONSE>(Func<REQUEST, CancellationToken, ValueTask<RESPONSE>> send)
-	: IRule<REQUEST, RESPONSE>
-	where REQUEST : notnull
-{
 	[MethodImpl(AggressiveInlining), DebuggerHidden]
-	public ValueTask<RESPONSE> Send(REQUEST request, CancellationToken token = default)
+	public RESPONSE Send(REQUEST request, CancellationToken token)
 		=> send(request, token);
 }

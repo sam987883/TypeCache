@@ -38,7 +38,7 @@ internal static class SqlApiHandler
 				sqlCommand.Parameters.Add(parameter.Name, values.First());
 		}
 
-		var response = await mediator.Request<ValueTask<DataSet>>().Send(sqlCommand, httpContext.RequestAborted);
+		var response = await mediator.Send(sqlCommand.Request.For<ValueTask<DataSet>>(), httpContext.RequestAborted);
 
 		foreach (var parameter in objectSchema.Parameters.Where(parameter =>
 			parameter.Direction is ParameterDirection.InputOutput || parameter.Direction is ParameterDirection.Output))
@@ -67,14 +67,15 @@ internal static class SqlApiHandler
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
+		var request = sqlCommand.Request;
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -95,12 +96,12 @@ internal static class SqlApiHandler
 
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand.Request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -136,12 +137,12 @@ internal static class SqlApiHandler
 
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand.Request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -162,12 +163,12 @@ internal static class SqlApiHandler
 
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand.Request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -201,8 +202,8 @@ internal static class SqlApiHandler
 		foreach (var pair in httpContext.Request.Query.Where(pair => pair.Key.StartsWith('@')))
 			sqlCommand.Parameters.Add(pair.Key.TrimStart('@'), pair.Value);
 
-		var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-		return Results.Ok(response);
+		var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+		return response.Any() ? Results.Ok(response) : Results.NoContent();
 	}
 
 	public static async Task<IResult> UpdateTable(
@@ -225,12 +226,12 @@ internal static class SqlApiHandler
 
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand.Request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}
@@ -251,12 +252,12 @@ internal static class SqlApiHandler
 
 		if (output.IsNotBlank)
 		{
-			var response = await mediator.Request<ValueTask<JsonArray>>().Send(sqlCommand, httpContext.RequestAborted);
-			return Results.Ok(response);
+			var response = await mediator.Send(sqlCommand.Request.For<ValueTask<JsonArray>>(), httpContext.RequestAborted);
+			return response.Any() ? Results.Ok(response) : Results.NoContent();
 		}
 		else
 		{
-			await mediator.Dispatch(sqlCommand, httpContext.RequestAborted);
+			await mediator.Dispatch(sqlCommand.Request, httpContext.RequestAborted);
 			return Results.Ok();
 		}
 	}

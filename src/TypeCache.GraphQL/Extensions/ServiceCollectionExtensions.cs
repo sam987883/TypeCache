@@ -22,12 +22,13 @@ public static class ServiceCollectionExtensions
 		/// <summary>
 		/// <list type="table">
 		/// <listheader>Registers the following:</listheader>
-		/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecuter"/></c></description></item>
+		/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecuter"/></c> <b>(if one is not already registered)</b></description></item>
 		/// <item><term>Singleton</term> <description><c><see cref="IDocumentExecutionListener"/></c> <b>(if one is not already registered)</b></description></item>
 		/// <item><term>Singleton</term> <description><c><see cref="IGraphQLSerializer"/></c> <b>(if one is not already registered)</b></description></item>
-		/// <item><term>Singleton</term> <description><c><see cref="EnumGraphType{T}"/></c></description></item>
-		/// <item><term>Singleton</term> <description><c><see cref="HashIdGraphType"/></c></description></item>
+		/// <item><term>Transient</term> <description><c><see cref="EnumGraphType{T}"/></c></description></item>
+		/// <item><term>Singleton</term> <description><c><see cref="HashIdGraphType"/></c> <b>(if it is not already registered)</b></description></item>
 		/// <item><term>Transient</term> <description><c><see cref="InputGraphType{T}"/></c></description></item>
+		/// <item><term>Transient</term> <description><c><see cref="InterfaceGraphType{T}"/></c></description></item>
 		/// <item><term>Transient</term> <description><c><see cref="OutputGraphType{T}"/></c></description></item>
 		/// </list>
 		/// </summary>
@@ -41,15 +42,17 @@ public static class ServiceCollectionExtensions
 		/// <item><see href="https://github.com/graphql-dotnet/graphql-dotnet/pkgs/nuget/GraphQL.NewtonsoftJson"/></item>
 		/// </list>
 		/// </remarks>
-		public IServiceCollection AddGraphQL()
+		/// <param name="namingPolicy">Default is <b><c><see cref="JsonNamingPolicy.CamelCase"/></c></b></param>
+		public IServiceCollection AddGraphQL(JsonNamingPolicy? namingPolicy = null)
 		{
 			@this.TryAddSingleton<IGraphQLSerializer>(provider =>
 			{
 				var jsonOptions = new JsonSerializerOptions()
 				{
+					DictionaryKeyPolicy = namingPolicy ?? JsonNamingPolicy.CamelCase,
 					MaxDepth = 40,
 					PropertyNameCaseInsensitive = true,
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+					PropertyNamingPolicy = namingPolicy ?? JsonNamingPolicy.CamelCase
 				};
 				jsonOptions.Converters.Add(new JsonStringEnumConverter());
 				jsonOptions.Converters.Add(new BigIntegerJsonConverter());
@@ -59,13 +62,13 @@ public static class ServiceCollectionExtensions
 
 				return new GraphQLJsonSerializer(jsonOptions);
 			});
+			@this.TryAddSingleton<IDocumentExecuter, DocumentExecuter>();
 			@this.TryAddSingleton<IDocumentExecutionListener, DefaultDocumentExecutionListener>();
-			return @this.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-				.AddScoped(typeof(EnumGraphType<>))
-				.AddSingleton<HashIdGraphType>()
-				.AddScoped(typeof(InterfaceGraphType<>))
-				.AddScoped(typeof(InputGraphType<>))
-				.AddScoped(typeof(OutputGraphType<>));
+			@this.TryAddSingleton<HashIdGraphType>();
+			return @this.AddTransient(typeof(EnumGraphType<>))
+				.AddTransient(typeof(InterfaceGraphType<>))
+				.AddTransient(typeof(InputGraphType<>))
+				.AddTransient(typeof(OutputGraphType<>));
 		}
 
 		/// <summary>

@@ -2,8 +2,8 @@
 
 namespace TypeCache.Mediation;
 
-internal sealed class CustomValidationRule<REQUEST>(Action<REQUEST> validate)
-	: IValidationRule<REQUEST>
+internal sealed class CustomValidation<REQUEST>(Action<REQUEST> validate)
+	: IValidation<REQUEST>
 	where REQUEST : notnull
 {
 	[MethodImpl(AggressiveInlining), DebuggerHidden]

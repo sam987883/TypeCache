@@ -3,6 +3,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using TypeCache.Extensions;
+using TypeCache.Reflection;
 using static System.Reflection.BindingFlags;
 
 namespace TypeCache.Utilities;

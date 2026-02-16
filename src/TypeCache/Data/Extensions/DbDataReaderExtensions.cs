@@ -16,7 +16,7 @@ public static class DbDataReaderExtensions
 	/// </summary>
 	[DebuggerHidden]
 	public static string[] GetColumns(this DbDataReader @this)
-		=> (0..@this.FieldCount).ToEnumerable().Select(@this.GetName).ToArray();
+		=> (0..@this.VisibleFieldCount).ToEnumerable().Select(@this.GetName).ToArray();
 
 	public static DataTable ReadDataTable(this DbDataReader @this)
 	{
@@ -31,13 +31,14 @@ public static class DbDataReaderExtensions
 		where T : notnull, new()
 	{
 		var properties = @this.GetColumns().Select(column => Type<T>.Properties[column]).ToArray();
-		var values = new object[properties.Length];
+		var ctor = Type<T>.Constructors.FindDefault()!;
+		var columnsLength = @this.VisibleFieldCount;
 
 		while (await @this.ReadAsync(token))
 		{
-			var model = Type<T>.Create()!;
-			@this.GetValues(values);
-			properties.Index().ForEach(_ => _.Item.SetValue(model, values[_.Index]));
+			var model = (T)ctor.Create()!;
+			for (var i = 0; i < columnsLength; ++i)
+				properties[i].SetValue(model, @this.GetValue(i));
 			rows.Add(model);
 		}
 	}
@@ -45,13 +46,14 @@ public static class DbDataReaderExtensions
 	public static async Task ReadModelsAsync(this DbDataReader @this, Type modelType, IList<object> rows, CancellationToken token = default)
 	{
 		var properties = @this.GetColumns().Select(column => modelType.Properties[column]).ToArray();
-		var values = new object[properties.Length];
+		var ctor = modelType.Constructors.FindDefault()!;
+		var columnsLength = @this.VisibleFieldCount;
 
 		while (await @this.ReadAsync(token))
 		{
-			var model = modelType.Create()!;
-			@this.GetValues(values);
-			properties.Index().ForEach(_ => _.Item.SetValue(model, values[_.Index]));
+			var model = ctor.Create()!;
+			for (var i = 0; i < columnsLength; ++i)
+				properties[i].SetValue(model, @this.GetValue(i));
 			rows.Add(model);
 		}
 	}
@@ -61,14 +63,13 @@ public static class DbDataReaderExtensions
 		var jsonNodeOptions = new JsonNodeOptions() { PropertyNameCaseInsensitive = true };
 		var jsonArray = new JsonArray(jsonNodeOptions);
 		var columns = @this.GetColumns();
-		var values = new object[columns.Length];
-		var range = 0..columns.Length;
+		var columnsLength = @this.VisibleFieldCount;
 
 		while (await @this.ReadAsync(token))
 		{
 			var jsonObject = new JsonObject(jsonNodeOptions);
-			@this.GetValues(values);
-			range.ForEach(i => jsonObject.Add(columns[i], JsonValue.Create(values[i], jsonNodeOptions)));
+			for (var i = 0; i < columnsLength; ++i)
+				jsonObject.Add(columns[i], JsonValue.Create(@this.GetValue(i)));
 			jsonArray.Add(jsonObject);
 		}
 
@@ -94,23 +95,20 @@ public static class DbDataReaderExtensions
 	public static async ValueTask WriteResultsAsJsonAsync(this DbDataReader @this, Utf8JsonWriter writer, JsonSerializerOptions? jsonOptions = null, CancellationToken token = default)
 	{
 		var columns = @this.GetColumns();
-		var range = 0..columns.Length;
-		var values = new object[columns.Length];
+		var columnsLength = @this.VisibleFieldCount;
 
 		writer.WriteStartArray();
 
 		while (await @this.ReadAsync(token))
 		{
-			@this.GetValues(values);
-
 			writer.WriteStartObject();
 
-			range.ForEach(i =>
+			for (var i = 0; i < columnsLength; ++i)
 			{
 				writer.WritePropertyName(columns[i]);
-				var value = values[i];
+				var value = @this.GetValue(i);
 				writer.WriteValue(value is not DBNull ? value : null, jsonOptions ?? new());
-			});
+			};
 
 			writer.WriteEndObject();
 		}

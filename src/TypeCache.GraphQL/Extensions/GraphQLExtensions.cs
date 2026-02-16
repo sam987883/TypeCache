@@ -6,6 +6,7 @@ using GraphQL.Types;
 using TypeCache.Data;
 using TypeCache.Data.Extensions;
 using TypeCache.Extensions;
+using TypeCache.GraphQL.Attributes;
 using TypeCache.GraphQL.Data;
 using TypeCache.GraphQL.Resolvers;
 using TypeCache.GraphQL.Types;

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using Microsoft.AspNetCore.Authorization;
-using TypeCache.Extensions;
+using TypeCache.Reflection;
 using TypeCache.Web.Requirements;
 
 namespace TypeCache.Web.Extensions;
