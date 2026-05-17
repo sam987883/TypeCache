@@ -258,12 +258,12 @@ public static class JsonExtensions
 
 	extension(JsonArray @this)
 	{
-		/// <summary>
-		/// =&gt; <see cref="JsonSerializer"/>.Deserialize&lt;<typeparamref name="T"/>[]?&gt;(@this, <paramref name="options"/>);
-		/// </summary>
+		/// <remarks>
+		/// <c>=&gt; @this.GetValues&lt;<typeparamref name="T"/>&gt;().ToArray();</c>
+		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public T[]? ToArray<T>(JsonSerializerOptions? options = null)
-			=> JsonSerializer.Deserialize<T[]?>(@this, options);
+			=> @this.GetValues<T>().ToArray();
 	}
 
 	extension(JsonSerializerOptions @this)

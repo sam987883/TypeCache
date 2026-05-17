@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2021 Samuel Abraham
 
 using System.Data;
+using System.Text.Json;
 using TypeCache.Reflection;
 
 namespace TypeCache.Data.Extensions;
@@ -30,6 +31,7 @@ public static class EnumExtensions
 		SqlDbType.Int => typeof(int),
 		SqlDbType.BigInt => typeof(long),
 		SqlDbType.Binary or SqlDbType.Image or SqlDbType.Timestamp or SqlDbType.VarBinary => typeof(byte[]),
+		SqlDbType.Json => typeof(JsonDocument),
 		SqlDbType.Char or SqlDbType.Text or SqlDbType.VarChar or SqlDbType.NChar or SqlDbType.NText or SqlDbType.NVarChar => typeof(string),
 		SqlDbType.Date => typeof(DateOnly),
 		SqlDbType.DateTime or SqlDbType.DateTime2 or SqlDbType.SmallDateTime => typeof(DateTime),

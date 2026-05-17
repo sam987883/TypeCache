@@ -10,12 +10,6 @@ public static class ServiceProviderExtensions
 	extension(IServiceProvider @this)
 	{
 		/// <summary>
-		/// <c>=&gt; @this.GetService&lt;<see cref="ILogger"/>&gt;();</c>
-		/// </summary>
-		public ILogger? Logger
-			=> @this.GetService<ILogger>();
-
-		/// <summary>
 		/// <c>=&gt; @this.GetService&lt;<see cref="ILogger{TCategoryName}"/>&gt;();</c>
 		/// </summary>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]

@@ -29,7 +29,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeAs(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeAs(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeAs(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c><br/><br/>
+		/// <c>value <see langword="as"/> <typeparamref name="T"/></c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public Expression As<T>()
@@ -38,7 +39,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeAs(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeAs(@this, <paramref name="type"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeAs(@this, <paramref name="type"/>);</c><br/><br/>
+		/// <c>value <see langword="as"/> type</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public Expression As(Type type)
@@ -46,7 +48,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Assign(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Assign(@this, <paramref name="expression"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Assign(@this, <paramref name="expression"/>);</c><br/><br/>
+		/// <c>a = b</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public BinaryExpression Assign(Expression expression)
@@ -54,7 +57,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Block(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Block(@this, <paramref name="expression"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Block(@this, <paramref name="expression"/>);</c><br/><br/>
+		/// <c>{ ... }</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public BlockExpression Block(Expression expression)
@@ -62,7 +66,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Call(Expression, MethodInfo)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>);</c><br/><br/>
+		/// <c>methodToCall()</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MethodCallExpression Call(MethodInfo methodInfo)
@@ -70,7 +75,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Call(Expression, MethodInfo, IEnumerable{Expression})"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c><br/><br/>
+		/// <c>methodToCall(...)</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MethodCallExpression Call(MethodInfo methodInfo, IEnumerable<Expression>? arguments = null)
@@ -78,7 +84,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Call(Expression, MethodInfo, Expression[])"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="methodInfo"/>, <paramref name="arguments"/>);</c><br/><br/>
+		/// <c>methodToCall(...)</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MethodCallExpression Call(MethodInfo methodInfo, Expression[]? arguments = null)
@@ -86,7 +93,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="method"/>, <see cref="Type.EmptyTypes"/>, <paramref name="arguments"/>);</c><br/><br/>
+		/// <c>methodToCall(...)</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MethodCallExpression Call(string method, Expression[]? arguments = null)
@@ -94,7 +102,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Call(Expression, string, Type[], Expression[])"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Call(@this, <paramref name="method"/>, <paramref name="genericTypes"/>, <paramref name="arguments"/>);</c><br/><br/>
+		/// <c>methodToCall&lt;T&gt;(...)</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MethodCallExpression Call(string method, Type[]? genericTypes, Expression[]? arguments = null)
@@ -128,14 +137,17 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Coalesce(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Coalesce(@this, <paramref name="expression"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Coalesce(@this, <paramref name="expression"/>);</c><br/><br/>
+		/// <c>a ?? b</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public BinaryExpression Coalesce(Expression expression)
 			=> Expression.Coalesce(@this, expression);
 
+		/// <inheritdoc cref="Expression.Convert(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; @this.Convert(<see langword="typeof"/>(<typeparamref name="T"/>));</c>
+		/// <c>=&gt; @this.Convert(<see langword="typeof"/>(<typeparamref name="T"/>));</c><br/><br/>
+		/// <c>(<typeparamref name="T"/>)value</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public Expression Convert<T>()
@@ -189,7 +201,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Field(Expression, FieldInfo)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Field(@this, <paramref name="fieldInfo"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Field(@this, <paramref name="fieldInfo"/>);</c><br/><br/>
+		/// <c><see langword="this"/>._Field</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Field(FieldInfo fieldInfo)
@@ -197,7 +210,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Field(Expression, string)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Field(@this, <paramref name="name"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Field(@this, <paramref name="name"/>);</c><br/><br/>
+		/// <c><see langword="this"/>._Field</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Field(string name)
@@ -205,7 +219,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.IfThen(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.IfThen(@this, <paramref name="trueResult"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.IfThen(@this, <paramref name="trueResult"/>);</c><br/><br/>
+		/// <c><see langword="if"/> (expression) <see langword="return"/> trueResult;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public ConditionalExpression If(Expression trueResult)
@@ -213,7 +228,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.IfThenElse(Expression, Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.IfThenElse(@this, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.IfThenElse(@this, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c><br/><br/>
+		/// <c><see langword="if"/> (expression) <see langword="return"/> trueResult; <see langword="else return"/> falseResult;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public ConditionalExpression If(Expression trueResult, Expression falseResult)
@@ -221,7 +237,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Condition(Expression, Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Condition(@this, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Condition(@this, <paramref name="trueResult"/>, <paramref name="falseResult"/>);</c><br/><br/>
+		/// <c>expression ? trueResult : falseResult;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public ConditionalExpression IIf(Expression trueResult, Expression falseResult)
@@ -229,7 +246,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeIs(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeIs(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeIs(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c><br/><br/>
+		/// <c>value <see langword="is"/> <typeparamref name="T"/>;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public TypeBinaryExpression Is<T>()
@@ -237,7 +255,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeIs(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeIs(@this, <paramref name="type"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeIs(@this, <paramref name="type"/>);</c><br/><br/>
+		/// <c>value <see langword="is"/> type;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public TypeBinaryExpression Is(Type type)
@@ -245,7 +264,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.ReferenceNotEqual(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.ReferenceNotEqual(@this, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.ReferenceNotEqual(@this, <see cref="Expression"/>.Constant(<see langword="null"/>));</c><br/><br/>
+		/// <c>value <see langword="is not null"/>;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public BinaryExpression IsNotNull()
@@ -253,7 +273,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.ReferenceEqual(Expression, Expression)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.ReferenceEqual(@this, <see cref="Expression"/>.Constant(<see langword="null"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.ReferenceEqual(@this, <see cref="Expression"/>.Constant(<see langword="null"/>));</c><br/><br/>
+		/// <c>value <see langword="is null"/>;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public BinaryExpression IsNull()
@@ -419,7 +440,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, MethodInfo)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="getMethodInfo"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="getMethodInfo"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.get_Property()</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Property(MethodInfo getMethodInfo)
@@ -427,7 +449,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="propertyInfo"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="propertyInfo"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Property(PropertyInfo propertyInfo)
@@ -435,7 +458,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, PropertyInfo, Expression[])"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="propertyInfo"/>, <paramref name="index"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="propertyInfo"/>, <paramref name="index"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property[<paramref name="index"/>]</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public IndexExpression Property(PropertyInfo propertyInfo, Expression[] index)
@@ -443,7 +467,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, string)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="name"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="name"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Property(string name)
@@ -451,7 +476,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, string, Expression[])"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="name"/>, <paramref name="index"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="name"/>, <paramref name="index"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property[<paramref name="index"/>]</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public IndexExpression Property(string name, Expression[] index)
@@ -459,7 +485,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, Type, string)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="name"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <see langword="typeof"/>(<typeparamref name="T"/>), <paramref name="name"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Property<T>(string name)
@@ -467,7 +494,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Property(Expression, Type, string)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="type"/>, <paramref name="name"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Property(@this, <paramref name="type"/>, <paramref name="name"/>);</c><br/><br/>
+		/// <c><see langword="this"/>.Property</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public MemberExpression Property(Type type, string name)
@@ -475,7 +503,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeEqual(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c><br/><br/>
+		/// <c>value.GetType() == <see langword="typeof"/>(<typeparamref name="T"/>)</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public TypeBinaryExpression TypeEqual<T>()
@@ -483,7 +512,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.TypeEqual(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@this, <paramref name="type"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.TypeEqual(@this, <paramref name="type"/>);</c><br/><br/>
+		/// <c>value.GetType() == <paramref name="type"/></c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public TypeBinaryExpression TypeEqual(Type type)
@@ -491,7 +521,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Unbox(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Unbox(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c>
+		/// <c>=&gt; <see cref="Expression"/>.Unbox(@this, <see langword="typeof"/>(<typeparamref name="T"/>));</c><br/><br/>
+		/// <c>(<typeparamref name="T"/>)obj</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public UnaryExpression Unbox<T>()
@@ -500,7 +531,8 @@ public static partial class ExpressionExtensions
 
 		/// <inheritdoc cref="Expression.Unbox(Expression, Type)"/>
 		/// <remarks>
-		/// <c>=&gt; <see cref="Expression"/>.Unbox(@this, <paramref name="type"/>);</c>
+		/// <c>=&gt; <see cref="Expression"/>.Unbox(@this, <paramref name="type"/>);</c><br/><br/>
+		/// <c>(int)obj</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public UnaryExpression Unbox(Type type)

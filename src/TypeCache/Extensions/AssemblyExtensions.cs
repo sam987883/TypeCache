@@ -6,15 +6,21 @@ public static class AssemblyExtensions
 {
 	extension(Assembly @this)
 	{
-		public string GetNuGetVersion()
+		public string? InformationalVersion
+			=> @this.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+		public string NuGetVersion
 		{
-			var version = @this.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-			return version?.LastIndexOf('+') switch
+			get
 			{
-				null => string.Empty,
-				-1 => version,
-				int i => version[0..i]
-			};
+				var informationalVersion = @this.InformationalVersion;
+				return informationalVersion?.LastIndexOf('+') switch
+				{
+					null => string.Empty,
+					-1 => informationalVersion,
+					int i => informationalVersion[0..i]
+				};
+			}
 		}
 	}
 }

@@ -16,6 +16,21 @@ public static class StringExtensions
 {
 	private const string RANGE_OPERATOR = "..";
 
+	extension(string)
+	{
+		public static bool operator &(string @this, char[] chars)
+			=> chars.All(@this.Contains);
+
+		public static (string, StringComparison) operator |(string @this, StringComparison comparison)
+			=> (@this, comparison);
+	}
+
+	extension((string, StringComparison))
+	{
+		public static bool operator &((string Text, StringComparison Comparison) @this, char[] chars)
+			=> chars.All(_ => @this.Text.Contains(_, @this.Comparison));
+	}
+
 	extension(string @this)
 	{
 		/// <inheritdoc cref="char.IsDigit(char)"/>
@@ -91,11 +106,18 @@ public static class StringExtensions
 			=> @this.Any(c => c.IsWhiteSpace());
 
 		/// <remarks>
-		/// <c>=&gt; <paramref name="chars"/>?.Any(@this.Contains) <see langword="is true"/>;</c>
+		/// <c>=&gt; <paramref name="chars"/>?.Any(@this.ContainsIgnoreCase) <see langword="is true"/>;</c>
 		/// </remarks>
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
-		public bool ContainsAny(char[]? chars = null)
-			=> chars?.Any(@this.Contains) is true;
+		public bool ContainsAnyIgnoreCase(char[] chars)
+			=> chars?.Any(@this.ContainsIgnoreCase) is true;
+
+		/// <remarks>
+		/// <c>=&gt; <paramref name="chars"/>?.Any(@this.ContainsOrdinal) <see langword="is true"/>;</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public bool ContainsAnyOrdinal(char[] chars)
+			=> chars?.Any(@this.ContainsOrdinal) is true;
 
 		/// <inheritdoc cref="string.Contains(char, StringComparison)"/>
 		/// <remarks>
@@ -112,6 +134,14 @@ public static class StringExtensions
 		[MethodImpl(AggressiveInlining), DebuggerHidden]
 		public bool ContainsIgnoreCase(string value)
 			=> @this.Contains(value, StringComparison.OrdinalIgnoreCase);
+
+		/// <inheritdoc cref="string.Contains(char, StringComparison)"/>
+		/// <remarks>
+		/// <c>=&gt; @this.Contains(<paramref name="value"/>, <see cref="StringComparison.Ordinal"/>);</c>
+		/// </remarks>
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public bool ContainsOrdinal(char value)
+			=> @this.Contains(value, StringComparison.Ordinal);
 
 		/// <inheritdoc cref="string.Contains(string, StringComparison)"/>
 		/// <remarks>

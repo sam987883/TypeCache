@@ -19,7 +19,7 @@ public static class Type<T>
 		CollectionType = TypeStore.CollectionTypes[Handle];
 		IsGeneric = typeof(T).IsGenericType;
 		IsPublic = typeof(T).IsPublic;
-		Name = typeof(T).IsGenericType ? typeof(T).Name.Substring(typeof(T).Name.IndexOf(TypeStore.GENERIC_TICKMARK)) : typeof(T).Name;
+		Name = typeof(T).IsGenericType ? typeof(T).Name[0..typeof(T).Name.IndexOf(TypeStore.GENERIC_TICKMARK)] : typeof(T).Name;
 		Namespace = typeof(T).Namespace ?? string.Empty;
 		ObjectType = TypeStore.ObjectTypes[Handle];
 		ScalarType = typeof(T).ScalarType;

@@ -15,26 +15,22 @@ public static class BooleanExtensions
 			return @this;
 		}
 
-		[MethodImpl(AggressiveInlining), DebuggerHidden]
-		public T If<T>(T trueValue, T falseValue)
-			=> @this ? trueValue : falseValue;
-
-		[MethodImpl(AggressiveInlining), DebuggerHidden]
-		public T If<T>(Func<T> trueValue, T falseValue)
-			=> @this ? trueValue() : falseValue;
-
-		[MethodImpl(AggressiveInlining), DebuggerHidden]
-		public T If<T>(Func<T> trueValue, Func<T> falseValue)
-			=> @this ? trueValue() : falseValue();
-
 		[DebuggerHidden]
-		public bool Then(Action doIfTrue)
+		public bool If(Action doIfTrue)
 		{
 			if (@this)
 				doIfTrue();
 
 			return @this;
 		}
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public T If<T>(T trueValue, T falseValue)
+			=> @this ? trueValue : falseValue;
+
+		[MethodImpl(AggressiveInlining), DebuggerHidden]
+		public T If<T>(Func<T> trueValue, Func<T> falseValue)
+			=> @this ? trueValue() : falseValue();
 
 		/// <remarks>
 		/// <c>=&gt; @this ? [(<see cref="byte"/>)1] : [(<see cref="byte"/>)0];</c>

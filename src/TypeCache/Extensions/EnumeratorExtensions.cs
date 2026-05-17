@@ -41,6 +41,7 @@ public static class EnumeratorExtensions
 			var count = 0;
 			while (@this.MoveNext())
 				++count;
+
 			return count;
 		}
 

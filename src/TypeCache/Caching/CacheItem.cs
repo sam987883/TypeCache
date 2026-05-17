@@ -13,7 +13,8 @@ public sealed class CacheItem(IMemoryCache cache, [ServiceKey] object key)
 		set
 		{
 			field = value;
-			this.Expiration = null;
+			if (value.HasValue)
+				this.Expiration = null;
 		}
 	}
 

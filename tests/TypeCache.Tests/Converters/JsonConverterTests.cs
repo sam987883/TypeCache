@@ -4,6 +4,8 @@ using System;
 using System.Data;
 using System.Numerics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Extensions.Primitives;
 using TypeCache.Converters;
 using Xunit;
 
@@ -67,5 +69,81 @@ public class JsonConverterTests
 
 		json = JsonSerializer.Serialize(null as DataRow, jsonOptions);
 		Assert.Equal("null", json);
+	}
+
+	[Fact]
+	public void DictionaryJsonConverter()
+	{
+		var dictionary = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
+
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new DictionaryJsonConverter());
+
+		var json = JsonSerializer.Serialize(dictionary, jsonOptions);
+		Assert.NotEmpty(json);
+
+		var result = JsonSerializer.Deserialize<Dictionary<string, int>>(json, jsonOptions);
+		Assert.NotNull(result);
+	}
+
+	[Fact]
+	public void ReadOnlyDictionaryJsonConverter()
+	{
+		var dictionary = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } } as IReadOnlyDictionary<string, int>;
+
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new ReadOnlyDictionaryJsonConverter());
+
+		var json = JsonSerializer.Serialize(dictionary, jsonOptions);
+		Assert.NotEmpty(json);
+	}
+
+	[Fact]
+	public void StringValuesJsonConverter()
+	{
+		var values = new StringValues(new[] { "value1", "value2" });
+
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new StringValuesJsonConverter());
+
+		var json = JsonSerializer.Serialize(values, jsonOptions);
+		Assert.NotEmpty(json);
+
+		var result = JsonSerializer.Deserialize<StringValues>(json, jsonOptions);
+		Assert.Equal(2, result.Count);
+	}
+
+	[Fact]
+	public void DataTableJsonConverter()
+	{
+		var dataTable = new DataTable("Table1");
+		dataTable.Columns.Add("Column1", typeof(int));
+		dataTable.Columns.Add("Column2", typeof(string));
+
+		var row = dataTable.NewRow();
+		row["Column1"] = 1;
+		row["Column2"] = "test";
+		dataTable.Rows.Add(row);
+
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new DataTableJsonConverter());
+
+		var json = JsonSerializer.Serialize(dataTable, jsonOptions);
+		Assert.NotEmpty(json);
+	}
+
+	[Fact]
+	public void DataSetJsonConverter()
+	{
+		var dataSet = new DataSet();
+		var dataTable = new DataTable("Table1");
+		dataTable.Columns.Add("Column1", typeof(int));
+		dataSet.Tables.Add(dataTable);
+
+		var jsonOptions = new JsonSerializerOptions();
+		jsonOptions.Converters.Add(new DataSetJsonConverter());
+
+		var json = JsonSerializer.Serialize(dataSet, jsonOptions);
+		Assert.NotEmpty(json);
 	}
 }

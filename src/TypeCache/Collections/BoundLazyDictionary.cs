@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Frozen;
+using TypeCache.Reflection;
 
 namespace TypeCache.Collections;
 
@@ -10,6 +11,7 @@ public static class BoundLazyDictionary
 	public static BoundLazyDictionary<K, V> Create<K, V>(
 		IEnumerable<K> keys,
 		Func<K, V> createValue,
+		V? noValue = default,
 		int concurrencyLevel = -1,
 		IEqualityComparer<K>? comparer = null)
 		where K : notnull
@@ -17,12 +19,13 @@ public static class BoundLazyDictionary
 		var keySet = keys.ToFrozenSet(comparer);
 		var lazyDictionary = LazyDictionary.Create(createValue, keySet.Count, -1, comparer);
 
-		return new(lazyDictionary, keySet);
+		return new(lazyDictionary, keySet) { NoValue = noValue };
 	}
 
 	public static BoundLazyDictionary<K, V> CreateThreadSafe<K, V>(
 		IEnumerable<K> keys,
 		Func<K, V> createValue,
+		V? noValue = default,
 		int concurrencyLevel = -1,
 		IEqualityComparer<K>? comparer = null)
 		where K : notnull
@@ -30,18 +33,18 @@ public static class BoundLazyDictionary
 		var keySet = keys.ToFrozenSet(comparer);
 		var lazyDictionary = LazyDictionary.CreateThreadSafe(createValue, keySet.Count, -1, comparer);
 
-		return new(lazyDictionary, keySet);
+		return new(lazyDictionary, keySet) { NoValue = noValue };
 	}
 }
 
 public sealed class BoundLazyDictionary<K, V>(LazyDictionary<K, V> lazyDictionary, FrozenSet<K> keys) : IReadOnlyDictionary<K, V>
 	where K : notnull
 {
-	public V this[K key] => keys.Contains(key) ? lazyDictionary[key] : this.NoValue!;
+	public V? NoValue { get; init; }
+
+	public V this[K key] => keys.Contains(key) ? lazyDictionary[key] : this.NoValue ?? throw new KeyNotFoundException($"{GetType().CodeName}: {key}");
 
 	public IEnumerable<K> Keys => keys;
-
-	public V? NoValue { get; init; }
 
 	public IEnumerable<V> Values => keys.Select(key => lazyDictionary[key]);
 

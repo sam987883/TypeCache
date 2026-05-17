@@ -3,7 +3,6 @@
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using TypeCache.Collections;
 using TypeCache.Utilities;
 
 namespace TypeCache.Extensions;
